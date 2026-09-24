@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 40
+#   version: 41
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -502,7 +502,7 @@ runtime:
     delivery_boundary: direct-sqs-side-effect-free-smoke-consumer-not-a-persistence-outbox
     live_proof_plan: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
   relay:
-    status: source-defined-not-deployed
+    status: foundation-deployed-task-definition-pending
     task_definition_family: kanbien-staging-platform-shell-relay
     invocation_model: one-shot-ecs-run-task-only-no-service-or-scheduler
     access_boundary: due-index-query-outbox-claim-source-queue-send-and-safe-metrics-only
@@ -511,6 +511,30 @@ runtime:
       - reviewed-cognito-write-scope
       - explicit-current-approval-for-one-harmless-run-task
       - bounded-worker-scale-up-and-return-to-zero
+  persistence_foundation:
+    status: deployed-and-post-deployment-verified
+    deployed_on_utc: "2026-09-24"
+    stack_status: UPDATE_COMPLETE
+    table:
+      status: ACTIVE
+      billing_mode: PAY_PER_REQUEST
+      encryption: enabled
+      point_in_time_recovery: enabled
+      deletion_protection: enabled
+      indexes:
+        - OutboxDueIndex
+        - LineageCauseIndex
+    relay_boundary:
+      ingress: none
+      egress: reviewed-tls-and-dns-only
+      task_role: due-index-query-outbox-lease-source-queue-send-and-safe-metrics-only
+    preserved_post_deployment_state:
+      public_server: desired-one-running-one
+      worker: desired-zero-running-zero
+      source_and_dead_letter_queues: empty
+      worker_visibility_timeout_seconds: 120
+    next_boundary: reviewed-service-change-set-only-no-relay-run-worker-scale-or-write-scope-change
+    evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
   apps:

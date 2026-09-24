@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 28
+#   version: 29
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -575,7 +575,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "acceptance-relay-worker-task-source-composed-not-deployed",
+        "status": "foundation-deployed-service-and-live-proof-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -597,19 +597,45 @@ expected_persistence_profile = {
             "cloudformation_deletion_policy": "retain",
             "ttl": "deliberately-not-configured-not-a-retention-policy",
         },
+        "foundation_evidence": {
+            "deployed_on_utc": "2026-09-24",
+            "stack_status": "UPDATE_COMPLETE",
+            "table_status": "ACTIVE",
+            "verified_protections": [
+                "on-demand-billing",
+                "server-side-encryption",
+                "point-in-time-recovery",
+                "deletion-protection",
+                "retain-on-delete",
+            ],
+            "verified_indexes": ["OutboxDueIndex", "LineageCauseIndex"],
+            "verified_workload_boundary": {
+                "server": "atomic-persistence-transaction-only",
+                "worker": "source-queue-settlement-and-processing-state-only",
+                "relay": "due-index-query-outbox-lease-source-queue-send-and-safe-metrics-only",
+            },
+            "verified_network_boundary": "relay-no-ingress-and-reviewed-tls-dns-egress-only",
+            "preserved_runtime_state": {
+                "public_server": "desired-one-running-one",
+                "worker": "desired-zero-running-zero",
+                "source_and_dead_letter_queues": "empty",
+                "worker_visibility_timeout_seconds": 120,
+            },
+            "evidence_hygiene": "safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads",
+        },
         "activation": {
-            "server_acceptance": "source-composed-not-deployed",
-            "outbox_relay": "source-composed-one-pass-task-definition-and-least-privilege-iam-not-deployed-or-scheduled",
-            "durable_worker_processing": "source-composed-worker-task-configuration-and-least-privilege-iam-not-deployed",
-            "iam": "source-defined-server-acceptance-relay-and-worker-processing-least-privilege-not-deployed",
+            "server_acceptance": "foundation-deployed-service-task-definition-pending",
+            "outbox_relay": "foundation-deployed-relay-role-network-and-logs-service-task-definition-pending-not-scheduled",
+            "durable_worker_processing": "foundation-deployed-worker-role-and-processing-state-policy-service-task-definition-pending",
+            "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "source-declared-not-configured",
-            "observability": "profile-registered-transition-catalogue-source-composed-slo-assignment-and-live-proof-pending",
+            "observability": "profile-registered-transition-catalogue-foundation-deployed-service-and-live-proof-pending",
         },
     },
 }
 if target_profile.get("persistence") != expected_persistence_profile:
-    fail("target profile must retain the reviewed persistence table and source-composed acceptance boundary")
+    fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 task_execution_policy = properties(foundation, "TaskExecutionRole", "AWS::IAM::Role").get("Policies", [])
 task_execution_configuration_statement = next(

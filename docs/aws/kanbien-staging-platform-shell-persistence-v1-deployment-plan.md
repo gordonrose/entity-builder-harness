@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -58,6 +58,35 @@ The following was inspected read-only before this plan was written:
 This baseline contains only resource state, names, counts, and revisions. It
 does not retain credentials, secret values, tokens, request bodies, table
 items, queue messages, or provider payloads.
+
+## Foundation execution evidence — 2026-09-24
+
+The immutable persistence-capable image was published through the existing
+GitHub workflow before any Foundation change was executed. Its safe workflow
+result was successful and its immutable digest was
+`sha256:a112641f69f60984bfa2e1660b756c36449c0bf66c4dc8af3e2c544c21ecf27e`.
+
+The reviewed additive Foundation change set was then executed. It added the
+persistence table, relay task role and network group, relay log groups, and
+only the narrow server/worker/deployment-role policy changes defined above.
+It did not delete or replace a shared routing, DNS, certificate, ALB, queue,
+rate-limit, or public-service resource.
+
+Post-deployment inspection established these safe facts:
+
+| Surface | Verified state |
+| --- | --- |
+| Foundation stack | `UPDATE_COMPLETE` |
+| Persistence table | `ACTIVE`, on-demand billing, encryption, point-in-time recovery, deletion protection, and retain-on-delete policies |
+| Required indexes | `OutboxDueIndex` and `LineageCauseIndex` |
+| Relay network boundary | No ingress; only reviewed TLS and DNS egress paths |
+| Workload roles | Server atomic transaction only; worker queue settlement/processing state only; relay due-query, lease, source-queue send, and safe metrics only |
+| Preserved runtime | Public server desired/running `1/1`; worker desired/running `0/0`; source and dead-letter queues empty; worker visibility timeout `120` seconds |
+
+No service task definition has been registered from this persistence image,
+no relay task has run, no worker has been scaled, no Cognito scope or client
+has changed, and no persistence write has been made. Those remain later,
+separately approved stages.
 
 ## Desired source-defined change
 

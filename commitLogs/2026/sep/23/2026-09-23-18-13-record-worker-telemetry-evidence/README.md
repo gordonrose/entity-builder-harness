@@ -148,6 +148,10 @@ go
 - Decision: Keep server runtime-test workspace aliases explicit for every platform package reachable through transitive runtime imports.
   Rationale: Runtime tests compile the source graph under legacy Node10 resolution for CommonJS execution, so explicit aliases prevent package-export resolution from varying between local and GitHub environments.
 
+
+- Decision: Record Foundation deployment separately from service activation
+  Rationale: A deployed table, identity boundary, logs, and network controls prove the durable substrate exists, but no task definition, relay, worker, identity scope, or write has yet used it. Keeping those states distinct prevents a false claim of end-to-end delivery.
+
 ## Context Hygiene
 
 
@@ -190,6 +194,10 @@ go
 
 - Summary: The chat branch was cleanly refreshed from local main through a governed preflight with no conflicts; the image workflow failed before AWS credentials/ECR due to one missing test alias and is now locally validated.
   Durable evidence: Retain the safe failed-run identifier and test outcome in the session record; do not retain tokens, AWS responses, image values, queue details, or build logs.
+
+
+- Summary: Retain only the safe Foundation execution result: deployed protected table and indexes, least-privilege workload boundaries, relay no-ingress boundary, preserved server one/worker zero state, and empty queues.
+  Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain records, queue messages, task identifiers, raw change-set/provider output, credentials, or payloads.
 
 ## Activity Log
 
@@ -942,6 +950,27 @@ Summary: Add the missing platform-persistence workspace alias to the server runt
 
 ADR impact: No ADR required; this aligns the existing runtime-test alias convention without changing platform architecture.
 
+
+### 2026-09-24T19:53:00Z - Decision
+
+Decision: Record Foundation deployment separately from service activation
+
+Rationale: A deployed table, identity boundary, logs, and network controls prove the durable substrate exists, but no task definition, relay, worker, identity scope, or write has yet used it. Keeping those states distinct prevents a false claim of end-to-end delivery.
+
+
+### 2026-09-24T19:53:00Z - Context hygiene
+
+Summary: Retain only the safe Foundation execution result: deployed protected table and indexes, least-privilege workload boundaries, relay no-ingress boundary, preserved server one/worker zero state, and empty queues.
+
+Durable evidence: Durable evidence is in the staging target profile, readiness manifest, Persistence v1 deployment plan, Persistence Foundation plan, infrastructure verifier, and this session log. Do not retain records, queue messages, task identifiers, raw change-set/provider output, credentials, or payloads.
+
+
+### 2026-09-24T19:53:00Z - ADR disposition
+
+ADR needed: no
+
+Reason: This records a target-specific executed change and its evidence boundary; it does not alter the already approved persistence architecture or platform contracts.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1008,7 +1037,7 @@ ADR impact: No ADR required; this aligns the existing runtime-test alias convent
 
 ADR needed: no
 ADR path: 
-Reason: The change aligns an existing TypeScript test-alias pattern and does not alter platform boundaries, persistence semantics, or deployment architecture.
+Reason: This records a target-specific executed change and its evidence boundary; it does not alter the already approved persistence architecture or platform contracts.
 
 ## Session Metrics
 
