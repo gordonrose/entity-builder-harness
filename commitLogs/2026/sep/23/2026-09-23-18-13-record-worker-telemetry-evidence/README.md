@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T21:08:29Z
-latest_commit_sha: a3053bff
-chat_duration: 100502s (01:03:55:02)
+latest_commit_at_utc: 2026-09-24T21:49:03Z
+latest_commit_sha: 3d167db7
+chat_duration: 102936s (01:04:35:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1215,6 +1215,17 @@ ADR needed: no
 
 Reason: The response-observability seam is a small contract extension implementing the existing profile-governed observability boundary; it does not change provider, persistence, or product architecture.
 
+
+### 2026-09-24T21:49:03Z - Commit recorded
+
+Commit: `3d167db7`
+
+Message: fix(observability): preserve safe route failure classes
+
+Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
+
+ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1306,6 +1317,13 @@ Reason: The response-observability seam is a small contract extension implementi
   Summary: Recorded the reviewed two-resource in-place server allowlist rollout, its healthy post-deployment state, and the corrected CloudFormation change-set inspection.
   ADR impact: No ADR: target-specific deployment evidence and inspection correction only.
 
+
+- Commit: `3d167db7`
+  Time UTC: 2026-09-24T21:49:03Z
+  Message: fix(observability): preserve safe route failure classes
+  Summary: Added a private, profile-governed route failure classification seam; recorded the safe non-committing persistence acceptance and lifecycle guard; verified contracts, server telemetry, target policy, and deploy scripts.
+  ADR impact: No ADR: implements the existing safe observability and staged-proof boundary.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1321,9 +1339,9 @@ Reason: This records target-specific staging deployment evidence and corrects an
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T21:08:29Z
-Latest commit SHA: a3053bff
-Chat duration: 100502s (01:03:55:02)
+Latest commit at UTC: 2026-09-24T21:49:03Z
+Latest commit SHA: 3d167db7
+Chat duration: 102936s (01:04:35:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
