@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 29
+#   version: 30
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -623,10 +623,23 @@ expected_persistence_profile = {
             },
             "evidence_hygiene": "safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads",
         },
+        "service_change_set_review": {
+            "status": "reviewed-available-not-executed",
+            "reviewed_on_utc": "2026-09-24",
+            "reviewed_changes": {
+                "relay_task_definition": "add-dormant-one-shot-task-definition-only",
+                "public_server_service": "task-definition-reference-update-only-no-service-replacement",
+                "public_server_task_definition": "normal-ecs-revision-replacement-container-definitions-only",
+                "worker_service": "task-definition-reference-update-only-no-service-replacement",
+                "worker_task_definition": "normal-ecs-revision-replacement-container-definitions-only",
+            },
+            "execution_guard": "explicit-current-approval-required-before-service-rollout",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-persistence-write",
+        },
         "activation": {
-            "server_acceptance": "foundation-deployed-service-task-definition-pending",
-            "outbox_relay": "foundation-deployed-relay-role-network-and-logs-service-task-definition-pending-not-scheduled",
-            "durable_worker_processing": "foundation-deployed-worker-role-and-processing-state-policy-service-task-definition-pending",
+            "server_acceptance": "foundation-deployed-service-change-set-reviewed-not-executed",
+            "outbox_relay": "foundation-deployed-relay-role-network-and-logs-service-change-set-reviewed-not-executed-not-scheduled",
+            "durable_worker_processing": "foundation-deployed-worker-role-and-processing-state-policy-service-change-set-reviewed-not-executed",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "source-declared-not-configured",

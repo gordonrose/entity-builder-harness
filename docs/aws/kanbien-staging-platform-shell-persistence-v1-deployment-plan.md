@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 3
+version: 4
 status: draft
 layer: 04.deploy
 domain: runtime.operations
@@ -87,6 +87,29 @@ No service task definition has been registered from this persistence image,
 no relay task has run, no worker has been scaled, no Cognito scope or client
 has changed, and no persistence write has been made. Those remain later,
 separately approved stages.
+
+## Service change-set inspection — 2026-09-24
+
+The service change set for the immutable image has been created and inspected,
+but **not executed**. It contains exactly five changes:
+
+- add `RelayTaskDefinition` only—a dormant task definition, not an ECS service
+  or scheduler;
+- update the existing public server service to reference a new task revision,
+  without replacing that service;
+- replace the public server task definition, as normal for an ECS container
+  definition revision;
+- update the existing worker service to reference a new task revision, without
+  replacing it and with desired count remaining `0`; and
+- replace the worker task definition, again only as an ECS container definition
+  revision.
+
+The review found no shared-boundary, routing, load-balancer, DNS, certificate,
+queue, alert-destination, Cognito, or permission-scope change. The Foundation
+and service stacks remain `UPDATE_COMPLETE`; the public server remains
+desired/running `1/1`, and the worker remains `0/0`. Execution requires a new,
+explicit approval because it will cause the public service to roll to its new
+task definition.
 
 ## Desired source-defined change
 
