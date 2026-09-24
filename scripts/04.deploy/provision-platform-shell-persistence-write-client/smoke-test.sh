@@ -36,6 +36,26 @@ fi
 fake_root="$(mktemp -d)"
 trap 'rm -rf "$fake_root"' EXIT
 fake_aws="$fake_root/aws"
+pending_profile="$fake_root/pending-provisioning-target-profile.yml"
+
+# Model only the pre-provisioning lifecycle in the fake execution tests.  The
+# checked-in staging profile may legitimately record an already-provisioned
+# client, which the real command must refuse to create again.
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml" "$pending_profile" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+source, destination = (Path(value) for value in sys.argv[1:])
+profile = yaml.safe_load(source.read_text(encoding="utf-8"))
+client = profile["auth"]["persistence_write_test_client"]
+client["status"] = "pending-provisioning"
+client.pop("client_id", None)
+client.pop("secret_arn", None)
+client.pop("provisioning_evidence", None)
+profile["config"]["secret_refs"].pop("cognito_persistence_write_client_secret", None)
+destination.write_text(yaml.safe_dump(profile, sort_keys=False), encoding="utf-8")
+PY
 cat >"$fake_aws" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -77,7 +97,7 @@ esac
 EOF
 chmod 700 "$fake_aws"
 
-execution_result="$(bash scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh --execute --aws-cli "$fake_aws")"
+execution_result="$(bash scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh --execute --aws-cli "$fake_aws" --target-profile "$pending_profile")"
 if [[ "$execution_result" != '{"client_id":"persistence-write-client-id","persistence_write_client_provision":"created","secret_arn":"arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-test"}' ]]; then
   echo "ERROR: persistence-write client provisioner did not emit the safe expected result" >&2
   exit 1
@@ -125,7 +145,7 @@ esac
 EOF
 chmod 700 "$rollback_aws"
 
-if bash scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh --execute --aws-cli "$rollback_aws" >/dev/null 2>&1; then
+if bash scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh --execute --aws-cli "$rollback_aws" --target-profile "$pending_profile" >/dev/null 2>&1; then
   echo "ERROR: persistence-write client provisioner accepted a missing secret ARN" >&2
   exit 1
 fi

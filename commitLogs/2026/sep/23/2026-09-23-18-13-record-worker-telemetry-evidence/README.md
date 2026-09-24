@@ -61,6 +61,10 @@ go
 - Raised: The governed pre-commit process left two untracked source-provenance smoke-test fixtures.
   Resolution: Confirmed both filenames and timestamps matched the check-source-material-coverage smoke test, removed only those disposable untracked fixtures, and left all tracked task evidence intact.
 
+
+- Raised: The staging write identity existed while the target profile still recorded it as pending provisioning.
+  Resolution: Performed no duplicate Cognito mutation; reconciled only safe scope and identifier-reference evidence, and isolated the local first-provisioning test with a temporary pending-state fixture.
+
 ## Decisions Made
 
 
@@ -164,6 +168,10 @@ go
 - Decision: Treat service deployment verification as distinct from persistence delivery proof
   Rationale: A healthy rolling server update and successful protected read prove the deployed revision is operational. They cannot prove the unconfigured write identity, acceptance transaction, relay publication, or duplicate-safe worker completion.
 
+
+- Decision: Treat an already-provisioned isolated write identity as evidence reconciliation, not an instruction to recreate it.
+  Rationale: The provisioner is intentionally non-idempotent for a fixed client name; refusing a second creation preserves the least-privilege boundary and avoids an unplanned secret rotation.
+
 ## Context Hygiene
 
 
@@ -218,6 +226,10 @@ go
 
 - Summary: Retain only safe service-deployment evidence: stack update complete, immutable image verified, healthy target, public liveness and protected-read success, worker zero, relay zero, and empty queues.
   Durable evidence: Durable evidence is in the target profile, readiness manifest, Persistence v1 deployment and implementation plans, infrastructure verifier, and this session log. Do not retain task/deployment identifiers, tokens, secret values, headers, bodies, raw provider output, record contents, or queue messages.
+
+
+- Summary: Retain only the safe Stage 1 facts: reviewed write scope exists, one isolated confidential client and target-owned secret reference exist, and the server still does not trust that client.
+  Durable evidence: Durable evidence is constrained to the target profile, readiness record, Persistence v1 plans, local policy tests, and this session log. Do not retain secret values, tokens, raw Cognito output, request data, task identifiers, or queue content.
 
 ## Activity Log
 
@@ -1073,6 +1085,34 @@ Summary: Record the executed reviewed service rollout, verified immutable image 
 
 ADR impact: No ADR required; this is target-specific deployment evidence under the existing staged persistence architecture.
 
+
+### 2026-09-24T20:46:22Z - Issue
+
+Raised: The staging write identity existed while the target profile still recorded it as pending provisioning.
+
+Resolution: Performed no duplicate Cognito mutation; reconciled only safe scope and identifier-reference evidence, and isolated the local first-provisioning test with a temporary pending-state fixture.
+
+
+### 2026-09-24T20:46:22Z - Decision
+
+Decision: Treat an already-provisioned isolated write identity as evidence reconciliation, not an instruction to recreate it.
+
+Rationale: The provisioner is intentionally non-idempotent for a fixed client name; refusing a second creation preserves the least-privilege boundary and avoids an unplanned secret rotation.
+
+
+### 2026-09-24T20:46:22Z - Context hygiene
+
+Summary: Retain only the safe Stage 1 facts: reviewed write scope exists, one isolated confidential client and target-owned secret reference exist, and the server still does not trust that client.
+
+Durable evidence: Durable evidence is constrained to the target profile, readiness record, Persistence v1 plans, local policy tests, and this session log. Do not retain secret values, tokens, raw Cognito output, request data, task identifiers, or queue content.
+
+
+### 2026-09-24T20:46:23Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is target-specific lifecycle evidence and a test-fixture correction; it does not alter reusable persistence or authentication architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1160,7 +1200,7 @@ ADR impact: No ADR required; this is target-specific deployment evidence under t
 
 ADR needed: no
 ADR path: 
-Reason: This is execution evidence for the existing staged deployment architecture; it does not change a platform boundary, persistence contract, or architecture decision.
+Reason: This is target-specific lifecycle evidence and a test-fixture correction; it does not alter reusable persistence or authentication architecture.
 
 ## Session Metrics
 
