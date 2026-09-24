@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-24T19:36:55Z
-latest_commit_sha: be06e419
-chat_duration: 95008s (01:02:23:28)
+latest_commit_at_utc: 2026-09-24T19:53:52Z
+latest_commit_sha: f86986d3
+chat_duration: 96025s (01:02:40:25)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -971,6 +971,17 @@ ADR needed: no
 
 Reason: This records a target-specific executed change and its evidence boundary; it does not alter the already approved persistence architecture or platform contracts.
 
+
+### 2026-09-24T19:53:52Z - Commit recorded
+
+Commit: `f86986d3`
+
+Message: docs(deploy): record persistence foundation evidence
+
+Summary: Record the executed additive Foundation deployment, protected table and relay boundaries, deliberately pending service activation, and static profile enforcement.
+
+ADR impact: No ADR required; this records target-specific deployment evidence and does not change persistence architecture or platform contracts.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1027,6 +1038,13 @@ Reason: This records a target-specific executed change and its evidence boundary
   Summary: Add the missing platform-persistence workspace alias to the server runtime-test compiler and verify the full server, compiled-runtime, and infrastructure checks.
   ADR impact: No ADR required; this aligns the existing runtime-test alias convention without changing platform architecture.
 
+
+- Commit: `f86986d3`
+  Time UTC: 2026-09-24T19:53:52Z
+  Message: docs(deploy): record persistence foundation evidence
+  Summary: Record the executed additive Foundation deployment, protected table and relay boundaries, deliberately pending service activation, and static profile enforcement.
+  ADR impact: No ADR required; this records target-specific deployment evidence and does not change persistence architecture or platform contracts.
+
 ## Main Refresh Conflicts
 
 - 2026-09-23: no conflicts; clean rehearsed refresh applied without stash.
@@ -1042,9 +1060,9 @@ Reason: This records a target-specific executed change and its evidence boundary
 ## Session Metrics
 
 Raised at UTC: 2026-09-23T17:13:27Z
-Latest commit at UTC: 2026-09-24T19:36:55Z
-Latest commit SHA: be06e419
-Chat duration: 95008s (01:02:23:28)
+Latest commit at UTC: 2026-09-24T19:53:52Z
+Latest commit SHA: f86986d3
+Chat duration: 96025s (01:02:40:25)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
