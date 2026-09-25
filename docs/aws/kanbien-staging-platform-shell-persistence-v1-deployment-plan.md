@@ -352,6 +352,21 @@ non-Fargate compiled-image checks. The immutable image must be published and a
 service change set reviewed and health-checked before exactly one recovery
 relay run is permitted.
 
+### Relay recovery image deployment evidence — 2026-09-25
+
+The immutable recovery image was published by the narrow staging image workflow
+with scan, SBOM, and provenance checks. The reviewed service change set then
+contained exactly three replacement ECS task definitions (server, relay, and
+worker) and two in-place ECS service task-definition-reference updates. It
+contained no IAM, queue, table, ALB, WAF, Cognito, DNS, secret, or alarm change.
+
+CloudFormation returned to `UPDATE_COMPLETE`. The server was `1/1`, its target
+was healthy, the worker stayed `0/0`, no relay task was running, the durable
+aggregate was three records with one due outbox and empty source/DLQ queues, and
+all five alarms were `OK`. This deployment evidence permits exactly the fixed
+labelled recovery relay. It does not permit another application write, a direct
+SQS fixture, a scheduler, or an unbounded worker service.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

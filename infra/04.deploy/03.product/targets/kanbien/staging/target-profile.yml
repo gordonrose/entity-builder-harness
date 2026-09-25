@@ -579,7 +579,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-source-ready-deployment-pending
+    status: foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-deployed-recovery-pending
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -646,10 +646,31 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: publish-and-deploy-the-reviewed-relay-configuration-remediation-then-run-one-recovery-delivery-proof
-      execution_exclusions: no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-before-the-remediated-task-definition-is-live
+      next_execution_guard: one-labelled-recovery-relay-then-one-self-terminating-worker-only-after-successful-relay-assessment
+      execution_exclusions: no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-outside-the-fixed-recovery-stages
+    relay_remediation_deployment:
+      status: executed-and-post-deployment-verified
+      reviewed_on_utc: "2026-09-25"
+      reviewed_changes:
+        relay_task_definition: immutable-image-replacement-with-hashed-fargate-task-metadata-lease-owner-helper
+        public_server_service: task-definition-reference-update-only-no-service-replacement
+        public_server_task_definition: immutable-image-replacement-only
+        worker_service: task-definition-reference-update-only-no-service-replacement
+        worker_task_definition: immutable-image-replacement-with-shared-lease-owner-helper-and-one-shot-exit-mode
+      executed_on_utc: "2026-09-25"
+      post_execution_verification:
+        service_stack: UPDATE_COMPLETE
+        public_server: desired-one-running-one-rollout-complete
+        public_target_health: healthy
+        worker: desired-zero-running-zero-rollout-complete
+        relay_running_task_count: zero
+        persistence_preconditions: three-records-one-due-outbox-source-and-dead-letter-queues-empty
+        alarms: five-ok
+        active_image: immutable-scan-clean-workflow-digest-verified
+      next_execution_guard: one-labelled-recovery-relay-then-one-self-terminating-worker-only-after-successful-relay-assessment
+      execution_exclusions: no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-outside-the-fixed-recovery-stages
     delivery_proof:
-      status: relay-config-remediation-source-ready-deployment-pending
+      status: relay-config-remediation-deployed-recovery-pending
       command: npm run platform:shell:persistence-delivery-proof
       execution_guard: --phase-and-approve-outbox-delivery-recovery
       task_family: kanbien-staging-platform-shell-relay
@@ -662,7 +683,7 @@ persistence:
         post_attempt_state: three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok
         evidence_hygiene: safe-status-exit-code-error-category-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads
       relay_configuration_remediation:
-        status: source-ready-deployment-pending
+        status: deployed-recovery-pending
         source_change: derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate
         deployment_guard: publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run
         recovery_limit: one-relay-task-and-one-self-terminating-worker-task-only-after-remediated-task-definition-is-live

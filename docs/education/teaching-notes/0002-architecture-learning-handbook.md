@@ -11039,6 +11039,12 @@ After each completed learning chunk:
   supplies a task-local identity; hashing it produces a safe lease-owner token.
   This is more reliable than assuming a particular container hostname format,
   while an explicit local-only fallback keeps sealed-image checks deterministic.
+- 2026-09-25: Recorded the recovery-image deployment boundary. A source fix is
+  not permission to run a background recovery task: the image must first be
+  immutable, reviewed through a narrow change set, deployed, and health-checked
+  against the exact aggregate preconditions. Only then can the separately
+  governed one-relay/one-worker proof begin. This turns “we changed the code”
+  into evidence that the intended code is actually the code the platform runs.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The
