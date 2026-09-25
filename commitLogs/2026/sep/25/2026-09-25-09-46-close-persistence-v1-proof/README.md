@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T09:19:39Z
-latest_commit_sha: 6a02723598d4b58c41babaf094935a3faaa6be34
-chat_duration: 2017s (00:00:33:37)
+latest_commit_at_utc: 2026-09-25T09:33:06Z
+latest_commit_sha: d45c2e3be56574da3cceff0c556078a056ab18aa
+chat_duration: 2824s (00:00:47:04)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -121,6 +121,17 @@ Summary: Added a fixed non-mutating, write-authorised admission route and runner
 
 ADR impact: No ADR; covered by the persistence foundation and staging deployment plans.
 
+
+### 2026-09-25T09:33:06Z - Commit recorded
+
+Commit: `d45c2e3be56574da3cceff0c556078a056ab18aa`
+
+Message: docs(persistence): record admission probe deployment
+
+Summary: Recorded the scan-clean immutable image, exact five-change service rollout, and verified staging health as the one-probe-ready lifecycle state.
+
+ADR impact: No ADR; this records evidence under existing persistence and deployment plans.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -150,6 +161,13 @@ Corpus gaps:
   Summary: Added a fixed non-mutating, write-authorised admission route and runner; updated the staging lifecycle, policy gate, plans, handbook, and generated recognition index.
   ADR impact: No ADR; covered by the persistence foundation and staging deployment plans.
 
+
+- Commit: `d45c2e3be56574da3cceff0c556078a056ab18aa`
+  Time UTC: 2026-09-25T09:33:06Z
+  Message: docs(persistence): record admission probe deployment
+  Summary: Recorded the scan-clean immutable image, exact five-change service rollout, and verified staging health as the one-probe-ready lifecycle state.
+  ADR impact: No ADR; this records evidence under existing persistence and deployment plans.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -165,9 +183,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T09:19:39Z
-Latest commit SHA: 6a02723598d4b58c41babaf094935a3faaa6be34
-Chat duration: 2017s (00:00:33:37)
+Latest commit at UTC: 2026-09-25T09:33:06Z
+Latest commit SHA: d45c2e3be56574da3cceff0c556078a056ab18aa
+Chat duration: 2824s (00:00:47:04)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
