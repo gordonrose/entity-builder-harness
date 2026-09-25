@@ -48,4 +48,16 @@ if rg -n 'add_argument\("--target-profile"|add_argument\("--aws-cli"|add_argumen
   exit 1
 fi
 
+python3 - <<'PY'
+from pathlib import Path
+
+source = Path("scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py").read_text(encoding="utf-8")
+valid_filter = '"ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", started_by'
+stopped_filter = '"ecs", "list-tasks", "--cluster", policy["cluster"], "--family", expected_family, "--desired-status", "STOPPED"'
+if valid_filter not in source or stopped_filter not in source or 'task.get("startedBy") == started_by' not in source:
+    raise SystemExit("ERROR: labelled ECS task inspection must use valid active and stopped task filters before matching the proof label in memory.")
+if 'def recovery_relay_not_started' not in source:
+    raise SystemExit("ERROR: persistence delivery proof must prevent a second labelled relay task after a failed first attempt.")
+PY
+
 echo "Persistence delivery-proof local validation passed."

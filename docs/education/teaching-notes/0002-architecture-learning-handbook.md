@@ -11045,6 +11045,20 @@ After each completed learning chunk:
   against the exact aggregate preconditions. Only then can the separately
   governed one-relay/one-worker proof begin. This turns “we changed the code”
   into evidence that the intended code is actually the code the platform runs.
+- 2026-09-25: Added the provider-API constraint lesson for bounded proofs.
+  A safe label is not enough if the provider rejects the way it is queried.
+  The proof now asks ECS for its one `started-by` label, checks the returned
+  family and state in memory, and treats that label as a one-use fuse. This
+  prevents a second relay attempt from being hidden behind unchanged durable
+  preconditions after a safe failure.
+- 2026-09-25: Added the bounded provider-diagnostic lesson. A platform error
+  can tell us that an outbox claim failed without telling us whether the cause
+  was a malformed request, a missing resource, throttling, or a permission
+  boundary. Logging the original AWS error would be unsafe. Instead, the
+  DynamoDB adapter reduces it to one finite category and the relay applies a
+  second allowlist before writing it to a structured operational log. The
+  first recovery label stays permanently spent; a changed source plus a fresh
+  deployment and a new fixed label are required before one further attempt.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

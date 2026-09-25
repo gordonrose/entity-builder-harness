@@ -367,6 +367,31 @@ all five alarms were `OK`. This deployment evidence permits exactly the fixed
 labelled recovery relay. It does not permit another application write, a direct
 SQS fixture, a scheduler, or an unbounded worker service.
 
+The recovery assessor uses ECS's `started-by` filter alone, then verifies the
+returned task family and status in memory. This is required because ECS rejects
+`started-by` combined with `family` or `desired-status`. The label also becomes
+a one-use fuse: even a safely failed labelled relay cannot be repeated by the
+runner without a new governed recovery decision.
+
+### Outbox-claim diagnostic recovery — 2026-09-25
+
+The metadata-safe recovery relay subsequently stopped at the durable outbox
+claim. It did not acquire a lease or send a source message: the table still has
+three aggregate transaction records and one due outbox entry, both queues are
+empty, the server is `1/1`, the worker is `0/0`, and the five reviewed alarms
+are `OK`. IAM simulation already permits the relay's due-index query, table
+read/update, and source-queue send actions, so the next correction must be
+evidence-led rather than a broader permission change.
+
+The source now reduces the AWS failure into a fixed diagnostic category at the
+adapter boundary and the relay logs it only through a second allowlist. It does
+not log an AWS message, request identifier, ARN, item, queue message, or raw
+provider response. A new immutable image plus the same reviewed service-only
+CloudFormation shape are required before one new `v2` labelled relay task can
+run. The exhausted `v1` label cannot be rerun. If `v2` succeeds, the normal
+one-shot worker stage follows; if it stops, its safe category identifies the
+next narrow source correction.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

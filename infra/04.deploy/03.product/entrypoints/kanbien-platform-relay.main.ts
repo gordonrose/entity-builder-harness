@@ -31,6 +31,32 @@ import {
 import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
 import { targetTaskLeaseOwnerFromEnvironment } from "./kanbien-platform-task-lease-owner";
 
+const safeDynamoDbOperations = new Set([
+  "create_outbox",
+  "read_outbox",
+  "list_outbox",
+  "claim_outbox",
+  "publish_outbox",
+  "read_processing",
+  "claim_processing",
+  "complete_processing",
+  "release_processing",
+  "append_lineage",
+  "read_lineage",
+  "write_facts",
+  "write_atomic",
+]);
+
+const safeDynamoDbProviderFailureClasses = new Set([
+  "access_denied",
+  "conditional_check_failed",
+  "resource_not_found",
+  "validation",
+  "throttled",
+  "transport",
+  "unknown",
+]);
+
 interface TargetRelayConfiguration {
   readonly relay: ReturnType<typeof createKanbienPlatformOutboxRelay>;
 }
@@ -209,9 +235,11 @@ function relayConfigurationError(
 
 function writeStartupFailure(
   message: string,
-  error: { readonly code: string; readonly defaultMessage: string; readonly details?: Readonly<Record<string, unknown>> },
+  error: { readonly code: string; readonly defaultMessage: string; readonly details?: Readonly<Record<string, unknown>>; readonly params?: Readonly<Record<string, unknown>> },
 ): void {
   const path = error.details?.["path"];
+  const operation = error.params?.["operation"];
+  const providerFailureClass = error.params?.["provider_failure_class"];
   console.error(JSON.stringify({
     level: "error",
     message,
@@ -219,6 +247,8 @@ function writeStartupFailure(
       code: error.code,
       message: error.defaultMessage,
       ...(typeof path === "string" ? { path } : {}),
+      ...(typeof operation === "string" && safeDynamoDbOperations.has(operation) ? { operation } : {}),
+      ...(typeof providerFailureClass === "string" && safeDynamoDbProviderFailureClasses.has(providerFailureClass) ? { providerFailureClass } : {}),
     },
   }));
 }
