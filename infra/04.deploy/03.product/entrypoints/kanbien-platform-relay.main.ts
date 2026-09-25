@@ -19,14 +19,9 @@
 //   - id: platform.server.image-build
 //     path: platform/server/tsconfig.image.json
 
-import { createHash } from "node:crypto";
 import { createAwsSdkDynamoDbPersistenceCommandClient } from "@kanbien/platform-adapter-aws-persistence-dynamodb";
 import { createAwsSdkPlatformSqsQueue } from "@kanbien/platform-adapter-aws-queue-sqs";
 import { noopMetrics } from "@kanbien/core/monitoring";
-import {
-  platformPersistenceLeaseOwner,
-  type PlatformPersistenceLeaseOwner,
-} from "@kanbien/platform-persistence";
 import { systemClock } from "@kanbien/core/shared";
 import {
   createKanbienPlatformOutboxRelay,
@@ -34,6 +29,7 @@ import {
   dynamoDbPersistenceConfigurationFromTargetEnvironment,
 } from "./kanbien-platform-persistence";
 import { observabilityFromTargetEnvironment } from "./kanbien-platform-observability";
+import { targetTaskLeaseOwnerFromEnvironment } from "./kanbien-platform-task-lease-owner";
 
 interface TargetRelayConfiguration {
   readonly relay: ReturnType<typeof createKanbienPlatformOutboxRelay>;
@@ -168,58 +164,10 @@ async function shutdownObservability(
 
 async function relayLeaseOwnerFromTargetEnvironment(
   env: NodeJS.ProcessEnv,
-): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
-  const metadataEndpoint = env["ECS_CONTAINER_METADATA_URI_V4"];
-  if (metadataEndpoint !== undefined) {
-    return relayLeaseOwnerFromFargateTaskMetadata(metadataEndpoint);
-  }
-
-  const hostname = env["HOSTNAME"];
-  if (hostname === undefined || !/^[a-z0-9-]+$/i.test(hostname)) {
-    return relayConfigurationError("HOSTNAME", "A lowercase alphanumeric or hyphenated container hostname is required for durable relay leases.");
-  }
-  const owner = platformPersistenceLeaseOwner("kanbien.relay.instance-" + hostname.toLowerCase());
-  if (!owner.ok) {
-    return relayConfigurationError("HOSTNAME", "The container hostname could not form a valid durable relay lease owner.");
-  }
+): Promise<{ readonly ok: true; readonly value: import("@kanbien/platform-persistence").PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
+  const owner = await targetTaskLeaseOwnerFromEnvironment(env, "kanbien.relay.instance-");
+  if (!owner.ok) return relayConfigurationError(owner.error.path, owner.error.reason);
   return owner;
-}
-
-async function relayLeaseOwnerFromFargateTaskMetadata(
-  metadataEndpoint: string,
-): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
-  let endpoint: URL;
-  try {
-    endpoint = new URL(metadataEndpoint + "/task");
-  } catch {
-    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must be a valid URL.");
-  }
-  if (endpoint.protocol !== "http:" || endpoint.hostname !== "169.254.170.2") {
-    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must remain link-local.");
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1_000);
-  try {
-    const response = await fetch(endpoint, { signal: controller.signal });
-    const metadata = await response.json();
-    const taskArn = typeof metadata === "object" && metadata !== null && "TaskARN" in metadata
-      ? (metadata as { readonly TaskARN?: unknown }).TaskARN
-      : undefined;
-    if (!response.ok || typeof taskArn !== "string" || taskArn.length === 0) {
-      return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must provide one task identity.");
-    }
-    const fingerprint = createHash("sha256").update(taskArn).digest("hex").slice(0, 24);
-    const owner = platformPersistenceLeaseOwner("kanbien.relay.instance-" + fingerprint);
-    if (!owner.ok) {
-      return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task identity could not form a valid durable relay lease owner.");
-    }
-    return owner;
-  } catch {
-    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint could not supply a durable relay lease identity.");
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 
 function requiredString(

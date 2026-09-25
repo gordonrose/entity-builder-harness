@@ -9,8 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import time
-from typing import Any, Callable
+from typing import Any
 
 
 PROFILE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
@@ -19,6 +18,7 @@ EXPECTED_REGION = "eu-west-1"
 EXPECTED_CLUSTER = "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
 EXPECTED_FOUNDATION_STACK = "kanbien-staging-platform-shell-foundation"
 EXPECTED_RELAY_FAMILY = "kanbien-staging-platform-shell-relay"
+EXPECTED_WORKER_FAMILY = "kanbien-staging-platform-shell-worker"
 EXPECTED_WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
 EXPECTED_SERVER_SERVICE = "kanbien-staging-platform-shell"
 EXPECTED_TABLE_COUNT_BEFORE = 3
@@ -28,6 +28,8 @@ EXPECTED_DUE_AFTER = 0
 EXPECTED_ALARM_COUNT = 5
 RECOVERY_SOURCE_READY = "relay-config-remediation-source-ready-deployment-pending"
 RECOVERY_DEPLOYED_READY = "relay-config-remediation-deployed-recovery-pending"
+RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v1"
+RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v1"
 
 
 class DeliveryProofError(Exception):
@@ -35,23 +37,29 @@ class DeliveryProofError(Exception):
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Expose only validation or the one explicitly approved live operation."""
+    """Expose finite resumable proof stages with no caller-selected target or payload."""
 
-    parser = argparse.ArgumentParser(description="Validate or run the fixed Kanbien staging persistence delivery proof.")
+    parser = argparse.ArgumentParser(description="Validate or run one fixed resumable Kanbien staging persistence delivery-proof stage.")
     parser.add_argument("--validate", action="store_true", help="Validate policy only; make no AWS calls.")
-    parser.add_argument("--execute", action="store_true", help="Run the one bounded relay and worker proof.")
+    parser.add_argument("--start-relay", action="store_true", help="Start the one recovery relay task and return immediately.")
+    parser.add_argument("--assess-relay", action="store_true", help="Read only the one recovery relay outcome and queue transition.")
+    parser.add_argument("--start-worker", action="store_true", help="Start the one self-terminating worker task only after a successful relay assessment.")
+    parser.add_argument("--assess-worker", action="store_true", help="Read only the durable worker task outcome and settlement after it exits.")
+    parser.add_argument("--verify-terminal", action="store_true", help="Read only the final dormant aggregate state after the one-shot worker exits.")
     parser.add_argument(
         "--approve-outbox-delivery-recovery",
         action="store_true",
-        help="Acknowledge the one configuration-remediated relay task and temporary worker scale-up to one.",
+        help="Acknowledge the one configuration-remediated relay task and one self-terminating worker task.",
     )
     arguments = parser.parse_args()
-    if arguments.validate == arguments.execute:
-        parser.error("choose exactly one of --validate or --execute")
-    if arguments.validate and arguments.approve_outbox_delivery_recovery:
-        parser.error("--approve-outbox-delivery-recovery is valid only with --execute")
-    if arguments.execute and not arguments.approve_outbox_delivery_recovery:
-        parser.error("--execute requires --approve-outbox-delivery-recovery")
+    modes = [arguments.validate, arguments.start_relay, arguments.assess_relay, arguments.start_worker, arguments.assess_worker, arguments.verify_terminal]
+    if sum(modes) != 1:
+        parser.error("choose exactly one proof mode")
+    mutating = arguments.start_relay or arguments.start_worker
+    if arguments.approve_outbox_delivery_recovery and not mutating:
+        parser.error("--approve-outbox-delivery-recovery is valid only for a mutating proof stage")
+    if mutating and not arguments.approve_outbox_delivery_recovery:
+        parser.error("a mutating proof stage requires --approve-outbox-delivery-recovery")
     return arguments
 
 
@@ -123,6 +131,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise DeliveryProofError("the delivery proof service names are not the reviewed services")
     if deployment.get("relay_task_family") != EXPECTED_RELAY_FAMILY:
         raise DeliveryProofError("the delivery proof relay family is not the reviewed task family")
+    if worker.get("task_family") != EXPECTED_WORKER_FAMILY:
+        raise DeliveryProofError("the delivery proof worker family is not the reviewed task family")
     if smoke.get("status") not in {
         "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-source-ready-deployment-pending",
         "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-deployed-recovery-pending",
@@ -131,7 +141,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     delivery_status = delivery.get("status")
     if delivery_status not in {RECOVERY_SOURCE_READY, RECOVERY_DEPLOYED_READY}:
         raise DeliveryProofError("the delivery proof is not in its governed recovery state")
-    if delivery.get("command") != "npm run platform:shell:persistence-delivery-proof" or delivery.get("execution_guard") != "--execute-and-approve-outbox-delivery-recovery":
+    if delivery.get("command") != "npm run platform:shell:persistence-delivery-proof" or delivery.get("execution_guard") != "--phase-and-approve-outbox-delivery-recovery":
         raise DeliveryProofError("the delivery proof command or guard is not the reviewed fixed shape")
     if delivery.get("task_family") != EXPECTED_RELAY_FAMILY:
         raise DeliveryProofError("the delivery proof task family differs from target runtime policy")
@@ -145,12 +155,20 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "worker_running_count": 0,
     }:
         raise DeliveryProofError("the delivery proof preconditions are not the reviewed dormant aggregate state")
-    if action.get("relay_task_count") != 1 or action.get("worker_desired_count") != 1:
+    if action.get("relay_task_count") != 1 or action.get("worker_task_count") != 1:
         raise DeliveryProofError("the delivery proof action is not a one-relay one-worker operation")
     maximum_wait_seconds = integer(action.get("maximum_wait_seconds"), "delivery_proof.bounded_action.maximum_wait_seconds")
     settlement_wait_seconds = integer(action.get("worker_metric_settlement_wait_seconds"), "delivery_proof.bounded_action.worker_metric_settlement_wait_seconds")
     if maximum_wait_seconds != 360 or settlement_wait_seconds != 75:
         raise DeliveryProofError("the delivery proof bounds are not the reviewed fixed values")
+    if delivery.get("resumable_stages") != {
+        "start_relay": "start-one-labelled-relay-and-return-without-client-side-waiting",
+        "assess_relay": "require-one-labelled-successful-relay-and-one-source-delivery-before-worker-activation",
+        "start_worker": "start-one-labelled-self-terminating-worker-task-after-successful-relay-assessment",
+        "assess_worker": "require-one-labelled-successful-worker-task-one-durable-processing-completion-and-empty-queues",
+        "verify_terminal": "require-worker-service-zero-empty-queues-no-due-outbox-and-four-safe-aggregate-records",
+    }:
+        raise DeliveryProofError("the delivery proof resumable stages are not the reviewed fixed sequence")
     if success != {
         "relay_exit_code": 0,
         "persistence_table_records": EXPECTED_TABLE_COUNT_AFTER,
@@ -177,7 +195,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
         "source_change": "derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate",
         "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run",
-        "recovery_limit": "one-relay-task-and-one-temporary-worker-scale-only-after-remediated-task-definition-is-live",
+        "recovery_limit": "one-relay-task-and-one-self-terminating-worker-task-only-after-remediated-task-definition-is-live",
     }:
         raise DeliveryProofError("the delivery proof must retain its reviewed relay configuration remediation policy")
 
@@ -190,6 +208,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "server_service": EXPECTED_SERVER_SERVICE,
         "worker_service": EXPECTED_WORKER_SERVICE,
         "relay_family": EXPECTED_RELAY_FAMILY,
+        "worker_family": EXPECTED_WORKER_FAMILY,
         "maximum_wait_seconds": maximum_wait_seconds,
         "settlement_wait_seconds": settlement_wait_seconds,
         "delivery_status": delivery_status,
@@ -329,18 +348,59 @@ def alarm_health(policy: dict[str, Any]) -> bool:
     return all(alarm.get("StateValue") == "OK" for alarm in alarms)
 
 
-def update_worker_count(value: int, policy: dict[str, Any]) -> None:
-    """Scale only the declared dormant worker service, and only to zero or one."""
+def one_shot_worker_configuration(policy: dict[str, Any]) -> tuple[str, str]:
+    """Derive the existing dormant worker's exact task and network configuration without caller input."""
 
-    if value not in (0, 1):
-        raise DeliveryProofError("the delivery proof permits worker desired count zero or one only")
-    run_aws([
-        "ecs", "update-service", "--cluster", policy["cluster"], "--service", policy["worker_service"], "--desired-count", str(value),
+    response = run_aws(["ecs", "describe-services", "--cluster", policy["cluster"], "--services", policy["worker_service"]], policy)
+    services = response.get("services")
+    if not isinstance(services, list) or len(services) != 1 or not isinstance(services[0], dict):
+        raise DeliveryProofError("the reviewed worker service was not found uniquely for its one-shot task")
+    service = services[0]
+    task_definition = service.get("taskDefinition")
+    network_configuration = service.get("networkConfiguration")
+    if not isinstance(task_definition, str) or not task_definition or not isinstance(network_configuration, dict):
+        raise DeliveryProofError("the reviewed worker service does not expose one task and network configuration")
+    awsvpc = network_configuration.get("awsvpcConfiguration")
+    if not isinstance(awsvpc, dict):
+        raise DeliveryProofError("the reviewed worker service does not use the required awsvpc network configuration")
+    subnets = awsvpc.get("subnets")
+    security_groups = awsvpc.get("securityGroups")
+    if not isinstance(subnets, list) or len(subnets) < 2 or any(not isinstance(value, str) or not value for value in subnets):
+        raise DeliveryProofError("the reviewed worker service does not retain two declared task subnets")
+    if not isinstance(security_groups, list) or len(security_groups) != 1 or any(not isinstance(value, str) or not value for value in security_groups):
+        raise DeliveryProofError("the reviewed worker service does not retain one declared worker security group")
+    if awsvpc.get("assignPublicIp") != "ENABLED":
+        raise DeliveryProofError("the reviewed worker service does not retain its declared public task address assignment")
+    network = "awsvpcConfiguration={subnets=[" + ",".join(subnets) + "],securityGroups=[" + ",".join(security_groups) + "],assignPublicIp=ENABLED}"
+    return task_definition, network
+
+
+def start_one_worker(policy: dict[str, Any]) -> None:
+    """Start one labelled worker task that exits after the only permitted successful delivery."""
+
+    task_definition, network = one_shot_worker_configuration(policy)
+    overrides = json.dumps({
+        "containerOverrides": [{
+            "name": "platform-shell-worker",
+            "environment": [{"name": "PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "value": "1"}],
+        }],
+    }, separators=(",", ":"))
+    response = run_aws([
+        "ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", task_definition,
+        "--launch-type", "FARGATE", "--count", "1", "--started-by", RECOVERY_WORKER_STARTED_BY,
+        "--overrides", overrides, "--network-configuration", network,
     ], policy)
+    failures = response.get("failures")
+    tasks = response.get("tasks")
+    if failures not in ([], None) or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict):
+        raise DeliveryProofError("the one reviewed self-terminating worker task did not start uniquely")
+    task_arn = tasks[0].get("taskArn")
+    if not isinstance(task_arn, str) or not task_arn:
+        raise DeliveryProofError("the one reviewed self-terminating worker task returned no task identity")
 
 
-def run_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> int:
-    """Start precisely one target-defined Fargate relay task and retain its ARN only in memory."""
+def start_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> None:
+    """Start precisely one target-defined Fargate relay task and return before it can outlive this command channel."""
 
     subnets = [item for item in outputs["PublicSubnetIdsCsv"].split(",") if item]
     if len(subnets) < 2:
@@ -352,6 +412,7 @@ def run_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> int:
         "--task-definition", policy["relay_family"],
         "--launch-type", "FARGATE",
         "--count", "1",
+        "--started-by", RECOVERY_RELAY_STARTED_BY,
         "--network-configuration", network,
     ], policy)
     failures = response.get("failures")
@@ -361,35 +422,67 @@ def run_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> int:
     task_arn = tasks[0].get("taskArn")
     if not isinstance(task_arn, str) or not task_arn:
         raise DeliveryProofError("the one reviewed relay task returned no task identity")
-    wait = subprocess.run(
-        ["aws", "ecs", "wait", "tasks-stopped", "--cluster", policy["cluster"], "--tasks", task_arn, "--profile", policy["aws_profile"], "--region", policy["region"]],
-        check=False,
-        capture_output=True,
-        encoding="utf-8",
-        env={**os.environ, "AWS_PAGER": "", "AWS_CLI_AUTO_PROMPT": "off"},
-    )
-    if wait.returncode != 0:
-        raise DeliveryProofError("the one reviewed relay task did not stop within its bounded wait")
-    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
+
+
+def completed_recovery_relay_exit_code(policy: dict[str, Any]) -> int:
+    """Read only the one labelled recovery task after it has stopped; never emit its identifier."""
+
+    listed = run_aws([
+        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["relay_family"],
+        "--started-by", RECOVERY_RELAY_STARTED_BY, "--desired-status", "STOPPED",
+    ], policy)
+    task_arns = listed.get("taskArns")
+    if not isinstance(task_arns, list) or len(task_arns) != 1 or any(not isinstance(task, str) or not task for task in task_arns):
+        raise DeliveryProofError("the one labelled recovery relay task is not uniquely stopped")
+    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arns[0]], policy)
     described = response.get("tasks")
     if not isinstance(described, list) or len(described) != 1 or not isinstance(described[0], dict) or described[0].get("lastStatus") != "STOPPED":
         raise DeliveryProofError("the one reviewed relay task did not reach stopped state")
     containers = described[0].get("containers")
     application = next((container for container in containers if isinstance(container, dict) and container.get("name") == "platform-shell-relay"), None) if isinstance(containers, list) else None
-    if not isinstance(application, dict) or application.get("exitCode") != 0:
+    if not isinstance(application, dict) or not isinstance(application.get("exitCode"), int):
         raise DeliveryProofError("the one reviewed relay task did not complete successfully")
-    return 0
+    return application["exitCode"]
 
 
-def wait_until(predicate: Callable[[], bool], timeout_seconds: int) -> bool:
-    """Poll at a fixed slow cadence to keep the rehearsal bounded and inexpensive."""
+def completed_recovery_worker_exit_code(policy: dict[str, Any]) -> int:
+    """Read only the one labelled self-terminating worker task after it has stopped."""
 
-    deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if predicate():
-            return True
-        time.sleep(10)
-    return predicate()
+    listed = run_aws([
+        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["worker_family"],
+        "--started-by", RECOVERY_WORKER_STARTED_BY, "--desired-status", "STOPPED",
+    ], policy)
+    task_arns = listed.get("taskArns")
+    if not isinstance(task_arns, list) or len(task_arns) != 1 or any(not isinstance(task, str) or not task for task in task_arns):
+        raise DeliveryProofError("the one labelled recovery worker task is not uniquely stopped")
+    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arns[0]], policy)
+    described = response.get("tasks")
+    if not isinstance(described, list) or len(described) != 1 or not isinstance(described[0], dict) or described[0].get("lastStatus") != "STOPPED":
+        raise DeliveryProofError("the one reviewed worker task did not reach stopped state")
+    containers = described[0].get("containers")
+    application = next((container for container in containers if isinstance(container, dict) and container.get("name") == "platform-shell-worker"), None) if isinstance(containers, list) else None
+    if not isinstance(application, dict) or not isinstance(application.get("exitCode"), int):
+        raise DeliveryProofError("the one reviewed worker task did not report one application exit outcome")
+    return application["exitCode"]
+
+
+def labelled_worker_task_count(desired_status: str, policy: dict[str, Any]) -> int:
+    """Count only the fixed recovery worker label so a second task cannot be started by this proof."""
+
+    response = run_aws([
+        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["worker_family"],
+        "--started-by", RECOVERY_WORKER_STARTED_BY, "--desired-status", desired_status,
+    ], policy)
+    task_arns = response.get("taskArns")
+    if not isinstance(task_arns, list) or any(not isinstance(task, str) or not task for task in task_arns):
+        raise DeliveryProofError("the labelled recovery worker task inspection did not return an aggregate task list")
+    return len(task_arns)
+
+
+def recovery_worker_not_started(policy: dict[str, Any]) -> bool:
+    """Permit the one worker task only when no same-labelled recovery task exists."""
+
+    return labelled_worker_task_count("RUNNING", policy) == 0 and labelled_worker_task_count("STOPPED", policy) == 0
 
 
 def preconditions_hold(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
@@ -411,71 +504,115 @@ def preconditions_hold(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
     )
 
 
+def relay_delivery_ready(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
+    """Require the one relay transition before the proof can activate any worker capacity."""
+
+    source_visible, source_in_flight = queue_counts(outputs["WorkerQueueUrl"], policy)
+    dlq_visible, dlq_in_flight = queue_counts(outputs["WorkerDeadLetterQueueUrl"], policy)
+    worker_desired, worker_running = service_state(policy["worker_service"], policy)
+    server_desired, server_running = service_state(policy["server_service"], policy)
+    return (
+        completed_recovery_relay_exit_code(policy) == 0
+        and table_count(outputs["PlatformPersistenceTableName"], policy) == EXPECTED_TABLE_COUNT_BEFORE
+        and due_outbox_count(outputs["PlatformPersistenceTableName"], outputs["PlatformPersistenceOutboxDueIndexName"], policy) == EXPECTED_DUE_AFTER
+        and source_visible == 1 and source_in_flight == 0
+        and dlq_visible == 0 and dlq_in_flight == 0
+        and worker_desired == 0 and worker_running == 0
+        and server_desired == 1 and server_running == 1
+        and running_relay_count(policy) == 0
+        and alarm_health(policy)
+    )
+
+
+def worker_settlement_ready(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
+    """Require the one successful self-terminating worker and durable settlement before terminal verification."""
+
+    source_visible, source_in_flight = queue_counts(outputs["WorkerQueueUrl"], policy)
+    dlq_visible, dlq_in_flight = queue_counts(outputs["WorkerDeadLetterQueueUrl"], policy)
+    worker_desired, worker_running = service_state(policy["worker_service"], policy)
+    server_desired, server_running = service_state(policy["server_service"], policy)
+    return (
+        completed_recovery_worker_exit_code(policy) == 0
+        and table_count(outputs["PlatformPersistenceTableName"], policy) == EXPECTED_TABLE_COUNT_AFTER
+        and due_outbox_count(outputs["PlatformPersistenceTableName"], outputs["PlatformPersistenceOutboxDueIndexName"], policy) == EXPECTED_DUE_AFTER
+        and source_visible == 0 and source_in_flight == 0
+        and dlq_visible == 0 and dlq_in_flight == 0
+        and worker_desired == 0 and worker_running == 0
+        and server_desired == 1 and server_running == 1
+        and running_relay_count(policy) == 0
+        and alarm_health(policy)
+    )
+
+
+def terminal_state_holds(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
+    """Require the dormant safe state that completes this one recovery proof."""
+
+    source_visible, source_in_flight = queue_counts(outputs["WorkerQueueUrl"], policy)
+    dlq_visible, dlq_in_flight = queue_counts(outputs["WorkerDeadLetterQueueUrl"], policy)
+    worker_desired, worker_running = service_state(policy["worker_service"], policy)
+    server_desired, server_running = service_state(policy["server_service"], policy)
+    return (
+        completed_recovery_worker_exit_code(policy) == 0
+        and table_count(outputs["PlatformPersistenceTableName"], policy) == EXPECTED_TABLE_COUNT_AFTER
+        and due_outbox_count(outputs["PlatformPersistenceTableName"], outputs["PlatformPersistenceOutboxDueIndexName"], policy) == EXPECTED_DUE_AFTER
+        and source_visible == 0 and source_in_flight == 0
+        and dlq_visible == 0 and dlq_in_flight == 0
+        and worker_desired == 0 and worker_running == 0
+        and server_desired == 1 and server_running == 1
+        and running_relay_count(policy) == 0
+        and alarm_health(policy)
+    )
+
+
 def emit(result: str, **fields: int | str) -> None:
     """Emit only safe status, duration, exit code, and aggregate count facts."""
 
     print(json.dumps({"persistence_delivery_proof": result, **fields}, separators=(",", ":"), sort_keys=True))
 
 
-def execute(policy: dict[str, Any]) -> int:
-    """Relay the one committed obligation, process it once, and always return worker to zero."""
+def require_deployed_recovery(policy: dict[str, Any]) -> dict[str, str]:
+    """Fail closed until the immutable remediation image is deployed and health-checked."""
 
-    started = time.monotonic()
-    worker_enabled = False
-    cleanup_failed = False
-    relay_exit_code = -1
-    result = "inconclusive"
-    failure = ""
-    try:
-        if policy["delivery_status"] != RECOVERY_DEPLOYED_READY:
-            raise DeliveryProofError("the relay configuration remediation has not been deployed and health-checked")
-        verify_account(policy)
-        outputs = foundation_outputs(policy)
+    if policy["delivery_status"] != RECOVERY_DEPLOYED_READY:
+        raise DeliveryProofError("the relay configuration remediation has not been deployed and health-checked")
+    verify_account(policy)
+    return foundation_outputs(policy)
+
+
+def run_stage(arguments: argparse.Namespace, policy: dict[str, Any]) -> int:
+    """Execute one short, resumable proof stage so a client timeout cannot conceal an in-flight state change."""
+
+    outputs = require_deployed_recovery(policy)
+    if arguments.start_relay:
         if not preconditions_hold(outputs, policy):
             raise DeliveryProofError("the fixed delivery-proof aggregate preconditions do not hold")
-        relay_exit_code = run_one_relay(outputs, policy)
-        if not wait_until(
-            lambda: due_outbox_count(outputs["PlatformPersistenceTableName"], outputs["PlatformPersistenceOutboxDueIndexName"], policy) == EXPECTED_DUE_AFTER
-            and queue_counts(outputs["WorkerQueueUrl"], policy) == (1, 0)
-            and queue_counts(outputs["WorkerDeadLetterQueueUrl"], policy) == (0, 0),
-            policy["maximum_wait_seconds"],
-        ):
-            raise DeliveryProofError("the relay did not create exactly one expected source-queue delivery")
-        update_worker_count(1, policy)
-        worker_enabled = True
-        if not wait_until(
-            lambda: service_state(policy["worker_service"], policy)[1] >= 1
-            and table_count(outputs["PlatformPersistenceTableName"], policy) == EXPECTED_TABLE_COUNT_AFTER
-            and due_outbox_count(outputs["PlatformPersistenceTableName"], outputs["PlatformPersistenceOutboxDueIndexName"], policy) == EXPECTED_DUE_AFTER
-            and queue_counts(outputs["WorkerQueueUrl"], policy) == (0, 0)
-            and queue_counts(outputs["WorkerDeadLetterQueueUrl"], policy) == (0, 0),
-            policy["maximum_wait_seconds"],
-        ):
-            raise DeliveryProofError("the bounded worker did not reach the expected durable completion state")
-        time.sleep(policy["settlement_wait_seconds"])
-        if service_state(policy["worker_service"], policy)[1] < 1:
-            raise DeliveryProofError("the worker did not remain available for the reviewed metric-settlement interval")
-        result = "passed"
-    except DeliveryProofError as exception:
-        failure = str(exception)
-    finally:
-        if worker_enabled:
-            try:
-                update_worker_count(0, policy)
-                if not wait_until(lambda: service_state(policy["worker_service"], policy) == (0, 0), policy["maximum_wait_seconds"]):
-                    cleanup_failed = True
-            except DeliveryProofError:
-                cleanup_failed = True
-    duration_ms = round((time.monotonic() - started) * 1000)
-    if cleanup_failed:
-        emit("cleanup-failed", duration_ms=duration_ms, relay_exit_code=relay_exit_code)
-        return 1
-    if result == "passed":
-        emit("passed", duration_ms=duration_ms, relay_exit_code=relay_exit_code, persistence_table_records=EXPECTED_TABLE_COUNT_AFTER)
+        start_one_relay(outputs, policy)
+        emit("relay-started")
         return 0
-    emit("inconclusive", duration_ms=duration_ms, relay_exit_code=relay_exit_code)
-    print(f"persistence-delivery-proof: {failure}", file=sys.stderr)
-    return 1
+    if arguments.assess_relay:
+        if not relay_delivery_ready(outputs, policy):
+            raise DeliveryProofError("the labelled recovery relay has not reached its exact successful delivery state")
+        emit("relay-succeeded", relay_exit_code=0)
+        return 0
+    if arguments.start_worker:
+        if not relay_delivery_ready(outputs, policy):
+            raise DeliveryProofError("the worker cannot start before the labelled recovery relay reaches its exact successful delivery state")
+        if not recovery_worker_not_started(policy):
+            raise DeliveryProofError("the one labelled recovery worker task has already started or completed")
+        start_one_worker(policy)
+        emit("worker-started")
+        return 0
+    if arguments.assess_worker:
+        if not worker_settlement_ready(outputs, policy):
+            raise DeliveryProofError("the self-terminating worker has not reached its exact durable settlement state")
+        emit("worker-settled", persistence_table_records=EXPECTED_TABLE_COUNT_AFTER)
+        return 0
+    if arguments.verify_terminal:
+        if not terminal_state_holds(outputs, policy):
+            raise DeliveryProofError("the recovery proof terminal aggregate state does not hold")
+        emit("passed", relay_exit_code=0, persistence_table_records=EXPECTED_TABLE_COUNT_AFTER)
+        return 0
+    raise DeliveryProofError("the selected proof stage is not implemented")
 
 
 def main() -> int:
@@ -486,7 +623,7 @@ def main() -> int:
     if arguments.validate:
         emit("validated", maximum_wait_seconds=policy["maximum_wait_seconds"], worker_metric_settlement_wait_seconds=policy["settlement_wait_seconds"])
         return 0
-    return execute(policy)
+    return run_stage(arguments, policy)
 
 
 if __name__ == "__main__":

@@ -132,7 +132,7 @@ pass, or worker delivery was changed or exercised.
 This is therefore a successful **service-deployment proof**, not yet an
 outbox-delivery proof. The next bounded stage is separately approving the
 write-only identity/client setup and exactly one harmless acceptance request;
-only after that may a relay pass and temporary worker scale-up be considered.
+only after that may a relay pass and one self-terminating worker task be considered.
 
 ## Write identity provisioning evidence — 2026-09-24
 
@@ -319,17 +319,20 @@ were empty, and five alarms were `OK`. This is evidence of one atomic state,
 lineage, and outbox commit; it is not yet evidence that the outbox has reached
 the worker.
 
-`npm run platform:shell:persistence-delivery-proof -- --execute
---approve-outbox-delivery-proof` is the next bounded action. It accepts no
-caller-selected target, task definition, network configuration, queue message,
-work item, credential source, or timeout. It requires the exact accepted
-aggregate state before it starts exactly one existing relay task. Only after a
-successful relay and exactly one source-queue delivery does it briefly scale
-the existing worker to one. It waits through the existing exporter-settlement
-interval and always restores the worker to zero. Its retained output is only
-status, duration, relay exit code, and aggregate counts; it never prints or
-records task IDs, table records, queue URLs/messages, credentials, request
-headers, bodies, or raw provider responses.
+`npm run platform:shell:persistence-delivery-proof` now exposes one fixed,
+resumable stage at a time. It accepts no caller-selected target, task
+definition, network configuration, queue message, work item, credential
+source, or timeout. The mutable stages are exactly: start one labelled relay
+and start one labelled self-terminating worker task; each requires
+`--approve-outbox-delivery-recovery`. The worker service itself remains at
+desired count zero. Read-only assessment stages must prove successful relay
+delivery, successful worker-task exit plus durable settlement after the existing
+exporter-settlement interval, and the final dormant state before the next
+mutable stage is allowed. This avoids client-side long waits and makes a
+channel interruption visible rather than silently proceeding. Retained output
+is only safe stage status, relay exit code, and aggregate counts; it never
+prints or records task IDs, table records, queue URLs/messages, credentials,
+request headers, bodies, or raw provider responses.
 
 ### Relay configuration recovery — 2026-09-25
 
@@ -340,8 +343,10 @@ entry, both queues remained empty, the worker remained `0/0`, and five alarms
 remained `OK`. The failed control channel did not continue to the worker.
 
 The remediation uses the Fargate-injected, link-local task-metadata endpoint
-to obtain a task identity and hashes it before it becomes a lease owner. This
-avoids depending on an unspecified container hostname while preserving a unique,
+to obtain a task identity and hashes it before it becomes a lease owner. Both
+the relay and the worker use the same checked helper, preventing an otherwise
+hidden divergence between the two durable-processing participants. This avoids
+depending on an unspecified container hostname while preserving a unique,
 non-sensitive per-task owner. A valid local hostname is retained solely for
 non-Fargate compiled-image checks. The immutable image must be published and a
 service change set reviewed and health-checked before exactly one recovery
@@ -462,11 +467,12 @@ provisioning stage is now recorded above; no write request has been made yet.
 10. Run exactly one controlled no-body work-item acceptance request. On a
     successful safe result, record `deployed-and-write-proven`, which prevents
     a second invocation using the same deterministic request identity. If it
-    fails, record only safe aggregate diagnostics, do not relay or scale a
+    fails, record only safe aggregate diagnostics, do not relay or start a
     worker, and require fresh approval before any replacement request.
-11. Run one relay `RunTask` and a bounded worker scale-up to one. Observe only safe
-    status/count/metric/log facts. Return the worker to zero in a `finally`
-    path, including a failed proof.
+11. Run one relay `RunTask` and one self-terminating worker `RunTask` with its
+    fixed one-successful-delivery override. Observe only safe
+    status/count/metric/log facts. The worker service remains at zero and the
+    proof task exits after its single successful delivery.
 
 ## Bounded live proof and pass conditions
 

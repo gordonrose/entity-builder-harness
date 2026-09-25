@@ -39,7 +39,6 @@ import { // Start only the generic worker process and its declared job shell.
   type PlatformWorkerProcess, // Hold the started generic worker process for graceful shutdown.
 } from "@kanbien/platform-workers/main"; // Import the explicit worker process boundary rather than worker internals.
 import { // Construct a validated durable worker owner rather than sharing an unsafe static lease identity.
-  platformPersistenceLeaseOwner, // Brand the target-local process identity before it reaches persistence coordination.
   type PlatformPersistenceLeaseOwner, // Name the provider-neutral durable lease identity directly.
 } from "@kanbien/platform-persistence"; // Keep leases and fences provider-neutral.
 import { // Reuse the shared target metrics composition helper.
@@ -51,10 +50,12 @@ import { // Compose the selected DynamoDB processing store only at this target b
   dynamoDbPersistenceConfigurationFromTargetEnvironment, // Reconstruct non-secret persistence configuration consistently with the server.
   type KanbienPlatformDurableWorkerProcessing, // Retain the target composition shape without leaking it into generic workers.
 } from "./kanbien-platform-persistence"; // Keep target persistence selection separate from worker lifecycle mechanics.
+import { targetTaskLeaseOwnerFromEnvironment } from "./kanbien-platform-task-lease-owner"; // Share Fargate-safe durable owner derivation with the relay.
 
 interface TargetWorkerConfiguration { // Describe the deployment-owned worker-specific queue policy.
   readonly queue: PlatformSqsWorkerQueue; // Supply the selected provider queue adapter to the target poll loop.
   readonly failureBackoffMs: number; // Bound retry pressure after a transient provider operation failure.
+  readonly stopAfterSuccessfulDeliveries?: number; // Permit the one governed recovery task to exit after its only successful delivery.
   readonly durableOutboxProcessing?: KanbienPlatformDurableWorkerProcessing; // Opt into durable duplicate protection only when this target configures its selected persistence provider.
 }
 
@@ -86,7 +87,7 @@ export async function runKanbienPlatformWorkerMain(): Promise<void> { // Start o
     return; // Do not process durable work with an incoherent selected profile.
   }
 
-  const workerConfiguration = workerConfigurationFromTargetEnvironment(process.env, persistenceObserver.value); // Validate selected queue and optional durable-processing configuration before lifecycle startup.
+  const workerConfiguration = await workerConfigurationFromTargetEnvironment(process.env, persistenceObserver.value); // Validate selected queue and optional durable-processing configuration before lifecycle startup.
   if (!workerConfiguration.ok) { // Stop before polling when target queue or persistence configuration is invalid.
     writeStartupFailure("kanbien-platform.worker.queue_configuration_invalid", workerConfiguration.error); // Emit only safe configuration facts.
     await shutdownObservability(observability.value); // Close any already-created target metric runtime.
@@ -120,18 +121,20 @@ export async function runKanbienPlatformWorkerMain(): Promise<void> { // Start o
     worker: started.value, // Adapt successful deliveries into the provider-neutral worker shell.
     observability: observability.value, // Flush metrics at bounded delivery boundaries.
     failureBackoffMs: workerConfiguration.value.failureBackoffMs, // Avoid a hot loop after a transient provider failure.
+    ...(workerConfiguration.value.stopAfterSuccessfulDeliveries === undefined ? {} : { stopAfterSuccessfulDeliveries: workerConfiguration.value.stopAfterSuccessfulDeliveries }), // Let the isolated one-shot recovery task finish after exactly one completed delivery.
     isStopping: lifecycle.isStopping, // Stop after an in-flight long poll or delivery completes.
   }); // Complete the long-running worker process.
+  if (!lifecycle.isStopping()) await closeTargetWorker(started.value, observability.value); // Close the one-shot task lifecycle after its successful bounded delivery.
 }
 
 function productConfigKeys(): readonly string[] { // Project the product manifest's declared config requirements once.
   return [...new Set(kanbienPlatformProductManifest.apps.flatMap((app) => app.requiredConfig))]; // Keep target code independent of individual app internals.
 }
 
-function workerConfigurationFromTargetEnvironment( // Select and validate the one queue provider supported by this target.
+async function workerConfigurationFromTargetEnvironment( // Select and validate the one queue provider supported by this target.
   env: NodeJS.ProcessEnv, // Read only deployment-owned ECS environment values.
   persistenceObserver: import("@kanbien/platform-persistence").PlatformPersistenceObserver, // Supply the already-validated no-payload transition observer to optional durable processing.
-): { readonly ok: true; readonly value: TargetWorkerConfiguration } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
+): Promise<{ readonly ok: true; readonly value: TargetWorkerConfiguration } | { readonly ok: false; readonly error: TargetWorkerConfigurationError }> {
   if (env["PLATFORM_WORKER_QUEUE_PROVIDER"] !== "sqs") { // Reject absent or unimplemented providers before lifecycle startup.
     return targetWorkerConfigurationError("PLATFORM_WORKER_QUEUE_PROVIDER", "The staging worker requires the selected SQS queue provider."); // Keep provider choice explicit at the target boundary.
   }
@@ -141,22 +144,34 @@ function workerConfigurationFromTargetEnvironment( // Select and validate the on
   }
   const failureBackoffMs = positiveInteger(env, "PLATFORM_WORKER_POLL_FAILURE_BACKOFF_MS"); // Bound pressure after a transient provider failure.
   if (!failureBackoffMs.ok) return failureBackoffMs; // Fail closed for a missing or unsafe polling backoff.
-  const durableOutboxProcessing = durableOutboxProcessingFromTargetEnvironment(env, persistenceObserver); // Select durable processing only when this target explicitly enables the selected persistence provider.
+  const stopAfterSuccessfulDeliveries = oneShotSuccessfulDeliveryLimit(env); // Permit only the fixed recovery task's one-delivery exit mode.
+  if (!stopAfterSuccessfulDeliveries.ok) return stopAfterSuccessfulDeliveries; // Reject any unreviewed task-local delivery limit.
+  const durableOutboxProcessing = await durableOutboxProcessingFromTargetEnvironment(env, persistenceObserver); // Select durable processing only when this target explicitly enables the selected persistence provider.
   if (!durableOutboxProcessing.ok) return durableOutboxProcessing; // Stop before polling if durable processing would be partially configured.
   return {
     ok: true,
     value: {
       queue: queue.value,
       failureBackoffMs: failureBackoffMs.value,
+      ...(stopAfterSuccessfulDeliveries.value === undefined ? {} : { stopAfterSuccessfulDeliveries: stopAfterSuccessfulDeliveries.value }),
       ...(durableOutboxProcessing.value === undefined ? {} : { durableOutboxProcessing: durableOutboxProcessing.value }),
     },
   }; // Return the fully validated target worker configuration.
 }
 
-function durableOutboxProcessingFromTargetEnvironment( // Select durable duplicate protection without forcing it onto the already-proven direct-SQS smoke consumer.
+function oneShotSuccessfulDeliveryLimit( // Parse only the fixed one-delivery recovery override; service tasks leave it absent.
+  env: NodeJS.ProcessEnv, // Read target-owned task-local environment configuration.
+): { readonly ok: true; readonly value: number | undefined } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
+  const value = env["PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES"]; // Read the optional recovery-only switch.
+  if (value === undefined) return { ok: true, value: undefined }; // Preserve the normal long-running worker service behaviour.
+  if (value !== "1") return targetWorkerConfigurationError("PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "Only the fixed one-successful-delivery recovery task limit is permitted."); // Prevent an arbitrary task-local processing policy.
+  return { ok: true, value: 1 }; // Return the sole approved bounded task limit.
+}
+
+async function durableOutboxProcessingFromTargetEnvironment( // Select durable duplicate protection without forcing it onto the already-proven direct-SQS smoke consumer.
   env: NodeJS.ProcessEnv, // Read only reviewed task environment values.
   observer: import("@kanbien/platform-persistence").PlatformPersistenceObserver, // Receive the target-selected safe observer without exposing it to an AWS adapter.
-): { readonly ok: true; readonly value: KanbienPlatformDurableWorkerProcessing | undefined } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
+): Promise<{ readonly ok: true; readonly value: KanbienPlatformDurableWorkerProcessing | undefined } | { readonly ok: false; readonly error: TargetWorkerConfigurationError }> {
   const provider = env["PLATFORM_PERSISTENCE_PROVIDER"]; // Read the target's explicit persistence-provider choice.
   if (provider === undefined || provider.length === 0) return { ok: true, value: undefined }; // Keep the pre-existing direct consumer behaviour explicit until the target enables the persistence path.
   if (provider !== "dynamodb") { // Reject a provider that this target composition cannot safely construct.
@@ -166,7 +181,7 @@ function durableOutboxProcessingFromTargetEnvironment( // Select durable duplica
   if (!configuration.ok) { // Translate the adapter's safe field-level error into target startup vocabulary.
     return targetWorkerConfigurationError(configuration.error.details.path, configuration.error.details.reason); // Stop before SQS polling begins.
   }
-  const owner = durableLeaseOwnerFromTargetEnvironment(env); // Derive one process-specific ownership identity for leases and fences.
+  const owner = await durableLeaseOwnerFromTargetEnvironment(env); // Derive one process-specific ownership identity for leases and fences.
   if (!owner.ok) return owner; // Require a valid unique process component before claiming durable work.
   const leaseDurationMs = durableLeaseDurationFromTargetEnvironment(env); // Ensure the durable lease ends before SQS visibility expires.
   if (!leaseDurationMs.ok) return leaseDurationMs; // Stop before accepting any delivery when recovery timing is unsafe.
@@ -182,15 +197,11 @@ function durableOutboxProcessingFromTargetEnvironment( // Select durable duplica
   };
 }
 
-function durableLeaseOwnerFromTargetEnvironment( // Convert the ECS-provided container hostname into a valid non-sensitive lease identity.
+async function durableLeaseOwnerFromTargetEnvironment( // Derive a unique durable owner from trusted Fargate metadata or a bounded local fallback.
   env: NodeJS.ProcessEnv, // Read the process-local hostname only at composition time.
-): { readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetWorkerConfigurationError } {
-  const hostname = env["HOSTNAME"]; // Read the container-local instance discriminator.
-  if (hostname === undefined || !/^[a-z0-9-]+$/i.test(hostname)) { // Reject a missing or unsafe hostname rather than falling back to one shared owner.
-    return targetWorkerConfigurationError("HOSTNAME", "A lowercase alphanumeric or hyphenated container hostname is required for durable worker leases."); // Do not expose the hostname itself.
-  }
-  const owner = platformPersistenceLeaseOwner("kanbien.worker.instance-" + hostname.toLowerCase()); // Prefix the hostname so every dot-separated segment begins with a letter.
-  if (!owner.ok) return targetWorkerConfigurationError("HOSTNAME", "The container hostname could not form a valid durable worker lease owner."); // Preserve a bounded configuration error.
+): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetWorkerConfigurationError }> {
+  const owner = await targetTaskLeaseOwnerFromEnvironment(env, "kanbien.worker.instance-"); // Prefer the task-specific non-sensitive Fargate identity.
+  if (!owner.ok) return targetWorkerConfigurationError(owner.error.path, owner.error.reason); // Translate shared safe errors into worker vocabulary.
   return owner; // Return the branded provider-neutral owner.
 }
 
@@ -210,8 +221,10 @@ async function pollUntilStopped(input: { // Keep provider polling coordination l
   readonly worker: PlatformWorkerProcess; // Execute registered jobs through provider-neutral mechanics.
   readonly observability: CloudWatchOtelMetricsRuntime | undefined; // Flush target metrics after each settled outcome.
   readonly failureBackoffMs: number; // Wait safely after a provider operation failure.
+  readonly stopAfterSuccessfulDeliveries?: number; // Stop only after the approved one-shot task has acknowledged its successful delivery.
   readonly isStopping: () => boolean; // Observe target lifecycle shutdown without global state.
 }): Promise<void> {
+  let successfulDeliveries = 0; // Count only acknowledged successful work inside this one task process.
   while (!input.isStopping()) { // Keep one delivery in flight until ECS requests shutdown.
     try { // Treat provider failures as retryable operational conditions, not process crashes.
       const received = await input.queue.receive(); // Long poll for at most one provider delivery.
@@ -238,8 +251,10 @@ async function pollUntilStopped(input: { // Keep provider polling coordination l
         console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.delivery_released", fields: { code } })); // Do not log queue payload, ID, receipt, tenant, or provider error.
       } else { // The generic worker completed the declared app job successfully.
         await input.queue.acknowledge(received.receiptHandle); // Delete only after successful job handling.
+        successfulDeliveries += 1; // Count only the acknowledged success toward the optional one-shot exit limit.
       }
       await flushObservability(input.observability); // Bound metric-loss exposure at every settled delivery outcome.
+      if (input.stopAfterSuccessfulDeliveries !== undefined && successfulDeliveries >= input.stopAfterSuccessfulDeliveries) return; // Exit the isolated recovery task without polling for unrelated work.
     } catch { // Keep raw AWS/provider failures out of operational logs and the task's public evidence.
       if (input.isStopping()) break; // Finish cleanly when the failed call raced with ECS shutdown.
       console.warn(JSON.stringify({ level: "warn", message: "kanbien-platform.worker.poll_failed" })); // Emit a safe diagnostic without provider error content.
