@@ -10960,6 +10960,13 @@ After each completed learning chunk:
   topics; the server starts and completes a safe request span through a
   no-op/in-memory-capable port. No trace provider, exporter, remote-context
   propagation, sampling policy, or durable record store was selected.
+- 2026-09-25: Added the atomic-acceptance-to-delivery boundary. One successful
+  write proves an atomic business-state, lineage, and outbox transaction; it
+  does not prove that a background process has delivered the work. The next
+  governed proof therefore starts one relay task for the one recorded outbox
+  obligation, then temporarily wakes the existing worker. Its preconditions,
+  action limits, terminal counts, and redaction rules are all target policy,
+  so the command cannot be repurposed into a general queue tool or scheduler.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

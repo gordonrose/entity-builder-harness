@@ -378,16 +378,20 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — IAM remediation deployed and live authorization proven.**
-Three acceptance identities are now recorded safe non-commits. The reviewed
-Foundation change set made one direct, in-place `TaskRole.Policies` change;
-CloudFormation also reported an in-place dynamic deployment-role update solely
-because it references `TaskRole.Arn`, with unchanged policy content. The stack
-returned to `UPDATE_COMPLETE`. A live simulation now evaluates
-`dynamodb:PutItem` as `allowed`, while the server remains `1/1`, worker `0/0`,
-both queues empty, and five alarms `OK`. One new fixed-identity acceptance is
-now permitted. Relay and worker action remain prohibited until it returns
-`202` and its safe transaction evidence is recorded.
+**Current result — atomic acceptance proven; one delivery proof is source-ready.**
+Three earlier acceptance identities remain recorded safe non-commits. The
+reviewed Foundation correction made `dynamodb:PutItem` allowed on the one
+persistence table for the server's all-`Put` transaction. The final fixed
+identity then returned `202` in 211 ms. Aggregate-only inspection found three
+transaction records and one due outbox obligation, while the server stayed
+`1/1`, worker `0/0`, both queues empty, and five alarms `OK`.
+
+The next and only newly permitted operation is the target-owned delivery proof:
+one existing relay Fargate task, followed only after relay success by a
+temporary scale of the existing worker to one. The command accepts no chosen
+target, task, network, queue, message, work-item, or timeout. It validates the
+exact aggregate preconditions, records no provider payloads, and returns the
+worker to zero in a `finally` path. It is not a scheduler or a second write.
 
 ### Tranche 2 — reusable persistent-record foundation
 

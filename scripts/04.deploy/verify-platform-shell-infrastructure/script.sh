@@ -42,6 +42,7 @@ bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
@@ -413,11 +414,11 @@ else:
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed source-ready non-mutating admission probe")
-    if persistence_status in {"write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"}:
+    if persistence_status in {"write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_admission_probe = {
             **admission_probe_base,
             "status": "deployed-pending-one-execution" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "executed-passed-fresh-acceptance-pending" if persistence_status == "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending" else "executed-passed-iam-remediation-pending",
-            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if persistence_status in {"write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"} else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
+            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if persistence_status in {"write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"} else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed deployed non-mutating admission probe")
@@ -442,7 +443,7 @@ else:
         }
         if persistence_write_test_client.get("admission_probe_deployment") != expected_admission_probe_deployment:
             fail("target profile must retain safe deployed admission-probe evidence")
-    if persistence_status in {"write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"}:
+    if persistence_status in {"write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_admission_probe_execution = {
             "executed_on_utc": "2026-09-25",
             "status": "passed",
@@ -456,7 +457,7 @@ else:
         }
         if persistence_write_test_client.get("admission_probe_execution") != expected_admission_probe_execution:
             fail("target profile must retain the safe successful admission-probe evidence")
-    if persistence_status in {"write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"}:
+    if persistence_status in {"write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_fresh_acceptance_attempt = {
             "executed_on_utc": "2026-09-25",
             "status": "failed-non-committing",
@@ -481,11 +482,24 @@ else:
             "deployment_guard": "reviewed-foundation-stack-change-set-and-post-deployment-live-iam-simulation-required-before-one-new-acceptance",
             "evidence_hygiene": "safe-authorization-decision-only-no-role-arn-policy-document-provider-payload-or-record-data",
         }
-        if persistence_status == "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending":
+        if persistence_status in {"write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"}:
             expected_iam_remediation["post_deployment_simulation"] = "dynamodb-put-item-allowed"
             expected_iam_remediation["post_deployment_health"] = "server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok"
         if persistence_write_test_client.get("iam_remediation") != expected_iam_remediation:
             fail("target profile must retain the bounded IAM remediation and authorization evidence")
+    if persistence_status == "deployed-and-write-proven":
+        expected_final_acceptance = {
+            "executed_on_utc": "2026-09-25",
+            "status": "passed",
+            "http_status": 202,
+            "duration_ms": 211,
+            "aggregate_transaction_records": 3,
+            "aggregate_due_outbox_entries": 1,
+            "post_attempt_state": "server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok",
+            "evidence_hygiene": "safe-status-latency-and-aggregate-counts-only-no-token-secret-request-id-response-body-record-message-or-provider-payload",
+        }
+        if persistence_write_test_client.get("final_acceptance_proof") != expected_final_acceptance:
+            fail("target profile must retain the safe successful atomic-acceptance evidence")
     if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
         expected_failed_acceptance = {
             "executed_on_utc": "2026-09-24",
@@ -719,7 +733,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-iam-remediation-authorization-proven-fresh-acceptance-pending",
+        "status": "foundation-and-service-deployed-acceptance-proven-delivery-proof-source-ready",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -789,17 +803,48 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "execute-one-new-fixed-identity-acceptance-then-record-safe-transaction-evidence-before-relay-or-worker-action",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-after-the-one-new-acceptance",
+            "next_execution_guard": "execute-one-fixed-outbox-delivery-proof-then-record-safe-relay-and-worker-evidence",
+            "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-after-the-one-delivery-proof",
+        },
+        "delivery_proof": {
+            "status": "source-ready-one-execution-pending",
+            "command": "npm run platform:shell:persistence-delivery-proof",
+            "execution_guard": "--execute-and-approve-outbox-delivery-proof",
+            "task_family": "kanbien-staging-platform-shell-relay",
+            "preconditions": {
+                "persistence_table_records": 3,
+                "due_outbox_entries": 1,
+                "source_queue_visible_messages": 0,
+                "dead_letter_queue_visible_messages": 0,
+                "relay_running_tasks": 0,
+                "worker_desired_count": 0,
+                "worker_running_count": 0,
+            },
+            "bounded_action": {
+                "relay_task_count": 1,
+                "worker_desired_count": 1,
+                "maximum_wait_seconds": 360,
+                "worker_metric_settlement_wait_seconds": 75,
+            },
+            "success": {
+                "relay_exit_code": 0,
+                "persistence_table_records": 4,
+                "due_outbox_entries": 0,
+                "source_queue_visible_messages": 0,
+                "dead_letter_queue_visible_messages": 0,
+                "worker_desired_count": 0,
+                "worker_running_count": 0,
+            },
+            "output_policy": "status-duration-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
         },
         "activation": {
-            "server_acceptance": "fresh-acceptance-failed-non-committing-iam-remediation-deployed-authorization-proven-one-new-acceptance-pending",
-            "outbox_relay": "prohibited-no-committed-outbox-obligation",
-            "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
+            "server_acceptance": "atomic-work-item-lineage-and-outbox-transaction-proven",
+            "outbox_relay": "source-ready-one-governed-task-for-the-one-due-outbox-entry",
+            "durable_worker_processing": "source-ready-only-after-the-governed-relay-creates-one-delivery-worker-returns-zero",
             "iam": "server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-one-new-acceptance-after-iam-remediation-proof",
-            "observability": "admission-profile-proved-and-fresh-acceptance-store-operation-failure-observed-with-safe-normalized-error-class",
+            "identity_scope_status": "isolated-write-client-used-once-for-the-accepted-atomic-proof",
+            "observability": "admission-and-acceptance-profiles-proved-safe-boundary-and-atomic-outbox-counts",
         },
     },
 }
