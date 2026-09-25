@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T09:33:06Z
-latest_commit_sha: d45c2e3be56574da3cceff0c556078a056ab18aa
-chat_duration: 2824s (00:00:47:04)
+latest_commit_at_utc: 2026-09-25T09:41:51Z
+latest_commit_sha: 5aefcdc7
+chat_duration: 3349s (00:00:55:49)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -62,6 +62,10 @@ go
 - Reused the root worktree's existing local dependencies through a temporary
   chat-worktree symlink for tests, then removed that symlink. No dependency
   tree was downloaded or retained in this worktree.
+
+
+- Summary: Admission proof recorded with only safe status, latency, one aggregate observation, and post-probe aggregate health; staged code makes the new third acceptance identity state-specific and one-shot.
+  Durable evidence: Target profile, persistence plan, deployment plan, handbook, runner policy tests, and infrastructure verifier.
 
 ## Activity Log
 
@@ -132,6 +136,24 @@ Summary: Recorded the scan-clean immutable image, exact five-change service roll
 
 ADR impact: No ADR; this records evidence under existing persistence and deployment plans.
 
+
+### 2026-09-25T09:41:34Z - Context hygiene
+
+Summary: Admission proof recorded with only safe status, latency, one aggregate observation, and post-probe aggregate health; staged code makes the new third acceptance identity state-specific and one-shot.
+
+Durable evidence: Target profile, persistence plan, deployment plan, handbook, runner policy tests, and infrastructure verifier.
+
+
+### 2026-09-25T09:41:51Z - Commit recorded
+
+Commit: `5aefcdc7`
+
+Message: feat(persistence): gate fresh acceptance after admission proof
+
+Summary: Recorded the successful non-mutating admission proof, added a state-specific one-shot fresh acceptance guard, and updated target policy, plans, docs, and static verification.
+
+ADR impact: No ADR; this is a governed progression of the existing persistence proof plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -168,6 +190,13 @@ Corpus gaps:
   Summary: Recorded the scan-clean immutable image, exact five-change service rollout, and verified staging health as the one-probe-ready lifecycle state.
   ADR impact: No ADR; this records evidence under existing persistence and deployment plans.
 
+
+- Commit: `5aefcdc7`
+  Time UTC: 2026-09-25T09:41:51Z
+  Message: feat(persistence): gate fresh acceptance after admission proof
+  Summary: Recorded the successful non-mutating admission proof, added a state-specific one-shot fresh acceptance guard, and updated target policy, plans, docs, and static verification.
+  ADR impact: No ADR; this is a governed progression of the existing persistence proof plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -183,9 +212,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T09:33:06Z
-Latest commit SHA: d45c2e3be56574da3cceff0c556078a056ab18aa
-Chat duration: 2824s (00:00:47:04)
+Latest commit at UTC: 2026-09-25T09:41:51Z
+Latest commit SHA: 5aefcdc7
+Chat duration: 3349s (00:00:55:49)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
