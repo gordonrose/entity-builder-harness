@@ -95,6 +95,13 @@ go
 - Summary: The immutable recovery image is live after a five-resource service-only change set; server and worker health, queue/table aggregate preconditions, and five alarms were verified before enabling only the first labelled relay stage.
   Durable evidence: Target profile and readiness manifest; persistence plan; AWS deployment plan; teaching handbook; static infrastructure verifier.
 
+
+- Summary: The first labelled relay was started, then the runner exposed an ECS API constraint before any worker activation. The assessment now uses valid started-by-only task lookup, verifies task family in memory, and refuses duplicate relay labels.
+  Durable evidence: Delivery-proof runner and local smoke test; persistence plan; AWS plan; teaching handbook.
+
+- Summary: The metadata-safe recovery relay reached the durable outbox claim but stopped before a lease or queue send. A bounded adapter diagnostic now preserves only the logical operation and an allowlisted provider-failure class. The initial label remains consumed; target policy permits a new v2 label only after an immutable-image rollout and post-deployment health checks.
+  Durable evidence: DynamoDB persistence adapter and deterministic tests; relay entrypoint; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -296,6 +303,19 @@ Message: docs(persistence): record recovery deployment
 Summary: Recorded the reviewed five-resource immutable recovery-image rollout, verified healthy staging preconditions, and advanced the target policy to permit only the first labelled recovery relay stage. No relay or worker task was started.
 
 ADR impact: No ADR; this is deployment evidence under the existing Persistence Foundation and staging deployment plans.
+
+
+### 2026-09-25T11:16:09Z - Context hygiene
+
+Summary: The first labelled relay was started, then the runner exposed an ECS API constraint before any worker activation. The assessment now uses valid started-by-only task lookup, verifies task family in memory, and refuses duplicate relay labels.
+
+Durable evidence: Delivery-proof runner and local smoke test; persistence plan; AWS plan; teaching handbook.
+
+### 2026-09-25T12:08:00Z - Context hygiene
+
+Summary: The metadata-safe recovery relay reached the durable outbox claim but stopped before a lease or queue send. A bounded adapter diagnostic now preserves only the logical operation and an allowlisted provider-failure class. The initial label remains consumed; target policy permits a new v2 label only after an immutable-image rollout and post-deployment health checks.
+
+Durable evidence: DynamoDB persistence adapter and deterministic tests; relay entrypoint; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
 
 ## Sub-Agent Activity
 

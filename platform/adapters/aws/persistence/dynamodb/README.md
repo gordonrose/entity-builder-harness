@@ -97,6 +97,20 @@ because they are adjacent in code.
   recovery, backups, tagging, retention posture, and IAM. The target profile
   owns selected non-secret names and references. This package owns neither.
 
+## Bounded provider diagnostics
+
+The adapter never exposes an AWS error message, request identifier, ARN, item,
+or provider response as a platform error. When an operation fails, it carries
+only its fixed logical operation name and one of these finite categories:
+`access_denied`, `conditional_check_failed`, `resource_not_found`,
+`validation`, `throttled`, `transport`, or `unknown`.
+
+The Kanbien relay entrypoint has a second allowlist before it writes either
+field to its structured startup-failure log. This gives an operator enough
+information to correct a target configuration safely—for example,
+`claim_outbox` plus `validation`—without creating an accidental diagnostic
+channel for customer data or AWS provider payloads.
+
 ## Safe imports
 
 ```text

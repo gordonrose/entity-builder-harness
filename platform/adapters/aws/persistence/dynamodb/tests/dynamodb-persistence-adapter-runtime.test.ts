@@ -38,6 +38,10 @@ import {
   type DynamoDbPersistenceCommandClient,
 } from "../src/index";
 import {
+  dynamoDbPersistenceOperationError,
+  dynamoDbPersistenceProviderFailureClass,
+} from "../src/errors";
+import {
   outboxRecordToItem,
   recordChangeToItem,
 } from "../src/records";
@@ -56,6 +60,21 @@ async function main(): Promise<void> {
     lineageCauseIndexName: "cause",
   });
   equal(invalid.ok, false);
+
+  // Provider diagnostics are deliberately reduced to a finite, safe category.
+  equal(
+    dynamoDbPersistenceProviderFailureClass({ name: "AccessDeniedException" }),
+    "access_denied",
+  );
+  equal(
+    dynamoDbPersistenceProviderFailureClass({ name: "ValidationException" }),
+    "validation",
+  );
+  equal(dynamoDbPersistenceProviderFailureClass({ name: "UnexpectedProviderError" }), "unknown");
+  deepEqual(
+    dynamoDbPersistenceOperationError("claim_outbox", { name: "ConditionalCheckFailedException" }).params,
+    { operation: "claim_outbox", provider_failure_class: "conditional_check_failed" },
+  );
 
   const at = (seconds: number) => isoDateTimeFromDate(new Date(Date.parse("2026-09-24T12:00:00.000Z") + (seconds * 1_000)));
   const subject = recordReference({
@@ -271,6 +290,30 @@ async function main(): Promise<void> {
   const duplicate = await conditional.create(entry);
   equal(duplicate.ok, false);
   if (!duplicate.ok) equal(duplicate.error.code, "PLATFORM_PERSISTENCE_DUPLICATE_OUTBOX_ENTRY");
+
+  const claimFailure = createDynamoDbPlatformOutboxStore({
+    configuration,
+    client: {
+      send: async (command) => {
+        if (command instanceof GetItemCommand) return { Item: outboxRecordToItem(platformOutboxRecord({ entry })) };
+        throw { name: "ValidationException" };
+      },
+    },
+  });
+  const failedClaim = await claimFailure.claim({
+    id: entry.id,
+    owner,
+    acquiredAt: at(0),
+    leaseDurationMs: 60_000,
+  });
+  equal(failedClaim.ok, false);
+  if (!failedClaim.ok) {
+    equal(failedClaim.error.code, "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED");
+    deepEqual(failedClaim.error.params, {
+      operation: "claim_outbox",
+      provider_failure_class: "validation",
+    });
+  }
 
   console.log("DynamoDB persistence adapter runtime test passed.");
 }

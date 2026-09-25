@@ -404,6 +404,12 @@ explicit recovery guard. The worker service remains at desired count zero; its
 proof task exits after its only successful delivery. It is not a scheduler or a
 second write.
 
+The proof label is deliberately retrieved with ECS's valid `started-by`-only
+filter and its task family is then checked in memory. ECS does not permit that
+filter to be combined with family or desired-status filters. The runner also
+refuses a second relay task if its recovery label has ever been used, including
+after a safe failure that leaves the original durable preconditions unchanged.
+
 **Recovery note — first relay configuration attempt stopped safely.** The first
 relay task returned a target-configuration error before an outbox claim or
 queue send. Aggregate state was unchanged: three transaction records, one due
@@ -414,6 +420,18 @@ dependency without storing an ECS identity and prevents the worker from
 reintroducing the same configuration risk. A fresh image and reviewed
 service-task-definition rollout are required before the one recovery delivery
 proof; no new acceptance write is allowed.
+
+**Recovery note — bounded outbox-claim diagnosis.** The first metadata-safe
+recovery task later reached the relay but stopped at the durable outbox claim.
+It did not claim the record or send a message, so the same safe aggregate state
+remains. Its platform error and persistence transition identify the stage, but
+the adapter deliberately did not retain an AWS failure category. The next
+source change keeps that redaction boundary and adds only one allowlisted
+category—such as `validation` or `access_denied`—to the structured relay
+startup diagnostic. After a new immutable-image rollout and health check, one
+new `v2` relay label is permitted. It is a new governed attempt, never a retry
+of the consumed `v1` label; the worker remains prohibited until that relay
+exits successfully and produces the expected one delivery.
 
 ### Tranche 2 — reusable persistent-record foundation
 

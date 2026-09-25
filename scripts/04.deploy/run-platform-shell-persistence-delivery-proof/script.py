@@ -26,10 +26,10 @@ EXPECTED_TABLE_COUNT_AFTER = 4
 EXPECTED_DUE_BEFORE = 1
 EXPECTED_DUE_AFTER = 0
 EXPECTED_ALARM_COUNT = 5
-RECOVERY_SOURCE_READY = "relay-config-remediation-source-ready-deployment-pending"
-RECOVERY_DEPLOYED_READY = "relay-config-remediation-deployed-recovery-pending"
-RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v1"
-RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v1"
+RECOVERY_SOURCE_READY = "relay-claim-diagnostic-source-ready-deployment-pending"
+RECOVERY_DEPLOYED_READY = "relay-claim-diagnostic-deployed-recovery-pending"
+RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v2"
+RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v2"
 
 
 class DeliveryProofError(Exception):
@@ -134,8 +134,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     if worker.get("task_family") != EXPECTED_WORKER_FAMILY:
         raise DeliveryProofError("the delivery proof worker family is not the reviewed task family")
     if smoke.get("status") not in {
-        "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-source-ready-deployment-pending",
-        "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-deployed-recovery-pending",
+        "foundation-and-service-deployed-acceptance-proven-relay-claim-diagnostic-source-ready-deployment-pending",
+        "foundation-and-service-deployed-acceptance-proven-relay-claim-diagnostic-deployed-recovery-pending",
     }:
         raise DeliveryProofError("the target lifecycle does not permit the configuration-remediated delivery proof")
     delivery_status = delivery.get("status")
@@ -192,12 +192,31 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }:
         raise DeliveryProofError("the delivery proof must retain its safe failed relay-attempt evidence")
     if delivery.get("relay_configuration_remediation") != {
-        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "status": "executed-and-post-deployment-verified",
         "source_change": "derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate",
         "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run",
         "recovery_limit": "one-relay-task-and-one-self-terminating-worker-task-only-after-remediated-task-definition-is-live",
     }:
         raise DeliveryProofError("the delivery proof must retain its reviewed relay configuration remediation policy")
+    if delivery.get("relay_claim_attempt") != {
+        "executed_on_utc": "2026-09-25",
+        "result": "failed-before-outbox-claim-or-queue-send",
+        "relay_application_exit_code": 1,
+        "stable_error_code": "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED",
+        "persistence_transition": "platform.persistence.outbox.claim_failed",
+        "post_attempt_state": "three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok",
+        "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its safe failed outbox-claim evidence")
+    if delivery.get("relay_claim_diagnostic_remediation") != {
+        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "source_change": "classify-dynamodb-outbox-operation-failures-into-one-allowlisted-provider-category-for-relay-startup-diagnostics",
+        "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
+        "relay_started_by": RECOVERY_RELAY_STARTED_BY,
+        "worker_started_by": RECOVERY_WORKER_STARTED_BY,
+        "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-diagnostic-task-definition-is-live",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its reviewed outbox-claim diagnostic remediation policy")
 
     return {
         "account_id": EXPECTED_ACCOUNT_ID,
@@ -424,20 +443,42 @@ def start_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> None:
         raise DeliveryProofError("the one reviewed relay task returned no task identity")
 
 
-def completed_recovery_relay_exit_code(policy: dict[str, Any]) -> int:
-    """Read only the one labelled recovery task after it has stopped; never emit its identifier."""
+def labelled_tasks(started_by: str, expected_family: str, policy: dict[str, Any]) -> list[dict[str, Any]]:
+    """Read active and stopped tasks through valid ECS filters, then match the proof label in memory."""
 
-    listed = run_aws([
-        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["relay_family"],
-        "--started-by", RECOVERY_RELAY_STARTED_BY, "--desired-status", "STOPPED",
+    active = run_aws([
+        "ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", started_by,
     ], policy)
-    task_arns = listed.get("taskArns")
-    if not isinstance(task_arns, list) or len(task_arns) != 1 or any(not isinstance(task, str) or not task for task in task_arns):
-        raise DeliveryProofError("the one labelled recovery relay task is not uniquely stopped")
-    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arns[0]], policy)
+    stopped = run_aws([
+        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", expected_family, "--desired-status", "STOPPED",
+    ], policy)
+    active_task_arns = active.get("taskArns")
+    stopped_task_arns = stopped.get("taskArns")
+    if (
+        not isinstance(active_task_arns, list)
+        or not isinstance(stopped_task_arns, list)
+        or any(not isinstance(task, str) or not task for task in [*active_task_arns, *stopped_task_arns])
+    ):
+        raise DeliveryProofError("the labelled recovery task inspection did not return valid task lists")
+    task_arns = list(dict.fromkeys([*active_task_arns, *stopped_task_arns]))
+    if not task_arns:
+        return []
+    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", *task_arns], policy)
     described = response.get("tasks")
-    if not isinstance(described, list) or len(described) != 1 or not isinstance(described[0], dict) or described[0].get("lastStatus") != "STOPPED":
-        raise DeliveryProofError("the one reviewed relay task did not reach stopped state")
+    if not isinstance(described, list) or len(described) != len(task_arns) or any(not isinstance(task, dict) for task in described):
+        raise DeliveryProofError("the labelled recovery task description was incomplete")
+    labelled = [task for task in described if task.get("startedBy") == started_by]
+    if any(task.get("group") != f"family:{expected_family}" for task in labelled):
+        raise DeliveryProofError("a labelled recovery task does not belong to the reviewed task family")
+    return labelled
+
+
+def completed_recovery_relay_exit_code(policy: dict[str, Any]) -> int:
+    """Read only the one labelled recovery relay after it has stopped; never emit its identifier."""
+
+    described = labelled_tasks(RECOVERY_RELAY_STARTED_BY, policy["relay_family"], policy)
+    if len(described) != 1 or described[0].get("lastStatus") != "STOPPED":
+        raise DeliveryProofError("the one labelled recovery relay task is not uniquely stopped")
     containers = described[0].get("containers")
     application = next((container for container in containers if isinstance(container, dict) and container.get("name") == "platform-shell-relay"), None) if isinstance(containers, list) else None
     if not isinstance(application, dict) or not isinstance(application.get("exitCode"), int):
@@ -448,16 +489,8 @@ def completed_recovery_relay_exit_code(policy: dict[str, Any]) -> int:
 def completed_recovery_worker_exit_code(policy: dict[str, Any]) -> int:
     """Read only the one labelled self-terminating worker task after it has stopped."""
 
-    listed = run_aws([
-        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["worker_family"],
-        "--started-by", RECOVERY_WORKER_STARTED_BY, "--desired-status", "STOPPED",
-    ], policy)
-    task_arns = listed.get("taskArns")
-    if not isinstance(task_arns, list) or len(task_arns) != 1 or any(not isinstance(task, str) or not task for task in task_arns):
-        raise DeliveryProofError("the one labelled recovery worker task is not uniquely stopped")
-    response = run_aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arns[0]], policy)
-    described = response.get("tasks")
-    if not isinstance(described, list) or len(described) != 1 or not isinstance(described[0], dict) or described[0].get("lastStatus") != "STOPPED":
+    described = labelled_tasks(RECOVERY_WORKER_STARTED_BY, policy["worker_family"], policy)
+    if len(described) != 1 or described[0].get("lastStatus") != "STOPPED":
         raise DeliveryProofError("the one reviewed worker task did not reach stopped state")
     containers = described[0].get("containers")
     application = next((container for container in containers if isinstance(container, dict) and container.get("name") == "platform-shell-worker"), None) if isinstance(containers, list) else None
@@ -469,20 +502,19 @@ def completed_recovery_worker_exit_code(policy: dict[str, Any]) -> int:
 def labelled_worker_task_count(desired_status: str, policy: dict[str, Any]) -> int:
     """Count only the fixed recovery worker label so a second task cannot be started by this proof."""
 
-    response = run_aws([
-        "ecs", "list-tasks", "--cluster", policy["cluster"], "--family", policy["worker_family"],
-        "--started-by", RECOVERY_WORKER_STARTED_BY, "--desired-status", desired_status,
-    ], policy)
-    task_arns = response.get("taskArns")
-    if not isinstance(task_arns, list) or any(not isinstance(task, str) or not task for task in task_arns):
-        raise DeliveryProofError("the labelled recovery worker task inspection did not return an aggregate task list")
-    return len(task_arns)
+    return sum(1 for task in labelled_tasks(RECOVERY_WORKER_STARTED_BY, policy["worker_family"], policy) if task.get("lastStatus") == desired_status)
 
 
 def recovery_worker_not_started(policy: dict[str, Any]) -> bool:
     """Permit the one worker task only when no same-labelled recovery task exists."""
 
     return labelled_worker_task_count("RUNNING", policy) == 0 and labelled_worker_task_count("STOPPED", policy) == 0
+
+
+def recovery_relay_not_started(policy: dict[str, Any]) -> bool:
+    """Permit one relay task only when its fixed recovery label has never been used."""
+
+    return len(labelled_tasks(RECOVERY_RELAY_STARTED_BY, policy["relay_family"], policy)) == 0
 
 
 def preconditions_hold(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
@@ -586,6 +618,8 @@ def run_stage(arguments: argparse.Namespace, policy: dict[str, Any]) -> int:
     if arguments.start_relay:
         if not preconditions_hold(outputs, policy):
             raise DeliveryProofError("the fixed delivery-proof aggregate preconditions do not hold")
+        if not recovery_relay_not_started(policy):
+            raise DeliveryProofError("the one labelled recovery relay task has already started or completed")
         start_one_relay(outputs, policy)
         emit("relay-started")
         return 0

@@ -29,7 +29,7 @@ has no selectable target, credentials, task, network, queue, message,
 work-item, or timeout. Its only mutable commands require
 `--approve-outbox-delivery-recovery`.
 
-After the remediation image is deployed and health-checked, run these fixed
+After the currently approved remediation image is deployed and health-checked, run these fixed
 stages in order:
 
 1. `--start-relay --approve-outbox-delivery-recovery` starts exactly one
@@ -53,4 +53,6 @@ messages, task IDs, or raw AWS responses.
 
 This is a bounded recovery delivery proof, not a scheduler, a continuous
 relay, an arbitrary worker queue test, or permission to replay the existing
-outbox entry more than once after the remediation.
+outbox entry more than once. A failed label is permanently spent. A later
+attempt requires a documented source change, an immutable-image rollout,
+post-rollout health evidence, and a fresh fixed label in the target policy.

@@ -88,8 +88,8 @@ export function createDynamoDbPlatformOutboxStore(
           ScanIndexForward: true,
         }));
         return success(responseItems(response).map(itemToOutboxRecord));
-      } catch {
-        return { ok: false, error: dynamoDbPersistenceOperationError("list_outbox") };
+      } catch (error) {
+        return { ok: false, error: dynamoDbPersistenceOperationError("list_outbox", error) };
       }
     },
 
@@ -97,8 +97,8 @@ export function createDynamoDbPlatformOutboxStore(
       let record: PlatformOutboxRecord | null;
       try {
         record = await readOutbox(options, input.id);
-      } catch {
-        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox") };
+      } catch (error) {
+        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox", error) };
       }
       if (record === null) return outboxNotFound();
       if (record.state === "published") return success({ disposition: "already-published", record });
@@ -147,7 +147,7 @@ export function createDynamoDbPlatformOutboxStore(
         return success({ disposition: "claimed", record: claimed });
       } catch (error) {
         if (!isDynamoDbConditionalFailure(error)) {
-          return { ok: false, error: dynamoDbPersistenceOperationError("claim_outbox") };
+          return { ok: false, error: dynamoDbPersistenceOperationError("claim_outbox", error) };
         }
         return resolveOutboxClaimRace(options, input.id, input.acquiredAt);
       }
@@ -157,8 +157,8 @@ export function createDynamoDbPlatformOutboxStore(
       let record: PlatformOutboxRecord | null;
       try {
         record = await readOutbox(options, input.id);
-      } catch {
-        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox") };
+      } catch (error) {
+        return { ok: false, error: dynamoDbPersistenceOperationError("read_outbox", error) };
       }
       if (record === null) return outboxNotFound();
       if (record.state === "published") return success(record);
@@ -196,7 +196,7 @@ export function createDynamoDbPlatformOutboxStore(
         return success(published);
       } catch (error) {
         if (!isDynamoDbConditionalFailure(error)) {
-          return { ok: false, error: dynamoDbPersistenceOperationError("publish_outbox") };
+          return { ok: false, error: dynamoDbPersistenceOperationError("publish_outbox", error) };
         }
         return resolvePublishRace(options, input.id, input.fence, input.publishedAt);
       }
