@@ -379,7 +379,7 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — atomic acceptance proven; one delivery proof is source-ready.**
+**Current result — atomic acceptance proven; one delivery proof is deployment-ready.**
 Three earlier acceptance identities remain recorded safe non-commits. The
 reviewed Foundation correction made `dynamodb:PutItem` allowed on the one
 persistence table for the server's all-`Put` transaction. The final fixed
@@ -387,7 +387,13 @@ identity then returned `202` in 211 ms. Aggregate-only inspection found three
 transaction records and one due outbox obligation, while the server stayed
 `1/1`, worker `0/0`, both queues empty, and five alarms `OK`.
 
-The next and only newly permitted operation is the target-owned delivery proof:
+The immutable recovery image and its reviewed CloudFormation service change set
+are now deployed. CloudFormation completed normally with exactly three
+task-definition replacements and two in-place service references; the server
+is healthy at `1/1`, the worker remains dormant at `0/0`, the target is healthy,
+the precondition aggregate remains three records plus one due outbox, both
+queues are empty, and five alarms are `OK`. The next and only newly permitted
+operation is therefore the target-owned delivery proof:
 one existing relay Fargate task, followed only after relay success by one
 self-terminating worker Fargate task. It accepts no chosen target,
 task, network, queue, message, work-item, or timeout. It is now split into

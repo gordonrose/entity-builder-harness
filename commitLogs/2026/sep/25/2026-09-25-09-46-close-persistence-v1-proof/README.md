@@ -91,6 +91,10 @@ go
 - Summary: The first recovery relay stopped safely before a claim or queue send because target-local hostname identity was unreliable. The recovery now shares a link-local Fargate task-metadata hash helper between relay and worker, and replaces a long all-in-one runner with fixed short labelled stages. The worker proof is one self-terminating task so the worker service stays at zero even if the chat channel ends.
   Durable evidence: infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts; relay and worker entrypoints; scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; kanbien staging target profile; persistence plan; deployment plan; teaching handbook
 
+
+- Summary: The immutable recovery image is live after a five-resource service-only change set; server and worker health, queue/table aggregate preconditions, and five alarms were verified before enabling only the first labelled relay stage.
+  Durable evidence: Target profile and readiness manifest; persistence plan; AWS deployment plan; teaching handbook; static infrastructure verifier.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -274,6 +278,13 @@ Message: fix(persistence): make recovery delivery proof resumable
 Summary: Shared hardened Fargate task-metadata lease identity across relay and worker, changed the live outbox proof to short labelled stages, and made its one worker delivery a self-terminating task so the worker service remains dormant. Updated fixed target policy, static verification, plans, generated artifact recognition, and the teaching handbook. Focused delivery and infrastructure checks, platform server check, and compiled runtime payload validation passed; the full repository commit gate passed.
 
 ADR impact: No ADR; this is a bounded recovery implementation refinement already governed by the Persistence Foundation plan and staging target profile.
+
+
+### 2026-09-25T11:11:48Z - Context hygiene
+
+Summary: The immutable recovery image is live after a five-resource service-only change set; server and worker health, queue/table aggregate preconditions, and five alarms were verified before enabling only the first labelled relay stage.
+
+Durable evidence: Target profile and readiness manifest; persistence plan; AWS deployment plan; teaching handbook; static infrastructure verifier.
 
 ## Sub-Agent Activity
 
