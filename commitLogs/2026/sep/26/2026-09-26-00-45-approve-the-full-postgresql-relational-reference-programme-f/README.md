@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-25T23:45:55Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-25T23:54:56Z
+latest_commit_sha: 67564f4e
+chat_duration: 541s (00:00:09:01)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -119,13 +119,30 @@ Summary: Imported the exact seven approved files from the prior chat after the r
 
 Durable evidence: The imported PostgreSQL plan contains six gated stages; deterministic-process checking required one explicit human-governed AWS deployment marker. Metadata, diff, and deletion gates pass.
 
+
+### 2026-09-25T23:54:56Z - Commit recorded
+
+Commit: `67564f4e`
+
+Message: docs(persistence): plan PostgreSQL reference
+
+Summary: Imported and validated the PostgreSQL relational-reference plan, aligned persistence/runtime/target/deployment documents, and added six printable handbook lessons. The plan remains draft and does not create AWS resources.
+
+ADR impact: ADR deferred: Stage 1 must verify cost, engine availability, target topology, and provider details before a durable selection decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `67564f4e`
+  Time UTC: 2026-09-25T23:54:56Z
+  Message: docs(persistence): plan PostgreSQL reference
+  Summary: Imported and validated the PostgreSQL relational-reference plan, aligned persistence/runtime/target/deployment documents, and added six printable handbook lessons. The plan remains draft and does not create AWS resources.
+  ADR impact: ADR deferred: Stage 1 must verify cost, engine availability, target topology, and provider details before a durable selection decision.
 
 ## Main Refresh Conflicts
 
@@ -140,12 +157,12 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T23:45:55Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-25T23:54:56Z
+Latest commit SHA: 67564f4e
+Chat duration: 541s (00:00:09:01)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
