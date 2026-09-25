@@ -10,17 +10,17 @@ status: active
 raised_at_utc: 2026-09-25T08:46:02Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 304426593
+transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-25T09:19:39Z
+latest_commit_sha: 6a02723598d4b58c41babaf094935a3faaa6be34
+chat_duration: 2017s (00:00:33:37)
+estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -96,6 +96,17 @@ Initial intent: go
   if it is the expected immutable task-definition/service-reference rollout,
   then health-check before the one admission-probe execution.
 
+
+### 2026-09-25T09:19:39Z - Commit recorded
+
+Commit: `6a02723598d4b58c41babaf094935a3faaa6be34`
+
+Message: feat(persistence): add safe write-admission probe
+
+Summary: Added a fixed non-mutating, write-authorised admission route and runner; updated the staging lifecycle, policy gate, plans, handbook, and generated recognition index.
+
+ADR impact: No ADR; covered by the persistence foundation and staging deployment plans.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -117,7 +128,13 @@ Corpus gaps:
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `6a02723598d4b58c41babaf094935a3faaa6be34`
+  Time UTC: 2026-09-25T09:19:39Z
+  Message: feat(persistence): add safe write-admission probe
+  Summary: Added a fixed non-mutating, write-authorised admission route and runner; updated the staging lifecycle, policy gate, plans, handbook, and generated recognition index.
+  ADR impact: No ADR; covered by the persistence foundation and staging deployment plans.
 
 ## Main Refresh Conflicts
 
@@ -134,12 +151,12 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-25T09:19:39Z
+Latest commit SHA: 6a02723598d4b58c41babaf094935a3faaa6be34
+Chat duration: 2017s (00:00:33:37)
+Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
