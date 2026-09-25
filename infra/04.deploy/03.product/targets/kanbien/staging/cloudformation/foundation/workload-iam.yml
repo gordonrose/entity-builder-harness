@@ -56,10 +56,12 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Sid: TransactWriteOnlyThePlatformSmokePersistenceTable
+              # TransactWriteItems authorises each member operation. This bounded
+              # transaction has three Put members and no ConditionCheck member.
+              - Sid: PutOnlyThePlatformSmokePersistenceTable
                 Effect: Allow
                 Action:
-                  - dynamodb:TransactWriteItems
+                  - dynamodb:PutItem
                 Resource: !GetAtt PlatformPersistenceTable.Arn
         - PolicyName: platform-shell-otel-metric-delivery
           PolicyDocument:

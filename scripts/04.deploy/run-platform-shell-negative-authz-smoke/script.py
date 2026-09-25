@@ -133,11 +133,13 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending",
         "write-proof-failed-non-committing-admission-probe-deployed-pending-execution",
         "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending",
+        "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending",
+        "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending",
         "deployed-and-write-proven",
     }:
         raise NegativeAuthzSmokeError("the persistence-write client must remain in a governed lifecycle state")
     expected_client_ids = [policy["client_id"]]
-    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_client_ids.append(required_string(persistence_write_client.get("client_id"), "auth.persistence_write_test_client.client_id"))
     if additional_client_ids != expected_client_ids:
         raise NegativeAuthzSmokeError("the additional Cognito client allowlist must contain exactly the deployed proof clients")

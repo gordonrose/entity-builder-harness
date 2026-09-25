@@ -9655,7 +9655,8 @@ live AWS evidence:        absent
 
 That was not a permanent prohibition. It was a rule about sequence. Phase 5b
 now has a real server component to justify one permission, so the staging
-source grants its task exactly `dynamodb:TransactWriteItems` against this one
+source grants its task exactly `dynamodb:PutItem` against this one table for
+the all-`Put` members of the `TransactWriteItems` request
 table. It still cannot read arbitrary rows, query an index, delete data, or
 administer DynamoDB. The relay and worker still receive no table access because
 they still do not exist as target-composed components.
@@ -10438,6 +10439,31 @@ Why is a `204` admission result not enough to start the relay?
 Because the relay needs a durable outbox obligation. The probe deliberately
 creates none, so there is nothing legitimate to publish.
 
+## 118. An API Name Is Not Always an IAM Permission Name
+
+The next acceptance request did reach the application, but returned `503` and
+committed nothing. The table count, queues, server, worker, and alarms were
+all healthy, so we asked a narrower read-only question: *may the live server
+role perform the operation that DynamoDB needs?*
+
+The answer was no: `dynamodb:PutItem` was `implicitDeny`. This feels odd
+because the code calls DynamoDB’s `TransactWriteItems` API. The useful rule is:
+
+```text
+API request:         TransactWriteItems
+transaction members: Put, Put, Put
+IAM permissions:     dynamodb:PutItem on the one table
+```
+
+IAM authorises the member operations within this transaction, rather than a
+permission named after the API request. The correction remains least privilege:
+the server receives `PutItem` on the one persistence table, but still cannot
+read, query, scan, update, delete, administer the table, or access a queue.
+
+The important safety lesson is sequence. We do not retry the failed identity.
+We deploy the narrow policy correction, prove its live IAM decision without
+writing data, and only then use a new fixed identity for one final acceptance.
+
 Planning triage: the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 owns the staged proof sequence; the staging target profile and infrastructure
 gate own the exact runner policy. The probe was deployed through a reviewed
@@ -10504,6 +10530,11 @@ After each completed learning chunk:
    plan path changed or the explicit no-plan-change rationale.
 
 ## Revision History
+
+- 2026-09-25: Added the IAM-vocabulary correction lesson after the first fresh
+  acceptance safely returned `503` with no commit. It records why a DynamoDB
+  `TransactWriteItems` request needs `dynamodb:PutItem` for its all-`Put`
+  members and preserves the no-retry sequence.
 
 - 2026-09-25: Recorded the successful no-side-effect admission probe: `204` in
   95 ms, exactly one matching structured application observation, and a

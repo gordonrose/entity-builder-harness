@@ -21,6 +21,8 @@ EXPECTED_STATUS = 204
 SOURCE_READY = "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending"
 DEPLOYED_READY = "write-proof-failed-non-committing-admission-probe-deployed-pending-execution"
 PASSED = "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending"
+IAM_REMEDIATION_SOURCE_READY = "write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending"
+IAM_REMEDIATION_DEPLOYED_READY = "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"
 
 
 class AdmissionProbeError(Exception):
@@ -165,11 +167,11 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
             "status": "deployed-pending-one-execution",
             "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write",
         }
-    elif policy["status"] == PASSED:
+    elif policy["status"] in {PASSED, IAM_REMEDIATION_SOURCE_READY, IAM_REMEDIATION_DEPLOYED_READY}:
         expected_probe = {
             **base_probe,
-            "status": "executed-passed-fresh-acceptance-pending",
-            "next_guard": "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action",
+            "status": "executed-passed-fresh-acceptance-pending" if policy["status"] == PASSED else "executed-passed-iam-remediation-pending",
+            "next_guard": "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if policy["status"] == PASSED else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
         }
     else:
         raise AdmissionProbeError("the admission probe is not in a governed lifecycle state")

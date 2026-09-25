@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T09:41:51Z
-latest_commit_sha: 5aefcdc7
-chat_duration: 3349s (00:00:55:49)
+latest_commit_at_utc: 2026-09-25T09:53:05Z
+latest_commit_sha: 7b5c9b78
+chat_duration: 4023s (00:01:07:03)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -66,6 +66,10 @@ go
 
 - Summary: Admission proof recorded with only safe status, latency, one aggregate observation, and post-probe aggregate health; staged code makes the new third acceptance identity state-specific and one-shot.
   Durable evidence: Target profile, persistence plan, deployment plan, handbook, runner policy tests, and infrastructure verifier.
+
+
+- Summary: The first guarded fresh persistence acceptance failed safely with HTTP 503 and no committed state because the live server role denied the DynamoDB PutItem member action required by its all-Put TransactWriteItems call. The source remediation changes only that one table-scoped member permission; no relay or worker ran.
+  Durable evidence: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/workload-iam.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; target profile; persistence and deployment plans; teaching handbook
 
 ## Activity Log
 
@@ -154,6 +158,24 @@ Summary: Recorded the successful non-mutating admission proof, added a state-spe
 
 ADR impact: No ADR; this is a governed progression of the existing persistence proof plan.
 
+
+### 2026-09-25T09:51:24Z - Context hygiene
+
+Summary: The first guarded fresh persistence acceptance failed safely with HTTP 503 and no committed state because the live server role denied the DynamoDB PutItem member action required by its all-Put TransactWriteItems call. The source remediation changes only that one table-scoped member permission; no relay or worker ran.
+
+Durable evidence: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/workload-iam.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; target profile; persistence and deployment plans; teaching handbook
+
+
+### 2026-09-25T09:53:05Z - Commit recorded
+
+Commit: `7b5c9b78`
+
+Message: fix(persistence): correct DynamoDB transaction IAM action
+
+Summary: Recorded the safe non-committing 503 diagnosis and corrected the source TaskRole policy to permit only DynamoDB PutItem on the one persistence table, which is the member action required by the existing all-Put atomic transaction. Updated target lifecycle guards, validation scripts, deployment evidence plans, and the teaching handbook; no live infrastructure changed in this commit. The full aggregate pre-commit gate was environment-time-limited after passing its preceding checks, while all affected local validation suites passed.
+
+ADR impact: No ADR; this is a narrow implementation correction within the approved DynamoDB persistence proof architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -197,6 +219,13 @@ Corpus gaps:
   Summary: Recorded the successful non-mutating admission proof, added a state-specific one-shot fresh acceptance guard, and updated target policy, plans, docs, and static verification.
   ADR impact: No ADR; this is a governed progression of the existing persistence proof plan.
 
+
+- Commit: `7b5c9b78`
+  Time UTC: 2026-09-25T09:53:05Z
+  Message: fix(persistence): correct DynamoDB transaction IAM action
+  Summary: Recorded the safe non-committing 503 diagnosis and corrected the source TaskRole policy to permit only DynamoDB PutItem on the one persistence table, which is the member action required by the existing all-Put atomic transaction. Updated target lifecycle guards, validation scripts, deployment evidence plans, and the teaching handbook; no live infrastructure changed in this commit. The full aggregate pre-commit gate was environment-time-limited after passing its preceding checks, while all affected local validation suites passed.
+  ADR impact: No ADR; this is a narrow implementation correction within the approved DynamoDB persistence proof architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -212,9 +241,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T09:41:51Z
-Latest commit SHA: 5aefcdc7
-Chat duration: 3349s (00:00:55:49)
+Latest commit at UTC: 2026-09-25T09:53:05Z
+Latest commit SHA: 7b5c9b78
+Chat duration: 4023s (00:01:07:03)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
