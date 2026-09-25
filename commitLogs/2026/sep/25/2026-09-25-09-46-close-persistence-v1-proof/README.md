@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T12:00:29Z
-latest_commit_sha: 4167c8e705aa391b03c22b2672c08e7ffbd8cd6b
-chat_duration: 11667s (00:03:14:27)
+latest_commit_at_utc: 2026-09-25T13:17:50Z
+latest_commit_sha: 199e3f5c
+chat_duration: 16308s (00:04:31:48)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -337,6 +337,17 @@ Summary: Added bounded DynamoDB operation diagnostics, a fresh one-use v2 recove
 
 ADR impact: No ADR; this is a bounded recovery diagnostic within the approved persistence foundation and staging deployment plan.
 
+
+### 2026-09-25T13:17:50Z - Commit recorded
+
+Commit: `199e3f5c`
+
+Message: docs(persistence): record diagnostic image deployment
+
+Summary: Recorded the scan-clean, attested diagnostic image, exact service-only CloudFormation rollout, post-rollout health evidence, and the corrected ResourceChange review rule before the one v2 relay stage.
+
+ADR impact: No ADR; deployment evidence and process correction under the approved persistence foundation and staging deployment plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -429,6 +440,13 @@ Corpus gaps:
   Summary: Added bounded DynamoDB operation diagnostics, a fresh one-use v2 recovery identity, deterministic tests, target-policy gates, and deployment/teaching records after the safe outbox-claim stop.
   ADR impact: No ADR; this is a bounded recovery diagnostic within the approved persistence foundation and staging deployment plan.
 
+
+- Commit: `199e3f5c`
+  Time UTC: 2026-09-25T13:17:50Z
+  Message: docs(persistence): record diagnostic image deployment
+  Summary: Recorded the scan-clean, attested diagnostic image, exact service-only CloudFormation rollout, post-rollout health evidence, and the corrected ResourceChange review rule before the one v2 relay stage.
+  ADR impact: No ADR; deployment evidence and process correction under the approved persistence foundation and staging deployment plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -444,9 +462,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T12:00:29Z
-Latest commit SHA: 4167c8e705aa391b03c22b2672c08e7ffbd8cd6b
-Chat duration: 11667s (00:03:14:27)
+Latest commit at UTC: 2026-09-25T13:17:50Z
+Latest commit SHA: 199e3f5c
+Chat duration: 16308s (00:04:31:48)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
