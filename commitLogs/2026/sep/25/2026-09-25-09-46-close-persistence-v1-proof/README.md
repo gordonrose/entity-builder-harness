@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T13:51:46Z
-latest_commit_sha: 01ba610ffca143f364d331926ce07cdd6a51405d
-chat_duration: 18344s (00:05:05:44)
+latest_commit_at_utc: 2026-09-25T14:00:26Z
+latest_commit_sha: f99fd3af3121c75ac85a7cd7e9077ab14af5c50e
+chat_duration: 18864s (00:05:14:24)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -401,6 +401,17 @@ Summary: The one v3 relay and one self-terminating worker completed successfully
 
 Durable evidence: Durable evidence: staging target profile and static infrastructure verifier; bounded delivery runner and smoke test; persistence foundation plan; AWS staging deployment plan; architecture learning handbook.
 
+
+### 2026-09-25T14:00:26Z - Commit recorded
+
+Commit: `f99fd3af3121c75ac85a7cd7e9077ab14af5c50e`
+
+Message: docs(persistence): record terminal outbox proof
+
+Summary: Recorded the successful one-relay, one-worker, durable-terminal staging proof and made the target policy terminal so repeat relay or worker stages are refused before AWS contact.
+
+ADR impact: No ADR; terminal evidence and no-repeat enforcement within the existing persistence proof plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -514,6 +525,13 @@ Corpus gaps:
   Summary: Recorded the v3 image and service-only deployment evidence, corrected the historical legacy-target inspection mistake, and made the delivery runner fail closed unless the Foundation-exported platform-shell target group has exactly one healthy target.
   ADR impact: No ADR; bounded deployment-proof safeguard under the existing persistence and staging plans.
 
+
+- Commit: `f99fd3af3121c75ac85a7cd7e9077ab14af5c50e`
+  Time UTC: 2026-09-25T14:00:26Z
+  Message: docs(persistence): record terminal outbox proof
+  Summary: Recorded the successful one-relay, one-worker, durable-terminal staging proof and made the target policy terminal so repeat relay or worker stages are refused before AWS contact.
+  ADR impact: No ADR; terminal evidence and no-repeat enforcement within the existing persistence proof plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -529,9 +547,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T13:51:46Z
-Latest commit SHA: 01ba610ffca143f364d331926ce07cdd6a51405d
-Chat duration: 18344s (00:05:05:44)
+Latest commit at UTC: 2026-09-25T14:00:26Z
+Latest commit SHA: f99fd3af3121c75ac85a7cd7e9077ab14af5c50e
+Chat duration: 18864s (00:05:14:24)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
