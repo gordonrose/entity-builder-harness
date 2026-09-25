@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T13:28:15Z
-latest_commit_sha: ccab0fa3e05652b419fe7717f7dff1ace722f431
-chat_duration: 16933s (00:04:42:13)
+latest_commit_at_utc: 2026-09-25T13:51:46Z
+latest_commit_sha: 01ba610ffca143f364d331926ce07cdd6a51405d
+chat_duration: 18344s (00:05:05:44)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -379,6 +379,17 @@ Summary: The apparent target-group drift was a manual evidence-source error: the
 
 Durable evidence: Durable evidence: delivery-proof runner and smoke test; staging target policy and infrastructure verifier; persistence plan; staging deployment plan; architecture learning handbook.
 
+
+### 2026-09-25T13:51:46Z - Commit recorded
+
+Commit: `01ba610ffca143f364d331926ce07cdd6a51405d`
+
+Message: fix(deploy): verify shell target health before relay
+
+Summary: Recorded the v3 image and service-only deployment evidence, corrected the historical legacy-target inspection mistake, and made the delivery runner fail closed unless the Foundation-exported platform-shell target group has exactly one healthy target.
+
+ADR impact: No ADR; bounded deployment-proof safeguard under the existing persistence and staging plans.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -485,6 +496,13 @@ Corpus gaps:
   Summary: Corrected DynamoDB outbox claim construction so each condition branch supplies only values referenced by its expression; added initial-claim and lease-reclaim regression assertions; advanced the one-shot staging recovery policy to v3 source-ready pending an immutable rollout.
   ADR impact: No ADR; narrow adapter correction and deployment evidence under the existing persistence foundation plan.
 
+
+- Commit: `01ba610ffca143f364d331926ce07cdd6a51405d`
+  Time UTC: 2026-09-25T13:51:46Z
+  Message: fix(deploy): verify shell target health before relay
+  Summary: Recorded the v3 image and service-only deployment evidence, corrected the historical legacy-target inspection mistake, and made the delivery runner fail closed unless the Foundation-exported platform-shell target group has exactly one healthy target.
+  ADR impact: No ADR; bounded deployment-proof safeguard under the existing persistence and staging plans.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -500,9 +518,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T13:28:15Z
-Latest commit SHA: ccab0fa3e05652b419fe7717f7dff1ace722f431
-Chat duration: 16933s (00:04:42:13)
+Latest commit at UTC: 2026-09-25T13:51:46Z
+Latest commit SHA: 01ba610ffca143f364d331926ce07cdd6a51405d
+Chat duration: 18344s (00:05:05:44)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
