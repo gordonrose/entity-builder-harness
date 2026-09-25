@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T13:17:50Z
-latest_commit_sha: 199e3f5c
-chat_duration: 16308s (00:04:31:48)
+latest_commit_at_utc: 2026-09-25T13:28:15Z
+latest_commit_sha: ccab0fa3e05652b419fe7717f7dff1ace722f431
+chat_duration: 16933s (00:04:42:13)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -357,6 +357,17 @@ Summary: Recorded the scan-clean, attested diagnostic image, exact service-only 
 
 ADR impact: No ADR; deployment evidence and process correction under the approved persistence foundation and staging deployment plan.
 
+
+### 2026-09-25T13:28:15Z - Commit recorded
+
+Commit: `ccab0fa3e05652b419fe7717f7dff1ace722f431`
+
+Message: fix(persistence): omit unused outbox claim values
+
+Summary: Corrected DynamoDB outbox claim construction so each condition branch supplies only values referenced by its expression; added initial-claim and lease-reclaim regression assertions; advanced the one-shot staging recovery policy to v3 source-ready pending an immutable rollout.
+
+ADR impact: No ADR; narrow adapter correction and deployment evidence under the existing persistence foundation plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -456,6 +467,13 @@ Corpus gaps:
   Summary: Recorded the scan-clean, attested diagnostic image, exact service-only CloudFormation rollout, post-rollout health evidence, and the corrected ResourceChange review rule before the one v2 relay stage.
   ADR impact: No ADR; deployment evidence and process correction under the approved persistence foundation and staging deployment plan.
 
+
+- Commit: `ccab0fa3e05652b419fe7717f7dff1ace722f431`
+  Time UTC: 2026-09-25T13:28:15Z
+  Message: fix(persistence): omit unused outbox claim values
+  Summary: Corrected DynamoDB outbox claim construction so each condition branch supplies only values referenced by its expression; added initial-claim and lease-reclaim regression assertions; advanced the one-shot staging recovery policy to v3 source-ready pending an immutable rollout.
+  ADR impact: No ADR; narrow adapter correction and deployment evidence under the existing persistence foundation plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -471,9 +489,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T13:17:50Z
-Latest commit SHA: 199e3f5c
-Chat duration: 16308s (00:04:31:48)
+Latest commit at UTC: 2026-09-25T13:28:15Z
+Latest commit SHA: ccab0fa3e05652b419fe7717f7dff1ace722f431
+Chat duration: 16933s (00:04:42:13)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
