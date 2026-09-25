@@ -24,14 +24,15 @@
 the committed `kanbien/staging` policy without contacting AWS.
 
 `npm run platform:shell:persistence-delivery-proof -- --execute
---approve-outbox-delivery-proof` has no selectable target, credentials, task,
+--approve-outbox-delivery-recovery` has no selectable target, credentials, task,
 network, queue, message, work-item, or timeout. It is allowed once only when
 the target profile records the exact post-acceptance aggregate state: three
 table records, one due outbox obligation, empty queues, no relay task, dormant
 worker, healthy server, and five healthy alarms.
 
-The command verifies account and stack state, starts exactly one existing
-relay Fargate task, waits for that task to stop successfully, confirms its one
+After a prior safe non-delivery configuration stop, the command verifies that
+the metadata-identity remediation is deployed, then verifies account and stack
+state, starts exactly one existing recovery relay Fargate task, waits for that task to stop successfully, confirms its one
 delivery reached the existing source queue, scales the existing worker to one,
 waits for the processing record and queue settlement, leaves it alive through
 the existing 75-second exporter interval, and always returns the worker to
@@ -40,6 +41,6 @@ aggregate terminal table count. It never prints or records secrets, headers,
 request bodies, DynamoDB items, queue URLs/messages, task IDs, or raw AWS
 responses.
 
-This is a bounded first delivery proof, not a scheduler, a continuous relay,
-an arbitrary worker queue test, or permission to replay the existing outbox
-entry.
+This is a bounded recovery delivery proof, not a scheduler, a continuous
+relay, an arbitrary worker queue test, or permission to replay the existing
+outbox entry more than once after the remediation.

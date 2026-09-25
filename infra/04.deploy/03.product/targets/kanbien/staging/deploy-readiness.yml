@@ -604,7 +604,9 @@ runtime:
       fresh_acceptance_attempt: status-failed-non-committing-http-503-duration-146ms-one-store-operation-failure-observation-table-zero-queues-empty-server-one-worker-zero-five-alarms-ok
       iam_remediation: foundation-task-role-put-item-member-permission-deployed-and-live-role-authorization-proven
       final_acceptance_proof: http-202-duration-211ms-three-transaction-records-one-due-outbox-empty-queues-server-one-worker-zero-five-alarms-ok
-    next_boundary: add-validate-and-run-one-fixed-outbox-delivery-proof-then-record-safe-relay-and-worker-evidence
+      first_relay_attempt: application-exit-one-target-configuration-category-before-outbox-claim-or-queue-send-three-records-one-due-outbox-empty-queues-server-one-worker-zero-five-alarms-ok
+      relay_remediation: hashed-fargate-task-metadata-lease-owner-source-ready-deployment-pending
+    next_boundary: publish-deploy-and-health-check-fargate-relay-configuration-remediation-then-run-one-recovery-delivery-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts

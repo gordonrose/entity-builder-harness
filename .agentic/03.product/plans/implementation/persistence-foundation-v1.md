@@ -393,6 +393,16 @@ target, task, network, queue, message, work-item, or timeout. It validates the
 exact aggregate preconditions, records no provider payloads, and returns the
 worker to zero in a `finally` path. It is not a scheduler or a second write.
 
+**Recovery note — first relay configuration attempt stopped safely.** The first
+relay task returned a target-configuration error before an outbox claim or
+queue send. Aggregate state was unchanged: three transaction records, one due
+outbox entry, empty queues, server `1/1`, worker `0/0`, and five alarms `OK`.
+The relay now derives a hashed lease owner from Fargate's injected link-local
+task-metadata endpoint. This removes the unproven hostname dependency without
+storing an ECS identity. A fresh image and reviewed service-task-definition
+rollout are required before the one recovery delivery proof; no new acceptance
+write is allowed.
+
 ### Tranche 2 — reusable persistent-record foundation
 
 Tranche 2 completes the reusable **contract** required before a future feature

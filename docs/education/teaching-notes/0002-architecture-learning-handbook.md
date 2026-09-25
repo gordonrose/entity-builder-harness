@@ -10967,6 +10967,12 @@ After each completed learning chunk:
   obligation, then temporarily wakes the existing worker. Its preconditions,
   action limits, terminal counts, and redaction rules are all target policy,
   so the command cannot be repurposed into a general queue tool or scheduler.
+- 2026-09-25: Added the durable-lease identity recovery lesson. A lease owner
+  must be unique for each live worker or relay attempt, but the owner value
+  need not be an exposed cloud identifier. On Fargate the task-metadata endpoint
+  supplies a task-local identity; hashing it produces a safe lease-owner token.
+  This is more reliable than assuming a particular container hostname format,
+  while an explicit local-only fallback keeps sealed-image checks deterministic.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The
