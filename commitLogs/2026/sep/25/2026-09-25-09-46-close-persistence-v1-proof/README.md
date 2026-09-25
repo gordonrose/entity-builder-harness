@@ -102,6 +102,9 @@ go
 - Summary: The metadata-safe recovery relay reached the durable outbox claim but stopped before a lease or queue send. A bounded adapter diagnostic now preserves only the logical operation and an allowlisted provider-failure class. The initial label remains consumed; target policy permits a new v2 label only after an immutable-image rollout and post-deployment health checks.
   Durable evidence: DynamoDB persistence adapter and deterministic tests; relay entrypoint; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
 
+- Summary: The v2 diagnostic image passed image scanning and attestation, then deployed through an exact five-resource service-only change set. The completed rollout restored server `1/1`, retained worker `0/0`, healthy target, empty queues, untouched persistence preconditions, and five `OK` alarms. Change-set review now explicitly uses CloudFormation `ResourceChange` actions.
+  Durable evidence: GitHub workflow 36132578884; service change set persistence-claim-diagnostic-20260925; staging target policy; persistence plan; AWS plan; teaching handbook.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -316,6 +319,12 @@ Durable evidence: Delivery-proof runner and local smoke test; persistence plan; 
 Summary: The metadata-safe recovery relay reached the durable outbox claim but stopped before a lease or queue send. A bounded adapter diagnostic now preserves only the logical operation and an allowlisted provider-failure class. The initial label remains consumed; target policy permits a new v2 label only after an immutable-image rollout and post-deployment health checks.
 
 Durable evidence: DynamoDB persistence adapter and deterministic tests; relay entrypoint; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
+
+### 2026-09-25T13:22:00Z - Context hygiene
+
+Summary: The v2 diagnostic image passed image scanning and attestation, then deployed through an exact five-resource service-only change set. The completed rollout restored server `1/1`, retained worker `0/0`, healthy target, empty queues, untouched persistence preconditions, and five `OK` alarms. Change-set review now explicitly uses CloudFormation `ResourceChange` actions.
+
+Durable evidence: GitHub workflow 36132578884; service change set persistence-claim-diagnostic-20260925; staging target policy; persistence plan; AWS plan; teaching handbook.
 
 
 ### 2026-09-25T12:00:29Z - Commit recorded

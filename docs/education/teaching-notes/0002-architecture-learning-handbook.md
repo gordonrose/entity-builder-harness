@@ -11059,6 +11059,13 @@ After each completed learning chunk:
   second allowlist before writing it to a structured operational log. The
   first recovery label stays permanently spent; a changed source plus a fresh
   deployment and a new fixed label are required before one further attempt.
+- 2026-09-25: Added the deployment-review precision lesson. A change set can
+  be correctly created yet appear empty if its nested provider response is
+  queried incorrectly. CloudFormation resolved actions live under
+  `Changes[].ResourceChange`. The reviewed diagnostic rollout therefore proved
+  its exact three task-definition replacements and two in-place service
+  updates before execution, then proved the new immutable image, target health,
+  dormant worker, queues, alarm state, and durable preconditions afterwards.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The
