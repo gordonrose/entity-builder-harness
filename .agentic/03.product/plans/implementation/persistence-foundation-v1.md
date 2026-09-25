@@ -453,6 +453,22 @@ client proves every expression value is referenced in both paths. The v2 label
 is permanently spent; the v3 source policy requires another immutable-image
 rollout and health check before its single relay can start.
 
+**Recovery note — expression-remediation deployment.** The v3 image passed
+the image workflow's scan, SBOM, and provenance stages and was deployed through
+the reviewed `persistence-claim-expression-20260925` service-only change set.
+Its exact shape was three replacement task definitions and two in-place service
+task-definition reference updates, excluding IAM, DynamoDB, SQS, ALB/WAF,
+Cognito, DNS, secrets, and alarms. The service stack is `UPDATE_COMPLETE`,
+server `1/1`, worker `0/0`, all five alarms are `OK`, and the one
+Foundation-owned platform-shell target is healthy.
+
+The delivery runner now derives that target group from the Foundation stack
+output and requires exactly one healthy target before it may start a relay. It
+must never use the historical `existing_service_platform` inventory record:
+that record deliberately describes the separate legacy service and its old
+target group. This closes the evidence-source mistake that initially made a
+healthy platform-shell rollout appear to have no targets.
+
 ### Tranche 2 — reusable persistent-record foundation
 
 Tranche 2 completes the reusable **contract** required before a future feature

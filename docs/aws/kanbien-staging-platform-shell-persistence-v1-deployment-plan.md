@@ -430,6 +430,21 @@ source-only correction until a fresh image is scanned, attested, deployed, and
 health-checked. The failed v2 label is not retried; only one new v3 label may
 run after that deployment evidence exists.
 
+### Outbox-claim expression deployment — 2026-09-25
+
+The v3 image workflow for source commit `4a51ce56` completed with zero critical
+or high ECR findings and with SBOM and provenance attestations. The reviewed
+`persistence-claim-expression-20260925` service change set contained exactly
+three replacement task definitions and two in-place service reference updates;
+it excluded IAM, DynamoDB, SQS, ALB/WAF, Cognito, DNS, secrets, and alarms.
+
+The service stack reached `UPDATE_COMPLETE`; server is `1/1`, worker is `0/0`,
+five alarms are `OK`, and the Foundation-exported platform-shell target group
+has exactly one healthy target. The delivery runner now resolves and checks
+that Foundation output at execution time. It must not use the historical
+legacy-service target-group field in the readiness inventory: that field is
+correct for the old service, but is not evidence for the platform shell.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

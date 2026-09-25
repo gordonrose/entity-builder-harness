@@ -733,7 +733,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-source-ready-deployment-pending",
+        "status": "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-deployed-recovery-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -831,7 +831,7 @@ expected_persistence_profile = {
             "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-outside-the-fixed-recovery-stages",
         },
         "delivery_proof": {
-            "status": "relay-claim-expression-remediation-source-ready-deployment-pending",
+            "status": "relay-claim-expression-remediation-deployed-recovery-pending",
             "command": "npm run platform:shell:persistence-delivery-proof",
             "execution_guard": "--phase-and-approve-outbox-delivery-recovery",
             "task_family": "kanbien-staging-platform-shell-relay",
@@ -879,13 +879,44 @@ expected_persistence_profile = {
                 "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
             },
             "relay_claim_expression_remediation": {
-                "status": "source-ready-deployment-pending",
+                "status": "deployed-recovery-pending",
                 "source_change": "omit-conditionally-unused-dynamodb-expression-values-for-initial-and-expired-outbox-claims",
                 "local_proof": "first-claim-and-expired-lease-reclaim-requests-contain-only-referenced-expression-values",
                 "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
                 "relay_started_by": "kanbien-outbox-recovery-v3",
                 "worker_started_by": "kanbien-outbox-worker-recovery-v3",
                 "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-expression-remediation-is-live",
+            },
+            "relay_claim_expression_deployment": {
+                "status": "executed-and-post-deployment-verified",
+                "workflow": {
+                    "run_id": "36141211079",
+                    "source_commit": "4a51ce56203c554301da6ce721b39965347c93ac",
+                    "result": "succeeded-scan-clean-sbom-and-provenance-attested",
+                },
+                "image_digest": "sha256:160b1388b0f027b51918d5350b25e971b57527da3a2ad85eb1d892181519412d",
+                "service_change_set": {
+                    "name": "persistence-claim-expression-20260925",
+                    "reviewed_changes": {
+                        "relay_task_definition": "replacement",
+                        "public_server_service": "in-place-task-definition-reference-update",
+                        "public_server_task_definition": "replacement",
+                        "worker_service": "in-place-task-definition-reference-update",
+                        "worker_task_definition": "replacement",
+                    },
+                    "excluded_changes": "no-iam-dynamodb-sqs-alb-waf-cognito-dns-secret-or-alarm-change",
+                },
+                "post_execution_verification": {
+                    "service_stack": "UPDATE_COMPLETE",
+                    "public_server": "desired-one-running-one-rollout-complete",
+                    "public_target_health": "one-healthy-target-from-foundation-stack-output",
+                    "worker": "desired-zero-running-zero-rollout-complete",
+                    "alarms": "five-ok",
+                    "active_image": "immutable-digest-verified",
+                },
+                "health_source_policy": "resolve-the-live-platform-shell-target-group-from-foundation-output-never-from-historical-existing-service-inventory",
+                "next_execution_guard": "one-new-labelled-v3-relay-then-one-new-self-terminating-v3-worker-only-after-successful-relay-assessment",
+                "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-v1-or-v2-retry-no-repeat-outside-the-fixed-v3-stages",
             },
             "relay_claim_diagnostic_deployment": {
                 "status": "executed-and-post-deployment-verified",
