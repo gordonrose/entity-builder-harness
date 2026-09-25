@@ -112,6 +112,10 @@ go
 - Summary: The apparent target-group drift was a manual evidence-source error: the historical existing_service_platform inventory was queried instead of the Foundation-owned platform-shell output. Live comparison showed the ECS binding matches the Foundation export and one target is healthy. The runner now verifies that source dynamically before any relay.
   Durable evidence: Durable evidence: delivery-proof runner and smoke test; staging target policy and infrastructure verifier; persistence plan; staging deployment plan; architecture learning handbook.
 
+
+- Summary: The one v3 relay and one self-terminating worker completed successfully. Terminal verification recorded only aggregate counts: four persistence records, no due outbox, empty queues, dormant worker service, successful relay exit, and five OK alarms. The delivery runner now treats this as terminal and refuses a repeat relay before contacting AWS.
+  Durable evidence: Durable evidence: staging target profile and static infrastructure verifier; bounded delivery runner and smoke test; persistence foundation plan; AWS staging deployment plan; architecture learning handbook.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -389,6 +393,13 @@ Message: fix(deploy): verify shell target health before relay
 Summary: Recorded the v3 image and service-only deployment evidence, corrected the historical legacy-target inspection mistake, and made the delivery runner fail closed unless the Foundation-exported platform-shell target group has exactly one healthy target.
 
 ADR impact: No ADR; bounded deployment-proof safeguard under the existing persistence and staging plans.
+
+
+### 2026-09-25T13:59:29Z - Context hygiene
+
+Summary: The one v3 relay and one self-terminating worker completed successfully. Terminal verification recorded only aggregate counts: four persistence records, no due outbox, empty queues, dormant worker service, successful relay exit, and five OK alarms. The delivery runner now treats this as terminal and refuses a repeat relay before contacting AWS.
+
+Durable evidence: Durable evidence: staging target profile and static infrastructure verifier; bounded delivery runner and smoke test; persistence foundation plan; AWS staging deployment plan; architecture learning handbook.
 
 ## Sub-Agent Activity
 

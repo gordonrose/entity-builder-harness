@@ -733,7 +733,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-deployed-recovery-pending",
+        "status": "foundation-and-service-deployed-acceptance-proven-outbox-delivery-proven-terminal",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -831,7 +831,7 @@ expected_persistence_profile = {
             "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-outside-the-fixed-recovery-stages",
         },
         "delivery_proof": {
-            "status": "relay-claim-expression-remediation-deployed-recovery-pending",
+            "status": "outbox-delivery-proven-terminal",
             "command": "npm run platform:shell:persistence-delivery-proof",
             "execution_guard": "--phase-and-approve-outbox-delivery-recovery",
             "task_family": "kanbien-staging-platform-shell-relay",
@@ -879,7 +879,7 @@ expected_persistence_profile = {
                 "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
             },
             "relay_claim_expression_remediation": {
-                "status": "deployed-recovery-pending",
+                "status": "executed-and-delivery-proven",
                 "source_change": "omit-conditionally-unused-dynamodb-expression-values-for-initial-and-expired-outbox-claims",
                 "local_proof": "first-claim-and-expired-lease-reclaim-requests-contain-only-referenced-expression-values",
                 "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
@@ -917,6 +917,32 @@ expected_persistence_profile = {
                 "health_source_policy": "resolve-the-live-platform-shell-target-group-from-foundation-output-never-from-historical-existing-service-inventory",
                 "next_execution_guard": "one-new-labelled-v3-relay-then-one-new-self-terminating-v3-worker-only-after-successful-relay-assessment",
                 "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-v1-or-v2-retry-no-repeat-outside-the-fixed-v3-stages",
+            },
+            "relay_claim_expression_attempt": {
+                "executed_on_utc": "2026-09-25",
+                "result": "claimed-one-outbox-entry-and-delivered-one-source-queue-message",
+                "relay_application_exit_code": 0,
+                "post_relay_state": "three-persistence-records-no-due-outbox-one-source-queue-delivery-worker-service-zero-five-alarms-ok",
+                "evidence_hygiene": "safe-status-exit-code-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+            },
+            "worker_delivery_attempt": {
+                "executed_on_utc": "2026-09-25",
+                "result": "processed-one-source-queue-delivery-and-self-terminated",
+                "worker_application_exit_code": 0,
+                "post_worker_state": "four-persistence-records-no-due-outbox-source-and-dead-letter-queues-empty-worker-service-zero-five-alarms-ok",
+                "evidence_hygiene": "safe-status-exit-code-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+            },
+            "terminal_verification": {
+                "status": "passed",
+                "result": "relay-worker-and-durable-processing-chain-proven-once",
+                "persistence_table_records": 4,
+                "due_outbox_entries": 0,
+                "source_queue_visible_messages": 0,
+                "dead_letter_queue_visible_messages": 0,
+                "worker_desired_count": 0,
+                "worker_running_count": 0,
+                "relay_exit_code": 0,
+                "execution_exclusions": "no-repeat-relay-no-repeat-worker-no-new-write-no-direct-sqs-fixture-no-scheduler",
             },
             "relay_claim_diagnostic_deployment": {
                 "status": "executed-and-post-deployment-verified",
@@ -985,8 +1011,8 @@ expected_persistence_profile = {
         },
         "activation": {
             "server_acceptance": "atomic-work-item-lineage-and-outbox-transaction-proven",
-            "outbox_relay": "first-task-stopped-safely-before-outbox-claim-or-queue-send-remediation-deployment-required",
-            "durable_worker_processing": "prohibited-until-one-remediated-relay-task-creates-one-delivery-and-one-self-terminating-worker-task-completes",
+            "outbox_relay": "one-remediated-relay-task-claimed-one-outbox-entry-and-delivered-one-source-queue-message",
+            "durable_worker_processing": "one-self-terminating-worker-task-processed-one-delivery-and-returned-service-to-zero",
             "iam": "server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "isolated-write-client-used-once-for-the-accepted-atomic-proof",

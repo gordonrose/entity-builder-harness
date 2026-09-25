@@ -28,6 +28,7 @@ EXPECTED_DUE_AFTER = 0
 EXPECTED_ALARM_COUNT = 5
 RECOVERY_SOURCE_READY = "relay-claim-expression-remediation-source-ready-deployment-pending"
 RECOVERY_DEPLOYED_READY = "relay-claim-expression-remediation-deployed-recovery-pending"
+RECOVERY_COMPLETED = "outbox-delivery-proven-terminal"
 RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v3"
 RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v3"
 
@@ -136,10 +137,11 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     if smoke.get("status") not in {
         "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-source-ready-deployment-pending",
         "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-deployed-recovery-pending",
+        "foundation-and-service-deployed-acceptance-proven-outbox-delivery-proven-terminal",
     }:
         raise DeliveryProofError("the target lifecycle does not permit the configuration-remediated delivery proof")
     delivery_status = delivery.get("status")
-    if delivery_status not in {RECOVERY_SOURCE_READY, RECOVERY_DEPLOYED_READY}:
+    if delivery_status not in {RECOVERY_SOURCE_READY, RECOVERY_DEPLOYED_READY, RECOVERY_COMPLETED}:
         raise DeliveryProofError("the delivery proof is not in its governed recovery state")
     if delivery.get("command") != "npm run platform:shell:persistence-delivery-proof" or delivery.get("execution_guard") != "--phase-and-approve-outbox-delivery-recovery":
         raise DeliveryProofError("the delivery proof command or guard is not the reviewed fixed shape")
@@ -229,8 +231,13 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
     }:
         raise DeliveryProofError("the delivery proof must retain its safe validation failure evidence")
+    remediation_status = {
+        RECOVERY_SOURCE_READY: "source-ready-deployment-pending",
+        RECOVERY_DEPLOYED_READY: "deployed-recovery-pending",
+        RECOVERY_COMPLETED: "executed-and-delivery-proven",
+    }[delivery_status]
     if delivery.get("relay_claim_expression_remediation") != {
-        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "status": remediation_status,
         "source_change": "omit-conditionally-unused-dynamodb-expression-values-for-initial-and-expired-outbox-claims",
         "local_proof": "first-claim-and-expired-lease-reclaim-requests-contain-only-referenced-expression-values",
         "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
@@ -239,6 +246,19 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-expression-remediation-is-live",
     }:
         raise DeliveryProofError("the delivery proof must retain its reviewed outbox-claim expression remediation policy")
+    if delivery_status == RECOVERY_COMPLETED and delivery.get("terminal_verification") != {
+        "status": "passed",
+        "result": "relay-worker-and-durable-processing-chain-proven-once",
+        "persistence_table_records": EXPECTED_TABLE_COUNT_AFTER,
+        "due_outbox_entries": EXPECTED_DUE_AFTER,
+        "source_queue_visible_messages": 0,
+        "dead_letter_queue_visible_messages": 0,
+        "worker_desired_count": 0,
+        "worker_running_count": 0,
+        "relay_exit_code": 0,
+        "execution_exclusions": "no-repeat-relay-no-repeat-worker-no-new-write-no-direct-sqs-fixture-no-scheduler",
+    }:
+        raise DeliveryProofError("the terminal delivery proof record is incomplete")
 
     return {
         "account_id": EXPECTED_ACCOUNT_ID,

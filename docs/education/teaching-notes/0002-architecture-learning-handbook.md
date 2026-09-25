@@ -11079,6 +11079,13 @@ After each completed learning chunk:
   resolves the platform-shell target group from the owning Foundation stack
   output, then requires exactly one healthy target. This avoids confusing a
   legacy target group with the target group that the live shell service uses.
+- 2026-09-25: Completed the bounded outbox delivery proof. A successful
+  transaction is not proof that background work happened; the relay and worker
+  must each be observed separately. Here one relay turned one durable outbox
+  obligation into one queue delivery, then one self-terminating worker settled
+  it. The final aggregate state—not raw records or messages—proved that there
+  was no remaining due work or queue backlog and that the dormant worker
+  service returned to zero.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

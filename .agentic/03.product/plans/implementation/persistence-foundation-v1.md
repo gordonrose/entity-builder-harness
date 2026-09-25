@@ -469,6 +469,16 @@ that record deliberately describes the separate legacy service and its old
 target group. This closes the evidence-source mistake that initially made a
 healthy platform-shell rollout appear to have no targets.
 
+**Live delivery proof — complete.** The one v3 relay exited successfully,
+claimed the single due obligation, and created the single expected source-queue
+delivery. The one self-terminating worker then processed that delivery and
+stopped. Terminal verification proved four aggregate persistence records, no
+due outbox entries, empty source and dead-letter queues, worker desired and
+running counts of zero, successful relay exit, and five `OK` alarms. The
+target now records this as terminal evidence; its one-use relay and worker
+labels must not be reused. This proves the smoke path, not a general business
+workload or a retention-policy implementation.
+
 ### Tranche 2 — reusable persistent-record foundation
 
 Tranche 2 completes the reusable **contract** required before a future feature
