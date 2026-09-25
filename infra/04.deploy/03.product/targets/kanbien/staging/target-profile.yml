@@ -356,7 +356,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending
+    status: deployed-and-write-proven
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -490,6 +490,15 @@ auth:
       evidence_hygiene: safe-authorization-decision-only-no-role-arn-policy-document-provider-payload-or-record-data
       post_deployment_simulation: dynamodb-put-item-allowed
       post_deployment_health: server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok
+    final_acceptance_proof:
+      executed_on_utc: "2026-09-25"
+      status: passed
+      http_status: 202
+      duration_ms: 211
+      aggregate_transaction_records: 3
+      aggregate_due_outbox_entries: 1
+      post_attempt_state: server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok
+      evidence_hygiene: safe-status-latency-and-aggregate-counts-only-no-token-secret-request-id-response-body-record-message-or-provider-payload
   resource_server:
     identifier: platform-shell
     scopes:
@@ -570,7 +579,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-iam-remediation-authorization-proven-fresh-acceptance-pending
+    status: foundation-and-service-deployed-acceptance-proven-delivery-proof-source-ready
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -637,16 +646,43 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: execute-one-new-fixed-identity-acceptance-then-record-safe-transaction-evidence-before-relay-or-worker-action
-      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-after-the-one-new-acceptance
+      next_execution_guard: execute-one-fixed-outbox-delivery-proof-then-record-safe-relay-and-worker-evidence
+      execution_exclusions: no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-after-the-one-delivery-proof
+    delivery_proof:
+      status: source-ready-one-execution-pending
+      command: npm run platform:shell:persistence-delivery-proof
+      execution_guard: --execute-and-approve-outbox-delivery-proof
+      task_family: kanbien-staging-platform-shell-relay
+      preconditions:
+        persistence_table_records: 3
+        due_outbox_entries: 1
+        source_queue_visible_messages: 0
+        dead_letter_queue_visible_messages: 0
+        relay_running_tasks: 0
+        worker_desired_count: 0
+        worker_running_count: 0
+      bounded_action:
+        relay_task_count: 1
+        worker_desired_count: 1
+        maximum_wait_seconds: 360
+        worker_metric_settlement_wait_seconds: 75
+      success:
+        relay_exit_code: 0
+        persistence_table_records: 4
+        due_outbox_entries: 0
+        source_queue_visible_messages: 0
+        dead_letter_queue_visible_messages: 0
+        worker_desired_count: 0
+        worker_running_count: 0
+      output_policy: status-duration-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads
     activation:
-      server_acceptance: fresh-acceptance-failed-non-committing-iam-remediation-deployed-authorization-proven-one-new-acceptance-pending
-      outbox_relay: prohibited-no-committed-outbox-obligation
-      durable_worker_processing: prohibited-no-relay-created-delivery-worker-remains-zero
+      server_acceptance: atomic-work-item-lineage-and-outbox-transaction-proven
+      outbox_relay: source-ready-one-governed-task-for-the-one-due-outbox-entry
+      durable_worker_processing: source-ready-only-after-the-governed-relay-creates-one-delivery-worker-returns-zero
       iam: server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-one-new-acceptance-after-iam-remediation-proof
-      observability: admission-profile-proved-and-fresh-acceptance-store-operation-failure-observed-with-safe-normalized-error-class
+      identity_scope_status: isolated-write-client-used-once-for-the-accepted-atomic-proof
+      observability: admission-and-acceptance-profiles-proved-safe-boundary-and-atomic-outbox-counts
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager

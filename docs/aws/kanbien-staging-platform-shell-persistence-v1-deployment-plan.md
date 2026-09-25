@@ -310,6 +310,27 @@ queues stayed empty, and the five platform-shell alarms remained `OK`. This
 unlocks one new fixed-identity acceptance request only; it is not permission
 to relay or process work before that acceptance has proved an atomic commit.
 
+## Atomic acceptance evidence and bounded delivery command — 2026-09-25
+
+The final fixed-identity acceptance returned `202` in 211 milliseconds.
+Aggregate-only postconditions found three transaction records and one due
+outbox entry, while the public server was `1/1`, worker was `0/0`, both queues
+were empty, and five alarms were `OK`. This is evidence of one atomic state,
+lineage, and outbox commit; it is not yet evidence that the outbox has reached
+the worker.
+
+`npm run platform:shell:persistence-delivery-proof -- --execute
+--approve-outbox-delivery-proof` is the next bounded action. It accepts no
+caller-selected target, task definition, network configuration, queue message,
+work item, credential source, or timeout. It requires the exact accepted
+aggregate state before it starts exactly one existing relay task. Only after a
+successful relay and exactly one source-queue delivery does it briefly scale
+the existing worker to one. It waits through the existing exporter-settlement
+interval and always restores the worker to zero. Its retained output is only
+status, duration, relay exit code, and aggregate counts; it never prints or
+records task IDs, table records, queue URLs/messages, credentials, request
+headers, bodies, or raw provider responses.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T10:05:26Z
-latest_commit_sha: 9b6589b5
-chat_duration: 4764s (00:01:19:24)
+latest_commit_at_utc: 2026-09-25T10:18:49Z
+latest_commit_sha: 6ae9c0ce
+chat_duration: 5567s (00:01:32:47)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -78,6 +78,10 @@ go
 
 - Summary: The Foundation IAM remediation was reviewed as one direct in-place TaskRole policy update plus one dynamic ServiceDeploymentExecutionRole dependency caused by TaskRole.Arn; the latter had unchanged policy content. CloudFormation completed, the active server role now evaluates DynamoDB PutItem as allowed on the persistence table, and the server/worker/queues/alarms remain healthy. The source lifecycle permits exactly one new acceptance; relay and worker remain prohibited.
   Durable evidence: Foundation change set persistence-iam-putitem-20260925; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; deploy-readiness.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; persistence deployment plan and handbook
+
+
+- Summary: The final fixed write has already committed exactly three aggregate transaction records and one due outbox obligation. The new delivery runner uses no direct SQS send; it validates that exact pre-state, runs one existing relay task, temporarily scales only the dormant worker, waits for durable completion and metric settlement, and always restores zero. Static target-policy, admission, persistence, and infrastructure checks pass.
+  Durable evidence: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; .agentic/03.product/plans/implementation/persistence-foundation-v1.md; docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md; docs/education/teaching-notes/0002-architecture-learning-handbook.md
 
 ## Activity Log
 
@@ -209,6 +213,24 @@ Summary: Recorded the reviewed in-place Foundation IAM correction and its post-d
 
 ADR impact: No ADR; this is deployment evidence and lifecycle progression within the existing persistence architecture.
 
+
+### 2026-09-25T10:16:57Z - Context hygiene
+
+Summary: The final fixed write has already committed exactly three aggregate transaction records and one due outbox obligation. The new delivery runner uses no direct SQS send; it validates that exact pre-state, runs one existing relay task, temporarily scales only the dormant worker, waits for durable completion and metric settlement, and always restores zero. Static target-policy, admission, persistence, and infrastructure checks pass.
+
+Durable evidence: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; .agentic/03.product/plans/implementation/persistence-foundation-v1.md; docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md; docs/education/teaching-notes/0002-architecture-learning-handbook.md
+
+
+### 2026-09-25T10:18:49Z - Commit recorded
+
+Commit: `6ae9c0ce`
+
+Message: feat(persistence): add bounded outbox delivery proof
+
+Summary: Added a fixed target-owned command that can move only the already committed outbox obligation through one relay Fargate task and one temporary worker scale-up, with exact aggregate preconditions, safe output, and mandatory zero-worker cleanup. Recorded final acceptance evidence, target lifecycle policy, static verification, deployment plan, and teaching note. Focused checks passed; the generic RAG gate was environment-time-limited after its preceding checks passed.
+
+ADR impact: No ADR; this is an implementation and evidence progression within the existing persistence foundation and staging deployment plans.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -266,6 +288,13 @@ Corpus gaps:
   Summary: Recorded the reviewed in-place Foundation IAM correction and its post-deployment live authorization proof. The change set directly modified only TaskRole.Policies; its dynamic deployment-role entry was dependency-only. The active server role now permits DynamoDB PutItem only on the persistence table, while the server remains healthy, worker dormant, queues empty, and alarms OK. The target now permits exactly one new fixed-identity acceptance and still forbids relay/worker action. Affected source validation suites passed; the aggregate pre-commit gate was environment-time-limited after its preceding checks passed.
   ADR impact: No ADR; this is deployment evidence and lifecycle progression within the existing persistence architecture.
 
+
+- Commit: `6ae9c0ce`
+  Time UTC: 2026-09-25T10:18:49Z
+  Message: feat(persistence): add bounded outbox delivery proof
+  Summary: Added a fixed target-owned command that can move only the already committed outbox obligation through one relay Fargate task and one temporary worker scale-up, with exact aggregate preconditions, safe output, and mandatory zero-worker cleanup. Recorded final acceptance evidence, target lifecycle policy, static verification, deployment plan, and teaching note. Focused checks passed; the generic RAG gate was environment-time-limited after its preceding checks passed.
+  ADR impact: No ADR; this is an implementation and evidence progression within the existing persistence foundation and staging deployment plans.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -281,9 +310,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T10:05:26Z
-Latest commit SHA: 9b6589b5
-Chat duration: 4764s (00:01:19:24)
+Latest commit at UTC: 2026-09-25T10:18:49Z
+Latest commit SHA: 6ae9c0ce
+Chat duration: 5567s (00:01:32:47)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE

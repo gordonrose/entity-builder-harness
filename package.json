@@ -41,6 +41,8 @@
     "platform:shell:persistence-smoke:check": "bash scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh",
     "platform:shell:persistence-admission-probe": "bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh",
     "platform:shell:persistence-admission-probe:check": "bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+    "platform:shell:persistence-delivery-proof": "bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh",
+    "platform:shell:persistence-delivery-proof:check": "bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh",
     "platform:shell:rate-limit-smoke": "bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh",
     "platform:shell:rate-limit-smoke:check": "bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh",
     "platform:shell:ingress-smoke": "bash scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh",
