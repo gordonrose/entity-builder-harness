@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T11:12:36Z
-latest_commit_sha: fdf1a749
-chat_duration: 8794s (00:02:26:34)
+latest_commit_at_utc: 2026-09-25T12:00:29Z
+latest_commit_sha: 4167c8e705aa391b03c22b2672c08e7ffbd8cd6b
+chat_duration: 11667s (00:03:14:27)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -317,6 +317,17 @@ Summary: The metadata-safe recovery relay reached the durable outbox claim but s
 
 Durable evidence: DynamoDB persistence adapter and deterministic tests; relay entrypoint; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
 
+
+### 2026-09-25T12:00:29Z - Commit recorded
+
+Commit: `4167c8e705aa391b03c22b2672c08e7ffbd8cd6b`
+
+Message: fix(persistence): diagnose bounded relay claim failures
+
+Summary: Added bounded DynamoDB operation diagnostics, a fresh one-use v2 recovery identity, deterministic tests, target-policy gates, and deployment/teaching records after the safe outbox-claim stop.
+
+ADR impact: No ADR; this is a bounded recovery diagnostic within the approved persistence foundation and staging deployment plan.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -402,6 +413,13 @@ Corpus gaps:
   Summary: Recorded the reviewed five-resource immutable recovery-image rollout, verified healthy staging preconditions, and advanced the target policy to permit only the first labelled recovery relay stage. No relay or worker task was started.
   ADR impact: No ADR; this is deployment evidence under the existing Persistence Foundation and staging deployment plans.
 
+
+- Commit: `4167c8e705aa391b03c22b2672c08e7ffbd8cd6b`
+  Time UTC: 2026-09-25T12:00:29Z
+  Message: fix(persistence): diagnose bounded relay claim failures
+  Summary: Added bounded DynamoDB operation diagnostics, a fresh one-use v2 recovery identity, deterministic tests, target-policy gates, and deployment/teaching records after the safe outbox-claim stop.
+  ADR impact: No ADR; this is a bounded recovery diagnostic within the approved persistence foundation and staging deployment plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -417,9 +435,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T11:12:36Z
-Latest commit SHA: fdf1a749
-Chat duration: 8794s (00:02:26:34)
+Latest commit at UTC: 2026-09-25T12:00:29Z
+Latest commit SHA: 4167c8e705aa391b03c22b2672c08e7ffbd8cd6b
+Chat duration: 11667s (00:03:14:27)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
