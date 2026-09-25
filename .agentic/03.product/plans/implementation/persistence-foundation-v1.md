@@ -443,6 +443,16 @@ must query that exact field before declaring a change set empty. The diagnostic
 deployment contained the expected three replacement task definitions and two
 in-place service reference updates; no shared-boundary resource changed.
 
+**Recovery note — claim-expression correction.** The v2 relay then provided
+the bounded category `validation` for `claim_outbox`. Local request inspection
+identified the deterministic cause: an initial claim sent `:asOf` despite its
+condition not referencing that placeholder. DynamoDB rejects unused expression
+values. The adapter now adds `:pending` only for an initial claim, and adds
+`:priorFence` and `:asOf` only for an expired-lease reclaim. The recording
+client proves every expression value is referenced in both paths. The v2 label
+is permanently spent; the v3 source policy requires another immutable-image
+rollout and health check before its single relay can start.
+
 ### Tranche 2 — reusable persistent-record foundation
 
 Tranche 2 completes the reusable **contract** required before a future feature

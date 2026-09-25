@@ -26,10 +26,10 @@ EXPECTED_TABLE_COUNT_AFTER = 4
 EXPECTED_DUE_BEFORE = 1
 EXPECTED_DUE_AFTER = 0
 EXPECTED_ALARM_COUNT = 5
-RECOVERY_SOURCE_READY = "relay-claim-diagnostic-source-ready-deployment-pending"
-RECOVERY_DEPLOYED_READY = "relay-claim-diagnostic-deployed-recovery-pending"
-RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v2"
-RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v2"
+RECOVERY_SOURCE_READY = "relay-claim-expression-remediation-source-ready-deployment-pending"
+RECOVERY_DEPLOYED_READY = "relay-claim-expression-remediation-deployed-recovery-pending"
+RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v3"
+RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v3"
 
 
 class DeliveryProofError(Exception):
@@ -134,8 +134,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     if worker.get("task_family") != EXPECTED_WORKER_FAMILY:
         raise DeliveryProofError("the delivery proof worker family is not the reviewed task family")
     if smoke.get("status") not in {
-        "foundation-and-service-deployed-acceptance-proven-relay-claim-diagnostic-source-ready-deployment-pending",
-        "foundation-and-service-deployed-acceptance-proven-relay-claim-diagnostic-deployed-recovery-pending",
+        "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-source-ready-deployment-pending",
+        "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-deployed-recovery-pending",
     }:
         raise DeliveryProofError("the target lifecycle does not permit the configuration-remediated delivery proof")
     delivery_status = delivery.get("status")
@@ -209,14 +209,36 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }:
         raise DeliveryProofError("the delivery proof must retain its safe failed outbox-claim evidence")
     if delivery.get("relay_claim_diagnostic_remediation") != {
-        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "status": "executed-and-safe-stop",
         "source_change": "classify-dynamodb-outbox-operation-failures-into-one-allowlisted-provider-category-for-relay-startup-diagnostics",
         "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
-        "relay_started_by": RECOVERY_RELAY_STARTED_BY,
-        "worker_started_by": RECOVERY_WORKER_STARTED_BY,
+        "relay_started_by": "kanbien-outbox-recovery-v2",
+        "worker_started_by": "kanbien-outbox-worker-recovery-v2",
         "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-diagnostic-task-definition-is-live",
     }:
         raise DeliveryProofError("the delivery proof must retain its reviewed outbox-claim diagnostic remediation policy")
+    if delivery.get("relay_claim_diagnostic_attempt") != {
+        "executed_on_utc": "2026-09-25",
+        "result": "failed-before-outbox-claim-or-queue-send",
+        "relay_application_exit_code": 1,
+        "stable_error_code": "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED",
+        "operation": "claim_outbox",
+        "provider_failure_class": "validation",
+        "persistence_transition": "platform.persistence.outbox.claim_failed",
+        "post_attempt_state": "three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok",
+        "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its safe validation failure evidence")
+    if delivery.get("relay_claim_expression_remediation") != {
+        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "source_change": "omit-conditionally-unused-dynamodb-expression-values-for-initial-and-expired-outbox-claims",
+        "local_proof": "first-claim-and-expired-lease-reclaim-requests-contain-only-referenced-expression-values",
+        "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
+        "relay_started_by": RECOVERY_RELAY_STARTED_BY,
+        "worker_started_by": RECOVERY_WORKER_STARTED_BY,
+        "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-expression-remediation-is-live",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its reviewed outbox-claim expression remediation policy")
 
     return {
         "account_id": EXPECTED_ACCOUNT_ID,

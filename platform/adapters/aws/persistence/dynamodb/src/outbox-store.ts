@@ -130,7 +130,6 @@ export function createDynamoDbPlatformOutboxStore(
           ConditionExpression: claimCondition(record),
           ExpressionAttributeNames: claimAttributeNames(),
           ExpressionAttributeValues: {
-            ":pending": stringAttribute("pending"),
             ":leased": stringAttribute("leased"),
             ":priorAttempt": numberAttribute(record.attempt),
             ":attempt": numberAttribute(leaseResult.value.attempt),
@@ -140,8 +139,12 @@ export function createDynamoDbPlatformOutboxStore(
             ":leaseExpiresAt": stringAttribute(leaseResult.value.expiresAt),
             ":dueKey": stringAttribute(outboxDuePartition()),
             ":dueSort": stringAttribute(dueSort(leaseResult.value.expiresAt, input.id)),
-            ":asOf": stringAttribute(input.acquiredAt),
-            ...(record.lease === undefined ? {} : { ":priorFence": numberAttribute(record.lease.fence) }),
+            ...(record.lease === undefined
+              ? { ":pending": stringAttribute("pending") }
+              : {
+                ":priorFence": numberAttribute(record.lease.fence),
+                ":asOf": stringAttribute(input.acquiredAt),
+              }),
           },
         }));
         return success({ disposition: "claimed", record: claimed });

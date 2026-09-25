@@ -142,13 +142,35 @@ async function main(): Promise<void> {
     match(claimCommand.input.ConditionExpression ?? "", /#state = :pending/);
     equal(claimCommand.input.ExpressionAttributeValues?.[":leaseFence"]?.N, "1");
     equal(claimCommand.input.ExpressionAttributeValues?.[":dueSort"]?.S, "DUE#2026-09-24T12:01:00.000Z#outbox-1");
+    equal(claimCommand.input.ExpressionAttributeValues?.[":asOf"], undefined);
+    equal(claimCommand.input.ExpressionAttributeValues?.[":priorFence"], undefined);
+    assertExpressionValuesAreUsed(claimCommand);
   }
   storedOutbox = claim.value.record;
 
+  const reclaimed = await outbox.claim({
+    id: entry.id,
+    owner,
+    acquiredAt: at(61),
+    leaseDurationMs: 60_000,
+  });
+  equal(reclaimed.ok, true);
+  if (!reclaimed.ok || reclaimed.value.disposition !== "claimed") throw new Error("Expected an expired relay lease to be reclaimed.");
+  const reclaimCommand = commands.at(-1);
+  equal(reclaimCommand instanceof UpdateItemCommand, true);
+  if (reclaimCommand instanceof UpdateItemCommand) {
+    match(reclaimCommand.input.ConditionExpression ?? "", /#state = :leased/);
+    equal(reclaimCommand.input.ExpressionAttributeValues?.[":pending"], undefined);
+    equal(reclaimCommand.input.ExpressionAttributeValues?.[":priorFence"]?.N, "1");
+    equal(reclaimCommand.input.ExpressionAttributeValues?.[":asOf"]?.S, at(61));
+    assertExpressionValuesAreUsed(reclaimCommand);
+  }
+  storedOutbox = reclaimed.value.record;
+
   const published = await outbox.markPublished({
     id: entry.id,
-    fence: claim.value.record.lease!.fence,
-    publishedAt: at(1),
+    fence: reclaimed.value.record.lease!.fence,
+    publishedAt: at(62),
   });
   equal(published.ok, true);
   const publishCommand = commands.at(-1);
@@ -156,7 +178,7 @@ async function main(): Promise<void> {
   if (publishCommand instanceof UpdateItemCommand) {
     match(publishCommand.input.ConditionExpression ?? "", /#leaseFence = :fence/);
     match(publishCommand.input.ConditionExpression ?? "", /#leaseExpiresAt > :publishedAt/);
-    equal(publishCommand.input.ExpressionAttributeValues?.[":fence"]?.N, "1");
+    equal(publishCommand.input.ExpressionAttributeValues?.[":fence"]?.N, "2");
   }
 
   const deliverable = await outbox.listDeliverable({ asOf: at(0), limit: 2 });
@@ -321,6 +343,13 @@ async function main(): Promise<void> {
 function accepted<TValue>(result: { readonly ok: true; readonly value: TValue } | { readonly ok: false }): TValue {
   if (!result.ok) throw new Error("Expected a valid test fixture.");
   return result.value;
+}
+
+function assertExpressionValuesAreUsed(command: UpdateItemCommand): void {
+  const expression = `${command.input.UpdateExpression ?? ""} ${command.input.ConditionExpression ?? ""}`;
+  for (const placeholder of Object.keys(command.input.ExpressionAttributeValues ?? {})) {
+    equal(expression.includes(placeholder), true, `Expression value ${placeholder} must be referenced by this DynamoDB request.`);
+  }
 }
 
 main()

@@ -111,6 +111,12 @@ information to correct a target configuration safely—for example,
 `claim_outbox` plus `validation`—without creating an accidental diagnostic
 channel for customer data or AWS provider payloads.
 
+The outbox tests additionally prove that each DynamoDB conditional request
+supplies only values that its chosen expression references. Initial claims and
+expired-lease reclaims use different condition branches, so their expression
+value maps must differ too. DynamoDB treats an unused placeholder as a
+validation error rather than ignoring it.
+
 ## Safe imports
 
 ```text

@@ -733,7 +733,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-acceptance-proven-relay-claim-diagnostic-deployed-recovery-pending",
+        "status": "foundation-and-service-deployed-acceptance-proven-relay-claim-expression-remediation-source-ready-deployment-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -831,7 +831,7 @@ expected_persistence_profile = {
             "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-outside-the-fixed-recovery-stages",
         },
         "delivery_proof": {
-            "status": "relay-claim-diagnostic-deployed-recovery-pending",
+            "status": "relay-claim-expression-remediation-source-ready-deployment-pending",
             "command": "npm run platform:shell:persistence-delivery-proof",
             "execution_guard": "--phase-and-approve-outbox-delivery-recovery",
             "task_family": "kanbien-staging-platform-shell-relay",
@@ -860,12 +860,32 @@ expected_persistence_profile = {
                 "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
             },
             "relay_claim_diagnostic_remediation": {
-                "status": "deployed-recovery-pending",
+                "status": "executed-and-safe-stop",
                 "source_change": "classify-dynamodb-outbox-operation-failures-into-one-allowlisted-provider-category-for-relay-startup-diagnostics",
                 "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
                 "relay_started_by": "kanbien-outbox-recovery-v2",
                 "worker_started_by": "kanbien-outbox-worker-recovery-v2",
                 "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-diagnostic-task-definition-is-live",
+            },
+            "relay_claim_diagnostic_attempt": {
+                "executed_on_utc": "2026-09-25",
+                "result": "failed-before-outbox-claim-or-queue-send",
+                "relay_application_exit_code": 1,
+                "stable_error_code": "PLATFORM_PERSISTENCE_STORE_OPERATION_FAILED",
+                "operation": "claim_outbox",
+                "provider_failure_class": "validation",
+                "persistence_transition": "platform.persistence.outbox.claim_failed",
+                "post_attempt_state": "three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok",
+                "evidence_hygiene": "safe-status-exit-code-error-category-transition-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+            },
+            "relay_claim_expression_remediation": {
+                "status": "source-ready-deployment-pending",
+                "source_change": "omit-conditionally-unused-dynamodb-expression-values-for-initial-and-expired-outbox-claims",
+                "local_proof": "first-claim-and-expired-lease-reclaim-requests-contain-only-referenced-expression-values",
+                "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-new-labelled-recovery-relay-run",
+                "relay_started_by": "kanbien-outbox-recovery-v3",
+                "worker_started_by": "kanbien-outbox-worker-recovery-v3",
+                "recovery_limit": "one-new-relay-task-and-one-new-self-terminating-worker-task-only-after-expression-remediation-is-live",
             },
             "relay_claim_diagnostic_deployment": {
                 "status": "executed-and-post-deployment-verified",
@@ -974,8 +994,8 @@ for required_text, message in {
 
 delivery_proof = Path("scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py").read_text(encoding="utf-8")
 for required_text, message in {
-    'RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v2"': "delivery proof must label its new one-use diagnostic relay task",
-    'RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v2"': "delivery proof must label its new self-terminating worker task",
+    'RECOVERY_RELAY_STARTED_BY = "kanbien-outbox-recovery-v3"': "delivery proof must label its new one-use expression-remediation relay task",
+    'RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v3"': "delivery proof must label its new self-terminating worker task",
     '"PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "value": "1"': "delivery proof must use only the fixed worker one-shot override",
     'if not recovery_worker_not_started(policy):': "delivery proof must reject a second labelled recovery worker task",
 }.items():
