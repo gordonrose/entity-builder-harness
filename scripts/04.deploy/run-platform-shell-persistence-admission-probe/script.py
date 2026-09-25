@@ -171,7 +171,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         expected_probe = {
             **base_probe,
             "status": "executed-passed-fresh-acceptance-pending" if policy["status"] == PASSED else "executed-passed-iam-remediation-pending",
-            "next_guard": "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if policy["status"] == PASSED else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
+            "next_guard": "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if policy["status"] in {PASSED, IAM_REMEDIATION_DEPLOYED_READY} else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
         }
     else:
         raise AdmissionProbeError("the admission probe is not in a governed lifecycle state")

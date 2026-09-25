@@ -293,6 +293,23 @@ administrative access. After a reviewed Foundation-stack change set, a live
 IAM simulation must prove `PutItem` is allowed before a fourth fixed identity
 can make the final bounded acceptance attempt.
 
+## IAM remediation deployment evidence — 2026-09-25
+
+The reviewed Foundation change set made one direct, in-place update to
+`TaskRole.Policies`: it replaced the non-authorising transaction API-name
+action with `dynamodb:PutItem` on `PlatformPersistenceTable` only. CloudFormation
+also displayed an in-place dynamic change for the service-deployment role
+because its unchanged policy refers to `TaskRole.Arn`; it did not broaden that
+role. No resource was replaced, and no queue, database schema, routing, DNS,
+Cognito, alert destination, or ECS service changed.
+
+The Foundation stack returned to `UPDATE_COMPLETE`. A live, table-scoped IAM
+simulation for the active server role then returned `allowed` for
+`dynamodb:PutItem`. The server stayed healthy at `1/1`, worker at `0/0`, both
+queues stayed empty, and the five platform-shell alarms remained `OK`. This
+unlocks one new fixed-identity acceptance request only; it is not permission
+to relay or process work before that acceptance has proved an atomic commit.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

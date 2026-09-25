@@ -417,7 +417,7 @@ else:
         expected_admission_probe = {
             **admission_probe_base,
             "status": "deployed-pending-one-execution" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "executed-passed-fresh-acceptance-pending" if persistence_status == "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending" else "executed-passed-iam-remediation-pending",
-            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if persistence_status == "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending" else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
+            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action" if persistence_status in {"write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending"} else "deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance",
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed deployed non-mutating admission probe")
@@ -719,7 +719,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-iam-remediation-source-ready-deployment-pending",
+        "status": "foundation-and-service-deployed-iam-remediation-authorization-proven-fresh-acceptance-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -789,16 +789,16 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "deploy-and-prove-the-one-table-put-item-iam-remediation-before-one-new-fixed-identity-acceptance",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-before-iam-remediation-deployment-and-live-authorization-proof",
+            "next_execution_guard": "execute-one-new-fixed-identity-acceptance-then-record-safe-transaction-evidence-before-relay-or-worker-action",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-after-the-one-new-acceptance",
         },
         "activation": {
-            "server_acceptance": "fresh-acceptance-failed-non-committing-iam-remediation-source-ready-deployment-pending",
+            "server_acceptance": "fresh-acceptance-failed-non-committing-iam-remediation-deployed-authorization-proven-one-new-acceptance-pending",
             "outbox_relay": "prohibited-no-committed-outbox-obligation",
             "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
-            "iam": "server-persistence-member-permission-remediation-source-ready-deployment-pending",
+            "iam": "server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-no-new-acceptance-before-iam-remediation-proof",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-one-new-acceptance-after-iam-remediation-proof",
             "observability": "admission-profile-proved-and-fresh-acceptance-store-operation-failure-observed-with-safe-normalized-error-class",
         },
     },

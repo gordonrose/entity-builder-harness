@@ -555,7 +555,7 @@ runtime:
         source_and_dead_letter_queues: empty
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
     write_identity:
-      status: write-proof-failed-non-committing-iam-remediation-source-ready-deployment-pending
+      status: write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending
       scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
@@ -598,12 +598,12 @@ runtime:
         request_body: none
         persistence_side_effects: prohibited
         expected_http_status: 204
-        next_guard: deploy-and-prove-least-privilege-iam-remediation-before-one-new-fixed-identity-acceptance
+        next_guard: one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action
       admission_probe_deployment: immutable-image-published-scan-clean-attested-service-change-set-five-expected-modifications-executed-update-complete-server-one-worker-zero-queues-empty-five-alarms-ok
       admission_probe_execution: status-passed-http-204-duration-95ms-one-structured-application-observation-no-persistence-side-effects-server-one-worker-zero-queues-empty-five-alarms-ok
       fresh_acceptance_attempt: status-failed-non-committing-http-503-duration-146ms-one-store-operation-failure-observation-table-zero-queues-empty-server-one-worker-zero-five-alarms-ok
-      iam_remediation: replace-non-authorizing-dynamodb-transact-write-items-policy-action-with-dynamodb-put-item-on-platform-persistence-table-then-prove-live-role-authorization
-    next_boundary: deploy-foundation-iam-remediation-prove-live-put-item-authorization-then-execute-one-new-fixed-identity-acceptance
+      iam_remediation: foundation-task-role-put-item-member-permission-deployed-and-live-role-authorization-proven
+    next_boundary: execute-one-new-fixed-identity-acceptance-then-record-safe-transaction-evidence-before-relay-or-worker-action
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts
