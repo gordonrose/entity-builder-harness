@@ -10464,6 +10464,21 @@ The important safety lesson is sequence. We do not retry the failed identity.
 We deploy the narrow policy correction, prove its live IAM decision without
 writing data, and only then use a new fixed identity for one final acceptance.
 
+### What the live proof showed
+
+The Foundation update changed the server role in place. The change-set also
+listed the deployment role, but only as a dynamic dependency: its existing
+policy refers to the server role's ARN, so CloudFormation re-evaluated it even
+though its policy text did not change. The direct change was only the
+table-scoped `PutItem` permission.
+
+After deployment, IAM answered `allowed` for the active server role and that
+one table. The server remained healthy, the dormant worker remained at zero,
+both queues were empty, and all five alarms were OK. That is a useful dividing
+line: we have proved the *permission*, but not yet the transaction. The next
+step is one new acceptance request; only a successful atomic commit can create
+the outbox work that a relay may publish.
+
 Planning triage: the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 owns the staged proof sequence; the staging target profile and infrastructure
 gate own the exact runner policy. The probe was deployed through a reviewed

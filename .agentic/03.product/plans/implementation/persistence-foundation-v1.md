@@ -378,14 +378,16 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — IAM remediation source-ready; deployment pending.** Three
-acceptance identities are now recorded safe non-commits. The admission probe
-proved ingress, authentication, authorisation, and route handling; the third
-acceptance isolated the remaining fault to a denied persistence member
-operation. The next work is to deploy the one-table `dynamodb:PutItem` policy
-correction, prove its live IAM decision without writing data, then issue one
-new fixed-identity acceptance. Relay and worker action remain prohibited until
-that request returns `202` and its safe transaction evidence is recorded.
+**Current result — IAM remediation deployed and live authorization proven.**
+Three acceptance identities are now recorded safe non-commits. The reviewed
+Foundation change set made one direct, in-place `TaskRole.Policies` change;
+CloudFormation also reported an in-place dynamic deployment-role update solely
+because it references `TaskRole.Arn`, with unchanged policy content. The stack
+returned to `UPDATE_COMPLETE`. A live simulation now evaluates
+`dynamodb:PutItem` as `allowed`, while the server remains `1/1`, worker `0/0`,
+both queues empty, and five alarms `OK`. One new fixed-identity acceptance is
+now permitted. Relay and worker action remain prohibited until it returns
+`202` and its safe transaction evidence is recorded.
 
 ### Tranche 2 — reusable persistent-record foundation
 
