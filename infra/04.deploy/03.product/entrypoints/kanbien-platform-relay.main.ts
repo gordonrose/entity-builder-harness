@@ -19,6 +19,7 @@
 //   - id: platform.server.image-build
 //     path: platform/server/tsconfig.image.json
 
+import { createHash } from "node:crypto";
 import { createAwsSdkDynamoDbPersistenceCommandClient } from "@kanbien/platform-adapter-aws-persistence-dynamodb";
 import { createAwsSdkPlatformSqsQueue } from "@kanbien/platform-adapter-aws-queue-sqs";
 import { noopMetrics } from "@kanbien/core/monitoring";
@@ -67,7 +68,7 @@ export async function runKanbienPlatformRelayMain(): Promise<void> {
     return;
   }
 
-  const configuration = relayConfigurationFromTargetEnvironment(process.env, observer.value);
+  const configuration = await relayConfigurationFromTargetEnvironment(process.env, observer.value);
   if (!configuration.ok) {
     writeStartupFailure("kanbien-platform.relay.configuration_invalid", configuration.error);
     await shutdownObservability(observability.value);
@@ -103,10 +104,10 @@ export async function runKanbienPlatformRelayMain(): Promise<void> {
   }
 }
 
-function relayConfigurationFromTargetEnvironment(
+async function relayConfigurationFromTargetEnvironment(
   env: NodeJS.ProcessEnv,
   observer: import("@kanbien/platform-persistence").PlatformPersistenceObserver,
-): { readonly ok: true; readonly value: TargetRelayConfiguration } | { readonly ok: false; readonly error: TargetRelayConfigurationError } {
+): Promise<{ readonly ok: true; readonly value: TargetRelayConfiguration } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
   if (env["PLATFORM_PERSISTENCE_PROVIDER"] !== "dynamodb") {
     return relayConfigurationError("PLATFORM_PERSISTENCE_PROVIDER", "The staging relay requires the selected DynamoDB persistence provider.");
   }
@@ -121,7 +122,7 @@ function relayConfigurationFromTargetEnvironment(
   if (!queueUrl.ok) return queueUrl;
   const queueRegion = requiredString(env, "PLATFORM_RELAY_SQS_REGION");
   if (!queueRegion.ok) return queueRegion;
-  const owner = relayLeaseOwnerFromTargetEnvironment(env);
+  const owner = await relayLeaseOwnerFromTargetEnvironment(env);
   if (!owner.ok) return owner;
   const leaseDurationMs = boundedPositiveInteger(env, "PLATFORM_RELAY_LEASE_DURATION_MS", 90_000);
   if (!leaseDurationMs.ok) return leaseDurationMs;
@@ -165,9 +166,14 @@ async function shutdownObservability(
   }
 }
 
-function relayLeaseOwnerFromTargetEnvironment(
+async function relayLeaseOwnerFromTargetEnvironment(
   env: NodeJS.ProcessEnv,
-): { readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError } {
+): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
+  const metadataEndpoint = env["ECS_CONTAINER_METADATA_URI_V4"];
+  if (metadataEndpoint !== undefined) {
+    return relayLeaseOwnerFromFargateTaskMetadata(metadataEndpoint);
+  }
+
   const hostname = env["HOSTNAME"];
   if (hostname === undefined || !/^[a-z0-9-]+$/i.test(hostname)) {
     return relayConfigurationError("HOSTNAME", "A lowercase alphanumeric or hyphenated container hostname is required for durable relay leases.");
@@ -177,6 +183,43 @@ function relayLeaseOwnerFromTargetEnvironment(
     return relayConfigurationError("HOSTNAME", "The container hostname could not form a valid durable relay lease owner.");
   }
   return owner;
+}
+
+async function relayLeaseOwnerFromFargateTaskMetadata(
+  metadataEndpoint: string,
+): Promise<{ readonly ok: true; readonly value: PlatformPersistenceLeaseOwner } | { readonly ok: false; readonly error: TargetRelayConfigurationError }> {
+  let endpoint: URL;
+  try {
+    endpoint = new URL(metadataEndpoint + "/task");
+  } catch {
+    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must be a valid URL.");
+  }
+  if (endpoint.protocol !== "http:" || endpoint.hostname !== "169.254.170.2") {
+    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must remain link-local.");
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1_000);
+  try {
+    const response = await fetch(endpoint, { signal: controller.signal });
+    const metadata = await response.json();
+    const taskArn = typeof metadata === "object" && metadata !== null && "TaskARN" in metadata
+      ? (metadata as { readonly TaskARN?: unknown }).TaskARN
+      : undefined;
+    if (!response.ok || typeof taskArn !== "string" || taskArn.length === 0) {
+      return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint must provide one task identity.");
+    }
+    const fingerprint = createHash("sha256").update(taskArn).digest("hex").slice(0, 24);
+    const owner = platformPersistenceLeaseOwner("kanbien.relay.instance-" + fingerprint);
+    if (!owner.ok) {
+      return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task identity could not form a valid durable relay lease owner.");
+    }
+    return owner;
+  } catch {
+    return relayConfigurationError("ECS_CONTAINER_METADATA_URI_V4", "The Fargate task metadata endpoint could not supply a durable relay lease identity.");
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function requiredString(
@@ -218,9 +261,18 @@ function relayConfigurationError(
 
 function writeStartupFailure(
   message: string,
-  error: { readonly code: string; readonly defaultMessage: string },
+  error: { readonly code: string; readonly defaultMessage: string; readonly details?: Readonly<Record<string, unknown>> },
 ): void {
-  console.error(JSON.stringify({ level: "error", message, error: { code: error.code, message: error.defaultMessage } }));
+  const path = error.details?.["path"];
+  console.error(JSON.stringify({
+    level: "error",
+    message,
+    error: {
+      code: error.code,
+      message: error.defaultMessage,
+      ...(typeof path === "string" ? { path } : {}),
+    },
+  }));
 }
 
 if (typeof require !== "undefined" && require.main === module) {

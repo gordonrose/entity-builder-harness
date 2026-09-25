@@ -331,6 +331,22 @@ status, duration, relay exit code, and aggregate counts; it never prints or
 records task IDs, table records, queue URLs/messages, credentials, request
 headers, bodies, or raw provider responses.
 
+### Relay configuration recovery — 2026-09-25
+
+The first relay task then stopped with a non-zero application exit before an
+outbox claim or queue send. Safe inspection found the stable target-configuration
+error category only; the table remained at three records with one due outbox
+entry, both queues remained empty, the worker remained `0/0`, and five alarms
+remained `OK`. The failed control channel did not continue to the worker.
+
+The remediation uses the Fargate-injected, link-local task-metadata endpoint
+to obtain a task identity and hashes it before it becomes a lease owner. This
+avoids depending on an unspecified container hostname while preserving a unique,
+non-sensitive per-task owner. A valid local hostname is retained solely for
+non-Fargate compiled-image checks. The immutable image must be published and a
+service change set reviewed and health-checked before exactly one recovery
+relay run is permitted.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

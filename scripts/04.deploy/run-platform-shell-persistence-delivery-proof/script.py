@@ -26,6 +26,8 @@ EXPECTED_TABLE_COUNT_AFTER = 4
 EXPECTED_DUE_BEFORE = 1
 EXPECTED_DUE_AFTER = 0
 EXPECTED_ALARM_COUNT = 5
+RECOVERY_SOURCE_READY = "relay-config-remediation-source-ready-deployment-pending"
+RECOVERY_DEPLOYED_READY = "relay-config-remediation-deployed-recovery-pending"
 
 
 class DeliveryProofError(Exception):
@@ -39,17 +41,17 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--validate", action="store_true", help="Validate policy only; make no AWS calls.")
     parser.add_argument("--execute", action="store_true", help="Run the one bounded relay and worker proof.")
     parser.add_argument(
-        "--approve-outbox-delivery-proof",
+        "--approve-outbox-delivery-recovery",
         action="store_true",
-        help="Acknowledge the one relay task and temporary worker scale-up to one.",
+        help="Acknowledge the one configuration-remediated relay task and temporary worker scale-up to one.",
     )
     arguments = parser.parse_args()
     if arguments.validate == arguments.execute:
         parser.error("choose exactly one of --validate or --execute")
-    if arguments.validate and arguments.approve_outbox_delivery_proof:
-        parser.error("--approve-outbox-delivery-proof is valid only with --execute")
-    if arguments.execute and not arguments.approve_outbox_delivery_proof:
-        parser.error("--execute requires --approve-outbox-delivery-proof")
+    if arguments.validate and arguments.approve_outbox_delivery_recovery:
+        parser.error("--approve-outbox-delivery-recovery is valid only with --execute")
+    if arguments.execute and not arguments.approve_outbox_delivery_recovery:
+        parser.error("--execute requires --approve-outbox-delivery-recovery")
     return arguments
 
 
@@ -121,11 +123,15 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise DeliveryProofError("the delivery proof service names are not the reviewed services")
     if deployment.get("relay_task_family") != EXPECTED_RELAY_FAMILY:
         raise DeliveryProofError("the delivery proof relay family is not the reviewed task family")
-    if smoke.get("status") != "foundation-and-service-deployed-acceptance-proven-delivery-proof-source-ready":
-        raise DeliveryProofError("the target lifecycle does not permit the delivery proof")
-    if delivery.get("status") != "source-ready-one-execution-pending":
-        raise DeliveryProofError("the delivery proof is not in its one-execution-pending state")
-    if delivery.get("command") != "npm run platform:shell:persistence-delivery-proof" or delivery.get("execution_guard") != "--execute-and-approve-outbox-delivery-proof":
+    if smoke.get("status") not in {
+        "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-source-ready-deployment-pending",
+        "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-deployed-recovery-pending",
+    }:
+        raise DeliveryProofError("the target lifecycle does not permit the configuration-remediated delivery proof")
+    delivery_status = delivery.get("status")
+    if delivery_status not in {RECOVERY_SOURCE_READY, RECOVERY_DEPLOYED_READY}:
+        raise DeliveryProofError("the delivery proof is not in its governed recovery state")
+    if delivery.get("command") != "npm run platform:shell:persistence-delivery-proof" or delivery.get("execution_guard") != "--execute-and-approve-outbox-delivery-recovery":
         raise DeliveryProofError("the delivery proof command or guard is not the reviewed fixed shape")
     if delivery.get("task_family") != EXPECTED_RELAY_FAMILY:
         raise DeliveryProofError("the delivery proof task family differs from target runtime policy")
@@ -157,6 +163,23 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise DeliveryProofError("the delivery proof success state is not the reviewed terminal aggregate state")
     if delivery.get("output_policy") != "status-duration-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads":
         raise DeliveryProofError("the delivery proof output policy is not the reviewed redaction boundary")
+    if delivery.get("first_relay_attempt") != {
+        "executed_on_utc": "2026-09-25",
+        "result": "failed-before-outbox-claim-or-queue-send",
+        "relay_application_exit_code": 1,
+        "stable_error_code": "KANBIEN_PLATFORM_TARGET_RELAY_CONFIG_INVALID",
+        "error_field": "not-retained-until-metadata-remediation-is-deployed",
+        "post_attempt_state": "three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok",
+        "evidence_hygiene": "safe-status-exit-code-error-category-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its safe failed relay-attempt evidence")
+    if delivery.get("relay_configuration_remediation") != {
+        "status": "source-ready-deployment-pending" if delivery_status == RECOVERY_SOURCE_READY else "deployed-recovery-pending",
+        "source_change": "derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate",
+        "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run",
+        "recovery_limit": "one-relay-task-and-one-temporary-worker-scale-only-after-remediated-task-definition-is-live",
+    }:
+        raise DeliveryProofError("the delivery proof must retain its reviewed relay configuration remediation policy")
 
     return {
         "account_id": EXPECTED_ACCOUNT_ID,
@@ -169,6 +192,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "relay_family": EXPECTED_RELAY_FAMILY,
         "maximum_wait_seconds": maximum_wait_seconds,
         "settlement_wait_seconds": settlement_wait_seconds,
+        "delivery_status": delivery_status,
     }
 
 
@@ -351,7 +375,8 @@ def run_one_relay(outputs: dict[str, str], policy: dict[str, Any]) -> int:
     if not isinstance(described, list) or len(described) != 1 or not isinstance(described[0], dict) or described[0].get("lastStatus") != "STOPPED":
         raise DeliveryProofError("the one reviewed relay task did not reach stopped state")
     containers = described[0].get("containers")
-    if not isinstance(containers, list) or not containers or any(not isinstance(container, dict) or container.get("exitCode") != 0 for container in containers):
+    application = next((container for container in containers if isinstance(container, dict) and container.get("name") == "platform-shell-relay"), None) if isinstance(containers, list) else None
+    if not isinstance(application, dict) or application.get("exitCode") != 0:
         raise DeliveryProofError("the one reviewed relay task did not complete successfully")
     return 0
 
@@ -402,6 +427,8 @@ def execute(policy: dict[str, Any]) -> int:
     result = "inconclusive"
     failure = ""
     try:
+        if policy["delivery_status"] != RECOVERY_DEPLOYED_READY:
+            raise DeliveryProofError("the relay configuration remediation has not been deployed and health-checked")
         verify_account(policy)
         outputs = foundation_outputs(policy)
         if not preconditions_hold(outputs, policy):

@@ -733,7 +733,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-acceptance-proven-delivery-proof-source-ready",
+        "status": "foundation-and-service-deployed-acceptance-proven-relay-configuration-remediation-source-ready-deployment-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -803,14 +803,29 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "execute-one-fixed-outbox-delivery-proof-then-record-safe-relay-and-worker-evidence",
-            "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-after-the-one-delivery-proof",
+            "next_execution_guard": "publish-and-deploy-the-reviewed-relay-configuration-remediation-then-run-one-recovery-delivery-proof",
+            "execution_exclusions": "no-additional-write-no-direct-sqs-fixture-no-scheduler-no-relay-or-worker-repeat-before-the-remediated-task-definition-is-live",
         },
         "delivery_proof": {
-            "status": "source-ready-one-execution-pending",
+            "status": "relay-config-remediation-source-ready-deployment-pending",
             "command": "npm run platform:shell:persistence-delivery-proof",
-            "execution_guard": "--execute-and-approve-outbox-delivery-proof",
+            "execution_guard": "--execute-and-approve-outbox-delivery-recovery",
             "task_family": "kanbien-staging-platform-shell-relay",
+            "first_relay_attempt": {
+                "executed_on_utc": "2026-09-25",
+                "result": "failed-before-outbox-claim-or-queue-send",
+                "relay_application_exit_code": 1,
+                "stable_error_code": "KANBIEN_PLATFORM_TARGET_RELAY_CONFIG_INVALID",
+                "error_field": "not-retained-until-metadata-remediation-is-deployed",
+                "post_attempt_state": "three-transaction-records-one-due-outbox-source-and-dead-letter-queues-empty-server-one-worker-zero-five-alarms-ok",
+                "evidence_hygiene": "safe-status-exit-code-error-category-and-aggregate-counts-only-no-task-identifiers-records-messages-queue-urls-or-provider-payloads",
+            },
+            "relay_configuration_remediation": {
+                "status": "source-ready-deployment-pending",
+                "source_change": "derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate",
+                "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run",
+                "recovery_limit": "one-relay-task-and-one-temporary-worker-scale-only-after-remediated-task-definition-is-live",
+            },
             "preconditions": {
                 "persistence_table_records": 3,
                 "due_outbox_entries": 1,
@@ -839,17 +854,28 @@ expected_persistence_profile = {
         },
         "activation": {
             "server_acceptance": "atomic-work-item-lineage-and-outbox-transaction-proven",
-            "outbox_relay": "source-ready-one-governed-task-for-the-one-due-outbox-entry",
-            "durable_worker_processing": "source-ready-only-after-the-governed-relay-creates-one-delivery-worker-returns-zero",
+            "outbox_relay": "first-task-stopped-safely-before-outbox-claim-or-queue-send-remediation-deployment-required",
+            "durable_worker_processing": "prohibited-until-one-remediated-relay-task-creates-one-delivery-worker-returns-zero",
             "iam": "server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "isolated-write-client-used-once-for-the-accepted-atomic-proof",
-            "observability": "admission-and-acceptance-profiles-proved-safe-boundary-and-atomic-outbox-counts",
+            "observability": "admission-and-acceptance-profiles-proved-safe-boundary-and-atomic-outbox-counts-relay-startup-error-classified-without-raw-logs",
         },
     },
 }
 if target_profile.get("persistence") != expected_persistence_profile:
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
+
+relay_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts").read_text(encoding="utf-8")
+for required_text, message in {
+    'import { createHash } from "node:crypto";': "relay must hash rather than persist a Fargate task identity",
+    'env["ECS_CONTAINER_METADATA_URI_V4"]': "relay must use the injected Fargate task-metadata endpoint for its durable lease owner",
+    'endpoint.hostname !== "169.254.170.2"': "relay must restrict its task-metadata lookup to the link-local Fargate endpoint",
+    'createHash("sha256").update(taskArn).digest("hex").slice(0, 24)': "relay must reduce task metadata to a bounded non-sensitive lease-owner fingerprint",
+    'typeof path === "string" ? { path } : {}': "relay startup diagnostics may record only a safe controlled configuration field",
+}.items():
+    if required_text not in relay_entrypoint:
+        fail(message)
 
 task_execution_policy = properties(foundation, "TaskExecutionRole", "AWS::IAM::Role").get("Policies", [])
 task_execution_configuration_statement = next(
