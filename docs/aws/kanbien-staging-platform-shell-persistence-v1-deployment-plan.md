@@ -392,6 +392,27 @@ run. The exhausted `v1` label cannot be rerun. If `v2` succeeds, the normal
 one-shot worker stage follows; if it stops, its safe category identifies the
 next narrow source correction.
 
+### Outbox-claim diagnostic deployment evidence — 2026-09-25
+
+The image workflow for source commit `08de1b3c` succeeded with an ECR scan that
+reported zero critical and high findings, plus SBOM and provenance attestations.
+The selected immutable image digest was then supplied to the existing service
+stack through the named `persistence-claim-diagnostic-20260925` change set.
+
+The change-set review used `Changes[].ResourceChange`: CloudFormation does not
+place the resolved action beneath `Changes[].Resource`. The resulting shape was
+exactly three replacement task definitions (server, relay, worker) and two
+in-place service task-definition reference updates. It contained no IAM,
+DynamoDB, SQS, ALB, WAF, Cognito, DNS, secret, or alarm change.
+
+After execution, the service stack reached `UPDATE_COMPLETE`; the public
+server was `1/1` with a healthy target, the worker remained `0/0`, queues were
+empty, the persistence aggregate remained three records with one due outbox
+and no lease fence, and all five alarms were `OK`. This permits only the one
+fixed v2 relay task. It does not permit a v1 replay, another application write,
+a direct SQS fixture, a scheduler, or worker activation before a successful v2
+relay assessment.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

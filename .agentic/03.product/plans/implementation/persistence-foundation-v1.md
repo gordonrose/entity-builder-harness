@@ -428,10 +428,20 @@ remains. Its platform error and persistence transition identify the stage, but
 the adapter deliberately did not retain an AWS failure category. The next
 source change keeps that redaction boundary and adds only one allowlisted
 category—such as `validation` or `access_denied`—to the structured relay
-startup diagnostic. After a new immutable-image rollout and health check, one
-new `v2` relay label is permitted. It is a new governed attempt, never a retry
-of the consumed `v1` label; the worker remains prohibited until that relay
-exits successfully and produces the expected one delivery.
+startup diagnostic. That immutable image has now passed its scan, SBOM, and
+provenance workflow and was deployed through a reviewed five-resource
+service-only change set. Post-rollout state is healthy: server `1/1`, worker
+`0/0`, empty queues, five alarms `OK`, and the durable precondition remains
+three records, one due outbox, no lease fence. One new `v2` relay label is now
+permitted. It is a new governed attempt, never a retry of the consumed `v1`
+label; the worker remains prohibited until that relay exits successfully and
+produces the expected one delivery.
+
+**Deployment-review correction.** CloudFormation exposes each resolved change
+under `Changes[].ResourceChange`, not `Changes[].Resource`. Review automation
+must query that exact field before declaring a change set empty. The diagnostic
+deployment contained the expected three replacement task definitions and two
+in-place service reference updates; no shared-boundary resource changed.
 
 ### Tranche 2 — reusable persistent-record foundation
 
