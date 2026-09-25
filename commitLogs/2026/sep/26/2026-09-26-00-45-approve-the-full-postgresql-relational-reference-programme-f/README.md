@@ -45,6 +45,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Raised: The governed recovery importer partially copied one file before sandboxed Git index access failed.
   Resolution: Restored only that copied file to HEAD while preserving the prior source worktree, then reran the importer with approved index access; it imported and staged exactly the seven approved planning/documentation paths.
 
+
+- Raised: Stage 1 read-only AWS inspection stopped before any RDS or infrastructure action.
+  Resolution: The kanbien-dev SSO token is expired and refresh failed. Current VPC, legacy RDS boundary, engine availability, and cost posture cannot be verified; no AWS mutation or PostgreSQL source implementation may proceed because Stage 1 has not passed.
+
 ## Decisions Made
 
 
@@ -70,6 +74,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 
 - Summary: Imported the exact seven approved files from the prior chat after the recovery tool’s sandboxed partial import was safely restored and rerun with staged Git index access.
   Durable evidence: The imported PostgreSQL plan contains six gated stages; deterministic-process checking required one explicit human-governed AWS deployment marker. Metadata, diff, and deletion gates pass.
+
+
+- Summary: Read the AWS plan/execution workflows and staging profile, then attempted only read-only STS/RDS inspection.
+  Durable evidence: The AWS CLI returned expired SSO-token refresh failure. The PostgreSQL plan remains draft, committed as 67564f4e; progression resumes only after fresh kanbien-dev SSO authentication and successful Stage 1 inspection.
 
 ## Activity Log
 
@@ -129,6 +137,20 @@ Message: docs(persistence): plan PostgreSQL reference
 Summary: Imported and validated the PostgreSQL relational-reference plan, aligned persistence/runtime/target/deployment documents, and added six printable handbook lessons. The plan remains draft and does not create AWS resources.
 
 ADR impact: ADR deferred: Stage 1 must verify cost, engine availability, target topology, and provider details before a durable selection decision.
+
+
+### 2026-09-25T23:55:41Z - Issue
+
+Raised: Stage 1 read-only AWS inspection stopped before any RDS or infrastructure action.
+
+Resolution: The kanbien-dev SSO token is expired and refresh failed. Current VPC, legacy RDS boundary, engine availability, and cost posture cannot be verified; no AWS mutation or PostgreSQL source implementation may proceed because Stage 1 has not passed.
+
+
+### 2026-09-25T23:55:41Z - Context hygiene
+
+Summary: Read the AWS plan/execution workflows and staging profile, then attempted only read-only STS/RDS inspection.
+
+Durable evidence: The AWS CLI returned expired SSO-token refresh failure. The PostgreSQL plan remains draft, committed as 67564f4e; progression resumes only after fresh kanbien-dev SSO authentication and successful Stage 1 inspection.
 
 ## Sub-Agent Activity
 
