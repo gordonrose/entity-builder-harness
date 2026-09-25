@@ -23,23 +23,33 @@
 `npm run platform:shell:persistence-delivery-proof -- --validate` validates
 the committed `kanbien/staging` policy without contacting AWS.
 
-`npm run platform:shell:persistence-delivery-proof -- --execute
---approve-outbox-delivery-recovery` has no selectable target, credentials, task,
-network, queue, message, work-item, or timeout. It is allowed once only when
-the target profile records the exact post-acceptance aggregate state: three
-table records, one due outbox obligation, empty queues, no relay task, dormant
-worker, healthy server, and five healthy alarms.
+The live proof is intentionally split into short, strictly ordered commands so
+an interactive-client timeout cannot hide an in-progress cloud operation. It
+has no selectable target, credentials, task, network, queue, message,
+work-item, or timeout. Its only mutable commands require
+`--approve-outbox-delivery-recovery`.
 
-After a prior safe non-delivery configuration stop, the command verifies that
-the metadata-identity remediation is deployed, then verifies account and stack
-state, starts exactly one existing recovery relay Fargate task, waits for that task to stop successfully, confirms its one
-delivery reached the existing source queue, scales the existing worker to one,
-waits for the processing record and queue settlement, leaves it alive through
-the existing 75-second exporter interval, and always returns the worker to
-zero. It emits only a safe status, rounded duration, relay exit code, and the
-aggregate terminal table count. It never prints or records secrets, headers,
-request bodies, DynamoDB items, queue URLs/messages, task IDs, or raw AWS
-responses.
+After the remediation image is deployed and health-checked, run these fixed
+stages in order:
+
+1. `--start-relay --approve-outbox-delivery-recovery` starts exactly one
+   labelled Fargate relay and returns immediately.
+2. `--assess-relay` requires that exact labelled relay to have exited `0` and
+   produced exactly one source-queue delivery.
+3. `--start-worker --approve-outbox-delivery-recovery` starts exactly one
+   labelled worker task with its fixed self-termination-after-one-successful-
+   delivery mode; it never changes the worker service desired count.
+4. `--assess-worker` requires that task to have exited `0`, one durable
+   completion record, and empty queues. It is run after the established
+   75-second exporter settlement interval.
+5. `--verify-terminal` requires the server to remain healthy, worker `0/0`,
+   queues empty, no due outbox entry, and four aggregate persistence records.
+
+Every stage revalidates the fixed account, stack, target profile, aggregate
+preconditions, and safe output policy. It emits only a safe stage status,
+relay exit code where applicable, and aggregate record count. It never prints
+or records secrets, headers, request bodies, DynamoDB items, queue URLs or
+messages, task IDs, or raw AWS responses.
 
 This is a bounded recovery delivery proof, not a scheduler, a continuous
 relay, an arbitrary worker queue test, or permission to replay the existing

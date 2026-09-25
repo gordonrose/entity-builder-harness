@@ -10488,6 +10488,70 @@ does no persistence work, that result permits one *new fixed-identity*
 acceptance request; it is not permission to retry the earlier failed writes or
 to start relay/worker processing early.
 
+## 119. A Bounded Background Proof Must Not Depend on the Chat Staying Alive
+
+The first relay proof exposed a practical operational lesson. A command runner
+can have a short execution window while a Fargate task takes longer to start,
+run, and stop. Making one huge command wait for everything is risky: the
+operator loses the final result when the channel ends, and a temporary worker
+service may remain enabled until somebody notices.
+
+The safe design is a sequence of small, independently checked stages:
+
+```text
+accepted outbox entry
+        │
+        ▼
+start one labelled relay task ──> assess its exit and one queue delivery
+                                             │
+                                             ▼
+                         start one labelled self-terminating worker task
+                                             │
+                                             ▼
+                    assess its exit, durable completion, empty queues,
+                         and the normal worker service still at 0/0
+```
+
+Each stage re-reads the reviewed account, target profile, stack outputs, and
+aggregate state. The *start* stages are the only mutations and require the
+explicit recovery guard. The *assess* stages are read-only. A label fixed in
+source lets the assessment find exactly the task started by this proof without
+printing or recording its AWS task ID.
+
+The worker is a one-shot task, not a briefly scaled service. It is given one
+fixed setting—exit after one successful acknowledged delivery—and rejects every
+other value. That means the normal worker service remains at zero, the proof
+task closes after it has done the one permitted piece of work, and a lost chat
+connection cannot leave an always-polling worker service consuming capacity.
+
+There is a second lesson about leases. Both the relay and worker need a unique
+owner value while they claim durable work. On Fargate they now use the same
+helper: it requests only the validated link-local task-metadata endpoint,
+hashes the returned task identity, and supplies the hash as the lease owner.
+The raw cloud task identity never becomes a log field, database value, or
+evidence record. Sharing the helper matters: otherwise the relay might be
+fixed while the worker quietly retains the original hostname assumption.
+
+### Misconception check
+
+“If the worker service is configured with desired count zero, no worker can
+run.”
+
+Not quite. A direct Fargate task can use the service’s existing task definition
+and network policy without changing the service’s desired count. That is useful
+for one controlled proof, but it must be explicitly bounded, labelled, and
+assessed—otherwise it would become an ungoverned second way to run background
+work.
+
+### Study question
+
+Why is a self-terminating worker task safer here than scaling the worker
+service from zero to one and back again?
+
+Because task termination is part of the task’s own declared behaviour after
+one successful delivery. It does not rely on a later chat command surviving to
+scale a long-polling service down again.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
@@ -10512,6 +10576,8 @@ to start relay/worker processing early.
 - [Kanbien target persistence composition](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts)
 - [Kanbien one-pass relay entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts)
 - [Kanbien durable worker entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts)
+- [Kanbien task lease-owner helper](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts)
+- [Bounded persistence delivery-proof runner](../../../scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md)
 - [Staging persistence table source](../../../infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/persistence.yml)
 - [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 - [Current persistence session log](../../../commitLogs/2026/sep/23/2026-09-23-18-13-record-worker-telemetry-evidence/README.md)

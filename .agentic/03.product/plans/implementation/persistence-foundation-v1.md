@@ -364,10 +364,11 @@ continuous business-event availability.
 4. Run one governed Fargate relay task, derived solely from the reviewed
    service/foundation outputs. It may publish at most the one due outbox fact,
    emits no envelope or task identifier, and must exit successfully.
-5. Use a separate governed persistence-worker proof to scale the already
-   deployed worker from zero to one, settle that one relay-created delivery,
-   wait through the bounded telemetry flush, and return it to zero in a
-   `finally` path. It must not enqueue a second direct-SQS fixture.
+5. Use a separate governed persistence-worker proof to start one labelled,
+   self-terminating Fargate worker task from the already deployed worker task
+   definition. It settles that one relay-created delivery, exits after its
+   single successful acknowledgement, and leaves the worker service at zero.
+   It must not enqueue a second direct-SQS fixture.
 6. Verify aggregate-only postconditions: public server still healthy, worker
    desired/running zero, source/DLQ empty, the due index has no remaining
    deliverable work, and the one processing completion is present. Record the
@@ -387,21 +388,26 @@ transaction records and one due outbox obligation, while the server stayed
 `1/1`, worker `0/0`, both queues empty, and five alarms `OK`.
 
 The next and only newly permitted operation is the target-owned delivery proof:
-one existing relay Fargate task, followed only after relay success by a
-temporary scale of the existing worker to one. The command accepts no chosen
-target, task, network, queue, message, work-item, or timeout. It validates the
-exact aggregate preconditions, records no provider payloads, and returns the
-worker to zero in a `finally` path. It is not a scheduler or a second write.
+one existing relay Fargate task, followed only after relay success by one
+self-terminating worker Fargate task. It accepts no chosen target,
+task, network, queue, message, work-item, or timeout. It is now split into
+short start/assess/stop stages: a client-channel timeout cannot conceal a
+long-running AWS wait or a cleanup result. Every stage revalidates its exact
+aggregate preconditions; only the two narrowly mutable task starts require the
+explicit recovery guard. The worker service remains at desired count zero; its
+proof task exits after its only successful delivery. It is not a scheduler or a
+second write.
 
 **Recovery note — first relay configuration attempt stopped safely.** The first
 relay task returned a target-configuration error before an outbox claim or
 queue send. Aggregate state was unchanged: three transaction records, one due
 outbox entry, empty queues, server `1/1`, worker `0/0`, and five alarms `OK`.
-The relay now derives a hashed lease owner from Fargate's injected link-local
-task-metadata endpoint. This removes the unproven hostname dependency without
-storing an ECS identity. A fresh image and reviewed service-task-definition
-rollout are required before the one recovery delivery proof; no new acceptance
-write is allowed.
+The relay and worker now share a hashed lease-owner derivation from Fargate's
+injected link-local task-metadata endpoint. This removes the unproven hostname
+dependency without storing an ECS identity and prevents the worker from
+reintroducing the same configuration risk. A fresh image and reviewed
+service-task-definition rollout are required before the one recovery delivery
+proof; no new acceptance write is allowed.
 
 ### Tranche 2 — reusable persistent-record foundation
 

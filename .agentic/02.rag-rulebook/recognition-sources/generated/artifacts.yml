@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 888
-  term_count: 1788
+  indexed_artifacts: 891
+  term_count: 1794
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -9137,6 +9137,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-persistence-admission-probe.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-delivery-proof.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-delivery-proof
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-delivery-proof.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-delivery-proof.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-persistence-smoke.readme
   category: artifact-id

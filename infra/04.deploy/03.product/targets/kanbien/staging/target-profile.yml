@@ -651,7 +651,7 @@ persistence:
     delivery_proof:
       status: relay-config-remediation-source-ready-deployment-pending
       command: npm run platform:shell:persistence-delivery-proof
-      execution_guard: --execute-and-approve-outbox-delivery-recovery
+      execution_guard: --phase-and-approve-outbox-delivery-recovery
       task_family: kanbien-staging-platform-shell-relay
       first_relay_attempt:
         executed_on_utc: "2026-09-25"
@@ -665,7 +665,7 @@ persistence:
         status: source-ready-deployment-pending
         source_change: derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate
         deployment_guard: publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run
-        recovery_limit: one-relay-task-and-one-temporary-worker-scale-only-after-remediated-task-definition-is-live
+        recovery_limit: one-relay-task-and-one-self-terminating-worker-task-only-after-remediated-task-definition-is-live
       preconditions:
         persistence_table_records: 3
         due_outbox_entries: 1
@@ -676,9 +676,15 @@ persistence:
         worker_running_count: 0
       bounded_action:
         relay_task_count: 1
-        worker_desired_count: 1
+        worker_task_count: 1
         maximum_wait_seconds: 360
         worker_metric_settlement_wait_seconds: 75
+      resumable_stages:
+        start_relay: start-one-labelled-relay-and-return-without-client-side-waiting
+        assess_relay: require-one-labelled-successful-relay-and-one-source-delivery-before-worker-activation
+        start_worker: start-one-labelled-self-terminating-worker-task-after-successful-relay-assessment
+        assess_worker: require-one-labelled-successful-worker-task-one-durable-processing-completion-and-empty-queues
+        verify_terminal: require-worker-service-zero-empty-queues-no-due-outbox-and-four-safe-aggregate-records
       success:
         relay_exit_code: 0
         persistence_table_records: 4
@@ -691,7 +697,7 @@ persistence:
     activation:
       server_acceptance: atomic-work-item-lineage-and-outbox-transaction-proven
       outbox_relay: first-task-stopped-safely-before-outbox-claim-or-queue-send-remediation-deployment-required
-      durable_worker_processing: prohibited-until-one-remediated-relay-task-creates-one-delivery-worker-returns-zero
+      durable_worker_processing: prohibited-until-one-remediated-relay-task-creates-one-delivery-and-one-self-terminating-worker-task-completes
       iam: server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven
       required_identity_scope: platform-shell/smoke.write
       identity_scope_status: isolated-write-client-used-once-for-the-accepted-atomic-proof

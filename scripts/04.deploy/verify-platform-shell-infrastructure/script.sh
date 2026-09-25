@@ -809,7 +809,7 @@ expected_persistence_profile = {
         "delivery_proof": {
             "status": "relay-config-remediation-source-ready-deployment-pending",
             "command": "npm run platform:shell:persistence-delivery-proof",
-            "execution_guard": "--execute-and-approve-outbox-delivery-recovery",
+            "execution_guard": "--phase-and-approve-outbox-delivery-recovery",
             "task_family": "kanbien-staging-platform-shell-relay",
             "first_relay_attempt": {
                 "executed_on_utc": "2026-09-25",
@@ -824,7 +824,7 @@ expected_persistence_profile = {
                 "status": "source-ready-deployment-pending",
                 "source_change": "derive-a-hashed-lease-owner-from-the-link-local-fargate-task-metadata-endpoint-with-hostname-fallback-only-outside-fargate",
                 "deployment_guard": "publish-immutable-image-review-service-change-set-and-health-check-before-one-recovery-relay-run",
-                "recovery_limit": "one-relay-task-and-one-temporary-worker-scale-only-after-remediated-task-definition-is-live",
+                "recovery_limit": "one-relay-task-and-one-self-terminating-worker-task-only-after-remediated-task-definition-is-live",
             },
             "preconditions": {
                 "persistence_table_records": 3,
@@ -837,9 +837,16 @@ expected_persistence_profile = {
             },
             "bounded_action": {
                 "relay_task_count": 1,
-                "worker_desired_count": 1,
+                "worker_task_count": 1,
                 "maximum_wait_seconds": 360,
                 "worker_metric_settlement_wait_seconds": 75,
+            },
+            "resumable_stages": {
+                "start_relay": "start-one-labelled-relay-and-return-without-client-side-waiting",
+                "assess_relay": "require-one-labelled-successful-relay-and-one-source-delivery-before-worker-activation",
+                "start_worker": "start-one-labelled-self-terminating-worker-task-after-successful-relay-assessment",
+                "assess_worker": "require-one-labelled-successful-worker-task-one-durable-processing-completion-and-empty-queues",
+                "verify_terminal": "require-worker-service-zero-empty-queues-no-due-outbox-and-four-safe-aggregate-records",
             },
             "success": {
                 "relay_exit_code": 0,
@@ -855,7 +862,7 @@ expected_persistence_profile = {
         "activation": {
             "server_acceptance": "atomic-work-item-lineage-and-outbox-transaction-proven",
             "outbox_relay": "first-task-stopped-safely-before-outbox-claim-or-queue-send-remediation-deployment-required",
-            "durable_worker_processing": "prohibited-until-one-remediated-relay-task-creates-one-delivery-worker-returns-zero",
+            "durable_worker_processing": "prohibited-until-one-remediated-relay-task-creates-one-delivery-and-one-self-terminating-worker-task-completes",
             "iam": "server-persistence-member-permission-remediation-deployed-and-live-put-item-authorization-proven",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "isolated-write-client-used-once-for-the-accepted-atomic-proof",
@@ -867,15 +874,41 @@ if target_profile.get("persistence") != expected_persistence_profile:
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 relay_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts").read_text(encoding="utf-8")
+worker_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts").read_text(encoding="utf-8")
+task_identity_helper = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts").read_text(encoding="utf-8")
 for required_text, message in {
-    'import { createHash } from "node:crypto";': "relay must hash rather than persist a Fargate task identity",
-    'env["ECS_CONTAINER_METADATA_URI_V4"]': "relay must use the injected Fargate task-metadata endpoint for its durable lease owner",
-    'endpoint.hostname !== "169.254.170.2"': "relay must restrict its task-metadata lookup to the link-local Fargate endpoint",
-    'createHash("sha256").update(taskArn).digest("hex").slice(0, 24)': "relay must reduce task metadata to a bounded non-sensitive lease-owner fingerprint",
+    'targetTaskLeaseOwnerFromEnvironment(env, "kanbien.relay.instance-")': "relay must use the shared Fargate-safe durable lease-owner derivation",
     'typeof path === "string" ? { path } : {}': "relay startup diagnostics may record only a safe controlled configuration field",
 }.items():
     if required_text not in relay_entrypoint:
         fail(message)
+for required_text, message in {
+    'targetTaskLeaseOwnerFromEnvironment(env, "kanbien.worker.instance-")': "worker must use the shared Fargate-safe durable lease-owner derivation",
+    'PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES': "worker must retain the fixed self-terminating recovery task switch",
+    'if (value !== "1")': "worker must reject arbitrary self-terminating task delivery limits",
+}.items():
+    if required_text not in worker_entrypoint:
+        fail(message)
+for required_text, message in {
+    'import { createHash } from "node:crypto";': "task lease-owner derivation must hash rather than persist a Fargate task identity",
+    'env["ECS_CONTAINER_METADATA_URI_V4"]': "task lease-owner derivation must use the injected Fargate task-metadata endpoint",
+    'endpoint.hostname !== "169.254.170.2"': "task lease-owner derivation must restrict lookup to the link-local Fargate endpoint",
+    'createHash("sha256").update(taskArn).digest("hex").slice(0, 24)': "task lease-owner derivation must reduce task metadata to a bounded non-sensitive fingerprint",
+    'endpoint.username !== ""': "task lease-owner derivation must reject credential-bearing metadata endpoint URLs",
+}.items():
+    if required_text not in task_identity_helper:
+        fail(message)
+
+delivery_proof = Path("scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py").read_text(encoding="utf-8")
+for required_text, message in {
+    'RECOVERY_WORKER_STARTED_BY = "kanbien-outbox-worker-recovery-v1"': "delivery proof must label its one self-terminating worker task",
+    '"PLATFORM_WORKER_EXIT_AFTER_SUCCESSFUL_DELIVERIES", "value": "1"': "delivery proof must use only the fixed worker one-shot override",
+    'if not recovery_worker_not_started(policy):': "delivery proof must reject a second labelled recovery worker task",
+}.items():
+    if required_text not in delivery_proof:
+        fail(message)
+if '"ecs", "update-service"' in delivery_proof:
+    fail("delivery proof must not scale the worker service during its self-terminating worker task recovery")
 
 task_execution_policy = properties(foundation, "TaskExecutionRole", "AWS::IAM::Role").get("Policies", [])
 task_execution_configuration_statement = next(

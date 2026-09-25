@@ -33,17 +33,17 @@ if [[ "$result" != *'"persistence_delivery_proof":"validated"'* ]] || [[ "$resul
   exit 1
 fi
 
-if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --execute >/dev/null 2>&1; then
-  echo "ERROR: persistence delivery proof must require its explicit live-operation guard." >&2
+if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --start-relay >/dev/null 2>&1; then
+  echo "ERROR: a mutating persistence delivery-proof stage must require its explicit live-operation guard." >&2
   exit 1
 fi
 
-if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --validate --execute >/dev/null 2>&1; then
+if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --validate --start-relay >/dev/null 2>&1; then
   echo "ERROR: persistence delivery proof must accept exactly one operating mode." >&2
   exit 1
 fi
 
-if rg -n 'add_argument\("--target-profile"|add_argument\("--aws-cli"|add_argument\("--aws-credential-source"|add_argument\("--task-definition"|add_argument\("--network-configuration"|send-message|message-body' scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py >/dev/null; then
+if rg -n 'add_argument\("--target-profile"|add_argument\("--aws-cli"|add_argument\("--aws-credential-source"|add_argument\("--task-definition"|add_argument\("--network-configuration"|send-message|message-body|ecs", "wait"' scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py >/dev/null; then
   echo "ERROR: persistence delivery proof must not accept caller-selected target, credential, task, network, or direct queue-message inputs." >&2
   exit 1
 fi
