@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T10:18:49Z
-latest_commit_sha: 6ae9c0ce
-chat_duration: 5567s (00:01:32:47)
+latest_commit_at_utc: 2026-09-25T10:30:11Z
+latest_commit_sha: 78163f5c
+chat_duration: 6249s (00:01:44:09)
 estimated_chat_tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -82,6 +82,10 @@ go
 
 - Summary: The final fixed write has already committed exactly three aggregate transaction records and one due outbox obligation. The new delivery runner uses no direct SQS send; it validates that exact pre-state, runs one existing relay task, temporarily scales only the dormant worker, waits for durable completion and metric settlement, and always restores zero. Static target-policy, admission, persistence, and infrastructure checks pass.
   Durable evidence: scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; scripts/04.deploy/verify-platform-shell-infrastructure/script.sh; .agentic/03.product/plans/implementation/persistence-foundation-v1.md; docs/aws/kanbien-staging-platform-shell-persistence-v1-deployment-plan.md; docs/education/teaching-notes/0002-architecture-learning-handbook.md
+
+
+- Summary: The initial delivery runner was interrupted by the command channel after starting its one relay task. Aggregate inspection proved the relay application exited 1 with a safe target-configuration category before any outbox claim or queue send; the table remains 3, due outbox remains 1, queues remain empty, server 1/1, worker 0/0, alarms OK. The recovery replaces hostname-derived Fargate lease identity with a SHA-256-truncated task-metadata fingerprint, keeps hostname only for non-Fargate checks, and changes the runner lifecycle so no recovery can execute until the immutable image/service task definition is deployed and health-checked. Focused delivery, infrastructure, and server type checks pass.
+  Durable evidence: infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts; scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; deploy-readiness.yml; persistence plan; deployment plan; handbook
 
 ## Activity Log
 
@@ -231,6 +235,24 @@ Summary: Added a fixed target-owned command that can move only the already commi
 
 ADR impact: No ADR; this is an implementation and evidence progression within the existing persistence foundation and staging deployment plans.
 
+
+### 2026-09-25T10:29:08Z - Context hygiene
+
+Summary: The initial delivery runner was interrupted by the command channel after starting its one relay task. Aggregate inspection proved the relay application exited 1 with a safe target-configuration category before any outbox claim or queue send; the table remains 3, due outbox remains 1, queues remain empty, server 1/1, worker 0/0, alarms OK. The recovery replaces hostname-derived Fargate lease identity with a SHA-256-truncated task-metadata fingerprint, keeps hostname only for non-Fargate checks, and changes the runner lifecycle so no recovery can execute until the immutable image/service task definition is deployed and health-checked. Focused delivery, infrastructure, and server type checks pass.
+
+Durable evidence: infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts; scripts/04.deploy/run-platform-shell-persistence-delivery-proof/; infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml; deploy-readiness.yml; persistence plan; deployment plan; handbook
+
+
+### 2026-09-25T10:30:11Z - Commit recorded
+
+Commit: `78163f5c`
+
+Message: fix(persistence): derive relay lease identity from task metadata
+
+Summary: Recorded the safe no-delivery relay configuration stop, changed Fargate relay lease-owner derivation from an assumed hostname to a bounded hash of injected link-local task metadata, and staged one recovery proof that remains execution-blocked until a reviewed immutable-image/service rollout is healthy. Delivery and infrastructure checks plus platform-server typecheck passed; the aggregate generic commit gate was time-limited after its preceding RAG checks passed.
+
+ADR impact: No ADR; this is a narrow implementation recovery within the established persistence proof architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -295,6 +317,13 @@ Corpus gaps:
   Summary: Added a fixed target-owned command that can move only the already committed outbox obligation through one relay Fargate task and one temporary worker scale-up, with exact aggregate preconditions, safe output, and mandatory zero-worker cleanup. Recorded final acceptance evidence, target lifecycle policy, static verification, deployment plan, and teaching note. Focused checks passed; the generic RAG gate was environment-time-limited after its preceding checks passed.
   ADR impact: No ADR; this is an implementation and evidence progression within the existing persistence foundation and staging deployment plans.
 
+
+- Commit: `78163f5c`
+  Time UTC: 2026-09-25T10:30:11Z
+  Message: fix(persistence): derive relay lease identity from task metadata
+  Summary: Recorded the safe no-delivery relay configuration stop, changed Fargate relay lease-owner derivation from an assumed hostname to a bounded hash of injected link-local task metadata, and staged one recovery proof that remains execution-blocked until a reviewed immutable-image/service rollout is healthy. Delivery and infrastructure checks plus platform-server typecheck passed; the aggregate generic commit gate was time-limited after its preceding RAG checks passed.
+  ADR impact: No ADR; this is a narrow implementation recovery within the established persistence proof architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -310,9 +339,9 @@ those approved architectural boundaries rather than a new durable decision.
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T08:46:02Z
-Latest commit at UTC: 2026-09-25T10:18:49Z
-Latest commit SHA: 6ae9c0ce
-Chat duration: 5567s (00:01:32:47)
+Latest commit at UTC: 2026-09-25T10:30:11Z
+Latest commit SHA: 78163f5c
+Chat duration: 6249s (00:01:44:09)
 Estimated chat tokens: 76106649 estimated from chat transcript bytes (304426593 bytes; source: codex path: /home/owner/.codex/sessions/2026/08/31/rollout-2026-08-31T01-09-34-01a05526-6410-73f3-a691-39a27d433af7.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
