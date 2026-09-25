@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 30
+version: 31
 status: active
 layer: 03.product
 domain: persistence
@@ -520,11 +520,20 @@ relay is not silently enabled here because its cadence, delivery-latency SLO,
 availability posture, and recurring Fargate cost are material target decisions
 that the present low-cost smoke proof does not define.
 
-At present, the **reusable foundation is complete locally**, but the **live
-reference proof remains incomplete** because Tranche 1 has reached its
-non-mutating admission gate. No plan text or readiness record may call the
-persistence solution fully production-proven until that diagnostic and one
-newly authorised acceptance-to-worker path pass.
+**Current status — bounded reference proof complete.** The reusable foundation
+has local contract coverage and the defined `kanbien/staging` reference has
+completed its one permitted terminal transaction → outbox → SQS → worker
+delivery. The terminal evidence records only safe aggregates: four persistence
+records, no due outbox work, empty source and dead-letter queues, a
+self-terminating worker, and five `OK` alarms. It does not make a claim about
+real entity persistence, tenant data, continuous dispatch, or a universal
+database choice.
+
+The next persistence milestone is deliberately additive:
+[PostgreSQL Relational Persistence Reference v1](postgresql-relational-persistence-reference-v1.md).
+It defines how a relational option can be selected and proved without changing
+the bounded DynamoDB/SQS reference or placing provider code in this
+provider-neutral foundation.
 
 ## The Terms Used In This Plan
 
@@ -1095,8 +1104,8 @@ This plan is complete only when all of the following are true:
 - The staging target has a reviewed, least-privilege, encrypted, observable,
   cost-aware deployment configuration with source validation and a reviewed
   change set.
-- A controlled live proof produces durable, safe evidence for the declared
-  smoke flow and records remaining limitations honestly.
+- The controlled live proof has produced durable, safe terminal evidence for
+  the declared smoke flow and records its remaining limitations honestly.
 - The production reference baseline distinguishes this proof from unbuilt real
   entity persistence, real tenant data, product retention/migration/restore,
   and continuous scheduler/relay operation.
@@ -1107,9 +1116,13 @@ The following are deliberately not guessed in persistence v1. Each needs a
 real product requirement and a governed change before it may be represented as
 an available platform default:
 
-1. The primary persistence provider for real Entity Builder entities.
+1. The primary persistence provider for each real Entity Builder entity. The
+   PostgreSQL relational-reference plan is a proposed, additive default for
+   relational workloads; it is not a universal assignment.
 2. Product schema migrations, relational constraints, reporting/search
-   patterns, data migration, and restore procedures.
+   patterns, data migration, and restore procedures. The PostgreSQL plan
+   supplies the reusable relational migration and restore boundary, while a
+   product still owns each actual schema and migration.
 3. Per-entity tenant keys, data classifications, retention windows, legal
    hold, purge/anonymisation, and authorised restore policy.
 4. High-availability, multi-region recovery, throughput, and recovery
@@ -1124,6 +1137,9 @@ an available platform default:
 - `packages/core/src/queues/` and `platform/workers/` own the existing
   provider-neutral asynchronous vocabulary and worker lifecycle.
 - `platform/adapters/aws/queue/sqs/` owns the SQS translation boundary.
+- `.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md`
+  owns the next, additive relational-reference decision and implementation
+  path; it does not amend the completed DynamoDB smoke proof.
 - `infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/work-queues.yml`
   owns the existing target queue/DLQ resource fragment.
 - `.agentic/aws/workflows/plan-aws-change.md` and

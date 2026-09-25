@@ -40,7 +40,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: The governed recovery importer partially copied one file before sandboxed Git index access failed.
+  Resolution: Restored only that copied file to HEAD while preserving the prior source worktree, then reran the importer with approved index access; it imported and staged exactly the seven approved planning/documentation paths.
 
 ## Decisions Made
 
@@ -49,12 +52,24 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Decision: Execute the full PostgreSQL relational-reference programme in six gated stages.
   Rationale: Authority includes repository implementation, validated commits/merge/push, and only least-privilege kanbien/staging AWS changes up to €50/month; stop on drift, unsafe evidence, broader permissions, unhealthy rollout, destructive action, or failed restore proof.
 
+
+- Decision: Treat the PostgreSQL reference plan as a draft implementation programme, not a universal database selection.
+  Rationale: The current stage begins from an imported documentation checkpoint; RDS resource creation remains conditional on Stage 1 inspection, €50/month cap, and every preceding gate passing.
+
+
+- Decision: Record the PostgreSQL relational-reference plan and teaching series as a documentation checkpoint before Stage 1 implementation.
+  Rationale: No ADR is created yet because RDS PostgreSQL is a draft target proposal; Stage 1 must inspect current target constraints, cost, and engine availability before a provider-selection decision is final.
+
 ## Context Hygiene
 
 
 
 - Summary: Prior PostgreSQL planning and teaching changes remain uncommitted in the 2026-09-25 chat worktree and must be imported through the governed recovery path before implementation.
   Durable evidence: Source worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-25-09-46-go-3705592782; approved paths are the persistence plans, handbook, deployment plan, and prior session log.
+
+
+- Summary: Imported the exact seven approved files from the prior chat after the recovery tool’s sandboxed partial import was safely restored and rerun with staged Git index access.
+  Durable evidence: The imported PostgreSQL plan contains six gated stages; deterministic-process checking required one explicit human-governed AWS deployment marker. Metadata, diff, and deletion gates pass.
 
 ## Activity Log
 
@@ -75,6 +90,34 @@ Rationale: Authority includes repository implementation, validated commits/merge
 Summary: Prior PostgreSQL planning and teaching changes remain uncommitted in the 2026-09-25 chat worktree and must be imported through the governed recovery path before implementation.
 
 Durable evidence: Source worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-25-09-46-go-3705592782; approved paths are the persistence plans, handbook, deployment plan, and prior session log.
+
+
+### 2026-09-25T23:53:46Z - Issue
+
+Raised: The governed recovery importer partially copied one file before sandboxed Git index access failed.
+
+Resolution: Restored only that copied file to HEAD while preserving the prior source worktree, then reran the importer with approved index access; it imported and staged exactly the seven approved planning/documentation paths.
+
+
+### 2026-09-25T23:53:46Z - Decision
+
+Decision: Treat the PostgreSQL reference plan as a draft implementation programme, not a universal database selection.
+
+Rationale: The current stage begins from an imported documentation checkpoint; RDS resource creation remains conditional on Stage 1 inspection, €50/month cap, and every preceding gate passing.
+
+
+### 2026-09-25T23:54:11Z - Decision
+
+Decision: Record the PostgreSQL relational-reference plan and teaching series as a documentation checkpoint before Stage 1 implementation.
+
+Rationale: No ADR is created yet because RDS PostgreSQL is a draft target proposal; Stage 1 must inspect current target constraints, cost, and engine availability before a provider-selection decision is final.
+
+
+### 2026-09-25T23:54:11Z - Context hygiene
+
+Summary: Imported the exact seven approved files from the prior chat after the recovery tool’s sandboxed partial import was safely restored and rerun with staged Git index access.
+
+Durable evidence: The imported PostgreSQL plan contains six gated stages; deterministic-process checking required one explicit human-governed AWS deployment marker. Metadata, diff, and deletion gates pass.
 
 ## Sub-Agent Activity
 

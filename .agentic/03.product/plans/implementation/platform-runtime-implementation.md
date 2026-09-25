@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.architecture.plan.platform-runtime-implementation
-version: 43
+version: 44
 status: active
 layer: 03.product
 domain: platform-runtime
@@ -1268,9 +1268,26 @@ DynamoDB. This runtime plan remains the owner of the enduring architecture
 rules; the focused plan owns ordered implementation, tests, deployment
 preparation, and evidence criteria.
 
+That bounded reference is now operationally proven at its deliberately narrow
+scope. It is not a universal persistence choice. The next additive decision is
+[PostgreSQL Relational Persistence Reference v1](postgresql-relational-persistence-reference-v1.md):
+it must introduce a provider-specific adapter beneath
+`platform/adapters/aws/persistence/postgresql/`, provider-specific target
+resources beneath `infra/04.deploy/`, and product-owned schemas/migrations
+without moving those concerns into Core or generic `platform/persistence`.
+The PostgreSQL plan has its own approval, cost, security, migration, and
+recovery gates; this runtime plan does not authorise AWS mutation by itself.
+
 #### Bounded DynamoDB transactional-outbox smoke proof
 
 <!-- deterministic-check: allow reason="this is a bounded architecture decision; its data-classification and transaction requirements need future adapter and target tests, not a plan-prose script" -->
+**Historical design record; status updated 2026-09-25.** The bounded DynamoDB
+transactional-outbox implementation and its one permitted staging delivery
+have completed. The paragraphs below preserve the decision rationale and
+non-negotiable safety rules. Read future-tense implementation steps in this
+section as the historical plan unless they expressly concern deferred
+continuous dispatch, scheduler, product-data, or recovery work.
+
 The first operating use case is now sufficiently concrete to plan a narrow
 platform proof: a non-business platform-smoke work item changes state and
 writes a bounded evidence record and outbox record in the same DynamoDB

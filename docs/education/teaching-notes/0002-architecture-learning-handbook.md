@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 40
+  version: 41
   status: active
   layer: 05.education
   domain: education
@@ -60,6 +60,16 @@ that structure. Repository links are the current evidence.
 19. [Platform adapters: translating providers without spreading them everywhere](#19-platform-adapters-translating-providers-without-spreading-them-everywhere)
 20. [Next lesson queue](#20-next-lesson-queue)
 116. [Logical deletion is a repair state, not a retention policy](#116-logical-deletion-is-a-repair-state-not-a-retention-policy)
+
+### Current persistence-reference series
+
+120. [A proven reference is not a universal database decision](#120-a-proven-reference-is-not-a-universal-database-decision)
+121. [RDS is managed hosting, not a public application boundary](#121-rds-is-managed-hosting-not-a-public-application-boundary)
+122. [Migrations are compatibility changes, not edits to a live database](#122-migrations-are-compatibility-changes-not-edits-to-a-live-database)
+123. [Transactions and concurrency protect different failure modes](#123-transactions-and-concurrency-protect-different-failure-modes)
+124. [Tenant scope is necessary but not sufficient authorization](#124-tenant-scope-is-necessary-but-not-sufficient-authorization)
+125. [Deletion, lineage, and recovery answer different questions](#125-deletion-lineage-and-recovery-answer-different-questions)
+126. [A relational reference is proven in six bounded stages](#126-a-relational-reference-is-proven-in-six-bounded-stages)
 
 ## 1. Layers and Ownership
 
@@ -10552,6 +10562,387 @@ Because task termination is part of the task’s own declared behaviour after
 one successful delivery. It does not rely on a later chat command surviving to
 scale a long-polling service down again.
 
+## 120. A Proven Reference Is Not a Universal Database Decision
+
+We have now proved one small DynamoDB/SQS path in staging. That is a useful
+achievement, but it answers a narrow question:
+
+> Can this platform commit a harmless state change, publish the resulting work
+> safely later, and finish that work exactly once in effect?
+
+It does **not** answer a different question:
+
+> Which store should a future product use for every customer, invoice, member,
+> document, relationship, report, and search query?
+
+That distinction is why the next plan is an additive PostgreSQL *reference*,
+not a replacement project.
+
+```text
+Completed DynamoDB/SQS proof        Proposed PostgreSQL reference
+----------------------------        -----------------------------
+one bounded smoke workflow     +    one bounded relational workflow
+proves durable delivery             proves relational transactions, migrations,
+                                     isolation, and recovery
+
+Neither sentence means: "all future data must go here."
+```
+
+### Why PostgreSQL is worth a separate reference
+
+Relational stores are especially useful when a capability needs deliberately
+related facts—such as an invoice linked to a customer and line items—plus
+joins, constraints, and migrations. DynamoDB can be excellent for its own
+access patterns, but proving one DynamoDB workflow does not prove those
+relational concerns.
+
+The PostgreSQL plan therefore starts by proving the *mechanics* a future
+relational capability would need:
+
+- one all-or-nothing transaction;
+- a rejected stale update rather than a lost newer update;
+- an ordered, checked migration;
+- a tenant-A test that cannot see tenant-B's synthetic row; and
+- a backup/restore rehearsal that does not overwrite the live reference.
+
+### Where the code belongs
+
+The future PostgreSQL driver code belongs under
+`platform/adapters/aws/persistence/postgresql/`. That placement says three
+useful things at a glance:
+
+1. it is an **AWS** target choice;
+2. it is about **persistence**, not generic application behaviour; and
+3. it is specifically a **PostgreSQL** translation boundary.
+
+Core can still say “begin a transaction” without knowing which database is
+used. A product can still say “save this approved invoice change” without
+knowing which TCP connection or SQL driver performs it. The adapter is the
+translator between those two sides.
+
+### The safety baseline
+
+The reference will not be considered complete merely because a database is
+reachable. It must be private (not a public internet endpoint), encrypted at
+rest and in transit, use different migration and runtime authorities, use
+parameterised values rather than request-built SQL, emit no SQL/rows/values to
+ordinary telemetry, and prove a controlled restore.
+
+### Misconception check
+
+“Once PostgreSQL is available, every app should use it.”
+
+No. A platform reference is an approved, well-understood option. A product
+still selects storage from its real data shape, access patterns, sensitivity,
+availability needs, cost, and recovery requirement. The platform prevents a
+capability from having to rediscover the security and operational baseline
+from scratch.
+
+### Study question
+
+Why is a backup configuration not enough to claim recovery readiness?
+
+Because it proves that a provider was asked to retain a copy, not that the
+copy can be restored into an isolated destination, has the expected schema and
+safe data, and can be used without damaging the live service.
+
+## 121. RDS Is Managed Hosting, Not a Public Application Boundary
+
+PostgreSQL is database software. Amazon RDS is AWS's managed service for
+operating that software. RDS reduces server-operation work such as managed
+backups and infrastructure maintenance; it does not make our data model,
+authorisation, or recovery responsibilities disappear.
+
+```text
+Public internet → WAF → ALB → platform server → private RDS PostgreSQL
+```
+
+Only the platform workload may ask the database for data. Browsers, the ALB,
+and arbitrary AWS workloads must not connect to it.
+
+| Control | What it contributes |
+| --- | --- |
+| Private RDS setting and database subnet group | No public database endpoint. |
+| Database security group | Allows PostgreSQL traffic only from approved workload groups. |
+| Runtime database authority | Limits ordinary application data operations. |
+| Migration database authority | Allows deliberate schema change without giving that power to the normal server. |
+| TLS connection | Encrypts traffic between workload and RDS. |
+| RDS storage encryption | Protects stored database and managed backups. |
+
+AWS IAM and PostgreSQL permissions are different checks. IAM can decide whether
+an ECS task may retrieve the exact secret reference it needs. PostgreSQL then
+decides what that connected database identity may do. We need both layers.
+
+### Misconception check
+
+“The ALB protects the database.”
+
+No. The ALB is an HTTP boundary. The database needs separate private-network,
+credential, and database-role controls.
+
+### Study question
+
+Why must the ordinary server and the migration runner have separate database
+authority?
+
+Because the normal server handles public requests frequently. Giving it schema
+change authority would turn an ordinary application defect or compromise into
+potential structural database damage.
+
+## 122. Migrations Are Compatibility Changes, Not Edits to a Live Database
+
+A database **schema** is the structure of tables, fields, relationships,
+constraints, and indexes. A **migration** is an ordered, recorded change to
+that structure.
+
+```text
+Migration 001 → create a table
+Migration 002 → add a field
+Migration 003 → add an index
+```
+
+The database records a migration identifier, checksum, applied time, tool
+version, and outcome. If a source migration that has already been applied is
+changed later, its checksum no longer matches and the runner stops safely.
+Old applied migrations are immutable; a new change gets a new migration.
+
+The safe live-change pattern is:
+
+```text
+Expand → migrate/backfill → contract
+```
+
+1. **Expand:** add a backward-compatible new field or table.
+2. **Migrate/backfill:** populate or convert existing data through a controlled
+   process.
+3. **Contract:** only after old application versions are gone, enforce stricter
+   rules or remove obsolete structure.
+
+This avoids deploying new code while an older running server still requires
+the old database shape.
+
+Migrations run through one deliberate migration path, not automatically when
+every server starts. Some PostgreSQL operations have special locking or
+transaction behaviour, so the migration runner must know each migration's
+safety characteristics. A failure stops promotion; recovery is a reviewed
+forward repair or separately governed restore, not automatic destructive
+rollback.
+
+### Misconception check
+
+“A migration is just an SQL file.”
+
+No. In a live system it is a compatibility change involving application
+versions, data, authority, deployment order, observability, and recovery.
+
+### Study question
+
+Why add a new optional field before requiring it?
+
+Because old and new application versions can run at the same time during a
+deployment. The optional field keeps both compatible while the data moves.
+
+## 123. Transactions and Concurrency Protect Different Failure Modes
+
+A **transaction** protects related writes. A **concurrency token** protects a
+record from being overwritten by a stale editor.
+
+```text
+One approved transition
+    ├── state change
+    ├── record-change lineage
+    └── outbox obligation
+
+All commit together, or none commits.
+```
+
+Without a concurrency token, two people can read the same older invoice and
+each save a change. The later save can erase the first person's change. A
+revision number prevents that:
+
+```text
+Both editors read revision 7
+    ↓
+First save changes record to revision 8
+    ↓
+Second save still expects revision 7
+    ↓
+Second save is rejected as a safe conflict
+```
+
+The relevant controls solve different problems:
+
+| Control | Protects against |
+| --- | --- |
+| Transaction | Partial state/lineage/outbox writes. |
+| Revision token | Stale interactive updates. |
+| Unique idempotency identity | Duplicate create request or delivery. |
+| Lease and fence | Old background worker writing after a newer claimant. |
+| Constraint or foreign key | An impossible relational state. |
+
+PostgreSQL provides transactions, constraints, unique indexes, conditional
+updates, and carefully chosen locks. More locking is not automatically safer:
+it can cause waits or deadlocks. A product decides which business outcome must
+never occur; the platform supplies the right bounded mechanism.
+
+### Misconception check
+
+“A transaction locks the whole database until it finishes.”
+
+No. A transaction makes a set of operations commit or roll back together. Its
+precise isolation and locking behaviour must be chosen for the operation.
+
+### Study question
+
+Why does an interactive invoice edit usually need a revision token, while a
+restartable queue worker needs a lease and fence?
+
+The edit needs to reject an outdated save. The worker needs temporary exclusive
+authority across crashes and retries, so an expired worker cannot complete
+after a newer worker has taken over.
+
+## 124. Tenant Scope Is Necessary but Not Sufficient Authorization
+
+Every tenant-owned row needs a deliberate tenant boundary:
+
+```text
+Approved request context
+    tenant: Acme
+    region: Benelux
+    permission: invoice.read
+        ↓
+Repository query applies approved scope
+        ↓
+Only permitted Acme / Benelux invoices are eligible
+```
+
+The tenant scope comes from verified authentication and authorisation context,
+not from a browser value that says “tenant=Acme.” A repository operation for a
+tenant-owned record therefore requires tenant scope for reads, lists, updates,
+deletes, restores, and relationship changes.
+
+Tenant-aware relationships and indexes matter too. An invoice must not be able
+to point to a customer in another tenant merely because their local identifiers
+look alike. Tenant-first keys and indexes help the database enforce and find
+the right partition of data.
+
+PostgreSQL row-level security (RLS) may become a second defence. It can restrict
+database rows to a trusted per-transaction tenant context. It is only safe when
+the database role cannot bypass it, the context is set by the server rather
+than the client, and pooled connections cannot leak one tenant's context into
+another request. Until that complete design is proved, RLS remains a proposed
+defence—not a claim.
+
+Tenant scope still does not answer all authorisation questions. Bill may be
+inside the correct tenant but permitted to read only Benelux invoices, not
+customer-service queries. Group, role, resource, region, relationship, and
+action checks remain product authorisation concerns.
+
+### Misconception check
+
+“A `tenant_id` column means the table is tenant-safe.”
+
+No. Every query, relationship, index, database role, and test must treat that
+column as an access boundary. RLS can add protection but cannot replace full
+product authorisation.
+
+### Study question
+
+Why should tenant-isolation tests include list/count/search behaviour, not just
+“get by ID”?
+
+Because a system can leak another tenant's information by revealing that a
+record exists, how many records exist, or whether a search found a match.
+
+## 125. Deletion, Lineage, and Recovery Answer Different Questions
+
+Deletion is a lifecycle, not one irreversible button.
+
+```text
+Active → authorised logical delete → deleted / recoverable
+                                      ↓
+                            restore while policy permits
+                                      or
+                       purge/anonymise when policy permits
+```
+
+Normal reads, searches, lists, exports, and relationships must treat a
+logically deleted record as unavailable. A later authorised restore checks the
+recovery period, relevant policy, legal hold, and concurrency state. A logical
+delete is a repair window, not permission to retain personal data indefinitely.
+
+**Record-change lineage** answers: “which record revision changed because of
+this event or queue message?” It stores minimal, protected facts such as entity
+kind/reference, revision, action, tenant, timestamp, correlation, and direct
+cause. It is not a complete historical copy of every row.
+
+An **audit event** answers a different question: “who performed an accountable
+action, against which target, in which context, with what outcome?” An
+authorised invoice deletion may need both a lineage fact and an audit event.
+
+Full old/new rows, secrets, medical data, customer names, raw requests, and
+prompts do not belong in broad history by default. Field-difference policy is
+allowlisted and classification-aware.
+
+Backups protect against broader incidents such as destructive migration or
+database failure. They are not proof of recovery merely because they are
+enabled. A controlled restore rehearsal must recover into an isolated
+destination, verify safe schema/migration/synthetic-count facts, and leave the
+live database untouched.
+
+### Misconception check
+
+“Soft delete means we never delete data.”
+
+No. It is a temporary, governed repair state. Retention, erasure,
+anonymisation, legal hold, restore, and purge still require explicit policy.
+
+### Study question
+
+Why can a deleted record require both lineage and an audit event?
+
+Lineage identifies the changed record revision and its direct cause. The audit
+event records the accountable action and its authorised context.
+
+## 126. A Relational Reference Is Proven in Six Bounded Stages
+
+The PostgreSQL plan now has six stages. Each is a gate, not just a to-do list.
+Passing one stage does not silently authorise the cloud mutation in the next.
+
+| Stage | Main outcome | Key proof |
+| --- | --- | --- |
+| 1. Decide and inspect | Exact low-cost private-RDS design and threat model. | Every resource, role, cost cap, network route, and non-goal can be named. |
+| 2. Build adapter | Scanable PostgreSQL adapter with no provider leakage. | Unit, boundary, parameterisation, redaction, and error-mapping tests. |
+| 3. Local semantics | Disposable database plus harmless smoke capability. | Transactions, migrations, concurrency, fences, synthetic tenant isolation, and safe telemetry. |
+| 4. Define target | Reviewed IaC, access, alarms, budgets, and restore procedure. | Exact CloudFormation change set contains only intended relational resources. |
+| 5. Deploy/configure | Staging target matches the reviewed security design. | Private access, encryption/TLS, separate authorities, health, alarms, and cost checks. |
+| 6. Deliver and recover | One bounded full workflow and isolated restore rehearsal. | Terminal queue/outbox state, duplicate safety, restore result, alert/runbook evidence. |
+
+The final claim will be precise:
+
+> Kanbien has a secure, private, observable, recoverable PostgreSQL relational
+> reference in staging for a bounded synthetic workflow.
+
+It will not mean that all products use PostgreSQL, that real tenant data is
+ready, that continuous dispatch exists, or that high availability and
+multi-region recovery are complete.
+
+### Misconception check
+
+“A successful CloudFormation deployment proves operational readiness.”
+
+No. It proves AWS accepted an infrastructure request. Operational proof also
+needs access, isolation, migration, delivery, monitoring, cost, and recovery
+evidence.
+
+### Study question
+
+Why does the final restore rehearsal use an isolated destination rather than
+overwriting the live database?
+
+Because a recovery test should reduce risk. Overwriting the live reference
+could turn a rehearsal into a real outage or data-loss incident.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
@@ -10573,6 +10964,7 @@ scale a long-polling service down again.
 - [Platform persistence source guide](../../../platform/persistence/README.md)
 - [Platform persistence public barrel](../../../platform/persistence/src/index.ts)
 - [AWS DynamoDB persistence adapter](../../../platform/adapters/aws/persistence/dynamodb/README.md)
+- [PostgreSQL relational-reference plan](../../../.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md)
 - [Kanbien target persistence composition](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts)
 - [Kanbien one-pass relay entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts)
 - [Kanbien durable worker entrypoint](../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts)
@@ -11086,6 +11478,15 @@ After each completed learning chunk:
   it. The final aggregate state—not raw records or messages—proved that there
   was no remaining due work or queue backlog and that the dormant worker
   service returned to zero.
+- 2026-09-25: Added the relational-reference lesson and linked plan. It
+  explains why the completed DynamoDB/SQS proof is evidence for one bounded
+  delivery path rather than a universal database decision, and introduces the
+  separate PostgreSQL adapter, migration, isolation, telemetry, and
+  backup/restore proof boundaries.
+- 2026-09-25: Expanded the PostgreSQL reference into the printable learning
+  series: private RDS access, migration safety, transaction/concurrency,
+  tenant isolation/RLS, lifecycle/lineage/recovery, and the six-stage route to
+  bounded operational proof.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The
