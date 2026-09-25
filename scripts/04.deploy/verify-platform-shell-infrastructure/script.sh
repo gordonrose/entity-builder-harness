@@ -421,6 +421,27 @@ else:
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed deployed non-mutating admission probe")
+        expected_admission_probe_deployment = {
+            "executed_on_utc": "2026-09-25",
+            "source_commit_sha": "9b2aeb33153911eb507b83d30e362214445c0e3b",
+            "github_workflow_run_id": "36117931464",
+            "image_digest": "sha256:ce90ea8725a7743296ffce1a624b778bfedd2f391f29994d831227597ef80dfa",
+            "image_scan": "zero-critical-zero-high",
+            "change_set_review": "three-task-definition-revisions-and-two-in-place-service-references-only",
+            "post_deployment_verification": {
+                "service_stack": "UPDATE_COMPLETE",
+                "public_server": "desired-one-running-one-rollout-complete",
+                "public_target_health": "healthy",
+                "public_liveness": "http-200",
+                "protected_read_smoke": "http-200-safe-redacted-result",
+                "worker": "desired-zero-running-zero-rollout-complete",
+                "source_and_dead_letter_queues": "empty",
+                "alarms": "five-ok",
+            },
+            "evidence_hygiene": "safe-image-and-aggregate-runtime-facts-only-no-task-identifiers-secrets-tokens-headers-bodies-or-provider-payloads",
+        }
+        if persistence_write_test_client.get("admission_probe_deployment") != expected_admission_probe_deployment:
+            fail("target profile must retain safe deployed admission-probe evidence")
     if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
         expected_failed_acceptance = {
             "executed_on_utc": "2026-09-24",
@@ -654,7 +675,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-admission-probe-source-ready-deployment-pending",
+        "status": "foundation-and-service-deployed-admission-probe-deployed-pending-execution",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -724,17 +745,17 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "deploy-and-health-check-the-non-mutating-admission-probe-before-any-new-persistence-write",
+            "next_execution_guard": "execute-one-non-mutating-admission-probe-then-record-safe-result-before-any-fresh-persistence-write",
             "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-fresh-persistence-write-before-admission-probe",
         },
         "activation": {
-            "server_acceptance": "non-mutating-admission-probe-source-ready-deployment-pending",
+            "server_acceptance": "non-mutating-admission-probe-deployed-pending-one-execution",
             "outbox_relay": "prohibited-no-committed-outbox-obligation",
             "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
             "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-admission-probe-only-before-any-fresh-write",
-            "observability": "admission-profile-source-registered-no-body-no-persistence-side-effects-deployment-pending",
+            "observability": "admission-profile-deployed-no-body-no-persistence-side-effects-one-execution-pending",
         },
     },
 }

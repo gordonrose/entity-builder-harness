@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 29
+version: 30
 status: active
 layer: 03.product
 domain: persistence
@@ -279,6 +279,13 @@ prompt, transcript, credential, token, or raw request data.
   involved. Its fixed runner can execute only once after a reviewed immutable
   deployment and healthy-server check. A pass proves the authenticated request
   reaches the application boundary; it does not claim a persistence commit.
+- **2026-09-25 — Admission diagnostic deployment complete:** the scan-clean,
+  attested immutable image was published from `main`, then a reviewed service
+  change set made only three normal ECS task-definition revisions and two
+  in-place service references. The stack returned to `UPDATE_COMPLETE`, the
+  server to healthy `1/1`, the worker to `0/0`, queues to empty, and all five
+  alarms to `OK`; public liveness and the protected-read smoke returned `200`.
+  The non-mutating admission route is therefore deployed and may execute once.
 
 ### Durable-delivery contract boundary
 
@@ -325,10 +332,10 @@ continuous business-event availability.
 
 ### Tranche 1 — bounded live transactional-outbox proof
 
-1. Deploy and health-check the immutable server image containing the fixed,
-   non-mutating write-admission route. Execute its one no-body diagnostic only
-   after that check. Stop if it does not return `204`; do not infer an ingress
-   cause and do not issue another state-changing request.
+1. **Complete:** deploy and health-check the immutable server image containing
+   the fixed, non-mutating write-admission route. Execute its one no-body
+   diagnostic only after that check. Stop if it does not return `204`; do not
+   infer an ingress cause and do not issue another state-changing request.
 2. If and only if that diagnostic succeeds, perform **one** fresh no-body
    acceptance request with a new fixed opaque request identity. The two prior
    requests remain proved non-commits and are never retried under their
@@ -343,7 +350,7 @@ continuous business-event availability.
    deployed worker from zero to one, settle that one relay-created delivery,
    wait through the bounded telemetry flush, and return it to zero in a
    `finally` path. It must not enqueue a second direct-SQS fixture.
-5. Verify aggregate-only postconditions: public server still healthy, worker
+6. Verify aggregate-only postconditions: public server still healthy, worker
    desired/running zero, source/DLQ empty, the due index has no remaining
    deliverable work, and the one processing completion is present. Record the
    relay/worker transition metric observation separately from queue settlement.
@@ -353,13 +360,14 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — stopped safely.** The one permitted replacement acceptance
-returned `503` in 148 milliseconds. A safe aggregate inspection found zero
-committed records, empty source and dead-letter queues, a healthy `1/1` server,
-and a `0/0` worker. Because no matching structured server-request record was
-observed, the next work is a separate pre-server/ingress diagnosis—not another
-write. Steps 3–5 are prohibited until that diagnosis is reviewed and a new,
-bounded execution authority exists.
+**Current result — diagnostic deployed, execution pending.** The two earlier
+acceptance requests remain safe non-commits. A read-only ingress inspection and
+the completed immutable-image rollout now establish that the public host,
+WAF, ALB-only ingress, healthy `1/1` server, zero worker, empty queues, and
+five alarms are all in their expected states. The next work is exactly one
+non-mutating admission request; no fresh persistence write, relay, or worker
+action is permitted unless that request returns `204` and its safe evidence is
+recorded.
 
 ### Tranche 2 — reusable persistent-record foundation
 
@@ -403,10 +411,10 @@ availability posture, and recurring Fargate cost are material target decisions
 that the present low-cost smoke proof does not define.
 
 At present, the **reusable foundation is complete locally**, but the **live
-reference proof remains incomplete** because Tranche 1 stopped at its required
-safety gate. No plan text or readiness record may call the persistence solution
-fully production-proven until the separate ingress diagnosis closes and one
-newly authorised acceptance-to-worker path passes.
+reference proof remains incomplete** because Tranche 1 has reached its
+non-mutating admission gate. No plan text or readiness record may call the
+persistence solution fully production-proven until that diagnostic and one
+newly authorised acceptance-to-worker path pass.
 
 ## The Terms Used In This Plan
 

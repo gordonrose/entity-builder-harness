@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 47
+#   version: 48
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -555,7 +555,7 @@ runtime:
         source_and_dead_letter_queues: empty
       next_execution_guard: explicit-current-approval-required-for-write-identity-or-delivery-proof
     write_identity:
-      status: write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending
+      status: write-proof-failed-non-committing-admission-probe-deployed-pending-execution
       scope: platform-shell/smoke.write
       client_boundary: separate-confidential-client-credentials-only
       secret_boundary: target-owned-bounded-smoke-only-not-ecs
@@ -593,13 +593,14 @@ runtime:
         post_attempt_state: server-one-running-one-worker-zero-queues-empty
         follow_up: diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action
       admission_probe:
-        status: source-ready-deployment-pending
+        status: deployed-pending-one-execution
         route: POST /smoke/work-items/admission
         request_body: none
         persistence_side_effects: prohibited
         expected_http_status: 204
-        next_guard: reviewed-service-deployment-and-health-before-one-execution
-    next_boundary: deploy-and-health-check-a-non-mutating-admission-probe-before-any-new-write-relay-or-worker-proof
+        next_guard: one-execution-only-then-record-safe-result-before-any-fresh-persistence-write
+      admission_probe_deployment: immutable-image-published-scan-clean-attested-service-change-set-five-expected-modifications-executed-update-complete-server-one-worker-zero-queues-empty-five-alarms-ok
+    next_boundary: execute-one-non-mutating-admission-probe-and-record-its-safe-result-before-any-new-write-relay-or-worker-proof
     evidence_hygiene: safe-configuration-and-aggregate-runtime-facts-only-no-records-messages-task-identifiers-or-provider-payloads
 product:
   manifest: products/kanbien-platform/src/product.manifest.ts

@@ -96,6 +96,20 @@ Initial intent: go
   if it is the expected immutable task-definition/service-reference rollout,
   then health-check before the one admission-probe execution.
 
+### 2026-09-25T10:00:00Z - Admission diagnostic deployed and health-checked
+
+- Published the immutable image from `main` through the existing narrow GitHub
+  image workflow. It completed scan-clean with provenance and SBOM attestations.
+- Reviewed a service-only change set: exactly three ECS task-definition
+  replacements and two in-place service updates; no identity, storage, queue,
+  routing, DNS, WAF, alert, or secret-value change.
+- Executed the reviewed rollout. The service stack returned to
+  `UPDATE_COMPLETE`, server to healthy `1/1`, worker to `0/0`, queues to empty,
+  and five alarms to `OK`. Public liveness and protected-read smoke both
+  returned `200` with safe redacted results.
+- The fixed non-mutating admission route is now live. Next boundary: execute
+  it once and record only safe status/latency plus aggregate telemetry proof.
+
 
 ### 2026-09-25T09:19:39Z - Commit recorded
 

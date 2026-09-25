@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 39
+  version: 40
   status: active
   layer: 05.education
   domain: education
@@ -10441,8 +10441,8 @@ creates none, so there is nothing legitimate to publish.
 Planning triage: the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 owns the staged proof sequence; the staging target profile and infrastructure
 gate own the exact runner policy. The probe is source-ready and locally
-verified, but it is not live until a reviewed immutable-image deployment and
-health check complete.
+verified and now deployed through a reviewed immutable-image service rollout.
+It remains deliberately unexecuted until the one bounded diagnostic run.
 
 ## Repository Evidence
 
@@ -10502,6 +10502,11 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-25: Recorded the completed admission-diagnostic deployment: an
+  immutable scan-clean and attested image, a five-change service-only change
+  set, healthy `1/1` server, zero worker, empty queues, healthy alarms, and
+  successful public health/protected-read checks. The live route is still not
+  persistence evidence until its one bounded execution occurs.
 - 2026-09-25: Added the write-admission diagnostic lesson. It distinguishes a
   no-side-effect route from a state-changing acceptance, explains why it tests
   the authenticated server boundary first, and records the next governed

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-platform-shell-persistence-v1-deployment
-version: 9
+version: 10
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -248,6 +248,23 @@ only that the narrow authenticated request reached the server boundary; it is
 not acceptance or delivery evidence. The route must first be deployed in an
 immutable image and the server health checked. One failed result stops the
 programme before any further persistence write.
+
+## Admission diagnostic deployment evidence — 2026-09-25
+
+The immutable image for source commit `9b2aeb33` was published by GitHub
+workflow run `36117931464`. Its image scan reported no critical or high
+findings, and provenance plus SBOM attestations completed. The reviewed
+service-only CloudFormation change set contained exactly three normal ECS task
+definition revisions and two in-place service references. It did not contain
+IAM, Cognito, queue, storage, WAF, routing, DNS, alert, or secret-value
+changes.
+
+After execution the service stack was `UPDATE_COMPLETE`; the public server was
+healthy at `1/1`, the worker remained `0/0`, the source and dead-letter queues
+were empty, and all five alarms were `OK`. Public liveness and the existing
+bounded protected-read smoke both returned `200`. The admission route is live,
+but it has not yet been invoked: the next action is its one fixed no-body
+execution, not a new persistence write.
 
 ## Desired source-defined change
 
