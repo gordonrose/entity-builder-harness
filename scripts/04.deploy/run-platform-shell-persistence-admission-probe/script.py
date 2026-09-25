@@ -20,6 +20,7 @@ EXPECTED_ACCOUNT_ID = "337159794548"
 EXPECTED_STATUS = 204
 SOURCE_READY = "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending"
 DEPLOYED_READY = "write-proof-failed-non-committing-admission-probe-deployed-pending-execution"
+PASSED = "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending"
 
 
 class AdmissionProbeError(Exception):
@@ -163,6 +164,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
             **base_probe,
             "status": "deployed-pending-one-execution",
             "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write",
+        }
+    elif policy["status"] == PASSED:
+        expected_probe = {
+            **base_probe,
+            "status": "executed-passed-fresh-acceptance-pending",
+            "next_guard": "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action",
         }
     else:
         raise AdmissionProbeError("the admission probe is not in a governed lifecycle state")

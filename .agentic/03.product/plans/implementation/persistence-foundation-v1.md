@@ -286,6 +286,14 @@ prompt, transcript, credential, token, or raw request data.
   server to healthy `1/1`, the worker to `0/0`, queues to empty, and all five
   alarms to `OK`; public liveness and the protected-read smoke returned `200`.
   The non-mutating admission route is therefore deployed and may execute once.
+- **2026-09-25 — Admission diagnostic execution passed:** the one fixed
+  no-body request returned `204` in 95 milliseconds. An aggregate-only query
+  found exactly one matching structured application observation. A subsequent
+  read-only preflight found the server healthy at `1/1`, worker dormant at
+  `0/0`, source and dead-letter queues empty, and all five alarms `OK`. This
+  proves the authenticated application boundary without a persistence side
+  effect. It permits one new, fixed-identity acceptance request; it does not
+  permit a retry, relay, or worker action yet.
 
 ### Durable-delivery contract boundary
 
@@ -336,7 +344,8 @@ continuous business-event availability.
    the fixed, non-mutating write-admission route. Execute its one no-body
    diagnostic only after that check. Stop if it does not return `204`; do not
    infer an ingress cause and do not issue another state-changing request.
-2. If and only if that diagnostic succeeds, perform **one** fresh no-body
+2. **Now authorised by the recorded passing diagnostic:** perform **one**
+   fresh no-body
    acceptance request with a new fixed opaque request identity. The two prior
    requests remain proved non-commits and are never retried under their
    original proof identities.
@@ -360,14 +369,14 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — diagnostic deployed, execution pending.** The two earlier
-acceptance requests remain safe non-commits. A read-only ingress inspection and
-the completed immutable-image rollout now establish that the public host,
-WAF, ALB-only ingress, healthy `1/1` server, zero worker, empty queues, and
-five alarms are all in their expected states. The next work is exactly one
-non-mutating admission request; no fresh persistence write, relay, or worker
-action is permitted unless that request returns `204` and its safe evidence is
-recorded.
+**Current result — admission passed; one fresh acceptance pending.** The two
+earlier acceptance requests remain safe non-commits. The passing no-side-effect
+probe and its aggregate telemetry observation prove the authenticated server
+boundary; the post-probe preflight still found the public host, WAF, ALB-only
+ingress, healthy `1/1` server, zero worker, empty queues, and five healthy
+alarms. The next work is exactly one fresh acceptance using its new fixed
+identity. Relay and worker action remain prohibited unless that request returns
+`202` and its safe transaction evidence is recorded.
 
 ### Tranche 2 — reusable persistent-record foundation
 

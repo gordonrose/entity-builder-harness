@@ -356,7 +356,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: write-proof-failed-non-committing-admission-probe-deployed-pending-execution
+    status: write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -433,14 +433,14 @@ auth:
       post_attempt_state: server-one-running-one-worker-zero-queues-empty
       follow_up: diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action
     admission_probe:
-      status: deployed-pending-one-execution
+      status: executed-passed-fresh-acceptance-pending
       route: POST /smoke/work-items/admission
       permission: platform-smoke.persistence.work-item:create
       request_body: none
       persistence_side_effects: prohibited
       expected_http_status: 204
       output_policy: status-and-safe-latency-only-no-token-secret-request-id-or-response-body
-      next_guard: one-execution-only-then-record-safe-result-before-any-fresh-persistence-write
+      next_guard: one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action
     admission_probe_deployment:
       executed_on_utc: "2026-09-25"
       source_commit_sha: 9b2aeb33153911eb507b83d30e362214445c0e3b
@@ -458,6 +458,16 @@ auth:
         source_and_dead_letter_queues: empty
         alarms: five-ok
       evidence_hygiene: safe-image-and-aggregate-runtime-facts-only-no-task-identifiers-secrets-tokens-headers-bodies-or-provider-payloads
+    admission_probe_execution:
+      executed_on_utc: "2026-09-25"
+      status: passed
+      http_status: 204
+      duration_ms: 95
+      structured_application_observations: 1
+      observability_query_scope: exact-capability-and-http-status-aggregate-count-only
+      persistence_side_effects: prohibited
+      post_execution_state: server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok
+      evidence_hygiene: safe-status-latency-and-aggregate-observation-only-no-token-secret-request-id-response-body-record-message-or-provider-payload
   resource_server:
     identifier: platform-shell
     scopes:
@@ -538,7 +548,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-admission-probe-deployed-pending-execution
+    status: foundation-and-service-deployed-admission-probe-passed-fresh-acceptance-pending
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -605,16 +615,16 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: execute-one-non-mutating-admission-probe-then-record-safe-result-before-any-fresh-persistence-write
-      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-fresh-persistence-write-before-admission-probe
+      next_execution_guard: execute-one-fresh-acceptance-with-new-fixed-identity-then-record-safe-transaction-evidence-before-relay-or-worker-action
+      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-after-the-one-fresh-acceptance
     activation:
-      server_acceptance: non-mutating-admission-probe-deployed-pending-one-execution
+      server_acceptance: admission-probe-passed-one-fresh-acceptance-pending
       outbox_relay: prohibited-no-committed-outbox-obligation
       durable_worker_processing: prohibited-no-relay-created-delivery-worker-remains-zero
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-admission-probe-only-before-any-fresh-write
-      observability: admission-profile-deployed-no-body-no-persistence-side-effects-one-execution-pending
+      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-one-fresh-acceptance-after-admission-proof
+      observability: admission-profile-proved-no-body-no-persistence-side-effects-one-structured-observation
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager

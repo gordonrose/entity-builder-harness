@@ -45,7 +45,7 @@ source = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile
 target = Path(sys.argv[1])
 document = yaml.safe_load(source.read_text(encoding="utf-8"))
 write_client = document["auth"]["persistence_write_test_client"]
-write_client["status"] = "deployed-pending-write-proof"
+write_client["status"] = "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending"
 write_client["client_id"] = "persistence-write-client-id"
 write_client["secret_arn"] = "arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-fixture"
 negative_client_id = document["auth"]["negative_test_client"]["client_id"]
@@ -65,8 +65,8 @@ if [[ "$fixture_result" != '{"persistence_smoke":"validated"}' ]]; then
   exit 1
 fi
 
-if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-replacement-after-remediation >/dev/null 2>&1; then
-  echo "ERROR: persistence smoke replacement guard must be unavailable in validation mode" >&2
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-fresh-after-admission-probe >/dev/null 2>&1; then
+  echo "ERROR: persistence smoke fresh-acceptance guard must be unavailable in validation mode" >&2
   exit 1
 fi
 
@@ -75,8 +75,8 @@ if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execu
   exit 1
 fi
 
-if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --approve-replacement-after-remediation --target-profile "$fixture" >/dev/null 2>&1; then
-  echo "ERROR: replacement persistence smoke execution must require the recorded remediation lifecycle" >&2
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --approve-fresh-after-admission-probe --approve-replacement-after-remediation --target-profile "$fixture" >/dev/null 2>&1; then
+  echo "ERROR: persistence smoke must reject conflicting fresh-write guards before live AWS access" >&2
   exit 1
 fi
 

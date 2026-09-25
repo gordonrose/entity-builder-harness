@@ -262,9 +262,18 @@ changes.
 After execution the service stack was `UPDATE_COMPLETE`; the public server was
 healthy at `1/1`, the worker remained `0/0`, the source and dead-letter queues
 were empty, and all five alarms were `OK`. Public liveness and the existing
-bounded protected-read smoke both returned `200`. The admission route is live,
-but it has not yet been invoked: the next action is its one fixed no-body
-execution, not a new persistence write.
+bounded protected-read smoke both returned `200`.
+
+## Admission diagnostic execution evidence — 2026-09-25
+
+The one fixed no-body request returned `204` in 95 milliseconds. Its exact
+capability/status aggregate query found one structured application observation.
+The route had no persistence side effects by construction, and a later
+read-only preflight again found a healthy `1/1` server, dormant `0/0` worker,
+empty source/dead-letter queues, and five `OK` alarms. The next permitted
+operation is therefore one new fixed-identity acceptance request. It is not a
+retry of either recorded `503` request, and relay/worker activation remains
+prohibited until the resulting transaction evidence is recorded.
 
 ## Desired source-defined change
 

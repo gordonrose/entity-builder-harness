@@ -53,6 +53,21 @@ no “try again” mode. A reviewer must first diagnose the possible pre-server 
 ingress path, record the result, and grant new bounded authority before any
 future write, relay, or worker action can occur.
 
+When the separately deployed no-body admission route has returned `204`, its
+safe result has been recorded, and the staging server/worker/queue/alarm
+preflight remains healthy, exactly one different fixed identity becomes
+available. It is deliberately not a retry of either failed request:
+
+```bash
+npm run platform:shell:persistence-smoke -- --execute --approve-fresh-after-admission-probe
+```
+
+This form runs only in
+`write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending`.
+It uses the third, source-owned opaque identity and is refused before AWS or
+HTTP access in every other lifecycle state. A success must still be recorded
+before the relay or the dormant worker may be activated.
+
 It accepts no caller-supplied client ID, secret, scope, route, body, or request
 ID. It requests only `platform-shell/smoke.write`, reads only the separately
 declared secret, and emits only a verdict, HTTP status, and rounded duration.

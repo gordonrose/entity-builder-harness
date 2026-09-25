@@ -10440,9 +10440,12 @@ creates none, so there is nothing legitimate to publish.
 
 Planning triage: the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
 owns the staged proof sequence; the staging target profile and infrastructure
-gate own the exact runner policy. The probe is source-ready and locally
-verified and now deployed through a reviewed immutable-image service rollout.
-It remains deliberately unexecuted until the one bounded diagnostic run.
+gate own the exact runner policy. The probe was deployed through a reviewed
+immutable-image service rollout and then returned `204` in 95 milliseconds.
+One matching structured application observation arrived. Because the handler
+does no persistence work, that result permits one *new fixed-identity*
+acceptance request; it is not permission to retry the earlier failed writes or
+to start relay/worker processing early.
 
 ## Repository Evidence
 
@@ -10501,6 +10504,11 @@ After each completed learning chunk:
    plan path changed or the explicit no-plan-change rationale.
 
 ## Revision History
+
+- 2026-09-25: Recorded the successful no-side-effect admission probe: `204` in
+  95 ms, exactly one matching structured application observation, and a
+  post-probe healthy server/dormant worker/empty queues/five-healthy-alarms
+  preflight. The next stage is one new fixed-identity acceptance, not a retry.
 
 - 2026-09-25: Recorded the completed admission-diagnostic deployment: an
   immutable scan-clean and attested image, a five-change service-only change

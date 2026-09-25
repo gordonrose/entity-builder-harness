@@ -20,6 +20,7 @@ EXPECTED_ACCOUNT_ID = "337159794548"
 EXPECTED_STATUS = 202
 INITIAL_REQUEST_ID = "persistence-smoke-v1"
 REMEDIATION_REPLACEMENT_REQUEST_ID = "persistence-smoke-remediation-v2"
+ADMISSION_PROBE_FRESH_REQUEST_ID = "persistence-smoke-admission-v3"
 
 
 class PersistenceSmokeError(Exception):
@@ -37,6 +38,11 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         help="Acknowledge the separately authorised single replacement write after the non-committing remediation.",
     )
+    parser.add_argument(
+        "--approve-fresh-after-admission-probe",
+        action="store_true",
+        help="Acknowledge the one fresh write permitted only after the recorded non-mutating admission proof.",
+    )
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
     parser.add_argument("--aws-cli", default="aws", help="AWS CLI executable for the declared secret lookup.")
     parser.add_argument("--timeout-seconds", type=int, default=10, help="Bound each live network call to 1-30 seconds.")
@@ -45,6 +51,10 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("choose exactly one of --validate or --execute")
     if arguments.validate and arguments.approve_replacement_after_remediation:
         parser.error("--approve-replacement-after-remediation is valid only with --execute")
+    if arguments.validate and arguments.approve_fresh_after_admission_probe:
+        parser.error("--approve-fresh-after-admission-probe is valid only with --execute")
+    if arguments.approve_replacement_after_remediation and arguments.approve_fresh_after_admission_probe:
+        parser.error("choose at most one governed fresh-write approval guard")
     if not 1 <= arguments.timeout_seconds <= 30:
         parser.error("--timeout-seconds must be between 1 and 30")
     return arguments
@@ -176,6 +186,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending",
         "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending",
         "write-proof-failed-non-committing-admission-probe-deployed-pending-execution",
+        "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending",
         "deployed-and-write-proven",
     }
     if policy["status"] not in allowed_statuses:
@@ -200,7 +211,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
     if secret_refs.get("cognito_persistence_write_client_secret") != expected_secret_ref:
         raise PersistenceSmokeError("the persistence smoke secret reference must remain bounded and target owned")
     expected_allowlist = [negative_client_id]
-    if policy["status"] in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
+    if policy["status"] in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_allowlist.append(policy["client_id"])
     if allowlist != expected_allowlist:
         raise PersistenceSmokeError("the service client allowlist does not match the write-client lifecycle boundary")
@@ -294,7 +305,11 @@ def main() -> int:
     if arguments.validate:
         emit("validated")
         return 0
-    if arguments.approve_replacement_after_remediation:
+    if arguments.approve_fresh_after_admission_probe:
+        if policy["status"] != "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending":
+            raise PersistenceSmokeError("the fresh acceptance proof may run only after its recorded non-mutating admission proof")
+        request_id = ADMISSION_PROBE_FRESH_REQUEST_ID
+    elif arguments.approve_replacement_after_remediation:
         if policy["status"] != "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending":
             raise PersistenceSmokeError("the replacement acceptance proof may run only after its reviewed remediation deployment")
         request_id = REMEDIATION_REPLACEMENT_REQUEST_ID

@@ -348,7 +348,7 @@ else:
         if persistence_write_test_client.get(key) != expected:
             fail(f"target profile persistence write client must retain {key}")
     persistence_status = persistence_write_test_client.get("status")
-    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
+    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "deployed-and-write-proven"}:
         fail("target profile persistence write client must use a governed lifecycle status")
     persistence_client_id = persistence_write_test_client.get("client_id")
     persistence_secret_arn = persistence_write_test_client.get("secret_arn")
@@ -391,7 +391,7 @@ else:
         }
         if secret_refs.get("cognito_persistence_write_client_secret") != expected_persistence_secret_ref:
             fail("target profile must retain the bounded persistence-write secret reference after provisioning")
-    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending", "deployed-and-write-proven"}:
         expected_client_allowlist.append(persistence_client_id)
     if not all(isinstance(client_id, str) and client_id for client_id in expected_client_allowlist):
         fail("target profile must retain all deployed proof-client identifiers")
@@ -413,11 +413,11 @@ else:
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed source-ready non-mutating admission probe")
-    if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution":
+    if persistence_status in {"write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending"}:
         expected_admission_probe = {
             **admission_probe_base,
-            "status": "deployed-pending-one-execution",
-            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write",
+            "status": "deployed-pending-one-execution" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "executed-passed-fresh-acceptance-pending",
+            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write" if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution" else "one-fresh-acceptance-with-new-fixed-identity-before-relay-or-worker-action",
         }
         if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
             fail("target profile must retain the fixed deployed non-mutating admission probe")
@@ -442,6 +442,20 @@ else:
         }
         if persistence_write_test_client.get("admission_probe_deployment") != expected_admission_probe_deployment:
             fail("target profile must retain safe deployed admission-probe evidence")
+    if persistence_status == "write-proof-failed-non-committing-admission-probe-passed-fresh-acceptance-pending":
+        expected_admission_probe_execution = {
+            "executed_on_utc": "2026-09-25",
+            "status": "passed",
+            "http_status": 204,
+            "duration_ms": 95,
+            "structured_application_observations": 1,
+            "observability_query_scope": "exact-capability-and-http-status-aggregate-count-only",
+            "persistence_side_effects": "prohibited",
+            "post_execution_state": "server-one-running-one-worker-zero-source-and-dead-letter-queues-empty-five-alarms-ok",
+            "evidence_hygiene": "safe-status-latency-and-aggregate-observation-only-no-token-secret-request-id-response-body-record-message-or-provider-payload",
+        }
+        if persistence_write_test_client.get("admission_probe_execution") != expected_admission_probe_execution:
+            fail("target profile must retain the safe successful admission-probe evidence")
     if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
         expected_failed_acceptance = {
             "executed_on_utc": "2026-09-24",
@@ -675,7 +689,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-admission-probe-deployed-pending-execution",
+        "status": "foundation-and-service-deployed-admission-probe-passed-fresh-acceptance-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -745,17 +759,17 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "execute-one-non-mutating-admission-probe-then-record-safe-result-before-any-fresh-persistence-write",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-fresh-persistence-write-before-admission-probe",
+            "next_execution_guard": "execute-one-fresh-acceptance-with-new-fixed-identity-then-record-safe-transaction-evidence-before-relay-or-worker-action",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-additional-write-after-the-one-fresh-acceptance",
         },
         "activation": {
-            "server_acceptance": "non-mutating-admission-probe-deployed-pending-one-execution",
+            "server_acceptance": "admission-probe-passed-one-fresh-acceptance-pending",
             "outbox_relay": "prohibited-no-committed-outbox-obligation",
             "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-admission-probe-only-before-any-fresh-write",
-            "observability": "admission-profile-deployed-no-body-no-persistence-side-effects-one-execution-pending",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-one-fresh-acceptance-after-admission-proof",
+            "observability": "admission-profile-proved-no-body-no-persistence-side-effects-one-structured-observation",
         },
     },
 }
