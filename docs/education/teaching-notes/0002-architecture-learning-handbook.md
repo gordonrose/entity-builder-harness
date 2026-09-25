@@ -11073,6 +11073,12 @@ After each completed learning chunk:
   both initial-claim and expired-lease reclaim requests contain only referenced
   placeholders. The safe `validation` category made that precise fix possible
   without retaining the provider's raw diagnostic text.
+- 2026-09-25: Added the evidence-source lesson for live health checks. An
+  inventory can truthfully describe an older, separate service while being the
+  wrong source for a new workload's health. The delivery proof therefore
+  resolves the platform-shell target group from the owning Foundation stack
+  output, then requires exactly one healthy target. This avoids confusing a
+  legacy target group with the target group that the live shell service uses.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

@@ -303,7 +303,15 @@ def foundation_outputs(policy: dict[str, Any]) -> dict[str, str]:
     for output in outputs:
         if isinstance(output, dict) and isinstance(output.get("OutputKey"), str) and isinstance(output.get("OutputValue"), str):
             values[output["OutputKey"]] = output["OutputValue"]
-    required = ("PlatformPersistenceTableName", "PlatformPersistenceOutboxDueIndexName", "WorkerQueueUrl", "WorkerDeadLetterQueueUrl", "PublicSubnetIdsCsv", "RelaySecurityGroupId")
+    required = (
+        "PlatformPersistenceTableName",
+        "PlatformPersistenceOutboxDueIndexName",
+        "WorkerQueueUrl",
+        "WorkerDeadLetterQueueUrl",
+        "PublicSubnetIdsCsv",
+        "RelaySecurityGroupId",
+        "TargetGroupArn",
+    )
     if any(not values.get(key) for key in required):
         raise DeliveryProofError("the reviewed Foundation outputs are incomplete for the bounded delivery proof")
     return values
@@ -387,6 +395,23 @@ def alarm_health(policy: dict[str, Any]) -> bool:
     if not isinstance(alarms, list) or len(alarms) != EXPECTED_ALARM_COUNT or any(not isinstance(alarm, dict) for alarm in alarms):
         return False
     return all(alarm.get("StateValue") == "OK" for alarm in alarms)
+
+
+def public_target_health_is_healthy(outputs: dict[str, str], policy: dict[str, Any]) -> bool:
+    """Require one healthy target in the Foundation-exported platform-shell target group."""
+
+    response = run_aws(["elbv2", "describe-target-health", "--target-group-arn", outputs["TargetGroupArn"]], policy)
+    descriptions = response.get("TargetHealthDescriptions")
+    return (
+        isinstance(descriptions, list)
+        and len(descriptions) == 1
+        and all(
+            isinstance(description, dict)
+            and isinstance(description.get("TargetHealth"), dict)
+            and description["TargetHealth"].get("State") == "healthy"
+            for description in descriptions
+        )
+    )
 
 
 def one_shot_worker_configuration(policy: dict[str, Any]) -> tuple[str, str]:
@@ -630,7 +655,10 @@ def require_deployed_recovery(policy: dict[str, Any]) -> dict[str, str]:
     if policy["delivery_status"] != RECOVERY_DEPLOYED_READY:
         raise DeliveryProofError("the relay configuration remediation has not been deployed and health-checked")
     verify_account(policy)
-    return foundation_outputs(policy)
+    outputs = foundation_outputs(policy)
+    if not public_target_health_is_healthy(outputs, policy):
+        raise DeliveryProofError("the Foundation-exported platform-shell target group is not uniquely healthy")
+    return outputs
 
 
 def run_stage(arguments: argparse.Namespace, policy: dict[str, Any]) -> int:

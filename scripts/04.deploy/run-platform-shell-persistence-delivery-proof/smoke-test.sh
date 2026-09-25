@@ -58,6 +58,8 @@ if valid_filter not in source or stopped_filter not in source or 'task.get("star
     raise SystemExit("ERROR: labelled ECS task inspection must use valid active and stopped task filters before matching the proof label in memory.")
 if 'def recovery_relay_not_started' not in source:
     raise SystemExit("ERROR: persistence delivery proof must prevent a second labelled relay task after a failed first attempt.")
+if '"TargetGroupArn"' not in source or 'def public_target_health_is_healthy' not in source or 'outputs["TargetGroupArn"]' not in source:
+    raise SystemExit("ERROR: persistence delivery proof must derive and verify target health from the Foundation-exported platform-shell target group.")
 PY
 
 echo "Persistence delivery-proof local validation passed."

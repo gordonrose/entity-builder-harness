@@ -108,6 +108,10 @@ go
 - Summary: The one v2 relay safely stopped before a lease or queue send with the bounded `claim_outbox` / `validation` category. The adapter had supplied an unused `:asOf` expression value for initial claims; source now branches values with the selected condition and deterministic tests verify no request includes an unreferenced placeholder. V2 is spent; v3 remains source-ready only.
   Durable evidence: DynamoDB persistence adapter/runtime tests; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
 
+
+- Summary: The apparent target-group drift was a manual evidence-source error: the historical existing_service_platform inventory was queried instead of the Foundation-owned platform-shell output. Live comparison showed the ECS binding matches the Foundation export and one target is healthy. The runner now verifies that source dynamically before any relay.
+  Durable evidence: Durable evidence: delivery-proof runner and smoke test; staging target policy and infrastructure verifier; persistence plan; staging deployment plan; architecture learning handbook.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -367,6 +371,13 @@ Message: fix(persistence): omit unused outbox claim values
 Summary: Corrected DynamoDB outbox claim construction so each condition branch supplies only values referenced by its expression; added initial-claim and lease-reclaim regression assertions; advanced the one-shot staging recovery policy to v3 source-ready pending an immutable rollout.
 
 ADR impact: No ADR; narrow adapter correction and deployment evidence under the existing persistence foundation plan.
+
+
+### 2026-09-25T13:50:50Z - Context hygiene
+
+Summary: The apparent target-group drift was a manual evidence-source error: the historical existing_service_platform inventory was queried instead of the Foundation-owned platform-shell output. Live comparison showed the ECS binding matches the Foundation export and one target is healthy. The runner now verifies that source dynamically before any relay.
+
+Durable evidence: Durable evidence: delivery-proof runner and smoke test; staging target policy and infrastructure verifier; persistence plan; staging deployment plan; architecture learning handbook.
 
 ## Sub-Agent Activity
 
