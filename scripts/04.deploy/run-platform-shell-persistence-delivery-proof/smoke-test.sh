@@ -38,6 +38,11 @@ if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.s
   exit 1
 fi
 
+if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --start-relay --approve-outbox-delivery-recovery >/dev/null 2>&1; then
+  echo "ERROR: a terminal delivery proof must refuse any repeat relay stage before contacting AWS." >&2
+  exit 1
+fi
+
 if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh --validate --start-relay >/dev/null 2>&1; then
   echo "ERROR: persistence delivery proof must accept exactly one operating mode." >&2
   exit 1
@@ -60,6 +65,8 @@ if 'def recovery_relay_not_started' not in source:
     raise SystemExit("ERROR: persistence delivery proof must prevent a second labelled relay task after a failed first attempt.")
 if '"TargetGroupArn"' not in source or 'def public_target_health_is_healthy' not in source or 'outputs["TargetGroupArn"]' not in source:
     raise SystemExit("ERROR: persistence delivery proof must derive and verify target health from the Foundation-exported platform-shell target group.")
+if 'RECOVERY_COMPLETED = "outbox-delivery-proven-terminal"' not in source:
+    raise SystemExit("ERROR: persistence delivery proof must make completed terminal evidence explicit.")
 PY
 
 echo "Persistence delivery-proof local validation passed."

@@ -445,6 +445,18 @@ that Foundation output at execution time. It must not use the historical
 legacy-service target-group field in the readiness inventory: that field is
 correct for the old service, but is not evidence for the platform shell.
 
+### Terminal outbox delivery proof — 2026-09-25
+
+The single permitted v3 relay exited `0` after claiming the one due outbox
+obligation and producing the one expected source-queue delivery. The single
+self-terminating worker then processed that delivery and exited `0` without
+scaling the worker service. Terminal verification recorded only safe aggregate
+facts: four persistence records, no due outbox work, empty source and
+dead-letter queues, worker desired/running counts of zero, and five `OK`
+alarms. No task identifiers, record contents, queue messages, URLs, or raw
+provider responses are retained. The fixed proof is now complete and may not
+be replayed.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
