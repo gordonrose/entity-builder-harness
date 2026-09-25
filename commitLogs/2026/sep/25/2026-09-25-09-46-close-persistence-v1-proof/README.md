@@ -105,6 +105,9 @@ go
 - Summary: The v2 diagnostic image passed image scanning and attestation, then deployed through an exact five-resource service-only change set. The completed rollout restored server `1/1`, retained worker `0/0`, healthy target, empty queues, untouched persistence preconditions, and five `OK` alarms. Change-set review now explicitly uses CloudFormation `ResourceChange` actions.
   Durable evidence: GitHub workflow 36132578884; service change set persistence-claim-diagnostic-20260925; staging target policy; persistence plan; AWS plan; teaching handbook.
 
+- Summary: The one v2 relay safely stopped before a lease or queue send with the bounded `claim_outbox` / `validation` category. The adapter had supplied an unused `:asOf` expression value for initial claims; source now branches values with the selected condition and deterministic tests verify no request includes an unreferenced placeholder. V2 is spent; v3 remains source-ready only.
+  Durable evidence: DynamoDB persistence adapter/runtime tests; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
+
 ## Activity Log
 
 ### 2026-09-25T08:46:02Z - Session started
@@ -325,6 +328,12 @@ Durable evidence: DynamoDB persistence adapter and deterministic tests; relay en
 Summary: The v2 diagnostic image passed image scanning and attestation, then deployed through an exact five-resource service-only change set. The completed rollout restored server `1/1`, retained worker `0/0`, healthy target, empty queues, untouched persistence preconditions, and five `OK` alarms. Change-set review now explicitly uses CloudFormation `ResourceChange` actions.
 
 Durable evidence: GitHub workflow 36132578884; service change set persistence-claim-diagnostic-20260925; staging target policy; persistence plan; AWS plan; teaching handbook.
+
+### 2026-09-25T13:44:00Z - Context hygiene
+
+Summary: The one v2 relay safely stopped before a lease or queue send with the bounded `claim_outbox` / `validation` category. The adapter had supplied an unused `:asOf` expression value for initial claims; source now branches values with the selected condition and deterministic tests verify no request includes an unreferenced placeholder. V2 is spent; v3 remains source-ready only.
+
+Durable evidence: DynamoDB persistence adapter/runtime tests; delivery-proof runner; staging target policy; persistence plan; AWS plan; teaching handbook.
 
 
 ### 2026-09-25T12:00:29Z - Commit recorded

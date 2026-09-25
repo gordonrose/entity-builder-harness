@@ -11066,6 +11066,13 @@ After each completed learning chunk:
   its exact three task-definition replacements and two in-place service
   updates before execution, then proved the new immutable image, target health,
   dormant worker, queues, alarm state, and durable preconditions afterwards.
+- 2026-09-25: Added the expression-placeholder lesson. DynamoDB does not
+  silently ignore an expression value that a request never uses—it rejects the
+  whole request. A conditional update therefore needs expression values built
+  by the same branch that selects its condition. The outbox tests now prove
+  both initial-claim and expired-lease reclaim requests contain only referenced
+  placeholders. The safe `validation` category made that precise fix possible
+  without retaining the provider's raw diagnostic text.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

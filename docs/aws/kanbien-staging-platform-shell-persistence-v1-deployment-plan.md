@@ -413,6 +413,23 @@ fixed v2 relay task. It does not permit a v1 replay, another application write,
 a direct SQS fixture, a scheduler, or worker activation before a successful v2
 relay assessment.
 
+### Outbox-claim expression correction — 2026-09-25
+
+The one v2 relay stopped before a lease or queue send and emitted the bounded
+failure category `validation` for `claim_outbox`. Local construction tests then
+identified an unused DynamoDB expression value: an initial claim supplied
+`:asOf`, though the initial-claim condition has no expiry predicate. DynamoDB
+rejects a request containing an unused expression value.
+
+The correction makes the expression values conditional on the same branch as
+the condition: initial claims contain `:pending` but no `:asOf` or
+`:priorFence`; expired-lease reclaims contain `:asOf` and `:priorFence` but no
+`:pending`. Deterministic tests assert every supplied placeholder is present in
+the corresponding `UpdateExpression` or `ConditionExpression`. This is a
+source-only correction until a fresh image is scanned, attested, deployed, and
+health-checked. The failed v2 label is not retried; only one new v3 label may
+run after that deployment evidence exists.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
