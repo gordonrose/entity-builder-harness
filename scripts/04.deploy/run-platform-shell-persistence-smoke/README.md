@@ -68,6 +68,23 @@ It uses the third, source-owned opaque identity and is refused before AWS or
 HTTP access in every other lifecycle state. A success must still be recorded
 before the relay or the dormant worker may be activated.
 
+If that fresh request is proved non-committing and an IAM simulation identifies
+a missing *member-operation* permission, remediation is not an excuse to reuse
+its identity. After the least-privilege policy change has been deployed and a
+live simulation proves the needed `dynamodb:PutItem` decision, only this fourth
+and final acceptance form is available:
+
+```bash
+npm run platform:shell:persistence-smoke -- --execute --approve-fresh-after-iam-remediation
+```
+
+It is restricted to the recorded
+`write-proof-failed-non-committing-iam-remediation-deployed-authorization-proven-fresh-acceptance-pending`
+lifecycle. It has no caller-selectable request ID and is refused in source-ready
+or any other state. The transaction’s API remains `TransactWriteItems`; IAM
+authorises its all-`Put` members with `dynamodb:PutItem` on the one persistence
+table.
+
 It accepts no caller-supplied client ID, secret, scope, route, body, or request
 ID. It requests only `platform-shell/smoke.write`, reads only the separately
 declared secret, and emits only a verdict, HTTP status, and rounded duration.

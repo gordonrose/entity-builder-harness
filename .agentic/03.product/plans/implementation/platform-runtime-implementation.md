@@ -1866,7 +1866,8 @@ Entry criteria:
 
 The source deployment definition is complete for the bounded outbox path, and
 its Foundation/service resources are deployed to the staging reference target.
-The public server has only `TransactWriteItems` for harmless acceptance; the
+The public server has only the table-scoped `dynamodb:PutItem` member permission
+for its harmless all-`Put` `TransactWriteItems` acceptance; the
 one-pass relay has only due-index query, outbox get/update, and queue send; and
 the worker has only queue receive/settlement and durable-processing get/put/
 update. The worker receives selected non-secret table/index configuration and

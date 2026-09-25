@@ -153,7 +153,7 @@ prompt, transcript, credential, token, or raw request data.
   that seam from target configuration; the server route accepts no business
   payload, uses the safe request identifier as its idempotency identity, and
   requires its own create permission. The source target grants its server task
-  only `dynamodb:TransactWriteItems` for the one persistence table. Local app,
+  only the required DynamoDB member operation for the one persistence table. Local app,
   product, static-infrastructure, and compiled-image checks prove that wiring;
   no AWS resource, Cognito scope, or task definition was deployed.
 - **2026-09-24 — delivery-policy source reconciliation complete:** the
@@ -294,6 +294,15 @@ prompt, transcript, credential, token, or raw request data.
   proves the authenticated application boundary without a persistence side
   effect. It permits one new, fixed-identity acceptance request; it does not
   permit a retry, relay, or worker action yet.
+- **2026-09-25 — Fresh acceptance stopped safely; IAM remediation identified:**
+  the new fixed-identity acceptance returned `503` in 146 milliseconds. Safe
+  aggregate checks found zero table records, empty queues, server `1/1`, worker
+  `0/0`, and five `OK` alarms. One structured application observation reported
+  the normalised store-operation failure. A read-only live IAM simulation then
+  showed `dynamodb:PutItem` as `implicitDeny`: `TransactWriteItems` is an API,
+  while this all-`Put` transaction is authorised by the member `PutItem`
+  permission. The remediation changes only that one server-table permission;
+  it adds no read, update, delete, index, queue, or administrative access.
 
 ### Durable-delivery contract boundary
 
@@ -369,14 +378,14 @@ payload, client, token, scope, identity, or request-body argument. They fail
 closed on account/region/lifecycle/precondition drift and never print or retain
 provider responses, task IDs, records, messages, secrets, headers, or bodies.
 
-**Current result — admission passed; one fresh acceptance pending.** The two
-earlier acceptance requests remain safe non-commits. The passing no-side-effect
-probe and its aggregate telemetry observation prove the authenticated server
-boundary; the post-probe preflight still found the public host, WAF, ALB-only
-ingress, healthy `1/1` server, zero worker, empty queues, and five healthy
-alarms. The next work is exactly one fresh acceptance using its new fixed
-identity. Relay and worker action remain prohibited unless that request returns
-`202` and its safe transaction evidence is recorded.
+**Current result — IAM remediation source-ready; deployment pending.** Three
+acceptance identities are now recorded safe non-commits. The admission probe
+proved ingress, authentication, authorisation, and route handling; the third
+acceptance isolated the remaining fault to a denied persistence member
+operation. The next work is to deploy the one-table `dynamodb:PutItem` policy
+correction, prove its live IAM decision without writing data, then issue one
+new fixed-identity acceptance. Relay and worker action remain prohibited until
+that request returns `202` and its safe transaction evidence is recorded.
 
 ### Tranche 2 — reusable persistent-record foundation
 
@@ -869,8 +878,9 @@ permission is separate from read access. Product composition receives only the
 app-facing atomic-writer/repository seam; the staging entrypoint alone selects
 the DynamoDB client and validated table/index configuration.
 
-The staging server role receives exactly `dynamodb:TransactWriteItems` against
-the selected table—no scan, query, get, update, delete, queue, or administrative
+The staging server role receives exactly `dynamodb:PutItem` against the
+selected table, because the application uses an all-`Put` `TransactWriteItems`
+API request—no scan, query, get, update, delete, queue, or administrative
 permission. The target profile declares the required `platform-shell/smoke.write`
 scope mapping but explicitly records that Cognito has not been changed. The
 route, IAM statement, and configuration therefore remain source-composed and

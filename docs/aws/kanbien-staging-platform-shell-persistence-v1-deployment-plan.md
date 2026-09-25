@@ -275,6 +275,24 @@ operation is therefore one new fixed-identity acceptance request. It is not a
 retry of either recorded `503` request, and relay/worker activation remains
 prohibited until the resulting transaction evidence is recorded.
 
+## Fresh acceptance failure and IAM correction — 2026-09-25
+
+The one new fixed-identity acceptance returned `503` in 146 milliseconds.
+Aggregate-only checks confirmed no table records, empty source/dead-letter
+queues, a healthy `1/1` server, dormant `0/0` worker, and five `OK` alarms.
+One matching structured application observation reported the normalised
+store-operation failure class. The relay and worker remain prohibited.
+
+Read-only IAM simulation found `dynamodb:PutItem` was `implicitDeny` for the
+live server role. This revealed an IAM vocabulary error: the API is
+`TransactWriteItems`, but AWS authorises this three-`Put` transaction through
+the member `dynamodb:PutItem` action on the target table. The remediation
+replaces the non-authorising API-name policy action with that one table-scoped
+member permission. It does not add read, update, delete, index, queue, or
+administrative access. After a reviewed Foundation-stack change set, a live
+IAM simulation must prove `PutItem` is allowed before a fourth fixed identity
+can make the final bounded acceptance attempt.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
