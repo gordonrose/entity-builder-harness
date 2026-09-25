@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 885
-  term_count: 1782
+  indexed_artifacts: 888
+  term_count: 1788
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -9101,6 +9101,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-negative-authz-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-admission-probe.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-admission-probe/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-admission-probe
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-persistence-admission-probe.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-persistence-admission-probe.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-persistence-smoke.readme
   category: artifact-id

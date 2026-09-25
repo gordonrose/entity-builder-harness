@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.persistence-foundation-v1
-version: 28
+version: 29
 status: active
 layer: 03.product
 domain: persistence
@@ -268,6 +268,17 @@ prompt, transcript, credential, token, or raw request data.
   candidate, not a conclusion about a provider failure. The live programme
   therefore stops before relay or worker action; a third write would be an
   unapproved new state change.
+- **2026-09-25 — Non-mutating admission diagnostic planned:** a read-only
+  ingress inspection confirmed the dedicated host rule, host-scoped WAF,
+  ALB-only server ingress, and public liveness route. The shared ALB has no
+  access logs, so enabling them would collect unrelated legacy-host traffic
+  and is deliberately out of scope. Before any fresh state change, the smoke
+  app therefore adds one no-body `POST /smoke/work-items/admission` route. It
+  requires the existing narrow write permission but returns `204` before the
+  repository, atomic writer, DynamoDB, outbox, queue, relay, or worker are
+  involved. Its fixed runner can execute only once after a reviewed immutable
+  deployment and healthy-server check. A pass proves the authenticated request
+  reaches the application boundary; it does not claim a persistence commit.
 
 ### Durable-delivery contract boundary
 
@@ -314,17 +325,21 @@ continuous business-event availability.
 
 ### Tranche 1 — bounded live transactional-outbox proof
 
-1. Perform **one** freshly authorised replacement no-body acceptance request
-   using a new fixed opaque request identity. The earlier request is retained
-   only as a proved non-commit; it is never retried under its original proof
-   identity.
-2. Record only safe status, rounded duration, aggregate transaction outcome,
+1. Deploy and health-check the immutable server image containing the fixed,
+   non-mutating write-admission route. Execute its one no-body diagnostic only
+   after that check. Stop if it does not return `204`; do not infer an ingress
+   cause and do not issue another state-changing request.
+2. If and only if that diagnostic succeeds, perform **one** fresh no-body
+   acceptance request with a new fixed opaque request identity. The two prior
+   requests remain proved non-commits and are never retried under their
+   original proof identities.
+3. Record only safe status, rounded duration, aggregate transaction outcome,
    and target-health facts. Stop before relay/worker work if acceptance does
    not return its declared success status.
-3. Run one governed Fargate relay task, derived solely from the reviewed
+4. Run one governed Fargate relay task, derived solely from the reviewed
    service/foundation outputs. It may publish at most the one due outbox fact,
    emits no envelope or task identifier, and must exit successfully.
-4. Use a separate governed persistence-worker proof to scale the already
+5. Use a separate governed persistence-worker proof to scale the already
    deployed worker from zero to one, settle that one relay-created delivery,
    wait through the bounded telemetry flush, and return it to zero in a
    `finally` path. It must not enqueue a second direct-SQS fixture.

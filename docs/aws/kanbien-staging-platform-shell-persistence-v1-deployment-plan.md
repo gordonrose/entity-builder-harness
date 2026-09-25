@@ -230,6 +230,25 @@ write attempt. No relay task was run and no worker was scaled. The next live
 step is a separately reviewed ingress diagnosis followed, only if warranted,
 by new bounded execution authority.
 
+## Non-mutating write-admission diagnostic — 2026-09-25
+
+Read-only ingress inspection confirmed the staging host rule, host-scoped WAF,
+ALB-only server ingress, and public liveness route. It also found no matching
+application observation for either failed acceptance request. The shared ALB
+has no access logging; enabling it would capture traffic for unrelated legacy
+hosts, so that is neither a safe diagnostic nor part of this persistence
+programme.
+
+The next source change is therefore a narrow alternative: a no-body,
+write-authenticated route at `POST /smoke/work-items/admission`. It returns
+`204` before the repository, atomic writer, DynamoDB, outbox, SQS, relay, or
+worker path. The corresponding runner has no caller-selectable target, scope,
+route, body, request identifier, or timeout. A successful result demonstrates
+only that the narrow authenticated request reached the server boundary; it is
+not acceptance or delivery evidence. The route must first be deployed in an
+immutable image and the server health checked. One failed result stops the
+programme before any further persistence write.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes
@@ -397,17 +416,19 @@ service.
 
 ## 2026-09-24 two-tranche completion execution
 
-The earlier failed acceptance is a safely recorded non-commit. A later attempt
+The earlier failed acceptances are safely recorded non-commits. A later attempt
 must not be an implicit retry. The reviewed completion sequence is therefore:
 
-1. Execute the one newly authorised replacement acceptance with its separate
+1. Deploy and health-check the immutable server image containing the
+   non-mutating admission route, then execute that runner exactly once.
+2. If and only if it returns `204`, execute one fresh acceptance with a new
    fixed request identity and explicit runner guard.
-2. If and only if that succeeds, commit its safe evidence and use the
+3. If and only if that succeeds, commit its safe evidence and use the
    profile-governed relay runner for one Fargate `RunTask` pass.
-3. If and only if the relay succeeds, commit its safe evidence and use the
+4. If and only if the relay succeeds, commit its safe evidence and use the
    persistence-worker runner for the one relay-produced delivery. That runner
    always returns the worker to zero and never creates a direct queue fixture.
-4. Query only aggregate table/queue/service/metric outcomes and record the
+5. Query only aggregate table/queue/service/metric outcomes and record the
    first live-proof result. No task ID, table item, queue envelope, response
    body, header, token, secret, or provider payload belongs in the repository.
 

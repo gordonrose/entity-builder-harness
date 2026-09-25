@@ -62,6 +62,11 @@ Current commands:
 - `run-platform-shell-ingress-smoke/`: locally validates, or after current
   approval performs fixed read-only WAF, listener, and security-group
   inspections plus one public liveness request.
+- `run-platform-shell-persistence-admission-probe/`: locally validates, or
+  after the reviewed deployment performs exactly one no-body authenticated
+  request to the dedicated server-admission route. It is not a persistence
+  write: the route returns `204` without invoking the repository, transaction,
+  DynamoDB, outbox, SQS, relay, or worker.
 - `run-platform-shell-worker-smoke/`: locally validates, or after explicit
   current approval sends exactly two side-effect-free queue messages 75 seconds
   apart, starts only the dormant worker service, observes bounded settlement,

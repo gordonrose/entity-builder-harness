@@ -79,3 +79,16 @@ accept work item -> stage outbox fact -> relay -> queue envelope
 This is a source and local-control-flow proof. It does not mean that this app
 starts a relay, runs a scheduler, selects SQS, or has live DynamoDB access.
 Those deployment choices remain in the Kanbien staging target composition.
+
+## Write-admission diagnostic
+
+When the same opt-in persistence seam is selected, the app also exposes
+`POST /smoke/work-items/admission`. It requires the exact same declared write
+permission and accepts no request body, so it traverses the public HTTP,
+authentication, authorisation, rate-limit, route-validation, and profile
+telemetry path. Its handler returns `204` and deliberately does not call the
+repository, atomic writer, outbox, queue, or any provider client.
+
+This is a bounded diagnostic, not a second persistence capability. It exists
+only to distinguish a pre-handler boundary failure from a transaction failure
+before a newly authorised persistence acceptance is attempted.

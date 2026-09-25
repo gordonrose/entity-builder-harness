@@ -174,6 +174,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         "write-proof-failed-non-committing-remediation-pending",
         "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending",
         "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending",
+        "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending",
+        "write-proof-failed-non-committing-admission-probe-deployed-pending-execution",
         "deployed-and-write-proven",
     }
     if policy["status"] not in allowed_statuses:
@@ -198,7 +200,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
     if secret_refs.get("cognito_persistence_write_client_secret") != expected_secret_ref:
         raise PersistenceSmokeError("the persistence smoke secret reference must remain bounded and target owned")
     expected_allowlist = [negative_client_id]
-    if policy["status"] in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "deployed-and-write-proven"}:
+    if policy["status"] in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
         expected_allowlist.append(policy["client_id"])
     if allowlist != expected_allowlist:
         raise PersistenceSmokeError("the service client allowlist does not match the write-client lifecycle boundary")

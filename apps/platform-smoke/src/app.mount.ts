@@ -55,6 +55,7 @@ export interface PlatformSmokeAppOptions {
 export const platformSmokeAppId = unwrapPlatformName(platformAppId(platformSmokeAppManifest.appId));
 export const platformSmokeRouteName = unwrapPlatformName(platformRouteName("platform-smoke.echo"));
 export const platformSmokeWorkItemAcceptanceRouteName = unwrapPlatformName(platformRouteName("platform-smoke.persistence.work-item.accept"));
+export const platformSmokeWorkItemAdmissionRouteName = unwrapPlatformName(platformRouteName("platform-smoke.persistence.work-item.admission"));
 export const platformSmokeJobName = unwrapPlatformName(platformJobName("platform-smoke.rebuild"));
 export const platformSmokeWorkItemAcceptedJobName = unwrapPlatformName(platformJobName("platform-smoke.work-item.accepted"));
 export const platformSmokeHealthName = unwrapPlatformName(platformHealthName("platform-smoke.readiness"));
@@ -65,6 +66,9 @@ export const platformSmokeWorkItemDeliveryObservabilityProfileName = unwrapPlatf
 );
 export const platformSmokeWorkItemAcceptanceObservabilityProfileName = unwrapPlatformName(
   platformObservabilityProfileName("platform-smoke.persistence.work-item.accepted"),
+);
+export const platformSmokeWorkItemAdmissionObservabilityProfileName = unwrapPlatformName(
+  platformObservabilityProfileName("platform-smoke.persistence.work-item.admission"),
 );
 export const platformSmokeJobMessageType = "platform-smoke.rebuild" as QueueMessageType;
 export const platformSmokeWorkItemAcceptedJobMessageType = "platform-smoke.work-item.accepted" as QueueMessageType;
@@ -111,6 +115,18 @@ export const platformSmokeWorkItemAcceptanceObservabilityProfile: PlatformCapabi
   logFieldNames: ["capability", "action", "execution_context", "outcome", "error_class"],
   metricDimensionFieldNames: ["capability", "action", "execution_context", "outcome", "error_class"],
   traceAttributeNames: ["capability", "action", "execution_context", "outcome", "error_class"],
+  nfrObjectives: [{ nfrClass: "async_acceptance", measurement: "request_response_latency" }],
+};
+
+/** Governs the non-mutating write-path diagnostic used before a fresh acceptance proof. */
+export const platformSmokeWorkItemAdmissionObservabilityProfile: PlatformCapabilityObservabilityProfile = {
+  name: platformSmokeWorkItemAdmissionObservabilityProfileName,
+  capability: unwrapPlatformName(platformCapabilityName("platform-smoke.persistence.work-item.admission")),
+  action: "verify",
+  signals: ["operational_log", "metric", "trace"],
+  logFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+  metricDimensionFieldNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
+  traceAttributeNames: ["capability", "action", "execution_context", "http_method", "http_status_code", "outcome", "error_class"],
   nfrObjectives: [{ nfrClass: "async_acceptance", measurement: "request_response_latency" }],
 };
 
@@ -263,9 +279,21 @@ function registerPlatformSmokeWorkItemAcceptance(
   dependencies: PlatformSmokeAcceptWorkItemDependencies,
 ): void {
   registry.registerObservabilityProfile(platformSmokeWorkItemAcceptanceObservabilityProfile);
+  registry.registerObservabilityProfile(platformSmokeWorkItemAdmissionObservabilityProfile);
   registry.registerPermission({
     permission: platformSmokeWorkItemCreatePermission,
     description: "Accept the bounded platform smoke work item.",
+  });
+  registry.registerRoute({
+    name: platformSmokeWorkItemAdmissionRouteName,
+    method: "POST",
+    path: "/smoke/work-items/admission",
+    auth: { kind: "authenticated", permissions: [platformSmokeWorkItemCreatePermission] },
+    observability: { kind: "profile", profile: platformSmokeWorkItemAdmissionObservabilityProfileName },
+    validator: platformSmokeWorkItemAcceptanceValidator,
+    handler: {
+      handle: () => ({ status: 204, body: undefined }),
+    },
   });
   registry.registerRoute({
     name: platformSmokeWorkItemAcceptanceRouteName,

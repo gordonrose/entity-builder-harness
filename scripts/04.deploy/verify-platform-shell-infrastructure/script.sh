@@ -41,6 +41,7 @@ bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
@@ -347,7 +348,7 @@ else:
         if persistence_write_test_client.get(key) != expected:
             fail(f"target profile persistence write client must retain {key}")
     persistence_status = persistence_write_test_client.get("status")
-    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "deployed-and-write-proven"}:
+    if persistence_status not in {"pending-provisioning", "provisioned-pending-service-deployment", "deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
         fail("target profile persistence write client must use a governed lifecycle status")
     persistence_client_id = persistence_write_test_client.get("client_id")
     persistence_secret_arn = persistence_write_test_client.get("secret_arn")
@@ -390,12 +391,36 @@ else:
         }
         if secret_refs.get("cognito_persistence_write_client_secret") != expected_persistence_secret_ref:
             fail("target profile must retain the bounded persistence-write secret reference after provisioning")
-    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "deployed-and-write-proven"}:
+    if persistence_status in {"deployed-pending-write-proof", "write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending", "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending", "write-proof-failed-non-committing-admission-probe-deployed-pending-execution", "deployed-and-write-proven"}:
         expected_client_allowlist.append(persistence_client_id)
     if not all(isinstance(client_id, str) and client_id for client_id in expected_client_allowlist):
         fail("target profile must retain all deployed proof-client identifiers")
     if non_secret_env.get("PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS") != json.dumps(expected_client_allowlist, separators=(",", ":")):
         fail("target profile must allowlist exactly the proof clients deployed to the service")
+    admission_probe_base = {
+        "route": "POST /smoke/work-items/admission",
+        "permission": "platform-smoke.persistence.work-item:create",
+        "request_body": "none",
+        "persistence_side_effects": "prohibited",
+        "expected_http_status": 204,
+        "output_policy": "status-and-safe-latency-only-no-token-secret-request-id-or-response-body",
+    }
+    if persistence_status == "write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending":
+        expected_admission_probe = {
+            **admission_probe_base,
+            "status": "source-ready-deployment-pending",
+            "next_guard": "reviewed-service-deployment-and-health-before-one-execution",
+        }
+        if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
+            fail("target profile must retain the fixed source-ready non-mutating admission probe")
+    if persistence_status == "write-proof-failed-non-committing-admission-probe-deployed-pending-execution":
+        expected_admission_probe = {
+            **admission_probe_base,
+            "status": "deployed-pending-one-execution",
+            "next_guard": "one-execution-only-then-record-safe-result-before-any-fresh-persistence-write",
+        }
+        if persistence_write_test_client.get("admission_probe") != expected_admission_probe:
+            fail("target profile must retain the fixed deployed non-mutating admission probe")
     if persistence_status in {"write-proof-failed-non-committing-remediation-pending", "write-proof-failed-non-committing-remediation-deployed-fresh-approval-pending", "write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending"}:
         expected_failed_acceptance = {
             "executed_on_utc": "2026-09-24",
@@ -629,7 +654,7 @@ if persistence_table.get("Tags") != expected_persistence_tags:
 
 expected_persistence_profile = {
     "smoke_transactional_outbox": {
-        "status": "foundation-and-service-deployed-replacement-write-proof-failed-non-committing-pre-server-diagnosis-pending",
+        "status": "foundation-and-service-deployed-admission-probe-source-ready-deployment-pending",
         "provider": "aws-dynamodb",
         "adapter_package": "@kanbien/platform-adapter-aws-persistence-dynamodb",
         "composition_entrypoint": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
@@ -699,17 +724,17 @@ expected_persistence_profile = {
                 "relay_running_task_count": "zero",
                 "source_and_dead_letter_queues": "empty",
             },
-            "next_execution_guard": "diagnose-possible-pre-server-or-ingress-path-before-any-new-write-proof-authority",
-            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-third-persistence-write",
+            "next_execution_guard": "deploy-and-health-check-the-non-mutating-admission-probe-before-any-new-persistence-write",
+            "execution_exclusions": "no-relay-run-no-worker-scale-no-cognito-change-no-fresh-persistence-write-before-admission-probe",
         },
         "activation": {
-            "server_acceptance": "replacement-write-proof-failed-non-committing-no-matching-server-request-observed",
+            "server_acceptance": "non-mutating-admission-probe-source-ready-deployment-pending",
             "outbox_relay": "prohibited-no-committed-outbox-obligation",
             "durable_worker_processing": "prohibited-no-relay-created-delivery-worker-remains-zero",
             "iam": "foundation-deployed-server-relay-and-worker-least-privilege-verified",
             "required_identity_scope": "platform-shell/smoke.write",
-            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-no-third-write-permitted",
-            "observability": "profile-registered-transition-catalogue-service-deployed-protected-read-verified-replacement-request-missing-from-server-observation",
+            "identity_scope_status": "provisioned-separate-write-client-trusted-by-exact-server-allowlist-admission-probe-only-before-any-fresh-write",
+            "observability": "admission-profile-source-registered-no-body-no-persistence-side-effects-deployment-pending",
         },
     },
 }

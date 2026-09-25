@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 55
+#   version: 56
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -30,6 +30,8 @@
 #     path: scripts/04.deploy/provision-platform-shell-persistence-write-client/script.sh
 #   - id: deploy.script.run-platform-shell-persistence-smoke
 #     path: scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh
+#   - id: deploy.script.run-platform-shell-persistence-admission-probe
+#     path: scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
 schema: deploy/platform-shell-target-profile/v1
 status: draft
 client:
@@ -354,7 +356,7 @@ auth:
       output_policy: status-and-safe-latency-only-no-token-secret-or-response-body
       post_proof_health: stack-update-complete-revision-5-completed-healthy-target-five-ok-alarms
   persistence_write_test_client:
-    status: write-proof-failed-non-committing-replacement-pre-server-diagnosis-pending
+    status: write-proof-failed-non-committing-admission-probe-source-ready-deployment-pending
     name: platform-shell-staging-persistence-write-client
     client_id: 38bhngfddbgu7c41b01crllh46
     secret_arn: arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/platform-shell/cognito-persistence-write-client-gtrOvE
@@ -430,6 +432,15 @@ auth:
       server_observation: no-matching-structured-request-observed
       post_attempt_state: server-one-running-one-worker-zero-queues-empty
       follow_up: diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action
+    admission_probe:
+      status: source-ready-deployment-pending
+      route: POST /smoke/work-items/admission
+      permission: platform-smoke.persistence.work-item:create
+      request_body: none
+      persistence_side_effects: prohibited
+      expected_http_status: 204
+      output_policy: status-and-safe-latency-only-no-token-secret-request-id-or-response-body
+      next_guard: reviewed-service-deployment-and-health-before-one-execution
   resource_server:
     identifier: platform-shell
     scopes:
@@ -510,7 +521,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   smoke_transactional_outbox:
-    status: foundation-and-service-deployed-replacement-write-proof-failed-non-committing-pre-server-diagnosis-pending
+    status: foundation-and-service-deployed-admission-probe-source-ready-deployment-pending
     provider: aws-dynamodb
     adapter_package: "@kanbien/platform-adapter-aws-persistence-dynamodb"
     composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
@@ -577,16 +588,16 @@ persistence:
         worker: desired-zero-running-zero-rollout-complete
         relay_running_task_count: zero
         source_and_dead_letter_queues: empty
-      next_execution_guard: diagnose-possible-pre-server-or-ingress-path-before-any-new-write-proof-authority
-      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-third-persistence-write
+      next_execution_guard: deploy-and-health-check-the-non-mutating-admission-probe-before-any-new-persistence-write
+      execution_exclusions: no-relay-run-no-worker-scale-no-cognito-change-no-fresh-persistence-write-before-admission-probe
     activation:
-      server_acceptance: replacement-write-proof-failed-non-committing-no-matching-server-request-observed
+      server_acceptance: non-mutating-admission-probe-source-ready-deployment-pending
       outbox_relay: prohibited-no-committed-outbox-obligation
       durable_worker_processing: prohibited-no-relay-created-delivery-worker-remains-zero
       iam: foundation-deployed-server-relay-and-worker-least-privilege-verified
       required_identity_scope: platform-shell/smoke.write
-      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-no-third-write-permitted
-      observability: profile-registered-transition-catalogue-service-deployed-protected-read-verified-replacement-request-missing-from-server-observation
+      identity_scope_status: provisioned-separate-write-client-trusted-by-exact-server-allowlist-admission-probe-only-before-any-fresh-write
+      observability: admission-profile-source-registered-no-body-no-persistence-side-effects-deployment-pending
 config:
   non_secret_source: ecs-task-environment
   secret_source: aws-secrets-manager

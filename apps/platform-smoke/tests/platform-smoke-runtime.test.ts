@@ -218,6 +218,37 @@ async function main(): Promise<void> {
     headers: { authorization: "Bearer read" },
   });
   equal(forbiddenAcceptance.status, 403);
+  const unauthenticatedAdmission = await server.value.handle({ method: "POST", path: "/smoke/work-items/admission" });
+  equal(unauthenticatedAdmission.status, 401);
+  const forbiddenAdmission = await server.value.handle({
+    method: "POST",
+    path: "/smoke/work-items/admission",
+    headers: { authorization: "Bearer read" },
+  });
+  equal(forbiddenAdmission.status, 403);
+  const admitted = await server.value.handle({
+    method: "POST",
+    path: "/smoke/work-items/admission",
+    headers: { authorization: "Bearer write" },
+  });
+  equal(admitted.status, 204);
+  equal(admitted.body, undefined);
+  equal(routeMutations.length, 0);
+  equal(metrics.points().some((point) =>
+    point.name === "platform.server.request_response_latency"
+      && point.labels?.["capability"] === "platform-smoke.persistence.work-item.admission"
+      && point.labels?.["action"] === "verify"), true);
+  deepEqual(tracer.spans().at(-1)?.end, {
+    outcome: "succeeded",
+    attributes: {
+      capability: "platform-smoke.persistence.work-item.admission",
+      action: "verify",
+      execution_context: "server",
+      http_method: "POST",
+      http_status_code: 204,
+      outcome: "succeeded",
+    },
+  });
   const invalidAcceptance = await server.value.handle({
     method: "POST",
     path: "/smoke/work-items",

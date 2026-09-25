@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 38
+  version: 39
   status: active
   layer: 05.education
   domain: education
@@ -10361,7 +10361,8 @@ transaction-to-outbox proof is not complete: the one separately approved
 replacement request returned a safe `503`, committed no record, left both
 queues empty, and had no matching structured server-request observation. The
 relay and worker were therefore correctly not started. The next step is a
-separate pre-server/ingress diagnosis, not another unreviewed write attempt.
+single **non-mutating write-admission probe** after a reviewed deployment, not
+another unreviewed write attempt.
 
 ### Study question
 
@@ -10372,6 +10373,76 @@ Because the generic lifecycle layer can know that its recovery and policy
 conditions are satisfied, but it cannot know whether the product's legal,
 tenant, classification, backup, and erasure obligations have been performed
 by an authorised purge process.
+
+## 117. A Diagnostic Probe Can Test the Door Without Entering the Building
+
+We had two failed write attempts. Each was safely non-committing, but the
+second did not leave a matching structured server observation. That leaves an
+important question unanswered:
+
+> Does an authenticated request reach the application server at all, or does
+> it fail earlier at a network/edge boundary?
+
+Sending a third state-changing request just to answer that question would be
+poor engineering. Instead, the smoke app has a separate *admission probe*:
+
+```text
+write-only token
+       │
+       ▼
+WAF / load balancer / server transport
+       │
+       ▼
+authentication ──> authorisation ──> route validation
+                                             │
+                                             ▼
+                               return 204 immediately
+                               (do not call persistence)
+```
+
+The route is `POST /smoke/work-items/admission`. It deliberately uses the
+same narrow write permission as the real acceptance route, but it accepts no
+request body and its handler never calls a repository, transaction, DynamoDB,
+outbox, SQS, relay, or worker. The local test checks three things:
+
+1. no token receives `401` and a read-only token receives `403`;
+2. the write token receives `204`;
+3. the recording atomic writer has no mutation after the request.
+
+The runner is also constrained: no caller can provide a URL, route, scope,
+body, request identity, or timeout. Its only permitted live result is a safe
+status and rounded latency. It can execute once only after a reviewed immutable
+server deployment and health check.
+
+### What a passing probe means
+
+A `204` proves that this exact authenticated request reached the server route
+and produced profile-governed telemetry. It does **not** prove a database
+transaction, an outbox entry, queue publication, or worker delivery. It merely
+makes the next decision rational: if a later, separately governed acceptance
+fails, we can focus on the persistence path rather than guessing about ingress.
+
+### Misconception check
+
+“Because it uses the write token, the probe is a write.”
+
+No. Authorisation determines what the caller *may ask to do*; the route’s
+implemented effect determines what it *does*. This route needs the write
+permission to test the real authorisation boundary, but its bounded handler
+performs no state change.
+
+### Study question
+
+Why is a `204` admission result not enough to start the relay?
+
+Because the relay needs a durable outbox obligation. The probe deliberately
+creates none, so there is nothing legitimate to publish.
+
+Planning triage: the [Persistence Foundation v1 plan](../../../.agentic/03.product/plans/implementation/persistence-foundation-v1.md)
+owns the staged proof sequence; the staging target profile and infrastructure
+gate own the exact runner policy. The probe is source-ready and locally
+verified, but it is not live until a reviewed immutable-image deployment and
+health check complete.
 
 ## Repository Evidence
 
@@ -10431,6 +10502,10 @@ After each completed learning chunk:
 
 ## Revision History
 
+- 2026-09-25: Added the write-admission diagnostic lesson. It distinguishes a
+  no-side-effect route from a state-changing acceptance, explains why it tests
+  the authenticated server boundary first, and records the next governed
+  deployment/probe/acceptance sequence.
 - 2026-09-24: Added the safe-failure observability lesson. The first bounded
   staging write returned 503 and was proved non-committing with aggregate-only
   evidence; relay and worker execution did not occur. The new route-response
