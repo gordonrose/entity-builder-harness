@@ -43,6 +43,11 @@ from pathlib import Path
 
 module = runpy.run_path(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py"))
 
+assert module["normalized_replacement"]("True") is True
+assert module["normalized_replacement"]("False") is False
+assert module["normalized_replacement"](None) is None
+assert module["normalized_replacement"]("unexpected") == "unexpected"
+
 try:
     module["run_check"](
         "artifact-bucket-public-access-control",

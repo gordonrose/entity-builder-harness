@@ -626,6 +626,12 @@ def check_budget(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     )
 
 
+def normalized_replacement(value: Any) -> Any:
+    """Convert CloudFormation's boolean-like replacement fields to source booleans."""
+
+    return {"True": True, "False": False}.get(value, value)
+
+
 def check_change_set(arguments: argparse.Namespace, policy: dict[str, Any], stack: str, change_set: str, expected_changes: set[tuple[Any, ...]], check_id: str) -> None:
     """Require exactly the already-reviewed target stack change-set scope before execution."""
 
@@ -637,9 +643,8 @@ def check_change_set(arguments: argparse.Namespace, policy: dict[str, Any], stac
     for change in changes:
         if not isinstance(change, dict):
             raise ReconciliationError(check_id)
-        replacement = change.get("replacement")
-        normalized_replacement = False if replacement == "False" else None if replacement is None else replacement
-        actual_changes.add((change.get("action"), change.get("logicalId"), change.get("resourceType"), normalized_replacement))
+        replacement = normalized_replacement(change.get("replacement"))
+        actual_changes.add((change.get("action"), change.get("logicalId"), change.get("resourceType"), replacement))
     require(actual_changes == expected_changes and len(changes) == len(expected_changes), check_id)
 
 
