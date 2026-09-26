@@ -64,6 +64,9 @@ WORKDIR /app
 
 COPY --chown=nonroot:nonroot --from=build /app/.cache/ ./.cache/
 COPY --chown=nonroot:nonroot --from=build /app/node_modules/ ./node_modules/
+# This is AWS's public regional RDS trust chain, pinned in source and verified
+# by the PostgreSQL source-policy check. It is not an application secret.
+COPY --chown=nonroot:nonroot --from=build /app/platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.pem ./assets/rds-eu-west-1-bundle.pem
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
