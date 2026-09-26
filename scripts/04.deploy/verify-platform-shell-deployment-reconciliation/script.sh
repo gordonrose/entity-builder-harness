@@ -66,7 +66,7 @@ expected_config = {
     "status": "source-implemented-live-role-alignment-and-detector-pending",
     "command": "npm run platform:shell:deployment-reconciliation",
     "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
-    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
+    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
     "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
     "schedule_cron_utc": "15 */4 * * *",
     "execution_identity": "github-platform-shell-staging-reconciliation",
@@ -183,6 +183,30 @@ require(service_stage_six_scope == {
         {"logical_id": "WorkerService", "resource_type": "AWS::ECS::Service", "replacement": False},
     ],
 }, "reconciliation must permit only the exact Stage 6 relational service change scope")
+bootstrap_recovery_scope = reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope", {})
+require(bootstrap_recovery_scope == {
+    "foundation_evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    },
+    "service_evidence": {"schema": "deploy/platform-shell-service-active-drift-evidence/v1", "maximum_age_seconds": 900, "classification": "in-sync"},
+    "additions": [],
+    "modifications": [
+        {"logical_id": "TaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "WorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalBootstrapTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalMigrationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalRelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalWorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalRestoreVerificationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "Service", "resource_type": "AWS::ECS::Service", "replacement": False},
+        {"logical_id": "WorkerService", "resource_type": "AWS::ECS::Service", "replacement": False},
+    ],
+}, "reconciliation must permit only existing task-definition revisions and in-place service references for the bootstrap recovery")
 require(profile.get("operations", {}).get("budget", {}).get("name") == "kanbien-staging-platform-shell-monthly", "operations must use the canonical live platform-shell budget name")
 require(profile.get("persistence", {}).get("relational_reference", {}).get("operations", {}).get("cost", {}).get("existing_tag_scoped_budget") == "kanbien-staging-platform-shell-monthly", "relational reference must use the canonical live platform-shell budget name")
 
@@ -297,7 +321,7 @@ for prohibited in ("expectedvalue", "actualvalue", "create-change-set", "execute
 source = Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8").lower()
 for prohibited in ("execute-change-set", "create-stack", "update-stack", "delete-stack", "put-object", "put-bucket", "put-budget", "get-secret-value"):
     require(prohibited not in source, f"reconciliation command must not contain {prohibited}")
-for required in ("lastchecktimestamp", "evidence-stale", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope", "get-role-policy"):
+for required in ("lastchecktimestamp", "evidence-stale", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope", "get-role-policy", "relational-stage6-bootstrap-recovery-service-change-set-scope"):
     require(required in source, f"reconciliation command must retain {required}")
 for required in ("get-public-access-block", "get-bucket-encryption", "get-bucket-ownership-controls", "get-bucket-lifecycle-configuration", "get-bucket-policy-status"):
     require(required in source, f"reconciliation command must retain the reviewed provider operation {required}")

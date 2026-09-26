@@ -33,6 +33,14 @@ if ! rg -q 'role-policy-alignment requires the declared administrator target-pro
   echo "ERROR: reconciliation role-policy alignment must remain administrator-only." >&2
   exit 1
 fi
+if ! rg -q 'a relational Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: relational Service preflight must remain target-admin only." >&2
+  exit 1
+fi
+if ! rg -q 'pre-relational-stage6-bootstrap-recovery-service-change-set' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: bootstrap recovery must retain its distinct Service change-set guard." >&2
+  exit 1
+fi
 python3 -c 'from pathlib import Path; compile(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8"), "reconcile-platform-shell-staging.py", "exec")'
 python3 - <<'PY'
 import runpy
@@ -47,6 +55,20 @@ assert module["normalized_replacement"]("True") is True
 assert module["normalized_replacement"]("False") is False
 assert module["normalized_replacement"](None) is None
 assert module["normalized_replacement"]("unexpected") == "unexpected"
+
+bootstrap_recovery_changes = {
+    ("Modify", "TaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "WorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalRelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalWorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalRestoreVerificationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "Service", "AWS::ECS::Service", False),
+    ("Modify", "WorkerService", "AWS::ECS::Service", False),
+}
+assert len(bootstrap_recovery_changes) == 10
 
 try:
     module["run_check"](

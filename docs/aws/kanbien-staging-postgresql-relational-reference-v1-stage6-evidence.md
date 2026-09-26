@@ -31,7 +31,11 @@ migration identity and makes both running and stopped fixed task labels
 single-use. It defines a new fixed `recovery-1` label set; it does not replay
 the initial label. The live recovery section remains intentionally unfilled
 until the corrected immutable image is deployed, its normal Service revision
-rolls out healthily, and the fixed controller returns its terminal safe verdict.
+rolls out healthily, and the fixed bootstrap-only recovery returns its terminal
+safe verdict. The recovery rollout guard accepts only revisions of existing
+task definitions and existing in-place service references; it rejects all
+resource additions, removals, IAM, database, queue, routing, and listener
+changes.
 
 ## Required live evidence fields
 

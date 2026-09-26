@@ -93,3 +93,16 @@ gained a different policy.
 npm run platform:shell:deployment-reconciliation:role-policy-alignment
 npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-service-change-set --service-change-set reviewed-name
 ```
+
+- `pre-relational-stage6-bootstrap-recovery-service-change-set` is used only
+  after the first Stage 6 Service composition already exists and a corrected
+  immutable image must be rolled out before the one fixed bootstrap recovery.
+  It permits no additions or removals. It permits only replacement revisions of
+  the three normal and five already-declared relational task definitions, plus
+  the two in-place ECS service references. The same fresh Foundation
+  classification and in-sync Service assessment are required. Any IAM,
+  queue, database, listener, routing, or other resource change fails closed.
+
+```bash
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-bootstrap-recovery-service-change-set --service-change-set reviewed-name --known-foundation-drift-evidence /tmp/fresh-foundation-evidence.json --service-drift-evidence /tmp/fresh-service-evidence.json
+```

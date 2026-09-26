@@ -50,8 +50,13 @@ migration/runtime identities and connection/schema grants. The migration role
 sets default privileges for tables it will itself create, which matches
 PostgreSQL's role-ownership rules. A corrected immutable image, normal
 task-definition-only Service update, stack-health check, and live-boundary
-check must all pass before the controller is invoked again. Do not reuse the
-original labels or inspect/paste raw task logs.
+check must all pass before recovery begins. The rollout guard permits only the
+eight existing task-definition revision replacements and the two existing
+in-place service references: no new resources, IAM, queue, database, routing,
+or listener change is admissible. The first recovery invocation runs
+**bootstrap only**; it must pass before a separately reviewed continuation can
+touch migration or any later stage. Do not reuse the original labels or
+inspect/paste raw task logs.
 
 ## Before running
 
@@ -72,6 +77,17 @@ Run the local, no-AWS validation first:
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --validate
 ```
+
+After the guarded corrected-image revision has reached a healthy service
+rollout, invoke only the bootstrap recovery first:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --execute-bootstrap-recovery --approve-relational-bootstrap-recovery
+```
+
+This fixed command cannot progress to migration, relay, worker, or restore.
+Those steps remain deliberately unavailable until the bootstrap verdict has
+been assessed.
 
 ## Run the proof
 

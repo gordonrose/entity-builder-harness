@@ -674,7 +674,8 @@ runtime:
           initial_bootstrap: completed-nonzero-without-task-log-or-identifier-retention
           corrective_ownership: migration-role-default-privileges-only
           consumed_stage_guard: running-and-stopped-fixed-label-reads
-          next_execution: one-new-fixed-recovery-1-label-set-after-corrected-image-rollout
+          service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
+          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
         sequence:
           - bootstrap
           - migration

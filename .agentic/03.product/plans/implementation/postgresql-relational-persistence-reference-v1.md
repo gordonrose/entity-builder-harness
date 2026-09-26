@@ -602,8 +602,12 @@ default-server command. The image contains AWS's public, digest-pinned
 `eu-west-1` RDS CA bundle, so it verifies the RDS chain rather than trusting a
 generic container trust store or weakening TLS.
 
-`platform:shell:postgresql-relational-smoke` has only two modes: local
-`--validate`, or the fixed `--execute --approve-relational-stage6` sequence.
+`platform:shell:postgresql-relational-smoke` has a local `--validate` mode, a
+fixed `--execute --approve-relational-stage6` sequence, and a distinct
+`--execute-bootstrap-recovery --approve-relational-bootstrap-recovery` mode.
+The bootstrap-recovery mode cannot start migration, relay, worker, or restore;
+it exists so the corrected PostgreSQL ownership boundary is proven before any
+later delivery stage is eligible.
 It accepts no target, credential, payload, task, queue, database, restore
 name, network, or timeout supplied by a caller. Before each onward step it
 checks the reviewed account/region, stack readiness, public server `1/1`,
@@ -626,6 +630,15 @@ a new immutable image, normal reviewed Service task-definition revisions, a
 healthy rollout and live-boundary check, then one distinct fixed `recovery-1`
 label set. It does not expose task identifiers, logs, SQL, records, or provider
 payloads while investigating or recording the recovery.
+
+The corrected-image Service revision has its own preflight policy. It accepts
+zero resource additions or removals and exactly the three existing normal plus
+five existing relational task-definition replacements and the two existing
+in-place ECS service references. It rejects IAM, database, queue, listener,
+routing, or any other stack change. Since this guard and controller are local
+deployment controls rather than runtime image inputs, their commit may follow
+the already-published byte-identical corrected runtime image without another
+image build; the applied image remains identified by its immutable digest.
 
 1. With a distinct, bounded approval, run one fixed harmless relational smoke
    request. It may create only approved opaque state, lineage, and outbox facts.

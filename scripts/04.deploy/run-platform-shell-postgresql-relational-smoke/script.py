@@ -30,14 +30,19 @@ def arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate or run one Kanbien staging relational smoke proof.")
     parser.add_argument("--validate", action="store_true", help="Validate the committed policy without AWS calls.")
     parser.add_argument("--execute", action="store_true", help="Run the fixed bootstrap-to-restore proof.")
+    parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
+    parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     result = parser.parse_args()
-    if result.validate == result.execute:
-        parser.error("choose exactly one of --validate or --execute")
-    if result.validate and result.approve_relational_stage6:
-        parser.error("the Stage 6 approval guard is valid only with --execute")
-    if result.execute and not result.approve_relational_stage6:
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery))
+    if selected != 1:
+        parser.error("choose exactly one of --validate, --execute, or --execute-bootstrap-recovery")
+    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
+        parser.error("an execution approval guard is unavailable in validation mode")
+    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
+    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6):
+        parser.error("the fixed bootstrap recovery requires --approve-relational-bootstrap-recovery")
     return result
 
 
@@ -101,6 +106,7 @@ def load_policy() -> dict[str, Any]:
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
         "execution_guard": "execute-and-approve-relational-stage6",
+        "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
         "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
         "foundation_stack": "kanbien-staging-platform-shell-foundation",
         "service_stack": "kanbien-staging-platform-shell-service",
@@ -369,6 +375,21 @@ def execute(policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the relational proof did not preserve the reviewed terminal aggregate state")
 
 
+def execute_bootstrap_recovery(policy: dict[str, Any]) -> None:
+    """Run only the fixed replacement bootstrap before any later recovery stage."""
+
+    verify_account(policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    network = worker_network(policy)
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the bootstrap recovery preconditions are not the reviewed dormant aggregate state")
+    source_database(policy)
+    run_and_wait("bootstrap", network, policy)
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the bootstrap recovery did not preserve the reviewed terminal aggregate state")
+
+
 def main() -> int:
     """Emit one safe final verdict and no provider response details."""
 
@@ -378,11 +399,18 @@ def main() -> int:
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
             return 0
+        if parsed.execute_bootstrap_recovery:
+            execute_bootstrap_recovery(policy)
+            print('{"postgresql_relational_bootstrap_recovery":"passed"}')
+            return 0
         execute(policy)
         print('{"postgresql_relational_smoke":"passed"}')
         return 0
     except RelationalSmokeError:
-        print('{"postgresql_relational_smoke":"failed"}')
+        if parsed.execute_bootstrap_recovery:
+            print('{"postgresql_relational_bootstrap_recovery":"failed"}')
+        else:
+            print('{"postgresql_relational_smoke":"failed"}')
         return 1
 
 

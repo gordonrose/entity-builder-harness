@@ -24,6 +24,18 @@ image is deployed. It never replays the consumed label. Bootstrap creates the
 two PostgreSQL identities and their connection/schema grants; the migration
 identity, which creates future tables, owns its own default-table privileges.
 
+After the corrected image's guarded Service revision is healthy, the first
+recovery command is deliberately bootstrap-only:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --execute-bootstrap-recovery --approve-relational-bootstrap-recovery
+```
+
+It has the same fixed target and aggregate preconditions as the full proof but
+cannot start migration, relay, worker, or restore. A successful bootstrap is
+evidence for the ownership correction only; continuation requires its own
+reviewed recovery step.
+
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
 task, and deletes that recovery instance without a final snapshot. It retains

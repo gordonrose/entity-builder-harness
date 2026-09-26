@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
-    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "role-policy-alignment"), default="continuous")
+    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "role-policy-alignment"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
     parser.add_argument("--service-change-set", help="The reviewed service change-set name, required only for the isolated relational Stage 6 service preflight.")
     parser.add_argument("--service-drift-evidence", help="New /tmp safe Service-drift evidence, required only for the isolated relational Stage 6 service preflight.")
@@ -67,7 +67,8 @@ def parse_arguments() -> argparse.Namespace:
     if not 1 <= arguments.timeout_seconds <= 30:
         parser.error("--timeout-seconds must be between 1 and 30")
     preflight_modes = {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}
-    service_preflight_mode = arguments.mode == "pre-relational-stage6-service-change-set"
+    service_preflight_modes = {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}
+    service_preflight_mode = arguments.mode in service_preflight_modes
     if arguments.validate and (arguments.foundation_change_set or arguments.service_change_set or arguments.known_foundation_drift_evidence or arguments.service_drift_evidence):
         parser.error("--validate cannot inspect a change set or evidence record")
     if arguments.mode in preflight_modes and not arguments.validate and not arguments.foundation_change_set:
@@ -78,13 +79,13 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--service-change-set is required for the isolated relational Stage 6 service preflight")
     if not service_preflight_mode and arguments.service_change_set:
         parser.error("--service-change-set is permitted only for the isolated relational Stage 6 service preflight")
-    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} and not arguments.validate:
+    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *service_preflight_modes} and not arguments.validate:
         if not arguments.known_foundation_drift_evidence:
             parser.error("--known-foundation-drift-evidence is required for the exact egress-remediation preflight")
         evidence = Path(arguments.known_foundation_drift_evidence)
         if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
             parser.error("--known-foundation-drift-evidence must be a direct child of /tmp")
-    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} and arguments.known_foundation_drift_evidence:
+    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *service_preflight_modes} and arguments.known_foundation_drift_evidence:
         parser.error("--known-foundation-drift-evidence is permitted only for a relational Foundation preflight with classified drift")
     if service_preflight_mode and not arguments.validate:
         if not arguments.service_drift_evidence:
@@ -98,6 +99,8 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("role-policy-alignment requires the declared administrator target-profile credentials")
     if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and not arguments.validate and arguments.aws_credential_source != "target-profile":
         parser.error("a relational Foundation preflight requires declared administrator target-profile credentials")
+    if service_preflight_mode and not arguments.validate and arguments.aws_credential_source != "target-profile":
+        parser.error("a relational Service preflight requires declared administrator target-profile credentials")
     return arguments
 
 
@@ -220,6 +223,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction",
             "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition",
             "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions",
+            "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only",
             "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison",
         },
         "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
@@ -237,6 +241,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "foundation_egress_remediation_scope": reconciliation.get("foundation_egress_remediation_scope"),
         "foundation_relational_stage6_change_set_scope": reconciliation.get("foundation_relational_stage6_change_set_scope"),
         "service_relational_stage6_change_set_scope": reconciliation.get("service_relational_stage6_change_set_scope"),
+        "service_relational_stage6_bootstrap_recovery_image_change_set_scope": reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope"),
     }:
         raise ReconciliationError("reconciliation-policy-not-reviewed")
     if budget.get("name") != "kanbien-staging-platform-shell-monthly" or budget.get("amount_usd") != 25 or budget.get("period") != "monthly":
@@ -347,6 +352,23 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     actual_service_stage_six_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in service_stage_six_scope.get("modifications", []) if isinstance(item, dict)}
     if service_stage_six_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or service_stage_six_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_service_stage_six_additions != expected_service_stage_six_additions or actual_service_stage_six_modifications != expected_service_stage_six_modifications:
         raise ReconciliationError("relational-stage6-service-scope-not-reviewed")
+    bootstrap_recovery_scope = mapping(reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope"), "relational-stage6-bootstrap-recovery-service-scope-missing")
+    expected_bootstrap_recovery_modifications = {
+        ("TaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("WorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalRelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalWorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalRestoreVerificationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("Service", "AWS::ECS::Service", False),
+        ("WorkerService", "AWS::ECS::Service", False),
+    }
+    actual_bootstrap_recovery_additions = {(item.get("logical_id"), item.get("resource_type")) for item in bootstrap_recovery_scope.get("additions", []) if isinstance(item, dict)}
+    actual_bootstrap_recovery_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in bootstrap_recovery_scope.get("modifications", []) if isinstance(item, dict)}
+    if bootstrap_recovery_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or bootstrap_recovery_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_bootstrap_recovery_additions or actual_bootstrap_recovery_modifications != expected_bootstrap_recovery_modifications:
+        raise ReconciliationError("relational-stage6-bootstrap-recovery-service-scope-not-reviewed")
     return {
         "account_id": account_id,
         "region": region,
@@ -374,6 +396,9 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "expected_relational_stage6_service_changes": {
             *(("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_service_stage_six_additions),
             *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_service_stage_six_modifications),
+        },
+        "expected_relational_stage6_bootstrap_recovery_service_changes": {
+            *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_bootstrap_recovery_modifications),
         },
         "maximum_stage_six_evidence_age_seconds": expected_stage_six_evidence["maximum_age_seconds"],
         "maximum_service_stage_six_evidence_age_seconds": expected_service_stage_six_service_evidence["maximum_age_seconds"],
@@ -491,7 +516,7 @@ def check_known_remediation_evidence(arguments: argparse.Namespace, policy: dict
             {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_category": "not_equal"},
         ],
     ]
-    if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"}:
+    if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
         allowed_changes = [allowed_changes[0]]
     if any(document.get(key) != value for key, value in expected.items()) or document.get("known_changes") not in allowed_changes:
         raise ReconciliationError("known-foundation-drift-evidence-not-reviewed")
@@ -500,7 +525,7 @@ def check_known_remediation_evidence(arguments: argparse.Namespace, policy: dict
     except (TypeError, ValueError) as exception:
         raise ReconciliationError("known-foundation-drift-evidence-timestamp-invalid") from exception
     age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
-    maximum_age = policy["maximum_stage_six_evidence_age_seconds"] if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} else policy["maximum_remediation_evidence_age_seconds"]
+    maximum_age = policy["maximum_stage_six_evidence_age_seconds"] if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"} else policy["maximum_remediation_evidence_age_seconds"]
     if age_seconds < 0 or age_seconds > maximum_age:
         raise ReconciliationError("known-foundation-drift-evidence-stale")
 
@@ -677,7 +702,7 @@ def main() -> int:
                 *artifact_bucket_checks(arguments, policy),
                 ("platform-shell-budget", lambda: check_budget(arguments, policy)),
             ]
-            if arguments.mode == "pre-relational-stage6-service-change-set":
+            if arguments.mode in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
                 core_checks = [
                     ("aws-account", lambda: check_identity(arguments, policy)),
                     ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
@@ -690,12 +715,12 @@ def main() -> int:
                 ]
             if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}:
                 core_checks.insert(4, ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)))
-            elif arguments.mode != "pre-relational-stage6-service-change-set":
+            elif arguments.mode not in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
                 core_checks.insert(4, ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")))
             for check_id, check in core_checks:
                 run_check(check_id, check)
                 checks.append({"id": check_id, "verdict": "passed"})
-            if arguments.mode in {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"}:
+            if arguments.mode in {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
                 run_check(
                     "reconciliation-live-role-policy",
                     lambda: check_reconciliation_live_role_policy(arguments, policy),
@@ -719,12 +744,18 @@ def main() -> int:
                         lambda: check_change_set(arguments, policy, policy["foundation_stack"], arguments.foundation_change_set, policy["expected_relational_stage6_changes"], "relational-stage6-foundation-change-set-scope"),
                     )
                     checks.append({"id": "relational-stage6-foundation-change-set-scope", "verdict": "passed"})
-                else:
+                elif arguments.mode == "pre-relational-stage6-service-change-set":
                     run_check(
                         "relational-stage6-service-change-set-scope",
                         lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_relational_stage6_service_changes"], "relational-stage6-service-change-set-scope"),
                     )
                     checks.append({"id": "relational-stage6-service-change-set-scope", "verdict": "passed"})
+                else:
+                    run_check(
+                        "relational-stage6-bootstrap-recovery-service-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_relational_stage6_bootstrap_recovery_service_changes"], "relational-stage6-bootstrap-recovery-service-change-set-scope"),
+                    )
+                    checks.append({"id": "relational-stage6-bootstrap-recovery-service-change-set-scope", "verdict": "passed"})
         print(json.dumps(result(arguments.mode, checks, "passed"), sort_keys=True))
         return 0
     except ReconciliationError as exception:

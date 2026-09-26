@@ -89,6 +89,7 @@ deployment:
       pre_foundation_egress_remediation_change_set: administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction
       pre_relational_stage6_foundation_change_set: administrator-only-preflight-for-isolated-relational-queue-and-task-composition
       pre_relational_stage6_service_change_set: administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions
+      pre_relational_stage6_bootstrap_recovery_service_change_set: administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only
       role_policy_alignment: admin-only-source-to-live-inline-policy-comparison
     workflow: .github/workflows/reconcile-platform-shell-staging.yml
     schedule_cron_utc: "15 */4 * * *"
@@ -283,6 +284,53 @@ deployment:
           resource_type: AWS::ECS::TaskDefinition
           replacement: true
         - logical_id: RelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: Service
+          resource_type: AWS::ECS::Service
+          replacement: false
+        - logical_id: WorkerService
+          resource_type: AWS::ECS::Service
+          replacement: false
+    service_relational_stage6_bootstrap_recovery_image_change_set_scope:
+      foundation_evidence:
+        schema: deploy/platform-shell-foundation-known-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: known-remediation-required
+        known_change_sets:
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+        tls_enforcement: required
+      service_evidence:
+        schema: deploy/platform-shell-service-active-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: in-sync
+      additions: []
+      modifications:
+        - logical_id: TaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: WorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalBootstrapTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalMigrationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalRelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalWorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalRestoreVerificationTaskDefinition
           resource_type: AWS::ECS::TaskDefinition
           replacement: true
         - logical_id: Service
@@ -933,10 +981,13 @@ persistence:
           default_privileges: migration-identity-owns-default-privileges-for-its-own-created-tables
           consumed_stage_detection: running-and-stopped-task-label-reads-before-any-stage-start
           recovery_label: one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label
+          service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
+          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
       next_gate: publish-corrected-immutable-image-review-normal-service-task-definition-revisions-and-run-one-fixed-bootstrap-recovery
       control:
         command: npm-run-platform-shell-postgresql-relational-smoke
         execution_guard: execute-and-approve-relational-stage6
+        bootstrap_recovery_execution_guard: execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery
         cluster: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
         foundation_stack: kanbien-staging-platform-shell-foundation
         service_stack: kanbien-staging-platform-shell-service

@@ -12,6 +12,14 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: relational smoke execution must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute-bootstrap-recovery >/dev/null 2>&1; then
+  echo "ERROR: bootstrap recovery execution must require its explicit fixed approval guard" >&2
+  exit 1
+fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute --execute-bootstrap-recovery --approve-relational-stage6 --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
+  echo "ERROR: bootstrap recovery must be mutually exclusive with the full proof" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --validate --approve-relational-stage6 >/dev/null 2>&1; then
   echo "ERROR: relational smoke approval must be unavailable in validation mode" >&2
   exit 1
@@ -22,6 +30,10 @@ if rg -q 'parser\.add_argument\("--(target|database|task-definition|queue-url|se
 fi
 if ! grep -q 'created = True' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: relational smoke must own cleanup immediately after an accepted recovery restore" >&2
+  exit 1
+fi
+if ! rg -q 'def execute_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap recovery must retain a dedicated one-stage execution path" >&2
   exit 1
 fi
 python3 - <<'PY'
