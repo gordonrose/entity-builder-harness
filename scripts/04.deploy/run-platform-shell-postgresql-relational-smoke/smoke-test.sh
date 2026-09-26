@@ -20,4 +20,8 @@ if rg -q 'parser\.add_argument\("--(target|database|task-definition|queue-url|se
   echo "ERROR: relational smoke must not accept caller-selected live target inputs" >&2
   exit 1
 fi
+if ! rg -q 'created = True' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: relational smoke must own cleanup immediately after an accepted recovery restore" >&2
+  exit 1
+fi
 echo "PostgreSQL relational smoke local validation passed."

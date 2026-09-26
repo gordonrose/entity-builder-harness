@@ -308,8 +308,10 @@ def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
             "--db-parameter-group-name", source["parameter_group"],
             "--no-publicly-accessible", "--no-multi-az", "--storage-type", "gp3", "--no-deletion-protection",
         ], policy)
-        created = isinstance(response.get("DBInstance"), dict)
-        if not created:
+        # A successful restore call owns cleanup even if a later response-shape
+        # assertion fails. This prevents a disposable recovery from lingering.
+        created = True
+        if not isinstance(response.get("DBInstance"), dict):
             raise RelationalSmokeError("the disposable recovery database was not created uniquely")
         deadline = time.monotonic() + policy["restore_wait_seconds"]
         host: str | None = None
