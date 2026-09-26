@@ -26,7 +26,6 @@
 from __future__ import annotations
 
 import argparse
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import json
@@ -41,6 +40,8 @@ from typing import Any
 DEFAULT_PROFILE = "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
 SAFE_SCHEMA = "deploy/platform-shell-reconciliation-result/v1"
 DRIFT_WAIT_SECONDS = 60
+AWS_MAX_ATTEMPTS = 3
+AWS_RETRY_BACKOFF_SECONDS = (1, 2)
 
 
 class ReconciliationError(Exception):
@@ -202,17 +203,20 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
 
 
 def run_aws(arguments: argparse.Namespace, policy: dict[str, Any], command: list[str]) -> Any:
-    """Run one fixed AWS CLI read or drift-detection operation without exposing its output on failure."""
+    """Run one fixed AWS operation with small bounded retries and no error-payload output."""
 
     invocation = [arguments.aws_cli, *command, "--region", policy["region"], "--output", "json"]
     if arguments.aws_credential_source == "target-profile":
         invocation.extend(["--profile", policy["aws_profile"]])
-    try:
-        completed = subprocess.run(invocation, check=True, capture_output=True, text=True, timeout=arguments.timeout_seconds)
-        payload = json.loads(completed.stdout)
-    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
-        raise ReconciliationError("aws-verification-unavailable") from exception
-    return payload
+    for attempt in range(AWS_MAX_ATTEMPTS):
+        try:
+            completed = subprocess.run(invocation, check=True, capture_output=True, text=True, timeout=arguments.timeout_seconds)
+            return json.loads(completed.stdout)
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
+            if attempt == AWS_MAX_ATTEMPTS - 1:
+                raise ReconciliationError("aws-verification-unavailable") from exception
+            time.sleep(AWS_RETRY_BACKOFF_SECONDS[attempt])
+    raise AssertionError("bounded AWS verification retry loop did not return")
 
 
 def require(condition: bool, code: str) -> None:
@@ -285,9 +289,7 @@ def check_artifact_bucket(arguments: argparse.Namespace, policy: dict[str, Any])
         "lifecycle": ["s3api", "get-bucket-lifecycle-configuration", "--bucket", bucket, "--query", "Rules"],
         "public_status": ["s3api", "get-bucket-policy-status", "--bucket", bucket, "--query", "PolicyStatus.IsPublic"],
     }
-    with ThreadPoolExecutor(max_workers=len(commands)) as executor:
-        futures = {name: executor.submit(run_aws, arguments, policy, command) for name, command in commands.items()}
-        values = {name: future.result() for name, future in futures.items()}
+    values = {name: run_aws(arguments, policy, command) for name, command in commands.items()}
     public_access = values["public_access"]
     require(public_access == {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True}, "artifact-bucket-public-access-control")
     encryption = values["encryption"]
@@ -361,11 +363,9 @@ def main() -> int:
             ]
             if arguments.mode == "continuous":
                 core_checks.insert(3, ("artifact-stack-drift", lambda: check_stack_drift(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")))
-            with ThreadPoolExecutor(max_workers=len(core_checks)) as executor:
-                futures = [(check_id, executor.submit(run_check, check_id, check)) for check_id, check in core_checks]
-                for check_id, future in futures:
-                    future.result()
-                    checks.append({"id": check_id, "verdict": "passed"})
+            for check_id, check in core_checks:
+                run_check(check_id, check)
+                checks.append({"id": check_id, "verdict": "passed"})
             if arguments.mode == "pre-foundation-change-set":
                 run_check(
                     "foundation-change-set-scope",

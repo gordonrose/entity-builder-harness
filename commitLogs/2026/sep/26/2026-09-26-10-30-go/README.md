@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T12:59:05Z
-latest_commit_sha: d7fb1da3
-chat_duration: 12487s (00:03:28:07)
+latest_commit_at_utc: 2026-09-26T13:11:03Z
+latest_commit_sha: 02437631
+chat_duration: 13205s (00:03:40:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -77,6 +77,10 @@ go
 
 - Decision: Preserve scoped CloudFormation reconciliation without wildcard drift-status permission
   Rationale: Fresh stack drift timestamps provide the required fail-closed evidence while keeping the GitHub role restricted to the two declared stack ARNs.
+
+
+- Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
+  Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
 
 ## Context Hygiene
 
@@ -328,6 +332,24 @@ Summary: When a bounded AWS verification call is unavailable, emit the owning sa
 
 ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment reconciliation.
 
+
+### 2026-09-26T13:04:17Z - Decision
+
+Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
+
+Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
+
+
+### 2026-09-26T13:11:03Z - Commit recorded
+
+Commit: `02437631`
+
+Message: fix(deploy): serialize reconciliation verification
+
+Summary: Serialize bounded staging verification calls and retry each transient AWS verification failure up to three times; retain safe owning-control error identifiers.
+
+ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege or mutation scope changes.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -391,6 +413,13 @@ ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment rec
   Summary: When a bounded AWS verification call is unavailable, emit the owning safe reconciliation control instead of a generic provider-unavailable result.
   ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment reconciliation.
 
+
+- Commit: `02437631`
+  Time UTC: 2026-09-26T13:11:03Z
+  Message: fix(deploy): serialize reconciliation verification
+  Summary: Serialize bounded staging verification calls and retry each transient AWS verification failure up to three times; retain safe owning-control error identifiers.
+  ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege or mutation scope changes.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -406,9 +435,9 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T12:59:05Z
-Latest commit SHA: d7fb1da3
-Chat duration: 12487s (00:03:28:07)
+Latest commit at UTC: 2026-09-26T13:11:03Z
+Latest commit SHA: 02437631
+Chat duration: 13205s (00:03:40:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
