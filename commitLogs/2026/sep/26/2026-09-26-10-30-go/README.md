@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T13:11:03Z
-latest_commit_sha: 02437631
-chat_duration: 13205s (00:03:40:05)
+latest_commit_at_utc: 2026-09-26T13:21:07Z
+latest_commit_sha: 939d0f69
+chat_duration: 13809s (00:03:50:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -60,6 +60,10 @@ go
 
 - Raised: The first GitHub reconciliation proof returned only aws-verification-unavailable after its dedicated role successfully assumed and issued declared read requests; the failure could not identify the owning safe control.
   Resolution: Reconciliation now attributes an unavailable provider call to its owning safe check while preserving the no-response-output policy. Focused source, static policy, infrastructure, and live administrator reconciliation checks passed.
+
+
+- Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
+  Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
 
 ## Decisions Made
 
@@ -350,6 +354,35 @@ Summary: Serialize bounded staging verification calls and retry each transient A
 
 ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege or mutation scope changes.
 
+
+### 2026-09-26T13:13:40Z - Issue
+
+Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
+
+Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
+
+
+### 2026-09-26T13:20:48Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): identify drift verification phase
+
+Summary: Separate safe drift-detection-start and fresh-summary-unavailable results so the live reconciliation proof identifies the exact CloudFormation boundary without emitting provider errors.
+
+ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
+
+
+### 2026-09-26T13:21:07Z - Commit recorded
+
+Commit: `939d0f69`
+
+Message: fix(deploy): identify drift verification phase
+
+Summary: Separate safe drift-detection-start and fresh-summary-unavailable results so the live reconciliation proof identifies the exact CloudFormation boundary without emitting provider errors.
+
+ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -420,6 +453,20 @@ ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege
   Summary: Serialize bounded staging verification calls and retry each transient AWS verification failure up to three times; retain safe owning-control error identifiers.
   ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege or mutation scope changes.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-09-26T13:20:48Z
+  Message: fix(deploy): identify drift verification phase
+  Summary: Separate safe drift-detection-start and fresh-summary-unavailable results so the live reconciliation proof identifies the exact CloudFormation boundary without emitting provider errors.
+  ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
+
+
+- Commit: `939d0f69`
+  Time UTC: 2026-09-26T13:21:07Z
+  Message: fix(deploy): identify drift verification phase
+  Summary: Separate safe drift-detection-start and fresh-summary-unavailable results so the live reconciliation proof identifies the exact CloudFormation boundary without emitting provider errors.
+  ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -435,9 +482,9 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T13:11:03Z
-Latest commit SHA: 02437631
-Chat duration: 13205s (00:03:40:05)
+Latest commit at UTC: 2026-09-26T13:21:07Z
+Latest commit SHA: 939d0f69
+Chat duration: 13809s (00:03:50:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

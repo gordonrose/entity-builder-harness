@@ -72,6 +72,31 @@ finally:
     module["time"].sleep = original_sleep
 assert result == "retry-success"
 assert attempts == 3
+
+attempts = 0
+
+def always_fail(*_arguments, **_keywords):
+    global attempts
+    attempts += 1
+    raise subprocess.CalledProcessError(1, "aws")
+
+module["subprocess"].run = always_fail
+module["time"].sleep = lambda _seconds: None
+try:
+    module["run_aws"](
+        SimpleNamespace(aws_cli="aws", aws_credential_source="environment", timeout_seconds=1),
+        {"region": "eu-west-1"},
+        ["cloudformation", "detect-stack-drift"],
+        "artifact-stack-drift-detection-unavailable",
+    )
+except module["ReconciliationError"] as exception:
+    assert str(exception) == "artifact-stack-drift-detection-unavailable"
+else:
+    raise AssertionError("provider unavailability did not preserve the supplied safe failure code")
+finally:
+    module["subprocess"].run = original_run
+    module["time"].sleep = original_sleep
+assert attempts == 3
 PY
 result="$(bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --validate --json)"
 if [[ "$result" != *'"verdict": "passed"'* || "$result" != *'"id": "source-policy"'* ]]; then
