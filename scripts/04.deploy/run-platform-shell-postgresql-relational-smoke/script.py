@@ -31,18 +31,22 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--validate", action="store_true", help="Validate the committed policy without AWS calls.")
     parser.add_argument("--execute", action="store_true", help="Run the fixed bootstrap-to-restore proof.")
     parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
+    parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
+    parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.diagnose_bootstrap_recovery))
     if selected != 1:
-        parser.error("choose exactly one of --validate, --execute, or --execute-bootstrap-recovery")
-    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
+        parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
+    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("an execution approval guard is unavailable in validation mode")
-    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
+    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
-    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6):
+    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed bootstrap recovery requires --approve-relational-bootstrap-recovery")
+    if result.diagnose_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery_diagnostic or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
+        parser.error("the fixed bootstrap recovery diagnostic requires --approve-relational-bootstrap-recovery-diagnostic")
     return result
 
 
@@ -107,6 +111,7 @@ def load_policy() -> dict[str, Any]:
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
         "execution_guard": "execute-and-approve-relational-stage6",
         "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
+        "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
         "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
         "foundation_stack": "kanbien-staging-platform-shell-foundation",
         "service_stack": "kanbien-staging-platform-shell-service",
@@ -170,7 +175,7 @@ def stack_outputs(policy: dict[str, Any]) -> dict[str, str]:
     if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict) or stacks[0].get("StackStatus") != "UPDATE_COMPLETE":
         raise RelationalSmokeError("the relational Foundation stack is not update-complete")
     values = {item.get("OutputKey"): item.get("OutputValue") for item in stacks[0].get("Outputs", []) if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)}
-    required = ("RelationalSmokeQueueUrl", "RelationalSmokeDeadLetterQueueUrl")
+    required = ("RelationalSmokeQueueUrl", "RelationalSmokeDeadLetterQueueUrl", "RelayLogGroupName")
     if any(not isinstance(values.get(name), str) or not values[name] for name in required):
         raise RelationalSmokeError("the relational Foundation output interface is incomplete")
     return {name: values[name] for name in required}
@@ -390,6 +395,43 @@ def execute_bootstrap_recovery(policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the bootstrap recovery did not preserve the reviewed terminal aggregate state")
 
 
+def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
+    """Classify one consumed recovery-1 task without emitting task or log details."""
+
+    verify_account(policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"]["bootstrap"], "--desired-status", "STOPPED"], policy)
+    task_arns = listed.get("taskArns")
+    if not isinstance(task_arns, list) or len(task_arns) != 1 or not isinstance(task_arns[0], str):
+        raise RelationalSmokeError("the fixed bootstrap diagnostic cannot identify one consumed terminal task")
+    described = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arns[0]], policy)
+    tasks = described.get("tasks")
+    task = tasks[0] if isinstance(tasks, list) and len(tasks) == 1 and isinstance(tasks[0], dict) else None
+    containers = task.get("containers") if isinstance(task, dict) else None
+    container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"]["bootstrap"]), None) if isinstance(containers, list) else None
+    if not isinstance(container, dict) or container.get("exitCode") != 1:
+        raise RelationalSmokeError("the fixed bootstrap diagnostic terminal metadata differs from the reviewed recovery-1 failure")
+    stream = container.get("logStreamName")
+    if not isinstance(stream, str) or not stream:
+        return "bootstrap-workload-failure-log-marker-unavailable"
+    logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy)
+    events = logged.get("events")
+    if not isinstance(events, list):
+        return "bootstrap-workload-failure-log-marker-unavailable"
+    for event in events:
+        message = event.get("message") if isinstance(event, dict) else None
+        if not isinstance(message, str):
+            continue
+        try:
+            safe_event = json.loads(message)
+        except json.JSONDecodeError:
+            continue
+        if safe_event == {"level": "error", "message": "kanbien-platform.relational-smoke.bootstrap_completed", "fields": {"outcome": "failed"}}:
+            return "bootstrap-workload-failure-unclassified"
+    return "bootstrap-workload-failure-log-marker-unavailable"
+
+
 def main() -> int:
     """Emit one safe final verdict and no provider response details."""
 
@@ -403,12 +445,18 @@ def main() -> int:
             execute_bootstrap_recovery(policy)
             print('{"postgresql_relational_bootstrap_recovery":"passed"}')
             return 0
+        if parsed.diagnose_bootstrap_recovery:
+            category = diagnose_bootstrap_recovery(policy)
+            print(json.dumps({"postgresql_relational_bootstrap_recovery_diagnostic": category}, sort_keys=True))
+            return 0
         execute(policy)
         print('{"postgresql_relational_smoke":"passed"}')
         return 0
     except RelationalSmokeError:
         if parsed.execute_bootstrap_recovery:
             print('{"postgresql_relational_bootstrap_recovery":"failed"}')
+        elif parsed.diagnose_bootstrap_recovery:
+            print('{"postgresql_relational_bootstrap_recovery_diagnostic":"diagnostic-unavailable"}')
         else:
             print('{"postgresql_relational_smoke":"failed"}')
         return 1

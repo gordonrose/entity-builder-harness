@@ -16,6 +16,10 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: bootstrap recovery execution must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --diagnose-bootstrap-recovery >/dev/null 2>&1; then
+  echo "ERROR: bootstrap failure diagnosis must require its explicit fixed approval guard" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute --execute-bootstrap-recovery --approve-relational-stage6 --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
   echo "ERROR: bootstrap recovery must be mutually exclusive with the full proof" >&2
   exit 1
@@ -34,6 +38,10 @@ if ! grep -q 'created = True' scripts/04.deploy/run-platform-shell-postgresql-re
 fi
 if ! rg -q 'def execute_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: bootstrap recovery must retain a dedicated one-stage execution path" >&2
+  exit 1
+fi
+if ! rg -q 'def diagnose_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'logs", "get-log-events"' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap diagnostic must retain only its fixed safe log classification path" >&2
   exit 1
 fi
 python3 - <<'PY'

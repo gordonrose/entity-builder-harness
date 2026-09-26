@@ -1268,6 +1268,7 @@ expected_relational_reference = {
             "command": "npm-run-platform-shell-postgresql-relational-smoke",
             "execution_guard": "execute-and-approve-relational-stage6",
             "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
+            "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
             "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
             "foundation_stack": "kanbien-staging-platform-shell-foundation",
             "service_stack": "kanbien-staging-platform-shell-service",

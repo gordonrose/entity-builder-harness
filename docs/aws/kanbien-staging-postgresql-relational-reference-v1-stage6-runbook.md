@@ -89,6 +89,12 @@ This fixed command cannot progress to migration, relay, worker, or restore.
 Those steps remain deliberately unavailable until the bootstrap verdict has
 been assessed.
 
+For a non-successful bootstrap, use only the fixed diagnostic command before
+changing source. It can inspect the consumed recovery label's terminal
+metadata and fixed log stream internally, but emits only one allowlisted
+failure category; it does not print task identifiers, stopped reasons, log
+text, stack traces, credentials, or provider responses.
+
 ## Run the proof
 
 The one live command is:

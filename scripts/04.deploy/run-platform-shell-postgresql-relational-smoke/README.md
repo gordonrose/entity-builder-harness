@@ -36,6 +36,18 @@ cannot start migration, relay, worker, or restore. A successful bootstrap is
 evidence for the ownership correction only; continuation requires its own
 reviewed recovery step.
 
+If that fixed bootstrap ends non-successfully, do not inspect or paste the
+task's raw metadata or logs. The one read-only diagnostic is limited to the
+consumed `recovery-1` label and returns an allowlisted category only:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --diagnose-bootstrap-recovery --approve-relational-bootstrap-recovery-diagnostic
+```
+
+It reads terminal metadata and, only when needed, the fixed task log stream in
+memory. It never prints task IDs, stopped reasons, log lines, stack traces,
+credentials, or provider responses.
+
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
 task, and deletes that recovery instance without a final snapshot. It retains
