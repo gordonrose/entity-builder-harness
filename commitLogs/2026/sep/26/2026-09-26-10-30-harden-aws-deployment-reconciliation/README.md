@@ -503,9 +503,17 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
 
 ## Main Refresh Conflicts
 
-- 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
-  merge. The preflight branch had no conflicts or changed-path overlap; it was
-  promoted and cleaned up without stash or history rewrite.
+- 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
+  checkpoint commits while fetched `origin/main` had advanced by five commits.
+  Changed-path overlap was empty. A no-stash, no-rewrite rehearsal merged
+  `main` cleanly in
+  `agentic/preflight/chat-2026-09-26-10-30-go-694f38599269/20260926153307`
+  at `/tmp/agentic-main-refresh-preflight/chat-2026-09-26-10-30-go-694f38599269-20260926153307`.
+  The deployment boundary, reconciliation, policy, infrastructure, and
+  whitespace checks passed on preflight commit `574e7a27be58934b9bee6fb85f024a5c4903d0c4`.
+  The tested result was fast-forwarded to the chat branch and the clean
+  preflight worktree and branch were removed. No conflict classification was
+  needed.
 
 ## ADR Disposition
 
