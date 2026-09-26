@@ -45,6 +45,10 @@ go
 - Raised: Foundation template exceeded CloudFormation's inline size limit
   Resolution: Defined a separate private target-owned CloudFormation artifact store instead of reusing legacy, audit, or cross-environment storage.
 
+
+- Raised: Artifact-store review change set failed CloudFormation property validation
+  Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -62,6 +66,10 @@ go
 
 - Summary: Stage 4 source is extended with the artifact-store prerequisite; artifact store and Foundation change sets remain independently reviewed.
   Durable evidence: ADR 0034, target CloudFormation source, and the PostgreSQL deployment plan
+
+
+- Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
+  Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
 
 ## Activity Log
 
@@ -153,6 +161,20 @@ Message: fix(deploy): clean up failed artifact store bootstrap
 Summary: Use RetainExceptOnCreate so a failed first artifact-store deployment leaves no retained bucket while successful evidence remains protected.
 
 ADR impact: No new ADR; strengthens the ADR 0034 rollback behavior.
+
+
+### 2026-09-26T11:16:08Z - Issue
+
+Raised: Artifact-store review change set failed CloudFormation property validation
+
+Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
+
+
+### 2026-09-26T11:16:08Z - Context hygiene
+
+Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
+
+Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
 
 ## Sub-Agent Activity
 
