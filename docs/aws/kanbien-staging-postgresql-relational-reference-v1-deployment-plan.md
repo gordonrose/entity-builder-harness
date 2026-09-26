@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -25,8 +25,8 @@ used_by:
 
 ## Status and boundary
 
-This is a Stage 1 target decision, Stage 2 local-adapter evidence record, and
-Stage 4 change-set plan. It does not
+This is a Stage 1 target decision, Stage 2/3 local evidence record, and Stage
+4 source-definition/change-set plan. It does not
 authorise a CloudFormation execution by itself. The explicit current-chat
 programme approval permits progression only after each earlier stage passes;
 the later AWS action must still use the governed change-set workflow and stop
@@ -76,7 +76,7 @@ unit and its direct supporting resources:
 | Database | One new `db.t4g.micro` single-AZ RDS PostgreSQL 17.11 instance, GP3 20 GiB with 30 GiB maximum. | Storage encryption, seven-day backups, deletion protection, snapshot-on-replacement/deletion policies, no public endpoint. |
 | TLS | One new `postgres17` DB parameter group. | `rds.force_ssl=1`; the adapter rejects absent TLS verification. |
 | Credentials | New target-owned generated references: initial bootstrap, migration, and runtime. | No existing secret is altered; no secret value, endpoint, connection string, token, request, or row goes into source or evidence. |
-| Workload access | Separate migration and recovery-verifier task roles/execution roles plus narrow additions to the existing workload security groups. | Runtime SQL role is DML-only; migration SQL role receives only migration/DDL authority; no role has a generic secret wildcard or arbitrary DDL at runtime. |
+| Workload access | Separate bootstrap, migration, and runtime task roles plus narrow additions to the existing workload security groups. | Existing tasks receive no relational secret/configuration in this stage. Runtime SQL authority is DML-only after bootstrap; migration authority is reserved for the one-shot migration path; no role has a generic secret wildcard or arbitrary DDL at runtime. |
 | Operations | RDS metric alarms, RDS event subscription, runbook and tag-scoped budget use. | Existing SNS destination only; metrics/events and safe application telemetry, not database engine-log export. |
 
 The one necessary change to pre-existing workload security groups is **not**
@@ -144,11 +144,36 @@ inside the test because a disposable loopback container has no trusted
 certificate. The staging RDS connection remains `verify-full` TLS and is
 proved only in Stage 5.
 
-On 2026-09-26, compile and standard adapter checks passed, but the local
-Docker daemon was unresponsive. The fixture detected that condition, removed
-its empty temporary directory, and exited before it could create a container.
-No Stage 3 real-engine claim has been made; no AWS resource or credential was
-used; and Stage 4 remains blocked on a successful disposable run.
+On 2026-09-26, the exact command completed successfully after local
+dependencies were restored from the committed lockfile. The fixture created
+only its generated loopback Docker database, then removed its exact temporary
+container and credential file. The evidence is a passed real-engine semantic
+proof—not AWS evidence: no RDS resource, target credential, endpoint, shared
+database, or product record was used. Stage 4 may now define and validate the
+source target and produce a reviewed change set.
+
+## Stage 4 source-definition checkpoint
+
+The source is now rendered from four responsibility-focused Foundation
+fragments: relational resources, relational access, relational workload
+configuration, and relational operations. The one RDS database is private,
+encrypted, single-AZ, backed up for seven days, deletion-protected, snapshot
+protected on deletion/replacement, and uses `rds.force_ssl=1`. It has no
+database-engine log export because query text could reach those logs.
+
+The target uses one RDS-compatible database name, `platformsmoke`; the harmless
+`platform_smoke` schema remains migration-owned. It creates generated Secrets
+Manager references rather than source values, and only task roles created for
+the later bootstrap/migration/runtime path can retrieve their respective
+references. Existing server, worker, and relay roles are intentionally not
+expanded in this stage.
+
+The static verifier and full foundation policy check pass locally. The only
+remaining Stage 4 action is a review-only CloudFormation change set. It must
+pass `PrivateSubnetIds` as deployment input, use previous values for every
+existing Foundation parameter, and show only the named relational resources and
+the same-account RDS SNS-publish policy addition. It must not be executed at
+this stage.
 
 ## Observability, recovery, and rollback
 

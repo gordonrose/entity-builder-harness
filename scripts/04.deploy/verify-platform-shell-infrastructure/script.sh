@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 34
+#   version: 35
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -37,6 +37,7 @@ bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
 bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
 bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+bash scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
@@ -565,14 +566,32 @@ expected_foundation_resources = {
     "OtelCollectorConfigurationParameter",
     "RateLimitTable",
     "PlatformPersistenceTable",
+    "RelationalDatabaseSubnetGroup",
+    "RelationalDatabaseSecurityGroup",
+    "RelationalDatabaseParameterGroup",
+    "RelationalMigrationSecret",
+    "RelationalRuntimeSecret",
+    "RelationalDatabase",
+    "RelationalMigrationSecretAttachment",
+    "RelationalRuntimeSecretAttachment",
     "TaskExecutionRole",
     "TaskRole",
     "WorkerTaskRole",
     "RelayTaskRole",
+    "RelationalBootstrapTaskRole",
+    "RelationalMigrationTaskRole",
+    "RelationalRuntimeTaskRole",
     "ServiceDeploymentExecutionRole",
     "ServiceSecurityGroup",
     "WorkerSecurityGroup",
     "RelaySecurityGroup",
+    "RelationalDatabaseIngressFromServer",
+    "RelationalDatabaseIngressFromWorker",
+    "RelationalDatabaseIngressFromRelay",
+    "RelationalDatabaseEgressFromServer",
+    "RelationalDatabaseEgressFromWorker",
+    "RelationalDatabaseEgressFromRelay",
+    "RelationalTargetConfiguration",
     "WorkerQueue",
     "WorkerDeadLetterQueue",
     "WorkerQueueTransportPolicy",
@@ -589,12 +608,17 @@ expected_foundation_resources = {
     "AlarmSubscription",
     "UnhealthyTargetAlarm",
     "Target5xxAlarm",
+    "RelationalDatabaseCpuHighAlarm",
+    "RelationalDatabaseFreeStorageLowAlarm",
+    "RelationalDatabaseConnectionsHighAlarm",
+    "RelationalDatabaseEventSubscription",
     "PlatformShellMonthlyBudget",
 }
 expected_foundation_parameters = {
     "VpcId",
     "VpcCidr",
     "PublicSubnetIds",
+    "PrivateSubnetIds",
     "ExistingAlbArn",
     "ExistingAlbSecurityGroupId",
     "ExistingHttpsListenerArn",
@@ -638,6 +662,11 @@ expected_foundation_outputs = {
     "AlarmTopicArn",
     "WebAclArn",
     "PlatformHostnameCertificateArn",
+    "RelationalBootstrapTaskRoleArn",
+    "RelationalMigrationTaskRoleArn",
+    "RelationalRuntimeTaskRoleArn",
+    "RelationalDatabaseSecurityGroupId",
+    "RelationalTargetConfigurationArn",
 }
 expected_service_resources = {
     "TaskDefinition",
@@ -1025,7 +1054,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-2-adapter-local-proof-passed-not-yet-provisioned",
+    "status": "stage-4-source-defined-change-set-pending",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1097,9 +1126,37 @@ expected_relational_reference = {
         "evidence_scope": "deterministic-recording-pool-only-no-database-or-aws-resource",
         "next_gate": "stage-3-disposable-local-postgresql-semantics-and-smoke-composition",
     },
+    "stage_3_disposable_local_real_engine_proof": {
+        "completed_on_utc": "2026-09-26",
+        "result": "passed",
+        "command": "npm-run-platform-adapter-aws-persistence-postgresql-integration",
+        "evidence_scope": "disposable-loopback-postgresql-only-no-aws-resource-or-credential",
+        "safe_proofs": [
+            "migration-history-and-checksum-immutability",
+            "smoke-state-lineage-and-outbox-atomicity-plus-rollback",
+            "optimistic-concurrency-and-tenant-predicate-isolation",
+            "outbox-and-worker-lease-fence-rejection",
+            "minimal-envelope-relay-ordering-and-telemetry-redaction",
+        ],
+        "next_gate": "stage-4-source-defined-relational-target-and-reviewed-change-set",
+    },
+    "stage_4_source_definition": {
+        "status": "static-validation-passed-change-set-pending",
+        "foundation_fragments": [
+            "foundation/relational-persistence.yml",
+            "foundation/relational-access.yml",
+            "foundation/relational-workload-configuration.yml",
+            "foundation/relational-operations.yml",
+        ],
+        "database_name": "platformsmoke",
+        "smoke_schema": "platform_smoke",
+        "deployment_input": "PrivateSubnetIds-only-no-subnet-identifiers-in-source",
+        "workload_configuration": "non-secret-ssm-reference-with-target-owned-secret-references",
+        "next_gate": "static-validation-and-reviewed-additive-foundation-change-set",
+    },
 }
 if target_persistence.get("relational_reference") != expected_relational_reference:
-    fail("target profile relational reference must retain the reviewed Stage 1/2 target and adapter safety boundary")
+    fail("target profile relational reference must retain the reviewed local-proof and Stage 4 source-definition boundary")
 
 relay_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts").read_text(encoding="utf-8")
 worker_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts").read_text(encoding="utf-8")
@@ -1318,10 +1375,11 @@ topic_policy_statements = alarm_topic_policy.get("PolicyDocument", {}).get("Stat
 expected_topic_principals = {
     "AllowCloudWatchAlarmsToPublish": "cloudwatch.amazonaws.com",
     "AllowBudgetsToPublish": "budgets.amazonaws.com",
+    "AllowRdsEventsToPublish": "rds.amazonaws.com",
 }
 actual_topic_statements = {statement.get("Sid"): statement for statement in topic_policy_statements if isinstance(statement, dict)}
 if set(actual_topic_statements) != set(expected_topic_principals):
-    fail("AlarmTopicPolicy must allow only CloudWatch alarms and Budgets to publish")
+    fail("AlarmTopicPolicy must allow only CloudWatch alarms, Budgets, and same-account RDS events to publish")
 for statement_id, principal in expected_topic_principals.items():
     statement = actual_topic_statements.get(statement_id, {})
     if statement.get("Effect") != "Allow" or statement.get("Principal") != {"Service": principal} or statement.get("Action") != "sns:Publish" or statement.get("Resource") != {"!Ref": "AlarmTopic"} or statement.get("Condition") != {"StringEquals": {"aws:SourceAccount": {"!Ref": "AWS::AccountId"}}}:

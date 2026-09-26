@@ -1,0 +1,169 @@
+# Relational access is deliberately separate from database provisioning. IAM
+# controls secret retrieval; PostgreSQL grants are created by the later one-shot
+# bootstrap and migration path, never by a normal runtime task.
+Resources:
+  RelationalDatabaseIngressFromServer:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: PostgreSQL only from the platform-shell server security group.
+      GroupId: !Ref RelationalDatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref ServiceSecurityGroup
+
+  RelationalDatabaseIngressFromWorker:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: PostgreSQL only from the platform-shell worker security group.
+      GroupId: !Ref RelationalDatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref WorkerSecurityGroup
+
+  RelationalDatabaseIngressFromRelay:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: PostgreSQL only from the platform-shell relay security group.
+      GroupId: !Ref RelationalDatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref RelaySecurityGroup
+
+  RelationalDatabaseEgressFromServer:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: PostgreSQL only from the platform-shell server to the relational database security group.
+      GroupId: !Ref ServiceSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      DestinationSecurityGroupId: !Ref RelationalDatabaseSecurityGroup
+
+  RelationalDatabaseEgressFromWorker:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: PostgreSQL only from the platform-shell worker to the relational database security group.
+      GroupId: !Ref WorkerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      DestinationSecurityGroupId: !Ref RelationalDatabaseSecurityGroup
+
+  RelationalDatabaseEgressFromRelay:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: PostgreSQL only from the platform-shell relay to the relational database security group.
+      GroupId: !Ref RelaySecurityGroup
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      DestinationSecurityGroupId: !Ref RelationalDatabaseSecurityGroup
+
+  RelationalBootstrapTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-bootstrap-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-bootstrap-read-only-target-credentials
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalBootstrapAndRoleCredentials
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !GetAtt RelationalDatabase.MasterUserSecret.SecretArn
+                  - !Ref RelationalMigrationSecret
+                  - !Ref RelationalRuntimeSecret
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-bootstrap
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalMigrationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-migration-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-migration-read-only-configuration-and-credential
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalMigrationConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalMigrationCredential
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref RelationalMigrationSecret
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-migration
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalRuntimeTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-runtime-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-runtime-read-only-configuration-and-credential
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalRuntimeConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalRuntimeCredential
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref RelationalRuntimeSecret
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-runtime
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation

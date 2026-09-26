@@ -124,3 +124,23 @@ Outputs:
     Value: !Ref PlatformHostnameCertificate
     Export:
       Name: !Sub ${AWS::StackName}-PlatformHostnameCertificateArn
+  RelationalBootstrapTaskRoleArn:
+    Value: !GetAtt RelationalBootstrapTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalBootstrapTaskRoleArn
+  RelationalMigrationTaskRoleArn:
+    Value: !GetAtt RelationalMigrationTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalMigrationTaskRoleArn
+  RelationalRuntimeTaskRoleArn:
+    Value: !GetAtt RelationalRuntimeTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalRuntimeTaskRoleArn
+  RelationalDatabaseSecurityGroupId:
+    Value: !Ref RelationalDatabaseSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalDatabaseSecurityGroupId
+  RelationalTargetConfigurationArn:
+    Value: !GetAtt RelationalTargetConfiguration.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalTargetConfigurationArn

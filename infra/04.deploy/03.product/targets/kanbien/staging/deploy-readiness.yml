@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 50
+#   version: 51
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -513,7 +513,7 @@ runtime:
       - bounded-worker-scale-up-and-return-to-zero
   persistence_foundation:
     relational_reference:
-      status: stage-3-local-fixture-implemented-real-engine-proof-pending
+      status: stage-4-source-defined-change-set-pending
       source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
       deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
       threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -545,7 +545,7 @@ runtime:
           - safe-telemetry-and-source-import-boundary
         evidence_scope: deterministic-recording-pool-only-no-database-or-aws-resource
       stage_3_disposable_local_relational_smoke:
-        source_status: implemented-and-compiled
+        source_status: implemented-and-real-engine-proven
         command: npm-run-platform-adapter-aws-persistence-postgresql-integration
         safety_boundary:
           - generated-loopback-only-docker-container-with-temporary-storage
@@ -559,9 +559,19 @@ runtime:
           - outbox-and-worker-lease-fence-rejection
           - minimal-envelope-relay-ordering-and-telemetry-redaction
         invocation_on_utc: "2026-09-26"
-        result: blocked-local-docker-daemon-unresponsive-before-container-creation
-        evidence_scope: source-compilation-and-safe-fixture-availability-guard-only
-      next_gate: complete-stage-3-disposable-local-postgresql-semantics-and-smoke-composition
+        result: passed
+        evidence_scope: disposable-loopback-postgresql-only-no-aws-resource-or-credential
+      stage_4_source_definition:
+        status: static-validation-passed-change-set-pending
+        foundation_fragments:
+          - foundation/relational-persistence.yml
+          - foundation/relational-access.yml
+          - foundation/relational-workload-configuration.yml
+          - foundation/relational-operations.yml
+        database_name: platformsmoke
+        smoke_schema: platform_smoke
+        deployment_input: PrivateSubnetIds-only-no-subnet-identifiers-in-source
+      next_gate: validate-relational-source-and-create-reviewed-additive-foundation-change-set
     status: deployed-and-post-deployment-verified
     deployed_on_utc: "2026-09-24"
     stack_status: UPDATE_COMPLETE
