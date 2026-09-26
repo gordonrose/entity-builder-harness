@@ -1,0 +1,88 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.deployment-artifact-store
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines:
+#   - security
+#   - sre
+#   kind: cloudformation-template
+#   purpose: Create the isolated private S3 store used only for oversized reviewed Kanbien staging CloudFormation templates.
+#   portability:
+#     class: target-specific
+#     targets:
+#     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-deployment-artifact-store
+#     path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Private deployment-artifact store for reviewed Kanbien staging platform-shell CloudFormation templates.
+
+Resources:
+  PlatformShellDeploymentArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: kanbien-staging-platform-shell-cfn-artifacts-337159794548
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-reviewed-change-set-templates
+            Status: Enabled
+            Filter:
+              Prefix: change-sets/
+            ExpirationInDays: 30
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: deployment-artifacts
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: deployment-template-non-secret
+        - Key: managed-by
+          Value: cloudformation
+
+  PlatformShellDeploymentArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PlatformShellDeploymentArtifactBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !GetAtt PlatformShellDeploymentArtifactBucket.Arn
+              - !Sub ${PlatformShellDeploymentArtifactBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+Outputs:
+  DeploymentArtifactBucketName:
+    Description: Private target-owned bucket for transient reviewed CloudFormation templates only.
+    Value: !Ref PlatformShellDeploymentArtifactBucket
+  DeploymentArtifactBucketArn:
+    Description: ARN of the private target-owned deployment-artifact bucket.
+    Value: !GetAtt PlatformShellDeploymentArtifactBucket.Arn

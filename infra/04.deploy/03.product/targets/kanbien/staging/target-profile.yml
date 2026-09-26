@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 60
+#   version: 61
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -57,6 +57,11 @@ deployment:
   mutation_authorized_by_profile: false
   first_mutation_candidate: create-platform-shell-foundation-stack
   cloudformation:
+    deployment_artifact_store_stack: kanbien-staging-platform-shell-deployment-artifacts
+    deployment_artifact_store_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml
+    deployment_artifact_bucket_name: kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    deployment_artifact_store_check: npm run platform:shell:deployment-artifact-store:check
+    deployment_artifact_store_status: source-defined-change-set-pending
     foundation_stack: kanbien-staging-platform-shell-foundation
     foundation_composition: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
     foundation_renderer: scripts/04.deploy/render-platform-shell-foundation-template/script.sh

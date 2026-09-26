@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 35
+#   version: 36
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -37,6 +37,7 @@ bash scripts/04.deploy/render-platform-shell-foundation-template/script.sh \
 bash -n scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
 bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+bash scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
 bash scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh

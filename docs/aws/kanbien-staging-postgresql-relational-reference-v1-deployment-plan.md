@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 3
+version: 4
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -66,6 +66,30 @@ restore clone is temporary and checked for deletion only under its separately
 controlled restore procedure.
 
 ## Exact proposed resource set
+
+### Template-transport prerequisite
+
+The rendered Foundation exceeds CloudFormation's 51,200-byte inline-template
+limit. Before the relational Foundation change set can be created, the
+separate `kanbien-staging-platform-shell-deployment-artifacts` stack must be
+reviewed and applied. It may contain only a target-owned S3 bucket and its
+TLS-only bucket policy. The bucket is private, encrypted with SSE-S3, blocks
+all public access, enforces bucket-owner ownership, grants no principal in its
+policy, retains the bucket on stack deletion, and expires `change-sets/`
+objects after 30 days.
+
+This is deployment transport, not relational persistence: it stores a
+generated CloudFormation template only, never a database row, credential,
+request, response, endpoint, token, or application document. It is a separate
+bootstrap stack so there is no circular dependency—the bucket must exist before
+CloudFormation can fetch the larger Foundation template. It does not alter the
+legacy site, DNS, ALB, Cognito, DynamoDB/SQS proof, or any existing bucket.
+
+After its reviewed deployment, only the one generated Foundation template is
+uploaded over TLS under `change-sets/`, and the relational change set references
+that object. The object is not committed, and its content is the deterministic
+rendering of committed source. The planned lifecycle storage cost is negligible
+relative to the authorised RDS reference bound.
 
 The Stage 4 CloudFormation change set may contain only this named relational
 unit and its direct supporting resources:
@@ -168,12 +192,15 @@ the later bootstrap/migration/runtime path can retrieve their respective
 references. Existing server, worker, and relay roles are intentionally not
 expanded in this stage.
 
-The static verifier and full foundation policy check pass locally. The only
-remaining Stage 4 action is a review-only CloudFormation change set. It must
-pass `PrivateSubnetIds` as deployment input, use previous values for every
-existing Foundation parameter, and show only the named relational resources and
-the same-account RDS SNS-publish policy addition. It must not be executed at
-this stage.
+The static verifier and full foundation policy check pass locally. Because the
+Foundation is too large for CloudFormation's inline request limit, the next
+Stage 4 action is first a review-only change set for the separate two-resource
+deployment-artifact store. Only after its source and change set pass review may
+that small stack be applied, permitting the final relational Foundation
+change-set review. That Foundation change set must pass `PrivateSubnetIds` as
+deployment input, use previous values for every existing Foundation parameter,
+and show only the named relational resources and the same-account RDS
+SNS-publish policy addition. It must not be executed in Stage 4.
 
 ## Observability, recovery, and rollback
 
@@ -212,5 +239,6 @@ operation.
 
 - [PostgreSQL Relational Persistence Reference v1](../../.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md)
 - [Threat-model decision](kanbien-staging-postgresql-relational-reference-v1-threat-model.md)
+- [Private target-owned CloudFormation artifact store](../04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md)
 - [Existing persistence v1 deployment plan](kanbien-staging-platform-shell-persistence-v1-deployment-plan.md)
 - [AWS RDS PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/)
