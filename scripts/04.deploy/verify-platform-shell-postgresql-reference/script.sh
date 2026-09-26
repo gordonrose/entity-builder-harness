@@ -249,6 +249,8 @@ if not certificate.is_file() or __import__("hashlib").sha256(certificate.read_by
 task_helper = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts").read_text(encoding="utf-8")
 if 'readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8")' not in task_helper or 'mode: "verify-full"' not in task_helper:
     fail("relational task helper must require the pinned RDS CA bundle and verify-full TLS")
+if 'const dbname = stringField(candidate, "dbname")' in task_helper or 'database: "platformsmoke"' not in task_helper:
+    fail("relational task helper must use the reviewed configuration database name rather than require an optional secret dbname field")
 
 if failures:
     for message in failures:

@@ -15,7 +15,6 @@ export interface RelationalTaskSecret {
   readonly password: string;
   readonly host: string;
   readonly port: number;
-  readonly dbname: string;
 }
 
 export interface RelationalTaskConfiguration {
@@ -40,11 +39,10 @@ export function secretFromEnvironment(name: string): RelationalTaskSecret {
   const password = stringField(candidate, "password");
   const host = stringField(candidate, "host");
   const port = numberField(candidate, "port");
-  const dbname = stringField(candidate, "dbname");
-  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username) || password.length < 1 || !/^[A-Za-z0-9.-]{1,253}$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65_535 || dbname !== "platformsmoke") {
+  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username) || password.length < 1 || !/^[A-Za-z0-9.-]{1,253}$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error("RELATIONAL_TASK_SECRET_INVALID");
   }
-  return { username, password, host, port, dbname };
+  return { username, password, host, port };
 }
 
 export function configurationFromEnvironment(): RelationalTaskConfiguration {
@@ -72,7 +70,9 @@ export function connectionConfiguration(secret: RelationalTaskSecret, reference:
   const result = postgreSqlPersistenceConfiguration({
     host: secret.host,
     port: secret.port,
-    database: secret.dbname,
+    // The database is a reviewed target configuration, not a credential
+    // property. AWS SecretTargetAttachment does not guarantee a dbname field.
+    database: "platformsmoke",
     schema,
     runtimeCredentialSecretReference: reference,
     maximumPoolSize: 2,
