@@ -62,6 +62,10 @@ go
 - Decision: Use a separate target-owned artifact-store bootstrap stack
   Rationale: It removes the template-transport circular dependency while retaining least-privilege, encryption, public-access blocks, TLS-only access, and bounded lifecycle controls.
 
+
+- Decision: Require fail-closed staging deployment reconciliation before infrastructure mutation
+  Rationale: A dedicated source policy, static verifier, local/live reconciliation command, and read-only GitHub OIDC workflow now guard source/live agreement; any mismatch blocks the change set.
+
 ## Context Hygiene
 
 - Summary: Stage 4 source is locally validated; only the AWS SSO-expired change-set review remains operationally unresolved.
@@ -78,6 +82,10 @@ go
 
 - Summary: Stage 4 now has source checks, a deployed hardened artifact store, and an available but unexecuted relational Foundation change set.
   Durable evidence: Target profile, readiness record, PostgreSQL deployment plan, product plan, static verifiers, and this session log; no secret, endpoint, record, message, or provider payload was recorded.
+
+
+- Summary: The live budget uses the canonical name kanbien-staging-platform-shell-monthly; the prior source-only suffix was stale and would have caused a deployment mismatch.
+  Durable evidence: Target profile, reconciliation command and policy checker, ADR 0035, PostgreSQL plan, staging deployment plan, and readiness record.
 
 ## Activity Log
 
@@ -220,6 +228,29 @@ Summary: Recorded the passed Stage 4 artifact-store bootstrap and the available 
 
 ADR impact: No new ADR; evidence completes the Stage 4 review gate under the existing relational-reference and artifact-store decisions.
 
+
+### 2026-09-26T11:52:12Z - Decision
+
+Decision: Require fail-closed staging deployment reconciliation before infrastructure mutation
+
+Rationale: A dedicated source policy, static verifier, local/live reconciliation command, and read-only GitHub OIDC workflow now guard source/live agreement; any mismatch blocks the change set.
+
+
+### 2026-09-26T11:52:13Z - Context hygiene
+
+Summary: The live budget uses the canonical name kanbien-staging-platform-shell-monthly; the prior source-only suffix was stale and would have caused a deployment mismatch.
+
+Durable evidence: Target profile, reconciliation command and policy checker, ADR 0035, PostgreSQL plan, staging deployment plan, and readiness record.
+
+
+### 2026-09-26T11:52:22Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+
+Reason: A pre-mutation and recurring live reconciliation boundary is a durable deployment architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -271,8 +302,8 @@ ADR impact: No new ADR; evidence completes the Stage 4 review gate under the exi
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
-Reason: The target's CloudFormation transport boundary is a durable deployment architecture decision.
+ADR path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+Reason: A pre-mutation and recurring live reconciliation boundary is a durable deployment architecture decision.
 
 ## Session Metrics
 

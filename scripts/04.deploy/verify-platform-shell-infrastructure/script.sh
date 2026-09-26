@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 36
+#   version: 37
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -39,6 +39,7 @@ bash scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
 bash scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
 bash scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
 bash scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
+bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
@@ -1106,7 +1107,7 @@ expected_relational_reference = {
             "estimated_monthly_usd_at_20_gib": "14.95",
             "estimated_monthly_usd_at_30_gib_ceiling": "16.22",
             "exclusions": "variable-transfer-extra-backup-storage-retained-manual-snapshots-and-tax",
-            "existing_tag_scoped_budget": "kanbien-staging-platform-shell-monthly-25-usd",
+            "existing_tag_scoped_budget": "kanbien-staging-platform-shell-monthly",
         },
     },
     "tenant_isolation": {
@@ -1162,6 +1163,7 @@ expected_relational_reference = {
                 "modified_resource": "AlarmTopicPolicy",
             },
             "prohibition": "no-rds-secret-or-foundation-execution-in-stage-4",
+            "required_reconciliation": "deployment.reconciliation.pre_foundation_change_set",
         },
         "next_gate": "stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary",
     },

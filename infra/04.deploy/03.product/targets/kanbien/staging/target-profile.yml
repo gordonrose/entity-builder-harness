@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 62
+#   version: 63
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -77,6 +77,71 @@ deployment:
       aws_template_validation: aws cloudformation validate-template
       service_observability_prerequisite_check: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
       execution_gate: reviewed-cloudformation-change-set-and-explicit-current-chat-approval
+  reconciliation:
+    status: source-defined-pending-live-role-deployment
+    command: npm run platform:shell:deployment-reconciliation
+    policy_check: npm run platform:shell:deployment-reconciliation:policy-check
+    modes:
+      continuous: scheduled-read-only-verification-of-declared-live-controls
+      pre_foundation_change_set: required-immediately-before-any-foundation-change-set-execution
+    workflow: .github/workflows/reconcile-platform-shell-staging.yml
+    schedule_cron_utc: "15 */4 * * *"
+    execution_identity: github-platform-shell-staging-reconciliation
+    role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-reconciliation
+    role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
+    trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json
+    output_policy: safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content
+    fail_closed: true
+    foundation_change_set_scope:
+      additions:
+        - logical_id: RelationalBootstrapTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalDatabaseConnectionsHighAlarm
+          resource_type: AWS::CloudWatch::Alarm
+        - logical_id: RelationalDatabaseCpuHighAlarm
+          resource_type: AWS::CloudWatch::Alarm
+        - logical_id: RelationalDatabaseEgressFromRelay
+          resource_type: AWS::EC2::SecurityGroupEgress
+        - logical_id: RelationalDatabaseEgressFromServer
+          resource_type: AWS::EC2::SecurityGroupEgress
+        - logical_id: RelationalDatabaseEgressFromWorker
+          resource_type: AWS::EC2::SecurityGroupEgress
+        - logical_id: RelationalDatabaseEventSubscription
+          resource_type: AWS::RDS::EventSubscription
+        - logical_id: RelationalDatabaseFreeStorageLowAlarm
+          resource_type: AWS::CloudWatch::Alarm
+        - logical_id: RelationalDatabaseIngressFromRelay
+          resource_type: AWS::EC2::SecurityGroupIngress
+        - logical_id: RelationalDatabaseIngressFromServer
+          resource_type: AWS::EC2::SecurityGroupIngress
+        - logical_id: RelationalDatabaseIngressFromWorker
+          resource_type: AWS::EC2::SecurityGroupIngress
+        - logical_id: RelationalDatabaseParameterGroup
+          resource_type: AWS::RDS::DBParameterGroup
+        - logical_id: RelationalDatabaseSecurityGroup
+          resource_type: AWS::EC2::SecurityGroup
+        - logical_id: RelationalDatabaseSubnetGroup
+          resource_type: AWS::RDS::DBSubnetGroup
+        - logical_id: RelationalDatabase
+          resource_type: AWS::RDS::DBInstance
+        - logical_id: RelationalMigrationSecretAttachment
+          resource_type: AWS::SecretsManager::SecretTargetAttachment
+        - logical_id: RelationalMigrationSecret
+          resource_type: AWS::SecretsManager::Secret
+        - logical_id: RelationalMigrationTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalRuntimeSecretAttachment
+          resource_type: AWS::SecretsManager::SecretTargetAttachment
+        - logical_id: RelationalRuntimeSecret
+          resource_type: AWS::SecretsManager::Secret
+        - logical_id: RelationalRuntimeTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalTargetConfiguration
+          resource_type: AWS::SSM::Parameter
+      modifications:
+        - logical_id: AlarmTopicPolicy
+          resource_type: AWS::SNS::TopicPolicy
+          replacement: false
   execution_policy:
     style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic
     bootstrap:
@@ -629,7 +694,7 @@ persistence:
         estimated_monthly_usd_at_20_gib: "14.95"
         estimated_monthly_usd_at_30_gib_ceiling: "16.22"
         exclusions: variable-transfer-extra-backup-storage-retained-manual-snapshots-and-tax
-        existing_tag_scoped_budget: kanbien-staging-platform-shell-monthly-25-usd
+        existing_tag_scoped_budget: kanbien-staging-platform-shell-monthly
     tenant_isolation:
       initial_enforcement: verified-application-predicate-and-isolation-tests
       rls: explicitly-deferred-pending-trusted-tenant-context-and-non-bypass-role-proof
@@ -676,6 +741,7 @@ persistence:
           modifies: 1
           modified_resource: AlarmTopicPolicy
         prohibition: no-rds-secret-or-foundation-execution-in-stage-4
+        required_reconciliation: deployment.reconciliation.pre_foundation_change_set
       next_gate: stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary
   smoke_transactional_outbox:
     status: foundation-and-service-deployed-acceptance-proven-outbox-delivery-proven-terminal

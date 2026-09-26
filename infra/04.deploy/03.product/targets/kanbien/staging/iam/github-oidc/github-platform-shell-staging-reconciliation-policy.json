@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VerifyDeclaredFoundationAndArtifactStacks",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:DetectStackDrift",
+        "cloudformation:DescribeStackDriftDetectionStatus"
+      ],
+      "Resource": [
+        "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*",
+        "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"
+      ]
+    },
+    {
+      "Sid": "VerifyDeclaredArtifactBucketControls",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketEncryption",
+        "s3:GetBucketLifecycleConfiguration",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetBucketPublicAccessBlock"
+      ],
+      "Resource": "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"
+    },
+    {
+      "Sid": "VerifyDeclaredPlatformShellBudget",
+      "Effect": "Allow",
+      "Action": "budgets:ViewBudget",
+      "Resource": "arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly"
+    },
+    {
+      "Sid": "VerifyCallerAccountOnly",
+      "Effect": "Allow",
+      "Action": "sts:GetCallerIdentity",
+      "Resource": "*"
+    }
+  ]
+}
