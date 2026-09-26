@@ -68,6 +68,9 @@ go
 - Raised: CloudFormation active drift detection requires provider-dependent reads that the narrow GitHub reconciliation identity cannot safely own.
   Resolution: Kept GitHub passive, added a complete target resource-type inventory and a source/live role-policy alignment check, and planned a separate detector behind a reviewed permission and cost boundary.
 
+- Raised: The narrowed GitHub role passed source/live policy alignment and IAM simulation, but its first live reconciliation blocked at the grouped artifact-bucket control.
+  Resolution: Did not add a permission. Split every artifact-bucket provider read into an independently attributable, fail-closed safe control so the next live proof identifies the exact unavailable operation without exposing a provider response.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -91,6 +94,9 @@ go
 
 - Decision: Separate active CloudFormation drift detection from GitHub reconciliation.
   Rationale: The GitHub role must prove only the operations it safely owns. A detector may be introduced only after every stack resource type has an authoritative provider-read contract, a separate role, a cost review, and a controlled live proof.
+
+- Decision: Require operation-level safe diagnostics for grouped provider controls.
+  Rationale: Source policy and IAM simulation are useful preflight evidence, but neither proves an operational identity's live request path. A grouped provider check cannot guide a least-privilege repair without risking speculative permission expansion.
 
 ## Context Hygiene
 
@@ -409,6 +415,18 @@ Message: feat(deploy): harden staging reconciliation boundary
 Summary: Separated active drift detection from the GitHub reconciler, added a complete resource-type dependency inventory and fast policy gates, and required a safe source/live role-policy alignment check before Foundation mutation.
 
 ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
+
+### 2026-09-26T15:36:20Z - Live reconciliation boundary proof
+
+- Confirmed the GitHub OIDC role could assume its identity and complete the source-policy, account, stack-status, and passive drift-evidence checks.
+- Confirmed the source/live inline-policy alignment after removing only the redundant active-drift action.
+- The workflow failed closed at the grouped artifact-bucket verification boundary. No role broadening, detector invocation, resource mutation, or sensitive provider output occurred.
+
+### 2026-09-26T15:40:00Z - Operation-level diagnostic correction
+
+- Split each declared artifact-bucket read into an independently attributable safe control and updated the reliability programme.
+- Local reconciliation, policy, infrastructure, and whitespace checks passed.
+- Next step: promote this diagnostic-only correction, run one read-only GitHub reconciliation proof, and resolve only the exact reported control if it remains blocked.
 
 ## Sub-Agent Activity
 

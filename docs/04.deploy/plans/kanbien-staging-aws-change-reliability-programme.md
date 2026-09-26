@@ -57,6 +57,10 @@ created by the source implementation in this plan.
 6. Add a small focused target check (`platform:shell:drift-detection-boundary:check`)
    to run during change development; run the full repository gate once after a
    completed slice.
+7. Make every live provider operation independently attributable in the safe
+   reconciliation result. A grouped control is not sufficient: when one
+   declared read is unavailable, the result must name that exact control while
+   continuing to suppress provider payloads.
 
 ## Stage 2 — detector design and review (not yet authorised to deploy)
 
@@ -77,6 +81,11 @@ created by the source implementation in this plan.
 1. Apply the narrowed GitHub reconciliation inline policy and prove the live
    GitHub workflow only uses its declared passive operations. This is a
    no-cost permission removal, separately recorded from the detector deployment.
+   The live policy alignment proof has passed. The first identity-specific run
+   then blocked at the grouped artifact-bucket read control, so the source now
+   reports each artifact-bucket read separately before any permission change is
+   considered. The next proof must identify the exact failed operation or pass
+   all declared controls; IAM simulation alone is not treated as proof.
 2. Execute the reviewed detector change set. It has a separate service role,
    a fixed stack allowlist, and no access to secrets, records, queue messages,
    or workload data.
