@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.reconciliation-operation-authorization-contract
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.access
@@ -65,7 +65,7 @@ operations:
     documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketOwnershipControls.html
   - check_id: artifact-bucket-lifecycle
     cli_operation: s3api:get-bucket-lifecycle-configuration
-    iam_action: s3:GetBucketLifecycleConfiguration
+    iam_action: s3:GetLifecycleConfiguration
     resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
     documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html
   - check_id: artifact-bucket-policy-status

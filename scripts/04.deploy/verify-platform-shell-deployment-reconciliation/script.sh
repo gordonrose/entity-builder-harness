@@ -106,7 +106,7 @@ expected_policy = {
     "Version": "2012-10-17",
     "Statement": [
         {"Sid": "VerifyDeclaredFoundationAndArtifactStacks", "Effect": "Allow", "Action": "cloudformation:DescribeStacks", "Resource": ["arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*", "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"]},
-        {"Sid": "VerifyDeclaredArtifactBucketControls", "Effect": "Allow", "Action": ["s3:GetEncryptionConfiguration", "s3:GetBucketLifecycleConfiguration", "s3:GetBucketOwnershipControls", "s3:GetBucketPolicyStatus", "s3:GetBucketPublicAccessBlock"], "Resource": "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"},
+        {"Sid": "VerifyDeclaredArtifactBucketControls", "Effect": "Allow", "Action": ["s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration", "s3:GetBucketOwnershipControls", "s3:GetBucketPolicyStatus", "s3:GetBucketPublicAccessBlock"], "Resource": "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"},
         {"Sid": "VerifyDeclaredPlatformShellBudget", "Effect": "Allow", "Action": "budgets:ViewBudget", "Resource": "arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly"},
         {"Sid": "VerifyCallerAccountOnly", "Effect": "Allow", "Action": "sts:GetCallerIdentity", "Resource": "*"},
     ],
@@ -132,7 +132,7 @@ expected_operations = {
     ("artifact-bucket-public-access-control", "s3api:get-public-access-block", "s3:GetBucketPublicAccessBlock", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
     ("artifact-bucket-encryption", "s3api:get-bucket-encryption", "s3:GetEncryptionConfiguration", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
     ("artifact-bucket-ownership", "s3api:get-bucket-ownership-controls", "s3:GetBucketOwnershipControls", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
-    ("artifact-bucket-lifecycle", "s3api:get-bucket-lifecycle-configuration", "s3:GetBucketLifecycleConfiguration", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
+    ("artifact-bucket-lifecycle", "s3api:get-bucket-lifecycle-configuration", "s3:GetLifecycleConfiguration", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
     ("artifact-bucket-policy-status", "s3api:get-bucket-policy-status", "s3:GetBucketPolicyStatus", "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"),
     ("platform-shell-budget", "budgets:describe-budget", "budgets:ViewBudget", "arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly"),
 }
