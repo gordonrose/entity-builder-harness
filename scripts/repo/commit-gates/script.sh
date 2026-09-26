@@ -35,22 +35,8 @@ run_if_executable() {
   fi
 }
 
-require_executable() {
-  local path="$1"
-
-  if [ ! -x "$path" ]; then
-    echo "ERROR: required repository commit gate is missing or not executable: $path" >&2
-    exit 1
-  fi
-}
-
 run_if_executable "scripts/01.harness/check-deterministic-process-drift.sh" --staged
 run_if_executable "scripts/01.harness/artifact-metadata/check-headers/script.sh" --staged-added
 run_if_executable "scripts/01.harness/check-governed-script-command-drift.sh"
-
-if [ -d ".agentic/02.rag-rulebook" ]; then
-  require_executable "scripts/02.rag-rulebook/commit-gates/script.sh"
-  bash scripts/02.rag-rulebook/commit-gates/script.sh
-fi
 
 echo "Repository commit extension gates passed."

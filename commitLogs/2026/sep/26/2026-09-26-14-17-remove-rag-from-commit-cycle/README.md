@@ -1,0 +1,126 @@
+# Chat Session: 2026-09-26-14-17 remove-rag-from-commit-cycle
+
+<!-- agentic-session
+id: 2026-09-26-14-17-remove-rag-from-commit-cycle
+task: remove RAG from commit cycle
+branch: chat/2026-09-26-14-17-remove-rag-from-commit-cycle
+worktree: /tmp/agentic-chat-worktrees/chat_2026-09-25-09-46-go-3705592782-318452591/chat_2026-09-26-14-17-remove-rag-from-commit-cycle-1298898466
+chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
+status: ready
+raised_at_utc: 2026-09-26T13:17:16Z
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
+latest_context_packet_id:
+latest_context_packet_routing_summary:
+latest_context_packet_at_utc:
+latest_commit_at_utc:
+latest_commit_sha:
+chat_duration:
+estimated_chat_tokens:
+estimated_chat_cost:
+estimated_chat_cost_basis:
+-->
+
+## Initial Intent
+
+remove RAG from commit cycle
+
+## Session Log
+
+- Session started.
+- Branch created.
+- Chat-owned worktree created.
+- Commit log initialized.
+
+## Questions Asked
+
+- None recorded yet.
+
+## Issues Raised
+
+
+
+- Raised: The canonical-worktree checker rejected the newly created chat worktree.
+  Resolution: Git and the session metadata both identify the actual new worktree, but the checker derived a nonexistent alternate path. Task edits were made only in the Git-registered worktree.
+
+## Decisions Made
+
+
+
+- Decision: RAG is removed from ordinary commit and PR/main-push automation.
+  Rationale: The repository commit extension no longer invokes the RAG gate, and the RAG MSP GitHub workflow is deleted. RAG source and manual deployment remain intact.
+
+## Context Hygiene
+
+
+
+- Summary: RAG delay sources and final scope.
+  Durable evidence: scripts/repo/commit-gates/script.sh previously invoked scripts/02.rag-rulebook/commit-gates/script.sh whenever the RAG directory existed; .github/workflows/rag-rulebook-msp-checks.yml ran on every PR and push to main. The commit gate now passes without RAG.
+
+## Activity Log
+
+### 2026-09-26T13:17:16Z - Session started
+
+Initial intent: remove RAG from commit cycle
+
+
+### 2026-09-26T13:30:10Z - Decision
+
+Decision: RAG is removed from ordinary commit and PR/main-push automation.
+
+Rationale: The repository commit extension no longer invokes the RAG gate, and the RAG MSP GitHub workflow is deleted. RAG source and manual deployment remain intact.
+
+
+### 2026-09-26T13:30:11Z - Issue
+
+Raised: The canonical-worktree checker rejected the newly created chat worktree.
+
+Resolution: Git and the session metadata both identify the actual new worktree, but the checker derived a nonexistent alternate path. Task edits were made only in the Git-registered worktree.
+
+
+### 2026-09-26T13:30:11Z - Context hygiene
+
+Summary: RAG delay sources and final scope.
+
+Durable evidence: scripts/repo/commit-gates/script.sh previously invoked scripts/02.rag-rulebook/commit-gates/script.sh whenever the RAG directory existed; .github/workflows/rag-rulebook-msp-checks.yml ran on every PR and push to main. The commit gate now passes without RAG.
+
+
+### 2026-09-26T13:36:39Z - ADR disposition
+
+ADR needed: no
+
+Reason: Removes unused RAG automation while retaining the layer and manual deployment; the scoped operational decision is fully captured in versioned workflow and gate changes.
+
+## Sub-Agent Activity
+
+- None recorded yet.
+
+## Commits
+
+- None recorded yet.
+
+## Main Refresh Conflicts
+
+- None recorded yet.
+
+## ADR Disposition
+
+ADR needed: no
+ADR path:
+Reason: Removes unused RAG automation while retaining the layer and manual deployment; the scoped operational decision is fully captured in versioned workflow and gate changes.
+
+## Session Metrics
+
+Raised at UTC: 2026-09-26T13:17:16Z
+Latest commit at UTC:
+Latest commit SHA:
+Chat duration:
+Estimated chat tokens:
+Estimated chat cost:
+Estimated chat cost basis:
+
+## Notes
+
+- None recorded yet.
