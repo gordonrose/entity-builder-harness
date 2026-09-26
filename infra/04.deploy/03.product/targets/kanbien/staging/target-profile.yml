@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 58
+#   version: 59
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -579,7 +579,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   relational_reference:
-    status: stage-1-target-selected-not-yet-provisioned
+    status: stage-2-adapter-local-proof-passed-not-yet-provisioned
     source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
     deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
     threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -628,6 +628,18 @@ persistence:
     tenant_isolation:
       initial_enforcement: verified-application-predicate-and-isolation-tests
       rls: explicitly-deferred-pending-trusted-tenant-context-and-non-bypass-role-proof
+    stage_2_adapter_local_proof:
+      completed_on_utc: "2026-09-26"
+      result: passed
+      package: platform/adapters/aws/persistence/postgresql/
+      checks:
+        - strict-non-secret-configuration-and-tls-policy
+        - parameterised-values-and-reviewed-identifiers
+        - stable-error-mapping-and-safe-telemetry
+        - commit-rollback-and-atomic-participant-lineage-outbox-seam
+        - type-build-runtime-and-import-boundary-checks
+      evidence_scope: deterministic-recording-pool-only-no-database-or-aws-resource
+      next_gate: stage-3-disposable-local-postgresql-semantics-and-smoke-composition
   smoke_transactional_outbox:
     status: foundation-and-service-deployed-acceptance-proven-outbox-delivery-proven-terminal
     provider: aws-dynamodb

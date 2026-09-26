@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 41
+  version: 42
   status: active
   layer: 05.education
   domain: education
@@ -10943,6 +10943,54 @@ overwriting the live database?
 Because a recovery test should reduce risk. Overwriting the live reference
 could turn a rehearsal into a real outage or data-loss incident.
 
+## 127. An Adapter Test Is Not Yet a Database Test
+
+Stage 2 is now complete: the PostgreSQL adapter can translate the platform's
+reusable persistence rules into safe PostgreSQL-shaped operations. Its tests
+use a **recording pool**—a pretend database connection which remembers which
+commands it was asked to run.
+
+That is valuable because it proves the code's decisions without needing a
+database:
+
+- values are carried as `$1`, `$2`, and so on, rather than pasted into SQL;
+- unreviewed table/schema names are rejected before a statement is made;
+- a failed operation issues `ROLLBACK`; a successful one issues `COMMIT`;
+- one product write, one lineage fact, and one outbox obligation are gathered
+  before they can commit together; and
+- telemetry contains a small outcome/category rather than SQL, a row,
+  connection details, or an error message.
+
+But a recording pool cannot prove that PostgreSQL itself honours a unique
+constraint, transaction isolation, locks, a fence check, or a migration. That
+is why Stage 3 deliberately starts a disposable local PostgreSQL instance.
+
+### Illustration
+
+```text
+Stage 2 recording pool                  Stage 3 real disposable PostgreSQL
+----------------------                  ----------------------------------
+"Did our adapter ask for ROLLBACK?"     "Did PostgreSQL actually undo the rows?"
+"Did it bind the value separately?"     "Did the database reject an unsafe race?"
+"Did it refuse an unsafe identifier?"   "Did the migration/checksum stay immutable?"
+```
+
+### Misconception check
+
+“The unit tests passed, so the database is proven.”
+
+No. Unit tests prove our local code and its contract. Integration tests prove
+how that code behaves with the real database engine. Both are necessary.
+
+### Study question
+
+Why is it safer to prove parameter binding with a recording pool before
+starting a database?
+
+Because it isolates the question “what did our code send?” from connection,
+network, and engine behaviour. When a later integration test fails, we can
+tell whether the problem is request construction or database semantics.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
@@ -11487,6 +11535,10 @@ After each completed learning chunk:
   series: private RDS access, migration safety, transaction/concurrency,
   tenant isolation/RLS, lifecycle/lineage/recovery, and the six-stage route to
   bounded operational proof.
+- 2026-09-26: Completed the provider-local PostgreSQL adapter stage with
+  deterministic configuration, parameterisation, transaction, atomic-write,
+  safe-telemetry, and import-boundary tests. Added the distinction between
+  recording-pool adapter proof and disposable-real-database semantics proof.
 - 2026-09-07: Added the queued-work lineage continuation. Queue messages now
   preserve an optional internal trace parent; the worker creates a bounded job
   span and records its input message as the runtime job's direct cause. The

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -25,7 +25,8 @@ used_by:
 
 ## Status and boundary
 
-This is a Stage 1 target decision and a Stage 4 change-set plan. It does not
+This is a Stage 1 target decision, Stage 2 local-adapter evidence record, and
+Stage 4 change-set plan. It does not
 authorise a CloudFormation execution by itself. The explicit current-chat
 programme approval permits progression only after each earlier stage passes;
 the later AWS action must still use the governed change-set workflow and stop
@@ -106,6 +107,19 @@ The initial reference defers PostgreSQL RLS. It instead proves tenant-first
 application predicates and cross-tenant rejection with two opaque synthetic
 tenant identifiers. RLS may be added only when a later design establishes a
 non-bypass runtime role and trusted per-transaction tenant context.
+
+## Stage 2 local adapter evidence
+
+Stage 2 is complete. The new PostgreSQL adapter is isolated at
+`platform/adapters/aws/persistence/postgresql/` and has passed its type,
+declaration-build, deterministic runtime, and import-boundary checks. Its
+recording-pool tests prove strict non-secret configuration/TLS validation,
+parameterised values, safe error/telemetry reduction, commit/rollback, and
+the one transaction seam for a product DML statement plus lineage/outbox facts.
+
+This is not a database, AWS, migration, tenant-isolation, delivery, or restore
+proof. No RDS resource or credential has been created or used in this stage.
+Those live semantics remain Stage 3 onward.
 
 ## Observability, recovery, and rollback
 

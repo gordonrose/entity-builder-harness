@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 2
+version: 3
 status: draft
 layer: 03.product
 domain: persistence
@@ -184,7 +184,9 @@ platform/adapters/aws/persistence/postgresql/
 │   ├── transactions.ts          # Implements the approved transaction boundary
 │   ├── outbox.ts                # Implements relational outbox persistence semantics
 │   ├── processing.ts            # Implements durable claim/lease/fence semantics
+│   ├── lineage.ts               # Implements bounded record-change persistence
 │   ├── migrations.ts            # Executes an approved migration manifest only
+│   ├── records.ts               # Keeps row conversion and statement construction private
 │   ├── telemetry.ts             # Emits safe provider-neutral observations
 │   └── index.ts                 # Deliberate public exports only
 └── tests/                       # Adapter, integration, boundary, and safety tests
@@ -199,6 +201,33 @@ The exact split may change after an infrastructure inspection, but the
 responsibility split must remain: resource/network/encryption/backup resources,
 access roles, and workload configuration must not become one unscannable
 template.
+
+## Stage 2 adapter evidence — 2026-09-26
+
+Stage 2 passed without creating or modifying an AWS resource. The new
+`@kanbien/platform-adapter-aws-persistence-postgresql` package contains only
+provider translation and is isolated beneath
+`platform/adapters/aws/persistence/postgresql/`.
+
+The deterministic package checks prove that it:
+
+- rejects unsafe non-secret configuration without echoing a secret reference;
+- requires certificate-verified TLS, bounded pool/connection/idle/statement
+  timeouts, and a reviewed schema identifier before connection;
+- keeps values parameterised and rejects unsafe relation identifiers;
+- maps PostgreSQL outcomes to fixed error categories without returning raw
+  provider detail;
+- rolls back a failed transaction, commits a successful one, and emits only
+  bounded telemetry fields;
+- requires a product DML participant plus a validated lineage/outbox mutation
+  before one atomic PostgreSQL commit; and
+- keeps `pg`, SQL, RDS, credential handling, and row encoding out of Core and
+  generic `platform/persistence`.
+
+The local tests use a recording pool, not a database. Therefore they prove
+adapter semantics and source boundaries only. A disposable live PostgreSQL
+instance is still required for Stage 3 before this can count as relational
+behaviour evidence.
 
 ## Contracts and ownership
 

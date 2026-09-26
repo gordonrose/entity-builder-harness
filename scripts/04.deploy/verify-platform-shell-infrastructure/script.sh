@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 33
+#   version: 34
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1025,7 +1025,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-1-target-selected-not-yet-provisioned",
+    "status": "stage-2-adapter-local-proof-passed-not-yet-provisioned",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1083,9 +1083,23 @@ expected_relational_reference = {
         "initial_enforcement": "verified-application-predicate-and-isolation-tests",
         "rls": "explicitly-deferred-pending-trusted-tenant-context-and-non-bypass-role-proof",
     },
+    "stage_2_adapter_local_proof": {
+        "completed_on_utc": "2026-09-26",
+        "result": "passed",
+        "package": "platform/adapters/aws/persistence/postgresql/",
+        "checks": [
+            "strict-non-secret-configuration-and-tls-policy",
+            "parameterised-values-and-reviewed-identifiers",
+            "stable-error-mapping-and-safe-telemetry",
+            "commit-rollback-and-atomic-participant-lineage-outbox-seam",
+            "type-build-runtime-and-import-boundary-checks",
+        ],
+        "evidence_scope": "deterministic-recording-pool-only-no-database-or-aws-resource",
+        "next_gate": "stage-3-disposable-local-postgresql-semantics-and-smoke-composition",
+    },
 }
 if target_persistence.get("relational_reference") != expected_relational_reference:
-    fail("target profile relational reference must retain the reviewed Stage 1 target and safety boundary")
+    fail("target profile relational reference must retain the reviewed Stage 1/2 target and adapter safety boundary")
 
 relay_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts").read_text(encoding="utf-8")
 worker_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts").read_text(encoding="utf-8")

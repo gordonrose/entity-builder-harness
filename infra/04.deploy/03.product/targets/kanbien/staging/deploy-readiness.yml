@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 49
+#   version: 50
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -513,7 +513,7 @@ runtime:
       - bounded-worker-scale-up-and-return-to-zero
   persistence_foundation:
     relational_reference:
-      status: stage-1-target-selected-not-yet-provisioned
+      status: stage-2-adapter-local-proof-passed-not-yet-provisioned
       source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
       deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
       threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -533,7 +533,18 @@ runtime:
           - no-legacy-rds-instance-subnet-group-security-group-or-credential-reuse
           - no-dns-alb-default-route-cognito-or-dynamodb-sqs-proof-change
           - no-database-engine-log-export-in-v1
-      next_gate: stage-2-provider-adapter-local-proof
+      stage_2_provider_adapter_local_proof:
+        completed_on_utc: "2026-09-26"
+        result: passed
+        package: platform/adapters/aws/persistence/postgresql/
+        safe_proofs:
+          - strict-tls-and-non-secret-configuration-validation
+          - parameterised-value-and-reviewed-identifier-boundary
+          - stable-provider-error-classification-without-raw-details
+          - transaction-commit-rollback-and-atomic-participant-lineage-outbox-seam
+          - safe-telemetry-and-source-import-boundary
+        evidence_scope: deterministic-recording-pool-only-no-database-or-aws-resource
+      next_gate: stage-3-disposable-local-postgresql-semantics-and-smoke-composition
     status: deployed-and-post-deployment-verified
     deployed_on_utc: "2026-09-24"
     stack_status: UPDATE_COMPLETE
