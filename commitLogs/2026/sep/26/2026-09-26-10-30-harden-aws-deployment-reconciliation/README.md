@@ -581,6 +581,14 @@ ADR impact: No new ADR; extends the approved AWS change reliability programme wi
   preflight worktree and branch were removed. No conflict classification was
   needed.
 
+- 2026-09-26: a later accepted `main` change caused a second clean divergence
+  with no changed-path overlap. The no-stash, no-rewrite rehearsal branch
+  `agentic/preflight/chat-2026-09-26-10-30-go-0e0c4b04d369/20260926154736`
+  produced commit `b799843c1391f5dcf897a1b47fa52e5e9ebfddd9`; the focused
+  deployment checks passed, the result was fast-forwarded to this chat branch,
+  and the clean preflight worktree and branch were removed. No conflict
+  classification was needed.
+
 ## ADR Disposition
 
 ADR needed: yes
