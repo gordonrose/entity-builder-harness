@@ -121,6 +121,35 @@ This is not a database, AWS, migration, tenant-isolation, delivery, or restore
 proof. No RDS resource or credential has been created or used in this stage.
 Those live semantics remain Stage 3 onward.
 
+## Stage 3 local relational-smoke checkpoint
+
+The source for the disposable local relational proof is now present. It is
+deliberately separate from AWS deployment and from the completed DynamoDB/SQS
+smoke path:
+
+- `platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs`
+  owns the exact generated Docker container, mode-`0600` temporary credential
+  file, loopback-only port, bounded readiness wait, and exact cleanup;
+- `postgresql-persistence-adapter-integration.test.ts` runs the real engine
+  assertions without printing rows, SQL values, tenant identifiers, passwords,
+  endpoints, or queue bodies; and
+- `infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts`
+  keeps the harmless smoke table and its static insert statement at target
+  composition, not in the reusable adapter.
+
+The command is `npm run
+platform:adapter:aws:persistence:postgresql:integration`. Its production pool
+constructor is not weakened: the local fixture injects a non-TLS pool only
+inside the test because a disposable loopback container has no trusted
+certificate. The staging RDS connection remains `verify-full` TLS and is
+proved only in Stage 5.
+
+On 2026-09-26, compile and standard adapter checks passed, but the local
+Docker daemon was unresponsive. The fixture detected that condition, removed
+its empty temporary directory, and exited before it could create a container.
+No Stage 3 real-engine claim has been made; no AWS resource or credential was
+used; and Stage 4 remains blocked on a successful disposable run.
+
 ## Observability, recovery, and rollback
 
 The adapter emits only its approved provider-neutral observability fields.

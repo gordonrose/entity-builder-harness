@@ -103,9 +103,17 @@ async function applyManifest(
 
 function validManifest(manifest: PostgreSqlMigrationManifest): boolean {
   const identifiers = new Set<string>();
+  let priorIdentifier: string | undefined;
   return manifest.migrations.every((migration) => {
-    if (!migrationIdentifierPattern.test(migration.id) || !checksumPattern.test(migration.checksum) || migration.statements.length === 0 || identifiers.has(migration.id)) return false;
+    if (
+      !migrationIdentifierPattern.test(migration.id)
+      || !checksumPattern.test(migration.checksum)
+      || migration.statements.length === 0
+      || identifiers.has(migration.id)
+      || (priorIdentifier !== undefined && migration.id <= priorIdentifier)
+    ) return false;
     identifiers.add(migration.id);
+    priorIdentifier = migration.id;
     return migration.statements.every((statement) => statement.text.trim().length > 0 && !statement.text.includes("\u0000"));
   });
 }

@@ -131,6 +131,7 @@
     "platform:adapter:aws:persistence:postgresql:boundary": "node platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs",
     "platform:adapter:aws:persistence:postgresql:build": "tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.json",
     "platform:adapter:aws:persistence:postgresql:check": "npm run platform:adapter:aws:persistence:postgresql:typecheck && npm run platform:adapter:aws:persistence:postgresql:build && npm run platform:adapter:aws:persistence:postgresql:test && npm run platform:adapter:aws:persistence:postgresql:boundary",
+    "platform:adapter:aws:persistence:postgresql:integration": "tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.integration-test.json && node platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs",
     "platform:adapter:aws:persistence:postgresql:test": "tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.runtime-test.json && node platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs",
     "platform:adapter:aws:persistence:postgresql:typecheck": "tsc -p platform/adapters/aws/persistence/postgresql/tsconfig.check.json",
     "platform:server:boundary": "node platform/server/tests/platform-server-boundaries.test.mjs",

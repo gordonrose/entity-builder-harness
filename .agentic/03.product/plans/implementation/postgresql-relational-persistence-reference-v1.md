@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 3
+version: 4
 status: draft
 layer: 03.product
 domain: persistence
@@ -228,6 +228,42 @@ The local tests use a recording pool, not a database. Therefore they prove
 adapter semantics and source boundaries only. A disposable live PostgreSQL
 instance is still required for Stage 3 before this can count as relational
 behaviour evidence.
+
+## Stage 3 local-fixture checkpoint — 2026-09-26
+
+Stage 3 source is implemented but has **not passed**. It adds a narrowly
+bounded `platform_smoke` PostgreSQL composition and an opt-in local command:
+
+```text
+npm run platform:adapter:aws:persistence:postgresql:integration
+```
+
+The command compiles the integration suite, starts one generated-name Docker
+container on loopback with temporary storage, passes its generated password
+through a mode-`0600` temporary environment file rather than command-line
+arguments, runs the proof, and removes both exact temporary resources in all
+outcomes. It never reads AWS credentials, contacts an AWS resource, uses a
+developer database, prints a secret, or changes the completed DynamoDB/SQS
+reference.
+
+The test proves the Stage 3 behaviours against a real engine when it can run:
+
+- ordered migration application and changed-checksum fail-closed behaviour;
+- the smoke app's state + lineage + outbox atomic transition and rollback;
+- an optimistic update rejected by a stale revision;
+- tenant-A predicate reads, updates, deletes, and counts returning the same
+  zero-result shape for opaque tenant-B requests;
+- outbox and worker lease reclaims increasing a fence and rejecting stale
+  publish/completion attempts; and
+- one provider-neutral outbox relay accepting a minimal queue envelope before
+  its published marker, with no data-bearing telemetry fields.
+
+The integration compilation, normal adapter checks, and fixture availability
+guard passed locally. The one real-engine invocation
+stopped before starting a container because the local Docker daemon did not
+respond. This is a local-environment blocker, not a passed semantic proof:
+Stage 4 must not begin until the exact command completes successfully and its
+safe output is recorded.
 
 ## Contracts and ownership
 

@@ -71,6 +71,17 @@ The package-level tests are deterministic and use a recording pool, not AWS or
 a shared database. They prove configuration redaction, parameterised values,
 safe error mapping, commit/rollback behaviour, safe telemetry, atomic
 participant/fact composition, migration checksums, and source import
-boundaries. They prove request construction and adapter semantics locally;
-Stage 3 adds a disposable PostgreSQL integration proof, and later stages add
-target and recovery evidence.
+boundaries.
+
+`npm run platform:adapter:aws:persistence:postgresql:integration` adds the
+Stage 3 disposable-engine proof. It starts an ephemeral, loopback-only Docker
+PostgreSQL container with a generated, unrecorded password and a temporary
+data directory, then always removes the exact generated container. It proves
+migration checksum immutability, atomic smoke state/lineage/outbox writes,
+rollback, optimistic concurrency, synthetic tenant predicates, outbox relay
+compatibility, and lease/fence rejection on a real engine. The local fixture
+deliberately uses no AWS credentials, shared database, real record, or
+production TLS bypass: it injects a test-only non-TLS `pg` pool solely because
+the disposable loopback fixture has no trusted certificate. The public
+production pool constructor continues to require `verify-full` TLS; Stage 5
+proves that live boundary.

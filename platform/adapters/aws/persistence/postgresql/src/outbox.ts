@@ -58,7 +58,7 @@ export function createPostgreSqlPlatformOutboxStore(
       if (!Number.isInteger(input.leaseDurationMs) || input.leaseDurationMs <= 0 || Number.isNaN(Date.parse(input.acquiredAt))) return invalidLease();
       try {
         const claimed = await options.pool.query<PostgreSqlOutboxRow>({
-          text: `UPDATE ${table} SET state = 'leased', attempt = attempt + 1, lease_owner = $2, lease_fence = lease_fence + 1, lease_acquired_at = $3, lease_expires_at = $4, published_at = NULL WHERE id = $1 AND (state = 'pending' OR (state = 'leased' AND lease_expires_at <= $3)) RETURNING *`,
+          text: `UPDATE ${table} SET state = 'leased', attempt = attempt + 1, lease_owner = $2, lease_fence = COALESCE(lease_fence, 0) + 1, lease_acquired_at = $3, lease_expires_at = $4, published_at = NULL WHERE id = $1 AND (state = 'pending' OR (state = 'leased' AND lease_expires_at <= $3)) RETURNING *`,
           values: [String(input.id), String(input.owner), input.acquiredAt, expiresAt],
         });
         const updated = claimed.rows[0] === undefined ? undefined : outboxRecordFromRow(claimed.rows[0]);

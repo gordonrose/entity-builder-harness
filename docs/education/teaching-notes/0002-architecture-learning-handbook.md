@@ -70,6 +70,8 @@ that structure. Repository links are the current evidence.
 124. [Tenant scope is necessary but not sufficient authorization](#124-tenant-scope-is-necessary-but-not-sufficient-authorization)
 125. [Deletion, lineage, and recovery answer different questions](#125-deletion-lineage-and-recovery-answer-different-questions)
 126. [A relational reference is proven in six bounded stages](#126-a-relational-reference-is-proven-in-six-bounded-stages)
+127. [An adapter test is not yet a database test](#127-an-adapter-test-is-not-yet-a-database-test)
+128. [A disposable integration fixture is a safety boundary](#128-a-disposable-integration-fixture-is-a-safety-boundary)
 
 ## 1. Layers and Ownership
 
@@ -10990,6 +10992,67 @@ starting a database?
 Because it isolates the question “what did our code send?” from connection,
 network, and engine behaviour. When a later integration test fails, we can
 tell whether the problem is request construction or database semantics.
+
+## 128. A Disposable Integration Fixture Is a Safety Boundary
+
+Stage 3 uses a database that exists only long enough to answer one question:
+
+> Does our reviewed persistence code behave correctly when a real PostgreSQL
+> engine—not a pretend recording pool—executes it?
+
+The fixture is intentionally more than “run Docker.” It has its own safety
+rules:
+
+```text
+generated container name     → prevents us touching an existing container
+loopback-only random port    → prevents a database being exposed to a network
+temporary data directory     → prevents test rows persisting between runs
+generated password           → avoids a developer or production credential
+mode-0600 temporary file     → keeps the password out of command arguments
+finally cleanup              → removes exactly the resources the test created
+```
+
+This means the test can create a schema, run migrations, make test writes, and
+attempt deliberately stale updates without risking a shared database. It uses
+opaque synthetic names such as “tenant A” and “tenant B”; they stand for two
+boundaries without representing a customer, person, or real record.
+
+### What the real-engine test checks
+
+The test asks PostgreSQL to demonstrate the consequences of our rules:
+
+| Rule | Real-engine question |
+| --- | --- |
+| Migration checksum | Does an already-recorded migration reject a changed checksum? |
+| Atomic write | Do state, lineage, and outbox facts appear together? |
+| Rollback | Do all three remain absent when the operation fails? |
+| Revision | Does an update using an old revision affect zero rows? |
+| Tenant predicate | Does tenant B receive the same empty result shape as a missing row? |
+| Fence | Can the old claimant publish or complete after a newer claimant? |
+| Relay | Is the outbox marked published only after the minimal queue envelope is accepted? |
+
+The local fixture does **not** prove production TLS: its loopback database has
+no trusted certificate. The production PostgreSQL pool still requires
+certificate verification. Stage 5 proves the separate, real RDS TLS boundary.
+
+### Misconception check
+
+“If the integration command exists, Stage 3 is complete.”
+
+No. The command is the experiment. Stage 3 passes only after the disposable
+engine has run it successfully and we have recorded safe aggregate evidence.
+On 2026-09-26 the Docker daemon was unavailable, so the fixture stopped before
+creating a container. That is a truthful blocked result, not a failed database
+or a passed integration test.
+
+### Study question
+
+Why is a temporary credentials file safer here than passing a generated
+password as a Docker command-line argument?
+
+Because operating systems can expose command arguments to other local process
+inspectors. A short-lived, owner-only file keeps the password out of that
+broader process listing and is deleted during fixture cleanup.
 
 ## Repository Evidence
 

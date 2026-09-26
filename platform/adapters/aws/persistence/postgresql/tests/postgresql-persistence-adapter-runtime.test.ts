@@ -180,6 +180,16 @@ async function main(): Promise<void> {
     migrations: [{ ...migration, checksum: "not-a-checksum" }],
   });
   equal(invalidChecksum.ok, false);
+  const outOfOrderMigration = {
+    id: "v0002_synthetic_table_second",
+    checksum: postgreSqlMigrationChecksum([{ text: "CREATE TABLE \"platform_smoke\".\"synthetic_table_second\" (id text PRIMARY KEY)" }]),
+    statements: [{ text: "CREATE TABLE \"platform_smoke\".\"synthetic_table_second\" (id text PRIMARY KEY)" }],
+  };
+  const outOfOrder = await migrationRunner.apply({
+    schema: configuration.schema,
+    migrations: [outOfOrderMigration, migration],
+  });
+  equal(outOfOrder.ok, false);
 
   equal(accepted(platformPersistenceLeaseOwner("worker-a")), "worker-a");
   console.log("PostgreSQL persistence adapter runtime test passed.");

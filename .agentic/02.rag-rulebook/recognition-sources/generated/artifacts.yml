@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 891
-  term_count: 1794
+  indexed_artifacts: 895
+  term_count: 1802
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -7338,6 +7338,18 @@ terms:
   canonical_id: harness.architecture.plan.platform-runtime-implementation
   evidence_path: .agentic/03.product/plans/implementation/platform-runtime-implementation.md
   confidence_weight: 1
+- term: product.plan.postgresql-relational-persistence-reference-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.postgresql-relational-persistence-reference-v1
+  evidence_path: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.postgresql-relational-persistence-reference-v1
+  evidence_path: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+  confidence_weight: 1
 - term: product.plan.product-harness-foundation
   category: artifact-id
   match_type: exact
@@ -8190,6 +8202,18 @@ terms:
   canonical_id: deploy.architecture.adr.0029-use-task-local-otel-collector-for-cloudwatch-metrics
   evidence_path: docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
   confidence_weight: 1
+- term: deploy.architecture.adr.0033-select-private-rds-postgresql-relational-reference
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0033-select-private-rds-postgresql-relational-reference
+  evidence_path: docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0033-select-private-rds-postgresql-relational-reference
+  evidence_path: docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+  confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
   match_type: exact
@@ -8609,6 +8633,30 @@ terms:
   match_type: exact
   canonical_id: aws.plan.kanbien-staging-platform-shell-worker-and-operations-closure
   evidence_path: docs/aws/kanbien-staging-platform-shell-worker-and-operations-closure-plan.md
+  confidence_weight: 1
+- term: aws.plan.kanbien-staging-postgresql-relational-reference-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+  confidence_weight: 1
+- term: aws.threat-model.kanbien-staging-postgresql-relational-reference-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.threat-model.kanbien-staging-postgresql-relational-reference-v1
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.threat-model.kanbien-staging-postgresql-relational-reference-v1
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
   confidence_weight: 1
 - term: aws.runbook.platform-shell-staging-alarms
   category: artifact-id

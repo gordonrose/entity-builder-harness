@@ -49,6 +49,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Raised: Stage 1 read-only AWS inspection stopped before any RDS or infrastructure action.
   Resolution: The kanbien-dev SSO token is expired and refresh failed. Current VPC, legacy RDS boundary, engine availability, and cost posture cannot be verified; no AWS mutation or PostgreSQL source implementation may proceed because Stage 1 has not passed.
 
+
+- Raised: Stage 3 local database execution is blocked
+  Resolution: The Docker daemon did not respond to the disposable PostgreSQL fixture guard. The fixture stopped before a container or AWS resource was created; Stage 4 remains gated on a successful real-engine run.
+
 ## Decisions Made
 
 
@@ -76,6 +80,14 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Decision: Complete PostgreSQL provider adapter Stage 2
   Rationale: The package now owns provider-specific connection, transaction, migration, outbox, processing, lineage, error, and telemetry translation; it adds only one provider-neutral checksum-mismatch error so an applied migration cannot silently change.
 
+
+- Decision: Build a disposable PostgreSQL semantic-proof fixture
+  Rationale: The fixture uses a generated name, loopback-only port, temporary storage, owner-only temporary credential file, AWS-environment sanitisation, exact cleanup, and only opaque synthetic values. The target composition selects the smoke repository without changing the live DynamoDB/SQS proof.
+
+
+- Decision: Enforce migration manifest ordering
+  Rationale: The checksum history was not sufficient by itself: the runner now rejects non-increasing migration identifiers, with a deterministic runtime test.
+
 ## Context Hygiene
 
 
@@ -98,6 +110,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 
 - Summary: Stage 2 passed locally without any AWS resource, credential, database, or product schema.
   Durable evidence: Durable evidence is in platform/adapters/aws/persistence/postgresql/, the PostgreSQL plan and deployment plan, staging target/readiness records, and the passed adapter plus infrastructure checks. Stage 3 remains the disposable local PostgreSQL integration gate.
+
+
+- Summary: Stage 3 source is ready and static checks pass, but no real PostgreSQL container has run.
+  Durable evidence: Durable evidence is in the Stage 3 plan checkpoint, deployment plan, target readiness record, adapter README, integration fixture/tests, and this session log. Docker daemon availability is the sole current blocker.
 
 ## Activity Log
 
@@ -228,6 +244,34 @@ Message: feat(persistence): add PostgreSQL adapter boundary
 Summary: Completed Stage 2 with a scanable PostgreSQL adapter, strict connection/TLS configuration, atomic DML-plus-lineage-plus-outbox seam, migration checksum fail-closed handling, leases/fences, safe telemetry, deterministic tests, and Stage 2 target/teaching evidence; no AWS resource, credential, or database was used.
 
 ADR impact: ADR 0033 remains the governing target-selection decision; this commit implements its provider-adapter boundary without changing the selected AWS target.
+
+
+### 2026-09-26T08:49:52Z - Issue
+
+Raised: Stage 3 local database execution is blocked
+
+Resolution: The Docker daemon did not respond to the disposable PostgreSQL fixture guard. The fixture stopped before a container or AWS resource was created; Stage 4 remains gated on a successful real-engine run.
+
+
+### 2026-09-26T08:49:52Z - Decision
+
+Decision: Build a disposable PostgreSQL semantic-proof fixture
+
+Rationale: The fixture uses a generated name, loopback-only port, temporary storage, owner-only temporary credential file, AWS-environment sanitisation, exact cleanup, and only opaque synthetic values. The target composition selects the smoke repository without changing the live DynamoDB/SQS proof.
+
+
+### 2026-09-26T08:49:53Z - Decision
+
+Decision: Enforce migration manifest ordering
+
+Rationale: The checksum history was not sufficient by itself: the runner now rejects non-increasing migration identifiers, with a deterministic runtime test.
+
+
+### 2026-09-26T08:49:53Z - Context hygiene
+
+Summary: Stage 3 source is ready and static checks pass, but no real PostgreSQL container has run.
+
+Durable evidence: Durable evidence is in the Stage 3 plan checkpoint, deployment plan, target readiness record, adapter README, integration fixture/tests, and this session log. Docker daemon availability is the sole current blocker.
 
 ## Sub-Agent Activity
 

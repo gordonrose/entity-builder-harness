@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.runtime-test.json",
+  "compilerOptions": {
+    "outDir": "../../../../../.cache/platform-adapter-aws-persistence-postgresql-integration",
+    "paths": {
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
+      ],
+      "@kanbien/app-platform-smoke": [
+        "apps/platform-smoke/src/index.ts"
+      ],
+      "@kanbien/platform-adapter-aws-persistence-postgresql": [
+        "platform/adapters/aws/persistence/postgresql/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/postgresql-persistence-adapter-integration.test.ts",
+    "../../../../../apps/platform-smoke/src/persistence/**/*.ts",
+    "../../../../../infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts",
+    "../../../../../platform/persistence/src/**/*.ts"
+  ],
+  "exclude": []
+}
