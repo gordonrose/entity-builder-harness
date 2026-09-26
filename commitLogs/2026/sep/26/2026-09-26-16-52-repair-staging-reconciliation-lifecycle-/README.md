@@ -75,6 +75,13 @@ identity-specific GitHub proof, and safe evidence only. Stop conditions remain
 unexpected scope, permission broadening, sensitive output, unhealthy workload,
 or any non-declared failing control.
 
+### 2026-09-26T16:03:53Z - Identity-specific reconciliation proof passed
+
+The GitHub reconciliation workflow completed successfully against the promoted
+reviewed source. Source/live role-policy alignment also passed. The role proved
+only its declared passive controls; no resource, DNS, workload, detector,
+secret, or non-staging change occurred.
+
 
 ### 2026-09-26T16:02:43Z - Commit recorded
 

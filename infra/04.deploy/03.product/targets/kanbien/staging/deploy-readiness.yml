@@ -195,7 +195,7 @@ deployment:
         role_name: github-platform-shell-staging-reconciliation
         inline_policy_name: ReadDeclaredStagingControls
         desired_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
-        status: source-defined-live-repair-required
+        status: live-policy-aligned-and-identity-proof-passed
         command: npm run platform:shell:deployment-reconciliation:role-policy-alignment
         required_before_foundation_change_set_execution: true
         output_policy: safe-check-identifier-and-verdict-only-no-live-policy-content
