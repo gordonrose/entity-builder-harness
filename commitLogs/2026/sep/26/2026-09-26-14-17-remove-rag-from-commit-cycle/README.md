@@ -8,10 +8,10 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-26T13:17:16Z
-transcript_provider: 
-transcript_path: 
-transcript_bytes: 
-transcript_source: 
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
@@ -52,12 +52,20 @@ remove RAG from commit cycle
 - Decision: RAG is removed from ordinary commit and PR/main-push automation.
   Rationale: The repository commit extension no longer invokes the RAG gate, and the RAG MSP GitHub workflow is deleted. RAG source and manual deployment remain intact.
 
+
+- Decision: Refreshed the chat branch from current main before local promotion.
+  Rationale: The branch was three commits behind and four ahead with no overlapping paths. A governed preflight merge succeeded without conflicts and was applied as commit b87b16e063c03e012f25915997a57520d79fbf00; stash was not used.
+
 ## Context Hygiene
 
 
 
 - Summary: RAG delay sources and final scope.
   Durable evidence: scripts/repo/commit-gates/script.sh previously invoked scripts/02.rag-rulebook/commit-gates/script.sh whenever the RAG directory existed; .github/workflows/rag-rulebook-msp-checks.yml ran on every PR and push to main. The commit gate now passes without RAG.
+
+
+- Summary: Main-refresh evidence and final promotion state.
+  Durable evidence: Fetch completed before refresh. The preflight branch agentic/preflight/chat-2026-09-26-14-17-remove-rag-from-commit-cyc-076e07bad8ad/20260926133906 merged cleanly and was removed after application. The repository commit extension still passes without RAG invocation.
 
 ## Activity Log
 
@@ -103,6 +111,20 @@ Message: chore: remove RAG commit and CI gates
 Summary: Removed automatic RAG execution from the repository commit extension and deleted the RAG PR/main-push CI workflow; manual RAG sources and deployment remain available.
 
 ADR impact: No ADR: scoped operational gate removal.
+
+
+### 2026-09-26T13:39:48Z - Decision
+
+Decision: Refreshed the chat branch from current main before local promotion.
+
+Rationale: The branch was three commits behind and four ahead with no overlapping paths. A governed preflight merge succeeded without conflicts and was applied as commit b87b16e063c03e012f25915997a57520d79fbf00; stash was not used.
+
+
+### 2026-09-26T13:39:48Z - Context hygiene
+
+Summary: Main-refresh evidence and final promotion state.
+
+Durable evidence: Fetch completed before refresh. The preflight branch agentic/preflight/chat-2026-09-26-14-17-remove-rag-from-commit-cyc-076e07bad8ad/20260926133906 merged cleanly and was removed after application. The repository commit extension still passes without RAG invocation.
 
 ## Sub-Agent Activity
 
