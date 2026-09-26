@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 6
+version: 7
 status: draft
 layer: 03.product
 domain: persistence
@@ -293,19 +293,22 @@ permanent high-privilege recovery identity.
 statically verifies the resource shape, no-public/no-CIDR network boundary,
 TLS/encryption/backups/deletion policy, generated-secret policy, IAM scope,
 non-secret configuration, and alarm boundary. It is included in the wider
-platform infrastructure check. These checks passed locally. No AWS resource,
-secret, change set, or live database has been created by this checkpoint.
+platform infrastructure check. These checks passed locally.
 
 <!-- deterministic-check: allow reason="the reviewed live AWS change-set contents cannot be decided by a local source check; the static verifier narrows its expected boundary first" -->
-The rendered Foundation is larger than CloudFormation's 51,200-byte inline
-limit. The remaining Stage 4 route is therefore deliberately two-step: first
-review and apply the isolated target-owned deployment-artifact store (one
-private encrypted S3 bucket and its TLS-only deny policy), then upload the
-deterministic non-secret rendered template beneath its bounded
-`change-sets/` prefix. Only then may the `kanbien-dev` profile create one named
-Foundation-stack change set using the new private-subnet input. The Foundation
-change set must contain only the reviewed additive relational resources and
-must not be executed in Stage 4.
+The rendered Foundation exceeded CloudFormation's 51,200-byte inline limit, so
+Stage 4 used an isolated target-owned deployment-artifact store (one private,
+encrypted S3 bucket and its TLS-only deny policy). Its reviewed bootstrap stack
+was applied and its public-access, encryption, ownership, policy, and bounded
+retention controls were verified. The deterministic non-secret rendered
+Foundation was then uploaded beneath `change-sets/` and validated by
+CloudFormation.
+
+The resulting Foundation change set is available and deliberately unexecuted.
+It contains 22 named additions and one non-replacement `AlarmTopicPolicy`
+change for scoped RDS-event publication; no RDS instance, relational secret, or
+Foundation change set has been applied. Stage 5 starts only by applying this
+reviewed change set and proving the resulting live boundary.
 
 ## Contracts and ownership
 

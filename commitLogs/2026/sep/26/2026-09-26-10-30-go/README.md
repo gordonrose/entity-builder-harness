@@ -49,6 +49,10 @@ go
 - Raised: Artifact-store review change set failed CloudFormation property validation
   Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
 
+
+- Raised: Foundation change-set shorthand input could not preserve the comma-separated subnet value
+  Resolution: No change set was created by the rejected local request. Used an uncommitted JSON deployment-parameter file so CloudFormation received one exact PrivateSubnetIds value.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -70,6 +74,10 @@ go
 
 - Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
   Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
+
+
+- Summary: Stage 4 now has source checks, a deployed hardened artifact store, and an available but unexecuted relational Foundation change set.
+  Durable evidence: Target profile, readiness record, PostgreSQL deployment plan, product plan, static verifiers, and this session log; no secret, endpoint, record, message, or provider payload was recorded.
 
 ## Activity Log
 
@@ -186,6 +194,20 @@ Message: fix(deploy): correct artifact-store lifecycle schema
 Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
 
 ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
+
+
+### 2026-09-26T11:25:30Z - Issue
+
+Raised: Foundation change-set shorthand input could not preserve the comma-separated subnet value
+
+Resolution: No change set was created by the rejected local request. Used an uncommitted JSON deployment-parameter file so CloudFormation received one exact PrivateSubnetIds value.
+
+
+### 2026-09-26T11:25:30Z - Context hygiene
+
+Summary: Stage 4 now has source checks, a deployed hardened artifact store, and an available but unexecuted relational Foundation change set.
+
+Durable evidence: Target profile, readiness record, PostgreSQL deployment plan, product plan, static verifiers, and this session log; no secret, endpoint, record, message, or provider payload was recorded.
 
 ## Sub-Agent Activity
 

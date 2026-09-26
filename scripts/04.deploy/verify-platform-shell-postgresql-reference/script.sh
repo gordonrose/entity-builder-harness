@@ -196,8 +196,8 @@ if events.get("SnsTopicArn") != {"!Ref": "AlarmTopic"} or events.get("SourceType
     fail("RDS events must be limited to the relational instance and existing alert destination")
 
 reference = profile.get("persistence", {}).get("relational_reference", {})
-if reference.get("status") != "stage-4-source-defined-change-set-pending" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke":
-    fail("target profile must record passed real-engine proof and source-defined unprovisioned target")
+if reference.get("status") != "stage-4-foundation-change-set-reviewed-not-executed" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke":
+    fail("target profile must record passed real-engine proof and a reviewed but unexecuted Foundation target")
 
 if failures:
     for message in failures:

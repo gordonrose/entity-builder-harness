@@ -109,7 +109,7 @@ expected_configuration = {
     "deployment_artifact_store_template": str(path),
     "deployment_artifact_bucket_name": "kanbien-staging-platform-shell-cfn-artifacts-337159794548",
     "deployment_artifact_store_check": "npm run platform:shell:deployment-artifact-store:check",
-    "deployment_artifact_store_status": "source-defined-change-set-pending",
+    "deployment_artifact_store_status": "deployed-and-verified",
 }
 for key, expected in expected_configuration.items():
     if cloudformation.get(key) != expected:

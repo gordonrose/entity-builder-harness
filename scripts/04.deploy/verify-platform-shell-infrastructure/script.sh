@@ -1055,7 +1055,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-4-source-defined-change-set-pending",
+    "status": "stage-4-foundation-change-set-reviewed-not-executed",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1142,7 +1142,7 @@ expected_relational_reference = {
         "next_gate": "stage-4-source-defined-relational-target-and-reviewed-change-set",
     },
     "stage_4_source_definition": {
-        "status": "static-validation-passed-change-set-pending",
+        "status": "static-validation-and-foundation-change-set-review-passed-not-executed",
         "foundation_fragments": [
             "foundation/relational-persistence.yml",
             "foundation/relational-access.yml",
@@ -1153,7 +1153,17 @@ expected_relational_reference = {
         "smoke_schema": "platform_smoke",
         "deployment_input": "PrivateSubnetIds-only-no-subnet-identifiers-in-source",
         "workload_configuration": "non-secret-ssm-reference-with-target-owned-secret-references",
-        "next_gate": "static-validation-and-reviewed-additive-foundation-change-set",
+        "artifact_store": "private-encrypted-target-owned-template-transport-deployed-and-verified",
+        "foundation_change_set": {
+            "status": "reviewed-available-not-executed",
+            "resource_changes": {
+                "adds": 22,
+                "modifies": 1,
+                "modified_resource": "AlarmTopicPolicy",
+            },
+            "prohibition": "no-rds-secret-or-foundation-execution-in-stage-4",
+        },
+        "next_gate": "stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary",
     },
 }
 if target_persistence.get("relational_reference") != expected_relational_reference:
