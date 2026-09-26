@@ -57,6 +57,10 @@ go
 - Raised: GitHub reconciliation proof showed CloudFormation drift-status lookup cannot be constrained to the reviewed stack ARN
   Resolution: Did not broaden IAM. Replaced that lookup with a fresh LastCheckTimestamp plus IN_SYNC stack-status check using only the existing scoped DescribeStacks permission.
 
+
+- Raised: The first GitHub reconciliation proof returned only aws-verification-unavailable after its dedicated role successfully assumed and issued declared read requests; the failure could not identify the owning safe control.
+  Resolution: Reconciliation now attributes an unavailable provider call to its owning safe check while preserving the no-response-output policy. Focused source, static policy, infrastructure, and live administrator reconciliation checks passed.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -305,6 +309,13 @@ Message: fix(deploy): retain scoped reconciliation drift checks
 Summary: Replaced a drift-status lookup that would require wildcard IAM with a fresh stack drift timestamp check through existing stack-scoped read permission.
 
 ADR impact: ADR 0035 remains the reconciliation decision; this correction preserves its least-privilege intent.
+
+
+### 2026-09-26T12:32:31Z - Issue
+
+Raised: The first GitHub reconciliation proof returned only aws-verification-unavailable after its dedicated role successfully assumed and issued declared read requests; the failure could not identify the owning safe control.
+
+Resolution: Reconciliation now attributes an unavailable provider call to its owning safe check while preserving the no-response-output policy. Focused source, static policy, infrastructure, and live administrator reconciliation checks passed.
 
 ## Sub-Agent Activity
 

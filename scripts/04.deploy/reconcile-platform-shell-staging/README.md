@@ -28,6 +28,12 @@ tag-scoped monthly budget. Its output contains only check identifiers and a
 verdict; it never prints provider responses, endpoints, resource contents,
 secrets, or change-set details.
 
+If AWS cannot be verified, the result names the owning safe control (for
+example, `artifact-bucket-controls-verification-unavailable`) rather than a
+generic provider error. It remains fail-closed, but now tells the operator
+which bounded reconciliation area needs investigation without revealing the
+provider response.
+
 Use it in two modes:
 
 - `continuous` is the read-only scheduled guard. A failed check makes the

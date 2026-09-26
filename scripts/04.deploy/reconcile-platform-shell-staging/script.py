@@ -34,6 +34,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from typing import Any
 
 
@@ -221,6 +222,17 @@ def require(condition: bool, code: str) -> None:
         raise ReconciliationError(code)
 
 
+def run_check(check_id: str, check: Callable[[], None]) -> None:
+    """Preserve a safe owning-control identifier when a provider call is unavailable."""
+
+    try:
+        check()
+    except ReconciliationError as exception:
+        if str(exception) == "aws-verification-unavailable":
+            raise ReconciliationError(f"{check_id}-verification-unavailable") from exception
+        raise
+
+
 def check_identity(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     """Verify that credentials are for the one declared AWS account."""
 
@@ -350,12 +362,15 @@ def main() -> int:
             if arguments.mode == "continuous":
                 core_checks.insert(3, ("artifact-stack-drift", lambda: check_stack_drift(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")))
             with ThreadPoolExecutor(max_workers=len(core_checks)) as executor:
-                futures = [(check_id, executor.submit(check)) for check_id, check in core_checks]
+                futures = [(check_id, executor.submit(run_check, check_id, check)) for check_id, check in core_checks]
                 for check_id, future in futures:
                     future.result()
                     checks.append({"id": check_id, "verdict": "passed"})
             if arguments.mode == "pre-foundation-change-set":
-                check_change_set(arguments, policy, arguments.foundation_change_set)
+                run_check(
+                    "foundation-change-set-scope",
+                    lambda: check_change_set(arguments, policy, arguments.foundation_change_set),
+                )
                 checks.append({"id": "foundation-change-set-scope", "verdict": "passed"})
         print(json.dumps(result(arguments.mode, checks, "passed"), sort_keys=True))
         return 0
