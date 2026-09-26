@@ -79,6 +79,9 @@ Current commands:
 - `verify-platform-shell-synthetic-scheduler/`: read-only policy check for the
   temporary GitHub Actions protected-route synthetic workflow and its separate
   one-secret-read IAM role source.
+- `verify-platform-shell-deployment-artifact-store/`: read-only policy check
+  for the private, encrypted, short-retention S3 store used only when a
+  reviewed CloudFormation template is too large for AWS's inline request limit.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.

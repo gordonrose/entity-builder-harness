@@ -34,6 +34,15 @@ renderer combines them into one transient CloudFormation template, so AWS still
 receives one foundation stack and no nested-stack or resource-ownership change
 is introduced.
 
+[`deployment-artifact-store.yml`](deployment-artifact-store.yml) is deliberately
+outside that foundation stack. It is a tiny bootstrap stack for an encrypted,
+private, target-owned S3 bucket that holds transient reviewed CloudFormation
+templates when a rendered foundation exceeds AWS's 51,200-byte inline limit.
+It holds deployment blueprints only—not application records, database data,
+credentials, or product documents—and expires `change-sets/` objects after 30
+days. Separating it prevents a circular dependency: the bucket must exist
+before CloudFormation can fetch the larger foundation template.
+
 The foundation takes every pre-existing AWS resource as an input. The WAF
 association is a shared-ALB operation, so its host scope and the live listener
 priority must be reviewed in an AWS change set before it is applied.

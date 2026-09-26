@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 5
+version: 6
 status: draft
 layer: 03.product
 domain: persistence
@@ -296,10 +296,16 @@ non-secret configuration, and alarm boundary. It is included in the wider
 platform infrastructure check. These checks passed locally. No AWS resource,
 secret, change set, or live database has been created by this checkpoint.
 
-The remaining Stage 4 gate is deliberately narrow: authenticate to the
-`kanbien-dev` profile, create one named foundation-stack change set using the
-new private-subnet input, and inspect that it contains only the reviewed
-additive relational resources. The change set must not be executed in Stage 4.
+<!-- deterministic-check: allow reason="the reviewed live AWS change-set contents cannot be decided by a local source check; the static verifier narrows its expected boundary first" -->
+The rendered Foundation is larger than CloudFormation's 51,200-byte inline
+limit. The remaining Stage 4 route is therefore deliberately two-step: first
+review and apply the isolated target-owned deployment-artifact store (one
+private encrypted S3 bucket and its TLS-only deny policy), then upload the
+deterministic non-secret rendered template beneath its bounded
+`change-sets/` prefix. Only then may the `kanbien-dev` profile create one named
+Foundation-stack change set using the new private-subnet input. The Foundation
+change set must contain only the reviewed additive relational resources and
+must not be executed in Stage 4.
 
 ## Contracts and ownership
 
@@ -494,16 +500,19 @@ the runtime authority must not perform arbitrary DDL.
 4. Add target configuration references, CloudWatch alarms/runbooks, tags,
 budget alerts, readiness checks, and an explicit restore/rollback procedure.
 5. Add static infrastructure and source-boundary tests. Create and inspect an
-exact CloudFormation change set, but do not execute it in this stage.
+exact CloudFormation change set, but do not execute it in this stage. When the
+rendered template exceeds the AWS inline limit, first create and review a
+separate private artifact-store stack rather than reusing an unrelated bucket.
 
 **Repository output:** `infra/04.deploy` target fragments, least-privilege IAM
 documents, verification scripts/tests, target profile/readiness records, and a
 deployment plan. No secrets values or live resource IDs belong in source.
 
-**Pass:** the change set contains only reviewed relational resources and
-workload configuration. It must not alter legacy site, DNS, default ALB
-routing, existing Cognito clients, unreviewed secrets, DynamoDB smoke table,
-or existing queue proof.
+**Pass:** the artifact-store change set contains only its encrypted private
+bucket and TLS-only policy; the later Foundation change set contains only
+reviewed relational resources and workload configuration. Neither may alter
+legacy site, DNS, default ALB routing, existing Cognito clients, unreviewed
+secrets, DynamoDB smoke table, or existing queue proof.
 
 **Stop:** an unexpected replacement/deletion, broader IAM, public endpoint,
 absent rollback/restore route, missing cost control, or sensitive value in

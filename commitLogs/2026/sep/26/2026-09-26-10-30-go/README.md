@@ -40,17 +40,28 @@ go
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Foundation template exceeded CloudFormation's inline size limit
+  Resolution: Defined a separate private target-owned CloudFormation artifact store instead of reusing legacy, audit, or cross-environment storage.
 
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
 - The reference target has no public endpoint, uses encrypted private RDS storage, narrowly scoped network paths, generated secrets, and non-secret SSM configuration.
 
+
+- Decision: Use a separate target-owned artifact-store bootstrap stack
+  Rationale: It removes the template-transport circular dependency while retaining least-privilege, encryption, public-access blocks, TLS-only access, and bounded lifecycle controls.
+
 ## Context Hygiene
 
 - Summary: Stage 4 source is locally validated; only the AWS SSO-expired change-set review remains operationally unresolved.
   Durable evidence: Durable source and readiness evidence: infra/04.deploy/03.product/targets/kanbien/staging/ and docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+
+
+- Summary: Stage 4 source is extended with the artifact-store prerequisite; artifact store and Foundation change sets remain independently reviewed.
+  Durable evidence: ADR 0034, target CloudFormation source, and the PostgreSQL deployment plan
 
 ## Activity Log
 
@@ -91,6 +102,36 @@ Summary: Defined and statically verified the private encrypted PostgreSQL relati
 
 ADR impact: No new ADR; implements the approved relational-reference programme.
 
+
+### 2026-09-26T11:07:12Z - Issue
+
+Raised: Foundation template exceeded CloudFormation's inline size limit
+
+Resolution: Defined a separate private target-owned CloudFormation artifact store instead of reusing legacy, audit, or cross-environment storage.
+
+
+### 2026-09-26T11:07:12Z - Decision
+
+Decision: Use a separate target-owned artifact-store bootstrap stack
+
+Rationale: It removes the template-transport circular dependency while retaining least-privilege, encryption, public-access blocks, TLS-only access, and bounded lifecycle controls.
+
+
+### 2026-09-26T11:07:12Z - Context hygiene
+
+Summary: Stage 4 source is extended with the artifact-store prerequisite; artifact store and Foundation change sets remain independently reviewed.
+
+Durable evidence: ADR 0034, target CloudFormation source, and the PostgreSQL deployment plan
+
+
+### 2026-09-26T11:07:13Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
+
+Reason: The target's CloudFormation transport boundary is a durable deployment architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -107,13 +148,15 @@ ADR impact: No new ADR; implements the approved relational-reference programme.
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+- 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
+  merge. The preflight branch had no conflicts or changed-path overlap; it was
+  promoted and cleaned up without stash or history rewrite.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path: None.
-Reason: Stage 4 implements the already-approved PostgreSQL relational-reference plan without making a new durable architectural choice.
+ADR needed: yes
+ADR path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
+Reason: The target's CloudFormation transport boundary is a durable deployment architecture decision.
 
 ## Session Metrics
 
@@ -127,14 +170,20 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
-- Next operational step: restore the `kanbien-dev` SSO session, inspect the reviewed Stage 4 change set, and execute it only if it remains within the approved scope and cost bound.
+- Next operational step: review and apply the small artifact-store change set;
+  then create and inspect the larger relational Foundation change set.
 
 ## RAG Knowledge Disposition
 
 Status: covered
-Reason: The Stage 4 PostgreSQL reference applies the established deployment boundaries for provider-specific infrastructure: private encrypted data services, least-privilege workload access, explicit configuration/secrets separation, target-owned operations, and evidence-first deployment.
+Reason: The Stage 4 PostgreSQL reference and its separate template-transport
+store apply the established deployment boundaries for provider-specific
+infrastructure: private encrypted data services, least-privilege access,
+explicit configuration/secrets separation, target-owned operations, and
+evidence-first deployment.
 Evidence:
 - docs/04.deploy/adrs/0029-use-task-local-otel-collector-for-cloudwatch-metrics.md
+- docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
 - docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
 - .agentic/03.product/plans/implementation/platform-runtime-implementation.md
 Corpus gaps:

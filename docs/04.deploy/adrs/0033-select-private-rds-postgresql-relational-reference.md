@@ -90,6 +90,11 @@ persistence remain SQL- and driver-neutral. Product capabilities will still
 own their schemas, queries, migrations, classifications, retention, and
 authorisation semantics.
 
+The rendered Foundation uses the private target-owned CloudFormation artifact
+store decided in [ADR 0034](0034-use-private-target-owned-cloudformation-artifact-stores.md)
+when it exceeds AWS's inline template limit. That transport store remains
+separate from database data and from the relational Foundation resource set.
+
 The reference is not highly available, does not establish customer-data
 residency or product-data approval, and does not authorise a generic CRUD
 framework. Future HA, RLS, IAM database authentication, secret rotation,

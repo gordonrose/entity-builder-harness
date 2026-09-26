@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.threat-model.kanbien-staging-postgresql-relational-reference-v1
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: persistence.security
@@ -41,6 +41,7 @@ entity, personal data, document, customer, or medical data is allowed near it.
 | Database unavailability | RDS status, connection, CPU, and storage alarms; safe dependency readiness; documented rollout rollback. | Single-AZ v1 is not a high-availability service. |
 | Data loss or unrecoverable backup | Seven-day automated backup retention, deletion protection, snapshot-on-replacement/deletion, and isolated restore rehearsal. | A configured backup is not treated as restore evidence. |
 | Telemetry exfiltration | Approved safe operation/outcome/duration/count/error-class fields only; database-engine log export disabled. | SQL, bind values, rows, endpoints, connection strings, secrets, raw RDS responses, and snapshot identifiers are never routine observability fields. |
+| Deployment-template exposure or substitution | A separate target-owned private, encrypted S3 artifact store blocks public access, enforces bucket ownership, denies non-TLS transport, grants no policy principal, and expires reviewed template objects. | An artifact bucket is not a data store, authorization boundary, or permission to upload product data, credentials, or arbitrary templates. |
 | Cost surprise | Micro single-AZ capacity, 30 GiB storage ceiling, no optional high-cost features, service-tag-scoped `$25/month` alert budget, and later cost inspection. | An alert does not automatically terminate billable resources; unplanned retained snapshots and transfers remain monitored risks. |
 
 ## Residual risks and promotion triggers
