@@ -53,6 +53,10 @@ go
 - Raised: Foundation change-set shorthand input could not preserve the comma-separated subnet value
   Resolution: No change set was created by the rejected local request. Used an uncommitted JSON deployment-parameter file so CloudFormation received one exact PrivateSubnetIds value.
 
+
+- Raised: GitHub reconciliation proof showed CloudFormation drift-status lookup cannot be constrained to the reviewed stack ARN
+  Resolution: Did not broaden IAM. Replaced that lookup with a fresh LastCheckTimestamp plus IN_SYNC stack-status check using only the existing scoped DescribeStacks permission.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -65,6 +69,10 @@ go
 
 - Decision: Require fail-closed staging deployment reconciliation before infrastructure mutation
   Rationale: A dedicated source policy, static verifier, local/live reconciliation command, and read-only GitHub OIDC workflow now guard source/live agreement; any mismatch blocks the change set.
+
+
+- Decision: Preserve scoped CloudFormation reconciliation without wildcard drift-status permission
+  Rationale: Fresh stack drift timestamps provide the required fail-closed evidence while keeping the GitHub role restricted to the two declared stack ARNs.
 
 ## Context Hygiene
 
@@ -86,6 +94,10 @@ go
 
 - Summary: The live budget uses the canonical name kanbien-staging-platform-shell-monthly; the prior source-only suffix was stale and would have caused a deployment mismatch.
   Durable evidence: Target profile, reconciliation command and policy checker, ADR 0035, PostgreSQL plan, staging deployment plan, and readiness record.
+
+
+- Summary: The first GitHub reconciliation run failed safely because DescribeStackDriftDetectionStatus was not authorisable against a stack ARN. The corrected design uses only scoped DescribeStacks plus DetectStackDrift and has passed locally against staging.
+  Durable evidence: Reconciliation command, IAM source, static verifier, target profile/readiness, ADR 0035, and the GitHub workflow run evidence.
 
 ## Activity Log
 
@@ -261,6 +273,27 @@ Message: feat(deploy): require staging reconciliation gate
 Summary: Added a fail-closed source/live AWS reconciliation control, canonicalized the staging budget declaration, and proved both continuous and exact pre-change-set checks without provisioning resources.
 
 ADR impact: ADR 0035 records the durable pre-mutation and recurring reconciliation boundary.
+
+
+### 2026-09-26T12:08:43Z - Issue
+
+Raised: GitHub reconciliation proof showed CloudFormation drift-status lookup cannot be constrained to the reviewed stack ARN
+
+Resolution: Did not broaden IAM. Replaced that lookup with a fresh LastCheckTimestamp plus IN_SYNC stack-status check using only the existing scoped DescribeStacks permission.
+
+
+### 2026-09-26T12:08:43Z - Decision
+
+Decision: Preserve scoped CloudFormation reconciliation without wildcard drift-status permission
+
+Rationale: Fresh stack drift timestamps provide the required fail-closed evidence while keeping the GitHub role restricted to the two declared stack ARNs.
+
+
+### 2026-09-26T12:08:43Z - Context hygiene
+
+Summary: The first GitHub reconciliation run failed safely because DescribeStackDriftDetectionStatus was not authorisable against a stack ARN. The corrected design uses only scoped DescribeStacks plus DetectStackDrift and has passed locally against staging.
+
+Durable evidence: Reconciliation command, IAM source, static verifier, target profile/readiness, ADR 0035, and the GitHub workflow run evidence.
 
 ## Sub-Agent Activity
 

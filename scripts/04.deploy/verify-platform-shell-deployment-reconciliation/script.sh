@@ -85,7 +85,7 @@ require(profile.get("persistence", {}).get("relational_reference", {}).get("oper
 expected_policy = {
     "Version": "2012-10-17",
     "Statement": [
-        {"Sid": "VerifyDeclaredFoundationAndArtifactStacks", "Effect": "Allow", "Action": ["cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"], "Resource": ["arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*", "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"]},
+        {"Sid": "VerifyDeclaredFoundationAndArtifactStacks", "Effect": "Allow", "Action": ["cloudformation:DescribeStacks", "cloudformation:DetectStackDrift"], "Resource": ["arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*", "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"]},
         {"Sid": "VerifyDeclaredArtifactBucketControls", "Effect": "Allow", "Action": ["s3:GetBucketEncryption", "s3:GetBucketLifecycleConfiguration", "s3:GetBucketOwnershipControls", "s3:GetBucketPolicyStatus", "s3:GetBucketPublicAccessBlock"], "Resource": "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"},
         {"Sid": "VerifyDeclaredPlatformShellBudget", "Effect": "Allow", "Action": "budgets:ViewBudget", "Resource": "arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly"},
         {"Sid": "VerifyCallerAccountOnly", "Effect": "Allow", "Action": "sts:GetCallerIdentity", "Resource": "*"},
@@ -119,7 +119,7 @@ require(scripts.get("platform:shell:deployment-reconciliation:policy-check") == 
 source = Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8").lower()
 for prohibited in ("execute-change-set", "create-stack", "update-stack", "delete-stack", "put-object", "put-bucket", "put-budget", "get-secret-value"):
     require(prohibited not in source, f"reconciliation command must not contain {prohibited}")
-for required in ("detect-stack-drift", "describe-stack-drift-detection-status", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope"):
+for required in ("detect-stack-drift", "lastchecktimestamp", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope"):
     require(required in source, f"reconciliation command must retain {required}")
 
 if failures:
