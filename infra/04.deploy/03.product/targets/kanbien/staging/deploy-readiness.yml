@@ -172,7 +172,6 @@ deployment:
       allowed_aws_actions:
         - cloudformation:DescribeStacks
         - cloudformation:DetectStackDrift
-        - cloudformation:DescribeStackDriftDetectionStatus
         - s3:GetBucketEncryption
         - s3:GetBucketLifecycleConfiguration
         - s3:GetBucketOwnershipControls

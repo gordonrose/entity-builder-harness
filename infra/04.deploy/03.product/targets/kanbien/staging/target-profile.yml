@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 63
+#   version: 64
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd

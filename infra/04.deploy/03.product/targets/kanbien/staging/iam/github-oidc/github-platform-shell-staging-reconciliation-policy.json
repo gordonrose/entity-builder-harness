@@ -6,8 +6,7 @@
       "Effect": "Allow",
       "Action": [
         "cloudformation:DescribeStacks",
-        "cloudformation:DetectStackDrift",
-        "cloudformation:DescribeStackDriftDetectionStatus"
+        "cloudformation:DetectStackDrift"
       ],
       "Resource": [
         "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*",

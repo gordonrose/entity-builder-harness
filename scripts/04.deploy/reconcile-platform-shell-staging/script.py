@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
@@ -235,20 +236,27 @@ def check_stack_status(arguments: argparse.Namespace, policy: dict[str, Any], st
 
 
 def check_stack_drift(arguments: argparse.Namespace, policy: dict[str, Any], stack: str, check_id: str) -> None:
-    """Request and poll CloudFormation drift detection using only safe aggregate fields."""
+    """Request drift detection and require a fresh in-sync stack summary without wildcard IAM."""
 
+    started_at = datetime.now(timezone.utc)
     started = run_aws(arguments, policy, ["cloudformation", "detect-stack-drift", "--stack-name", stack, "--query", "StackDriftDetectionId"])
     detection_id = started if isinstance(started, str) else None
     if not isinstance(detection_id, str) or not detection_id:
         raise ReconciliationError(check_id)
     deadline = time.monotonic() + DRIFT_WAIT_SECONDS
     while time.monotonic() < deadline:
-        result = run_aws(arguments, policy, ["cloudformation", "describe-stack-drift-detection-status", "--stack-drift-detection-id", detection_id, "--query", "{status:DetectionStatus,drift:StackDriftStatus,count:DriftedStackResourceCount}"])
+        result = run_aws(arguments, policy, ["cloudformation", "describe-stacks", "--stack-name", stack, "--query", "Stacks[0].DriftInformation.{status:StackDriftStatus,checked:LastCheckTimestamp}"])
+        if not isinstance(result, dict):
+            raise ReconciliationError(check_id)
         status = result.get("status")
-        if status == "DETECTION_COMPLETE":
-            require(result.get("drift") == "IN_SYNC" and result.get("count") == 0, check_id)
+        checked = result.get("checked")
+        try:
+            checked_at = datetime.fromisoformat(str(checked).replace("Z", "+00:00"))
+        except ValueError:
+            raise ReconciliationError(check_id)
+        if status == "IN_SYNC" and checked_at >= started_at - timedelta(seconds=2):
             return
-        if status == "DETECTION_FAILED":
+        if status in ("DRIFTED", "UNKNOWN"):
             raise ReconciliationError(check_id)
         time.sleep(2)
     raise ReconciliationError(check_id)
