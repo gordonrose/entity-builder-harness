@@ -1,0 +1,160 @@
+# Private relational-reference resources only. Product schemas, migrations, and
+# business data do not belong in this target foundation.
+Resources:
+  RelationalDatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for the isolated Kanbien staging PostgreSQL relational reference.
+      DBSubnetGroupName: kanbien-staging-platform-relational-private
+      SubnetIds: !Ref PrivateSubnetIds
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-safe-identifiers
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL ingress only from approved Kanbien platform-shell workload security groups.
+      GroupName: kanbien-staging-platform-relational-database
+      VpcId: !Ref VpcId
+      # The database never initiates new connections. Stateful replies to an
+      # approved workload connection remain permitted by the security-group model.
+      SecurityGroupEgress: []
+      Tags:
+        - Key: Name
+          Value: kanbien-staging-platform-relational-database
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabaseParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: TLS enforcement for the Kanbien staging PostgreSQL relational reference.
+      Family: postgres17
+      Parameters:
+        rds.force_ssl: "1"
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalMigrationSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: kanbien/staging/platform-shell/relational/migration
+      Description: Generated PostgreSQL migration identity for the isolated Kanbien staging relational reference.
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"psmokemigrate"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+        RequireEachIncludedType: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalRuntimeSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: kanbien/staging/platform-shell/relational/runtime
+      Description: Generated PostgreSQL runtime identity for the isolated Kanbien staging relational reference.
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"psmokeruntime"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+        RequireEachIncludedType: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabase:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: kanbien-staging-platform-relational
+      # RDS accepts a simple alphanumeric DB name; the smoke schema remains
+      # platform_smoke and is created by a later reviewed migration.
+      DBName: platformsmoke
+      Engine: postgres
+      EngineVersion: "17.11"
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: "20"
+      MaxAllocatedStorage: 30
+      StorageType: gp3
+      StorageEncrypted: true
+      MultiAZ: false
+      PubliclyAccessible: false
+      AutoMinorVersionUpgrade: true
+      AllowMajorVersionUpgrade: false
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: true
+      DeleteAutomatedBackups: true
+      DeletionProtection: true
+      EnableIAMDatabaseAuthentication: false
+      EnablePerformanceInsights: false
+      MonitoringInterval: 0
+      ManageMasterUserPassword: true
+      MasterUsername: psmokeadmin
+      CACertificateIdentifier: rds-ca-rsa2048-g1
+      DBSubnetGroupName: !Ref RelationalDatabaseSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RelationalDatabaseSecurityGroup
+      DBParameterGroupName: !Ref RelationalDatabaseParameterGroup
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-safe-identifiers
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalMigrationSecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref RelationalMigrationSecret
+      TargetId: !Ref RelationalDatabase
+      TargetType: AWS::RDS::DBInstance
+
+  RelationalRuntimeSecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref RelationalRuntimeSecret
+      TargetId: !Ref RelationalDatabase
+      TargetType: AWS::RDS::DBInstance

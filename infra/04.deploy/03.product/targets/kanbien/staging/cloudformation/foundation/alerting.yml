@@ -39,6 +39,15 @@ Resources:
             Condition:
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
+          - Sid: AllowRdsEventsToPublish
+            Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref AlarmTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
   AlarmSubscription:
     Type: AWS::SNS::Subscription

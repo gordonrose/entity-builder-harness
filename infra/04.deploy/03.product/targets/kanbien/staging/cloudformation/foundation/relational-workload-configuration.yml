@@ -1,0 +1,18 @@
+# Non-secret target selection for later one-shot bootstrap, migration, and
+# relational-smoke workload tasks. It intentionally contains references only;
+# connection endpoints and passwords stay inside target-owned secrets.
+Resources:
+  RelationalTargetConfiguration:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /kanbien/staging/platform-shell/relational-persistence/config
+      Type: String
+      DataType: text
+      Description: Non-secret PostgreSQL relational-reference target configuration for approved one-shot workloads.
+      Value: !Sub >-
+        {"provider":"postgresql","database":"platformsmoke","schema":"platform_smoke","tls":"verify-full","runtime_secret_arn":"${RelationalRuntimeSecret}","migration_secret_arn":"${RelationalMigrationSecret}"}
+      Tags:
+        service: platform-shell
+        component: relational-persistence
+        environment: staging
+        managed-by: cloudformation

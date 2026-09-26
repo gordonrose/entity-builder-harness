@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 4
+version: 5
 status: draft
 layer: 03.product
 domain: persistence
@@ -94,7 +94,7 @@ before implementation; none is silently applied because it appears here.
 | Network | No public database endpoint; database subnet group and security group allow only the selected workload security groups. | The public ALB is an HTTP entry point, not a database network. | None; public database access requires an exceptional, separately approved design. |
 | Encryption | RDS storage encryption and TLS-required application connections. | Protects stored data and traffic between workload and database. | Customer-managed key, rotation, or cross-account needs are separate key-management decisions. |
 | Credentials | One least-privilege migration identity and a distinct runtime identity, delivered by the target secret mechanism. | DDL authority and runtime data authority have different risk. | IAM database authentication or a managed rotation workflow may replace password credentials only after proof. |
-| Data scope | An isolated `platform_smoke` database/schema using opaque synthetic identifiers. | Keeps the proof harmless and makes cleanup/retention reviewable. | A product obtains its own governed schema, data classification, and retention decision. |
+| Data scope | An isolated `platformsmoke` database and `platform_smoke` schema using opaque synthetic identifiers. | Keeps the proof harmless and makes cleanup/retention reviewable. The database name is RDS-compatible; the reviewed migration creates the underscored schema later. | A product obtains its own governed schema, data classification, and retention decision. |
 | Queue relationship | Reuse the provider-neutral outbox/worker contracts; choose a distinct, clearly named relational-smoke delivery path if isolation cannot be proved on the existing queue. | The database choice must not change queue semantics or contaminate the completed proof. | A real product selects its own delivery policy and queue topology. |
 | Query access | Parameterised values only; controlled, static SQL identifiers; bounded timeouts and connection pool. | Prevents SQL injection and protects a small database from connection exhaustion. | A product may choose an ORM/query builder behind the same boundaries after review. |
 
@@ -229,10 +229,10 @@ adapter semantics and source boundaries only. A disposable live PostgreSQL
 instance is still required for Stage 3 before this can count as relational
 behaviour evidence.
 
-## Stage 3 local-fixture checkpoint — 2026-09-26
+## Stage 3 local-fixture evidence — 2026-09-26
 
-Stage 3 source is implemented but has **not passed**. It adds a narrowly
-bounded `platform_smoke` PostgreSQL composition and an opt-in local command:
+Stage 3 passed. It uses a narrowly bounded `platform_smoke` PostgreSQL
+composition and an opt-in local command:
 
 ```text
 npm run platform:adapter:aws:persistence:postgresql:integration
@@ -258,12 +258,48 @@ The test proves the Stage 3 behaviours against a real engine when it can run:
 - one provider-neutral outbox relay accepting a minimal queue envelope before
   its published marker, with no data-bearing telemetry fields.
 
-The integration compilation, normal adapter checks, and fixture availability
-guard passed locally. The one real-engine invocation
-stopped before starting a container because the local Docker daemon did not
-respond. This is a local-environment blocker, not a passed semantic proof:
-Stage 4 must not begin until the exact command completes successfully and its
-safe output is recorded.
+The integration compilation, normal adapter checks, fixture availability guard,
+and disposable real-engine invocation passed. The fixture created only its
+generated loopback Docker database and removed its exact temporary resources at
+the end of the test. No AWS resource, shared database, real record, or
+long-lived credential was used. Stage 4 may now define and validate the AWS
+target source; it still may not create an RDS resource until its reviewed
+change-set gate passes.
+
+## Stage 4 source-definition checkpoint — 2026-09-26
+
+Stage 4 source now has four focused Foundation fragments:
+
+- `relational-persistence.yml` owns the private subnet group, no-egress
+  database security group, `postgres17` TLS parameter group, encrypted RDS
+  instance, and generated target-owned credential references;
+- `relational-access.yml` owns the exact three TCP-5432 workload paths and the
+  separate bootstrap, migration, and runtime task roles;
+- `relational-workload-configuration.yml` owns one non-secret configuration
+  reference. Endpoint metadata remains attached to target-owned secrets, so it
+  is not published in source or normal deployment evidence; and
+- `relational-operations.yml` owns RDS CPU, storage, and connection alarms and
+  scoped RDS events through the existing alarm destination.
+
+The existing server, worker, and relay task roles receive neither the runtime
+credential nor the relational configuration in this stage. Their network paths
+are deliberately ready for the later bounded proof, but they cannot become a
+database client merely because the target is deployed. A recovery verifier has
+no standing role in v1: the restore rehearsal creates and removes its own
+isolated recovery boundary under a separate controlled procedure, avoiding a
+permanent high-privilege recovery identity.
+
+`scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh`
+statically verifies the resource shape, no-public/no-CIDR network boundary,
+TLS/encryption/backups/deletion policy, generated-secret policy, IAM scope,
+non-secret configuration, and alarm boundary. It is included in the wider
+platform infrastructure check. These checks passed locally. No AWS resource,
+secret, change set, or live database has been created by this checkpoint.
+
+The remaining Stage 4 gate is deliberately narrow: authenticate to the
+`kanbien-dev` profile, create one named foundation-stack change set using the
+new private-subnet input, and inspect that it contains only the reviewed
+additive relational resources. The change set must not be executed in Stage 4.
 
 ## Contracts and ownership
 

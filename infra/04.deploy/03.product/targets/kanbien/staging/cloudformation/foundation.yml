@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation
-#   version: 5
+#   version: 6
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -20,6 +20,8 @@
 #     path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
 #   - id: aws.plan.kanbien-staging-platform-shell-initial-deployment
 #     path: docs/aws/kanbien-staging-platform-shell-initial-deployment-plan.md
+#   - id: deploy.script.verify-platform-shell-postgresql-reference
+#     path: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
 
 schema: deploy/cloudformation-composition/v1
 description: >-
@@ -32,13 +34,17 @@ fragments:
   - foundation/observability-metrics.yml
   - foundation/rate-limiting.yml
   - foundation/persistence.yml
+  - foundation/relational-persistence.yml
   - foundation/workload-iam.yml
   - foundation/worker-workload-iam.yml
   - foundation/relay-workload-iam.yml
+  - foundation/relational-access.yml
+  - foundation/relational-workload-configuration.yml
   - foundation/work-queues.yml
   - foundation/public-ingress.yml
   - foundation/public-tls.yml
   - foundation/edge-protection.yml
   - foundation/alerting.yml
+  - foundation/relational-operations.yml
   - foundation/cost-controls.yml
   - foundation/outputs.yml

@@ -11041,9 +11041,11 @@ certificate verification. Stage 5 proves the separate, real RDS TLS boundary.
 
 No. The command is the experiment. Stage 3 passes only after the disposable
 engine has run it successfully and we have recorded safe aggregate evidence.
-On 2026-09-26 the Docker daemon was unavailable, so the fixture stopped before
-creating a container. That is a truthful blocked result, not a failed database
-or a passed integration test.
+On 2026-09-26 the Docker daemon was made available and the exact integration
+command passed. The fixture created only its generated loopback container, then
+cleaned up that container and its temporary credential file. That proves the
+selected relational semantics on a real PostgreSQL engine; it does not yet
+prove the separate AWS RDS target.
 
 ### Study question
 

@@ -1,0 +1,108 @@
+# RDS operations surface. Engine log export remains deliberately absent because
+# PostgreSQL engine logs can contain SQL text. Alarms and RDS event categories
+# deliver only operational state through the existing reviewed SNS topic.
+Resources:
+  RelationalDatabaseCpuHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: kanbien-staging-platform-relational-db-high-cpu
+      AlarmDescription: Staging relational reference CPU pressure requires review before the small reference becomes unavailable.
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref RelationalDatabase
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 80
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabaseFreeStorageLowAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: kanbien-staging-platform-relational-db-low-free-storage
+      AlarmDescription: Staging relational reference storage headroom is below the reviewed early-warning floor.
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref RelationalDatabase
+      Statistic: Minimum
+      Unit: Bytes
+      Period: 300
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 3221225472
+      ComparisonOperator: LessThanOrEqualToThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabaseConnectionsHighAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: kanbien-staging-platform-relational-db-high-connections
+      AlarmDescription: Staging relational reference connections are near the reviewed small-instance early-warning threshold.
+      Namespace: AWS/RDS
+      MetricName: DatabaseConnections
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref RelationalDatabase
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 60
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+        - !Ref AlarmTopic
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-persistence
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalDatabaseEventSubscription:
+    Type: AWS::RDS::EventSubscription
+    Properties:
+      SubscriptionName: kanbien-staging-platform-relational-events
+      Enabled: true
+      SnsTopicArn: !Ref AlarmTopic
+      SourceType: db-instance
+      SourceIds:
+        - !Ref RelationalDatabase
+      EventCategories:
+        - availability
+        - backup
+        - failure
+        - low storage
+        - maintenance
+        - recovery
