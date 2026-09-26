@@ -16,6 +16,14 @@ Foundation/service readiness, public server `1/1`, dormant worker `0/0`, and
 empty isolated queues. It then runs one bootstrap task, one migration task,
 one fixed-record relay task, one worker task, and one isolated restore check.
 
+Each stage label is single-use across both running **and stopped** ECS tasks.
+The initial bootstrap label was consumed by a non-zero exit without retaining a
+task log, task identifier, or provider payload. The current reviewed recovery
+uses a distinct, fixed `recovery-1` label set only after the corrected immutable
+image is deployed. It never replays the consumed label. Bootstrap creates the
+two PostgreSQL identities and their connection/schema grants; the migration
+identity, which creates future tables, owns its own default-table privileges.
+
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
 task, and deletes that recovery instance without a final snapshot. It retains

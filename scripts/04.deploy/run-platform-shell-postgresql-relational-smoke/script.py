@@ -71,7 +71,7 @@ def load_policy() -> dict[str, Any]:
         raise RelationalSmokeError("the relational proof target is not the reviewed staging account and region")
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
-    if reference.get("status") != "stage-5-live-boundary-proven-stage-6-relational-smoke-composition-source-ready" or stage.get("status") != "source-defined-change-set-pending":
+    if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready" or stage.get("status") != "bootstrap-recovery-source-defined-image-publication-pending":
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
     control = mapping(stage.get("control"), "stage_6_relational_smoke_composition.control")
     task_families = mapping(control.get("task_families"), "control.task_families")
@@ -92,11 +92,11 @@ def load_policy() -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260926",
-        "migration": "kanbien-postgresql-stage6-migration-20260926",
-        "relay": "kanbien-postgresql-stage6-relay-20260926",
-        "worker": "kanbien-postgresql-stage6-worker-20260926",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260926",
+        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260926-recovery-1",
+        "migration": "kanbien-postgresql-stage6-migration-20260926-recovery-1",
+        "relay": "kanbien-postgresql-stage6-relay-20260926-recovery-1",
+        "worker": "kanbien-postgresql-stage6-worker-20260926-recovery-1",
+        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260926-recovery-1",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
@@ -234,10 +234,11 @@ def assert_task_definition(stage: str, policy: dict[str, Any]) -> None:
 def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
     """Make each fixed stage single-use, including after a task failure."""
 
-    response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage]], policy)
-    tasks = response.get("taskArns")
-    if not isinstance(tasks, list) or tasks:
-        raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
+    for desired_status in ("RUNNING", "STOPPED"):
+        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", desired_status], policy)
+        tasks = response.get("taskArns")
+        if not isinstance(tasks, list) or tasks:
+            raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
 
 
 def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None) -> None:

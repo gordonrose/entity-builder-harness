@@ -26,7 +26,6 @@ async function main(): Promise<void> {
     await pool.query({ text: "CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate" });
     await pool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });
     await pool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
-    await pool.query({ text: "ALTER DEFAULT PRIVILEGES FOR ROLE psmokemigrate IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime" });
     writeOutcome("bootstrap_completed", "succeeded");
   } catch {
     writeOutcome("bootstrap_completed", "failed");

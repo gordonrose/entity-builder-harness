@@ -21,14 +21,17 @@ portability:
 
 Stage 5 is complete: the Foundation database boundary is private, encrypted,
 TLS-required, and has the documented loopback-only database egress correction.
-No relational bootstrap, migration, smoke record, queue delivery, worker, or
-restore action has been run under Stage 6.
+The initial Stage 6 bootstrap label was consumed by a non-zero task result;
+no migration, smoke record, queue delivery, worker, or restore stage was
+started. Task identifiers, task logs, and provider details were deliberately
+not retained in this evidence.
 
-Stage 6 source composition is ready for reviewed deployment. Its static source
-policy, target-profile control, TypeScript image build, and infrastructure
-policy suite pass. The live section below remains intentionally unfilled until
-the Foundation and service change sets are deployed and the fixed controller
-returns its terminal safe verdict.
+The recovery source moves PostgreSQL default-privilege ownership to the
+migration identity and makes both running and stopped fixed task labels
+single-use. It defines a new fixed `recovery-1` label set; it does not replay
+the initial label. The live recovery section remains intentionally unfilled
+until the corrected immutable image is deployed, its normal Service revision
+rolls out healthily, and the fixed controller returns its terminal safe verdict.
 
 ## Required live evidence fields
 

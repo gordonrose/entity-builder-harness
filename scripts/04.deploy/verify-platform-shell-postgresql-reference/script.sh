@@ -237,10 +237,10 @@ if events.get("SnsTopicArn") != {"!Ref": "AlarmTopic"} or events.get("SourceType
     fail("RDS events must be limited to the relational instance and existing alert destination")
 
 reference = profile.get("persistence", {}).get("relational_reference", {})
-if reference.get("status") != "stage-5-live-boundary-proven-stage-6-relational-smoke-composition-source-ready" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
+if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
     fail("target profile must record the passed real-engine proof and exact default-egress remediation boundary")
 stage_six = reference.get("stage_6_relational_smoke_composition", {})
-if stage_six.get("status") != "source-defined-change-set-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
+if stage_six.get("status") != "bootstrap-recovery-source-defined-image-publication-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
     fail("target profile must define the reviewed isolated relational smoke task boundary")
 
 certificate = Path("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt")
@@ -251,6 +251,11 @@ if 'readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8")' not in task_he
     fail("relational task helper must require the pinned RDS CA bundle and verify-full TLS")
 if 'const dbname = stringField(candidate, "dbname")' in task_helper or 'database: "platformsmoke"' not in task_helper:
     fail("relational task helper must use the reviewed configuration database name rather than require an optional secret dbname field")
+
+bootstrap_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts").read_text(encoding="utf-8")
+migration_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts").read_text(encoding="utf-8")
+if 'ALTER DEFAULT PRIVILEGES FOR ROLE' in bootstrap_entrypoint or 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' not in migration_entrypoint:
+    fail("default privileges must be owned by the migration identity rather than the bootstrap identity")
 
 if failures:
     for message in failures:

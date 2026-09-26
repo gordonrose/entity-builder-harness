@@ -37,6 +37,22 @@ Every arrow is conditional: failure prevents the next stage. If the controller
 created a recovery instance, it still attempts cleanup before reporting its
 safe failure verdict.
 
+## Bootstrap recovery boundary
+
+The initial fixed bootstrap stage exited non-zero. No later Stage 6 task was
+started, and the public server, dormant worker, and isolated queue boundary
+remained in their required terminal state. The task label is permanently
+consumed: stopped tasks count as consumed as well as running tasks.
+
+The reviewed recovery corrects the PostgreSQL ownership split before it creates
+one new fixed `recovery-1` label set. Bootstrap is limited to creating the
+migration/runtime identities and connection/schema grants. The migration role
+sets default privileges for tables it will itself create, which matches
+PostgreSQL's role-ownership rules. A corrected immutable image, normal
+task-definition-only Service update, stack-health check, and live-boundary
+check must all pass before the controller is invoked again. Do not reuse the
+original labels or inspect/paste raw task logs.
+
 ## Before running
 
 Confirm all of these through the controller's source validation and reviewed
@@ -73,8 +89,8 @@ Foundation outputs. It emits one of two safe results:
 - `{"postgresql_relational_smoke":"passed"}` — all fixed stages ran and the
   recovery instance was removed.
 - `{"postgresql_relational_smoke":"failed"}` — do not rerun under the same
-  fixed labels. Inspect safe infrastructure/evidence categories, preserve the
-  failure context, and prepare a separately reviewed remediation or new label.
+  fixed labels. Preserve only safe stage/aggregate evidence and prepare a
+  reviewed source correction plus one new fixed recovery label set.
 
 Never retrieve or paste task logs, SQL, rows, queue messages, endpoints,
 credentials, request/response bodies, task identifiers, or AWS provider

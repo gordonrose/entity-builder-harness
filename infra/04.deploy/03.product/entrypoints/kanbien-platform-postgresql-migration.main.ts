@@ -22,6 +22,10 @@ async function main(): Promise<void> {
     const migration = secretFromEnvironment("RELATIONAL_MIGRATION_SECRET_JSON");
     pool = connectionPool(migration, configuration.migrationSecretArn, configuration.schema);
     const adapterConfiguration = connectionConfiguration(migration, configuration.migrationSecretArn, configuration.schema);
+    // PostgreSQL default privileges belong to the role that will create later
+    // tables. The bootstrap identity deliberately does not impersonate this
+    // migration identity or retain membership in it.
+    await pool.query({ text: "ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime" });
     const result = await createPostgreSqlMigrationRunner(adapterConfiguration, { pool }, "stage6-staging").apply({
       schema: configuration.schema,
       migrations: [postgreSqlPersistenceFoundationMigration(configuration.schema), kanbienPlatformSmokePostgreSqlMigration(configuration.schema)],

@@ -611,6 +611,22 @@ dormant worker `0/0`, and isolated queue totals. It reports only safe final
 outcomes and aggregate counts; provider responses, endpoints, task IDs,
 secrets, records, messages, and raw logs stay out of output and evidence.
 
+#### Stage 6 bootstrap recovery (2026-09-26)
+
+The first fixed bootstrap label ended non-zero. No migration, relay, worker, or
+restore label started, and the required server/worker/queue aggregate boundary
+remained intact. The run is not replayed: a stopped label is now treated as
+consumed as well as a running label.
+
+Source review removed an ownership-incompatible default-privilege statement
+from bootstrap. PostgreSQL default privileges are now established by the
+migration identity for tables that it will create; bootstrap remains limited to
+identity creation and connection/schema grants. The recovery sequence requires
+a new immutable image, normal reviewed Service task-definition revisions, a
+healthy rollout and live-boundary check, then one distinct fixed `recovery-1`
+label set. It does not expose task identifiers, logs, SQL, records, or provider
+payloads while investigating or recording the recovery.
+
 1. With a distinct, bounded approval, run one fixed harmless relational smoke
    request. It may create only approved opaque state, lineage, and outbox facts.
 2. Run at most one governed relay and one self-terminating worker path. Require
