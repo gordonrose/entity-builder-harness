@@ -80,7 +80,7 @@ if bucket.get("OwnershipControls") != {"Rules": [{"ObjectOwnership": "BucketOwne
     fail("artifact store bucket must disable ACL ownership ambiguity")
 if bucket.get("PublicAccessBlockConfiguration") != {"BlockPublicAcls": True, "BlockPublicPolicy": True, "IgnorePublicAcls": True, "RestrictPublicBuckets": True}:
     fail("artifact store bucket must block all public access paths")
-expected_lifecycle = {"Rules": [{"Id": "expire-reviewed-change-set-templates", "Status": "Enabled", "Filter": {"Prefix": "change-sets/"}, "ExpirationInDays": 30, "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}}]}
+expected_lifecycle = {"Rules": [{"Id": "expire-reviewed-change-set-templates", "Status": "Enabled", "Prefix": "change-sets/", "ExpirationInDays": 30, "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}}]}
 if bucket.get("LifecycleConfiguration") != expected_lifecycle:
     fail("artifact store bucket must retain only bounded change-set artifacts")
 

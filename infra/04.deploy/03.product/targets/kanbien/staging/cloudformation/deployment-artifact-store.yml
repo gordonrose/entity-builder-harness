@@ -44,8 +44,7 @@ Resources:
         Rules:
           - Id: expire-reviewed-change-set-templates
             Status: Enabled
-            Filter:
-              Prefix: change-sets/
+            Prefix: change-sets/
             ExpirationInDays: 30
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 1

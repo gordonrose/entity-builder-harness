@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T11:11:16Z
-latest_commit_sha: 568c6551
-chat_duration: 6018s (00:01:40:18)
+latest_commit_at_utc: 2026-09-26T11:16:50Z
+latest_commit_sha: bef454ce
+chat_duration: 6352s (00:01:45:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -45,6 +45,10 @@ go
 - Raised: Foundation template exceeded CloudFormation's inline size limit
   Resolution: Defined a separate private target-owned CloudFormation artifact store instead of reusing legacy, audit, or cross-environment storage.
 
+
+- Raised: Artifact-store review change set failed CloudFormation property validation
+  Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -62,6 +66,10 @@ go
 
 - Summary: Stage 4 source is extended with the artifact-store prerequisite; artifact store and Foundation change sets remain independently reviewed.
   Durable evidence: ADR 0034, target CloudFormation source, and the PostgreSQL deployment plan
+
+
+- Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
+  Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
 
 ## Activity Log
 
@@ -154,6 +162,31 @@ Summary: Use RetainExceptOnCreate so a failed first artifact-store deployment le
 
 ADR impact: No new ADR; strengthens the ADR 0034 rollback behavior.
 
+
+### 2026-09-26T11:16:08Z - Issue
+
+Raised: Artifact-store review change set failed CloudFormation property validation
+
+Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
+
+
+### 2026-09-26T11:16:08Z - Context hygiene
+
+Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
+
+Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
+
+
+### 2026-09-26T11:16:50Z - Commit recorded
+
+Commit: `bef454ce`
+
+Message: fix(deploy): correct artifact-store lifecycle schema
+
+Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
+
+ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -182,6 +215,13 @@ ADR impact: No new ADR; strengthens the ADR 0034 rollback behavior.
   Summary: Use RetainExceptOnCreate so a failed first artifact-store deployment leaves no retained bucket while successful evidence remains protected.
   ADR impact: No new ADR; strengthens the ADR 0034 rollback behavior.
 
+
+- Commit: `bef454ce`
+  Time UTC: 2026-09-26T11:16:50Z
+  Message: fix(deploy): correct artifact-store lifecycle schema
+  Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
+  ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -197,9 +237,9 @@ Reason: The target's CloudFormation transport boundary is a durable deployment a
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T11:11:16Z
-Latest commit SHA: 568c6551
-Chat duration: 6018s (00:01:40:18)
+Latest commit at UTC: 2026-09-26T11:16:50Z
+Latest commit SHA: fix(deploy): correct artifact-store lifecycle schema
+Chat duration: 6352s (00:01:45:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
