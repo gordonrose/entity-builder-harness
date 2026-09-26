@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T15:30:55Z
-latest_commit_sha: 52ba62859ba071c4a833875b1f5b0db829e02122
-chat_duration: 21597s (00:05:59:57)
+latest_commit_at_utc: 2026-09-26T15:41:48Z
+latest_commit_sha: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
+chat_duration: 22250s (00:06:10:50)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -428,6 +428,17 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
 - Local reconciliation, policy, infrastructure, and whitespace checks passed.
 - Next step: promote this diagnostic-only correction, run one read-only GitHub reconciliation proof, and resolve only the exact reported control if it remains blocked.
 
+
+### 2026-09-26T15:41:48Z - Commit recorded
+
+Commit: `2ab8dacddeeb25b910e65c65a0fb9c764baf6740`
+
+Message: fix(deploy): isolate reconciliation control probes
+
+Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
+
+ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -519,6 +530,13 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
   Summary: Separated active drift detection from the GitHub reconciler, added a complete resource-type dependency inventory and fast policy gates, and required a safe source/live role-policy alignment check before Foundation mutation.
   ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
 
+
+- Commit: `2ab8dacddeeb25b910e65c65a0fb9c764baf6740`
+  Time UTC: 2026-09-26T15:41:48Z
+  Message: fix(deploy): isolate reconciliation control probes
+  Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
+  ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
@@ -544,9 +562,9 @@ Reason: The existing reconciliation boundary is amended so active provider-depen
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T15:30:55Z
-Latest commit SHA: 52ba62859ba071c4a833875b1f5b0db829e02122
-Chat duration: 21597s (00:05:59:57)
+Latest commit at UTC: 2026-09-26T15:41:48Z
+Latest commit SHA: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
+Chat duration: 22250s (00:06:10:50)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
