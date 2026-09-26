@@ -1,0 +1,80 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.reconciliation-operation-authorization-contract
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.access
+#   disciplines:
+#   - security
+#   - sre
+#   kind: infrastructure-dependency-contract
+#   purpose: Map every GitHub reconciliation provider operation to its reviewed IAM action and exact target scope.
+#   portability:
+#     class: target-specific
+#     targets:
+#     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-deployment-reconciliation
+#     path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+schema: deploy/reconciliation-operation-authorization-contract/v1
+target: kanbien/staging
+identity: github-platform-shell-staging-reconciliation
+policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
+status: active
+operations:
+  - check_id: aws-account
+    cli_operation: sts:get-caller-identity
+    iam_action: sts:GetCallerIdentity
+    resource_scope: "*"
+    documentation_url: https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html
+  - check_id: artifact-stack-status
+    cli_operation: cloudformation:describe-stacks
+    iam_action: cloudformation:DescribeStacks
+    resource_scope: arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+  - check_id: artifact-stack-drift-evidence
+    cli_operation: cloudformation:describe-stacks
+    iam_action: cloudformation:DescribeStacks
+    resource_scope: arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+  - check_id: foundation-stack-status
+    cli_operation: cloudformation:describe-stacks
+    iam_action: cloudformation:DescribeStacks
+    resource_scope: arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+  - check_id: foundation-stack-drift-evidence
+    cli_operation: cloudformation:describe-stacks
+    iam_action: cloudformation:DescribeStacks
+    resource_scope: arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+  - check_id: artifact-bucket-public-access-control
+    cli_operation: s3api:get-public-access-block
+    iam_action: s3:GetBucketPublicAccessBlock
+    resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetPublicAccessBlock.html
+  - check_id: artifact-bucket-encryption
+    cli_operation: s3api:get-bucket-encryption
+    iam_action: s3:GetEncryptionConfiguration
+    resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketEncryption.html
+  - check_id: artifact-bucket-ownership
+    cli_operation: s3api:get-bucket-ownership-controls
+    iam_action: s3:GetBucketOwnershipControls
+    resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketOwnershipControls.html
+  - check_id: artifact-bucket-lifecycle
+    cli_operation: s3api:get-bucket-lifecycle-configuration
+    iam_action: s3:GetBucketLifecycleConfiguration
+    resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html
+  - check_id: artifact-bucket-policy-status
+    cli_operation: s3api:get-bucket-policy-status
+    iam_action: s3:GetBucketPolicyStatus
+    resource_scope: arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548
+    documentation_url: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketPolicyStatus.html
+  - check_id: platform-shell-budget
+    cli_operation: budgets:describe-budget
+    iam_action: budgets:ViewBudget
+    resource_scope: arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly
+    documentation_url: https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_DescribeBudget.html

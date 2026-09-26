@@ -61,6 +61,10 @@ created by the source implementation in this plan.
    reconciliation result. A grouped control is not sufficient: when one
    declared read is unavailable, the result must name that exact control while
    continuing to suppress provider payloads.
+8. Require an operation-authorisation contract for every GitHub provider read.
+   It maps the CLI operation—not just its API-shaped name—to the authoritative
+   IAM action, exact resource scope, and AWS documentation. The policy checker
+   rejects a policy that does not exactly match this contract.
 
 ## Stage 2 — detector design and review (not yet authorised to deploy)
 
@@ -86,6 +90,12 @@ created by the source implementation in this plan.
    reports each artifact-bucket read separately before any permission change is
    considered. The next proof must identify the exact failed operation or pass
    all declared controls; IAM simulation alone is not treated as proof.
+   The separated proof identified the first source repair: S3
+   `get-bucket-encryption` requires `s3:GetEncryptionConfiguration`, not
+   `s3:GetBucketEncryption`. Source now swaps only that incorrect action for
+   the authoritative one and records it in the operation-authorisation
+   contract. Applying that live policy repair requires its own explicit AWS
+   approval and a subsequent identity-specific proof.
 2. Execute the reviewed detector change set. It has a separate service role,
    a fixed stack allowlist, and no access to secrets, records, queue messages,
    or workload data.

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T15:41:48Z
-latest_commit_sha: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
-chat_duration: 22250s (00:06:10:50)
+latest_commit_at_utc: 2026-09-26T15:47:03Z
+latest_commit_sha: aa2b6f7a55996584066175bb52124fc6ebe0028b
+chat_duration: 22565s (00:06:16:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -71,6 +71,9 @@ go
 - Raised: The narrowed GitHub role passed source/live policy alignment and IAM simulation, but its first live reconciliation blocked at the grouped artifact-bucket control.
   Resolution: Did not add a permission. Split every artifact-bucket provider read into an independently attributable, fail-closed safe control so the next live proof identifies the exact unavailable operation without exposing a provider response.
 
+- Raised: The separated live proof identified artifact-bucket encryption as the unavailable control. The original source used the API-shaped but incorrect IAM action `s3:GetBucketEncryption`.
+  Resolution: Added a complete operation-authorisation contract and corrected source to the authoritative `s3:GetEncryptionConfiguration` action. This is a one-for-one replacement, not a broader action set; live application remains pending separate exact approval and proof.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -97,6 +100,9 @@ go
 
 - Decision: Require operation-level safe diagnostics for grouped provider controls.
   Rationale: Source policy and IAM simulation are useful preflight evidence, but neither proves an operational identity's live request path. A grouped provider check cannot guide a least-privilege repair without risking speculative permission expansion.
+
+- Decision: Require a documented CLI-operation-to-IAM-action contract for every reconciliation read.
+  Rationale: AWS API names and IAM action names can differ. The contract gives reviewers an authoritative source, exact scope, static equality gate, and safe operational check rather than relying on naming intuition or IAM simulation alone.
 
 ## Context Hygiene
 
@@ -428,6 +434,12 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
 - Local reconciliation, policy, infrastructure, and whitespace checks passed.
 - Next step: promote this diagnostic-only correction, run one read-only GitHub reconciliation proof, and resolve only the exact reported control if it remains blocked.
 
+### 2026-09-26T15:43:05Z - Exact S3 authorisation mapping identified
+
+- The revised GitHub proof passed the public-access control and then blocked at artifact-bucket encryption.
+- AWS documentation confirms the CLI operation `s3api get-bucket-encryption` requires `s3:GetEncryptionConfiguration`.
+- Added a complete reviewed operation-authorisation contract and corrected the source action one-for-one. No live IAM policy repair has been applied in this stage.
+
 
 ### 2026-09-26T15:41:48Z - Commit recorded
 
@@ -438,6 +450,17 @@ Message: fix(deploy): isolate reconciliation control probes
 Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
 
 ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
+
+
+### 2026-09-26T15:47:03Z - Commit recorded
+
+Commit: `aa2b6f7a55996584066175bb52124fc6ebe0028b`
+
+Message: fix(deploy): map reconciliation APIs to IAM actions
+
+Summary: Recorded every GitHub reconciliation provider operation against its authoritative IAM action and exact scope; corrected the S3 encryption read in source only, pending separate live-policy approval.
+
+ADR impact: No new ADR; extends the approved AWS change reliability programme with a verified API-to-IAM action contract.
 
 ## Sub-Agent Activity
 
@@ -537,6 +560,13 @@ ADR impact: No new ADR; implements the AWS change reliability programme's operat
   Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
   ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
 
+
+- Commit: `aa2b6f7a55996584066175bb52124fc6ebe0028b`
+  Time UTC: 2026-09-26T15:47:03Z
+  Message: fix(deploy): map reconciliation APIs to IAM actions
+  Summary: Recorded every GitHub reconciliation provider operation against its authoritative IAM action and exact scope; corrected the S3 encryption read in source only, pending separate live-policy approval.
+  ADR impact: No new ADR; extends the approved AWS change reliability programme with a verified API-to-IAM action contract.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
@@ -551,6 +581,14 @@ ADR impact: No new ADR; implements the AWS change reliability programme's operat
   preflight worktree and branch were removed. No conflict classification was
   needed.
 
+- 2026-09-26: a later accepted `main` change caused a second clean divergence
+  with no changed-path overlap. The no-stash, no-rewrite rehearsal branch
+  `agentic/preflight/chat-2026-09-26-10-30-go-0e0c4b04d369/20260926154736`
+  produced commit `b799843c1391f5dcf897a1b47fa52e5e9ebfddd9`; the focused
+  deployment checks passed, the result was fast-forwarded to this chat branch,
+  and the clean preflight worktree and branch were removed. No conflict
+  classification was needed.
+
 ## ADR Disposition
 
 ADR needed: yes
@@ -562,9 +600,9 @@ Reason: The existing reconciliation boundary is amended so active provider-depen
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T15:41:48Z
-Latest commit SHA: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
-Chat duration: 22250s (00:06:10:50)
+Latest commit at UTC: 2026-09-26T15:47:03Z
+Latest commit SHA: aa2b6f7a55996584066175bb52124fc6ebe0028b
+Chat duration: 22565s (00:06:16:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

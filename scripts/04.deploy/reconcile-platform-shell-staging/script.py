@@ -127,6 +127,10 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         raise ReconciliationError("target-account-or-region-invalid")
     drift_evidence = mapping(reconciliation.get("drift_evidence"), "drift-evidence-policy-missing")
     live_role_policy_alignment = mapping(reconciliation.get("live_role_policy_alignment"), "live-role-policy-alignment-missing")
+    operation_authorization_contract = text(
+        reconciliation.get("operation_authorization_contract"),
+        "operation-authorization-contract-missing",
+    )
     expected_drift_evidence = {
         "strategy": "separate-target-scoped-detector",
         "github_role_may_start_detection": False,
@@ -142,13 +146,15 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "role_name": "github-platform-shell-staging-reconciliation",
         "inline_policy_name": "ReadDeclaredStagingControls",
         "desired_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json",
-        "status": "source-defined-live-application-required",
+        "status": "source-defined-live-repair-required",
         "command": "npm run platform:shell:deployment-reconciliation:role-policy-alignment",
         "required_before_foundation_change_set_execution": True,
         "output_policy": "safe-check-identifier-and-verdict-only-no-live-policy-content",
     }
     if live_role_policy_alignment != expected_live_role_policy_alignment:
         raise ReconciliationError("live-role-policy-alignment-not-reviewed")
+    if operation_authorization_contract != "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml":
+        raise ReconciliationError("operation-authorization-contract-not-reviewed")
     if reconciliation != {
         "status": "source-implemented-live-role-alignment-and-detector-pending",
         "command": "npm run platform:shell:deployment-reconciliation",
@@ -164,6 +170,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "role_arn": f"arn:aws:iam::{account_id}:role/github-platform-shell-staging-reconciliation",
         "role_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json",
         "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json",
+        "operation_authorization_contract": operation_authorization_contract,
         "output_policy": "safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content",
         "fail_closed": True,
         "drift_evidence": expected_drift_evidence,
