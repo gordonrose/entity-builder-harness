@@ -103,7 +103,10 @@ created by the source implementation in this plan.
    the complete declared operation inventory was rechecked against the linked
    authoritative API references. The repair remains a one-for-one action
    replacement on the existing bucket-only statement; it neither adds an
-   operation nor broadens its resource scope.
+   operation nor broadens its resource scope. The live source/alignment proof
+   and the identity-specific GitHub reconciliation both passed after that
+   repair. The role now proves every declared passive control; the separately
+   governed active detector remains intentionally unimplemented.
 2. Execute the reviewed detector change set. It has a separate service role,
    a fixed stack allowlist, and no access to secrets, records, queue messages,
    or workload data.
