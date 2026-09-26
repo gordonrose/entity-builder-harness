@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T00:18:07Z
-latest_commit_sha: 28478911
-chat_duration: 1932s (00:00:32:12)
+latest_commit_at_utc: 2026-09-26T08:30:41Z
+latest_commit_sha: 57080dd1
+chat_duration: 31486s (00:08:44:46)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -72,6 +72,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Decision: Defer PostgreSQL row-level security from the first relational reference.
   Rationale: Application tenant predicates and cross-tenant isolation tests can be proved now; RLS requires a separate trusted transaction-context and non-bypass role design before it can be claimed as a control.
 
+
+- Decision: Complete PostgreSQL provider adapter Stage 2
+  Rationale: The package now owns provider-specific connection, transaction, migration, outbox, processing, lineage, error, and telemetry translation; it adds only one provider-neutral checksum-mismatch error so an applied migration cannot silently change.
+
 ## Context Hygiene
 
 
@@ -90,6 +94,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 
 - Summary: Stage 1 resumed after the operator renewed the kanbien-dev SSO session and completed read-only target inspection.
   Durable evidence: A new private database subnet group is feasible; the selected RDS PostgreSQL 17.11 micro configuration is currently available; the plan keeps two legacy RDS instances fully out of scope; and new port-5432 source-group-only rules are required for the server, worker, and relay paths.
+
+
+- Summary: Stage 2 passed locally without any AWS resource, credential, database, or product schema.
+  Durable evidence: Durable evidence is in platform/adapters/aws/persistence/postgresql/, the PostgreSQL plan and deployment plan, staging target/readiness records, and the passed adapter plus infrastructure checks. Stage 3 remains the disposable local PostgreSQL integration gate.
 
 ## Activity Log
 
@@ -196,6 +204,31 @@ Summary: Completed Stage 1 read-only inspection and recorded the additive privat
 
 ADR impact: ADR 0033 records the durable staging reference selection; implementation remains gated by Stages 2–6.
 
+
+### 2026-09-26T08:26:30Z - Decision
+
+Decision: Complete PostgreSQL provider adapter Stage 2
+
+Rationale: The package now owns provider-specific connection, transaction, migration, outbox, processing, lineage, error, and telemetry translation; it adds only one provider-neutral checksum-mismatch error so an applied migration cannot silently change.
+
+
+### 2026-09-26T08:26:30Z - Context hygiene
+
+Summary: Stage 2 passed locally without any AWS resource, credential, database, or product schema.
+
+Durable evidence: Durable evidence is in platform/adapters/aws/persistence/postgresql/, the PostgreSQL plan and deployment plan, staging target/readiness records, and the passed adapter plus infrastructure checks. Stage 3 remains the disposable local PostgreSQL integration gate.
+
+
+### 2026-09-26T08:30:41Z - Commit recorded
+
+Commit: `57080dd1`
+
+Message: feat(persistence): add PostgreSQL adapter boundary
+
+Summary: Completed Stage 2 with a scanable PostgreSQL adapter, strict connection/TLS configuration, atomic DML-plus-lineage-plus-outbox seam, migration checksum fail-closed handling, leases/fences, safe telemetry, deterministic tests, and Stage 2 target/teaching evidence; no AWS resource, credential, or database was used.
+
+ADR impact: ADR 0033 remains the governing target-selection decision; this commit implements its provider-adapter boundary without changing the selected AWS target.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -214,6 +247,8 @@ Evidence:
 - docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
 - infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
 - infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+- platform/adapters/aws/persistence/postgresql/README.md
+- platform/adapters/aws/persistence/postgresql/src/index.ts
 Corpus gaps:
 - None.
 
@@ -234,6 +269,13 @@ Corpus gaps:
   Summary: Completed Stage 1 read-only inspection and recorded the additive private RDS PostgreSQL target decision, exact cost/security/legacy boundaries, ADR, threat model, and static profile guard; no AWS resource or secret changed.
   ADR impact: ADR 0033 records the durable staging reference selection; implementation remains gated by Stages 2–6.
 
+
+- Commit: `57080dd1`
+  Time UTC: 2026-09-26T08:30:41Z
+  Message: feat(persistence): add PostgreSQL adapter boundary
+  Summary: Completed Stage 2 with a scanable PostgreSQL adapter, strict connection/TLS configuration, atomic DML-plus-lineage-plus-outbox seam, migration checksum fail-closed handling, leases/fences, safe telemetry, deterministic tests, and Stage 2 target/teaching evidence; no AWS resource, credential, or database was used.
+  ADR impact: ADR 0033 remains the governing target-selection decision; this commit implements its provider-adapter boundary without changing the selected AWS target.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -247,9 +289,9 @@ Reason: Stage 1 selected the durable Kanbien staging relational-reference target
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T23:45:55Z
-Latest commit at UTC: 2026-09-26T00:18:07Z
-Latest commit SHA: 28478911
-Chat duration: 1932s (00:00:32:12)
+Latest commit at UTC: 2026-09-26T08:30:41Z
+Latest commit SHA: 57080dd1
+Chat duration: 31486s (00:08:44:46)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
