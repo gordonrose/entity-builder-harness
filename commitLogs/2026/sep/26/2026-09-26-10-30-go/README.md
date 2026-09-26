@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T11:26:20Z
-latest_commit_sha: 1c47ce5109997139064d7a1efb623f3e932e2794
-chat_duration: 6922s (00:01:55:22)
+latest_commit_at_utc: 2026-09-26T12:03:47Z
+latest_commit_sha: 0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77
+chat_duration: 9169s (00:02:32:49)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -251,6 +251,17 @@ ADR path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconc
 
 Reason: A pre-mutation and recurring live reconciliation boundary is a durable deployment architecture decision.
 
+
+### 2026-09-26T12:03:47Z - Commit recorded
+
+Commit: `0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77`
+
+Message: feat(deploy): require staging reconciliation gate
+
+Summary: Added a fail-closed source/live AWS reconciliation control, canonicalized the staging budget declaration, and proved both continuous and exact pre-change-set checks without provisioning resources.
+
+ADR impact: ADR 0035 records the durable pre-mutation and recurring reconciliation boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -293,6 +304,13 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
   Summary: Recorded the passed Stage 4 artifact-store bootstrap and the available but unexecuted relational Foundation change set with its strictly bounded scope.
   ADR impact: No new ADR; evidence completes the Stage 4 review gate under the existing relational-reference and artifact-store decisions.
 
+
+- Commit: `0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77`
+  Time UTC: 2026-09-26T12:03:47Z
+  Message: feat(deploy): require staging reconciliation gate
+  Summary: Added a fail-closed source/live AWS reconciliation control, canonicalized the staging budget declaration, and proved both continuous and exact pre-change-set checks without provisioning resources.
+  ADR impact: ADR 0035 records the durable pre-mutation and recurring reconciliation boundary.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -308,9 +326,9 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T11:26:20Z
-Latest commit SHA: 1c47ce5109997139064d7a1efb623f3e932e2794
-Chat duration: 6922s (00:01:55:22)
+Latest commit at UTC: 2026-09-26T12:03:47Z
+Latest commit SHA: 0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77
+Chat duration: 9169s (00:02:32:49)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
