@@ -76,6 +76,13 @@ defines the authorised mutation.
   separates image publication from deployment while still making the
   deployment scope mechanically reviewable.
 
+  It also requires two short-lived target-admin assessment records: the
+  classified Foundation record (which accepts only the known RDS parameter
+  normalisation) and an `IN_SYNC` record for the fixed Service stack. The
+  artifact bucket itself is verified through its current encryption, ownership,
+  public-access, lifecycle, and policy controls; a stale passive artifact
+  stack timestamp cannot suppress those direct checks or authorize a change.
+
 Before a Foundation change set can execute, the declared administrator profile
 also compares the live GitHub inline policy with the reviewed JSON source. This
 is deliberately a separate mode: GitHub proves its own usable operations in

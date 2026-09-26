@@ -660,6 +660,10 @@ runtime:
         next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
       stage_6_relational_smoke_composition:
         status: source-defined-change-set-pending
+        service_change_set_preflight:
+          foundation_evidence: fresh-classified-known-rds-parameter-normalization-only
+          service_evidence: fresh-target-admin-in-sync-service-stack-detection-only
+          artifact_controls: current-private-encrypted-owned-lifecycle-and-nonpublic-bucket-reads
         safety_boundary:
           - one-fixed-harmless-relational-work-item-only
           - target-owned-ecs-injected-secrets-and-non-secret-configuration-only

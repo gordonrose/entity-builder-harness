@@ -94,6 +94,16 @@ expected_config = {
             "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
         "operational_coverage": "administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending",
+        "service_active_assessment": {
+            "status": "approved-administrator-only-service-drift-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-service-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     },
     "live_role_policy_alignment": {
         "role_name": "github-platform-shell-staging-reconciliation",
@@ -150,6 +160,14 @@ require(stage_six_scope == {
 }, "reconciliation must permit only the exact Stage 6 relational foundation change scope")
 service_stage_six_scope = reconciliation.get("service_relational_stage6_change_set_scope", {})
 require(service_stage_six_scope == {
+    "foundation_evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    },
+    "service_evidence": {"schema": "deploy/platform-shell-service-active-drift-evidence/v1", "maximum_age_seconds": 900, "classification": "in-sync"},
     "additions": [
         {"logical_id": "RelationalBootstrapTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
         {"logical_id": "RelationalMigrationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},

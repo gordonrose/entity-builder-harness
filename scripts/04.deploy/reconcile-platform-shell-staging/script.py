@@ -56,6 +56,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "role-policy-alignment"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
     parser.add_argument("--service-change-set", help="The reviewed service change-set name, required only for the isolated relational Stage 6 service preflight.")
+    parser.add_argument("--service-drift-evidence", help="New /tmp safe Service-drift evidence, required only for the isolated relational Stage 6 service preflight.")
     parser.add_argument("--known-foundation-drift-evidence", help="A new safe /tmp evidence record, required only for the exact egress-remediation preflight.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE)
     parser.add_argument("--aws-cli", default="aws")
@@ -67,7 +68,7 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--timeout-seconds must be between 1 and 30")
     preflight_modes = {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}
     service_preflight_mode = arguments.mode == "pre-relational-stage6-service-change-set"
-    if arguments.validate and (arguments.foundation_change_set or arguments.service_change_set or arguments.known_foundation_drift_evidence):
+    if arguments.validate and (arguments.foundation_change_set or arguments.service_change_set or arguments.known_foundation_drift_evidence or arguments.service_drift_evidence):
         parser.error("--validate cannot inspect a change set or evidence record")
     if arguments.mode in preflight_modes and not arguments.validate and not arguments.foundation_change_set:
         parser.error("--foundation-change-set is required for a Foundation preflight mode")
@@ -77,14 +78,22 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--service-change-set is required for the isolated relational Stage 6 service preflight")
     if not service_preflight_mode and arguments.service_change_set:
         parser.error("--service-change-set is permitted only for the isolated relational Stage 6 service preflight")
-    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and not arguments.validate:
+    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} and not arguments.validate:
         if not arguments.known_foundation_drift_evidence:
             parser.error("--known-foundation-drift-evidence is required for the exact egress-remediation preflight")
         evidence = Path(arguments.known_foundation_drift_evidence)
         if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
             parser.error("--known-foundation-drift-evidence must be a direct child of /tmp")
-    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and arguments.known_foundation_drift_evidence:
+    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} and arguments.known_foundation_drift_evidence:
         parser.error("--known-foundation-drift-evidence is permitted only for a relational Foundation preflight with classified drift")
+    if service_preflight_mode and not arguments.validate:
+        if not arguments.service_drift_evidence:
+            parser.error("--service-drift-evidence is required for the isolated relational Stage 6 service preflight")
+        evidence = Path(arguments.service_drift_evidence)
+        if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
+            parser.error("--service-drift-evidence must be a direct child of /tmp")
+    if not service_preflight_mode and arguments.service_drift_evidence:
+        parser.error("--service-drift-evidence is permitted only for the isolated relational Stage 6 service preflight")
     if arguments.mode == "role-policy-alignment" and not arguments.validate and arguments.aws_credential_source != "target-profile":
         parser.error("role-policy-alignment requires the declared administrator target-profile credentials")
     if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and not arguments.validate and arguments.aws_credential_source != "target-profile":
@@ -175,6 +184,16 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
         "operational_coverage": "administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending",
+        "service_active_assessment": {
+            "status": "approved-administrator-only-service-drift-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-service-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     }
     if drift_evidence != expected_drift_evidence:
         raise ReconciliationError("drift-evidence-policy-not-reviewed")
@@ -304,6 +323,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     if stage_six_scope.get("evidence") != expected_stage_six_evidence or stage_six_additions != expected_stage_six_additions or stage_six_scope.get("modifications") != [{"logical_id": "ServiceDeploymentExecutionRole", "resource_type": "AWS::IAM::Role", "replacement": False}]:
         raise ReconciliationError("relational-stage6-scope-not-reviewed")
     service_stage_six_scope = mapping(reconciliation.get("service_relational_stage6_change_set_scope"), "relational-stage6-service-scope-missing")
+    expected_service_stage_six_foundation_evidence = expected_stage_six_evidence
+    expected_service_stage_six_service_evidence = {
+        "schema": "deploy/platform-shell-service-active-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "in-sync",
+    }
     expected_service_stage_six_additions = {
         ("RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition"),
         ("RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition"),
@@ -320,7 +345,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }
     actual_service_stage_six_additions = {(item.get("logical_id"), item.get("resource_type")) for item in service_stage_six_scope.get("additions", []) if isinstance(item, dict)}
     actual_service_stage_six_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in service_stage_six_scope.get("modifications", []) if isinstance(item, dict)}
-    if actual_service_stage_six_additions != expected_service_stage_six_additions or actual_service_stage_six_modifications != expected_service_stage_six_modifications:
+    if service_stage_six_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or service_stage_six_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_service_stage_six_additions != expected_service_stage_six_additions or actual_service_stage_six_modifications != expected_service_stage_six_modifications:
         raise ReconciliationError("relational-stage6-service-scope-not-reviewed")
     return {
         "account_id": account_id,
@@ -351,6 +376,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_service_stage_six_modifications),
         },
         "maximum_stage_six_evidence_age_seconds": expected_stage_six_evidence["maximum_age_seconds"],
+        "maximum_service_stage_six_evidence_age_seconds": expected_service_stage_six_service_evidence["maximum_age_seconds"],
     }
 
 
@@ -465,7 +491,7 @@ def check_known_remediation_evidence(arguments: argparse.Namespace, policy: dict
             {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_category": "not_equal"},
         ],
     ]
-    if arguments.mode == "pre-relational-stage6-foundation-change-set":
+    if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"}:
         allowed_changes = [allowed_changes[0]]
     if any(document.get(key) != value for key, value in expected.items()) or document.get("known_changes") not in allowed_changes:
         raise ReconciliationError("known-foundation-drift-evidence-not-reviewed")
@@ -474,9 +500,36 @@ def check_known_remediation_evidence(arguments: argparse.Namespace, policy: dict
     except (TypeError, ValueError) as exception:
         raise ReconciliationError("known-foundation-drift-evidence-timestamp-invalid") from exception
     age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
-    maximum_age = policy["maximum_stage_six_evidence_age_seconds"] if arguments.mode == "pre-relational-stage6-foundation-change-set" else policy["maximum_remediation_evidence_age_seconds"]
+    maximum_age = policy["maximum_stage_six_evidence_age_seconds"] if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set"} else policy["maximum_remediation_evidence_age_seconds"]
     if age_seconds < 0 or age_seconds > maximum_age:
         raise ReconciliationError("known-foundation-drift-evidence-stale")
+
+
+def check_service_drift_evidence(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Accept only the new, fixed-stack, in-sync Service assessment record."""
+
+    path = Path(arguments.service_drift_evidence)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("service-drift-evidence-unreadable") from exception
+    expected = {
+        "schema": "deploy/platform-shell-service-active-drift-evidence/v1",
+        "target": "kanbien/staging",
+        "account_id": policy["account_id"],
+        "region": policy["region"],
+        "service_stack": policy["service_stack"],
+        "classification": "in-sync",
+    }
+    if not isinstance(document, dict) or any(document.get(key) != value for key, value in expected.items()):
+        raise ReconciliationError("service-drift-evidence-not-reviewed")
+    try:
+        issued_at = datetime.fromisoformat(str(document.get("issued_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError("service-drift-evidence-timestamp-invalid") from exception
+    age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
+    if age_seconds < 0 or age_seconds > policy["maximum_service_stage_six_evidence_age_seconds"]:
+        raise ReconciliationError("service-drift-evidence-stale")
 
 
 def check_reconciliation_live_role_policy(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
@@ -620,7 +673,16 @@ def main() -> int:
                 ("platform-shell-budget", lambda: check_budget(arguments, policy)),
             ]
             if arguments.mode == "pre-relational-stage6-service-change-set":
-                core_checks.insert(4, ("service-stack-status", lambda: check_stack_status(arguments, policy, policy["service_stack"], "UPDATE_COMPLETE", "service-stack-status")))
+                core_checks = [
+                    ("aws-account", lambda: check_identity(arguments, policy)),
+                    ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
+                    ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
+                    ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)),
+                    ("service-stack-status", lambda: check_stack_status(arguments, policy, policy["service_stack"], "UPDATE_COMPLETE", "service-stack-status")),
+                    ("service-active-drift-evidence", lambda: check_service_drift_evidence(arguments, policy)),
+                    *artifact_bucket_checks(arguments, policy),
+                    ("platform-shell-budget", lambda: check_budget(arguments, policy)),
+                ]
             if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}:
                 core_checks.insert(4, ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)))
             else:
