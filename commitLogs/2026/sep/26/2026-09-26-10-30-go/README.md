@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T12:24:12Z
-latest_commit_sha: 1f090d6f
-chat_duration: 10394s (00:02:53:14)
+latest_commit_at_utc: 2026-09-26T12:59:05Z
+latest_commit_sha: d7fb1da3
+chat_duration: 12487s (00:03:28:07)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -317,6 +317,17 @@ Raised: The first GitHub reconciliation proof returned only aws-verification-una
 
 Resolution: Reconciliation now attributes an unavailable provider call to its owning safe check while preserving the no-response-output policy. Focused source, static policy, infrastructure, and live administrator reconciliation checks passed.
 
+
+### 2026-09-26T12:59:05Z - Commit recorded
+
+Commit: `d7fb1da3`
+
+Message: fix(deploy): identify failed reconciliation control
+
+Summary: When a bounded AWS verification call is unavailable, emit the owning safe reconciliation control instead of a generic provider-unavailable result.
+
+ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment reconciliation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -373,6 +384,13 @@ Resolution: Reconciliation now attributes an unavailable provider call to its ow
   Summary: Replaced a drift-status lookup that would require wildcard IAM with a fresh stack drift timestamp check through existing stack-scoped read permission.
   ADR impact: ADR 0035 remains the reconciliation decision; this correction preserves its least-privilege intent.
 
+
+- Commit: `d7fb1da3`
+  Time UTC: 2026-09-26T12:59:05Z
+  Message: fix(deploy): identify failed reconciliation control
+  Summary: When a bounded AWS verification call is unavailable, emit the owning safe reconciliation control instead of a generic provider-unavailable result.
+  ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment reconciliation.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -388,9 +406,9 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T12:24:12Z
-Latest commit SHA: 1f090d6f
-Chat duration: 10394s (00:02:53:14)
+Latest commit at UTC: 2026-09-26T12:59:05Z
+Latest commit SHA: d7fb1da3
+Chat duration: 12487s (00:03:28:07)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
