@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T10:06:31Z
-latest_commit_sha: 9d78962d
-chat_duration: 2133s (00:00:35:33)
+latest_commit_at_utc: 2026-09-26T11:08:54Z
+latest_commit_sha: faedcb71
+chat_duration: 5876s (00:01:37:56)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -132,6 +132,17 @@ ADR path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artif
 
 Reason: The target's CloudFormation transport boundary is a durable deployment architecture decision.
 
+
+### 2026-09-26T11:08:54Z - Commit recorded
+
+Commit: `faedcb71`
+
+Message: feat(deploy): add private template artifact store
+
+Summary: Added a separately reviewed private encrypted CloudFormation template store to bridge AWS's inline-template limit without reusing unrelated storage.
+
+ADR impact: ADR 0034 records the target-owned template-transport boundary.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -145,6 +156,13 @@ Reason: The target's CloudFormation transport boundary is a durable deployment a
   Message: feat(persistence): define PostgreSQL staging target
   Summary: Defined and statically verified the private encrypted PostgreSQL relational-reference target; AWS change-set review remains pending an SSO refresh.
   ADR impact: No new ADR; implements the approved relational-reference programme.
+
+
+- Commit: `faedcb71`
+  Time UTC: 2026-09-26T11:08:54Z
+  Message: feat(deploy): add private template artifact store
+  Summary: Added a separately reviewed private encrypted CloudFormation template store to bridge AWS's inline-template limit without reusing unrelated storage.
+  ADR impact: ADR 0034 records the target-owned template-transport boundary.
 
 ## Main Refresh Conflicts
 
@@ -161,9 +179,9 @@ Reason: The target's CloudFormation transport boundary is a durable deployment a
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T10:06:31Z
-Latest commit SHA: 9d78962d
-Chat duration: 2133s (00:00:35:33)
+Latest commit at UTC: 2026-09-26T11:08:54Z
+Latest commit SHA: faedcb71
+Chat duration: 5876s (00:01:37:56)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
