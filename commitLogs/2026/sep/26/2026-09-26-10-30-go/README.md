@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-26T09:30:58Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-26T10:06:31Z
+latest_commit_sha: 9d78962d
+chat_duration: 2133s (00:00:35:33)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -80,13 +80,30 @@ ADR needed: no
 Reason: Stage 4 implements the already-approved PostgreSQL relational-reference plan without making a new durable architectural choice.
 
 
+
+### 2026-09-26T10:06:31Z - Commit recorded
+
+Commit: `9d78962d`
+
+Message: feat(persistence): define PostgreSQL staging target
+
+Summary: Defined and statically verified the private encrypted PostgreSQL relational-reference target; AWS change-set review remains pending an SSO refresh.
+
+ADR impact: No new ADR; implements the approved relational-reference programme.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `9d78962d`
+  Time UTC: 2026-09-26T10:06:31Z
+  Message: feat(persistence): define PostgreSQL staging target
+  Summary: Defined and statically verified the private encrypted PostgreSQL relational-reference target; AWS change-set review remains pending an SSO refresh.
+  ADR impact: No new ADR; implements the approved relational-reference programme.
 
 ## Main Refresh Conflicts
 
@@ -101,12 +118,12 @@ Reason: Stage 4 implements the already-approved PostgreSQL relational-reference 
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-26T10:06:31Z
+Latest commit SHA: 9d78962d
+Chat duration: 2133s (00:00:35:33)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
