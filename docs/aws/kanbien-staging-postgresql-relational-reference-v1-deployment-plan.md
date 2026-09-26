@@ -221,6 +221,24 @@ action occurred in this checkpoint.
 
 ### Stage 6 composition and proof procedure
 
+#### Operational Realization Gate migration requirement — added 2026-09-26
+
+Do not execute the controller below, create a recovery label, or make another
+relational Stage 6 target change until this route has passed the generic
+[Operational Realization Gate](../04.deploy/plans/operational-realization-gate-programme.md).
+The route must first be expressed as a versioned provider-neutral realization
+contract. Target-specific inspectors and change-set readers must become a
+separate adapter that supplies safe normalized facts and operation-class counts
+to the generic compiler; target names, provider responses, credentials,
+endpoints, task identifiers, SQL, rows, and messages remain outside the core.
+
+Before a controlled execution is proposed, passing evidence is required for
+source, artifact, semantic integration, live-read, change-set, and execution
+preflight gates. A failed or stopped previous label is terminal. Any later
+recovery has a new immutable label, requires the recovery gate, and is never a
+replay. The target-specific approval and reconciliation workflow remain in
+force after this generic gate passes.
+
 The next change set adds a separate encrypted SQS source/DLQ pair, five
 non-public relational task definitions, their target-only execution/task
 roles, and outputs. It leaves the public server command, default ALB route,

@@ -1,0 +1,56 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.schema.operational-realization-contract.v1
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: deployment.realization
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: schema
+#   purpose: Describe the stable required shape enforced for provider-neutral Operational Realization contracts.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.script.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/script.py
+schema: operational-realization-contract-schema/v1
+contract_schema: operational-realization-contract/v1
+required_top_level:
+  - schema
+  - id
+  - version
+  - provider_boundary
+  - artifacts
+  - identities
+  - configuration_inputs
+  - connections
+  - state_stores
+  - async_channels
+  - observability_profiles
+  - recovery_plans
+  - execution_units
+  - edges
+  - lifecycle
+  - change_shape
+  - assumptions
+  - gates
+proof_states: [declared, locally-proven, live-read-proven, live-execution-proven]
+gate_order:
+  - source
+  - artifact
+  - semantic-integration
+  - live-read
+  - change-set
+  - execution-preflight
+  - controlled-execution
+  - recovery
+normalized_fact_schema: operational-realization-normalized-facts/v1
+normalized_change_summary_schema: operational-realization-normalized-change-summary/v1
+provider_adapter_boundary:
+  core_accepts: [normalized-facts, normalized-change-summary]
+  core_forbids: [provider-sdk, provider-cli, provider-resource-type, provider-import]

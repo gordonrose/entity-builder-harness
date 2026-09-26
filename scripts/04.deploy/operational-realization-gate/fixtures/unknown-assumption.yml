@@ -1,0 +1,52 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.operational-realization-unknown-assumption
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines:
+#   - architecture
+#   kind: fixture
+#   purpose: Prove unknown operational assumptions fail closed.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.test.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+schema: operational-realization-contract/v1
+id: unknown-assumption-route
+version: 1
+provider_boundary: normalized-facts-only
+artifacts: [{id: delivery-artifact, immutable_reference: digest-reviewed, entrypoint: delivery-entrypoint, assertions: [runtime-payload-reviewed]}]
+identities: [{id: delivery-identity, permissions: [read-configuration]}]
+configuration_inputs: [{id: delivery-configuration, required_fields: [configuration-reference], optional_fields: [], sensitivity: secret-reference-only}]
+connections: [{id: delivery-connection, source: delivery-worker, destination: delivery-store, transport_security: verified}]
+state_stores: [{id: delivery-store, semantics: [transaction-boundary-reviewed]}]
+async_channels: [{id: delivery-channel, delivery: at-least-once, acknowledgement: after-durable-completion, idempotency_boundary: delivery-store}]
+observability_profiles: [{id: delivery-observability, required_facts: [outcome-category]}]
+recovery_plans: [{id: delivery-recovery, cleanup: reviewed-cleanup, rollback: reviewed-rollback}]
+execution_units: [{id: delivery-worker, artifact: delivery-artifact, identity: delivery-identity, configuration_inputs: [delivery-configuration], connections: [delivery-connection], state_stores: [delivery-store], async_channels: [delivery-channel], observability_profile: delivery-observability, recovery_plan: delivery-recovery}]
+edges:
+  - {from: delivery-worker, to: delivery-artifact, purpose: executes}
+  - {from: delivery-worker, to: delivery-identity, purpose: assumes}
+  - {from: delivery-worker, to: delivery-configuration, purpose: reads-configuration}
+  - {from: delivery-worker, to: delivery-connection, purpose: connects}
+  - {from: delivery-worker, to: delivery-store, purpose: persists}
+  - {from: delivery-worker, to: delivery-channel, purpose: exchanges-work}
+  - {from: delivery-worker, to: delivery-observability, purpose: emits-safe-telemetry}
+  - {from: delivery-worker, to: delivery-recovery, purpose: recovers}
+lifecycle: {states: [prepared, running, succeeded, failed, stopped], terminal_states: [succeeded, failed, stopped], transitions: [{from: prepared, to: running}, {from: running, to: succeeded}, {from: running, to: failed}, {from: running, to: stopped}], retry: {mode: reviewed-recovery-only, requires_new_label: true, maximum_attempts: 1, permitted_from: [failed, stopped]}}
+change_shape: {reviewed_change_summary_required: true, allowed_operation_classes: [create], forbidden_operation_classes: [delete, replace, broaden-permission]}
+assumptions: [{id: unknown-engine-semantics, statement: engine-semantics-not-yet-proven, required_proof: locally-proven, actual_proof: unknown}]
+gates:
+  - {id: source, prerequisites: [], may_mutate_live_target: false, evidence: [source-check]}
+  - {id: artifact, prerequisites: [source], may_mutate_live_target: false, evidence: [artifact-check]}
+  - {id: semantic-integration, prerequisites: [source, artifact], may_mutate_live_target: false, evidence: [semantic-check]}
+  - {id: live-read, prerequisites: [source, artifact, semantic-integration], may_mutate_live_target: false, evidence: [live-read-check]}
+  - {id: change-set, prerequisites: [source, artifact, semantic-integration, live-read], may_mutate_live_target: false, evidence: [change-shape-check]}
+  - {id: execution-preflight, prerequisites: [source, artifact, semantic-integration, live-read, change-set], may_mutate_live_target: false, evidence: [preflight-check]}
+  - {id: controlled-execution, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight], may_mutate_live_target: true, evidence: [controlled-execution-check]}
+  - {id: recovery, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight, controlled-execution], may_mutate_live_target: true, evidence: [recovery-check]}

@@ -1,0 +1,29 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.operational-realization-preflight-normalized-facts
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: fixture
+#   purpose: Represent the complete non-mutating evidence required before controlled execution.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.test.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+schema: operational-realization-normalized-facts/v1
+contract_id: harmless-delivery-route
+gate_evidence:
+  - {gate: source, verdict: passed}
+  - {gate: artifact, verdict: passed}
+  - {gate: semantic-integration, verdict: passed}
+  - {gate: live-read, verdict: passed}
+  - {gate: change-set, verdict: passed}
+  - {gate: execution-preflight, verdict: passed}

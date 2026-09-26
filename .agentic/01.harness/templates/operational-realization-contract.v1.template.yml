@@ -1,0 +1,149 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: harness.template.operational-realization-contract.v1
+#   version: 1
+#   status: active
+#   layer: 01.harness
+#   domain: deployment.realization
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: template
+#   purpose: Provide the provider-neutral declaration required by the Operational Realization Gate.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: harness.workflow.operational-realization-gate
+#     path: .agentic/01.harness/workflows/operational-realization-gate.md
+schema: operational-realization-contract/v1
+id: replace-with-stable-capability-id
+version: 1
+provider_boundary: normalized-facts-only
+
+artifacts:
+  - id: replace-with-immutable-artifact
+    immutable_reference: replace-with-digest-or-content-address
+    entrypoint: replace-with-reviewed-entrypoint
+    assertions:
+      - runtime-payload-reviewed
+      - entrypoint-executable
+
+identities:
+  - id: replace-with-execution-identity
+    permissions:
+      - replace-with-narrow-permission-category
+
+configuration_inputs:
+  - id: replace-with-safe-config-shape
+    required_fields:
+      - safe-non-secret-field-name
+    optional_fields: []
+    sensitivity: secret-reference-only
+
+connections:
+  - id: replace-with-reviewed-connection
+    source: replace-with-execution-unit
+    destination: replace-with-state-store-or-channel
+    transport_security: verified
+
+state_stores:
+  - id: replace-with-state-store
+    semantics:
+      - transaction-boundary-reviewed
+      - concurrency-reviewed
+
+async_channels:
+  - id: replace-with-async-channel
+    delivery: at-least-once
+    acknowledgement: after-durable-completion
+    idempotency_boundary: replace-with-durable-boundary
+
+observability_profiles:
+  - id: replace-with-safe-observability-profile
+    required_facts:
+      - correlation-id
+      - outcome-category
+
+recovery_plans:
+  - id: replace-with-recovery-plan
+    cleanup: reviewed-cleanup-action
+    rollback: reviewed-rollback-action
+
+execution_units:
+  - id: replace-with-execution-unit
+    artifact: replace-with-immutable-artifact
+    identity: replace-with-execution-identity
+    configuration_inputs:
+      - replace-with-safe-config-shape
+    connections:
+      - replace-with-reviewed-connection
+    state_stores:
+      - replace-with-state-store
+    async_channels:
+      - replace-with-async-channel
+    observability_profile: replace-with-safe-observability-profile
+    recovery_plan: replace-with-recovery-plan
+
+edges:
+  - from: replace-with-execution-unit
+    to: replace-with-immutable-artifact
+    purpose: executes
+  - from: replace-with-execution-unit
+    to: replace-with-execution-identity
+    purpose: assumes
+  - from: replace-with-execution-unit
+    to: replace-with-safe-config-shape
+    purpose: reads-configuration
+  - from: replace-with-execution-unit
+    to: replace-with-reviewed-connection
+    purpose: connects
+  - from: replace-with-execution-unit
+    to: replace-with-state-store
+    purpose: persists
+  - from: replace-with-execution-unit
+    to: replace-with-async-channel
+    purpose: exchanges-work
+  - from: replace-with-execution-unit
+    to: replace-with-safe-observability-profile
+    purpose: emits-safe-telemetry
+  - from: replace-with-execution-unit
+    to: replace-with-recovery-plan
+    purpose: recovers
+
+lifecycle:
+  states: [prepared, running, succeeded, failed, stopped]
+  terminal_states: [succeeded, failed, stopped]
+  transitions:
+    - {from: prepared, to: running}
+    - {from: running, to: succeeded}
+    - {from: running, to: failed}
+    - {from: running, to: stopped}
+  retry:
+    mode: reviewed-recovery-only
+    requires_new_label: true
+    maximum_attempts: 1
+    permitted_from: [failed, stopped]
+
+change_shape:
+  reviewed_change_summary_required: true
+  allowed_operation_classes: [create, update]
+  forbidden_operation_classes: [delete, replace, broaden-permission]
+
+assumptions:
+  - id: replace-with-safe-assumption-id
+    statement: replace-with-safe-dependency-statement
+    required_proof: locally-proven
+    actual_proof: locally-proven
+
+gates:
+  - {id: source, prerequisites: [], may_mutate_live_target: false, evidence: [source-check]}
+  - {id: artifact, prerequisites: [source], may_mutate_live_target: false, evidence: [artifact-check]}
+  - {id: semantic-integration, prerequisites: [source, artifact], may_mutate_live_target: false, evidence: [semantic-check]}
+  - {id: live-read, prerequisites: [source, artifact, semantic-integration], may_mutate_live_target: false, evidence: [live-read-check]}
+  - {id: change-set, prerequisites: [source, artifact, semantic-integration, live-read], may_mutate_live_target: false, evidence: [change-shape-check]}
+  - {id: execution-preflight, prerequisites: [source, artifact, semantic-integration, live-read, change-set], may_mutate_live_target: false, evidence: [preflight-check]}
+  - {id: controlled-execution, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight], may_mutate_live_target: true, evidence: [controlled-execution-check]}
+  - {id: recovery, prerequisites: [source, artifact, semantic-integration, live-read, change-set, execution-preflight, controlled-execution], may_mutate_live_target: true, evidence: [recovery-check]}
