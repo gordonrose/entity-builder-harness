@@ -4,10 +4,7 @@
     {
       "Sid": "VerifyDeclaredFoundationAndArtifactStacks",
       "Effect": "Allow",
-      "Action": [
-        "cloudformation:DescribeStacks",
-        "cloudformation:DetectStackDrift"
-      ],
+      "Action": "cloudformation:DescribeStacks",
       "Resource": [
         "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*",
         "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"

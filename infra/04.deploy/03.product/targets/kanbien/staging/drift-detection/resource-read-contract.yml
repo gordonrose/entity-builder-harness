@@ -1,0 +1,83 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.resource-read-contract
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: runtime.operations
+#   disciplines:
+#   - security
+#   - sre
+#   kind: infrastructure-dependency-contract
+#   purpose: Inventory every CloudFormation resource type whose active drift detection needs an evidence-backed provider read contract.
+#   portability:
+#     class: target-specific
+#     targets:
+#     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-drift-detection-boundary
+#     path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
+schema: deploy/cloudformation-drift-resource-read-contract/v1
+target: kanbien/staging
+status: inventory-complete-provider-read-analysis-pending
+template_sources:
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/template.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/logging.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/observability-metrics.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/rate-limiting.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/persistence.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relational-persistence.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/workload-iam.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/worker-workload-iam.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relay-workload-iam.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relational-access.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relational-workload-configuration.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/work-queues.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/public-ingress.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/public-tls.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/edge-protection.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/alerting.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/relational-operations.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/cost-controls.yml
+  - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/outputs.yml
+approval_rule:
+  detector_policy_may_be_created_only_when: every-resource-type-has-an-authoritative-provider-read-analysis
+  analysis_must_record:
+    - supported_by_cloudformation_drift_detection
+    - required_aws_actions
+    - resource_scope_or_documented_unscoped_exception
+    - authoritative_documentation_url
+    - safe_live_probe
+    - reviewer_and_review_date
+  current_safety_posture: no-detector-policy-no-detector-role-no-detector-workload
+resource_types:
+  AWS::Budgets::Budget: { service_owner: budgets, analysis_status: provider-read-analysis-required }
+  AWS::CertificateManager::Certificate: { service_owner: acm, analysis_status: provider-read-analysis-required }
+  AWS::CloudWatch::Alarm: { service_owner: cloudwatch, analysis_status: provider-read-analysis-required }
+  AWS::DynamoDB::Table: { service_owner: dynamodb, analysis_status: provider-read-analysis-required }
+  AWS::EC2::SecurityGroup: { service_owner: ec2, analysis_status: provider-read-analysis-required }
+  AWS::EC2::SecurityGroupEgress: { service_owner: ec2, analysis_status: provider-read-analysis-required }
+  AWS::EC2::SecurityGroupIngress: { service_owner: ec2, analysis_status: provider-read-analysis-required }
+  AWS::ElasticLoadBalancingV2::ListenerCertificate: { service_owner: elasticloadbalancing, analysis_status: provider-read-analysis-required }
+  AWS::ElasticLoadBalancingV2::ListenerRule: { service_owner: elasticloadbalancing, analysis_status: provider-read-analysis-required }
+  AWS::ElasticLoadBalancingV2::TargetGroup: { service_owner: elasticloadbalancing, analysis_status: provider-read-analysis-required }
+  AWS::IAM::Role: { service_owner: iam, analysis_status: provider-read-analysis-required }
+  AWS::Logs::LogGroup: { service_owner: logs, analysis_status: provider-read-analysis-required }
+  AWS::RDS::DBInstance: { service_owner: rds, analysis_status: provider-read-analysis-required }
+  AWS::RDS::DBParameterGroup: { service_owner: rds, analysis_status: provider-read-analysis-required }
+  AWS::RDS::DBSubnetGroup: { service_owner: rds, analysis_status: provider-read-analysis-required }
+  AWS::RDS::EventSubscription: { service_owner: rds, analysis_status: provider-read-analysis-required }
+  AWS::Route53::RecordSet: { service_owner: route53, analysis_status: provider-read-analysis-required }
+  AWS::S3::Bucket: { service_owner: s3, analysis_status: provider-read-analysis-required }
+  AWS::S3::BucketPolicy: { service_owner: s3, analysis_status: provider-read-analysis-required }
+  AWS::SNS::Subscription: { service_owner: sns, analysis_status: provider-read-analysis-required }
+  AWS::SNS::Topic: { service_owner: sns, analysis_status: provider-read-analysis-required }
+  AWS::SNS::TopicPolicy: { service_owner: sns, analysis_status: provider-read-analysis-required }
+  AWS::SQS::Queue: { service_owner: sqs, analysis_status: provider-read-analysis-required }
+  AWS::SQS::QueuePolicy: { service_owner: sqs, analysis_status: provider-read-analysis-required }
+  AWS::SSM::Parameter: { service_owner: ssm, analysis_status: provider-read-analysis-required }
+  AWS::SecretsManager::Secret: { service_owner: secretsmanager, analysis_status: provider-read-analysis-required }
+  AWS::SecretsManager::SecretTargetAttachment: { service_owner: secretsmanager, analysis_status: provider-read-analysis-required }
+  AWS::WAFv2::WebACL: { service_owner: wafv2, analysis_status: provider-read-analysis-required }
+  AWS::WAFv2::WebACLAssociation: { service_owner: wafv2, analysis_status: provider-read-analysis-required }

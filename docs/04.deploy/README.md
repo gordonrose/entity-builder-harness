@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.corpus.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -43,7 +43,9 @@ Deploy knowledge is organized by deploy track:
 
 Structured deploy rules live under matching tracks in `rules/`.
 
-Deployment and operations ADRs live in `adrs/`.
+Deployment and operations ADRs live in `adrs/`. Staged implementation
+programmes, including their approval boundaries and verification evidence, live
+in `plans/`.
 
 These are not separate owning layers. `04.deploy` owns deployment governance;
 the track name identifies the system being deployed.

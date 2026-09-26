@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -34,19 +34,26 @@ AWS configuration still agreed at mutation time. Small mismatches—such as a
 budget identifier that has changed independently—caused avoidable retries and
 made a reviewed change set less trustworthy than it appeared.
 
+The original implementation coupled active CloudFormation drift detection to
+the narrow GitHub reconciliation role. AWS requires dependent provider reads
+for every supported resource type, so the top-level CloudFormation permission
+was not enough to make the live operation reliable. ADR 0036 supersedes that
+part of this decision while retaining reconciliation's fail-closed rule.
+
 ## Decision
 
 Every staging infrastructure mutation must be preceded by a fresh,
 non-provisioning reconciliation check. The check verifies the selected AWS
-account, declared stack state and drift, artifact-store hardening, and the
-target budget. A Foundation change-set execution additionally requires an
-exact reviewed resource-change allowlist. The command fails closed and emits
-only safe check identifiers and verdicts.
+account, declared stack state, fresh passive drift evidence, artifact-store
+hardening, and the target budget. A Foundation change-set execution additionally
+requires an exact reviewed resource-change allowlist. The command fails closed
+and emits only safe check identifiers and verdicts.
 
 The same controls run from a separate main-branch GitHub Actions workflow at a
-bounded cadence. Its dedicated OIDC role has only the read/detection actions
-needed for those checks. It has no stack mutation, secret retrieval, database,
-ECS, Cognito, or deployment permissions.
+bounded cadence. Its dedicated OIDC role has only the passive reads needed for
+those checks. It has no active drift detection, stack mutation, secret
+retrieval, database, ECS, Cognito, or deployment permissions. ADR 0036 governs
+the later separate active detector.
 
 ## Consequences
 

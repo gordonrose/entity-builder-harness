@@ -1,4 +1,4 @@
-# Chat Session: 2026-09-26-10-30 go
+# Chat Session: 2026-09-26-10-30 harden-aws-deployment-reconciliation
 
 <!-- agentic-session
 id: 2026-09-26-10-30-go
@@ -65,6 +65,9 @@ go
 - Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
   Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
 
+- Raised: CloudFormation active drift detection requires provider-dependent reads that the narrow GitHub reconciliation identity cannot safely own.
+  Resolution: Kept GitHub passive, added a complete target resource-type inventory and a source/live role-policy alignment check, and planned a separate detector behind a reviewed permission and cost boundary.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -85,6 +88,9 @@ go
 
 - Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
   Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
+
+- Decision: Separate active CloudFormation drift detection from GitHub reconciliation.
+  Rationale: The GitHub role must prove only the operations it safely owns. A detector may be introduced only after every stack resource type has an authoritative provider-read contract, a separate role, a cost review, and a controlled live proof.
 
 ## Context Hygiene
 
@@ -110,6 +116,9 @@ go
 
 - Summary: The first GitHub reconciliation run failed safely because DescribeStackDriftDetectionStatus was not authorisable against a stack ARN. The corrected design uses only scoped DescribeStacks plus DetectStackDrift and has passed locally against staging.
   Durable evidence: Reconciliation command, IAM source, static verifier, target profile/readiness, ADR 0035, and the GitHub workflow run evidence.
+
+- Summary: The source now prevents GitHub from starting provider-dependent drift scans, validates the full target resource-type inventory, and compares the live inline role policy to reviewed source before a Foundation change can execute.
+  Durable evidence: ADR 0036, the AWS change reliability programme, target drift-detection contract, reconciliation command, and static infrastructure checks. The separate detector has not been deployed.
 
 ## Activity Log
 
@@ -383,6 +392,13 @@ Summary: Separate safe drift-detection-start and fresh-summary-unavailable resul
 
 ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
 
+### 2026-09-26T15:28:47Z - Drift-detection reliability checkpoint
+
+- Recorded the runtime dependency finding: GitHub's narrow role cannot safely be treated as an active CloudFormation detector.
+- Added source-only guardrails, a target resource-read inventory, and a safe administrator-only source/live role-policy alignment check.
+- Read the live policy action names only; it differs from desired source by the one redundant `cloudformation:DetectStackDrift` permission.
+- No AWS resource, detector, secret, endpoint, or persistent-data change was made at this checkpoint.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -476,8 +492,10 @@ ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
-Reason: A pre-mutation and recurring live reconciliation boundary is a durable deployment architecture decision.
+ADR paths:
+- docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+- docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+Reason: The existing reconciliation boundary is amended so active provider-dependent drift detection has a separate target identity and an explicit permission-analysis gate.
 
 ## Session Metrics
 

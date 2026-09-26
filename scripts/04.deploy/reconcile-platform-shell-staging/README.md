@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.reconcile-platform-shell-staging.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -23,8 +23,8 @@ used_by:
 This command is the mandatory boundary between a reviewed infrastructure plan
 and an AWS mutation. It makes no provisioning change. It validates the source
 policy, then checks only the declared account, Foundation and artifact-stack
-state, CloudFormation drift, private artifact-bucket controls, and the
-tag-scoped monthly budget. Its output contains only check identifiers and a
+state, fresh passive CloudFormation drift evidence, private artifact-bucket
+controls, and the tag-scoped monthly budget. Its output contains only check identifiers and a
 verdict; it never prints provider responses, endpoints, resource contents,
 secrets, or change-set details.
 
@@ -34,9 +34,13 @@ generic provider error. It remains fail-closed, but now tells the operator
 which bounded reconciliation area needs investigation without revealing the
 provider response.
 
-For CloudFormation drift, that identifier also distinguishes starting the
-drift scan from reading its fresh stack summary. The distinction makes an IAM
-or provider-boundary problem actionable without logging an AWS error payload.
+GitHub does not start CloudFormation drift scans. AWS can require dependent
+provider reads for every resource type in a stack, and assigning those reads to
+the GitHub role would create a broad, hidden permission boundary. Instead this
+command requires a recent `IN_SYNC` stack summary and reports whether the
+evidence is missing, stale, or not in sync. A separate target-scoped detector
+is planned behind the reviewed resource-read contract in
+`infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/`.
 
 The check runs its AWS calls serially and each call has three bounded attempts
 with short backoff. This avoids creating an avoidable burst of CloudFormation,
@@ -49,9 +53,8 @@ Use it in two modes:
   GitHub workflow fail visibly rather than silently accepting drift.
 - `pre-foundation-change-set` is run immediately before a reviewed Foundation
   change set is executed. It rechecks every direct mutation prerequisite,
-  including the Foundation's current drift state and all artifact-bucket and
-  budget controls; the scheduled mode owns the separate artifact-stack drift
-  scan. It then requires exactly the 22 approved additions and one
+  including fresh passive evidence for both stacks and all artifact-bucket and
+  budget controls. It then requires exactly the 22 approved additions and one
   non-replacement SNS topic-policy update. Any extra, missing, or replacement
   change blocks execution.
 
@@ -63,3 +66,13 @@ npm run platform:shell:deployment-reconciliation -- --mode pre-foundation-change
 The command is a deployment control, not a substitute for review: it detects
 drift and prevents scope creep, while a current approved change set still
 defines the authorised mutation.
+
+Before a Foundation change set can execute, the declared administrator profile
+also compares the live GitHub inline policy with the reviewed JSON source. This
+is deliberately a separate mode: GitHub proves its own usable operations in
+the scheduled workflow; an administrator proves that AWS has not retained or
+gained a different policy.
+
+```bash
+npm run platform:shell:deployment-reconciliation:role-policy-alignment
+```

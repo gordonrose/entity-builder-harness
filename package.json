@@ -57,6 +57,8 @@
     "platform:shell:deployment-reconciliation": "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh",
     "platform:shell:deployment-reconciliation:check": "bash scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh",
     "platform:shell:deployment-reconciliation:policy-check": "bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh",
+    "platform:shell:deployment-reconciliation:role-policy-alignment": "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --mode role-policy-alignment --json",
+    "platform:shell:drift-detection-boundary:check": "bash scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh",
     "platform:shell:infrastructure:check": "bash scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
     "platform:shell:deployment-workflow:check": "bash scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
     "app:platform-smoke:boundary": "node apps/platform-smoke/tests/platform-smoke-boundaries.test.mjs",
