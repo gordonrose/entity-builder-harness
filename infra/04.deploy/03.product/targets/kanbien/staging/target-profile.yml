@@ -88,6 +88,7 @@ deployment:
       pre_foundation_change_set: required-immediately-before-any-foundation-change-set-execution
       pre_foundation_egress_remediation_change_set: administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction
       pre_relational_stage6_foundation_change_set: administrator-only-preflight-for-isolated-relational-queue-and-task-composition
+      pre_relational_stage6_service_change_set: administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions
       role_policy_alignment: admin-only-source-to-live-inline-policy-comparison
     workflow: .github/workflows/reconcile-platform-shell-staging.yml
     schedule_cron_utc: "15 */4 * * *"
@@ -234,6 +235,34 @@ deployment:
       modifications:
         - logical_id: ServiceDeploymentExecutionRole
           resource_type: AWS::IAM::Role
+          replacement: false
+    service_relational_stage6_change_set_scope:
+      additions:
+        - logical_id: RelationalBootstrapTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalMigrationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalRelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalWorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalRestoreVerificationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+      modifications:
+        - logical_id: TaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: WorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: Service
+          resource_type: AWS::ECS::Service
+          replacement: false
+        - logical_id: WorkerService
+          resource_type: AWS::ECS::Service
           replacement: false
   execution_policy:
     style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic

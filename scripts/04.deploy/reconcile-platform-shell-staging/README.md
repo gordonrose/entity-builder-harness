@@ -68,6 +68,14 @@ The command is a deployment control, not a substitute for review: it detects
 drift and prevents scope creep, while a current approved change set still
 defines the authorised mutation.
 
+- `pre-relational-stage6-service-change-set` is run immediately before the
+  isolated relational reference proof's Service-stack change set. It permits
+  exactly five new non-public PostgreSQL task definitions, the three normal
+  immutable-image task-definition revisions, and the two in-place service
+  references. It rejects every other resource, replacement, or stack. This
+  separates image publication from deployment while still making the
+  deployment scope mechanically reviewable.
+
 Before a Foundation change set can execute, the declared administrator profile
 also compares the live GitHub inline policy with the reviewed JSON source. This
 is deliberately a separate mode: GitHub proves its own usable operations in
@@ -76,4 +84,5 @@ gained a different policy.
 
 ```bash
 npm run platform:shell:deployment-reconciliation:role-policy-alignment
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-service-change-set --service-change-set reviewed-name
 ```

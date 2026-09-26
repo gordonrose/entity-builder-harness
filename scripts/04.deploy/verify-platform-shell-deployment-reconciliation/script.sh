@@ -66,7 +66,7 @@ expected_config = {
     "status": "source-implemented-live-role-alignment-and-detector-pending",
     "command": "npm run platform:shell:deployment-reconciliation",
     "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
-    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
+    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
     "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
     "schedule_cron_utc": "15 */4 * * *",
     "execution_identity": "github-platform-shell-staging-reconciliation",
@@ -148,6 +148,23 @@ require(stage_six_scope == {
     ],
     "modifications": [{"logical_id": "ServiceDeploymentExecutionRole", "resource_type": "AWS::IAM::Role", "replacement": False}],
 }, "reconciliation must permit only the exact Stage 6 relational foundation change scope")
+service_stage_six_scope = reconciliation.get("service_relational_stage6_change_set_scope", {})
+require(service_stage_six_scope == {
+    "additions": [
+        {"logical_id": "RelationalBootstrapTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalMigrationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalRelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalWorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalRestoreVerificationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+    ],
+    "modifications": [
+        {"logical_id": "TaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "WorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "Service", "resource_type": "AWS::ECS::Service", "replacement": False},
+        {"logical_id": "WorkerService", "resource_type": "AWS::ECS::Service", "replacement": False},
+    ],
+}, "reconciliation must permit only the exact Stage 6 relational service change scope")
 require(profile.get("operations", {}).get("budget", {}).get("name") == "kanbien-staging-platform-shell-monthly", "operations must use the canonical live platform-shell budget name")
 require(profile.get("persistence", {}).get("relational_reference", {}).get("operations", {}).get("cost", {}).get("existing_tag_scoped_budget") == "kanbien-staging-platform-shell-monthly", "relational reference must use the canonical live platform-shell budget name")
 
