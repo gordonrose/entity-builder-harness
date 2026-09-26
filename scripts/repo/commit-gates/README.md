@@ -22,4 +22,4 @@ This hook is the repository-owned extension point for checks that should run at
 the chat commit boundary but do not belong inside portable `00.chat`.
 
 `00.chat` may call this hook when it exists. The hook owns the selection of
-repo-specific, harness-specific, RAG/rulebook, deployment, or product checks.
+repo-specific, harness-specific, deployment, or product checks.
