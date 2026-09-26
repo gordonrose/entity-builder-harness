@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 1
+version: 2
 status: draft
 layer: 03.product
 domain: persistence
@@ -97,6 +97,47 @@ before implementation; none is silently applied because it appears here.
 | Data scope | An isolated `platform_smoke` database/schema using opaque synthetic identifiers. | Keeps the proof harmless and makes cleanup/retention reviewable. | A product obtains its own governed schema, data classification, and retention decision. |
 | Queue relationship | Reuse the provider-neutral outbox/worker contracts; choose a distinct, clearly named relational-smoke delivery path if isolation cannot be proved on the existing queue. | The database choice must not change queue semantics or contaminate the completed proof. | A real product selects its own delivery policy and queue topology. |
 | Query access | Parameterised values only; controlled, static SQL identifiers; bounded timeouts and connection pool. | Prevents SQL injection and protects a small database from connection exhaustion. | A product may choose an ORM/query builder behind the same boundaries after review. |
+
+## Stage 1 target decision — 2026-09-26
+
+Stage 1's read-only inspection passed. It did not create, update, read, or
+reuse a database credential, endpoint, record, or legacy resource. The target
+selection is recorded in the [staging deployment plan](../../../../docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md)
+and its [threat-model decision](../../../../docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md).
+
+The selected v1 reference is:
+
+- a new `db.t4g.micro` Amazon RDS for PostgreSQL `17.11` instance in
+  `eu-west-1`, with `20 GiB` GP3 storage and an explicit `30 GiB` autoscaling
+  ceiling;
+- its own database subnet group over the existing two private subnets, its own
+  security group, parameter group, generated credentials, tags, and alarms;
+- private-only, encrypted, single-AZ, seven-day automated backup retention,
+  deletion protection, and TLS enforced with the `postgres17` parameter family
+  and `rds.force_ssl=1`; and
+- explicit application-predicate tenant isolation for the initial reference.
+  PostgreSQL row-level security is deliberately deferred until a future design
+  proves an unforgeable per-transaction tenant context and non-bypass runtime
+  role.
+
+The current public-subnet ECS placement does not make the database public.
+The new database endpoint remains private. The later change set must add only
+TCP `5432` egress from the existing server, worker, and one-pass relay security
+groups to the new database security group, and only matching inbound rules on
+that new group. It must not broaden CIDR egress, alter ALB ingress, move the
+workloads, or touch the legacy database security group.
+
+At the inspected public on-demand rates, the selected instance is
+`$0.017/hour` and GP3 storage is `$0.127/GiB-month`: approximately `$14.95`
+per 730-hour month at `20 GiB`, or `$16.22` at the `30 GiB` ceiling, before
+variable transfer, exceptional retained snapshots, or tax. The existing
+service-tag-scoped `$25/month` budget therefore remains the tighter alerting
+guardrail and the selected recurring capacity remains below the user's
+`€50/month` ceiling. No manual snapshot retention, Multi-AZ, RDS Proxy,
+Aurora, enhanced monitoring, Performance Insights, or database-engine log
+export is in scope for v1. Engine-log export is deliberately absent because
+PostgreSQL engine logs can include query text; safe application telemetry,
+RDS metrics, and RDS event notifications provide the v1 operational signals.
 
 ## Non-negotiable design rules
 

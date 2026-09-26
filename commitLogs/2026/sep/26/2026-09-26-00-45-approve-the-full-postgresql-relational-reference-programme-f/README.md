@@ -64,6 +64,14 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 - Decision: Record the PostgreSQL relational-reference plan and teaching series as a documentation checkpoint before Stage 1 implementation.
   Rationale: No ADR is created yet because RDS PostgreSQL is a draft target proposal; Stage 1 must inspect current target constraints, cost, and engine availability before a provider-selection decision is final.
 
+
+- Decision: Select a new, additive Amazon RDS PostgreSQL 17.11 `db.t4g.micro` reference for the Stage 4 source-defined change set.
+  Rationale: Stage 1 established a private two-AZ subnet pair, current engine availability, a bounded 20–30 GiB GP3 capacity estimate below the target's existing $25 tag-scoped budget, and an exact no-public-endpoint/no-legacy-reuse access path.
+
+
+- Decision: Defer PostgreSQL row-level security from the first relational reference.
+  Rationale: Application tenant predicates and cross-tenant isolation tests can be proved now; RLS requires a separate trusted transaction-context and non-bypass role design before it can be claimed as a control.
+
 ## Context Hygiene
 
 
@@ -78,6 +86,10 @@ Approve the full PostgreSQL relational-reference programme for kanbien/staging.
 
 - Summary: Read the AWS plan/execution workflows and staging profile, then attempted only read-only STS/RDS inspection.
   Durable evidence: The AWS CLI returned expired SSO-token refresh failure. The PostgreSQL plan remains draft, committed as 67564f4e; progression resumes only after fresh kanbien-dev SSO authentication and successful Stage 1 inspection.
+
+
+- Summary: Stage 1 resumed after the operator renewed the kanbien-dev SSO session and completed read-only target inspection.
+  Durable evidence: A new private database subnet group is feasible; the selected RDS PostgreSQL 17.11 micro configuration is currently available; the plan keeps two legacy RDS instances fully out of scope; and new port-5432 source-group-only rules are required for the server, worker, and relay paths.
 
 ## Activity Log
 
@@ -152,9 +164,47 @@ Summary: Read the AWS plan/execution workflows and staging profile, then attempt
 
 Durable evidence: The AWS CLI returned expired SSO-token refresh failure. The PostgreSQL plan remains draft, committed as 67564f4e; progression resumes only after fresh kanbien-dev SSO authentication and successful Stage 1 inspection.
 
+
+### 2026-09-26T00:15:00Z - Decision
+
+Decision: Select a new, additive Amazon RDS PostgreSQL 17.11 `db.t4g.micro` reference for the Stage 4 source-defined change set.
+
+Rationale: Stage 1 established a private two-AZ subnet pair, current engine availability, a bounded 20–30 GiB GP3 capacity estimate below the target's existing $25 tag-scoped budget, and an exact no-public-endpoint/no-legacy-reuse access path.
+
+
+### 2026-09-26T00:15:00Z - Decision
+
+Decision: Defer PostgreSQL row-level security from the first relational reference.
+
+Rationale: Application tenant predicates and cross-tenant isolation tests can be proved now; RLS requires a separate trusted transaction-context and non-bypass role design before it can be claimed as a control.
+
+
+### 2026-09-26T00:15:00Z - Context hygiene
+
+Summary: Stage 1 resumed after the operator renewed the kanbien-dev SSO session and completed read-only target inspection.
+
+Durable evidence: A new private database subnet group is feasible; the selected RDS PostgreSQL 17.11 micro configuration is currently available; the plan keeps two legacy RDS instances fully out of scope; and new port-5432 source-group-only rules are required for the server, worker, and relay paths.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
+
+## RAG Knowledge Disposition
+
+Status: covered
+Reason: The Stage 1 target decision changes the governed deployment and
+persistence vocabulary for a PostgreSQL reference. Its source plan, threat
+model, deployment plan, target profile, readiness record, and ADR now expose
+the selected boundary for future retrieval.
+Evidence:
+- .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+- docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+- docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+- docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
+- infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+Corpus gaps:
+- None.
 
 ## Commits
 
@@ -172,9 +222,9 @@ Durable evidence: The AWS CLI returned expired SSO-token refresh failure. The Po
 
 ## ADR Disposition
 
-ADR needed: unknown
-ADR path:
-Reason:
+ADR needed: yes
+ADR path: docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+Reason: Stage 1 selected the durable Kanbien staging relational-reference target and its non-negotiable public-exposure, cost, credential, and legacy-resource boundaries.
 
 ## Session Metrics
 

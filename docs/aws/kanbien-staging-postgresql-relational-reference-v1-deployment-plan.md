@@ -1,0 +1,148 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
+version: 1
+status: draft
+layer: 04.deploy
+domain: persistence.operations
+disciplines:
+- architecture
+- security
+- sre
+kind: change-plan
+purpose: Define the inspected, additive, low-cost AWS deployment route for the Kanbien staging PostgreSQL relational reference.
+portability:
+  class: internal
+  targets:
+  - kanbien/staging
+used_by:
+- id: product.plan.postgresql-relational-persistence-reference-v1
+  path: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+- id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+  path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+-->
+# Kanbien Staging PostgreSQL Relational Reference v1: Deployment Plan
+
+## Status and boundary
+
+This is a Stage 1 target decision and a Stage 4 change-set plan. It does not
+authorise a CloudFormation execution by itself. The explicit current-chat
+programme approval permits progression only after each earlier stage passes;
+the later AWS action must still use the governed change-set workflow and stop
+on a public endpoint, legacy-resource reuse, broader access, cost drift,
+unhealthy rollout, unsafe evidence, or destructive action.
+
+The target is `kanbien/staging` in `eu-west-1`. It is an additive relational
+reference for opaque platform-smoke facts. It does not replace the completed
+DynamoDB/SQS reference, select PostgreSQL for all product data, or alter the
+legacy site, DNS, default ALB routing, Cognito, existing secrets, or a
+non-staging target.
+
+## Stage 1 read-only evidence
+
+The 2026-09-26 inspection established only the following safe facts:
+
+| Concern | Result | Decision enabled |
+| --- | --- | --- |
+| Private network | Two private subnets exist in separate availability zones and have no default internet route. | Create a new database subnet group over those subnets; do not reuse the legacy database subnet-group resource. |
+| Legacy boundary | Two legacy PostgreSQL instances exist; one is in an unhealthy encryption-credential state. | Do not modify, read from, restore over, use as a prerequisite, or reuse either legacy instance, its credentials, group, or availability. |
+| RDS capacity | The account has capacity for a new instance; PostgreSQL `17.11` on `db.t4g.micro` is currently orderable in the region. | Select a new RDS PostgreSQL 17.11 reference, not Aurora. |
+| TLS | The `postgres17` family supports a dynamic `rds.force_ssl` setting and the selected RDS CA is available. | Create a dedicated parameter group with `rds.force_ssl=1`; clients verify `rds-ca-rsa2048-g1`. |
+| Workload network | Server, worker, and relay groups currently permit DNS and HTTPS only. | Add precisely scoped TCP 5432 egress only to the new database group; no CIDR-based database egress. |
+| Cost | Current on-demand catalogue rates are `$0.017/hour` for the instance and `$0.127/GiB-month` for GP3. | The planned capacity is about `$14.95/month` at 20 GiB, `$16.22/month` at its 30 GiB ceiling, before variable charges. |
+
+The platform-shell tag-scoped `$25/month` budget already alerts through the
+existing SNS destination. The new reference must carry that same `service`
+tag. This is an alerting guardrail, not a promise that AWS will automatically
+stop a workload; the planned capacity is deliberately below both that tighter
+guardrail and the authorised `€50/month` recurring-cost ceiling.
+
+AWS bills backup, retained snapshot, transfer, and tax according to actual
+use. The reference therefore uses seven-day automated backups, no intentional
+manual-snapshot retention, no cross-region copy, no Multi-AZ, no RDS Proxy,
+no Aurora, no Enhanced Monitoring, and no Performance Insights in v1. A
+restore clone is temporary and checked for deletion only under its separately
+controlled restore procedure.
+
+## Exact proposed resource set
+
+The Stage 4 CloudFormation change set may contain only this named relational
+unit and its direct supporting resources:
+
+| Group | Proposed resource | Protection/boundary |
+| --- | --- | --- |
+| Network | New DB subnet group using the two existing private subnets; new relational DB security group. | RDS is `PubliclyAccessible: false`; inbound TCP 5432 is limited to the explicitly approved platform server, worker, relay, migration, and recovery-verifier groups. |
+| Database | One new `db.t4g.micro` single-AZ RDS PostgreSQL 17.11 instance, GP3 20 GiB with 30 GiB maximum. | Storage encryption, seven-day backups, deletion protection, snapshot-on-replacement/deletion policies, no public endpoint. |
+| TLS | One new `postgres17` DB parameter group. | `rds.force_ssl=1`; the adapter rejects absent TLS verification. |
+| Credentials | New target-owned generated references: initial bootstrap, migration, and runtime. | No existing secret is altered; no secret value, endpoint, connection string, token, request, or row goes into source or evidence. |
+| Workload access | Separate migration and recovery-verifier task roles/execution roles plus narrow additions to the existing workload security groups. | Runtime SQL role is DML-only; migration SQL role receives only migration/DDL authority; no role has a generic secret wildcard or arbitrary DDL at runtime. |
+| Operations | RDS metric alarms, RDS event subscription, runbook and tag-scoped budget use. | Existing SNS destination only; metrics/events and safe application telemetry, not database engine-log export. |
+
+The one necessary change to pre-existing workload security groups is **not**
+an open database path: each server, worker, and relay group receives one
+stateful egress rule, TCP 5432, whose destination is the new relational DB
+security group. The new DB group receives matching source-group rules. The
+service's ALB ingress, existing DNS/HTTPS rules, public routing, and all
+legacy groups remain unchanged.
+
+## Credential and database-authority sequence
+
+AWS IAM decides who may retrieve a secret; PostgreSQL decides what a retrieved
+database role may do. Both layers are needed.
+
+1. RDS creates an initial administrator credential in a new target-owned
+   Secrets Manager reference. It is accessible only to an isolated bootstrap
+   execution path.
+2. A one-time bootstrap task creates distinct PostgreSQL migration and runtime
+   roles from target-owned generated secret references, then grants only the
+   reviewed schema capabilities.
+3. Later migration work uses the migration role and ordered checked migration
+   manifest. The normal server, worker, and relay use only the runtime role.
+4. Runtime database authority excludes `CREATE`, `ALTER`, `DROP`, ownership
+   changes, and access outside the smoke schema. The application never sends
+   arbitrary SQL identifiers or SQL sourced from a request.
+
+The initial reference defers PostgreSQL RLS. It instead proves tenant-first
+application predicates and cross-tenant rejection with two opaque synthetic
+tenant identifiers. RLS may be added only when a later design establishes a
+non-bypass runtime role and trusted per-transaction tenant context.
+
+## Observability, recovery, and rollback
+
+The adapter emits only its approved provider-neutral observability fields.
+RDS metric alarms cover availability/dependency readiness, CPU, free storage,
+and connection pressure; RDS events report backup and failure categories to
+the existing alarm destination. Engine logs are not exported in v1 because
+they can contain raw query text. No SQL text, bind value, endpoint, tenant
+identifier, row, credential, provider payload, or snapshot identifier belongs
+in normal logs, metrics, traces, alerts, evidence, or commits.
+
+The restore rehearsal restores a selected snapshot to a new, isolated,
+private recovery instance with a new, recovery-only security group. It never
+replaces the live reference. The verifier checks only expected migration
+version, safe record-count/checksum, duration, and live-reference non-impact.
+Any cleanup action is assessed as a planned destructive step against the
+exact disposable identifier; it is not implicit in normal deployment.
+
+An application/image rollout failure rolls the ECS service back to its prior
+task definition. A migration failure stops promotion for reviewed forward
+repair; it never attempts an improvised schema rollback. A database recovery
+uses the isolated restore procedure—not a destructive restore-over-live
+operation.
+
+## Stage gates after this decision
+
+| Next stage | Required proof before moving on |
+| --- | --- |
+| 2: adapter | PostgreSQL driver remains isolated under its AWS adapter, with redaction, injection-resistance, configuration, error, and transaction tests. |
+| 3: local relational smoke | Disposable local PostgreSQL proves atomicity, migration checksum immutability, concurrency, lease/fence, tenant predicates, safe telemetry, and outbox compatibility. |
+| 4: source-defined target | Static tests and an exact change set contain only the resources listed above. |
+| 5: deployment boundary | Live private/encrypted/TLS/access/role/alarm/cost facts match reviewed source before a smoke record is created. |
+| 6: bounded delivery and restore | One harmless relational transaction and one queue delivery reach terminal state; an isolated restore proves recovery without live impact. |
+
+## Source references
+
+- [PostgreSQL Relational Persistence Reference v1](../../.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md)
+- [Threat-model decision](kanbien-staging-postgresql-relational-reference-v1-threat-model.md)
+- [Existing persistence v1 deployment plan](kanbien-staging-platform-shell-persistence-v1-deployment-plan.md)
+- [AWS RDS PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/)
