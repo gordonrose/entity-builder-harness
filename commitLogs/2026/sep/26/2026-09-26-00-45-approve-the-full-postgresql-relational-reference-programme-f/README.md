@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-25T23:54:56Z
-latest_commit_sha: 67564f4e
-chat_duration: 541s (00:00:09:01)
+latest_commit_at_utc: 2026-09-26T00:18:07Z
+latest_commit_sha: 28478911
+chat_duration: 1932s (00:00:32:12)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -185,6 +185,17 @@ Summary: Stage 1 resumed after the operator renewed the kanbien-dev SSO session 
 
 Durable evidence: A new private database subnet group is feasible; the selected RDS PostgreSQL 17.11 micro configuration is currently available; the plan keeps two legacy RDS instances fully out of scope; and new port-5432 source-group-only rules are required for the server, worker, and relay paths.
 
+
+### 2026-09-26T00:18:07Z - Commit recorded
+
+Commit: `28478911`
+
+Message: docs(persistence): select PostgreSQL reference target
+
+Summary: Completed Stage 1 read-only inspection and recorded the additive private RDS PostgreSQL target decision, exact cost/security/legacy boundaries, ADR, threat model, and static profile guard; no AWS resource or secret changed.
+
+ADR impact: ADR 0033 records the durable staging reference selection; implementation remains gated by Stages 2–6.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -216,6 +227,13 @@ Corpus gaps:
   Summary: Imported and validated the PostgreSQL relational-reference plan, aligned persistence/runtime/target/deployment documents, and added six printable handbook lessons. The plan remains draft and does not create AWS resources.
   ADR impact: ADR deferred: Stage 1 must verify cost, engine availability, target topology, and provider details before a durable selection decision.
 
+
+- Commit: `28478911`
+  Time UTC: 2026-09-26T00:18:07Z
+  Message: docs(persistence): select PostgreSQL reference target
+  Summary: Completed Stage 1 read-only inspection and recorded the additive private RDS PostgreSQL target decision, exact cost/security/legacy boundaries, ADR, threat model, and static profile guard; no AWS resource or secret changed.
+  ADR impact: ADR 0033 records the durable staging reference selection; implementation remains gated by Stages 2–6.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -229,9 +247,9 @@ Reason: Stage 1 selected the durable Kanbien staging relational-reference target
 ## Session Metrics
 
 Raised at UTC: 2026-09-25T23:45:55Z
-Latest commit at UTC: 2026-09-25T23:54:56Z
-Latest commit SHA: 67564f4e
-Chat duration: 541s (00:00:09:01)
+Latest commit at UTC: 2026-09-26T00:18:07Z
+Latest commit SHA: 28478911
+Chat duration: 1932s (00:00:32:12)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
