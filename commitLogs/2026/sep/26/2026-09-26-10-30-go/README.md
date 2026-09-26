@@ -16,7 +16,7 @@ latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
 latest_commit_at_utc: 2026-09-26T11:16:50Z
-latest_commit_sha: fix(deploy): correct artifact-store lifecycle schema
+latest_commit_sha: bef454ce
 chat_duration: 6352s (00:01:45:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
@@ -179,13 +179,13 @@ Durable evidence: The corrected artifact-store template, its static verifier, AD
 
 ### 2026-09-26T11:16:50Z - Commit recorded
 
-Commit: `fix(deploy): correct artifact-store lifecycle schema`
+Commit: `bef454ce`
 
-Message: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
+Message: fix(deploy): correct artifact-store lifecycle schema
 
-Summary: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
+Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
 
-ADR impact: covered by session ADR disposition
+ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
 
 ## Sub-Agent Activity
 
@@ -216,11 +216,11 @@ ADR impact: covered by session ADR disposition
   ADR impact: No new ADR; strengthens the ADR 0034 rollback behavior.
 
 
-- Commit: `fix(deploy): correct artifact-store lifecycle schema`
+- Commit: `bef454ce`
   Time UTC: 2026-09-26T11:16:50Z
-  Message: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
-  Summary: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
-  ADR impact: covered by session ADR disposition
+  Message: fix(deploy): correct artifact-store lifecycle schema
+  Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
+  ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
 
 ## Main Refresh Conflicts
 
