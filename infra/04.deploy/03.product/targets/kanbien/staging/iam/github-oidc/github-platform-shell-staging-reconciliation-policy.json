@@ -14,7 +14,7 @@
       "Sid": "VerifyDeclaredArtifactBucketControls",
       "Effect": "Allow",
       "Action": [
-        "s3:GetBucketEncryption",
+        "s3:GetEncryptionConfiguration",
         "s3:GetBucketLifecycleConfiguration",
         "s3:GetBucketOwnershipControls",
         "s3:GetBucketPolicyStatus",

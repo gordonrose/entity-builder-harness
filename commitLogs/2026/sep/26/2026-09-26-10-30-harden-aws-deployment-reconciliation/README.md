@@ -71,6 +71,9 @@ go
 - Raised: The narrowed GitHub role passed source/live policy alignment and IAM simulation, but its first live reconciliation blocked at the grouped artifact-bucket control.
   Resolution: Did not add a permission. Split every artifact-bucket provider read into an independently attributable, fail-closed safe control so the next live proof identifies the exact unavailable operation without exposing a provider response.
 
+- Raised: The separated live proof identified artifact-bucket encryption as the unavailable control. The original source used the API-shaped but incorrect IAM action `s3:GetBucketEncryption`.
+  Resolution: Added a complete operation-authorisation contract and corrected source to the authoritative `s3:GetEncryptionConfiguration` action. This is a one-for-one replacement, not a broader action set; live application remains pending separate exact approval and proof.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -97,6 +100,9 @@ go
 
 - Decision: Require operation-level safe diagnostics for grouped provider controls.
   Rationale: Source policy and IAM simulation are useful preflight evidence, but neither proves an operational identity's live request path. A grouped provider check cannot guide a least-privilege repair without risking speculative permission expansion.
+
+- Decision: Require a documented CLI-operation-to-IAM-action contract for every reconciliation read.
+  Rationale: AWS API names and IAM action names can differ. The contract gives reviewers an authoritative source, exact scope, static equality gate, and safe operational check rather than relying on naming intuition or IAM simulation alone.
 
 ## Context Hygiene
 
@@ -427,6 +433,12 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
 - Split each declared artifact-bucket read into an independently attributable safe control and updated the reliability programme.
 - Local reconciliation, policy, infrastructure, and whitespace checks passed.
 - Next step: promote this diagnostic-only correction, run one read-only GitHub reconciliation proof, and resolve only the exact reported control if it remains blocked.
+
+### 2026-09-26T15:43:05Z - Exact S3 authorisation mapping identified
+
+- The revised GitHub proof passed the public-access control and then blocked at artifact-bucket encryption.
+- AWS documentation confirms the CLI operation `s3api get-bucket-encryption` requires `s3:GetEncryptionConfiguration`.
+- Added a complete reviewed operation-authorisation contract and corrected the source action one-for-one. No live IAM policy repair has been applied in this stage.
 
 
 ### 2026-09-26T15:41:48Z - Commit recorded
