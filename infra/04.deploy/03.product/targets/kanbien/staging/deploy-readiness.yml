@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 52
+#   version: 55
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -158,7 +158,7 @@ deployment:
         event: declared-metric-coverage-missing-insufficient-confidence
         retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
     deployment_reconciliation:
-      status: source-defined-pending-live-role-deployment
+      status: source-implemented-live-role-alignment-and-detector-pending
       mutation_style: github-actions-oidc-read-only-declared-control-reconciliation
       workflow: .github/workflows/reconcile-platform-shell-staging.yml
       trigger: schedule-and-manual-dispatch
@@ -171,7 +171,6 @@ deployment:
       trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json
       allowed_aws_actions:
         - cloudformation:DescribeStacks
-        - cloudformation:DetectStackDrift
         - s3:GetBucketEncryption
         - s3:GetBucketLifecycleConfiguration
         - s3:GetBucketOwnershipControls
@@ -183,6 +182,22 @@ deployment:
       pre_foundation_change_set_command: npm run platform:shell:deployment-reconciliation -- --mode pre-foundation-change-set --foundation-change-set reviewed-name --json
       output_policy: safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content
       required_before_mutation: true
+      drift_evidence:
+        strategy: separate-target-scoped-detector
+        github_role_may_start_detection: false
+        github_role_evidence: fresh-in-sync-stack-summary-only
+        maximum_evidence_age_seconds: 21600
+        resource_read_contract: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
+        detector_deployment_status: source-planned-not-deployed
+        operational_coverage: blocked-pending-reviewed-detector-role-workload-cost-and-live-proof
+      live_role_policy_alignment:
+        role_name: github-platform-shell-staging-reconciliation
+        inline_policy_name: ReadDeclaredStagingControls
+        desired_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
+        status: source-defined-live-application-required
+        command: npm run platform:shell:deployment-reconciliation:role-policy-alignment
+        required_before_foundation_change_set_execution: true
+        output_policy: safe-check-identifier-and-verdict-only-no-live-policy-content
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev

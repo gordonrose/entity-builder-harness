@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-deployment-reconciliation
-#   version: 1
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -61,10 +61,10 @@ scripts = json_file("package.json")["scripts"]
 
 reconciliation = profile.get("deployment", {}).get("reconciliation", {})
 expected_config = {
-    "status": "source-defined-pending-live-role-deployment",
+    "status": "source-implemented-live-role-alignment-and-detector-pending",
     "command": "npm run platform:shell:deployment-reconciliation",
     "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
-    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution"},
+    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
     "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
     "schedule_cron_utc": "15 */4 * * *",
     "execution_identity": "github-platform-shell-staging-reconciliation",
@@ -73,6 +73,24 @@ expected_config = {
     "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json",
     "output_policy": "safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content",
     "fail_closed": True,
+    "drift_evidence": {
+        "strategy": "separate-target-scoped-detector",
+        "github_role_may_start_detection": False,
+        "github_role_evidence": "fresh-in-sync-stack-summary-only",
+        "maximum_evidence_age_seconds": 21600,
+        "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
+        "detector_deployment_status": "source-planned-not-deployed",
+        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+    },
+    "live_role_policy_alignment": {
+        "role_name": "github-platform-shell-staging-reconciliation",
+        "inline_policy_name": "ReadDeclaredStagingControls",
+        "desired_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json",
+        "status": "source-defined-live-application-required",
+        "command": "npm run platform:shell:deployment-reconciliation:role-policy-alignment",
+        "required_before_foundation_change_set_execution": True,
+        "output_policy": "safe-check-identifier-and-verdict-only-no-live-policy-content",
+    },
 }
 for key, expected in expected_config.items():
     require(reconciliation.get(key) == expected, f"reconciliation.{key} must retain the reviewed value")
@@ -85,7 +103,7 @@ require(profile.get("persistence", {}).get("relational_reference", {}).get("oper
 expected_policy = {
     "Version": "2012-10-17",
     "Statement": [
-        {"Sid": "VerifyDeclaredFoundationAndArtifactStacks", "Effect": "Allow", "Action": ["cloudformation:DescribeStacks", "cloudformation:DetectStackDrift"], "Resource": ["arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*", "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"]},
+        {"Sid": "VerifyDeclaredFoundationAndArtifactStacks", "Effect": "Allow", "Action": "cloudformation:DescribeStacks", "Resource": ["arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-deployment-artifacts/*", "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*"]},
         {"Sid": "VerifyDeclaredArtifactBucketControls", "Effect": "Allow", "Action": ["s3:GetBucketEncryption", "s3:GetBucketLifecycleConfiguration", "s3:GetBucketOwnershipControls", "s3:GetBucketPolicyStatus", "s3:GetBucketPublicAccessBlock"], "Resource": "arn:aws:s3:::kanbien-staging-platform-shell-cfn-artifacts-337159794548"},
         {"Sid": "VerifyDeclaredPlatformShellBudget", "Effect": "Allow", "Action": "budgets:ViewBudget", "Resource": "arn:aws:budgets::337159794548:budget/kanbien-staging-platform-shell-monthly"},
         {"Sid": "VerifyCallerAccountOnly", "Effect": "Allow", "Action": "sts:GetCallerIdentity", "Resource": "*"},
@@ -116,11 +134,14 @@ if len(steps) == len(expected_names):
 require(scripts.get("platform:shell:deployment-reconciliation") == "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh", "package must expose the reconciliation command")
 require(scripts.get("platform:shell:deployment-reconciliation:check") == "bash scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh", "package must expose the reconciliation local check")
 require(scripts.get("platform:shell:deployment-reconciliation:policy-check") == "bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh", "package must expose the reconciliation policy check")
+require(scripts.get("platform:shell:deployment-reconciliation:role-policy-alignment") == "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --mode role-policy-alignment --json", "package must expose the administrator-only reconciliation role-policy alignment check")
 source = Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8").lower()
 for prohibited in ("execute-change-set", "create-stack", "update-stack", "delete-stack", "put-object", "put-bucket", "put-budget", "get-secret-value"):
     require(prohibited not in source, f"reconciliation command must not contain {prohibited}")
-for required in ("detect-stack-drift", "lastchecktimestamp", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope"):
+for required in ("lastchecktimestamp", "evidence-stale", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope", "get-role-policy"):
     require(required in source, f"reconciliation command must retain {required}")
+for prohibited in ("detect-stack-drift", "detect-stack-resource-drift", "batchdescribetypeconfigurations"):
+    require(prohibited not in source, f"reconciliation command must not start or authorise active drift detection: {prohibited}")
 
 if failures:
     for failure in failures:

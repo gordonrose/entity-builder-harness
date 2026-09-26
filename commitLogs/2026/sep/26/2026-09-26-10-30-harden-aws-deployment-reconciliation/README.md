@@ -1,4 +1,4 @@
-# Chat Session: 2026-09-26-10-30 go
+# Chat Session: 2026-09-26-10-30 harden-aws-deployment-reconciliation
 
 <!-- agentic-session
 id: 2026-09-26-10-30-go
@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T13:21:07Z
-latest_commit_sha: 939d0f69
-chat_duration: 13809s (00:03:50:09)
+latest_commit_at_utc: 2026-09-26T15:30:55Z
+latest_commit_sha: 52ba62859ba071c4a833875b1f5b0db829e02122
+chat_duration: 21597s (00:05:59:57)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -65,6 +65,9 @@ go
 - Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
   Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
 
+- Raised: CloudFormation active drift detection requires provider-dependent reads that the narrow GitHub reconciliation identity cannot safely own.
+  Resolution: Kept GitHub passive, added a complete target resource-type inventory and a source/live role-policy alignment check, and planned a separate detector behind a reviewed permission and cost boundary.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -85,6 +88,9 @@ go
 
 - Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
   Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
+
+- Decision: Separate active CloudFormation drift detection from GitHub reconciliation.
+  Rationale: The GitHub role must prove only the operations it safely owns. A detector may be introduced only after every stack resource type has an authoritative provider-read contract, a separate role, a cost review, and a controlled live proof.
 
 ## Context Hygiene
 
@@ -110,6 +116,9 @@ go
 
 - Summary: The first GitHub reconciliation run failed safely because DescribeStackDriftDetectionStatus was not authorisable against a stack ARN. The corrected design uses only scoped DescribeStacks plus DetectStackDrift and has passed locally against staging.
   Durable evidence: Reconciliation command, IAM source, static verifier, target profile/readiness, ADR 0035, and the GitHub workflow run evidence.
+
+- Summary: The source now prevents GitHub from starting provider-dependent drift scans, validates the full target resource-type inventory, and compares the live inline role policy to reviewed source before a Foundation change can execute.
+  Durable evidence: ADR 0036, the AWS change reliability programme, target drift-detection contract, reconciliation command, and static infrastructure checks. The separate detector has not been deployed.
 
 ## Activity Log
 
@@ -383,6 +392,24 @@ Summary: Separate safe drift-detection-start and fresh-summary-unavailable resul
 
 ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
 
+### 2026-09-26T15:28:47Z - Drift-detection reliability checkpoint
+
+- Recorded the runtime dependency finding: GitHub's narrow role cannot safely be treated as an active CloudFormation detector.
+- Added source-only guardrails, a target resource-read inventory, and a safe administrator-only source/live role-policy alignment check.
+- Read the live policy action names only; it differs from desired source by the one redundant `cloudformation:DetectStackDrift` permission.
+- No AWS resource, detector, secret, endpoint, or persistent-data change was made at this checkpoint.
+
+
+### 2026-09-26T15:30:55Z - Commit recorded
+
+Commit: `52ba62859ba071c4a833875b1f5b0db829e02122`
+
+Message: feat(deploy): harden staging reconciliation boundary
+
+Summary: Separated active drift detection from the GitHub reconciler, added a complete resource-type dependency inventory and fast policy gates, and required a safe source/live role-policy alignment check before Foundation mutation.
+
+ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -467,24 +494,41 @@ ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
   Summary: Separate safe drift-detection-start and fresh-summary-unavailable results so the live reconciliation proof identifies the exact CloudFormation boundary without emitting provider errors.
   ADR impact: ADR 0035 remains unchanged; no IAM or mutation scope change.
 
+
+- Commit: `52ba62859ba071c4a833875b1f5b0db829e02122`
+  Time UTC: 2026-09-26T15:30:55Z
+  Message: feat(deploy): harden staging reconciliation boundary
+  Summary: Separated active drift detection from the GitHub reconciler, added a complete resource-type dependency inventory and fast policy gates, and required a safe source/live role-policy alignment check before Foundation mutation.
+  ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
+
 ## Main Refresh Conflicts
 
-- 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
-  merge. The preflight branch had no conflicts or changed-path overlap; it was
-  promoted and cleaned up without stash or history rewrite.
+- 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
+  checkpoint commits while fetched `origin/main` had advanced by five commits.
+  Changed-path overlap was empty. A no-stash, no-rewrite rehearsal merged
+  `main` cleanly in
+  `agentic/preflight/chat-2026-09-26-10-30-go-694f38599269/20260926153307`
+  at `/tmp/agentic-main-refresh-preflight/chat-2026-09-26-10-30-go-694f38599269-20260926153307`.
+  The deployment boundary, reconciliation, policy, infrastructure, and
+  whitespace checks passed on preflight commit `574e7a27be58934b9bee6fb85f024a5c4903d0c4`.
+  The tested result was fast-forwarded to the chat branch and the clean
+  preflight worktree and branch were removed. No conflict classification was
+  needed.
 
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
-Reason: A pre-mutation and recurring live reconciliation boundary is a durable deployment architecture decision.
+ADR paths:
+- docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+- docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+Reason: The existing reconciliation boundary is amended so active provider-dependent drift detection has a separate target identity and an explicit permission-analysis gate.
 
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T13:21:07Z
-Latest commit SHA: 939d0f69
-Chat duration: 13809s (00:03:50:09)
+Latest commit at UTC: 2026-09-26T15:30:55Z
+Latest commit SHA: 52ba62859ba071c4a833875b1f5b0db829e02122
+Chat duration: 21597s (00:05:59:57)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

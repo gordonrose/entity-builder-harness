@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 9
+version: 10
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -83,12 +83,17 @@ Current commands:
   for the private, encrypted, short-retention S3 store used only when a
   reviewed CloudFormation template is too large for AWS's inline request limit.
 - `reconcile-platform-shell-staging/`: fail-closed local and live target
-  reconciliation. It verifies declared stack/drift, artifact-store, and budget
-  controls without provisioning resources; its pre-change-set mode also
+  reconciliation. It verifies declared stack summaries and fresh passive drift
+  evidence, artifact-store, and budget controls without provisioning resources;
+  its pre-change-set mode also
   requires exactly the reviewed Foundation resource-change scope.
 - `verify-platform-shell-deployment-reconciliation/`: static policy check for
   reconciliation source, its dedicated read-only GitHub identity, and the
   validation-before-credentials scheduled workflow.
+- `verify-platform-shell-drift-detection-boundary/`: fast source-only check
+  that keeps GitHub passive and requires every target CloudFormation resource
+  type to have a detector permission-analysis entry before a detector role can
+  be designed.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.

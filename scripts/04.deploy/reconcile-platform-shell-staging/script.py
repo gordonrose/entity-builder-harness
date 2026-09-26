@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging
-#   version: 1
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -26,7 +26,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import json
 from pathlib import Path
@@ -39,7 +39,7 @@ from typing import Any
 
 DEFAULT_PROFILE = "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
 SAFE_SCHEMA = "deploy/platform-shell-reconciliation-result/v1"
-DRIFT_WAIT_SECONDS = 60
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 AWS_MAX_ATTEMPTS = 3
 AWS_RETRY_BACKOFF_SECONDS = (1, 2)
 
@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
-    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set"), default="continuous")
+    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "role-policy-alignment"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for pre-foundation-change-set mode.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE)
     parser.add_argument("--aws-cli", default="aws")
@@ -67,8 +67,10 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--validate cannot inspect a change set")
     if arguments.mode == "pre-foundation-change-set" and not arguments.validate and not arguments.foundation_change_set:
         parser.error("--foundation-change-set is required for pre-foundation-change-set mode")
-    if arguments.mode == "continuous" and arguments.foundation_change_set:
+    if arguments.mode != "pre-foundation-change-set" and arguments.foundation_change_set:
         parser.error("--foundation-change-set is permitted only for pre-foundation-change-set mode")
+    if arguments.mode == "role-policy-alignment" and not arguments.validate and arguments.aws_credential_source != "target-profile":
+        parser.error("role-policy-alignment requires the declared administrator target-profile credentials")
     return arguments
 
 
@@ -123,13 +125,38 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     artifact_bucket = text(cloudformation.get("deployment_artifact_bucket_name"), "artifact-bucket-missing")
     if not account_id.isdigit() or len(account_id) != 12 or region != "eu-west-1":
         raise ReconciliationError("target-account-or-region-invalid")
+    drift_evidence = mapping(reconciliation.get("drift_evidence"), "drift-evidence-policy-missing")
+    live_role_policy_alignment = mapping(reconciliation.get("live_role_policy_alignment"), "live-role-policy-alignment-missing")
+    expected_drift_evidence = {
+        "strategy": "separate-target-scoped-detector",
+        "github_role_may_start_detection": False,
+        "github_role_evidence": "fresh-in-sync-stack-summary-only",
+        "maximum_evidence_age_seconds": 21600,
+        "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
+        "detector_deployment_status": "source-planned-not-deployed",
+        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+    }
+    if drift_evidence != expected_drift_evidence:
+        raise ReconciliationError("drift-evidence-policy-not-reviewed")
+    expected_live_role_policy_alignment = {
+        "role_name": "github-platform-shell-staging-reconciliation",
+        "inline_policy_name": "ReadDeclaredStagingControls",
+        "desired_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json",
+        "status": "source-defined-live-application-required",
+        "command": "npm run platform:shell:deployment-reconciliation:role-policy-alignment",
+        "required_before_foundation_change_set_execution": True,
+        "output_policy": "safe-check-identifier-and-verdict-only-no-live-policy-content",
+    }
+    if live_role_policy_alignment != expected_live_role_policy_alignment:
+        raise ReconciliationError("live-role-policy-alignment-not-reviewed")
     if reconciliation != {
-        "status": "source-defined-pending-live-role-deployment",
+        "status": "source-implemented-live-role-alignment-and-detector-pending",
         "command": "npm run platform:shell:deployment-reconciliation",
         "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
         "modes": {
             "continuous": "scheduled-read-only-verification-of-declared-live-controls",
             "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution",
+            "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison",
         },
         "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
         "schedule_cron_utc": "15 */4 * * *",
@@ -139,6 +166,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "trust_policy_source": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json",
         "output_policy": "safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content",
         "fail_closed": True,
+        "drift_evidence": expected_drift_evidence,
+        "live_role_policy_alignment": expected_live_role_policy_alignment,
         "foundation_change_set_scope": reconciliation.get("foundation_change_set_scope"),
     }:
         raise ReconciliationError("reconciliation-policy-not-reviewed")
@@ -193,6 +222,10 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "artifact_stack": artifact_stack,
         "artifact_bucket": artifact_bucket,
         "foundation_stack": foundation_stack,
+        "maximum_drift_evidence_age_seconds": expected_drift_evidence["maximum_evidence_age_seconds"],
+        "reconciliation_role_name": expected_live_role_policy_alignment["role_name"],
+        "reconciliation_inline_policy_name": expected_live_role_policy_alignment["inline_policy_name"],
+        "reconciliation_policy_source": expected_live_role_policy_alignment["desired_policy_source"],
         "budget_name": budget["name"],
         "budget_arn": f"arn:aws:budgets::{account_id}:budget/{budget['name']}",
         "expected_changes": {
@@ -256,41 +289,53 @@ def check_stack_status(arguments: argparse.Namespace, policy: dict[str, Any], st
     require(payload == expected_status, check_id)
 
 
-def check_stack_drift(arguments: argparse.Namespace, policy: dict[str, Any], stack: str, check_id: str) -> None:
-    """Request drift detection and require a fresh in-sync stack summary without wildcard IAM."""
+def check_stack_drift_evidence(arguments: argparse.Namespace, policy: dict[str, Any], stack: str, check_id: str) -> None:
+    """Require fresh passive IN_SYNC evidence without giving GitHub an active detector permission."""
 
-    started_at = datetime.now(timezone.utc)
-    started = run_aws(
+    payload = run_aws(
         arguments,
         policy,
-        ["cloudformation", "detect-stack-drift", "--stack-name", stack, "--query", "StackDriftDetectionId"],
-        f"{check_id}-detection-unavailable",
+        ["cloudformation", "describe-stacks", "--stack-name", stack, "--query", "Stacks[0].DriftInformation.{status:StackDriftStatus,checked:LastCheckTimestamp}"],
+        f"{check_id}-summary-unavailable",
     )
-    detection_id = started if isinstance(started, str) else None
-    if not isinstance(detection_id, str) or not detection_id:
+    if not isinstance(payload, dict):
         raise ReconciliationError(check_id)
-    deadline = time.monotonic() + DRIFT_WAIT_SECONDS
-    while time.monotonic() < deadline:
-        result = run_aws(
-            arguments,
-            policy,
-            ["cloudformation", "describe-stacks", "--stack-name", stack, "--query", "Stacks[0].DriftInformation.{status:StackDriftStatus,checked:LastCheckTimestamp}"],
-            f"{check_id}-summary-unavailable",
-        )
-        if not isinstance(result, dict):
-            raise ReconciliationError(check_id)
-        status = result.get("status")
-        checked = result.get("checked")
-        try:
-            checked_at = datetime.fromisoformat(str(checked).replace("Z", "+00:00"))
-        except ValueError:
-            raise ReconciliationError(check_id)
-        if status == "IN_SYNC" and checked_at >= started_at - timedelta(seconds=2):
-            return
-        if status in ("DRIFTED", "UNKNOWN"):
-            raise ReconciliationError(check_id)
-        time.sleep(2)
-    raise ReconciliationError(check_id)
+    if payload.get("status") != "IN_SYNC":
+        raise ReconciliationError(check_id)
+    try:
+        checked_at = datetime.fromisoformat(str(payload.get("checked")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError(f"{check_id}-evidence-missing") from exception
+    age_seconds = (datetime.now(timezone.utc) - checked_at).total_seconds()
+    if age_seconds < 0 or age_seconds > policy["maximum_drift_evidence_age_seconds"]:
+        raise ReconciliationError(f"{check_id}-evidence-stale")
+
+
+def check_reconciliation_live_role_policy(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Require the administrator pre-change identity to prove the role matches reviewed source."""
+
+    source_path = REPOSITORY_ROOT / policy["reconciliation_policy_source"]
+    try:
+        with source_path.open(encoding="utf-8") as handle:
+            desired_policy = json.load(handle)
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("reconciliation-role-policy-source-unreadable") from exception
+    live_policy = run_aws(
+        arguments,
+        policy,
+        [
+            "iam",
+            "get-role-policy",
+            "--role-name",
+            policy["reconciliation_role_name"],
+            "--policy-name",
+            policy["reconciliation_inline_policy_name"],
+            "--query",
+            "PolicyDocument",
+        ],
+        "reconciliation-live-role-policy-unavailable",
+    )
+    require(live_policy == desired_policy, "reconciliation-live-role-policy")
 
 
 def check_artifact_bucket(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
@@ -367,21 +412,31 @@ def main() -> int:
     try:
         policy = resolve_policy(load_yaml(Path(arguments.target_profile)))
         checks.append({"id": "source-policy", "verdict": "passed"})
-        if not arguments.validate:
+        if not arguments.validate and arguments.mode == "role-policy-alignment":
+            run_check(
+                "reconciliation-live-role-policy",
+                lambda: check_reconciliation_live_role_policy(arguments, policy),
+            )
+            checks.append({"id": "reconciliation-live-role-policy", "verdict": "passed"})
+        elif not arguments.validate:
             core_checks = [
                 ("aws-account", lambda: check_identity(arguments, policy)),
                 ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
+                ("artifact-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")),
                 ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
-                ("foundation-stack-drift", lambda: check_stack_drift(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")),
+                ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")),
                 ("artifact-bucket-controls", lambda: check_artifact_bucket(arguments, policy)),
                 ("platform-shell-budget", lambda: check_budget(arguments, policy)),
             ]
-            if arguments.mode == "continuous":
-                core_checks.insert(3, ("artifact-stack-drift", lambda: check_stack_drift(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")))
             for check_id, check in core_checks:
                 run_check(check_id, check)
                 checks.append({"id": check_id, "verdict": "passed"})
             if arguments.mode == "pre-foundation-change-set":
+                run_check(
+                    "reconciliation-live-role-policy",
+                    lambda: check_reconciliation_live_role_policy(arguments, policy),
+                )
+                checks.append({"id": "reconciliation-live-role-policy", "verdict": "passed"})
                 run_check(
                     "foundation-change-set-scope",
                     lambda: check_change_set(arguments, policy, arguments.foundation_change_set),
