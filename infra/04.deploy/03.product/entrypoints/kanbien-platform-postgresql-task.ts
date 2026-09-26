@@ -99,7 +99,7 @@ function relationalCertificateAuthority(): string {
   // target-region bundle inside the immutable image avoids weakening TLS when
   // a distroless image lacks an operating-system trust-store entry for RDS.
   try {
-    return readFileSync("/app/assets/rds-eu-west-1-bundle.pem", "utf8");
+    return readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8");
   } catch {
     throw new Error("RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE");
   }

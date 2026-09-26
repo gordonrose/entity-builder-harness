@@ -243,11 +243,11 @@ stage_six = reference.get("stage_6_relational_smoke_composition", {})
 if stage_six.get("status") != "source-defined-change-set-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
     fail("target profile must define the reviewed isolated relational smoke task boundary")
 
-certificate = Path("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.pem")
+certificate = Path("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt")
 if not certificate.is_file() or __import__("hashlib").sha256(certificate.read_bytes()).hexdigest() != "a11cf9a1d0aadd7db86f92cbaa496466daeb501bf1c5e429d8ce8914a01c15d6":
     fail("the public eu-west-1 RDS CA bundle must be present and pinned by digest")
 task_helper = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts").read_text(encoding="utf-8")
-if 'readFileSync("/app/assets/rds-eu-west-1-bundle.pem", "utf8")' not in task_helper or 'mode: "verify-full"' not in task_helper:
+if 'readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8")' not in task_helper or 'mode: "verify-full"' not in task_helper:
     fail("relational task helper must require the pinned RDS CA bundle and verify-full TLS")
 
 if failures:
