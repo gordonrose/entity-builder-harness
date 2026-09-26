@@ -685,7 +685,7 @@ def main() -> int:
                 ]
             if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}:
                 core_checks.insert(4, ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)))
-            else:
+            elif arguments.mode != "pre-relational-stage6-service-change-set":
                 core_checks.insert(4, ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")))
             for check_id, check in core_checks:
                 run_check(check_id, check)
