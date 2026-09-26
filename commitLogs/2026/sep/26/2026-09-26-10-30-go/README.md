@@ -78,6 +78,10 @@ go
 - Decision: Preserve scoped CloudFormation reconciliation without wildcard drift-status permission
   Rationale: Fresh stack drift timestamps provide the required fail-closed evidence while keeping the GitHub role restricted to the two declared stack ARNs.
 
+
+- Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
+  Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
+
 ## Context Hygiene
 
 - Summary: Stage 4 source is locally validated; only the AWS SSO-expired change-set review remains operationally unresolved.
@@ -327,6 +331,13 @@ Message: fix(deploy): identify failed reconciliation control
 Summary: When a bounded AWS verification call is unavailable, emit the owning safe reconciliation control instead of a generic provider-unavailable result.
 
 ADR impact: No ADR change; ADR 0035 still governs least-privilege deployment reconciliation.
+
+
+### 2026-09-26T13:04:17Z - Decision
+
+Decision: Run staging reconciliation AWS calls serially, with three bounded retries, instead of launching CloudFormation, S3, and Budgets checks concurrently.
+
+Rationale: The GitHub role can perform each exact read in IAM simulation and administrator reconciliation succeeds. Serial bounded calls remove avoidable provider burst and timing instability while retaining fail-closed output and no added permissions.
 
 ## Sub-Agent Activity
 

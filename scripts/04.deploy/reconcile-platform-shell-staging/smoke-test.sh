@@ -25,26 +25,53 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+if rg -q 'ThreadPoolExecutor|concurrent\.futures' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: reconciliation AWS calls must remain serial." >&2
+  exit 1
+fi
 python3 -c 'from pathlib import Path; compile(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8"), "reconcile-platform-shell-staging.py", "exec")'
 python3 - <<'PY'
-import importlib.util
+import runpy
+import subprocess
+from types import SimpleNamespace
 from pathlib import Path
 
-source = Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py")
-specification = importlib.util.spec_from_file_location("reconciliation", source)
-module = importlib.util.module_from_spec(specification)
-assert specification.loader is not None
-specification.loader.exec_module(module)
+module = runpy.run_path(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py"))
 
 try:
-    module.run_check(
+    module["run_check"](
         "artifact-bucket-controls",
-        lambda: (_ for _ in ()).throw(module.ReconciliationError("aws-verification-unavailable")),
+        lambda: (_ for _ in ()).throw(module["ReconciliationError"]("aws-verification-unavailable")),
     )
-except module.ReconciliationError as exception:
+except module["ReconciliationError"] as exception:
     assert str(exception) == "artifact-bucket-controls-verification-unavailable"
 else:
     raise AssertionError("unavailable provider result was not attributed to its owning control")
+
+attempts = 0
+original_run = module["subprocess"].run
+original_sleep = module["time"].sleep
+
+def transient_then_success(*_arguments, **_keywords):
+    global attempts
+    attempts += 1
+    if attempts < 3:
+        raise subprocess.CalledProcessError(1, "aws")
+    return SimpleNamespace(stdout='"retry-success"')
+
+module["subprocess"].run = transient_then_success
+module["time"].sleep = lambda _seconds: None
+try:
+    result = module["run_aws"](
+        SimpleNamespace(aws_cli="aws", aws_credential_source="environment", timeout_seconds=1),
+        {"region": "eu-west-1"},
+        ["sts", "get-caller-identity"],
+    )
+finally:
+    module["subprocess"].run = original_run
+    module["time"].sleep = original_sleep
+assert result == "retry-success"
+assert attempts == 3
 PY
 result="$(bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --validate --json)"
 if [[ "$result" != *'"verdict": "passed"'* || "$result" != *'"id": "source-policy"'* ]]; then

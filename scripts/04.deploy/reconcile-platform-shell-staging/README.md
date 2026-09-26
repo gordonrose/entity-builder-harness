@@ -34,6 +34,11 @@ generic provider error. It remains fail-closed, but now tells the operator
 which bounded reconciliation area needs investigation without revealing the
 provider response.
 
+The check runs its AWS calls serially and each call has three bounded attempts
+with short backoff. This avoids creating an avoidable burst of CloudFormation,
+S3, and Budgets requests while still failing closed if the declared control
+cannot be verified.
+
 Use it in two modes:
 
 - `continuous` is the read-only scheduled guard. A failed check makes the
