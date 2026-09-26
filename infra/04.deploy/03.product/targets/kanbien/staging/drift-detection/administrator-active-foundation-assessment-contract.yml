@@ -1,0 +1,94 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.administrator-active-foundation-assessment-contract
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: runtime.operations
+#   disciplines:
+#   - security
+#   - sre
+#   kind: infrastructure-dependency-contract
+#   purpose: Bound one human-approved administrator-only Foundation drift assessment, declared TLS-normalization check, and structural classification needed for the reviewed PostgreSQL database-egress correction.
+#   portability:
+#     class: target-specific
+#     targets:
+#     - kanbien/staging
+schema: deploy/cloudformation-administrator-active-foundation-assessment-contract/v2
+target: kanbien/staging
+status: active
+identity: target-profile-administrator
+identity_boundary: existing-administrator-profile-only-no-github-role-policy-or-workload-change
+stack_name: kanbien-staging-platform-shell-foundation
+stack_scope: foundation-stack-only
+execution_gate: explicit-current-chat-approval-and-stable-stack-preflight
+assessment_sequence: detect-then-wait-for-completion-then-read-structural-resource-drift-only-if-drifted
+operations:
+  - check_id: aws-account
+    cli_operation: sts:get-caller-identity
+    iam_action: sts:GetCallerIdentity
+    resource_scope: "*"
+    documentation_url: https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html
+  - check_id: foundation-stack
+    cli_operation: cloudformation:describe-stacks
+    iam_action: cloudformation:DescribeStacks
+    resource_scope: arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/*
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStacks.html
+  - check_id: foundation-active-drift-assessment
+    cli_operation: cloudformation:detect-stack-drift
+    iam_action: cloudformation:DetectStackDrift
+    resource_scope: foundation-stack-only-enforced-by-fixed-script-argument-no-iam-policy-change
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DetectStackDrift.html
+  - check_id: foundation-active-drift-assessment
+    cli_operation: cloudformation:describe-stack-drift-detection-status
+    iam_action: cloudformation:DescribeStackDriftDetectionStatus
+    resource_scope: one-process-local-detection-id-from-the-immediately-prior-foundation-assessment
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackDriftDetectionStatus.html
+  - check_id: foundation-drift-classification
+    cli_operation: cloudformation:describe-stack-resource-drifts
+    iam_action: cloudformation:DescribeStackResourceDrifts
+    resource_scope: same-fixed-foundation-stack-after-the-immediately-prior-detection-completes-drifted
+    documentation_url: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DescribeStackResourceDrifts.html
+  - check_id: relational-tls-effective-state
+    cli_operation: rds:describe-db-instances
+    iam_action: rds:DescribeDBInstances
+    resource_scope: fixed-kanbien-staging-platform-relational-instance-only-enforced-by-fixed-script-argument
+    documentation_url: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html
+  - check_id: relational-tls-effective-state
+    cli_operation: rds:describe-db-parameters
+    iam_action: rds:DescribeDBParameters
+    resource_scope: selected-fixed-instance-parameter-group-only-enforced-by-process-local-value-no-iam-policy-change
+    documentation_url: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBParameters.html
+prohibited:
+  - github-role-active-detection-permission
+  - iam-policy-or-trust-change
+  - detector-role-or-workload
+  - property-expected-or-actual-value-output
+  - parameter-value-or-unrelated-parameter-name-output
+  - change-set-or-stack-mutation
+  - resource-configuration-change
+success_conditions:
+  - detection-complete-and-foundation-stack-in-sync
+  - detection-complete-and-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required
+known_remediation_signatures:
+  - logical_resource_id: RelationalDatabaseSecurityGroup
+    resource_type: AWS::EC2::SecurityGroup
+    resource_drift_status: MODIFIED
+    property_path: /SecurityGroupEgress
+    change_categories:
+      - ADD
+      - NOT_EQUAL
+  - logical_resource_id: RelationalDatabaseParameterGroup
+    resource_type: AWS::RDS::DBParameterGroup
+    resource_drift_status: MODIFIED
+    property_paths:
+      - /Parameters
+      - /Parameters/rds.force_ssl
+    change_categories:
+      - REMOVE
+effective_tls:
+  fixed_database_identifier: kanbien-staging-platform-relational
+  required_parameter_name: rds.force_ssl
+  required_parameter_value: "1"
+  safe_verdict: required
+output_policy: safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values

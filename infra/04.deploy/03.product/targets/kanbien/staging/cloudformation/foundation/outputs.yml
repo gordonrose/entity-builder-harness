@@ -128,6 +128,10 @@ Outputs:
     Value: !GetAtt RelationalBootstrapTaskRole.Arn
     Export:
       Name: !Sub ${AWS::StackName}-RelationalBootstrapTaskRoleArn
+  RelationalTaskExecutionRoleArn:
+    Value: !GetAtt RelationalTaskExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalTaskExecutionRoleArn
   RelationalMigrationTaskRoleArn:
     Value: !GetAtt RelationalMigrationTaskRole.Arn
     Export:
@@ -136,6 +140,18 @@ Outputs:
     Value: !GetAtt RelationalRuntimeTaskRole.Arn
     Export:
       Name: !Sub ${AWS::StackName}-RelationalRuntimeTaskRoleArn
+  RelationalRelayTaskRoleArn:
+    Value: !GetAtt RelationalRelayTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalRelayTaskRoleArn
+  RelationalWorkerTaskRoleArn:
+    Value: !GetAtt RelationalWorkerTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalWorkerTaskRoleArn
+  RelationalRestoreVerificationTaskRoleArn:
+    Value: !GetAtt RelationalRestoreVerificationTaskRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalRestoreVerificationTaskRoleArn
   RelationalDatabaseSecurityGroupId:
     Value: !Ref RelationalDatabaseSecurityGroup
     Export:
@@ -144,3 +160,27 @@ Outputs:
     Value: !GetAtt RelationalTargetConfiguration.Arn
     Export:
       Name: !Sub ${AWS::StackName}-RelationalTargetConfigurationArn
+  RelationalMasterSecretArn:
+    Value: !GetAtt RelationalDatabase.MasterUserSecret.SecretArn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalMasterSecretArn
+  RelationalMigrationSecretArn:
+    Value: !Ref RelationalMigrationSecret
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalMigrationSecretArn
+  RelationalRuntimeSecretArn:
+    Value: !Ref RelationalRuntimeSecret
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalRuntimeSecretArn
+  RelationalSmokeQueueUrl:
+    Value: !Ref RelationalSmokeQueue
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalSmokeQueueUrl
+  RelationalSmokeQueueArn:
+    Value: !GetAtt RelationalSmokeQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalSmokeQueueArn
+  RelationalSmokeDeadLetterQueueUrl:
+    Value: !Ref RelationalSmokeDeadLetterQueue
+    Export:
+      Name: !Sub ${AWS::StackName}-RelationalSmokeDeadLetterQueueUrl

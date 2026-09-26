@@ -184,7 +184,24 @@ def main() -> int:
         "maximum_evidence_age_seconds": 21600,
         "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
         "detector_deployment_status": "source-planned-not-deployed",
-        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+        "administrator_active_assessment_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+        "administrator_active_assessment": {
+            "status": "approved-administrator-only-foundation-drift-classification",
+            "command": "npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change",
+            "allowed_operations": [
+                "cloudformation:DetectStackDrift",
+                "cloudformation:DescribeStackDriftDetectionStatus",
+                "cloudformation:DescribeStackResourceDrifts",
+                "cloudformation:DescribeStacks",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBParameters",
+            ],
+            "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
+            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        },
+        "operational_coverage": "administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending",
     }
     if not isinstance(reconciliation, dict) or reconciliation.get("drift_evidence") != expected_drift_evidence:
         failures.append("target profile must retain the reviewed separate drift-detection boundary")

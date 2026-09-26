@@ -572,6 +572,45 @@ migration, alarm, and cost checks pass with no sensitive values in evidence.
 **Objective:** prove the full relational route and its recovery path at the
 same bounded scope, then state its exact operational limits.
 
+#### Stage 6 source composition (implemented; deployment and proof pending)
+
+The production server keeps its existing DynamoDB-backed default command. It
+is deliberately not repointed to PostgreSQL merely to prove an adapter. The
+relational route is instead four target-only, non-public Fargate task
+definitions plus one restore-verification task:
+
+1. **Bootstrap** injects the new target-owned master, migration, and runtime
+   credentials through ECS, creates the two database identities, and grants
+   the migration and runtime schema boundaries.
+2. **Migration** injects only the migration credential and non-secret target
+   configuration, applies the immutable foundation plus smoke-schema manifest,
+   and exits.
+3. **Relay** injects only the runtime credential/configuration and can only
+   send to the new isolated relational source queue. It accepts one fixed
+   opaque smoke work item and relays one outbox obligation.
+4. **Worker** has a distinct role: it may receive, delete, change visibility,
+   and inspect attributes only on that one isolated queue. It records durable
+   processing completion before acknowledgement and exits.
+5. **Restore verification** can read only the runtime credential/configuration
+   and connects only to a hostname matching the fixed disposable staging RDS
+   recovery pattern. It confirms the one smoke work-item and outbox fact over
+   `verify-full` TLS, then the controller removes the recovery instance.
+
+All five tasks reuse the existing dormant worker awsvpc topology solely for
+the bounded run. They have no listener, port mapping, service, scheduler, or
+default-server command. The image contains AWS's public, digest-pinned
+`eu-west-1` RDS CA bundle, so it verifies the RDS chain rather than trusting a
+generic container trust store or weakening TLS.
+
+`platform:shell:postgresql-relational-smoke` has only two modes: local
+`--validate`, or the fixed `--execute --approve-relational-stage6` sequence.
+It accepts no target, credential, payload, task, queue, database, restore
+name, network, or timeout supplied by a caller. Before each onward step it
+checks the reviewed account/region, stack readiness, public server `1/1`,
+dormant worker `0/0`, and isolated queue totals. It reports only safe final
+outcomes and aggregate counts; provider responses, endpoints, task IDs,
+secrets, records, messages, and raw logs stay out of output and evidence.
+
 1. With a distinct, bounded approval, run one fixed harmless relational smoke
    request. It may create only approved opaque state, lineage, and outbox facts.
 2. Run at most one governed relay and one self-terminating worker path. Require

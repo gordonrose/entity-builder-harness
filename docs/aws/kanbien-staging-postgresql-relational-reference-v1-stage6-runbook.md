@@ -1,0 +1,104 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
+version: 1
+status: active
+layer: 04.deploy
+domain: persistence.operations
+disciplines:
+- security
+- sre
+kind: runbook
+purpose: Operate the one bounded Kanbien staging PostgreSQL relational delivery and isolated restore rehearsal.
+portability:
+  class: target-specific
+  targets:
+  - kanbien/staging
+-->
+# Kanbien staging PostgreSQL relational Stage 6 runbook
+
+## Scope
+
+This runbook operates one fixed, harmless proof. It is not a general database
+administration command, a migration tool for product data, a scheduler, or a
+way to replay work. It does not modify the public server's default persistence
+provider.
+
+The controller is [the fixed relational smoke
+script](../../scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py).
+It owns the only permissible order:
+
+```text
+preflight → bootstrap → migrate → accept/relay once → worker once
+          → private restore → TLS state verification → recovery cleanup
+```
+
+Every arrow is conditional: failure prevents the next stage. If the controller
+created a recovery instance, it still attempts cleanup before reporting its
+safe failure verdict.
+
+## Before running
+
+Confirm all of these through the controller's source validation and reviewed
+CloudFormation change sets:
+
+- Foundation and service stacks are `UPDATE_COMPLETE`.
+- The public server is healthy at desired/running `1/1`.
+- The pre-existing worker remains `0/0`.
+- The new relational source and dead-letter queues are empty.
+- The database remains private, encrypted, `rds.force_ssl` is required, and
+  the only database-group egress is the approved loopback rule.
+- The Foundation/service change sets add only the reviewed relational queue,
+  task definitions, task roles, outputs, and deployment-role pass-role scope.
+
+Run the local, no-AWS validation first:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --validate
+```
+
+## Run the proof
+
+The one live command is:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --execute --approve-relational-stage6
+```
+
+There are deliberately no flags for a task family, queue URL, database,
+endpoint, record, payload, secret, target, network, restore identifier, or
+timeout. The command derives all of them from committed staging policy and
+Foundation outputs. It emits one of two safe results:
+
+- `{"postgresql_relational_smoke":"passed"}` — all fixed stages ran and the
+  recovery instance was removed.
+- `{"postgresql_relational_smoke":"failed"}` — do not rerun under the same
+  fixed labels. Inspect safe infrastructure/evidence categories, preserve the
+  failure context, and prepare a separately reviewed remediation or new label.
+
+Never retrieve or paste task logs, SQL, rows, queue messages, endpoints,
+credentials, request/response bodies, task identifiers, or AWS provider
+responses into an issue, commit, or evidence record.
+
+## Recovery and rollback
+
+- A public server rollout issue uses the existing ECS service rollback; Stage 6
+  does not change its service or task definition reference.
+- A migration failure is forward-repair only. Do not improvise a schema
+  rollback against the reference.
+- A restore failure does not permit restore-over-live. The controller uses one
+  private disposable recovery identifier and attempts its deletion without a
+  final snapshot. If it cannot complete cleanup, treat the remaining instance
+  as a cost/security exception and resolve it with an explicitly reviewed
+  recovery action.
+- A non-empty relational queue or DLQ is not cleared directly. Preserve safe
+  aggregate evidence and design the recovery action; direct message deletion
+  would destroy the proof trail.
+
+## Evidence to record
+
+Record only: source commit/image digest, change-set scope verdict, stage
+verdicts, aggregate queue counts, server/worker counts, restore duration
+category, cleanup status, alarms/alert destination status, cost posture, and
+residual limits. The Stage 6 evidence template is
+[`kanbien-staging-postgresql-relational-reference-v1-stage6-evidence.md`](kanbien-staging-postgresql-relational-reference-v1-stage6-evidence.md).

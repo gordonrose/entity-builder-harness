@@ -532,6 +532,202 @@ Resources:
         - Key: managed-by
           Value: cloudformation
 
+  RelationalBootstrapTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-relational-bootstrap
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalBootstrapTaskRoleArn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ContainerDefinitions:
+        - Name: relational-bootstrap
+          Image: !Ref ImageUri
+          Command: [.cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js]
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          Secrets:
+            - Name: RELATIONAL_MASTER_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalMasterSecretArn
+            - Name: RELATIONAL_MIGRATION_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalMigrationSecretArn
+            - Name: RELATIONAL_RUNTIME_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRuntimeSecretArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relational-bootstrap
+
+  RelationalMigrationTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-relational-migration
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalMigrationTaskRoleArn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ContainerDefinitions:
+        - Name: relational-migration
+          Image: !Ref ImageUri
+          Command: [.cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.js]
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          Secrets:
+            - Name: RELATIONAL_MIGRATION_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalMigrationSecretArn
+            - Name: RELATIONAL_CONFIG_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTargetConfigurationArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relational-migration
+
+  RelationalRelayTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-relational-relay
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRelayTaskRoleArn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ContainerDefinitions:
+        - Name: relational-relay
+          Image: !Ref ImageUri
+          Command: [.cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.js]
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          Environment:
+            - Name: RELATIONAL_SMOKE_QUEUE_URL
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalSmokeQueueUrl
+          Secrets:
+            - Name: RELATIONAL_RUNTIME_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRuntimeSecretArn
+            - Name: RELATIONAL_CONFIG_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTargetConfigurationArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relational-relay
+
+  RelationalWorkerTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-relational-worker
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalWorkerTaskRoleArn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ContainerDefinitions:
+        - Name: relational-worker
+          Image: !Ref ImageUri
+          Command: [.cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.js]
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          Environment:
+            - Name: RELATIONAL_SMOKE_QUEUE_URL
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalSmokeQueueUrl
+          Secrets:
+            - Name: RELATIONAL_RUNTIME_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRuntimeSecretArn
+            - Name: RELATIONAL_CONFIG_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTargetConfigurationArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relational-worker
+
+  RelationalRestoreVerificationTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-relational-restore-verify
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRestoreVerificationTaskRoleArn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      ContainerDefinitions:
+        - Name: relational-restore-verify
+          Image: !Ref ImageUri
+          Command: [.cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.js]
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          Secrets:
+            - Name: RELATIONAL_RUNTIME_SECRET_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalRuntimeSecretArn
+            - Name: RELATIONAL_CONFIG_JSON
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelationalTargetConfigurationArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RelayLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: relational-restore-verify
+
   EcsRunningCountAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn: Service
@@ -636,3 +832,13 @@ Outputs:
     Value: !Ref WorkerTaskDefinition
   RelayTaskDefinitionArn:
     Value: !Ref RelayTaskDefinition
+  RelationalBootstrapTaskDefinitionArn:
+    Value: !Ref RelationalBootstrapTaskDefinition
+  RelationalMigrationTaskDefinitionArn:
+    Value: !Ref RelationalMigrationTaskDefinition
+  RelationalRelayTaskDefinitionArn:
+    Value: !Ref RelationalRelayTaskDefinition
+  RelationalWorkerTaskDefinitionArn:
+    Value: !Ref RelationalWorkerTaskDefinition
+  RelationalRestoreVerificationTaskDefinitionArn:
+    Value: !Ref RelationalRestoreVerificationTaskDefinition
