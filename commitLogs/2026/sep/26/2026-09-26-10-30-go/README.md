@@ -61,6 +61,10 @@ go
 - Raised: The first GitHub reconciliation proof returned only aws-verification-unavailable after its dedicated role successfully assumed and issued declared read requests; the failure could not identify the owning safe control.
   Resolution: Reconciliation now attributes an unavailable provider call to its owning safe check while preserving the no-response-output policy. Focused source, static policy, infrastructure, and live administrator reconciliation checks passed.
 
+
+- Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
+  Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -349,6 +353,13 @@ Message: fix(deploy): serialize reconciliation verification
 Summary: Serialize bounded staging verification calls and retry each transient AWS verification failure up to three times; retain safe owning-control error identifiers.
 
 ADR impact: ADR 0035 remains the governing reconciliation decision; no privilege or mutation scope changes.
+
+
+### 2026-09-26T13:13:40Z - Issue
+
+Raised: The hardened GitHub reconciliation run still blocks at artifact-stack drift despite exact-resource IAM simulation and successful administrator reconciliation.
+
+Resolution: Drift verification now reports whether the bounded failure occurs when starting detection or reading the fresh stack summary, without exposing AWS provider payloads or widening IAM.
 
 ## Sub-Agent Activity
 

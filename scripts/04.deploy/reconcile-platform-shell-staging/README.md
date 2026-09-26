@@ -34,6 +34,10 @@ generic provider error. It remains fail-closed, but now tells the operator
 which bounded reconciliation area needs investigation without revealing the
 provider response.
 
+For CloudFormation drift, that identifier also distinguishes starting the
+drift scan from reading its fresh stack summary. The distinction makes an IAM
+or provider-boundary problem actionable without logging an AWS error payload.
+
 The check runs its AWS calls serially and each call has three bounded attempts
 with short backoff. This avoids creating an avoidable burst of CloudFormation,
 S3, and Budgets requests while still failing closed if the declared control

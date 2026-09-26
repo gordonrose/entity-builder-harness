@@ -202,7 +202,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_aws(arguments: argparse.Namespace, policy: dict[str, Any], command: list[str]) -> Any:
+def run_aws(
+    arguments: argparse.Namespace,
+    policy: dict[str, Any],
+    command: list[str],
+    failure_code: str = "aws-verification-unavailable",
+) -> Any:
     """Run one fixed AWS operation with small bounded retries and no error-payload output."""
 
     invocation = [arguments.aws_cli, *command, "--region", policy["region"], "--output", "json"]
@@ -214,7 +219,7 @@ def run_aws(arguments: argparse.Namespace, policy: dict[str, Any], command: list
             return json.loads(completed.stdout)
         except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
             if attempt == AWS_MAX_ATTEMPTS - 1:
-                raise ReconciliationError("aws-verification-unavailable") from exception
+                raise ReconciliationError(failure_code) from exception
             time.sleep(AWS_RETRY_BACKOFF_SECONDS[attempt])
     raise AssertionError("bounded AWS verification retry loop did not return")
 
@@ -255,13 +260,23 @@ def check_stack_drift(arguments: argparse.Namespace, policy: dict[str, Any], sta
     """Request drift detection and require a fresh in-sync stack summary without wildcard IAM."""
 
     started_at = datetime.now(timezone.utc)
-    started = run_aws(arguments, policy, ["cloudformation", "detect-stack-drift", "--stack-name", stack, "--query", "StackDriftDetectionId"])
+    started = run_aws(
+        arguments,
+        policy,
+        ["cloudformation", "detect-stack-drift", "--stack-name", stack, "--query", "StackDriftDetectionId"],
+        f"{check_id}-detection-unavailable",
+    )
     detection_id = started if isinstance(started, str) else None
     if not isinstance(detection_id, str) or not detection_id:
         raise ReconciliationError(check_id)
     deadline = time.monotonic() + DRIFT_WAIT_SECONDS
     while time.monotonic() < deadline:
-        result = run_aws(arguments, policy, ["cloudformation", "describe-stacks", "--stack-name", stack, "--query", "Stacks[0].DriftInformation.{status:StackDriftStatus,checked:LastCheckTimestamp}"])
+        result = run_aws(
+            arguments,
+            policy,
+            ["cloudformation", "describe-stacks", "--stack-name", stack, "--query", "Stacks[0].DriftInformation.{status:StackDriftStatus,checked:LastCheckTimestamp}"],
+            f"{check_id}-summary-unavailable",
+        )
         if not isinstance(result, dict):
             raise ReconciliationError(check_id)
         status = result.get("status")
