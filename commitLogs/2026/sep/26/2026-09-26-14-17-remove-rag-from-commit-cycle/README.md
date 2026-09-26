@@ -4,7 +4,7 @@
 id: 2026-09-26-14-17-remove-rag-from-commit-cycle
 task: remove RAG from commit cycle
 branch: chat/2026-09-26-14-17-remove-rag-from-commit-cycle
-worktree: /tmp/agentic-chat-worktrees/chat_2026-09-25-09-46-go-3705592782-318452591/chat_2026-09-26-14-17-remove-rag-from-commit-cycle-1298898466
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-14-17-remove-rag-from-commit-cycle-1298898466
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-26T13:17:16Z
