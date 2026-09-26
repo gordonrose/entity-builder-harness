@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 4
+version: 5
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -192,15 +192,19 @@ the later bootstrap/migration/runtime path can retrieve their respective
 references. Existing server, worker, and relay roles are intentionally not
 expanded in this stage.
 
-The static verifier and full foundation policy check pass locally. Because the
-Foundation is too large for CloudFormation's inline request limit, the next
-Stage 4 action is first a review-only change set for the separate two-resource
-deployment-artifact store. Only after its source and change set pass review may
-that small stack be applied, permitting the final relational Foundation
-change-set review. That Foundation change set must pass `PrivateSubnetIds` as
-deployment input, use previous values for every existing Foundation parameter,
-and show only the named relational resources and the same-account RDS
-SNS-publish policy addition. It must not be executed in Stage 4.
+The static verifier and full foundation policy check passed locally. Because
+the Foundation is larger than CloudFormation's inline request limit, Stage 4
+first reviewed and applied the separate two-resource deployment-artifact store.
+Its privacy, encryption, ownership, TLS-only, and bounded-retention controls
+were verified after creation. The final relational Foundation change set used
+`PrivateSubnetIds` as the only new deployment input and retained the previous
+value for every existing Foundation parameter.
+
+The relational change set is `AVAILABLE` and remains unexecuted. It has 22
+additions and one non-replacement `AlarmTopicPolicy` modification for the
+same-account RDS SNS publication path. No RDS instance, relational secret, or
+Foundation change set has been applied. The next action is Stage 5's governed
+application of this reviewed change set followed by live-boundary verification.
 
 ## Observability, recovery, and rollback
 

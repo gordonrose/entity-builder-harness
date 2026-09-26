@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T11:16:50Z
-latest_commit_sha: bef454ce
-chat_duration: 6352s (00:01:45:52)
+latest_commit_at_utc: 2026-09-26T11:26:20Z
+latest_commit_sha: 1c47ce5109997139064d7a1efb623f3e932e2794
+chat_duration: 6922s (00:01:55:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -49,6 +49,10 @@ go
 - Raised: Artifact-store review change set failed CloudFormation property validation
   Resolution: No resource was created. Verified the AWS CloudFormation S3 lifecycle-rule schema, replaced unsupported Filter syntax with direct Prefix syntax, and passed local plus AWS template validation.
 
+
+- Raised: Foundation change-set shorthand input could not preserve the comma-separated subnet value
+  Resolution: No change set was created by the rejected local request. Used an uncommitted JSON deployment-parameter file so CloudFormation received one exact PrivateSubnetIds value.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -70,6 +74,10 @@ go
 
 - Summary: The retry has one narrowly scoped source correction and preserves the two-resource review boundary.
   Durable evidence: The corrected artifact-store template, its static verifier, ADR 0034, and the current session log.
+
+
+- Summary: Stage 4 now has source checks, a deployed hardened artifact store, and an available but unexecuted relational Foundation change set.
+  Durable evidence: Target profile, readiness record, PostgreSQL deployment plan, product plan, static verifiers, and this session log; no secret, endpoint, record, message, or provider payload was recorded.
 
 ## Activity Log
 
@@ -187,6 +195,31 @@ Summary: Corrected the S3 lifecycle-rule property shape after a review-only Clou
 
 ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
 
+
+### 2026-09-26T11:25:30Z - Issue
+
+Raised: Foundation change-set shorthand input could not preserve the comma-separated subnet value
+
+Resolution: No change set was created by the rejected local request. Used an uncommitted JSON deployment-parameter file so CloudFormation received one exact PrivateSubnetIds value.
+
+
+### 2026-09-26T11:25:30Z - Context hygiene
+
+Summary: Stage 4 now has source checks, a deployed hardened artifact store, and an available but unexecuted relational Foundation change set.
+
+Durable evidence: Target profile, readiness record, PostgreSQL deployment plan, product plan, static verifiers, and this session log; no secret, endpoint, record, message, or provider payload was recorded.
+
+
+### 2026-09-26T11:26:20Z - Commit recorded
+
+Commit: `1c47ce5109997139064d7a1efb623f3e932e2794`
+
+Message: docs(persistence): record relational change-set review
+
+Summary: Recorded the passed Stage 4 artifact-store bootstrap and the available but unexecuted relational Foundation change set with its strictly bounded scope.
+
+ADR impact: No new ADR; evidence completes the Stage 4 review gate under the existing relational-reference and artifact-store decisions.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -222,6 +255,13 @@ ADR impact: No new ADR; implements the target-owned artifact-store decision in A
   Summary: Corrected the S3 lifecycle-rule property shape after a review-only CloudFormation validation failure; no resources were created before the fix.
   ADR impact: No new ADR; implements the target-owned artifact-store decision in ADR 0034.
 
+
+- Commit: `1c47ce5109997139064d7a1efb623f3e932e2794`
+  Time UTC: 2026-09-26T11:26:20Z
+  Message: docs(persistence): record relational change-set review
+  Summary: Recorded the passed Stage 4 artifact-store bootstrap and the available but unexecuted relational Foundation change set with its strictly bounded scope.
+  ADR impact: No new ADR; evidence completes the Stage 4 review gate under the existing relational-reference and artifact-store decisions.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -237,9 +277,9 @@ Reason: The target's CloudFormation transport boundary is a durable deployment a
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T11:16:50Z
-Latest commit SHA: fix(deploy): correct artifact-store lifecycle schema
-Chat duration: 6352s (00:01:45:52)
+Latest commit at UTC: 2026-09-26T11:26:20Z
+Latest commit SHA: 1c47ce5109997139064d7a1efb623f3e932e2794
+Chat duration: 6922s (00:01:55:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
