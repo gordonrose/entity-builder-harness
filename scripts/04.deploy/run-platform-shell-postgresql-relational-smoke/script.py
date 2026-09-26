@@ -414,15 +414,29 @@ def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
         raise RelationalSmokeError("the fixed bootstrap diagnostic terminal metadata differs from the reviewed recovery-1 failure")
     stream = container.get("logStreamName")
     if not isinstance(stream, str) or not stream:
-        return "bootstrap-workload-failure-log-marker-unavailable"
+        return "bootstrap-task-log-stream-unavailable"
     logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy)
     events = logged.get("events")
     if not isinstance(events, list):
-        return "bootstrap-workload-failure-log-marker-unavailable"
+        return "bootstrap-task-log-events-unavailable"
+    if not events:
+        return "bootstrap-task-log-stream-empty"
     for event in events:
         message = event.get("message") if isinstance(event, dict) else None
         if not isinstance(message, str):
             continue
+        if "ERR_MODULE_NOT_FOUND" in message or "Cannot find module" in message:
+            return "bootstrap-runtime-module-unavailable"
+        if "RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE" in message:
+            return "bootstrap-certificate-authority-unavailable"
+        if "password authentication failed" in message:
+            return "bootstrap-database-authentication-failure"
+        if "no pg_hba.conf entry" in message or "permission denied" in message:
+            return "bootstrap-database-authorization-failure"
+        if "ETIMEDOUT" in message or "ECONNREFUSED" in message:
+            return "bootstrap-database-connectivity-failure"
+        if "self-signed certificate" in message or "certificate verify failed" in message:
+            return "bootstrap-database-tls-failure"
         try:
             safe_event = json.loads(message)
         except json.JSONDecodeError:

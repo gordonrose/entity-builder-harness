@@ -44,6 +44,10 @@ if ! rg -q 'def diagnose_bootstrap_recovery' scripts/04.deploy/run-platform-shel
   echo "ERROR: bootstrap diagnostic must retain only its fixed safe log classification path" >&2
   exit 1
 fi
+if ! rg -q 'bootstrap-runtime-module-unavailable' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'bootstrap-database-connectivity-failure' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap diagnostic must retain the reviewed allowlisted failure categories" >&2
+  exit 1
+fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path
