@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T12:03:47Z
-latest_commit_sha: 0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77
-chat_duration: 9169s (00:02:32:49)
+latest_commit_at_utc: 2026-09-26T12:24:12Z
+latest_commit_sha: 1f090d6f
+chat_duration: 10394s (00:02:53:14)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -295,6 +295,17 @@ Summary: The first GitHub reconciliation run failed safely because DescribeStack
 
 Durable evidence: Reconciliation command, IAM source, static verifier, target profile/readiness, ADR 0035, and the GitHub workflow run evidence.
 
+
+### 2026-09-26T12:24:12Z - Commit recorded
+
+Commit: `1f090d6f`
+
+Message: fix(deploy): retain scoped reconciliation drift checks
+
+Summary: Replaced a drift-status lookup that would require wildcard IAM with a fresh stack drift timestamp check through existing stack-scoped read permission.
+
+ADR impact: ADR 0035 remains the reconciliation decision; this correction preserves its least-privilege intent.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -344,6 +355,13 @@ Durable evidence: Reconciliation command, IAM source, static verifier, target pr
   Summary: Added a fail-closed source/live AWS reconciliation control, canonicalized the staging budget declaration, and proved both continuous and exact pre-change-set checks without provisioning resources.
   ADR impact: ADR 0035 records the durable pre-mutation and recurring reconciliation boundary.
 
+
+- Commit: `1f090d6f`
+  Time UTC: 2026-09-26T12:24:12Z
+  Message: fix(deploy): retain scoped reconciliation drift checks
+  Summary: Replaced a drift-status lookup that would require wildcard IAM with a fresh stack drift timestamp check through existing stack-scoped read permission.
+  ADR impact: ADR 0035 remains the reconciliation decision; this correction preserves its least-privilege intent.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refreshed from local and fetched `main` through a clean rehearsed
@@ -359,9 +377,9 @@ Reason: A pre-mutation and recurring live reconciliation boundary is a durable d
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T12:03:47Z
-Latest commit SHA: 0b6576e2b72fa9fc93ab6f099a75eb25d3b6eb77
-Chat duration: 9169s (00:02:32:49)
+Latest commit at UTC: 2026-09-26T12:24:12Z
+Latest commit SHA: 1f090d6f
+Chat duration: 10394s (00:02:53:14)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
