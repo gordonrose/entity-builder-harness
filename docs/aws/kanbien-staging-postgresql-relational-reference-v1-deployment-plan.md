@@ -75,8 +75,8 @@ separate `kanbien-staging-platform-shell-deployment-artifacts` stack must be
 reviewed and applied. It may contain only a target-owned S3 bucket and its
 TLS-only bucket policy. The bucket is private, encrypted with SSE-S3, blocks
 all public access, enforces bucket-owner ownership, grants no principal in its
-policy, retains the bucket on stack deletion, and expires `change-sets/`
-objects after 30 days.
+policy, uses `RetainExceptOnCreate` to clean up an initial failed creation but
+retain an established bucket, and expires `change-sets/` objects after 30 days.
 
 This is deployment transport, not relational persistence: it stores a
 generated CloudFormation template only, never a database row, credential,

@@ -24,7 +24,7 @@ Description: Private deployment-artifact store for reviewed Kanbien staging plat
 Resources:
   PlatformShellDeploymentArtifactBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
+    DeletionPolicy: RetainExceptOnCreate
     UpdateReplacePolicy: Retain
     Properties:
       BucketName: kanbien-staging-platform-shell-cfn-artifacts-337159794548
