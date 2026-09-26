@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.deploy-readiness
-#   version: 48
+#   version: 50
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -512,6 +512,56 @@ runtime:
       - explicit-current-approval-for-one-harmless-run-task
       - bounded-worker-scale-up-and-return-to-zero
   persistence_foundation:
+    relational_reference:
+      status: stage-3-local-fixture-implemented-real-engine-proof-pending
+      source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+      deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
+      threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
+      stage_1_read_only_inspection:
+        completed_on_utc: "2026-09-26"
+        result: passed
+        safe_findings:
+          - two-private-subnets-in-distinct-availability-zones-available-for-a-new-database-subnet-group
+          - db-t4g-micro-postgresql-17-11-and-postgres17-tls-parameter-family-available
+          - selected-rds-reference-is-fully-separate-from-two-existing-legacy-instances
+          - existing-platform-shell-server-worker-and-relay-security-groups-have-no-current-postgresql-path
+          - no-public-database-endpoint-or-legacy-resource-reuse-is-required
+        required_later_change_scope:
+          - new-private-rds-reference-and-supporting-target-owned-resources-only
+          - one-tcp-5432-path-per-approved-workload-security-group-to-new-database-security-group-only
+        prohibitions:
+          - no-legacy-rds-instance-subnet-group-security-group-or-credential-reuse
+          - no-dns-alb-default-route-cognito-or-dynamodb-sqs-proof-change
+          - no-database-engine-log-export-in-v1
+      stage_2_provider_adapter_local_proof:
+        completed_on_utc: "2026-09-26"
+        result: passed
+        package: platform/adapters/aws/persistence/postgresql/
+        safe_proofs:
+          - strict-tls-and-non-secret-configuration-validation
+          - parameterised-value-and-reviewed-identifier-boundary
+          - stable-provider-error-classification-without-raw-details
+          - transaction-commit-rollback-and-atomic-participant-lineage-outbox-seam
+          - safe-telemetry-and-source-import-boundary
+        evidence_scope: deterministic-recording-pool-only-no-database-or-aws-resource
+      stage_3_disposable_local_relational_smoke:
+        source_status: implemented-and-compiled
+        command: npm-run-platform-adapter-aws-persistence-postgresql-integration
+        safety_boundary:
+          - generated-loopback-only-docker-container-with-temporary-storage
+          - generated-password-passed-only-through-mode-0600-temporary-file
+          - exact-container-and-temporary-file-cleanup-on-all-outcomes
+          - no-aws-credential-shared-database-real-record-or-existing-dynamodb-sqs-proof-use
+        intended_real_engine_proofs:
+          - migration-history-and-checksum-immutability
+          - smoke-state-lineage-and-outbox-atomicity-plus-rollback
+          - optimistic-concurrency-and-tenant-predicate-isolation
+          - outbox-and-worker-lease-fence-rejection
+          - minimal-envelope-relay-ordering-and-telemetry-redaction
+        invocation_on_utc: "2026-09-26"
+        result: blocked-local-docker-daemon-unresponsive-before-container-creation
+        evidence_scope: source-compilation-and-safe-fixture-availability-guard-only
+      next_gate: complete-stage-3-disposable-local-postgresql-semantics-and-smoke-composition
     status: deployed-and-post-deployment-verified
     deployed_on_utc: "2026-09-24"
     stack_status: UPDATE_COMPLETE

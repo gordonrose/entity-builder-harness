@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.production-reference-target-baseline
-version: 21
+version: 22
 status: draft
 layer: 03.product
 domain: platform-reference-target
@@ -260,10 +260,12 @@ A successful smoke deployment proves a bounded platform/deployment slice. It
 does not mean the Entity Builder is product-ready, human-identity-ready, or
 ready to process personal or medical data.
 
-The next bounded proof may create only harmless platform-smoke work-item,
-outbox, and audit-evidence records. It exists to prove transactional state and
-publication mechanics; it is not an entity schema, customer record, tenant
-data model, or authorisation implementation.
+The completed bounded proof created only harmless platform-smoke work-item,
+outbox, and audit-evidence records. It proved transactional state and
+publication mechanics; it did not create an entity schema, customer record,
+tenant data model, or authorisation implementation. A later relational
+reference remains separately planned and must keep the same boundary until a
+real product capability is governed.
 
 ### Existing public website is a separate continuity concern
 
@@ -312,12 +314,12 @@ provider or infrastructure choice is made.
 | Configuration and secrets | Versioned non-secret config, confidential value delivery, least-privilege access, rotation, no-secret logging. | Environment/config patterns and target references exist. | `requirements captured` | Secret provider/delivery design, target IAM/resource policy, rotation/recovery test, scan and audit evidence. |
 | Shared rate limiting and abuse defence | Consistent quota across replicas, route/principal policy, trusted address policy, safe failure decision. | `PlatformRateLimiter` contract and bounded in-memory limiter are tested. | `contract/local proof` | Shared-store adapter, target selection, network/credential design, failure policy, multi-replica proof. |
 | Operational observability | Structured redacted logs, metrics, traces where required, capability profiles, NFR/SLO measurement, collection/export, dashboards, alert ownership, retention/access controls. | The staging HTTP smoke path emits and query-proves the reviewed outcome and duration series. A target-owned coverage verifier and 28-day SLO evaluator have source and local proof; its read-only live result correctly remains `insufficient-confidence` below 100 observations. The separate OIDC role, scheduled workflow, exporter-loss rehearsal, dashboard, capability alarms, alert receipt, and cost proof remain pending. | `target configured` | Deploy and read back the coverage identity/workflow; prove normal and missing-metric verdicts, operator receipt, exporter-loss recovery, dashboard/runbook, capability alarm, retention/access, and the actual 28-day evidence clock. |
-| Smoke transactional state and publication proof | One harmless, non-business smoke work item and its bounded audit-evidence and outbox records must be written atomically, then made available to a later relay. This proves platform mechanics only; it stores no customer, tenant, personal, medical, or entity-builder data. | DynamoDB on-demand is the first reference storage provider; SQS Standard with a DLQ is the initial relay transport. Provider-neutral boundaries, the DynamoDB adapter, and a Kanbien target composer are locally proven. The live staging route/auth boundary has been proved, but its first fresh acceptance found an IAM vocabulary defect: its all-`Put` `TransactWriteItems` API call needs table-scoped `dynamodb:PutItem`, not an API-named IAM action. The one-action remediation is source-ready; no relay or worker proof has begun. | `target remediation pending` | Deploy the reviewed table-scoped `PutItem` correction, prove the live server-role decision, then run one new acceptance, relay, worker, and target-evidence sequence. |
+| Smoke transactional state and publication proof | One harmless, non-business smoke work item and its bounded audit-evidence and outbox records must be written atomically, then made available to a later relay. This proves platform mechanics only; it stores no customer, tenant, personal, medical, or entity-builder data. | DynamoDB on-demand and SQS Standard/DLQ are operationally proven for this deliberately one-shot staging reference: one atomic write, one relay claim/send, and one self-terminating worker completion. Terminal evidence retained only safe aggregates: four persistence records, no due outbox work, empty source/DLQ queues, zero running worker-service tasks, and five `OK` alarms. | `operationally proven` | Complete for this bounded smoke path. It does not approve continuous relay scheduling, general business side effects, or a universal data-store decision. |
 | Audit and security records | Durable, tamper-evident-enough record delivery, allowlisted facts, retention, access, export and review. | Record shape/normalisation direction exists; no durable sink. | `requirements captured` | Audit sink and integrity design, target resources, access/retention policy, verification and retrieval evidence. |
-| Entity persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No selected product-data path. The DynamoDB smoke selection does not decide entity persistence. | `not assessed` | Bounded persistence contract/adapter/infra plan and restore proof before any entity data. |
+| Entity persistence | Tenant-scoped durable data, migrations, encryption, transactions, backup/restore, access controls. | No product-data path is selected. The DynamoDB smoke selection remains non-binding. The additive PostgreSQL relational-reference plan now captures the reusable provider, migration, security, operations, and restore questions without authorising entity data. | `requirements captured` | Approve and execute a bounded relational-reference plan, then select a product schema and prove tenant isolation, migration, backup/restore, access controls, and lifecycle policy before any entity data. |
 | Object/file storage | Profile images and documents, encryption, tenant isolation, lifecycle/retention, signed access, safe download. | Required by first release; no selected path. | `requirements captured` | Storage design, adapter/host delivery, isolation/retention/access proof. |
 | Upload/download safety | Size/type controls, malware/unsafe-content strategy, bulk workflow, quarantine/approval, audit trail. | Required by first release; no selected path. | `requirements captured` | Threat model, ingestion workflow, storage/queue integration, negative tests and operating response. |
-| Queue, workers, retry, and DLQ | Bulk operations and later agent workflows require durable execution, idempotency, retry, DLQ, correlation, and controlled recovery. | Worker/job contracts exist. SQS Standard/DLQ is selected only for the bounded smoke reference; it is not a general product async-provider default yet. | `contract/local proof` | Queue/DLQ adapter and infrastructure, worker target, replay/poison-message policy, operational evidence. |
+| Queue, workers, retry, and DLQ | Bulk operations and later agent workflows require durable execution, idempotency, retry, DLQ, correlation, and controlled recovery. | SQS Standard/DLQ, the relay, and self-terminating worker are operationally proven only for the bounded smoke delivery. That evidence includes duplicate-safe durable completion and an empty final source/DLQ queue; it does not select a general async-provider default or continuous dispatch. | `operationally proven` | Complete only for the bounded smoke policy. A business workload still needs its own delivery policy, queue topology, poison-message/replay controls, SLOs, and operator runbook. |
 | Scheduler | Scheduled agent, maintenance, or bulk work must have durable triggers, idempotency, time-zone and missed-run policy. | Identified in platform plan; no selected service. | `requirements captured` | Chosen scheduler/adapter, target policy, operational proof before scheduled work ships. |
 | Agent workflow safety | Untrusted prompts/content, tool permission boundary, consequence confirmation, data minimisation, provider data boundary, evaluation and human escalation. | Security/prompt-injection governance is recorded; no production agent runtime. | `requirements captured` | Agent threat model, approved model/provider/data terms, policy enforcement, evals, audit and incident controls. |
 | Chat and voice channels | Verified session identity, same capability authz path, transcript/audio privacy, retention/consent, confirmation and human handoff. | Channel-neutral product-harness direction is recorded. | `requirements captured` | Channel adapter and privacy/security model before a channel is exposed. |
@@ -349,6 +351,14 @@ Infrastructure-hosted delivery does not always need an adapter package. For
 example, container log collection or secrets injection may be a target-host
 mechanism. It still needs an explicit target selection, failure model, and
 evidence; it must never be treated as automatic merely because ECS exists.
+
+### Relational persistence reference handoff
+
+[PostgreSQL Relational Persistence Reference v1](postgresql-relational-persistence-reference-v1.md)
+is the next additive persistence plan. It must not repurpose the harmless
+DynamoDB table, share legacy-site credentials, expose a database publicly, or
+turn its proposed provider choice into a product-entity default before its own
+security, migration, recovery, and target-evidence gates pass.
 
 ### Bounded DynamoDB smoke-persistence selection
 

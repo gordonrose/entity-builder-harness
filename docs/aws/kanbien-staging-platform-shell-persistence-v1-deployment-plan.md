@@ -457,6 +457,17 @@ alarms. No task identifiers, record contents, queue messages, URLs, or raw
 provider responses are retained. The fixed proof is now complete and may not
 be replayed.
 
+### Scope closure and relational handoff — 2026-09-25
+
+This deployment plan is complete for the bounded DynamoDB/SQS smoke path. Its
+terminal evidence must not be relabelled as proof that product entity data
+belongs in DynamoDB or that a continuous relay/scheduler is operating. The
+next relational option is planned separately in
+[`PostgreSQL Relational Persistence Reference v1`](../../.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md).
+That plan must have a distinct change set, least-privilege database access,
+migration and restore proof, and no dependency on legacy-site data or
+credentials.
+
 ## Desired source-defined change
 
 ### Foundation stack: additive resources and narrow policy changes

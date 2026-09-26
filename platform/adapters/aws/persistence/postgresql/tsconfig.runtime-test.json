@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.check.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmit": false,
+    "outDir": "../../../../../.cache/platform-adapter-aws-persistence-postgresql-runtime",
+    "baseUrl": "../../../../..",
+    "paths": {
+      "@kanbien/core": [
+        "packages/core/src/index.ts"
+      ],
+      "@kanbien/core/*": [
+        "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-persistence": [
+        "platform/persistence/src/index.ts"
+      ]
+    }
+  }
+}

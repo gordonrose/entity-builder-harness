@@ -56,6 +56,18 @@ go
 - The next live mutation is only an immutable server-image rollout after a
   reviewed change set. It does not alter DNS, Cognito, IAM, queues, or the
   shared ALB routing boundary.
+- The bounded DynamoDB/SQS staging proof is now closed: one accepted atomic
+  write, one relay, and one self-terminating worker reached the recorded
+  aggregate terminal state. It remains a smoke reference, not a universal
+  product-data decision.
+- The next persistence artefact is an additive PostgreSQL relational-reference
+  plan. It keeps product schemas and repositories product-owned, keeps driver
+  code in a provider adapter, and requires a separate AWS/security/migration/
+  restore approval path before any resource is created.
+- The PostgreSQL reference is now organised as six explicit delivery gates:
+  decide/inspect; adapter; local semantics; source-defined target; approved
+  target configuration proof; and one bounded delivery-plus-restore proof.
+  Passing a stage does not authorise the next target mutation.
 
 
 - Decision: Proceed to one final fixed-identity acceptance after live IAM proof
@@ -556,5 +568,9 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 
 ## Notes
 
-- The current staging target does not claim a persistence proof. It is
-  source-ready for a non-mutating diagnostic only.
+- The current staging target claims only the completed, fixed-identity
+  DynamoDB/SQS smoke proof. Its terminal policy refuses a repeat relay or
+  worker stage before AWS contact.
+- PostgreSQL remains a draft relational-reference plan. No PostgreSQL adapter,
+  RDS resource, database credential, migration, or new AWS change is implied
+  by the documentation work in this session.

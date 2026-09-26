@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 32
+#   version: 34
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1020,8 +1020,86 @@ expected_persistence_profile = {
         },
     },
 }
-if target_profile.get("persistence") != expected_persistence_profile:
+target_persistence = target_profile.get("persistence", {})
+if target_persistence.get("smoke_transactional_outbox") != expected_persistence_profile["smoke_transactional_outbox"]:
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
+
+expected_relational_reference = {
+    "status": "stage-2-adapter-local-proof-passed-not-yet-provisioned",
+    "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
+    "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
+    "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
+    "provider": "aws-rds-postgresql",
+    "adapter_package": "@kanbien/platform-adapter-aws-persistence-postgresql",
+    "region": "eu-west-1",
+    "selected_engine": {
+        "family": "postgres17",
+        "version": "17.11",
+        "instance_class": "db.t4g.micro",
+        "availability": "single-az-reference-not-ha-service",
+    },
+    "storage": {
+        "type": "gp3",
+        "allocated_gib": 20,
+        "max_allocated_gib": 30,
+        "encryption": "required",
+    },
+    "connection_security": {
+        "public_accessibility": "prohibited",
+        "database_subnet_group": "new-platform-shell-relational-group-over-existing-private-subnets",
+        "database_security_group": "new-platform-shell-relational-security-group",
+        "inbound": "tcp-5432-from-newly-declared-platform-workload-security-groups-only",
+        "workload_egress": "tcp-5432-from-server-worker-and-relay-to-new-database-security-group-only",
+        "tls": {
+            "parameter_group_setting": "rds.force_ssl=1",
+            "supported_ca": "rds-ca-rsa2048-g1",
+            "client_verification": "required",
+        },
+    },
+    "credentials": {
+        "source": "new-target-owned-secrets-manager-references-only",
+        "existing_secret_values": "untouched",
+        "principals": {
+            "bootstrap": "isolated-one-time-initialisation-only",
+            "migration": "ddl-and-migration-manifest-only",
+            "runtime": "dml-only-no-ddl",
+        },
+    },
+    "operations": {
+        "backup_retention_days": 7,
+        "deletion_protection": "required",
+        "restore_strategy": "isolated-disposable-private-recovery-instance-never-overwrites-live-reference",
+        "database_engine_log_export": "disabled-in-v1-to-prevent-query-text-exposure",
+        "signals": "safe-application-telemetry-rds-metrics-and-rds-events-only",
+        "cost": {
+            "source": "aws-pricing-api-read-only-inspection-2026-09-26",
+            "estimated_monthly_usd_at_20_gib": "14.95",
+            "estimated_monthly_usd_at_30_gib_ceiling": "16.22",
+            "exclusions": "variable-transfer-extra-backup-storage-retained-manual-snapshots-and-tax",
+            "existing_tag_scoped_budget": "kanbien-staging-platform-shell-monthly-25-usd",
+        },
+    },
+    "tenant_isolation": {
+        "initial_enforcement": "verified-application-predicate-and-isolation-tests",
+        "rls": "explicitly-deferred-pending-trusted-tenant-context-and-non-bypass-role-proof",
+    },
+    "stage_2_adapter_local_proof": {
+        "completed_on_utc": "2026-09-26",
+        "result": "passed",
+        "package": "platform/adapters/aws/persistence/postgresql/",
+        "checks": [
+            "strict-non-secret-configuration-and-tls-policy",
+            "parameterised-values-and-reviewed-identifiers",
+            "stable-error-mapping-and-safe-telemetry",
+            "commit-rollback-and-atomic-participant-lineage-outbox-seam",
+            "type-build-runtime-and-import-boundary-checks",
+        ],
+        "evidence_scope": "deterministic-recording-pool-only-no-database-or-aws-resource",
+        "next_gate": "stage-3-disposable-local-postgresql-semantics-and-smoke-composition",
+    },
+}
+if target_persistence.get("relational_reference") != expected_relational_reference:
+    fail("target profile relational reference must retain the reviewed Stage 1/2 target and adapter safety boundary")
 
 relay_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts").read_text(encoding="utf-8")
 worker_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts").read_text(encoding="utf-8")
