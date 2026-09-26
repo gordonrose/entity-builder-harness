@@ -51,8 +51,8 @@ The bucket must:
 - block every public-access route and enforce bucket-owner object ownership;
 - use default SSE-S3 encryption and deny non-TLS transport;
 - grant no principal through its bucket policy;
-- retain the bucket if its stack is deleted, preventing an unreviewed deletion
-  of deployment evidence; and
+- use `RetainExceptOnCreate`: remove an empty initial-creation rollback, but
+  retain the established bucket if its stack is later deleted; and
 - expire objects under `change-sets/` after 30 days and abort incomplete
   multipart uploads after one day.
 

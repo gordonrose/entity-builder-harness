@@ -70,8 +70,8 @@ bucket_resource = resources.get("PlatformShellDeploymentArtifactBucket", {})
 bucket = bucket_resource.get("Properties", {})
 if bucket_resource.get("Type") != "AWS::S3::Bucket":
     fail("artifact store bucket must be AWS::S3::Bucket")
-if bucket_resource.get("DeletionPolicy") != "Retain" or bucket_resource.get("UpdateReplacePolicy") != "Retain":
-    fail("artifact store bucket must retain rather than silently delete deployment evidence")
+if bucket_resource.get("DeletionPolicy") != "RetainExceptOnCreate" or bucket_resource.get("UpdateReplacePolicy") != "Retain":
+    fail("artifact store bucket must delete only an initial creation rollback and retain established deployment evidence")
 if bucket.get("BucketName") != "kanbien-staging-platform-shell-cfn-artifacts-337159794548":
     fail("artifact store bucket must retain its target-specific name")
 if bucket.get("BucketEncryption") != {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}:
