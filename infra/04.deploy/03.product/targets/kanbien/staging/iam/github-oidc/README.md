@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: infra.access
@@ -31,6 +31,7 @@ in AWS.
 | --- | --- | --- | --- |
 | `github-platform-shell-staging-deploy-policy.json` and `github-platform-shell-staging-deploy-trust.json` | Build and publish the immutable platform-shell image. | ECR image operations for `platform-shell` only. | GitHub Actions for this repository's `main` branch through the protected `staging` environment. |
 | `github-platform-shell-staging-synthetic-policy.json` and `github-platform-shell-staging-synthetic-trust.json` | Run the protected staging synthetic. | Inline policy `ReadOnlyControlledSmokeSecret` reads exactly the declared Cognito machine-client secret. | GitHub Actions for this repository's `main` branch only; no deployment environment or repository-secret fallback. |
+| `github-platform-shell-staging-reconciliation-policy.json` and `github-platform-shell-staging-reconciliation-trust.json` | Reconcile declared staging deployment controls. | Exact CloudFormation stack/drift reads, artifact-bucket control reads, one budget read, and caller identity only. | GitHub Actions for this repository's `main` branch only; it cannot deploy, alter stacks, read secrets, or operate ECS/RDS. |
 
 The synthetic role is intentionally not permitted to deploy an image, change a
 CloudFormation stack, manage ECS, administer Cognito, or read a wildcard set of

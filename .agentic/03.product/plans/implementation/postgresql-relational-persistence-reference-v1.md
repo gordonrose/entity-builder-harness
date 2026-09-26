@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 7
+version: 8
 status: draft
 layer: 03.product
 domain: persistence
@@ -310,6 +310,23 @@ change for scoped RDS-event publication; no RDS instance, relational secret, or
 Foundation change set has been applied. Stage 5 starts only by applying this
 reviewed change set and proving the resulting live boundary.
 
+### Reconciliation gate before Stage 5
+
+Stage 5 cannot execute merely because a change set is available. The target
+now has a fail-closed reconciliation command,
+`npm run platform:shell:deployment-reconciliation`, that first checks the
+declared account, Foundation and artifact-stack states, live CloudFormation
+drift, artifact-bucket privacy/encryption/ownership/retention controls, and
+the canonical tag-scoped budget. Its scheduled `continuous` mode keeps those
+controls visible after deployment. Its `pre-foundation-change-set` mode reruns
+all direct mutation prerequisites and permits only the exact 22 relational
+additions and one non-replacement SNS topic-policy update.
+
+The command emits only check identifiers and verdicts. It does not print
+provider responses, secrets, endpoints, resource content, or change details.
+Any mismatch—including a stale repository budget name—blocks execution before
+CloudFormation is asked to change the Foundation.
+
 ## Contracts and ownership
 
 | Concern | Owner | Required boundary |
@@ -527,7 +544,10 @@ source/evidence.
 matches the reviewed source before putting a smoke record into it.
 
 <!-- deterministic-check: allow reason="this is a human-reviewed AWS deployment and security-evidence sequence; later target-specific scripts may automate individual checks but cannot decide whether the reviewed change set remains within the approved authority" -->
-1. Apply only the reviewed change set through the governed AWS workflow.
+1. Run the required `pre-foundation-change-set` reconciliation immediately
+   before applying only the reviewed change set through the governed AWS
+   workflow. Stop on every non-passing check; do not correct a mismatch during
+   the same mutation attempt.
 2. Verify the service and any approved one-shot migration task are healthy;
    confirm the applied migration manifest/checksum with safe aggregate facts.
 3. Verify RDS has no public access, uses encryption and selected TLS, and is

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 5
+version: 6
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -206,6 +206,19 @@ same-account RDS SNS publication path. No RDS instance, relational secret, or
 Foundation change set has been applied. The next action is Stage 5's governed
 application of this reviewed change set followed by live-boundary verification.
 
+### Mandatory reconciliation boundary
+
+Before the Foundation change set can be executed, run the target's
+`pre-foundation-change-set` reconciliation. It fail-closes on a mismatch
+between declared source and live AWS state: expected account, stack status and
+drift, artifact-store hardening, or tag-scoped budget. It additionally compares
+the whole change set to the reviewed 22-addition/one-modification allowlist.
+
+The same target has a separate scheduled read-only reconciliation workflow.
+It does not deploy, read secrets, retrieve endpoints, or print provider
+responses. A failure is an operational blocker, not a reason to loosen the
+check or proceed with a stale review.
+
 ## Observability, recovery, and rollback
 
 The adapter emits only its approved provider-neutral observability fields.
@@ -236,7 +249,7 @@ operation.
 | 2: adapter | PostgreSQL driver remains isolated under its AWS adapter, with redaction, injection-resistance, configuration, error, and transaction tests. |
 | 3: local relational smoke | Disposable local PostgreSQL proves atomicity, migration checksum immutability, concurrency, lease/fence, tenant predicates, safe telemetry, and outbox compatibility. |
 | 4: source-defined target | Static tests and an exact change set contain only the resources listed above. |
-| 5: deployment boundary | Live private/encrypted/TLS/access/role/alarm/cost facts match reviewed source before a smoke record is created. |
+| 5: deployment boundary | A fresh pre-execution reconciliation passes, then live private/encrypted/TLS/access/role/alarm/cost facts match reviewed source before a smoke record is created. |
 | 6: bounded delivery and restore | One harmless relational transaction and one queue delivery reach terminal state; an isolated restore proves recovery without live impact. |
 
 ## Source references

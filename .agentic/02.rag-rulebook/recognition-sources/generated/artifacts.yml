@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 895
-  term_count: 1802
+  indexed_artifacts: 910
+  term_count: 1832
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8154,6 +8154,18 @@ terms:
   canonical_id: github.workflow.platform-shell-staging-synthetic
   evidence_path: .github/workflows/platform-shell-staging-synthetic.yml
   confidence_weight: 1
+- term: github.workflow.reconcile-platform-shell-staging
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.reconcile-platform-shell-staging
+  evidence_path: .github/workflows/reconcile-platform-shell-staging.yml
+  confidence_weight: 1
+- term: .github/workflows/reconcile-platform-shell-staging.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.reconcile-platform-shell-staging
+  evidence_path: .github/workflows/reconcile-platform-shell-staging.yml
+  confidence_weight: 1
 - term: deploy.corpus.readme
   category: artifact-id
   match_type: exact
@@ -8213,6 +8225,30 @@ terms:
   match_type: exact
   canonical_id: deploy.architecture.adr.0033-select-private-rds-postgresql-relational-reference
   evidence_path: docs/04.deploy/adrs/0033-select-private-rds-postgresql-relational-reference.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0034-use-private-target-owned-cloudformation-artifact-stores
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0034-use-private-target-owned-cloudformation-artifact-stores
+  evidence_path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0034-use-private-target-owned-cloudformation-artifact-stores
+  evidence_path: docs/04.deploy/adrs/0034-use-private-target-owned-cloudformation-artifact-stores.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
+  evidence_path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
+  evidence_path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
   confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
@@ -8982,6 +9018,42 @@ terms:
   canonical_id: deploy.script.provision-platform-shell-persistence-write-client.smoke-test
   evidence_path: scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
   confidence_weight: 1
+- term: deploy.script.reconcile-platform-shell-staging.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.readme
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/reconcile-platform-shell-staging/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.readme
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/README.md
+  confidence_weight: 1
+- term: deploy.script.reconcile-platform-shell-staging.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.wrapper
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.wrapper
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/script.sh
+  confidence_weight: 1
+- term: deploy.script.reconcile-platform-shell-staging.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.smoke-test
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.reconcile-platform-shell-staging.smoke-test
+  evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.render-platform-shell-foundation-template.readme
   category: artifact-id
   match_type: exact
@@ -9426,6 +9498,78 @@ terms:
   canonical_id: deploy.script.verify-platform-shell-deploy-readiness.smoke-test
   evidence_path: scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh
   confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-artifact-store.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-artifact-store
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-artifact-store.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-artifact-store.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-artifact-store/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-reconciliation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-reconciliation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-deployment-reconciliation.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-deployment-reconciliation.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.verify-platform-shell-deployment-workflow.readme
   category: artifact-id
   match_type: exact
@@ -9533,6 +9677,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-observability-prerequisites
   evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-postgresql-reference.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-postgresql-reference/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-postgresql-reference
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-postgresql-reference.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-reference.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-platform-shell-synthetic-scheduler.readme
   category: artifact-id

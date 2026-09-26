@@ -82,6 +82,13 @@ Current commands:
 - `verify-platform-shell-deployment-artifact-store/`: read-only policy check
   for the private, encrypted, short-retention S3 store used only when a
   reviewed CloudFormation template is too large for AWS's inline request limit.
+- `reconcile-platform-shell-staging/`: fail-closed local and live target
+  reconciliation. It verifies declared stack/drift, artifact-store, and budget
+  controls without provisioning resources; its pre-change-set mode also
+  requires exactly the reviewed Foundation resource-change scope.
+- `verify-platform-shell-deployment-reconciliation/`: static policy check for
+  reconciliation source, its dedicated read-only GitHub identity, and the
+  validation-before-credentials scheduled workflow.
 - `validate-container-boundaries/`: read-only Dockerfile and container image
   placement validation so deployable images stay under governed `infra/**`
   image directories.

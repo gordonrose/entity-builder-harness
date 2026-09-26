@@ -157,6 +157,33 @@ deployment:
         confirmed_on_utc: "2026-09-22"
         event: declared-metric-coverage-missing-insufficient-confidence
         retained_evidence: human-confirmation-only-no-email-address-subscription-identifier-link-or-message-content
+    deployment_reconciliation:
+      status: source-defined-pending-live-role-deployment
+      mutation_style: github-actions-oidc-read-only-declared-control-reconciliation
+      workflow: .github/workflows/reconcile-platform-shell-staging.yml
+      trigger: schedule-and-manual-dispatch
+      schedule_cron_utc: "15 */4 * * *"
+      deployable_ref: refs/heads/main
+      github_environment: none
+      role_name: github-platform-shell-staging-reconciliation
+      role_arn: arn:aws:iam::337159794548:role/github-platform-shell-staging-reconciliation
+      role_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json
+      trust_policy_source: infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json
+      allowed_aws_actions:
+        - cloudformation:DescribeStacks
+        - cloudformation:DetectStackDrift
+        - cloudformation:DescribeStackDriftDetectionStatus
+        - s3:GetBucketEncryption
+        - s3:GetBucketLifecycleConfiguration
+        - s3:GetBucketOwnershipControls
+        - s3:GetBucketPolicyStatus
+        - s3:GetBucketPublicAccessBlock
+        - budgets:ViewBudget
+        - sts:GetCallerIdentity
+      command: npm run platform:shell:deployment-reconciliation -- --aws-credential-source environment --mode continuous --json
+      pre_foundation_change_set_command: npm run platform:shell:deployment-reconciliation -- --mode pre-foundation-change-set --foundation-change-set reviewed-name --json
+      output_policy: safe-check-identifiers-and-verdicts-only-no-provider-response-secret-endpoint-or-resource-content
+      required_before_mutation: true
     repeatable_service_stack_change:
       mutation_style: governed-manual-aws-cli-change-set
       aws_profile: kanbien-dev
