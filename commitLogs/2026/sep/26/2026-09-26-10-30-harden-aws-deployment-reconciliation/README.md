@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T15:41:48Z
-latest_commit_sha: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
-chat_duration: 22250s (00:06:10:50)
+latest_commit_at_utc: 2026-09-26T15:47:03Z
+latest_commit_sha: aa2b6f7a55996584066175bb52124fc6ebe0028b
+chat_duration: 22565s (00:06:16:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -451,6 +451,17 @@ Summary: Split the artifact-store reconciliation reads into independent fail-clo
 
 ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
 
+
+### 2026-09-26T15:47:03Z - Commit recorded
+
+Commit: `aa2b6f7a55996584066175bb52124fc6ebe0028b`
+
+Message: fix(deploy): map reconciliation APIs to IAM actions
+
+Summary: Recorded every GitHub reconciliation provider operation against its authoritative IAM action and exact scope; corrected the S3 encryption read in source only, pending separate live-policy approval.
+
+ADR impact: No new ADR; extends the approved AWS change reliability programme with a verified API-to-IAM action contract.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -549,6 +560,13 @@ ADR impact: No new ADR; implements the AWS change reliability programme's operat
   Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
   ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
 
+
+- Commit: `aa2b6f7a55996584066175bb52124fc6ebe0028b`
+  Time UTC: 2026-09-26T15:47:03Z
+  Message: fix(deploy): map reconciliation APIs to IAM actions
+  Summary: Recorded every GitHub reconciliation provider operation against its authoritative IAM action and exact scope; corrected the S3 encryption read in source only, pending separate live-policy approval.
+  ADR impact: No new ADR; extends the approved AWS change reliability programme with a verified API-to-IAM action contract.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
@@ -574,9 +592,9 @@ Reason: The existing reconciliation boundary is amended so active provider-depen
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T15:41:48Z
-Latest commit SHA: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
-Chat duration: 22250s (00:06:10:50)
+Latest commit at UTC: 2026-09-26T15:47:03Z
+Latest commit SHA: aa2b6f7a55996584066175bb52124fc6ebe0028b
+Chat duration: 22565s (00:06:16:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
