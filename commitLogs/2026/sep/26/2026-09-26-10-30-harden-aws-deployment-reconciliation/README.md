@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-26T15:30:55Z
-latest_commit_sha: 52ba62859ba071c4a833875b1f5b0db829e02122
-chat_duration: 21597s (00:05:59:57)
+latest_commit_at_utc: 2026-09-26T15:41:48Z
+latest_commit_sha: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
+chat_duration: 22250s (00:06:10:50)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -68,6 +68,9 @@ go
 - Raised: CloudFormation active drift detection requires provider-dependent reads that the narrow GitHub reconciliation identity cannot safely own.
   Resolution: Kept GitHub passive, added a complete target resource-type inventory and a source/live role-policy alignment check, and planned a separate detector behind a reviewed permission and cost boundary.
 
+- Raised: The narrowed GitHub role passed source/live policy alignment and IAM simulation, but its first live reconciliation blocked at the grouped artifact-bucket control.
+  Resolution: Did not add a permission. Split every artifact-bucket provider read into an independently attributable, fail-closed safe control so the next live proof identifies the exact unavailable operation without exposing a provider response.
+
 ## Decisions Made
 
 - Stage 4 defines the private PostgreSQL reference target in source and stops at a reviewed CloudFormation change set; it does not provision the target until AWS SSO is restored and the change set is inspected.
@@ -91,6 +94,9 @@ go
 
 - Decision: Separate active CloudFormation drift detection from GitHub reconciliation.
   Rationale: The GitHub role must prove only the operations it safely owns. A detector may be introduced only after every stack resource type has an authoritative provider-read contract, a separate role, a cost review, and a controlled live proof.
+
+- Decision: Require operation-level safe diagnostics for grouped provider controls.
+  Rationale: Source policy and IAM simulation are useful preflight evidence, but neither proves an operational identity's live request path. A grouped provider check cannot guide a least-privilege repair without risking speculative permission expansion.
 
 ## Context Hygiene
 
@@ -410,6 +416,29 @@ Summary: Separated active drift detection from the GitHub reconciler, added a co
 
 ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
 
+### 2026-09-26T15:36:20Z - Live reconciliation boundary proof
+
+- Confirmed the GitHub OIDC role could assume its identity and complete the source-policy, account, stack-status, and passive drift-evidence checks.
+- Confirmed the source/live inline-policy alignment after removing only the redundant active-drift action.
+- The workflow failed closed at the grouped artifact-bucket verification boundary. No role broadening, detector invocation, resource mutation, or sensitive provider output occurred.
+
+### 2026-09-26T15:40:00Z - Operation-level diagnostic correction
+
+- Split each declared artifact-bucket read into an independently attributable safe control and updated the reliability programme.
+- Local reconciliation, policy, infrastructure, and whitespace checks passed.
+- Next step: promote this diagnostic-only correction, run one read-only GitHub reconciliation proof, and resolve only the exact reported control if it remains blocked.
+
+
+### 2026-09-26T15:41:48Z - Commit recorded
+
+Commit: `2ab8dacddeeb25b910e65c65a0fb9c764baf6740`
+
+Message: fix(deploy): isolate reconciliation control probes
+
+Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
+
+ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -501,6 +530,13 @@ ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for 
   Summary: Separated active drift detection from the GitHub reconciler, added a complete resource-type dependency inventory and fast policy gates, and required a safe source/live role-policy alignment check before Foundation mutation.
   ADR impact: ADR 0036 records the new detector boundary; ADR 0035 is amended for passive reconciliation.
 
+
+- Commit: `2ab8dacddeeb25b910e65c65a0fb9c764baf6740`
+  Time UTC: 2026-09-26T15:41:48Z
+  Message: fix(deploy): isolate reconciliation control probes
+  Summary: Split the artifact-store reconciliation reads into independent fail-closed safe controls after the live GitHub proof blocked at the former group boundary; no AWS permission was added.
+  ADR impact: No new ADR; implements the AWS change reliability programme's operation-level diagnostic rule.
+
 ## Main Refresh Conflicts
 
 - 2026-09-26: refresh readiness was `clean`; the chat branch had two task and
@@ -526,9 +562,9 @@ Reason: The existing reconciliation boundary is amended so active provider-depen
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T09:30:58Z
-Latest commit at UTC: 2026-09-26T15:30:55Z
-Latest commit SHA: 52ba62859ba071c4a833875b1f5b0db829e02122
-Chat duration: 21597s (00:05:59:57)
+Latest commit at UTC: 2026-09-26T15:41:48Z
+Latest commit SHA: 2ab8dacddeeb25b910e65c65a0fb9c764baf6740
+Chat duration: 22250s (00:06:10:50)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

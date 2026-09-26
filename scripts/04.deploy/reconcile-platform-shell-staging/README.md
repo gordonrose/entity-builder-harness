@@ -29,10 +29,11 @@ verdict; it never prints provider responses, endpoints, resource contents,
 secrets, or change-set details.
 
 If AWS cannot be verified, the result names the owning safe control (for
-example, `artifact-bucket-controls-verification-unavailable`) rather than a
-generic provider error. It remains fail-closed, but now tells the operator
-which bounded reconciliation area needs investigation without revealing the
-provider response.
+example, `artifact-bucket-public-access-control-verification-unavailable`)
+rather than a generic provider error. Each artifact-bucket read is an
+independent check, so a failure identifies the exact control without revealing
+a provider response. The command remains fail-closed: a passed neighbouring
+control never masks an unavailable one.
 
 GitHub does not start CloudFormation drift scans. AWS can require dependent
 provider reads for every resource type in a stack, and assigning those reads to

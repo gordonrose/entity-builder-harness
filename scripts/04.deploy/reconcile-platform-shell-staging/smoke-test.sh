@@ -45,11 +45,11 @@ module = runpy.run_path(Path("scripts/04.deploy/reconcile-platform-shell-staging
 
 try:
     module["run_check"](
-        "artifact-bucket-controls",
+        "artifact-bucket-public-access-control",
         lambda: (_ for _ in ()).throw(module["ReconciliationError"]("aws-verification-unavailable")),
     )
 except module["ReconciliationError"] as exception:
-    assert str(exception) == "artifact-bucket-controls-verification-unavailable"
+    assert str(exception) == "artifact-bucket-public-access-control-verification-unavailable"
 else:
     raise AssertionError("unavailable provider result was not attributed to its owning control")
 

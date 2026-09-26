@@ -338,28 +338,52 @@ def check_reconciliation_live_role_policy(arguments: argparse.Namespace, policy:
     require(live_policy == desired_policy, "reconciliation-live-role-policy")
 
 
-def check_artifact_bucket(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
-    """Verify the private, encrypted template transport control without reading policy content."""
+def artifact_bucket_checks(arguments: argparse.Namespace, policy: dict[str, Any]) -> list[tuple[str, Callable[[], None]]]:
+    """Return each private artifact-store control as one independently attributable check."""
 
     bucket = policy["artifact_bucket"]
-    commands = {
-        "public_access": ["s3api", "get-public-access-block", "--bucket", bucket, "--query", "PublicAccessBlockConfiguration"],
-        "encryption": ["s3api", "get-bucket-encryption", "--bucket", bucket, "--query", "ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm"],
-        "ownership": ["s3api", "get-bucket-ownership-controls", "--bucket", bucket, "--query", "OwnershipControls.Rules[0].ObjectOwnership"],
-        "lifecycle": ["s3api", "get-bucket-lifecycle-configuration", "--bucket", bucket, "--query", "Rules"],
-        "public_status": ["s3api", "get-bucket-policy-status", "--bucket", bucket, "--query", "PolicyStatus.IsPublic"],
-    }
-    values = {name: run_aws(arguments, policy, command) for name, command in commands.items()}
-    public_access = values["public_access"]
-    require(public_access == {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True}, "artifact-bucket-public-access-control")
-    encryption = values["encryption"]
-    require(encryption == "AES256", "artifact-bucket-encryption")
-    ownership = values["ownership"]
-    require(ownership == "BucketOwnerEnforced", "artifact-bucket-ownership")
-    lifecycle = values["lifecycle"]
-    require(lifecycle == [{"ID": "expire-reviewed-change-set-templates", "Status": "Enabled", "Filter": {"Prefix": "change-sets/"}, "Expiration": {"Days": 30}, "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}}], "artifact-bucket-lifecycle")
-    public_status = values["public_status"]
-    require(public_status is False, "artifact-bucket-policy-status")
+    return [
+        (
+            "artifact-bucket-public-access-control",
+            lambda: require(
+                run_aws(arguments, policy, ["s3api", "get-public-access-block", "--bucket", bucket, "--query", "PublicAccessBlockConfiguration"])
+                == {"BlockPublicAcls": True, "IgnorePublicAcls": True, "BlockPublicPolicy": True, "RestrictPublicBuckets": True},
+                "artifact-bucket-public-access-control",
+            ),
+        ),
+        (
+            "artifact-bucket-encryption",
+            lambda: require(
+                run_aws(arguments, policy, ["s3api", "get-bucket-encryption", "--bucket", bucket, "--query", "ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm"])
+                == "AES256",
+                "artifact-bucket-encryption",
+            ),
+        ),
+        (
+            "artifact-bucket-ownership",
+            lambda: require(
+                run_aws(arguments, policy, ["s3api", "get-bucket-ownership-controls", "--bucket", bucket, "--query", "OwnershipControls.Rules[0].ObjectOwnership"])
+                == "BucketOwnerEnforced",
+                "artifact-bucket-ownership",
+            ),
+        ),
+        (
+            "artifact-bucket-lifecycle",
+            lambda: require(
+                run_aws(arguments, policy, ["s3api", "get-bucket-lifecycle-configuration", "--bucket", bucket, "--query", "Rules"])
+                == [{"ID": "expire-reviewed-change-set-templates", "Status": "Enabled", "Filter": {"Prefix": "change-sets/"}, "Expiration": {"Days": 30}, "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1}}],
+                "artifact-bucket-lifecycle",
+            ),
+        ),
+        (
+            "artifact-bucket-policy-status",
+            lambda: require(
+                run_aws(arguments, policy, ["s3api", "get-bucket-policy-status", "--bucket", bucket, "--query", "PolicyStatus.IsPublic"])
+                is False,
+                "artifact-bucket-policy-status",
+            ),
+        ),
+    ]
 
 
 def check_budget(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
@@ -425,7 +449,7 @@ def main() -> int:
                 ("artifact-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")),
                 ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
                 ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")),
-                ("artifact-bucket-controls", lambda: check_artifact_bucket(arguments, policy)),
+                *artifact_bucket_checks(arguments, policy),
                 ("platform-shell-budget", lambda: check_budget(arguments, policy)),
             ]
             for check_id, check in core_checks:
