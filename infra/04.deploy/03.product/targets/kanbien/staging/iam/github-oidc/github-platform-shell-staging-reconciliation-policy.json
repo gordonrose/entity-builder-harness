@@ -15,7 +15,7 @@
       "Effect": "Allow",
       "Action": [
         "s3:GetEncryptionConfiguration",
-        "s3:GetBucketLifecycleConfiguration",
+        "s3:GetLifecycleConfiguration",
         "s3:GetBucketOwnershipControls",
         "s3:GetBucketPolicyStatus",
         "s3:GetBucketPublicAccessBlock"

@@ -95,7 +95,15 @@ created by the source implementation in this plan.
    `s3:GetBucketEncryption`. Source now swaps only that incorrect action for
    the authoritative one and records it in the operation-authorisation
    contract. Applying that live policy repair requires its own explicit AWS
-   approval and a subsequent identity-specific proof.
+   approval and a subsequent identity-specific proof. That proof passed the
+   encryption control, then isolated the second terminology exception:
+   `get-bucket-lifecycle-configuration` requires
+   `s3:GetLifecycleConfiguration`, not
+   `s3:GetBucketLifecycleConfiguration`. Before another live policy repair,
+   the complete declared operation inventory was rechecked against the linked
+   authoritative API references. The repair remains a one-for-one action
+   replacement on the existing bucket-only statement; it neither adds an
+   operation nor broadens its resource scope.
 2. Execute the reviewed detector change set. It has a separate service role,
    a fixed stack allowlist, and no access to secrets, records, queue messages,
    or workload data.
