@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.guide.operational-realization-contract.v1
-  version: 1
+  version: 2
   status: active
   layer: 01.harness
   domain: deployment.realization
@@ -66,6 +66,9 @@ transport channel.
 
 1. Copy the template and replace every placeholder with stable,
    provider-neutral identifiers.
+   A unit that does not produce or consume asynchronous work must declare
+   `async_channels: []`; it must not claim a channel merely to satisfy the
+   schema.
 2. Run `npm run deployment:realization:validate -- --contract <path>
    --validate-contract` before any target operation is proposed.
 3. Have the target-owned adapter emit only normalized facts and a normalized

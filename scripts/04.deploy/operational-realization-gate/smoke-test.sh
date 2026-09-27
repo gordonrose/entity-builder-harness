@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.test.operational-realization-gate
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: deployment.realization
@@ -73,6 +73,48 @@ if [[ "$valid_output" != *'"verdict": "passed"'* ]]; then
   echo "ERROR: valid realization contract did not pass" >&2
   exit 1
 fi
+
+python3 - "$FIXTURES/valid-contract.yml" "$TEMPORARY_DIRECTORY/no-async-setup.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+document = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
+document["identities"].append({"id": "setup-identity", "permissions": ["prepare-state"]})
+document["configuration_inputs"].append({"id": "setup-configuration", "required_fields": ["configuration-reference"], "optional_fields": [], "sensitivity": "secret-reference-only"})
+document["connections"].append({"id": "setup-connection", "source": "setup-runner", "destination": "delivery-store", "transport_security": "verified"})
+document["observability_profiles"].append({"id": "setup-observability", "required_facts": ["correlation-id", "outcome-category"]})
+document["recovery_plans"].append({"id": "setup-recovery", "entry_condition": "prior-attempt-reached-failed-or-stopped-terminal-state", "cleanup": "reviewed-cleanup", "rollback": "reviewed-rollback"})
+document["execution_units"].append({
+    "id": "setup-runner",
+    "artifact": "delivery-artifact",
+    "identity": "setup-identity",
+    "configuration_inputs": ["setup-configuration"],
+    "connections": ["setup-connection"],
+    "state_stores": ["delivery-store"],
+    "async_channels": [],
+    "observability_profile": "setup-observability",
+    "recovery_plan": "setup-recovery",
+})
+document["edges"].extend([
+    {"from": "setup-runner", "to": "delivery-artifact", "purpose": "executes"},
+    {"from": "setup-runner", "to": "setup-identity", "purpose": "assumes"},
+    {"from": "setup-runner", "to": "setup-configuration", "purpose": "reads-configuration"},
+    {"from": "setup-runner", "to": "setup-connection", "purpose": "connects"},
+    {"from": "setup-connection", "to": "delivery-store", "purpose": "reaches-state"},
+    {"from": "setup-runner", "to": "delivery-store", "purpose": "persists"},
+    {"from": "setup-runner", "to": "setup-observability", "purpose": "emits-safe-telemetry"},
+    {"from": "setup-runner", "to": "setup-recovery", "purpose": "recovers"},
+])
+Path(sys.argv[2]).write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+PY
+no_async_output="$(bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/no-async-setup.yml" --validate-contract --json)"
+if [[ "$no_async_output" != *'"verdict": "passed"'* ]]; then
+  echo "ERROR: a non-queue execution unit with an explicit empty channel list must pass" >&2
+  exit 1
+fi
+sed 's/async_channels: \[\]/async_channels: [delivery-channel]/' "$TEMPORARY_DIRECTORY/no-async-setup.yml" > "$TEMPORARY_DIRECTORY/unbound-async-setup.yml"
+expect_failure "execution-unit-async-channel-unbound" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unbound-async-setup.yml" --validate-contract --json
 
 preflight_output="$(bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$FIXTURES/preflight-normalized-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json)"
 if [[ "$preflight_output" != *'"verdict": "passed"'* ]]; then

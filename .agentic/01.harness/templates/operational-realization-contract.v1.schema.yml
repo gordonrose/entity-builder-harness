@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.schema.operational-realization-contract.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 01.harness
 #   domain: deployment.realization
@@ -48,7 +48,7 @@ field_guide:
   - path: execution_units[]
     what: A deployable unit that performs work.
     does: Declares every artifact, identity, input, connection, state store, channel, telemetry profile, and recovery plan it uses.
-    validation: Every reference and dependency edge must resolve to a declared component.
+    validation: Every reference and dependency edge must resolve to a declared component; `async_channels` may be empty only when the unit does not produce or consume asynchronous work.
   - path: connections[].source and connections[].destination
     what: Typed execution-to-dependency relationship.
     does: Prevents an execution unit from claiming an undeclared or incorrectly typed connection.

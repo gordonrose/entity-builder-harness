@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.operational-realization-gate
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: deployment.realization
@@ -274,8 +274,8 @@ def edge_set(contract: dict[str, Any], known: dict[str, str]) -> set[tuple[str, 
     return result
 
 
-def listed_ids(value: Any, code: str) -> list[str]:
-    entries = safe_list(value, code)
+def listed_ids(value: Any, code: str, non_empty: bool = True) -> list[str]:
+    entries = safe_list(value, code, non_empty=non_empty)
     if not all(isinstance(entry, str) and entry for entry in entries):
         raise ContractFailure(code)
     return entries
@@ -335,7 +335,11 @@ def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str
         for connection_id in unit_connections[unit_id]:
             if connections[connection_id]["source"] != unit_id:
                 raise ContractFailure("execution-unit-connection-source-mismatch")
-        unit_channels[unit_id] = set(listed_ids(unit.get("async_channels"), "execution-unit-async-channels-missing"))
+        # A unit that only prepares, migrates, verifies, or restores state may
+        # correctly use no asynchronous channel. Channel participants remain
+        # required to bind the channel below; an empty declaration is not an
+        # implicit binding.
+        unit_channels[unit_id] = set(listed_ids(unit.get("async_channels"), "execution-unit-async-channels-missing", non_empty=False))
         for channel_id in unit_channels[unit_id]:
             if channel_id not in channels:
                 raise ContractFailure("execution-unit-references-undeclared-component")

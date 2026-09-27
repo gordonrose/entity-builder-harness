@@ -45,6 +45,10 @@ let's do that
 - Raised: Continuous reconciliation could observe expired deployment-artifact drift evidence without a governed refresh path.
   Resolution: Added an administrator-only fixed-stack assessor that can detect and poll only for an in-sync status; the GitHub read role remains unchanged.
 
+
+- Raised: The realization gate required every execution unit to claim an async channel, which misrepresented units that only prepare, migrate, verify, or restore durable state.
+  Resolution: The generic contract now permits an explicit empty async-channel list while retaining mandatory binding validation for every declared channel participant.
+
 ## Decisions Made
 
 - Storage must be planned as a provider-neutral lifecycle platform, not as an
@@ -60,6 +64,10 @@ let's do that
 - Decision: Use a separate artifact-stack active drift assessor rather than broadening GitHub reconciliation permissions.
   Rationale: It preserves least privilege and fails closed on out-of-sync while supplying only a fresh safe fact.
 
+
+- Decision: Model non-queue execution units with an explicit empty async-channel list.
+  Rationale: This makes the graph truthful without weakening declared channel producer and consumer binding checks.
+
 ## Context Hygiene
 
 
@@ -74,6 +82,10 @@ let's do that
 
 - Summary: A stale artifact-drift fact was a structural reconciliation gap, not PostgreSQL drift. The new assessor is fixed-stack, status-only, administrator-only, and must pass before continuous reconciliation resumes.
   Durable evidence: Durable source: scripts/04.deploy/assess-platform-shell-artifact-drift/; staging target profile; deployment reconciliation and drift-boundary checks; PostgreSQL Stage 6 runbook/evidence.
+
+
+- Summary: The generic realization compiler now distinguishes non-queue execution units from async producers or consumers. A multi-stage stateful route can be declared accurately without a false queue relationship.
+  Durable evidence: Durable source: scripts/04.deploy/operational-realization-gate/; operational realization contract schema and guide.
 
 ## Activity Log
 
@@ -243,6 +255,27 @@ Message: fix(deploy): refresh artifact drift evidence safely
 Summary: Added a fixed-stack administrator-only artifact drift assessor, preserved the GitHub read boundary, and documented the safe reconciliation recovery path for PostgreSQL Stage 6.
 
 ADR impact: No ADR: this is a bounded least-privilege reconciliation control within the approved target architecture.
+
+
+### 2026-09-27T13:55:03Z - Issue
+
+Raised: The realization gate required every execution unit to claim an async channel, which misrepresented units that only prepare, migrate, verify, or restore durable state.
+
+Resolution: The generic contract now permits an explicit empty async-channel list while retaining mandatory binding validation for every declared channel participant.
+
+
+### 2026-09-27T13:55:03Z - Decision
+
+Decision: Model non-queue execution units with an explicit empty async-channel list.
+
+Rationale: This makes the graph truthful without weakening declared channel producer and consumer binding checks.
+
+
+### 2026-09-27T13:55:03Z - Context hygiene
+
+Summary: The generic realization compiler now distinguishes non-queue execution units from async producers or consumers. A multi-stage stateful route can be declared accurately without a false queue relationship.
+
+Durable evidence: Durable source: scripts/04.deploy/operational-realization-gate/; operational realization contract schema and guide.
 
 ## Sub-Agent Activity
 
