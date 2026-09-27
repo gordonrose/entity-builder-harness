@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T21:17:03Z
-latest_commit_sha: e86f10e9
-chat_duration: 2791s (00:00:46:31)
+latest_commit_at_utc: 2026-09-27T21:42:59Z
+latest_commit_sha: 164f9f18
+chat_duration: 4347s (00:01:12:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -100,6 +100,17 @@ Decision: Promoted the verified deployment-hardening closure to origin/main
 
 Rationale: The isolated promotion worktree passed the workflow verifier and full infrastructure static suite; origin/main was fetched and proved equal to source commit 6a435b15 after a normal fast-forward push.
 
+
+### 2026-09-27T21:42:59Z - Commit recorded
+
+Commit: `164f9f18`
+
+Message: feat(deploy): gate promotion on private candidate execution
+
+Summary: Add a source-validated isolated Fargate candidate-execution preflight, exact task-shape comparison, narrow reconciliation scopes, runtime-bound artifact evidence, and a PostgreSQL Stage 6 preflight guard.
+
+ADR impact: No ADR; this implements the existing operational-realization programme as a bounded target adapter slice.
+
 ## Sub-Agent Activity
 
 - Independent evidence audit: verified the source/payload seals already cover
@@ -118,6 +129,13 @@ Rationale: The isolated promotion worktree passed the workflow verifier and full
   Summary: Force the reviewed linux/amd64 image platform and verify immutable digest platform plus source revision before staging deployment continuation; record the provider-neutral realization follow-up.
   ADR impact: no ADR; recorded in deployment plans
 
+
+- Commit: `164f9f18`
+  Time UTC: 2026-09-27T21:42:59Z
+  Message: feat(deploy): gate promotion on private candidate execution
+  Summary: Add a source-validated isolated Fargate candidate-execution preflight, exact task-shape comparison, narrow reconciliation scopes, runtime-bound artifact evidence, and a PostgreSQL Stage 6 preflight guard.
+  ADR impact: No ADR; this implements the existing operational-realization programme as a bounded target adapter slice.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -133,9 +151,9 @@ this commit does not choose a new platform architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T20:30:32Z
-Latest commit at UTC: 2026-09-27T21:17:03Z
-Latest commit SHA: e86f10e9
-Chat duration: 2791s (00:00:46:31)
+Latest commit at UTC: 2026-09-27T21:42:59Z
+Latest commit SHA: 164f9f18
+Chat duration: 4347s (00:01:12:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
