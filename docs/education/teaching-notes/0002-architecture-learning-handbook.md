@@ -11056,9 +11056,290 @@ Because operating systems can expose command arguments to other local process
 inspectors. A short-lived, owner-only file keeps the password out of that
 broader process listing and is deleted during fixture cleanup.
 
+## 129. File Storage Is a Lifecycle, Not a Bucket
+
+The existing Core file contract names the durable facts that more than one
+feature can share: a file identity, display name, declared type and size,
+checksum, opaque storage reference, retention fact, and access intent. It is
+deliberately not an object-storage implementation.
+
+That distinction matters because a storage provider receiving bytes does not
+answer whether the content is safe, who may use it, when it must be retained,
+or how it can be recovered. The planned storage platform separates those
+questions:
+
+```text
+feature chooses an approved purpose/profile
+  → platform authorises a transfer
+  → provider receives untrusted bytes
+  → platform verifies and approves or rejects them
+  → platform issues a current, bounded delivery decision
+```
+
+An object key is only the provider's address for bytes. It is not the business
+identity of a document and it is never permission to read it. Likewise, a
+feature attachment has business meaning—"this is an exam-evidence attachment"
+or "this is a profile image"—whereas the reusable storage platform does not.
+
+### Misconception check
+
+“The upload worked, so the document is available.”
+
+No. Upload completion means bytes arrived. Approval and delivery are separate
+policy decisions.
+
+### Study question
+
+Why is it dangerous to build a provider key from a filename or a user name?
+
+Because names can contain personal data, change over time, collide, and tempt
+later code to treat an address as either an identity or an authorisation rule.
+The platform should use opaque keys and retain user-facing names as protected
+metadata.
+
+## 130. Quarantine Is a Boundary Between Bytes and Trust
+
+Files are user-controlled input. A sensible lifecycle therefore has an
+explicit state between receiving bytes and permitting anyone to consume them:
+
+```text
+requested → authorised → transferring → uploaded → verifying
+                                              │
+                              quarantined ────┴──── rejected
+                                              │
+                                           approved
+```
+
+Quarantine can include content-type verification, size checks, malware/DLP
+scanning, archive safety checks, and controlled derivative generation. A
+preview, thumbnail, OCR result, or AI output is derived content: it can itself
+be sensitive and must inherit at least the source's access, retention,
+residency, classification, and legal-hold protections.
+
+The feature decides whether its purpose permits OCR, AI, sharing, or a human
+review. The platform supplies the reusable state-machine, timeout, retry,
+quarantine, worker, and safe-observability mechanisms. A provider adapter
+performs the selected scanner or object-storage call only after those decisions
+are made.
+
+### Misconception check
+
+“OCR makes a scan or PDF accessible, so it can be treated as the source.”
+
+No. OCR is an interpretation which can be incomplete or incorrect. The
+original remains the evidence; important extracted values need appropriate
+validation and, where required, human review.
+
+### Study question
+
+Why must an uploaded document's text be treated as data rather than
+instructions when an AI processor sees it?
+
+Because untrusted content could contain hostile text. The document never gains
+authority over the system or the model's policy merely by being uploaded.
+
+## 131. Retention, Deletion, and Recovery Are Different Decisions
+
+A user asking to delete a document may start a short repair window. It does
+not automatically answer whether the data must be retained for a legal reason,
+whether a hold prevents purge, what happens to provider versions/backups, or
+whether a copy exists in a preview or extraction result.
+
+```text
+approved → delete-pending-restore → purge-eligible → purged
+                 │                         ▲
+                 └──── restore ────────────┘
+```
+
+Legal hold and retention can prevent the transition to physical purge. A
+recovery design also needs version/checksum integrity, restore exercises, and
+honesty about what backup or archive copies remain until their own lifecycle
+expires. Storage durability is not proof that an authorised mistake can be
+undone.
+
+### Misconception check
+
+“Provider versioning is the retention policy.”
+
+No. Versioning is a recovery mechanism. Retention, legal hold, restoration,
+privacy erasure, and eventual provider cleanup each need an explicit owner and
+rule.
+
+### Study question
+
+Why should an orphan reconciler report a missing or detached object before
+deleting it?
+
+Because an in-progress transfer, temporary provider inconsistency, or a broken
+metadata path can make a healthy object look detached. Detection plus a grace
+period is safer than destructive guessing.
+
+## 132. Access Grants Are Short-Lived Capabilities
+
+Private object storage should not become public merely because a browser needs
+to upload or download a file. The platform authorises the particular operation
+and may ask a provider adapter to issue a short-lived, narrowly scoped delivery
+grant.
+
+```text
+current authorisation
+  → platform access decision
+  → short-lived provider delivery grant
+  → browser transfers only the approved object and operation
+```
+
+Resume, preview, streaming/range delivery, export, restore, share, and delete
+are distinct operations. A prior upload grant is not a permanent download
+right. When a resume is requested the platform must re-check that the caller,
+object, transfer state, profile, and expiry still permit it.
+
+Grant URLs are credential-bearing runtime values. They are not application IDs
+and must not enter logs, audit facts, metrics, traces, alerts, test snapshots,
+or Git evidence.
+
+### Study question
+
+Why is browser byte-level progress not the same as the platform's transfer
+state?
+
+The browser can accurately show local progress to one user. The platform holds
+the durable, authorised fact about whether an upload may resume, is complete,
+has expired, is quarantined, or may be delivered.
+
+## 133. Object Storage Has Its Own Operations and Residency Model
+
+Costs and compliance apply to every copy, not just an original upload. A file
+may have a preview, extraction result, archive version, backup, scanner
+artefact, or replication copy. The same approved residency and lifecycle rules
+need to constrain those relevant copies and processors.
+
+The platform must expose safe operational facts such as purpose, profile,
+state, outcome, bounded error category, and size band. Features need cost and
+quota policy, while target infrastructure decides selected storage classes,
+archive mechanisms, encryption, provider region, alarms, and recovery
+resources. Neither ordinary operational logging nor a bucket's durability is a
+complete recovery or compliance strategy.
+
+The planned `Storage Platform v1` creates three distinct completion levels:
+
+1. provider-neutral contracts and deterministic platform coordination;
+2. one harmless, private S3 reference proof after the operational-realization
+   gate is available; and
+3. a feature-ready baseline with selected scanning, quarantine, recovery,
+   tenant-isolation, access, and operating controls.
+
+Multipart/resumable transfers, cold archive restore, streaming, OCR, AI, and
+bulk workflows are later explicit promotions. They are not smuggled in under
+the word “upload.”
+
+### Study question
+
+Why is a successful harmless S3 smoke flow not proof that the platform can
+accept real medical or personal documents?
+
+Because the latter requires selected and proven content controls, residency,
+retention, access, recovery, operational response, and feature-specific policy
+decisions beyond simply storing an opaque harmless object.
+
+## 134. Data Governance Is the Shared Policy Plane
+
+Residency, retention, legal hold, permitted processing, recovery, and evidence
+rules apply to more than files. A database record, its backup, an object
+preview, a log, an audit event, an export, and an AI extraction can all be
+different copies or uses of the same classified business data.
+
+The architecture therefore needs one shared, provider-neutral way to resolve
+what handling is allowed:
+
+```text
+platform safety floor
+  ∩ product baseline
+  ∩ tenant restriction
+  ∩ capability purpose
+  = resolved handling policy
+```
+
+The result is passed to the relevant platform module. It does not replace that
+module's own job:
+
+| Consumer | It still owns | It receives from data governance |
+| --- | --- | --- |
+| Persistence | Transactions, records, migrations, recovery mechanics | Retention, residency, legal-hold, permitted export/restore evidence requirements |
+| Storage | Transfer, quarantine, processing, delivery, archive mechanics | Classification, processing/residency, lifecycle, sharing and evidence constraints |
+| Observability | Safe normalisation, logs, metrics, traces | Which record class/facts are permitted; it still uses its canonical allowlists |
+| AI/integrations | Approved request construction and provider boundary | Whether the purpose/destination/processing is allowed at all |
+
+This is a **policy plane**, not a central database or a universal interceptor.
+It does not inspect arbitrary values to guess their sensitivity, upload a file,
+save a record, or select an AWS region. Features declare meaning and approved
+profiles; target infrastructure maps the resolved abstract requirement to
+specific regions, encryption, lifecycle resources, identities, and evidence.
+
+The [Data Governance Foundation v1 plan](../../../.agentic/03.product/plans/implementation/data-governance-foundation-v1.md)
+now records this as a prerequisite for the storage profile, and a planned
+consumer change for persistence and observability.
+
+### Misconception check
+
+“Data governance is another name for authorisation.”
+
+No. Authorisation asks whether this caller may perform an action. Data
+governance asks whether the action, destination, processing, retention, and
+evidence handling are allowed for this class and purpose of data. Both can deny
+the same request for different reasons.
+
+### Study question
+
+Why should observability consume a resolved policy instead of looking at raw
+records and deciding what to log?
+
+Because raw records are precisely the data that must stay protected. The
+observability module should only receive already-approved, bounded facts and
+apply its own allowlist; it must not become another broad reader of business
+data.
+
+## 135. “One Go” Is an Orchestrated Programme, Not One Unchecked Deployment
+
+The goal is to avoid a long series of chat-driven repairs while still respecting
+real dependency order. A reliable delivery programme has one approved
+orchestrator which progresses automatically only after each objective gate
+passes:
+
+```text
+source checks → current-state reconciliation → change-set review
+  → dependency deployment → bounded proof → recovery/cleanup → evidence
+```
+
+The gates are engineering controls, not repeated requests for permission. They
+answer distinct questions: is the source internally consistent; does the exact
+operating identity have only the required rights; is the proposed cloud change
+expected; did the dependency become healthy; and did the harmless proof
+demonstrate both allowed and denied behaviour?
+
+If a gate fails, the programme preserves its safe checkpoint and stops. It does
+not replay a consumed test label, broaden IAM, guess a missing setting, or use
+an administrator result as proof for a deployment role. A later approved run
+starts with fresh reconciliation rather than relying on chat memory.
+
+The [platform-foundation convergence programme](../../../docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md)
+now coordinates the data-governance, PostgreSQL, scheduler/time, storage, and
+observability dependency train. It explicitly distinguishes a harmless S3
+reference from feature-ready handling of real personal or medical documents.
+
+### Study question
+
+Why use several sequential change sets inside one automated programme instead
+of one giant CloudFormation deployment?
+
+Because a database, scheduler, and storage path have different dependencies,
+permissions, recovery paths, and proofs. Small reviewed checkpoints make a
+failure precise and recoverable while the orchestrator still removes the need
+for manual chat-by-chat coordination.
+
 ## Repository Evidence
 
 - [Current session log](../../../commitLogs/2026/sep/23/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder/README.md)
+- [Storage planning session log](../../../commitLogs/2026/sep/26/2026-09-26-22-12-plan-provider-neutral-storage-platform/README.md)
 - [Core package overview](../../../packages/core/README.md)
 - [Core security public entry point](../../../packages/core/src/security/index.ts)
 - [Platform contracts README](../../../platform/contracts/README.md)
@@ -11074,6 +11355,10 @@ broader process listing and is deleted during fixture cleanup.
 - [Platform worker source](../../../platform/workers/src/index.ts)
 - [Core persistence source guide](../../../packages/core/src/persistence/README.md)
 - [Core persistence public barrel](../../../packages/core/src/persistence/index.ts)
+- [Core file-storage contract](../../../packages/core/src/files/index.ts)
+- [Storage Platform v1 plan](../../../.agentic/03.product/plans/implementation/storage-platform-v1.md)
+- [Data Governance Foundation v1 plan](../../../.agentic/03.product/plans/implementation/data-governance-foundation-v1.md)
+- [Platform foundation convergence programme](../../../docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md)
 - [Platform persistence source guide](../../../platform/persistence/README.md)
 - [Platform persistence public barrel](../../../platform/persistence/src/index.ts)
 - [AWS DynamoDB persistence adapter](../../../platform/adapters/aws/persistence/dynamodb/README.md)

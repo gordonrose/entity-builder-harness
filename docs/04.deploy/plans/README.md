@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plans.readme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -32,3 +32,4 @@ workflow remains `.agentic/aws/workflows/execute-approved-aws-change.md`.
 | Plan | Purpose |
 | --- | --- |
 | [`kanbien-staging-aws-change-reliability-programme.md`](kanbien-staging-aws-change-reliability-programme.md) | Prevent source/live IAM and CloudFormation drift-detection dependency failures before a staging change reaches AWS. |
+| [`kanbien-staging-platform-foundation-convergence-v1.md`](kanbien-staging-platform-foundation-convergence-v1.md) | Orchestrate data governance, PostgreSQL, scheduler/time, storage, and observability foundations through source, reconciliation, change-set, proof, recovery, and closeout gates. |

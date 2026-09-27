@@ -394,6 +394,7 @@ Current state is intentionally incomplete and must remain visible:
 | Observability | safe structured records, logging, metric/trace seams | no external exporter/sink adapter selected | not a complete production observability path |
 | Rate limiting | bounded in-memory limiter | no durable shared adapter or ingress address resolver | blocks public multi-replica readiness |
 | Queue processing | provider-neutral worker/job mechanics | no queue provider selected | deferred target/adapter slice |
+| Object/file storage | minimal Core file contracts | no storage platform, provider adapter, or target path selected; `storage-platform-v1.md` owns the staged plan | deferred until its metadata, processing, lifecycle, and delivery boundaries are selected and proven |
 | Configuration and secrets | process configuration contracts | target host can inject values; no secrets-manager adapter selected | target-specific evidence still required |
 | Durable audit/security records | normalised record contracts | no durable provider/sink selected | deferred target/adapter slice |
 
@@ -1073,10 +1074,12 @@ retry, and drain behaviour without double-processing work.
 
 #### Data classification and evidence-policy inputs
 
-Status: boundary recorded; implementation is deliberately deferred until a
-first real entity, capability, and policy evaluator are selected. A data
-classification is not an operational profile, and it must never be used as a
-reason to place classified values in logs, metrics, or traces.
+Status: the current observability boundary remains provider-neutral and
+allowlist-based. [Data Governance Foundation v1](data-governance-foundation-v1.md)
+now owns the planned shared policy vocabulary and resolver; its integration is
+not yet implemented. A data classification is not an operational profile, and
+it must never be used as a reason to place classified values in logs, metrics,
+or traces.
 
 `packages/core/security/classification.ts` already owns the reusable
 provider-neutral classification vocabulary, while
@@ -1097,9 +1100,11 @@ normally reduces those facts while raising accountability requirements. Tenant
 policy may tighten, but must not silently weaken, the adopted product baseline.
 
 The product-harness plan owns the future entity/capability declaration and
-validator requirements. This platform-shell plan records the integration
-boundary only; it does not authorise a generic entity model, a security-policy
-engine, persistence implementation, or a record-delivery provider.
+validator requirements. The data-governance plan owns the provider-neutral
+policy-resolution contract. This platform-shell plan records observability's
+consumer boundary only; it does not authorise a generic entity model, a
+security-policy store, persistence implementation, or a record-delivery
+provider.
 
 Current hardening position: logging, metric recording, and tracing now each
 contain their own optional-sink failure. A failing logger, metric port, or
