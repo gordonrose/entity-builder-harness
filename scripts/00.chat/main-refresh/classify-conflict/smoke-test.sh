@@ -134,4 +134,52 @@ if ! printf '%s\n' "$OUTPUT" | grep -q '^type=retired-artifact-generator-conflic
   fail "retired artifact generator conflict was not classified"
 fi
 
+git -C "$REPO" merge --abort
+git -C "$REPO" checkout -q main
+
+PLAN_INDEX="docs/04.deploy/plans/README.md"
+mkdir -p "$REPO/$(dirname "$PLAN_INDEX")"
+cat > "$REPO/$PLAN_INDEX" <<'EOF'
+<!-- agentic-artifact:
+version: 1
+-->
+# Plans
+
+| Plan | Purpose |
+| --- | --- |
+| [base.md](base.md) | Base plan. |
+EOF
+git -C "$REPO" add "$PLAN_INDEX"
+git -C "$REPO" commit -q -m "add plan index"
+
+git -C "$REPO" checkout -q -b chat/plan-index
+sed -i 's/version: 1/version: 2/' "$REPO/$PLAN_INDEX"
+printf '%s\n' '| [chat.md](chat.md) | Chat plan. |' >> "$REPO/$PLAN_INDEX"
+git -C "$REPO" add "$PLAN_INDEX"
+git -C "$REPO" commit -q -m "add chat plan row"
+
+git -C "$REPO" checkout -q main
+printf '%s\n' '| [main.md](main.md) | Main plan. |' >> "$REPO/$PLAN_INDEX"
+git -C "$REPO" add "$PLAN_INDEX"
+git -C "$REPO" commit -q -m "add main plan row"
+
+git -C "$REPO" checkout -q chat/plan-index
+set +e
+git -C "$REPO" merge main >/dev/null 2>&1
+MERGE_STATUS="$?"
+set -e
+
+if [ "$MERGE_STATUS" -eq 0 ]; then
+  fail "expected append-only plan-index conflict"
+fi
+
+OUTPUT="$(
+  cd "$REPO"
+  bash scripts/00.chat/main-refresh/classify-conflict/script.sh "$PLAN_INDEX"
+)"
+
+if ! printf '%s\n' "$OUTPUT" | grep -q '^type=append-only-plan-index-conflict$'; then
+  fail "append-only plan index conflict was not classified"
+fi
+
 echo "main refresh conflict classifier smoke test passed."

@@ -100,6 +100,38 @@ contains_any() {
   return 1
 }
 
+plan_index_rows_added_only() {
+  local base_rows ours_rows theirs_rows base_without_rows ours_without_rows theirs_without_rows row
+
+  base_rows="$(printf '%s\n' "$BASE_CONTENT" | sed -nE 's/^\| \[.*\]\([^)]*\) \| .* \|$/&/p')"
+  ours_rows="$(printf '%s\n' "$OURS_CONTENT" | sed -nE 's/^\| \[.*\]\([^)]*\) \| .* \|$/&/p')"
+  theirs_rows="$(printf '%s\n' "$THEIRS_CONTENT" | sed -nE 's/^\| \[.*\]\([^)]*\) \| .* \|$/&/p')"
+
+  if [ -z "$base_rows" ] || [ -z "$ours_rows" ] || [ -z "$theirs_rows" ]; then
+    return 1
+  fi
+
+  base_without_rows="$(printf '%s\n' "$BASE_CONTENT" | sed -E '/^version: [0-9]+$/d; /^\| \[.*\]\([^)]*\) \| .* \|$/d')"
+  ours_without_rows="$(printf '%s\n' "$OURS_CONTENT" | sed -E '/^version: [0-9]+$/d; /^\| \[.*\]\([^)]*\) \| .* \|$/d')"
+  theirs_without_rows="$(printf '%s\n' "$THEIRS_CONTENT" | sed -E '/^version: [0-9]+$/d; /^\| \[.*\]\([^)]*\) \| .* \|$/d')"
+
+  if [ "$base_without_rows" != "$ours_without_rows" ] || [ "$base_without_rows" != "$theirs_without_rows" ]; then
+    return 1
+  fi
+
+  while IFS= read -r row; do
+    if [ -n "$row" ] && { ! printf '%s\n' "$ours_rows" | grep -Fqx "$row" || ! printf '%s\n' "$theirs_rows" | grep -Fqx "$row"; }; then
+      return 1
+    fi
+  done <<< "$base_rows"
+
+  if [ "$(printf '%s\n' "$ours_rows" | sort | uniq -d | wc -l)" -ne 0 ] || [ "$(printf '%s\n' "$theirs_rows" | sort | uniq -d | wc -l)" -ne 0 ]; then
+    return 1
+  fi
+
+  return 0
+}
+
 emit() {
   local type="$1"
   local reason="$2"
@@ -121,6 +153,15 @@ case "$CONFLICT_PATH" in
   commitLogs/*/README.md)
     emit "session-bookkeeping-conflict" "path is a chat session log; preserve recorded session evidence"
     exit 0
+    ;;
+esac
+
+case "$CONFLICT_PATH" in
+  docs/[0-9][0-9].*/plans/README.md)
+    if [ "$BASE_PRESENT" = "1" ] && [ "$OURS_PRESENT" = "1" ] && [ "$THEIRS_PRESENT" = "1" ] && plan_index_rows_added_only; then
+      emit "append-only-plan-index-conflict" "both sides preserve the existing plan index and add only unique plan-table rows with an optional metadata version increment"
+      exit 0
+    fi
     ;;
 esac
 

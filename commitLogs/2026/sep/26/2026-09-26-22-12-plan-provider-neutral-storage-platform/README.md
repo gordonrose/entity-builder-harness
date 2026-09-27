@@ -108,6 +108,23 @@ Initial intent: let's do that
   default ALB route, stored secret, Cognito configuration, DynamoDB/SQS smoke
   proof, or non-staging target is in scope.
 
+### 2026-09-27 - Fresh source intake and realization-gate remediation
+
+- Rehearsed and applied a clean non-rewriting refresh from freshly fetched
+  `origin/main` through an ephemeral local reference because the root
+  integration worktree's local `main` is intentionally unavailable for update.
+  The refresh added the accepted PostgreSQL recovery source without altering
+  the root worktree.
+- The Operational Realization Gate remediation was independently reviewed.
+  It now fails closed on unsafe evidence fields, missing check identifiers or
+  timestamps, incomplete component coverage, invalid typed connections and
+  async bindings, mutable artifacts, and an in-place recovery label. An
+  additional undeclared-async-channel path was corrected before integration.
+- Preflight found one additive `docs/04.deploy/plans/README.md` conflict:
+  both valid changes add distinct plan rows. ADR 0037 and a tested classifier
+  rule now govern resolution only when every existing row and all non-index
+  content are preserved. Any other prose conflict remains fail-closed.
+
 
 ### 2026-09-27T13:17:44Z - Context hygiene
 
@@ -150,13 +167,18 @@ ADR impact: No ADR: draft plans only; provider and target decisions remain separ
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+- `docs/04.deploy/plans/README.md` — pending governed
+  `append-only-plan-index-conflict` resolution in the exact
+  Operational-Realization-Gate preflight. The base plan row is unchanged;
+  each side adds one distinct plan row. Resolution must retain both and set a
+  single incremented metadata version after the preflight classifier confirms
+  the narrow safe shape.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path: 
-Reason: This checkpoint adds draft implementation plans and rule references, not an accepted durable architecture decision; any selected provider, policy, or target decision will receive its own ADR when adopted.
+ADR needed: yes
+ADR path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+Reason: A narrowly scoped deterministic conflict-resolution rule is a durable chat-process decision and must be recorded separately from the platform planning checkpoint.
 
 ## Session Metrics
 
