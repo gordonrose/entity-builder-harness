@@ -11,32 +11,38 @@ import {
 
 async function main(): Promise<void> {
   let pool;
+  let phase: BootstrapFailureCategory = "bootstrap-input-validation-failure";
   try {
     const master = secretFromEnvironment("RELATIONAL_MASTER_SECRET_JSON");
     const migration = secretFromEnvironment("RELATIONAL_MIGRATION_SECRET_JSON");
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
     pool = connectionPool(master, "arn:aws:secretsmanager:eu-west-1:337159794548:secret:target-managed-master", "platform_smoke");
+    phase = "bootstrap-password-quotation-failure";
     const migrationPassword = await quotedLiteral(pool, migration.password);
     const runtimePassword = await quotedLiteral(pool, runtime.password);
+    phase = "bootstrap-role-provisioning-failure";
     await pool.query({ text: "DO $$ BEGIN CREATE ROLE psmokemigrate LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
     await pool.query({ text: "DO $$ BEGIN CREATE ROLE psmokeruntime LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
     await pool.query({ text: "ALTER ROLE psmokemigrate LOGIN PASSWORD " + migrationPassword });
     await pool.query({ text: "ALTER ROLE psmokeruntime LOGIN PASSWORD " + runtimePassword });
+    phase = "bootstrap-database-grant-failure";
     await pool.query({ text: "GRANT CONNECT, CREATE, TEMPORARY ON DATABASE platformsmoke TO psmokemigrate" });
     await pool.query({ text: "GRANT CONNECT ON DATABASE platformsmoke TO psmokeruntime" });
+    phase = "bootstrap-schema-provisioning-failure";
     await pool.query({ text: "CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate" });
+    phase = "bootstrap-schema-grant-failure";
     await pool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });
     await pool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
     writeOutcome("bootstrap_completed", "succeeded");
   } catch (error) {
-    writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error));
+    writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error, phase));
     process.exitCode = 1;
   } finally {
     await closePool(pool);
   }
 }
 
-function bootstrapFailureCategory(error: unknown): BootstrapFailureCategory {
+function bootstrapFailureCategory(error: unknown, phase: BootstrapFailureCategory): BootstrapFailureCategory {
   const code = errorProperty(error, "code");
   const message = errorProperty(error, "message");
   if (message === "RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE") return "bootstrap-certificate-authority-unavailable";
@@ -44,7 +50,7 @@ function bootstrapFailureCategory(error: unknown): BootstrapFailureCategory {
   if (code === "42501") return "bootstrap-database-authorization-failure";
   if (["ECONNREFUSED", "ECONNRESET", "ENETUNREACH", "ENOTFOUND", "ETIMEDOUT"].includes(code ?? "")) return "bootstrap-database-connectivity-failure";
   if (["CERT_HAS_EXPIRED", "ERR_TLS_CERT_ALTNAME_INVALID", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_VERIFY_LEAF_SIGNATURE"].includes(code ?? "")) return "bootstrap-database-tls-failure";
-  return "bootstrap-workload-failure-unclassified";
+  return phase;
 }
 
 function errorProperty(error: unknown, property: "code" | "message"): string | undefined {

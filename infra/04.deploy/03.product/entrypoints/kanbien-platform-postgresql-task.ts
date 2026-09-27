@@ -31,6 +31,12 @@ export type BootstrapFailureCategory =
   | "bootstrap-database-authorization-failure"
   | "bootstrap-database-connectivity-failure"
   | "bootstrap-database-tls-failure"
+  | "bootstrap-input-validation-failure"
+  | "bootstrap-password-quotation-failure"
+  | "bootstrap-role-provisioning-failure"
+  | "bootstrap-database-grant-failure"
+  | "bootstrap-schema-provisioning-failure"
+  | "bootstrap-schema-grant-failure"
   | "bootstrap-workload-failure-unclassified";
 
 export function secretFromEnvironment(name: string): RelationalTaskSecret {
