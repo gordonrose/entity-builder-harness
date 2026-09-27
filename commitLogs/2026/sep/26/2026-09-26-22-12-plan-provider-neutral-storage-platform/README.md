@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T13:55:42Z
-latest_commit_sha: HEAD
-chat_duration: 60203s (00:16:43:23)
+latest_commit_at_utc: 2026-09-27T14:23:05Z
+latest_commit_sha: cd7a12cc
+chat_duration: 61846s (00:17:10:46)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -321,6 +321,17 @@ Summary: The real-engine PostgreSQL integration proof now passes migrations, ato
 
 Durable evidence: Durable source: platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs; integration test; PostgreSQL README and Stage 3 plan/runbook/handbook.
 
+
+### 2026-09-27T14:23:05Z - Commit recorded
+
+Commit: `cd7a12cc`
+
+Message: test(persistence): harden disposable postgresql proof
+
+Summary: Added a Docker-first, isolated local-engine fallback for the PostgreSQL semantic proof; fixed deterministic relay ordering; verified source checks, real-engine assertions, and exact temporary-fixture cleanup without AWS access.
+
+ADR impact: No ADR: test-fixture portability and test correctness remain within the approved PostgreSQL reference architecture.
+
 ## Sub-Agent Activity
 
 - A dedicated PostgreSQL completion agent is executing the approved programme
@@ -364,6 +375,13 @@ Durable evidence: Durable source: platform/adapters/aws/persistence/postgresql/t
   Summary: Allowed an explicit empty async-channel list for execution units that do not exchange asynchronous work, while retaining mandatory channel binding checks and adding positive and negative tests.
   ADR impact: No ADR: clarification within the approved operational-realization contract.
 
+
+- Commit: `cd7a12cc`
+  Time UTC: 2026-09-27T14:23:05Z
+  Message: test(persistence): harden disposable postgresql proof
+  Summary: Added a Docker-first, isolated local-engine fallback for the PostgreSQL semantic proof; fixed deterministic relay ordering; verified source checks, real-engine assertions, and exact temporary-fixture cleanup without AWS access.
+  ADR impact: No ADR: test-fixture portability and test correctness remain within the approved PostgreSQL reference architecture.
+
 ## Main Refresh Conflicts
 
 - `docs/04.deploy/plans/README.md` — pending governed
@@ -393,9 +411,9 @@ Reason: A narrowly scoped deterministic conflict-resolution rule is a durable ch
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T21:12:19Z
-Latest commit at UTC: 2026-09-27T13:55:42Z
-Latest commit SHA: HEAD
-Chat duration: 60203s (00:16:43:23)
+Latest commit at UTC: 2026-09-27T14:23:05Z
+Latest commit SHA: cd7a12cc
+Chat duration: 61846s (00:17:10:46)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
