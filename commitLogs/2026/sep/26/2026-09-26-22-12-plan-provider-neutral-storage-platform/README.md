@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T13:18:19Z
-latest_commit_sha: c053c5d492967bb3e7442058706edfeee5320733
-chat_duration: 57960s (00:16:06:00)
+latest_commit_at_utc: 2026-09-27T13:26:41Z
+latest_commit_sha: a6101ccb4340b0a8012b83a395df6ff8dcc68b7e
+chat_duration: 58462s (00:16:14:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -150,6 +150,17 @@ Summary: Checkpointed the provider-neutral data-governance, storage, and converg
 
 ADR impact: No ADR: draft plans only; provider and target decisions remain separately governed.
 
+
+### 2026-09-27T13:26:41Z - Commit recorded
+
+Commit: `a6101ccb4340b0a8012b83a395df6ff8dcc68b7e`
+
+Message: fix(chat): govern append-only plan index conflicts
+
+Summary: Added a narrowly tested classifier and ADR for mechanically verified append-only plan-index conflicts, enabling safe integration of the operational-realization gate without treating authored-content conflicts as generally auto-resolvable.
+
+ADR impact: ADR 0037 added.
+
 ## Sub-Agent Activity
 
 - A dedicated PostgreSQL completion agent is executing the approved programme
@@ -164,6 +175,13 @@ ADR impact: No ADR: draft plans only; provider and target decisions remain separ
   Message: docs(platform): plan data governance and storage convergence
   Summary: Checkpointed the provider-neutral data-governance, storage, and convergence plans after metadata, process-drift, repository, YAML, whitespace, and session readiness gates passed.
   ADR impact: No ADR: draft plans only; provider and target decisions remain separately governed.
+
+
+- Commit: `a6101ccb4340b0a8012b83a395df6ff8dcc68b7e`
+  Time UTC: 2026-09-27T13:26:41Z
+  Message: fix(chat): govern append-only plan index conflicts
+  Summary: Added a narrowly tested classifier and ADR for mechanically verified append-only plan-index conflicts, enabling safe integration of the operational-realization gate without treating authored-content conflicts as generally auto-resolvable.
+  ADR impact: ADR 0037 added.
 
 ## Main Refresh Conflicts
 
@@ -183,9 +201,9 @@ Reason: A narrowly scoped deterministic conflict-resolution rule is a durable ch
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T21:12:19Z
-Latest commit at UTC: 2026-09-27T13:18:19Z
-Latest commit SHA: c053c5d492967bb3e7442058706edfeee5320733
-Chat duration: 57960s (00:16:06:00)
+Latest commit at UTC: 2026-09-27T13:26:41Z
+Latest commit SHA: a6101ccb4340b0a8012b83a395df6ff8dcc68b7e
+Chat duration: 58462s (00:16:14:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
