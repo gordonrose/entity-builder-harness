@@ -55,6 +55,10 @@ let's do 1
   the full runtime-graph and private-execution proof. It is not represented as
   an already-complete operational proof.
 
+
+- Decision: Promoted the verified deployment-hardening closure to origin/main
+  Rationale: The isolated promotion worktree passed the workflow verifier and full infrastructure static suite; origin/main was fetched and proved equal to source commit 6a435b15 after a normal fast-forward push.
+
 ## Context Hygiene
 
 - Durable evidence is the staging target profile, workflow verifier, immutable
@@ -88,6 +92,13 @@ Message: fix(deploy): verify published runtime image contract
 Summary: Force the reviewed linux/amd64 image platform and verify immutable digest platform plus source revision before staging deployment continuation; record the provider-neutral realization follow-up.
 
 ADR impact: no ADR; recorded in deployment plans
+
+
+### 2026-09-27T21:18:22Z - Decision
+
+Decision: Promoted the verified deployment-hardening closure to origin/main
+
+Rationale: The isolated promotion worktree passed the workflow verifier and full infrastructure static suite; origin/main was fetched and proved equal to source commit 6a435b15 after a normal fast-forward push.
 
 ## Sub-Agent Activity
 
