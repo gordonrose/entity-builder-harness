@@ -467,6 +467,7 @@ artifacts:
     build_image_policy: pin-by-digest-for-official-build
     runtime_image_policy: pin-by-digest-for-official-build
     runtime_image_class: minimal-nonroot-distroless-nodejs22-debian12
+    runtime_platform: linux/amd64
     registry_scanning:
       scope: account-registry
       scan_type: BASIC
