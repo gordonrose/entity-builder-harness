@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-deployment-reconciliation
-#   version: 5
+#   version: 6
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -66,7 +66,7 @@ expected_config = {
     "status": "source-implemented-live-role-alignment-and-detector-pending",
     "command": "npm run platform:shell:deployment-reconciliation",
     "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
-    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
+    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only", "pre_candidate_execution_preflight_onboarding_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-addition-without-service-routing-change", "pre_candidate_execution_preflight_image_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-immutable-image-revision-without-service-routing-change", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
     "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
     "schedule_cron_utc": "15 */4 * * *",
     "execution_identity": "github-platform-shell-staging-reconciliation",

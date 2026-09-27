@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.service
-#   version: 8
+#   version: 9
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -38,6 +38,10 @@ Parameters:
     Type: String
     AllowedPattern: ^.+@sha256:[0-9a-f]{64}$
     ConstraintDescription: ImageUri must be an immutable repository@sha256 digest reference.
+  CandidateImageUri:
+    Type: String
+    AllowedPattern: ^.+@sha256:[0-9a-f]{64}$
+    ConstraintDescription: CandidateImageUri must be an immutable repository@sha256 digest reference.
   DesiredCount:
     Type: Number
     Default: 1
@@ -223,6 +227,178 @@ Resources:
       Tags:
         - Key: service
           Value: platform-shell
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  # This is deliberately a task definition, not an ECS service. The target
+  # adapter runs it only with the current server network configuration and
+  # never attaches it to an ALB, listener, or public route.
+  CandidatePreflightTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-staging-platform-shell-candidate-preflight
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      ExecutionRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskExecutionRoleArn
+      TaskRoleArn:
+        Fn::ImportValue: !Sub ${FoundationStackName}-TaskRoleArn
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: platform-shell
+          Image: !Ref CandidateImageUri
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 384
+          MemoryReservation: 512
+          StopTimeout: 30
+          DependsOn:
+            - ContainerName: otel-collector
+              Condition: START
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: HOST
+              Value: 0.0.0.0
+            - Name: PORT
+              Value: "3000"
+            - Name: PLATFORM_DEPLOYMENT_EXPOSURE
+              Value: public
+            - Name: PLATFORM_AUTH_PROVIDER
+              Value: cognito
+            - Name: PLATFORM_AUTH_COGNITO_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_AUTH_COGNITO_USER_POOL_ID
+              Value: eu-west-1_EQaXioA1n
+            - Name: PLATFORM_AUTH_COGNITO_APP_CLIENT_ID
+              Value: 4n7kuqstbvb97ur3btbur8afjt
+            - Name: PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS
+              Value: '["15po9eg4hgknb2pi2d1bdfhdds","38bhngfddbgu7c41b01crllh46"]'
+            - Name: PLATFORM_AUTHZ_SCOPE_PERMISSIONS
+              Value: '{"platform-shell/smoke.read":["platform-smoke.smoke:read"],"platform-shell/smoke.write":["platform-smoke.persistence.work-item:create"]}'
+            - Name: PLATFORM_CORS_ALLOWLIST
+              Value: https://staging.platform.kanbien.com
+            - Name: PLATFORM_HEALTH_LIVEZ_EXPOSURE
+              Value: public
+            - Name: PLATFORM_HEALTH_READYZ_EXPOSURE
+              Value: authenticated
+            - Name: PLATFORM_RATE_LIMIT_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_RATE_LIMIT_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-RateLimitTableName
+            - Name: PLATFORM_RATE_LIMIT_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_RATE_LIMIT_LIMIT
+              Value: "120"
+            - Name: PLATFORM_RATE_LIMIT_WINDOW_MS
+              Value: "60000"
+            - Name: PLATFORM_PERSISTENCE_PROVIDER
+              Value: dynamodb
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_TABLE
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceTableName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_OUTBOX_DUE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceOutboxDueIndexName
+            - Name: PLATFORM_PERSISTENCE_DYNAMODB_LINEAGE_CAUSE_INDEX
+              Value:
+                Fn::ImportValue: !Sub ${FoundationStackName}-PlatformPersistenceLineageCauseIndexName
+            - Name: PLATFORM_TRUSTED_INGRESS_MODE
+              Value: alb-security-group-only
+            - Name: PLATFORM_SERVER_MAX_REQUEST_BODY_BYTES
+              Value: "1048576"
+            - Name: PLATFORM_SERVER_MAX_HEADER_BYTES
+              Value: "16384"
+            - Name: PLATFORM_SERVER_MAX_HEADERS_COUNT
+              Value: "100"
+            - Name: PLATFORM_SERVER_HEADERS_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_SERVER_REQUEST_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_KEEP_ALIVE_TIMEOUT_MS
+              Value: "5000"
+            - Name: PLATFORM_SERVER_HANDLER_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_SHUTDOWN_DRAIN_TIMEOUT_MS
+              Value: "30000"
+            - Name: PLATFORM_SERVER_MAX_CONCURRENT_REQUESTS
+              Value: "100"
+            - Name: PLATFORM_SERVER_MAX_REQUESTS_PER_SOCKET
+              Value: "1000"
+            - Name: PLATFORM_SMOKE_APP_NAME
+              Value: Kanbien Platform Smoke
+            - Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
+              Value: cloudwatch-otel
+            - Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT
+              Value: http://127.0.0.1:4318/v1/metrics
+            - Name: PLATFORM_OBSERVABILITY_METRICS_REGION
+              Value: eu-west-1
+            - Name: PLATFORM_OBSERVABILITY_SERVICE_NAME
+              Value: kanbien-staging-platform-shell
+            - Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT
+              Value: staging
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS
+              Value: "60000"
+            - Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
+              Value: "10000"
+            - Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
+              Value: '[{"sourceName":"platform.server.request.outcome","sourceKind":"counter","sourceUnit":"count","instrumentName":"kanbien.platform.server.request.outcome","description":"Completed protected platform-smoke read requests by approved outcome.","allowedLabelNames":["capability","action","execution_context","http_method","http_status_code","outcome","error_class"],"cardinalityLimit":512},{"sourceName":"platform.server.request_response_latency","sourceKind":"timer","sourceUnit":"ms","instrumentName":"kanbien.platform.server.request.duration","description":"Protected platform-smoke read request and response latency in milliseconds.","allowedLabelNames":["capability","action","execution_context","http_method","http_status_code","outcome","error_class"],"cardinalityLimit":512,"histogramBucketBoundaries":[50,100,200,300,500,750,1000,2500,5000,10000,30000]}]'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-LogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: platform-shell
+          HealthCheck:
+            Command:
+              - CMD
+              - /nodejs/bin/node
+              - -e
+              - "fetch('http://127.0.0.1:3000/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+        - Name: otel-collector
+          Image: public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625
+          Essential: true
+          ReadonlyRootFilesystem: true
+          Cpu: 128
+          MemoryReservation: 256
+          StopTimeout: 30
+          Environment:
+            - Name: AWS_REGION
+              Value: eu-west-1
+          Secrets:
+            - Name: AOT_CONFIG_CONTENT
+              ValueFrom:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorConfigurationParameterArn
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Fn::ImportValue: !Sub ${FoundationStackName}-OtelCollectorLogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: otel-collector
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: candidate-execution-preflight
         - Key: environment
           Value: staging
         - Key: managed-by
@@ -826,6 +1002,8 @@ Outputs:
     Value: !Ref Service
   TaskDefinitionArn:
     Value: !Ref TaskDefinition
+  CandidatePreflightTaskDefinitionArn:
+    Value: !Ref CandidatePreflightTaskDefinition
   WorkerServiceArn:
     Value: !Ref WorkerService
   WorkerTaskDefinitionArn:

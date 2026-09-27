@@ -40,7 +40,7 @@ request body, row, message, or raw value into those facts.
 
 | Family | What it answers | Safety rule |
 | --- | --- | --- |
-| Artifact and execution unit | What exact reviewed payload runs and which components it uses. | Artifact reference is content-addressed; every unit reference has a graph edge. |
+| Artifact and execution unit | What exact reviewed payload runs and which components it uses. | An artifact is content-addressed in the contract, or declares `runtime-bound-sha256` so the adapter must bind its exact digest safely before execution; every unit reference has a graph edge. |
 | Identity, configuration, and connection | Who runs and what it may safely connect to. | Declare permission categories and field names, never credential or endpoint values. Connection source must be an execution unit; destination is a declared state store or channel, with an explicit directional edge for each end. |
 | State and asynchronous work | Where durable state lives and who produces or consumes work. | State and channel relationships are explicit. A channel needs producer, consumers, delivery semantics, acknowledgement, and idempotency boundary. |
 | Lifecycle and recovery | What happens after success, failure, or a stop. | A terminal attempt never reopens. Recovery has a new immutable attempt label and a failed/stopped predecessor. |
@@ -61,6 +61,23 @@ Bad evidence contains an endpoint, token, raw error, provider response, task
 identifier, SQL, request body, message, or record value. The compiler rejects
 unknown fields and unsafe field names so it cannot silently become a data
 transport channel.
+
+## Published candidate artifacts
+
+Some artifacts are created only after the reviewed source is published. Do not
+put a mutable tag, registry path, or a guessed future digest in the generic
+contract. Instead, declare:
+
+```yaml
+immutable_reference_mode: runtime-bound-sha256
+```
+
+The target adapter must then produce one `artifact_bindings` fact for that
+artifact. It may contain only the logical component ID, an exact `sha256:`
+digest, a stable check ID, a UTC timestamp, and `passed`. The gate rejects a
+missing, duplicated, mutable, or unapproved binding. This preserves the link
+from a specific published candidate to its private execution proof without
+turning the generic contract into a provider-resource document.
 
 ## How to use it
 

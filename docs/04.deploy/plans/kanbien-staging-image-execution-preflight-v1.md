@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.kanbien-staging-image-execution-preflight-v1
-version: 1
+version: 2
 status: deprecated
 layer: 04.deploy
 domain: runtime.operations
@@ -20,12 +20,13 @@ used_by:
 -->
 # Kanbien staging image execution preflight v1
 
-> **Superseded before implementation.** This document captured one symptom
-> (candidate image execution) after a failed rollout. It is not sufficient as
-> the first-principles operating model. The governing replacement is
-> [`operational-realization-v2-programme.md`](operational-realization-v2-programme.md),
-> which requires the complete runtime graph and a provider-neutral adapter
-> before any candidate-specific preflight is built.
+> **Superseded as an independent programme.** This document captured one
+> symptom (candidate image execution) after a failed rollout. Its bounded
+> candidate-task approach is now implemented only as a controlled sub-slice of
+> the governing
+> [`operational-realization-v2-programme.md`](operational-realization-v2-programme.md).
+> That active programme is the source of truth for current implementation and
+> live-proof status; this document remains a historical design trace.
 
 ## Decision
 

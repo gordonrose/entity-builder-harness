@@ -145,3 +145,24 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 - The next live action, if approved, is a new immutable candidate publication
   through the hardened workflow. It must not replay the terminal recovery
   label or modify the active service until its publication proof passes.
+
+### 2026-09-27 - Candidate execution preflight source closure
+
+- Added a provider-neutral realization contract for a runtime-bound immutable
+  candidate digest and hardened the generic compiler to require its one safe
+  binding when that declaration is used.
+- Added a dormant candidate task definition that is mechanically compared with
+  the server task definition. It has no ECS service, listener, target group,
+  routing, DNS, data, queue, or IAM change.
+- Added two exact reconciliation scopes: one for onboarding the dormant task
+  definition, and one for changing only its immutable image reference.
+- Added a target-owned candidate controller. It derives all live inputs from
+  reviewed source and live server configuration, rejects a consumed digest
+  label, performs one `RUNNING`/`HEALTHY` then controlled-stop lifecycle, and
+  emits only a safe verdict/failure category.
+- Added a direct PostgreSQL Stage 6 guard: execution now requires a healthy,
+  stopped candidate task for the exact active immutable server image before it
+  can start a bootstrap, migration, relay, worker, or restore task.
+- Local validation passed: infrastructure static policy suite, relational and
+  candidate controller tests, realization-gate tests, contract validation, and
+  whitespace checks. No AWS resource changed during this source stage.

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.schema.operational-realization-contract.v1
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 01.harness
 #   domain: deployment.realization
@@ -45,6 +45,10 @@ field_guide:
     what: Content-addressed artifact identity.
     does: Binds an execution unit to the exact reviewed runtime payload.
     validation: Must be sha256 plus 64 lowercase hexadecimal characters or sha512 plus 128 lowercase hexadecimal characters.
+  - path: artifacts[].immutable_reference_mode
+    what: A source-declared binding policy for an artifact that does not exist until a controlled publication.
+    does: Requires the target adapter to bind the exact immutable digest in normalized facts without placing a provider URI or mutable tag in the generic contract.
+    validation: May replace `immutable_reference` only with `runtime-bound-sha256`; normalized facts must bind every such artifact exactly once to a sha256 digest and a passed check.
   - path: execution_units[]
     what: A deployable unit that performs work.
     does: Declares every artifact, identity, input, connection, state store, channel, telemetry profile, and recovery plan it uses.
@@ -65,6 +69,10 @@ field_guide:
     what: Safe, normalized proof records from a separately governed provider adapter.
     does: Binds each passed gate and each declared graph component to a named check without provider or sensitive detail.
     validation: Entries use exact allowlisted fields, stable check identifiers, UTC timestamps, passed verdicts, and complete component coverage.
+  - path: normalized-facts.artifact_bindings
+    what: Safe evidence for source-declared runtime-bound artifacts.
+    does: Binds a logical artifact component to a content digest after publication and before execution.
+    validation: Present only when a contract uses `runtime-bound-sha256`; contains the component ID, sha256 digest, check ID, timestamp, and passed verdict only.
   - path: normalized-change-summary
     what: Safe aggregate result of a provider plan or change inspection.
     does: Confirms the proposed mutation shape stays within declared operation classes.

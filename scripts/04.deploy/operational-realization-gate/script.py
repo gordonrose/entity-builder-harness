@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.operational-realization-gate
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: deployment.realization
@@ -207,7 +207,7 @@ def ids(contract: dict[str, Any]) -> tuple[dict[str, set[str]], dict[str, str]]:
     groups: dict[str, set[str]] = {}
     kinds: dict[str, str] = {}
     for field, (kind,) in COMPONENTS.items():
-        values = safe_list(contract.get(field), f"{field}-missing")
+        values = safe_list(contract.get(field), f"{field}-missing", non_empty=field != "async_channels")
         group: set[str] = set()
         for item in values:
             component = safe_mapping(item, f"{field}-entry-invalid")
@@ -237,10 +237,17 @@ def validate_configuration_shapes(contract: dict[str, Any]) -> None:
 def validate_component_content(contract: dict[str, Any]) -> None:
     for item in safe_list(contract.get("artifacts"), "artifacts-missing"):
         artifact = safe_mapping(item, "artifact-invalid")
-        immutable_reference = safe_string(artifact.get("immutable_reference"), "artifact-immutable-reference-missing")
-        algorithm, _, digest = immutable_reference.partition(":")
-        if (algorithm, len(digest)) not in {("sha256", 64), ("sha512", 128)} or not re.fullmatch(r"[0-9a-f]+", digest):
-            raise ContractFailure("artifact-immutable-reference-invalid")
+        has_reference = "immutable_reference" in artifact
+        binding_mode = artifact.get("immutable_reference_mode")
+        if has_reference:
+            if binding_mode is not None:
+                raise ContractFailure("artifact-immutable-reference-mode-invalid")
+            immutable_reference = safe_string(artifact.get("immutable_reference"), "artifact-immutable-reference-missing")
+            algorithm, _, digest = immutable_reference.partition(":")
+            if (algorithm, len(digest)) not in {("sha256", 64), ("sha512", 128)} or not re.fullmatch(r"[0-9a-f]+", digest):
+                raise ContractFailure("artifact-immutable-reference-invalid")
+        elif binding_mode != "runtime-bound-sha256":
+            raise ContractFailure("artifact-immutable-reference-mode-invalid")
         safe_string(artifact.get("entrypoint"), "artifact-entrypoint-missing")
         safe_list(artifact.get("assertions"), "artifact-assertions-missing")
     for item in safe_list(contract.get("identities"), "identities-missing"):
@@ -301,7 +308,7 @@ def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str
         if connection.get("transport_security") not in {"verified", "not-applicable"}:
             raise ContractFailure("connection-security-invalid")
         connections[connection_id] = connection
-    for item in safe_list(contract.get("async_channels"), "async-channels-missing"):
+    for item in safe_list(contract.get("async_channels"), "async-channels-missing", non_empty=False):
         channel = safe_mapping(item, "async-channel-invalid")
         channel_id = safe_identifier(channel.get("id"), "async-channel-id-invalid")
         producer = safe_identifier(channel.get("producer"), "async-producer-invalid")
@@ -443,10 +450,22 @@ def validate_contract(contract: dict[str, Any]) -> str:
     return identifier
 
 
-def validate_facts(facts: dict[str, Any], contract_id: str, known: dict[str, str], through: str) -> None:
+def runtime_bound_artifact_ids(contract: dict[str, Any]) -> set[str]:
+    return {
+        safe_identifier(item.get("id"), "artifact-id-missing")
+        for item in safe_list(contract.get("artifacts"), "artifacts-missing")
+        if safe_mapping(item, "artifact-invalid").get("immutable_reference_mode") == "runtime-bound-sha256"
+    }
+
+
+def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id: str, known: dict[str, str], through: str) -> None:
     reject_provider_leakage(facts)
     reject_unsafe_value_fields(facts)
-    require_exact_keys(facts, RECOVERY_FACTS_FIELDS if through == "recovery" else FACTS_FIELDS, "normalized-facts-fields-invalid")
+    runtime_bound_artifacts = runtime_bound_artifact_ids(contract)
+    expected_fields = RECOVERY_FACTS_FIELDS if through == "recovery" else FACTS_FIELDS
+    if runtime_bound_artifacts:
+        expected_fields = expected_fields | {"artifact_bindings"}
+    require_exact_keys(facts, expected_fields, "normalized-facts-fields-invalid")
     if facts.get("schema") != FACTS_SCHEMA or facts.get("contract_id") != contract_id:
         raise ContractFailure("normalized-facts-schema-or-contract-invalid")
     evidence = safe_list(facts.get("gate_evidence"), "normalized-facts-evidence-missing")
@@ -476,6 +495,24 @@ def validate_facts(facts: dict[str, Any], contract_id: str, known: dict[str, str
         observed.add(component_id)
     if observed != set(known):
         raise ContractFailure("component-evidence-incomplete")
+    if runtime_bound_artifacts:
+        bindings = safe_list(facts.get("artifact_bindings"), "artifact-bindings-missing")
+        bound: set[str] = set()
+        for item in bindings:
+            binding = safe_mapping(item, "artifact-binding-invalid")
+            require_exact_keys(binding, {"component_id", "immutable_reference", "check_id", "timestamp", "verdict"}, "artifact-binding-fields-invalid")
+            component_id = safe_identifier(binding.get("component_id"), "artifact-binding-id-invalid")
+            immutable_reference = safe_string(binding.get("immutable_reference"), "artifact-binding-reference-invalid")
+            algorithm, _, digest = immutable_reference.partition(":")
+            if component_id not in runtime_bound_artifacts or component_id in bound or algorithm != "sha256" or len(digest) != 64 or not re.fullmatch(r"[0-9a-f]+", digest):
+                raise ContractFailure("artifact-binding-invalid")
+            safe_identifier(binding.get("check_id"), "artifact-binding-check-id-invalid")
+            safe_timestamp(binding.get("timestamp"), "artifact-binding-timestamp-invalid")
+            if binding.get("verdict") != "passed":
+                raise ContractFailure("artifact-binding-verdict-invalid")
+            bound.add(component_id)
+        if bound != runtime_bound_artifacts:
+            raise ContractFailure("artifact-binding-incomplete")
     if through == "recovery":
         recovery = safe_mapping(facts.get("recovery_evidence"), "recovery-evidence-missing")
         require_exact_keys(recovery, {"predecessor_attempt_label", "recovery_attempt_label", "predecessor_terminal_state", "check_id", "timestamp", "verdict"}, "recovery-evidence-fields-invalid")
@@ -529,7 +566,7 @@ def main() -> int:
         scope = through
         groups, known = ids(contract)
         del groups
-        validate_facts(load_yaml(args.facts, "normalized-facts-unreadable"), contract_id, known, through)
+        validate_facts(load_yaml(args.facts, "normalized-facts-unreadable"), contract, contract_id, known, through)
         if GATE_ORDER.index(through) >= GATE_ORDER.index("change-set") and not args.change_summary:
             raise ContractFailure("normalized-change-summary-required-for-gate")
         if args.change_summary:

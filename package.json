@@ -68,6 +68,8 @@
     "platform:shell:postgresql-live-boundary:check": "bash scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh",
     "platform:shell:postgresql-relational-smoke": "bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh",
     "platform:shell:postgresql-relational-smoke:check": "bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+    "platform:shell:candidate-execution-preflight": "bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh",
+    "platform:shell:candidate-execution-preflight:check": "bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh",
     "platform:shell:drift-detection-boundary:check": "bash scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh",
     "platform:shell:infrastructure:check": "bash scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
     "platform:shell:deployment-workflow:check": "bash scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 39
+#   version: 42
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -55,10 +55,12 @@ bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
 import os
+import copy
 from pathlib import Path
 import sys
 import json
@@ -696,6 +698,7 @@ expected_foundation_outputs = {
 }
 expected_service_resources = {
     "TaskDefinition",
+    "CandidatePreflightTaskDefinition",
     "Service",
     "WorkerTaskDefinition",
     "WorkerService",
@@ -1106,7 +1109,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-2-source-ready",
+    "status": "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1230,7 +1233,7 @@ expected_relational_reference = {
         "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
     },
     "stage_6_relational_smoke_composition": {
-        "status": "bootstrap-recovery-2-source-defined-image-publication-pending",
+        "status": "candidate-execution-preflight-source-defined-dormant-task-deployment-pending",
         "isolated_resources": [
             "relational-bootstrap-task-definition",
             "relational-migration-task-definition",
@@ -1264,7 +1267,7 @@ expected_relational_reference = {
                 "consumed_stage_detection": "running-and-stopped-task-label-reads-before-any-stage-start",
                 "recovery_label": "one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label",
                 "service_update_scope": "existing-task-definition-revisions-and-in-place-service-references-only",
-                "next_execution": "one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout",
+                "next_execution": "one-fixed-bootstrap-recovery-2-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight",
                 "continuation": "one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result",
             },
             "recovery_1_execution": {
@@ -1281,7 +1284,7 @@ expected_relational_reference = {
                 "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
             },
         },
-        "next_gate": "publish-corrected-immutable-image-review-normal-service-task-definition-revisions-and-run-one-fixed-bootstrap-recovery-2",
+        "next_gate": "deploy-dormant-candidate-task-prove-and-promote-one-immutable-image-then-run-one-fixed-bootstrap-recovery-2",
         "control": {
             "command": "npm-run-platform-shell-postgresql-relational-smoke",
             "execution_guard": "execute-and-approve-relational-stage6",
@@ -2232,8 +2235,32 @@ else:
 image_parameter = service.get("Parameters", {}).get("ImageUri", {})
 if "@sha256" not in image_parameter.get("AllowedPattern", ""):
     fail("service ImageUri must require an immutable digest")
+candidate_image_parameter = service.get("Parameters", {}).get("CandidateImageUri", {})
+if "@sha256" not in candidate_image_parameter.get("AllowedPattern", ""):
+    fail("service CandidateImageUri must require an immutable digest")
 
 task_definition = properties(service, "TaskDefinition", "AWS::ECS::TaskDefinition")
+candidate_preflight_task_definition = properties(service, "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition")
+candidate_mirror = copy.deepcopy(candidate_preflight_task_definition)
+server_mirror = copy.deepcopy(task_definition)
+candidate_mirror.pop("Family", None)
+candidate_mirror.pop("Tags", None)
+server_mirror.pop("Family", None)
+server_mirror.pop("Tags", None)
+candidate_containers = {
+    item.get("Name"): item
+    for item in candidate_mirror.get("ContainerDefinitions", [])
+    if isinstance(item, dict)
+}
+candidate_application = candidate_containers.get("platform-shell", {})
+if candidate_preflight_task_definition.get("Family") != "kanbien-staging-platform-shell-candidate-preflight" or candidate_application.get("Image") != {"!Ref": "CandidateImageUri"}:
+    fail("candidate preflight must use its only reviewed immutable image parameter and fixed family")
+else:
+    candidate_application["Image"] = {"!Ref": "ImageUri"}
+if candidate_mirror != server_mirror:
+    fail("candidate preflight task must mirror the server task exactly except family tags and candidate image")
+if service.get("Outputs", {}).get("CandidatePreflightTaskDefinitionArn") != {"Value": {"!Ref": "CandidatePreflightTaskDefinition"}}:
+    fail("service stack must expose only the reviewed candidate preflight task-definition reference")
 task_cpu_parameter = service.get("Parameters", {}).get("Cpu", {})
 task_memory_parameter = service.get("Parameters", {}).get("Memory", {})
 if task_definition.get("Cpu") != {"!Ref": "Cpu"} or task_definition.get("Memory") != {"!Ref": "Memory"} or task_cpu_parameter.get("Default") != "512" or task_cpu_parameter.get("AllowedValues") != ["512"] or task_memory_parameter.get("Default") != "1024" or task_memory_parameter.get("AllowedValues") != ["1024"]:

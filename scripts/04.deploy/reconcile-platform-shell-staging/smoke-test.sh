@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging.smoke-test
-#   version: 4
+#   version: 5
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -33,8 +33,8 @@ if ! grep -Eq -- 'role-policy-alignment requires the declared administrator targ
   echo "ERROR: reconciliation role-policy alignment must remain administrator-only." >&2
   exit 1
 fi
-if ! grep -Eq -- 'a relational Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
-  echo "ERROR: relational Service preflight must remain target-admin only." >&2
+if ! grep -Eq -- 'a controlled Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: controlled Service preflight must remain target-admin only." >&2
   exit 1
 fi
 if ! grep -Eq -- 'pre-relational-stage6-bootstrap-recovery-service-change-set' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
@@ -69,6 +69,15 @@ bootstrap_recovery_changes = {
     ("Modify", "WorkerService", "AWS::ECS::Service", False),
 }
 assert len(bootstrap_recovery_changes) == 10
+
+profile = module["load_yaml"](Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"))
+policy = module["resolve_policy"](profile)
+assert policy["expected_candidate_execution_preflight_onboarding_changes"] == {
+    ("Add", "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", None),
+}
+assert policy["expected_candidate_execution_preflight_image_changes"] == {
+    ("Modify", "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", True),
+}
 
 try:
     module["run_check"](

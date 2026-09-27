@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.test.operational-realization-gate
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: deployment.realization
@@ -74,12 +74,48 @@ if [[ "$valid_output" != *'"verdict": "passed"'* ]]; then
   exit 1
 fi
 
+python3 - "$FIXTURES/valid-contract.yml" "$FIXTURES/preflight-normalized-facts.yml" "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+contract = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
+facts = yaml.safe_load(Path(sys.argv[2]).read_text(encoding="utf-8"))
+artifact = contract["artifacts"][0]
+artifact.pop("immutable_reference")
+artifact["immutable_reference_mode"] = "runtime-bound-sha256"
+facts["artifact_bindings"] = [{
+    "component_id": "delivery-artifact",
+    "immutable_reference": "sha256:" + "b" * 64,
+    "check_id": "artifact-binding-check",
+    "timestamp": "2026-09-27T00:00:00Z",
+    "verdict": "passed",
+}]
+Path(sys.argv[3]).write_text(yaml.safe_dump(contract, sort_keys=False), encoding="utf-8")
+Path(sys.argv[4]).write_text(yaml.safe_dump(facts, sort_keys=False), encoding="utf-8")
+PY
+runtime_bound_output="$(bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" --facts "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json)"
+if [[ "$runtime_bound_output" != *'"verdict": "passed"'* ]]; then
+  echo "ERROR: a runtime-bound candidate artifact must require and accept one safe immutable binding" >&2
+  exit 1
+fi
+sed '/artifact_bindings:/,/verdict: passed/d' "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" > "$TEMPORARY_DIRECTORY/runtime-bound-facts-missing-binding.yml"
+expect_failure "normalized-facts-fields-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" --facts "$TEMPORARY_DIRECTORY/runtime-bound-facts-missing-binding.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json
+sed 's/sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/latest/' "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" > "$TEMPORARY_DIRECTORY/runtime-bound-facts-mutable-binding.yml"
+expect_failure "artifact-binding-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" --facts "$TEMPORARY_DIRECTORY/runtime-bound-facts-mutable-binding.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json
+
 python3 - "$FIXTURES/valid-contract.yml" "$TEMPORARY_DIRECTORY/no-async-setup.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
 
 document = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
+document["async_channels"] = []
+document["execution_units"][0]["async_channels"] = []
+document["edges"] = [
+    edge for edge in document["edges"]
+    if edge["from"] != "delivery-channel" and edge["to"] != "delivery-channel"
+]
 document["identities"].append({"id": "setup-identity", "permissions": ["prepare-state"]})
 document["configuration_inputs"].append({"id": "setup-configuration", "required_fields": ["configuration-reference"], "optional_fields": [], "sensitivity": "secret-reference-only"})
 document["connections"].append({"id": "setup-connection", "source": "setup-runner", "destination": "delivery-store", "transport_security": "verified"})
@@ -114,7 +150,7 @@ if [[ "$no_async_output" != *'"verdict": "passed"'* ]]; then
   exit 1
 fi
 sed 's/async_channels: \[\]/async_channels: [delivery-channel]/' "$TEMPORARY_DIRECTORY/no-async-setup.yml" > "$TEMPORARY_DIRECTORY/unbound-async-setup.yml"
-expect_failure "execution-unit-async-channel-unbound" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unbound-async-setup.yml" --validate-contract --json
+expect_failure "async_channels-entry-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unbound-async-setup.yml" --validate-contract --json
 
 preflight_output="$(bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$FIXTURES/preflight-normalized-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json)"
 if [[ "$preflight_output" != *'"verdict": "passed"'* ]]; then

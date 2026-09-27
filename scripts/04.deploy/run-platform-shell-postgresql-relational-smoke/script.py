@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -18,6 +20,8 @@ ACCOUNT = "337159794548"
 REGION = "eu-west-1"
 SERVER_SERVICE = "kanbien-staging-platform-shell"
 WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
+CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
+IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
 
 
 class RelationalSmokeError(Exception):
@@ -85,8 +89,8 @@ def load_policy(mode: str) -> dict[str, Any]:
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-2-source-ready",
-        "bootstrap-recovery-2-source-defined-image-publication-pending",
+        "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight",
+        "candidate-execution-preflight-source-defined-dormant-task-deployment-pending",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
@@ -255,6 +259,45 @@ def service_counts(name: str, policy: dict[str, Any]) -> tuple[int, int]:
         raise RelationalSmokeError("a reviewed service returned invalid aggregate counts") from exception
 
 
+def candidate_preflight_label(image: str) -> str:
+    """Derive the exact candidate label from the active immutable server image."""
+
+    match = IMMUTABLE_IMAGE.fullmatch(image)
+    if match is None:
+        raise RelationalSmokeError("the active service image is not an immutable candidate digest")
+    return f"kb-candidate-{hashlib.sha256(match.group(1).encode('ascii')).hexdigest()[:20]}"
+
+
+def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
+    """Require the exact active image to have one healthy, stopped private candidate task."""
+
+    service = aws(["ecs", "describe-services", "--cluster", policy["cluster"], "--services", SERVER_SERVICE], policy)
+    services = service.get("services")
+    current = services[0] if isinstance(services, list) and len(services) == 1 and isinstance(services[0], dict) else None
+    task_reference = current.get("taskDefinition") if isinstance(current, dict) else None
+    if not isinstance(task_reference, str) or not task_reference:
+        raise RelationalSmokeError("the active service candidate preflight source is unavailable")
+    definition = aws(["ecs", "describe-task-definition", "--task-definition", task_reference], policy).get("taskDefinition")
+    containers = definition.get("containerDefinitions") if isinstance(definition, dict) else None
+    application = next((item for item in containers if isinstance(item, dict) and item.get("name") == "platform-shell"), None) if isinstance(containers, list) else None
+    image = application.get("image") if isinstance(application, dict) else None
+    if not isinstance(image, str):
+        raise RelationalSmokeError("the active service candidate preflight image is unavailable")
+    label = candidate_preflight_label(image)
+    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy).get("taskArns")
+    stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy).get("taskArns")
+    if not isinstance(running, list) or running or not isinstance(stopped, list) or len(stopped) != 1 or not isinstance(stopped[0], str):
+        raise RelationalSmokeError("the active image lacks one terminal candidate execution preflight")
+    observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", stopped[0]], policy).get("tasks")
+    task = observed[0] if isinstance(observed, list) and len(observed) == 1 and isinstance(observed[0], dict) else None
+    candidate_reference = task.get("taskDefinitionArn") if isinstance(task, dict) else None
+    if not isinstance(task, dict) or task.get("lastStatus") != "STOPPED" or task.get("healthStatus") != "HEALTHY" or not isinstance(candidate_reference, str):
+        raise RelationalSmokeError("the active image candidate execution preflight did not become healthy and stop")
+    candidate_definition = aws(["ecs", "describe-task-definition", "--task-definition", candidate_reference], policy).get("taskDefinition")
+    if not isinstance(candidate_definition, dict) or candidate_definition.get("family") != CANDIDATE_TASK_FAMILY:
+        raise RelationalSmokeError("the active image candidate preflight did not use the reviewed dormant task family")
+
+
 def worker_network(policy: dict[str, Any]) -> str:
     """Reuse exactly the dormant worker's reviewed awsvpc topology for one-shot tasks."""
 
@@ -411,6 +454,7 @@ def execute(policy: dict[str, Any]) -> None:
 
     verify_account(policy)
     update_complete(policy["service_stack"], policy)
+    candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
@@ -440,6 +484,7 @@ def execute_bootstrap_recovery(policy: dict[str, Any]) -> None:
 
     verify_account(policy)
     update_complete(policy["service_stack"], policy)
+    candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
@@ -455,6 +500,7 @@ def execute_recovery_continuation(policy: dict[str, Any]) -> None:
 
     verify_account(policy)
     update_complete(policy["service_stack"], policy)
+    candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:

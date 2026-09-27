@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 67
+#   version: 68
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -90,6 +90,8 @@ deployment:
       pre_relational_stage6_foundation_change_set: administrator-only-preflight-for-isolated-relational-queue-and-task-composition
       pre_relational_stage6_service_change_set: administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions
       pre_relational_stage6_bootstrap_recovery_service_change_set: administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only
+      pre_candidate_execution_preflight_onboarding_change_set: administrator-only-preflight-for-one-dormant-candidate-task-definition-addition-without-service-routing-change
+      pre_candidate_execution_preflight_image_change_set: administrator-only-preflight-for-one-dormant-candidate-task-definition-immutable-image-revision-without-service-routing-change
       role_policy_alignment: admin-only-source-to-live-inline-policy-comparison
     workflow: .github/workflows/reconcile-platform-shell-staging.yml
     schedule_cron_utc: "15 */4 * * *"
@@ -352,6 +354,42 @@ deployment:
         - logical_id: WorkerService
           resource_type: AWS::ECS::Service
           replacement: false
+    candidate_execution_preflight_onboarding_change_set_scope:
+      service_evidence:
+        schema: deploy/platform-shell-service-active-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: in-sync
+      additions:
+        - logical_id: CandidatePreflightTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+      modifications: []
+    candidate_execution_preflight_image_change_set_scope:
+      service_evidence:
+        schema: deploy/platform-shell-service-active-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: in-sync
+      additions: []
+      modifications:
+        - logical_id: CandidatePreflightTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+  candidate_execution_preflight:
+    status: source-ready-dormant-task-boundary-not-yet-deployed
+    command: npm-run-platform-shell-candidate-execution-preflight
+    execution_guard: execute-and-approve-candidate-execution-preflight
+    realization_contract: infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
+    service_stack: kanbien-staging-platform-shell-service
+    source_service: kanbien-staging-platform-shell
+    candidate_task_definition_output: CandidatePreflightTaskDefinitionArn
+    candidate_task_family: kanbien-staging-platform-shell-candidate-preflight
+    application_container: platform-shell
+    runtime_network: exact-active-server-awsvpc-configuration-without-service-listener-or-load-balancer-attachment
+    candidate_label: derived-from-immutable-image-digest-and-not-caller-selectable
+    maximum_start_seconds: 300
+    maximum_stop_seconds: 120
+    successful_task_state: running-and-healthy-before-controlled-stop
+    final_state: stopped-with-no-running-task-for-derived-label
+    output_policy: safe-verdict-and-allowlisted-failure-category-only-no-provider-response-task-identifier-endpoint-log-message-or-runtime-value
   execution_policy:
     style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic
     bootstrap:
@@ -860,7 +898,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   relational_reference:
-    status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-2-source-ready
+    status: stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight
     source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
     deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
     threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -966,7 +1004,7 @@ persistence:
       live_boundary_verifier: passed
       next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
     stage_6_relational_smoke_composition:
-      status: bootstrap-recovery-2-source-defined-image-publication-pending
+      status: candidate-execution-preflight-source-defined-dormant-task-deployment-pending
       isolated_resources:
         - relational-bootstrap-task-definition
         - relational-migration-task-definition
@@ -996,7 +1034,7 @@ persistence:
           consumed_stage_detection: running-and-stopped-task-label-reads-before-any-stage-start
           recovery_label: one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label
           service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
-          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
+          next_execution: one-fixed-bootstrap-recovery-2-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight
           continuation: one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result
         recovery_1_execution:
           bootstrap: one-fixed-task-exited-nonzero
@@ -1009,7 +1047,7 @@ persistence:
           observability: fixed-safe-failure-category-only
           later_stages: unavailable-until-one-successful-bootstrap
           preserved_boundary: server-one-worker-zero-isolated-queues-empty
-      next_gate: publish-corrected-immutable-image-review-normal-service-task-definition-revisions-and-run-one-fixed-bootstrap-recovery-2
+      next_gate: deploy-dormant-candidate-task-prove-and-promote-one-immutable-image-then-run-one-fixed-bootstrap-recovery-2
       control:
         command: npm-run-platform-shell-postgresql-relational-smoke
         execution_guard: execute-and-approve-relational-stage6

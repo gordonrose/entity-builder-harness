@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging
-#   version: 4
+#   version: 5
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
-    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "role-policy-alignment"), default="continuous")
+    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set", "role-policy-alignment"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
     parser.add_argument("--service-change-set", help="The reviewed service change-set name, required only for the isolated relational Stage 6 service preflight.")
     parser.add_argument("--service-drift-evidence", help="New /tmp safe Service-drift evidence, required only for the isolated relational Stage 6 service preflight.")
@@ -67,7 +67,9 @@ def parse_arguments() -> argparse.Namespace:
     if not 1 <= arguments.timeout_seconds <= 30:
         parser.error("--timeout-seconds must be between 1 and 30")
     preflight_modes = {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}
-    service_preflight_modes = {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}
+    relational_service_preflight_modes = {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}
+    candidate_preflight_modes = {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}
+    service_preflight_modes = relational_service_preflight_modes | candidate_preflight_modes
     service_preflight_mode = arguments.mode in service_preflight_modes
     if arguments.validate and (arguments.foundation_change_set or arguments.service_change_set or arguments.known_foundation_drift_evidence or arguments.service_drift_evidence):
         parser.error("--validate cannot inspect a change set or evidence record")
@@ -79,13 +81,13 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--service-change-set is required for the isolated relational Stage 6 service preflight")
     if not service_preflight_mode and arguments.service_change_set:
         parser.error("--service-change-set is permitted only for the isolated relational Stage 6 service preflight")
-    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *service_preflight_modes} and not arguments.validate:
+    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *relational_service_preflight_modes} and not arguments.validate:
         if not arguments.known_foundation_drift_evidence:
             parser.error("--known-foundation-drift-evidence is required for the exact egress-remediation preflight")
         evidence = Path(arguments.known_foundation_drift_evidence)
         if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
             parser.error("--known-foundation-drift-evidence must be a direct child of /tmp")
-    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *service_preflight_modes} and arguments.known_foundation_drift_evidence:
+    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *relational_service_preflight_modes} and arguments.known_foundation_drift_evidence:
         parser.error("--known-foundation-drift-evidence is permitted only for a relational Foundation preflight with classified drift")
     if service_preflight_mode and not arguments.validate:
         if not arguments.service_drift_evidence:
@@ -100,7 +102,7 @@ def parse_arguments() -> argparse.Namespace:
     if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and not arguments.validate and arguments.aws_credential_source != "target-profile":
         parser.error("a relational Foundation preflight requires declared administrator target-profile credentials")
     if service_preflight_mode and not arguments.validate and arguments.aws_credential_source != "target-profile":
-        parser.error("a relational Service preflight requires declared administrator target-profile credentials")
+        parser.error("a controlled Service preflight requires declared administrator target-profile credentials")
     return arguments
 
 
@@ -234,6 +236,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition",
             "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions",
             "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only",
+            "pre_candidate_execution_preflight_onboarding_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-addition-without-service-routing-change",
+            "pre_candidate_execution_preflight_image_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-immutable-image-revision-without-service-routing-change",
             "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison",
         },
         "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
@@ -252,6 +256,8 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "foundation_relational_stage6_change_set_scope": reconciliation.get("foundation_relational_stage6_change_set_scope"),
         "service_relational_stage6_change_set_scope": reconciliation.get("service_relational_stage6_change_set_scope"),
         "service_relational_stage6_bootstrap_recovery_image_change_set_scope": reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope"),
+        "candidate_execution_preflight_onboarding_change_set_scope": reconciliation.get("candidate_execution_preflight_onboarding_change_set_scope"),
+        "candidate_execution_preflight_image_change_set_scope": reconciliation.get("candidate_execution_preflight_image_change_set_scope"),
     }:
         raise ReconciliationError("reconciliation-policy-not-reviewed")
     if budget.get("name") != "kanbien-staging-platform-shell-monthly" or budget.get("amount_usd") != 25 or budget.get("period") != "monthly":
@@ -379,6 +385,18 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     actual_bootstrap_recovery_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in bootstrap_recovery_scope.get("modifications", []) if isinstance(item, dict)}
     if bootstrap_recovery_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or bootstrap_recovery_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_bootstrap_recovery_additions or actual_bootstrap_recovery_modifications != expected_bootstrap_recovery_modifications:
         raise ReconciliationError("relational-stage6-bootstrap-recovery-service-scope-not-reviewed")
+    candidate_onboarding_scope = mapping(reconciliation.get("candidate_execution_preflight_onboarding_change_set_scope"), "candidate-preflight-onboarding-scope-missing")
+    candidate_image_scope = mapping(reconciliation.get("candidate_execution_preflight_image_change_set_scope"), "candidate-preflight-image-scope-missing")
+    expected_candidate_onboarding_additions = {("CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition")}
+    expected_candidate_image_modifications = {("CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", True)}
+    actual_candidate_onboarding_additions = {(item.get("logical_id"), item.get("resource_type")) for item in candidate_onboarding_scope.get("additions", []) if isinstance(item, dict)}
+    actual_candidate_onboarding_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_onboarding_scope.get("modifications", []) if isinstance(item, dict)}
+    actual_candidate_image_additions = {(item.get("logical_id"), item.get("resource_type")) for item in candidate_image_scope.get("additions", []) if isinstance(item, dict)}
+    actual_candidate_image_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_image_scope.get("modifications", []) if isinstance(item, dict)}
+    if candidate_onboarding_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_candidate_onboarding_additions != expected_candidate_onboarding_additions or actual_candidate_onboarding_modifications:
+        raise ReconciliationError("candidate-preflight-onboarding-scope-not-reviewed")
+    if candidate_image_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_candidate_image_additions or actual_candidate_image_modifications != expected_candidate_image_modifications:
+        raise ReconciliationError("candidate-preflight-image-scope-not-reviewed")
     return {
         "account_id": account_id,
         "region": region,
@@ -409,6 +427,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         },
         "expected_relational_stage6_bootstrap_recovery_service_changes": {
             *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_bootstrap_recovery_modifications),
+        },
+        "expected_candidate_execution_preflight_onboarding_changes": {
+            *(("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_candidate_onboarding_additions),
+        },
+        "expected_candidate_execution_preflight_image_changes": {
+            *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_candidate_image_modifications),
         },
         "maximum_stage_six_evidence_age_seconds": expected_stage_six_evidence["maximum_age_seconds"],
         "maximum_service_stage_six_evidence_age_seconds": expected_service_stage_six_service_evidence["maximum_age_seconds"],
@@ -723,14 +747,24 @@ def main() -> int:
                     *artifact_bucket_checks(arguments, policy),
                     ("platform-shell-budget", lambda: check_budget(arguments, policy)),
                 ]
+            elif arguments.mode in {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
+                core_checks = [
+                    ("aws-account", lambda: check_identity(arguments, policy)),
+                    ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
+                    ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
+                    ("service-stack-status", lambda: check_stack_status(arguments, policy, policy["service_stack"], "UPDATE_COMPLETE", "service-stack-status")),
+                    ("service-active-drift-evidence", lambda: check_service_drift_evidence(arguments, policy)),
+                    *artifact_bucket_checks(arguments, policy),
+                    ("platform-shell-budget", lambda: check_budget(arguments, policy)),
+                ]
             if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}:
                 core_checks.insert(4, ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)))
-            elif arguments.mode not in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
+            elif arguments.mode not in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
                 core_checks.insert(4, ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")))
             for check_id, check in core_checks:
                 run_check(check_id, check)
                 checks.append({"id": check_id, "verdict": "passed"})
-            if arguments.mode in {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
+            if arguments.mode in {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
                 run_check(
                     "reconciliation-live-role-policy",
                     lambda: check_reconciliation_live_role_policy(arguments, policy),
@@ -760,6 +794,18 @@ def main() -> int:
                         lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_relational_stage6_service_changes"], "relational-stage6-service-change-set-scope"),
                     )
                     checks.append({"id": "relational-stage6-service-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-candidate-execution-preflight-onboarding-change-set":
+                    run_check(
+                        "candidate-preflight-onboarding-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_candidate_execution_preflight_onboarding_changes"], "candidate-preflight-onboarding-change-set-scope"),
+                    )
+                    checks.append({"id": "candidate-preflight-onboarding-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-candidate-execution-preflight-image-change-set":
+                    run_check(
+                        "candidate-preflight-image-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_candidate_execution_preflight_image_changes"], "candidate-preflight-image-change-set-scope"),
+                    )
+                    checks.append({"id": "candidate-preflight-image-change-set-scope", "verdict": "passed"})
                 else:
                     run_check(
                         "relational-stage6-bootstrap-recovery-service-change-set-scope",

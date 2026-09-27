@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.operational-realization-v2-programme
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: deployment.realization
@@ -144,6 +144,43 @@ candidate definition, run one private execution proof, stop it, and prove
 cleanup. Only then may the normal service-only change set promote that same
 digest. Only after post-rollout health and reconciliation pass may PostgreSQL
 Stage 6 resume with new labels.
+
+## Kanbien/staging implementation position
+
+The first target slice is now implemented in source and deliberately remains
+short of a claimed live proof.
+
+- The generic realization gate supports a post-publication
+  `runtime-bound-sha256` artifact binding. A target adapter must supply the
+  exact digest as safe normalized evidence; mutable tags and missing bindings
+  fail validation.
+- The Kanbien target has a provider-neutral candidate-preflight contract and a
+  CloudFormation-only dormant task definition. Its static verifier requires it
+  to mirror the server task in every runtime-relevant field apart from task
+  family, tags, and its distinct immutable candidate image parameter.
+- The dormant definition has no ECS service, listener, load-balancer target,
+  DNS change, new ingress rule, database work, queue work, or recurring cost.
+  Its only live onboarding change is one task-definition addition. A later
+  candidate revision may replace only that definition.
+- The target-owned controller accepts no caller-selected image, task, target,
+  role, network, label, or timeout. It derives one label from the candidate
+  digest, rejects a consumed label, runs one task in the active server's exact
+  `awsvpc` configuration, waits for `RUNNING` and `HEALTHY`, stops it, and
+  verifies that no task remains running for that label. Raw provider data stays
+  in process memory; output is an allowlisted safe result only.
+- PostgreSQL Stage 6 now has a direct guard: before any bootstrap, migration,
+  relay, worker, or restore work, the currently active immutable server image
+  must have exactly one healthy, stopped candidate preflight using the reviewed
+  dormant task family. This prevents a direct retry of the earlier failed
+  recovery route.
+
+The remaining target sequence is intentionally narrow: (1) deploy the
+dormant definition with the known active digest, (2) publish a new immutable
+candidate and replace only `CandidateImageUri`, (3) run and record the
+candidate preflight, (4) promote that exact digest through the existing
+service-only gate, and (5) resume the separately bounded Stage 6 proof. A
+failure at any point leaves the public service untouched and requires a new
+candidate digest rather than a replay.
 
 ## Completion
 
