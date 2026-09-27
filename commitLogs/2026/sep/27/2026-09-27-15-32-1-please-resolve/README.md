@@ -61,6 +61,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: Recovery-1 bootstrap diagnostic lacked a safe source classification
   Resolution: The fixed bootstrap label is consumed after a non-successful task with no task log stream. No later Stage 6 task ran. Added an allowlisted in-memory terminal-metadata classifier so the existing task can be diagnosed read-only without emitting raw metadata, logs, identifiers, secrets, or provider payloads.
 
+
+- Raised: The first safe terminal classification was still too coarse for repair
+  Resolution: It established that the bootstrap container exited but did not expose a log-stream name. The controller now derives only the deterministic awslogs name for that one already-consumed task, tries it internally, and falls back to the existing safe terminal category when unavailable.
+
 ## Decisions Made
 
 
@@ -80,6 +84,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Decision: Constrain no-log-stream diagnosis to allowlisted terminal categories
   Rationale: A diagnostic may classify task stop class and bootstrap-container reason only in memory after no log stream. It emits only a reviewed category and cannot replay a consumed label or authorise later Stage 6 work. No ADR is needed because this is a bounded Stage 6 operational diagnostic refinement.
 
+
+- Decision: Use a deterministic no-log-stream diagnostic lookup before metadata fallback
+  Rationale: The derived stream is target-defined, belongs only to the consumed bootstrap task, is never emitted or recorded, and cannot trigger an execution, replay, or configuration change. No ADR is needed: this is an incremental bounded diagnostic safeguard.
+
 ## Context Hygiene
 
 
@@ -98,6 +106,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 
 - Summary: Stage 6 recovery-1 consumed with a non-successful bootstrap and unavailable log stream; platform state remained server 1/1, worker 0/0, and isolated queues empty. The controller now accepts only a read-only safe terminal-metadata category before any future recovery route.
   Durable evidence: Durable controls: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; target profile/readiness; Stage 6 runbook and evidence. Local smoke, PostgreSQL-reference, and infrastructure checks passed.
+
+
+- Summary: Current main contains the first safe classification hardening; it classified recovery-1 as an essential-container exit without an attached stream name. The follow-up source path derives the fixed awslogs stream only in memory to seek an existing safe marker before retaining that fallback.
+  Durable evidence: Durable controls: relational smoke controller, target profile, static verifiers, unit tests, Stage 6 runbook/evidence. Local policy checks passed; no new AWS mutation has occurred.
 
 ## Activity Log
 
@@ -235,6 +247,27 @@ Message: fix(deploy): harden relational bootstrap diagnosis
 Summary: Added a target-defined, allowlisted terminal-metadata classifier for an already-consumed no-log-stream bootstrap failure; tightened policy, readiness, static verification, unit checks, runbook, and safe evidence without permitting replay or exposing raw AWS details.
 
 ADR impact: not-needed: bounded operational diagnostic refinement
+
+
+### 2026-09-27T20:18:14Z - Issue
+
+Raised: The first safe terminal classification was still too coarse for repair
+
+Resolution: It established that the bootstrap container exited but did not expose a log-stream name. The controller now derives only the deterministic awslogs name for that one already-consumed task, tries it internally, and falls back to the existing safe terminal category when unavailable.
+
+
+### 2026-09-27T20:18:14Z - Decision
+
+Decision: Use a deterministic no-log-stream diagnostic lookup before metadata fallback
+
+Rationale: The derived stream is target-defined, belongs only to the consumed bootstrap task, is never emitted or recorded, and cannot trigger an execution, replay, or configuration change. No ADR is needed: this is an incremental bounded diagnostic safeguard.
+
+
+### 2026-09-27T20:18:14Z - Context hygiene
+
+Summary: Current main contains the first safe classification hardening; it classified recovery-1 as an essential-container exit without an attached stream name. The follow-up source path derives the fixed awslogs stream only in memory to seek an existing safe marker before retaining that fallback.
+
+Durable evidence: Durable controls: relational smoke controller, target profile, static verifiers, unit tests, Stage 6 runbook/evidence. Local policy checks passed; no new AWS mutation has occurred.
 
 ## Sub-Agent Activity
 

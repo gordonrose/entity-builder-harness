@@ -244,7 +244,8 @@ if stage_six.get("status") != "bootstrap-recovery-1-consumed-diagnostic-hardenin
     fail("target profile must define the reviewed isolated relational smoke task boundary")
 diagnostic = stage_six.get("control", {}).get("bootstrap_recovery_diagnostic", {})
 if diagnostic != {
-    "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+    "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-direct-and-derived-log-stream-unavailable",
+    "derived_log_stream_prefix": "relational-bootstrap/relational-bootstrap/",
     "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
     "categories": [
         "bootstrap-task-log-stream-unavailable", "bootstrap-task-log-events-unavailable", "bootstrap-task-log-stream-empty",

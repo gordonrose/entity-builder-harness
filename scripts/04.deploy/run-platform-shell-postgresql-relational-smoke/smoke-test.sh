@@ -110,6 +110,14 @@ assert module["bootstrap_metadata_category"](
     {},
     diagnostic_policy,
 ) == "bootstrap-essential-container-exited-without-log-stream"
+assert module["derived_bootstrap_log_stream"](
+    {"taskArn": "arn:aws:ecs:eu-west-1:123456789012:task/reviewed-cluster/0123456789abcdef0123456789abcdef"},
+    {"bootstrap_diagnostic_log_stream_prefix": "relational-bootstrap/relational-bootstrap/"},
+) == "relational-bootstrap/relational-bootstrap/0123456789abcdef0123456789abcdef"
+assert module["derived_bootstrap_log_stream"](
+    {"taskArn": "not-a-reviewed-task-arn"},
+    {"bootstrap_diagnostic_log_stream_prefix": "relational-bootstrap/relational-bootstrap/"},
+) is None
 PY
 if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts || grep -q 'ALTER DEFAULT PRIVILEGES FOR ROLE' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: migration must own default privileges for its own future tables" >&2

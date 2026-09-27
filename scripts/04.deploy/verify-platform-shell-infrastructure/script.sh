@@ -1283,7 +1283,8 @@ expected_relational_reference = {
             "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
             "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
             "bootstrap_recovery_diagnostic": {
-                "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+                "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-direct-and-derived-log-stream-unavailable",
+                "derived_log_stream_prefix": "relational-bootstrap/relational-bootstrap/",
                 "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
                 "categories": [
                     "bootstrap-task-log-stream-unavailable",

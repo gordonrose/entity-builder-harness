@@ -139,7 +139,8 @@ def load_policy(mode: str) -> dict[str, Any]:
     if any(control.get(key) != value for key, value in required.items()) or task_families != expected_families or task_containers != expected_containers or started_by != expected_labels:
         raise RelationalSmokeError("the relational proof control differs from the reviewed fixed shape")
     expected_diagnostic = {
-        "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+        "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-direct-and-derived-log-stream-unavailable",
+        "derived_log_stream_prefix": "relational-bootstrap/relational-bootstrap/",
         "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
         "categories": [
             "bootstrap-task-log-stream-unavailable",
@@ -179,10 +180,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "task_wait_seconds": 900,
         "restore_wait_seconds": 1800,
         "bootstrap_diagnostic_categories": set(expected_diagnostic["categories"]),
+        "bootstrap_diagnostic_log_stream_prefix": expected_diagnostic["derived_log_stream_prefix"],
     }
 
 
-def aws(arguments: list[str], policy: dict[str, Any], allow_not_found: bool = False) -> dict[str, Any] | None:
+def aws(arguments: list[str], policy: dict[str, Any], allowed_not_found_code: str | None = None) -> dict[str, Any] | None:
     """Call AWS while keeping raw provider responses solely in process memory."""
 
     environment = os.environ.copy()
@@ -190,7 +192,7 @@ def aws(arguments: list[str], policy: dict[str, Any], allow_not_found: bool = Fa
     environment["AWS_CLI_AUTO_PROMPT"] = "off"
     result = subprocess.run(["aws", *arguments, "--profile", policy["profile"], "--region", REGION, "--output", "json"], capture_output=True, encoding="utf-8", check=False, env=environment)
     if result.returncode != 0:
-        if allow_not_found and "DBInstanceNotFound" in result.stderr:
+        if allowed_not_found_code is not None and allowed_not_found_code in result.stderr:
             return None
         raise RelationalSmokeError("a fixed approved relational-stage AWS operation did not complete")
     try:
@@ -356,7 +358,7 @@ def source_database(policy: dict[str, Any]) -> dict[str, Any]:
 def restore_absent(policy: dict[str, Any]) -> bool:
     """Require the fixed disposable recovery identifier to be unused before restore."""
 
-    return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allow_not_found=True) is None
+    return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allowed_not_found_code="DBInstanceNotFound") is None
 
 
 def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
@@ -507,6 +509,18 @@ def bootstrap_metadata_category(task: dict[str, Any], container: dict[str, Any],
     return category
 
 
+def derived_bootstrap_log_stream(task: dict[str, Any], policy: dict[str, Any]) -> str | None:
+    """Construct only the standard awslogs name for this fixed bootstrap task."""
+
+    task_arn = task.get("taskArn")
+    if not isinstance(task_arn, str):
+        return None
+    task_id = task_arn.rsplit("/", 1)[-1]
+    if not task_id or any(character not in "0123456789abcdef-" for character in task_id.lower()):
+        return None
+    return policy["bootstrap_diagnostic_log_stream_prefix"] + task_id
+
+
 def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
     """Classify one consumed recovery-1 task without emitting task or log details."""
 
@@ -526,8 +540,12 @@ def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
         raise RelationalSmokeError("the fixed bootstrap diagnostic terminal metadata differs from the reviewed recovery-1 failure")
     stream = container.get("logStreamName")
     if not isinstance(stream, str) or not stream:
+        stream = derived_bootstrap_log_stream(task, policy)
+        if stream is None:
+            return bootstrap_metadata_category(task, container, policy)
+    logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy, allowed_not_found_code="ResourceNotFoundException")
+    if logged is None:
         return bootstrap_metadata_category(task, container, policy)
-    logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy)
     events = logged.get("events")
     if not isinstance(events, list):
         return "bootstrap-task-log-events-unavailable"

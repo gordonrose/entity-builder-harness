@@ -50,6 +50,11 @@ only read-only terminal-metadata diagnostic hardening: it emits an allowlisted
 class while keeping raw stop class, container reason, task identifiers, and
 logs private. It does not permit a replay.
 
+When ECS omits the attached stream name, the diagnostic may derive the one
+standard awslogs stream name from the consumed task only in memory. It reads
+that exact stream before falling back to terminal metadata and never records or
+emits the derived name.
+
 Continuous reconciliation also distinguishes expired artifact-stack drift
 evidence from an artifact mismatch. The read-only GitHub role reports an
 expired fact but cannot refresh it; the administrator-only artifact assessor
