@@ -49,6 +49,10 @@ let's do that
 - Raised: The realization gate required every execution unit to claim an async channel, which misrepresented units that only prepare, migrate, verify, or restore durable state.
   Resolution: The generic contract now permits an explicit empty async-channel list while retaining mandatory binding validation for every declared channel participant.
 
+
+- Raised: The PostgreSQL semantic proof assumed Docker and its relay test could observe an older pending outbox entry before the intended relay fixture.
+  Resolution: Added a disposable local-engine fallback with loopback, generated data/socket paths, credential stripping, bounded assertions, safe phase evidence, and exact cleanup; made the relay fixture deterministically oldest so it tests its own delivery path.
+
 ## Decisions Made
 
 - Storage must be planned as a provider-neutral lifecycle platform, not as an
@@ -68,6 +72,10 @@ let's do that
 - Decision: Model non-queue execution units with an explicit empty async-channel list.
   Rationale: This makes the graph truthful without weakening declared channel producer and consumer binding checks.
 
+
+- Decision: Keep a disposable local PostgreSQL engine fallback for semantic tests when Docker is unavailable.
+  Rationale: It is fully isolated and test-only, preserves production TLS requirements, and is not an AWS target or developer database substitute.
+
 ## Context Hygiene
 
 
@@ -86,6 +94,10 @@ let's do that
 
 - Summary: The generic realization compiler now distinguishes non-queue execution units from async producers or consumers. A multi-stage stateful route can be declared accurately without a false queue relationship.
   Durable evidence: Durable source: scripts/04.deploy/operational-realization-gate/; operational realization contract schema and guide.
+
+
+- Summary: The real-engine PostgreSQL integration proof now passes migrations, atomic state/lineage/outbox, rollback, optimistic concurrency, tenant predicates, outbox and worker fencing, relay ordering, and telemetry safety using an isolated loopback fixture with no remaining engine or fixture directory.
+  Durable evidence: Durable source: platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs; integration test; PostgreSQL README and Stage 3 plan/runbook/handbook.
 
 ## Activity Log
 
@@ -287,6 +299,27 @@ Message: fix(harness): model non-queue realization units
 Summary: Allowed an explicit empty async-channel list for execution units that do not exchange asynchronous work, while retaining mandatory channel binding checks and adding positive and negative tests.
 
 ADR impact: No ADR: clarification within the approved operational-realization contract.
+
+
+### 2026-09-27T14:22:15Z - Issue
+
+Raised: The PostgreSQL semantic proof assumed Docker and its relay test could observe an older pending outbox entry before the intended relay fixture.
+
+Resolution: Added a disposable local-engine fallback with loopback, generated data/socket paths, credential stripping, bounded assertions, safe phase evidence, and exact cleanup; made the relay fixture deterministically oldest so it tests its own delivery path.
+
+
+### 2026-09-27T14:22:15Z - Decision
+
+Decision: Keep a disposable local PostgreSQL engine fallback for semantic tests when Docker is unavailable.
+
+Rationale: It is fully isolated and test-only, preserves production TLS requirements, and is not an AWS target or developer database substitute.
+
+
+### 2026-09-27T14:22:15Z - Context hygiene
+
+Summary: The real-engine PostgreSQL integration proof now passes migrations, atomic state/lineage/outbox, rollback, optimistic concurrency, tenant predicates, outbox and worker fencing, relay ordering, and telemetry safety using an isolated loopback fixture with no remaining engine or fixture directory.
+
+Durable evidence: Durable source: platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs; integration test; PostgreSQL README and Stage 3 plan/runbook/handbook.
 
 ## Sub-Agent Activity
 

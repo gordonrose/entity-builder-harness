@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 9
+version: 10
 status: draft
 layer: 03.product
 domain: persistence
@@ -238,13 +238,14 @@ composition and an opt-in local command:
 npm run platform:adapter:aws:persistence:postgresql:integration
 ```
 
-The command compiles the integration suite, starts one generated-name Docker
-container on loopback with temporary storage, passes its generated password
-through a mode-`0600` temporary environment file rather than command-line
-arguments, runs the proof, and removes both exact temporary resources in all
-outcomes. It never reads AWS credentials, contacts an AWS resource, uses a
-developer database, prints a secret, or changes the completed DynamoDB/SQS
-reference.
+The command compiles the integration suite, first starts one generated-name
+Docker container on loopback with temporary storage when a Docker daemon is
+available, and otherwise starts an installed local PostgreSQL engine only in a
+new temporary data and socket directory. Both routes pass a generated password
+through a mode-`0600` temporary file rather than command-line arguments, run
+the proof, and remove their exact temporary resources in all outcomes. It
+never reads AWS credentials, contacts an AWS resource, uses a developer
+database, prints a secret, or changes the completed DynamoDB/SQS reference.
 
 The test proves the Stage 3 behaviours against a real engine when it can run:
 
@@ -265,6 +266,11 @@ the end of the test. No AWS resource, shared database, real record, or
 long-lived credential was used. Stage 4 may now define and validate the AWS
 target source; it still may not create an RDS resource until its reviewed
 change-set gate passes.
+
+On 2026-09-27, the portable local-engine route also passed under the same
+disposable boundary. This is a reliability improvement to the semantic proof,
+not an alternative target database or a relaxation of the production TLS
+requirement.
 
 ## Stage 4 source-definition checkpoint — 2026-09-26
 

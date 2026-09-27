@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0002-architecture-learning-handbook
-  version: 42
+  version: 43
   status: active
   layer: 05.education
   domain: education
@@ -11012,6 +11012,13 @@ mode-0600 temporary file     → keeps the password out of command arguments
 finally cleanup              → removes exactly the resources the test created
 ```
 
+Docker is the first fixture engine when its daemon is available. If it is not,
+the test may use an installed local PostgreSQL engine only after it has created
+a fresh temporary data directory and private socket directory. That is not a
+developer database fallback: it is the same disposable experiment using a
+different local engine launcher. Both routes bind application traffic only to
+loopback and remove their generated state afterward.
+
 This means the test can create a schema, run migrations, make test writes, and
 attempt deliberately stale updates without risking a shared database. It uses
 opaque synthetic names such as “tenant A” and “tenant B”; they stand for two
@@ -11046,6 +11053,11 @@ command passed. The fixture created only its generated loopback container, then
 cleaned up that container and its temporary credential file. That proves the
 selected relational semantics on a real PostgreSQL engine; it does not yet
 prove the separate AWS RDS target.
+
+On 2026-09-27 the portable local-engine launcher ran the same proof when a
+Docker daemon was not usable. Its separate temporary data and socket
+directories are what keep that convenience from becoming an accidental test
+against a developer's database.
 
 ### Study question
 

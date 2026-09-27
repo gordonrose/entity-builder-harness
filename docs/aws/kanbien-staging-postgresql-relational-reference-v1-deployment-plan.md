@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 7
+version: 8
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -152,8 +152,10 @@ deliberately separate from AWS deployment and from the completed DynamoDB/SQS
 smoke path:
 
 - `platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs`
-  owns the exact generated Docker container, mode-`0600` temporary credential
-  file, loopback-only port, bounded readiness wait, and exact cleanup;
+  owns the exact generated Docker fixture or, when no daemon is usable, an
+  installed local engine in an exact temporary data/socket directory; both use
+  a mode-`0600` temporary credential file, loopback-only port, bounded
+  readiness wait, and exact cleanup;
 - `postgresql-persistence-adapter-integration.test.ts` runs the real engine
   assertions without printing rows, SQL values, tenant identifiers, passwords,
   endpoints, or queue bodies; and
@@ -175,6 +177,10 @@ container and credential file. The evidence is a passed real-engine semantic
 proof—not AWS evidence: no RDS resource, target credential, endpoint, shared
 database, or product record was used. Stage 4 may now define and validate the
 source target and produce a reviewed change set.
+
+On 2026-09-27, the same assertions also passed with the portable local-engine
+fixture when the Docker daemon was unavailable. That fallback remains fully
+disposable: it uses neither a developer database nor a host-wide socket path.
 
 ## Stage 4 source-definition checkpoint
 
