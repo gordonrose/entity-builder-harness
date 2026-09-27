@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T22:21:30Z
-latest_commit_sha: 888787387fe592a1cf2472a11fc17374c2da8d2d
-chat_duration: 349s (00:00:05:49)
+latest_commit_at_utc: 2026-09-27T22:23:38Z
+latest_commit_sha: ff248dfe
+chat_duration: 477s (00:00:07:57)
 estimated_chat_tokens: 683170 estimated from chat transcript bytes (2732678 bytes; source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -116,6 +116,17 @@ Summary: Repair 14 existing metadata-only failures; all 965 headers and four off
 
 ADR impact: No ADR; metadata correctness only.
 
+
+### 2026-09-27T22:23:38Z - Commit recorded
+
+Commit: `ff248dfe`
+
+Message: docs(deploy): plan reliable local-to-proven delivery
+
+Summary: Publish planning-first reliability programme with 17 acceptance criteria. Commit gates, 966 metadata headers, generated-index freshness, 2213 recognition terms and plan references pass; unrelated edits preserved.
+
+ADR impact: No ADR; plan extends existing realization programme.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -144,6 +155,13 @@ ADR impact: No ADR; metadata correctness only.
   Summary: Repair 14 existing metadata-only failures; all 965 headers and four offline deployment smoke checks passed. Executable statements and document bodies are unchanged.
   ADR impact: No ADR; metadata correctness only.
 
+
+- Commit: `ff248dfe`
+  Time UTC: 2026-09-27T22:23:38Z
+  Message: docs(deploy): plan reliable local-to-proven delivery
+  Summary: Publish planning-first reliability programme with 17 acceptance criteria. Commit gates, 966 metadata headers, generated-index freshness, 2213 recognition terms and plan references pass; unrelated edits preserved.
+  ADR impact: No ADR; plan extends existing realization programme.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -157,9 +175,9 @@ Reason: Publishing a planning document through existing lifecycle and remote-pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T22:15:41Z
-Latest commit at UTC: 2026-09-27T22:21:30Z
-Latest commit SHA: 888787387fe592a1cf2472a11fc17374c2da8d2d
-Chat duration: 349s (00:00:05:49)
+Latest commit at UTC: 2026-09-27T22:23:38Z
+Latest commit SHA: ff248dfe
+Chat duration: 477s (00:00:07:57)
 Estimated chat tokens: 683170 estimated from chat transcript bytes (2732678 bytes; source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
