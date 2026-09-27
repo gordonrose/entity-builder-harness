@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T21:53:38Z
-latest_commit_sha: 3a650b0f
-chat_duration: 4986s (00:01:23:06)
+latest_commit_at_utc: 2026-09-27T22:03:52Z
+latest_commit_sha: b7e05432
+chat_duration: 5600s (00:01:33:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -122,6 +122,17 @@ Summary: Allow only the isolated candidate-task onboarding path to recover from 
 
 ADR impact: No ADR; this corrects the existing candidate onboarding gate.
 
+
+### 2026-09-27T22:03:52Z - Commit recorded
+
+Commit: `b7e05432`
+
+Message: fix(deploy): clean up interrupted candidate preflights
+
+Summary: Record the first candidate attempt as terminal, add interruption-triggered controlled cleanup, and require a new immutable digest before any next execution proof.
+
+ADR impact: No ADR; this closes a controller reliability gap within the existing realization programme.
+
 ## Sub-Agent Activity
 
 - Independent evidence audit: verified the source/payload seals already cover
@@ -154,6 +165,13 @@ ADR impact: No ADR; this corrects the existing candidate onboarding gate.
   Summary: Allow only the isolated candidate-task onboarding path to recover from a historical service-stack rollback after fresh in-sync drift and fixed-service steady-state proof; ordinary changes remain denied.
   ADR impact: No ADR; this corrects the existing candidate onboarding gate.
 
+
+- Commit: `b7e05432`
+  Time UTC: 2026-09-27T22:03:52Z
+  Message: fix(deploy): clean up interrupted candidate preflights
+  Summary: Record the first candidate attempt as terminal, add interruption-triggered controlled cleanup, and require a new immutable digest before any next execution proof.
+  ADR impact: No ADR; this closes a controller reliability gap within the existing realization programme.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -169,9 +187,9 @@ this commit does not choose a new platform architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T20:30:32Z
-Latest commit at UTC: 2026-09-27T21:53:38Z
-Latest commit SHA: 3a650b0f
-Chat duration: 4986s (00:01:23:06)
+Latest commit at UTC: 2026-09-27T22:03:52Z
+Latest commit SHA: b7e05432
+Chat duration: 5600s (00:01:33:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
