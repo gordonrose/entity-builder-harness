@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
-version: 1
+version: 2
 status: active
 layer: 04.deploy
 domain: persistence.operations
@@ -71,6 +71,21 @@ CloudFormation change sets:
   the only database-group egress is the approved loopback rule.
 - The Foundation/service change sets add only the reviewed relational queue,
   task definitions, task roles, outputs, and deployment-role pass-role scope.
+
+If continuous reconciliation reports only expired deployment-artifact drift
+evidence, refresh that fact before retrying reconciliation. This is not a
+deployment or a workaround: it performs drift detection and status polling on
+the one fixed artifact stack, accepting only an in-sync result.
+
+```bash
+npm run platform:shell:artifact-active-drift-assessment -- \
+  --execute-approved-active-artifact-drift-assessment \
+  --evidence-file /tmp/new-safe-evidence.json \
+  --json
+```
+
+Do not use this command to inspect stack-resource details or S3 contents. An
+out-of-sync result is a stop condition for the reviewed route.
 
 Run the local, no-AWS validation first:
 

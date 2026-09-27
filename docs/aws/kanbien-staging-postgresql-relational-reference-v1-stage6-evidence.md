@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -42,6 +42,13 @@ commands. The continuation is available only after the one recovery bootstrap
 has a successful terminal result; it verifies that predecessor in memory and
 never starts bootstrap again. Its migration, relay, worker, restore, and
 cleanup labels remain single use.
+
+Continuous reconciliation also distinguishes expired artifact-stack drift
+evidence from an artifact mismatch. The read-only GitHub role reports an
+expired fact but cannot refresh it; the administrator-only artifact assessor
+can detect and poll the one fixed stack and records only an in-sync verdict.
+No refreshed evidence is claimed here until that assessment and the following
+reconciliation have both passed.
 
 ## Required live evidence fields
 

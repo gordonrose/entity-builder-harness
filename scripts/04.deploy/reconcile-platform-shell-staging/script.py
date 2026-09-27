@@ -186,7 +186,17 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
             "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
-        "operational_coverage": "administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending",
+        "artifact_active_assessment": {
+            "status": "approved-administrator-only-artifact-drift-assessment",
+            "command": "npm run platform:shell:artifact-active-drift-assessment -- --execute-approved-active-artifact-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "deployment-artifact-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-deployment-artifact-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
+        "operational_coverage": "administrator-only-foundation-artifact-and-service-assessments-available-detector-role-workload-cost-and-live-proof-pending",
         "service_active_assessment": {
             "status": "approved-administrator-only-service-drift-assessment",
             "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",

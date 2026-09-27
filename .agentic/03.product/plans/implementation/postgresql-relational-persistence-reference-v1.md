@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 8
+version: 9
 status: draft
 layer: 03.product
 domain: persistence
@@ -326,6 +326,14 @@ The command emits only check identifiers and verdicts. It does not print
 provider responses, secrets, endpoints, resource content, or change details.
 Any mismatch—including a stale repository budget name—blocks execution before
 CloudFormation is asked to change the Foundation.
+
+The read-only GitHub role is deliberately unable to start CloudFormation drift
+detection. To keep that least-privilege boundary while avoiding a permanently
+stale artifact-stack fact, a separate administrator-only command can detect
+and poll the one deployment-artifact stack and write only a short-lived
+in-sync/out-of-sync safe fact. It has no stack-resource-detail, bucket-object,
+change-set, or stack-update authority. A non-in-sync result remains a stop
+condition rather than a cue to weaken reconciliation.
 
 ## Contracts and ownership
 

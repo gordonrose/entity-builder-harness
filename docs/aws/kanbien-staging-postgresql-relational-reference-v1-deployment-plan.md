@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 6
+version: 7
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -287,6 +287,15 @@ The same target has a separate scheduled read-only reconciliation workflow.
 It does not deploy, read secrets, retrieve endpoints, or print provider
 responses. A failure is an operational blocker, not a reason to loosen the
 check or proceed with a stale review.
+
+The read-only reconciler intentionally cannot start CloudFormation drift
+detection. When the deployment-artifact stack's in-sync evidence expires, the
+target-owned administrator uses the separate active artifact assessment. It is
+limited to identity confirmation, that one fixed stack's status, drift-detect
+request, and status polling; it accepts only `in-sync` and writes a short-lived
+safe record under `/tmp`. It cannot inspect resource details or bucket
+contents, execute a change set, or change the stack. This refreshes evidence
+for reconciliation without broadening the GitHub read role.
 
 ## Observability, recovery, and rollback
 

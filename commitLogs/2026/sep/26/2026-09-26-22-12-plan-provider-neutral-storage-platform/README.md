@@ -40,7 +40,10 @@ let's do that
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Continuous reconciliation could observe expired deployment-artifact drift evidence without a governed refresh path.
+  Resolution: Added an administrator-only fixed-stack assessor that can detect and poll only for an in-sync status; the GitHub read role remains unchanged.
 
 ## Decisions Made
 
@@ -53,6 +56,10 @@ let's do that
   facts. Content remains untrusted until the selected verification/approval
   path passes.
 
+
+- Decision: Use a separate artifact-stack active drift assessor rather than broadening GitHub reconciliation permissions.
+  Rationale: It preserves least privilege and fails closed on out-of-sync while supplying only a fresh safe fact.
+
 ## Context Hygiene
 
 
@@ -63,6 +70,10 @@ let's do that
 
 - Summary: The controlled Stage 6 source revealed a continuation gap: bootstrap-only recovery consumed its label but the only full command would replay it. The controller now has a separately guarded continuation that verifies the successful predecessor in memory before later stages.
   Durable evidence: Durable source: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/; target-profile Stage 6 control; Stage 6 runbook/evidence; PostgreSQL reference plan.
+
+
+- Summary: A stale artifact-drift fact was a structural reconciliation gap, not PostgreSQL drift. The new assessor is fixed-stack, status-only, administrator-only, and must pass before continuous reconciliation resumes.
+  Durable evidence: Durable source: scripts/04.deploy/assess-platform-shell-artifact-drift/; staging target profile; deployment reconciliation and drift-boundary checks; PostgreSQL Stage 6 runbook/evidence.
 
 ## Activity Log
 
@@ -200,6 +211,27 @@ Message: fix(deploy): separate relational recovery continuation
 Summary: Added a separately guarded Stage 6 continuation that requires a successful consumed bootstrap label before it runs migration, relay, worker, restore, and cleanup; refreshed target policy, runbook, evidence, static guard, and plan.
 
 ADR impact: No ADR: bounded controller correction within the approved Stage 6 architecture.
+
+
+### 2026-09-27T13:50:40Z - Issue
+
+Raised: Continuous reconciliation could observe expired deployment-artifact drift evidence without a governed refresh path.
+
+Resolution: Added an administrator-only fixed-stack assessor that can detect and poll only for an in-sync status; the GitHub read role remains unchanged.
+
+
+### 2026-09-27T13:50:41Z - Decision
+
+Decision: Use a separate artifact-stack active drift assessor rather than broadening GitHub reconciliation permissions.
+
+Rationale: It preserves least privilege and fails closed on out-of-sync while supplying only a fresh safe fact.
+
+
+### 2026-09-27T13:50:41Z - Context hygiene
+
+Summary: A stale artifact-drift fact was a structural reconciliation gap, not PostgreSQL drift. The new assessor is fixed-stack, status-only, administrator-only, and must pass before continuous reconciliation resumes.
+
+Durable evidence: Durable source: scripts/04.deploy/assess-platform-shell-artifact-drift/; staging target profile; deployment reconciliation and drift-boundary checks; PostgreSQL Stage 6 runbook/evidence.
 
 ## Sub-Agent Activity
 

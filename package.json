@@ -60,6 +60,8 @@
     "platform:shell:deployment-reconciliation:role-policy-alignment": "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --mode role-policy-alignment --json",
     "platform:shell:foundation-active-drift-assessment": "bash scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh",
     "platform:shell:foundation-active-drift-assessment:check": "bash scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh",
+    "platform:shell:artifact-active-drift-assessment": "bash scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh",
+    "platform:shell:artifact-active-drift-assessment:check": "bash scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh",
     "platform:shell:service-active-drift-assessment": "bash scripts/04.deploy/assess-platform-shell-service-drift/script.sh",
     "platform:shell:service-active-drift-assessment:check": "bash scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh",
     "platform:shell:postgresql-live-boundary": "bash scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh",
