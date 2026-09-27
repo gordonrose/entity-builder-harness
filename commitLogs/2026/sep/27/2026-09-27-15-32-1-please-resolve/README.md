@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-27T19:29:57Z
+latest_commit_sha: 1120c03b35c1665f1a4e2a305f1a7baa90d2c198
+chat_duration: 17871s (00:04:57:51)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -93,13 +93,30 @@ ADR needed: no
 
 Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a product or deployment architecture decision.
 
+
+### 2026-09-27T19:29:57Z - Commit recorded
+
+Commit: `1120c03b35c1665f1a4e2a305f1a7baa90d2c198`
+
+Message: feat(chat): support isolated remote main promotion
+
+Summary: Added an exact-commit, fast-forward-only remote promotion workflow, a clean integration-worktree preparer, remote-base eligibility, remote-aware refresh preflight, and disposable regression coverage. Verified and used the path to advance PostgreSQL source to origin/main without altering root user work.
+
+ADR impact: not-needed: narrow chat lifecycle governance enhancement
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `1120c03b35c1665f1a4e2a305f1a7baa90d2c198`
+  Time UTC: 2026-09-27T19:29:57Z
+  Message: feat(chat): support isolated remote main promotion
+  Summary: Added an exact-commit, fast-forward-only remote promotion workflow, a clean integration-worktree preparer, remote-base eligibility, remote-aware refresh preflight, and disposable regression coverage. Verified and used the path to advance PostgreSQL source to origin/main without altering root user work.
+  ADR impact: not-needed: narrow chat lifecycle governance enhancement
 
 ## Main Refresh Conflicts
 
@@ -114,12 +131,12 @@ Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T14:32:06Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-27T19:29:57Z
+Latest commit SHA: 1120c03b35c1665f1a4e2a305f1a7baa90d2c198
+Chat duration: 17871s (00:04:57:51)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
