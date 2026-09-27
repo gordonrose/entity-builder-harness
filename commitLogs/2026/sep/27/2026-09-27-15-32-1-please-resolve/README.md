@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T20:18:54Z
-latest_commit_sha: 561899ed
-chat_duration: 20808s (00:05:46:48)
+latest_commit_at_utc: 2026-09-27T20:25:08Z
+latest_commit_sha: 8d314f42
+chat_duration: 21182s (00:05:53:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -313,6 +313,17 @@ Summary: Recovery-1 had an essential container exit; a derived deterministic str
 
 Durable evidence: Durable controls: PostgreSQL bootstrap/helper entrypoints; runtime payload verifier; relational smoke policy/controller; target/readiness state; Stage 6 plan/runbook/evidence. Local policy gates passed. GitHub publication is the required compile/runtime image gate before service rollout.
 
+
+### 2026-09-27T20:25:08Z - Commit recorded
+
+Commit: `8d314f42`
+
+Message: fix(deploy): classify relational bootstrap failures
+
+Summary: Defined recovery-2 with fresh single-use labels, a category-only bootstrap outcome, a derived-stream diagnostic, and a compiled PostgreSQL bootstrap payload check before image publication; local policy gates passed.
+
+ADR impact: not-needed: existing Stage 6 safety plan implementation
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -348,6 +359,13 @@ Durable evidence: Durable controls: PostgreSQL bootstrap/helper entrypoints; run
   Summary: Added a deterministic, in-memory awslogs fallback for the consumed bootstrap task, so diagnostics can classify an existing safe marker without emitting task or stream identities; all local policy checks passed.
   ADR impact: not-needed: bounded operational diagnostic refinement
 
+
+- Commit: `8d314f42`
+  Time UTC: 2026-09-27T20:25:08Z
+  Message: fix(deploy): classify relational bootstrap failures
+  Summary: Defined recovery-2 with fresh single-use labels, a category-only bootstrap outcome, a derived-stream diagnostic, and a compiled PostgreSQL bootstrap payload check before image publication; local policy gates passed.
+  ADR impact: not-needed: existing Stage 6 safety plan implementation
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -361,9 +379,9 @@ Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T14:32:06Z
-Latest commit at UTC: 2026-09-27T20:18:54Z
-Latest commit SHA: 561899ed
-Chat duration: 20808s (00:05:46:48)
+Latest commit at UTC: 2026-09-27T20:25:08Z
+Latest commit SHA: 8d314f42
+Chat duration: 21182s (00:05:53:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
