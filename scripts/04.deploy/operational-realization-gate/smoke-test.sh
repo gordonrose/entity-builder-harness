@@ -57,7 +57,17 @@ for path in (
 ):
     if not isinstance(yaml.safe_load(Path(path).read_text(encoding="utf-8")), dict):
         raise SystemExit("ERROR: realization template/schema must be valid YAML mappings")
+schema = yaml.safe_load(Path(".agentic/01.harness/templates/operational-realization-contract.v1.schema.yml").read_text(encoding="utf-8"))
+guide = schema.get("companion_guide")
+if not isinstance(schema.get("field_guide"), list) or not schema["field_guide"] or not isinstance(guide, str) or not Path(guide).is_file():
+    raise SystemExit("ERROR: realization schema must provide a field guide and linked companion guide")
 PY
+contract_output="$(bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --validate-contract --json)"
+if [[ "$contract_output" != *'"scope": "contract"'* || "$contract_output" != *'"verdict": "passed"'* ]]; then
+  echo "ERROR: explicit contract validation did not pass" >&2
+  exit 1
+fi
+
 valid_output="$(bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$FIXTURES/valid-normalized-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json)"
 if [[ "$valid_output" != *'"verdict": "passed"'* ]]; then
   echo "ERROR: valid realization contract did not pass" >&2
@@ -70,21 +80,52 @@ if [[ "$preflight_output" != *'"verdict": "passed"'* ]]; then
   exit 1
 fi
 
-expect_failure "assumption-proof-unknown" bash "$SCRIPT" --contract "$FIXTURES/unknown-assumption.yml" --json
+expect_failure "arguments-invalid" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --json
+expect_failure "assumption-proof-unknown" bash "$SCRIPT" --contract "$FIXTURES/unknown-assumption.yml" --validate-contract --json
 
 sed '/to: delivery-store, purpose: persists/d' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/undeclared-edge.yml"
-expect_failure "undeclared-dependency-edge" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/undeclared-edge.yml" --json
+expect_failure "undeclared-dependency-edge" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/undeclared-edge.yml" --validate-contract --json
 
 sed 's/mode: reviewed-recovery-only/mode: automatic/' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/unsafe-retry.yml"
-expect_failure "unsafe-retry-policy" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unsafe-retry.yml" --json
+expect_failure "unsafe-retry-policy" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unsafe-retry.yml" --validate-contract --json
 
 sed '0,/id: delivery-store/s//id: aws-store/' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/provider-leakage.yml"
-expect_failure "provider-specific-leakage" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/provider-leakage.yml" --json
+expect_failure "provider-specific-leakage" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/provider-leakage.yml" --validate-contract --json
 
 sed '/sensitivity: secret-reference-only/a\    endpoint: unsafe-value' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/unsafe-value.yml"
-expect_failure "unsafe-value-field-declared" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unsafe-value.yml" --json
+expect_failure "unsafe-value-field-declared" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/unsafe-value.yml" --validate-contract --json
 
-expect_failure "normalized-change-summary-required-for-gate" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$FIXTURES/valid-normalized-facts.yml" --through change-set --json
+expect_failure "normalized-change-summary-required-for-gate" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$FIXTURES/preflight-normalized-facts.yml" --through execution-preflight --json
+
+sed '/contract_id: harmless-delivery-route/a token_value: sentinel' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/unsafe-facts.yml"
+expect_failure "unsafe-value-field-declared" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/unsafe-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
+
+sed 's/check_id: source-check, //' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-check-id.yml"
+expect_failure "normalized-facts-entry-fields-invalid" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/missing-check-id.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
+
+sed 's/timestamp: "2026-09-27T00:00:00Z", //' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-timestamp.yml"
+expect_failure "normalized-facts-entry-fields-invalid" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/missing-timestamp.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
+
+sed '/component_id: delivery-identity/d' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-component-binding.yml"
+expect_failure "component-evidence-incomplete" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/missing-component-binding.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
+
+sed 's/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/latest/' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/mutable-artifact.yml"
+expect_failure "artifact-immutable-reference-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/mutable-artifact.yml" --validate-contract --json
+
+sed '/producer: delivery-worker/d' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/async-producer-missing.yml"
+expect_failure "async-producer-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/async-producer-missing.yml" --validate-contract --json
+
+sed '/^execution_units:/,$ s/async_channels: \[delivery-channel\]/async_channels: [missing-channel]/' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/async-channel-undeclared.yml"
+expect_failure "execution-unit-references-undeclared-component" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/async-channel-undeclared.yml" --validate-contract --json
+
+sed 's/source: delivery-worker/source: delivery-artifact/' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/connection-source-wrong-kind.yml"
+expect_failure "connection-source-type-invalid" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/connection-source-wrong-kind.yml" --validate-contract --json
+
+sed '/from: delivery-connection, to: delivery-store/d' "$FIXTURES/valid-contract.yml" > "$TEMPORARY_DIRECTORY/connection-destination-edge-missing.yml"
+expect_failure "connection-destination-edge-missing" bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/connection-destination-edge-missing.yml" --validate-contract --json
+
+sed 's/recovery_attempt_label: recovery-attempt/recovery_attempt_label: prior-attempt/' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/recovery-replay.yml"
+expect_failure "recovery-label-not-new" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/recovery-replay.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
 
 if rg -n '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' scripts/04.deploy/operational-realization-gate/script.py; then
   echo "ERROR: provider adapter import leaked into generic realization core" >&2

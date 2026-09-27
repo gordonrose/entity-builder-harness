@@ -24,7 +24,7 @@ version: 1
 provider_boundary: normalized-facts-only
 artifacts:
   - id: delivery-artifact
-    immutable_reference: digest-reviewed
+    immutable_reference: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     entrypoint: delivery-entrypoint
     assertions: [runtime-payload-reviewed, entrypoint-executable]
 identities:
@@ -45,6 +45,8 @@ state_stores:
     semantics: [transaction-boundary-reviewed, concurrency-reviewed]
 async_channels:
   - id: delivery-channel
+    producer: delivery-worker
+    consumers: [delivery-worker]
     delivery: at-least-once
     acknowledgement: after-durable-completion
     idempotency_boundary: delivery-store
@@ -53,6 +55,7 @@ observability_profiles:
     required_facts: [correlation-id, outcome-category]
 recovery_plans:
   - id: delivery-recovery
+    entry_condition: prior-attempt-reached-failed-or-stopped-terminal-state
     cleanup: reviewed-cleanup
     rollback: reviewed-rollback
 execution_units:
@@ -70,8 +73,10 @@ edges:
   - {from: delivery-worker, to: delivery-identity, purpose: assumes}
   - {from: delivery-worker, to: delivery-configuration, purpose: reads-configuration}
   - {from: delivery-worker, to: delivery-connection, purpose: connects}
+  - {from: delivery-connection, to: delivery-store, purpose: reaches-state}
   - {from: delivery-worker, to: delivery-store, purpose: persists}
   - {from: delivery-worker, to: delivery-channel, purpose: exchanges-work}
+  - {from: delivery-channel, to: delivery-worker, purpose: delivers-work}
   - {from: delivery-worker, to: delivery-observability, purpose: emits-safe-telemetry}
   - {from: delivery-worker, to: delivery-recovery, purpose: recovers}
 lifecycle:

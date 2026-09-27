@@ -39,6 +39,36 @@ required_top_level:
   - change_shape
   - assumptions
   - gates
+companion_guide: .agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+field_guide:
+  - path: artifacts[].immutable_reference
+    what: Content-addressed artifact identity.
+    does: Binds an execution unit to the exact reviewed runtime payload.
+    validation: Must be sha256 plus 64 lowercase hexadecimal characters or sha512 plus 128 lowercase hexadecimal characters.
+  - path: execution_units[]
+    what: A deployable unit that performs work.
+    does: Declares every artifact, identity, input, connection, state store, channel, telemetry profile, and recovery plan it uses.
+    validation: Every reference and dependency edge must resolve to a declared component.
+  - path: connections[].source and connections[].destination
+    what: Typed execution-to-dependency relationship.
+    does: Prevents an execution unit from claiming an undeclared or incorrectly typed connection.
+    validation: Source is an execution unit; destination is a state store or async channel; transport security is declared.
+  - path: async_channels[].producer and async_channels[].consumers
+    what: Typed channel ownership and delivery relationships.
+    does: Makes producer and consumer work paths explicit rather than implied by a queue name.
+    validation: Every participant is an execution unit and has the required directional graph edge.
+  - path: lifecycle and recovery_plans[]
+    what: Terminal-state and reviewed recovery declaration.
+    does: Prevents automatic or in-place replay of a terminal attempt.
+    validation: Recovery is reviewed-only and records a terminal entry condition, cleanup, rollback, and a new labelled attempt in normalized facts.
+  - path: normalized-facts.gate_evidence and normalized-facts.component_evidence
+    what: Safe, normalized proof records from a separately governed provider adapter.
+    does: Binds each passed gate and each declared graph component to a named check without provider or sensitive detail.
+    validation: Entries use exact allowlisted fields, stable check identifiers, UTC timestamps, passed verdicts, and complete component coverage.
+  - path: normalized-change-summary
+    what: Safe aggregate result of a provider plan or change inspection.
+    does: Confirms the proposed mutation shape stays within declared operation classes.
+    validation: Uses exact allowlisted fields, stable check identifier, UTC timestamp, and declared non-negative operation counts only.
 proof_states: [declared, locally-proven, live-read-proven, live-execution-proven]
 gate_order:
   - source

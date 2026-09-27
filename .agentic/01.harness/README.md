@@ -97,6 +97,9 @@ workflow.
 - `templates/agent-scorecard.yml` - provides the shared agent-neutral scorecard template and points to agent-specific examples.
 - `templates/agent-scorecard.schema.yml` - defines the machine-readable scorecard field contract and weighted-score rule.
 - `templates/agent-scorecard.example.yml` - provides a reusable authoring example template for agent-specific scorecards.
+- `templates/operational-realization-contract.v1.schema.yml` - defines the provider-neutral execution-graph and safe-evidence fields enforced before a live capability operation.
+- `templates/operational-realization-contract.v1.template.yml` - provides the corresponding declaration shape.
+- `templates/operational-realization-contract.v1.guide.md` - explains the schema's field families, safe evidence boundary, and authoring flow.
 - `templates/examples/cfo-token-efficiency-scorecard.yml` - provides a valid CFO Token Efficiency scorecard example.
 
 ## Chat Workbench Docs

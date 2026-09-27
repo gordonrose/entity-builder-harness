@@ -41,14 +41,16 @@ semantics, or mutation shape changes.
 1. Copy the template and declare the complete execution graph. Do not use an
    external resource name, provider type, credential value, endpoint, or raw
    provider response in the contract.
-2. Use `npm run deployment:realization:validate -- --contract <path>` to
+2. Use `npm run deployment:realization:validate -- --contract <path>
+   --validate-contract` to
    reject missing graph edges, unsafe lifecycle/retry paths, insufficient proof
    requirements, unknown assumptions, and provider leakage.
 3. Collect safe evidence in order: source, artifact, semantic integration,
    live-read, change-set, execution preflight. A provider adapter may collect
    target facts, but it must write normalized facts only.
 4. Re-run the compiler with normalized facts. It must show all prerequisite
-   gate evidence passed before a provider mutation is proposed.
+   gate evidence and every declared component binding passed before a provider
+   mutation is proposed.
 5. Obtain the separate target-specific authorization required to execute the
    reviewed mutation. This generic workflow never grants cloud authority.
 6. Run one labelled controlled execution. Record safe terminal evidence.

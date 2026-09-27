@@ -20,6 +20,8 @@
 #     path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
 schema: operational-realization-normalized-change-summary/v1
 contract_id: harmless-delivery-route
+check_id: change-summary-check
+timestamp: "2026-09-27T00:00:00Z"
 operation_counts:
   create: 1
   update: 0

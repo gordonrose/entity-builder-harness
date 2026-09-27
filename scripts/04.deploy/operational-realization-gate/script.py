@@ -27,6 +27,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
@@ -73,7 +74,6 @@ UNIT_REFERENCES = {
     "configuration_inputs": "configuration_inputs",
     "connections": "connections",
     "state_stores": "state_stores",
-    "async_channels": "async_channels",
     "observability_profile": "observability_profiles",
     "recovery_plan": "recovery_plans",
 }
@@ -87,6 +87,10 @@ PROVIDER_LEAKAGE = re.compile(
     flags=re.IGNORECASE,
 )
 SAFE_ID = re.compile(r"^[a-z][a-z0-9-]{2,127}$")
+UTC_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+FACTS_FIELDS = {"schema", "contract_id", "gate_evidence", "component_evidence"}
+RECOVERY_FACTS_FIELDS = FACTS_FIELDS | {"recovery_evidence"}
+CHANGE_SUMMARY_FIELDS = {"schema", "contract_id", "check_id", "timestamp", "operation_counts"}
 
 
 class ContractFailure(Exception):
@@ -103,13 +107,18 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--facts")
     parser.add_argument("--change-summary")
     parser.add_argument("--through", choices=GATE_ORDER)
+    parser.add_argument("--validate-contract", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--help", action="store_true")
     parsed, unknown = parser.parse_known_args()
     if parsed.help:
-        print("Usage: script.py --contract <provider-neutral-contract.yml> [--facts <normalized-facts.yml>] [--change-summary <normalized-change-summary.yml>] [--json]")
+        print("Usage: script.py --contract <provider-neutral-contract.yml> (--validate-contract | --facts <normalized-facts.yml> --through <gate> [--change-summary <normalized-change-summary.yml>]) [--json]")
         raise SystemExit(0)
-    if unknown or not parsed.contract:
+    if unknown or not parsed.contract or (parsed.validate_contract == bool(parsed.through)):
+        raise ContractFailure("arguments-invalid")
+    if parsed.validate_contract and (parsed.facts or parsed.change_summary):
+        raise ContractFailure("arguments-invalid")
+    if parsed.through and not parsed.facts:
         raise ContractFailure("arguments-invalid")
     return parsed
 
@@ -161,12 +170,37 @@ def reject_provider_leakage(value: Any) -> None:
 def reject_unsafe_value_fields(value: Any) -> None:
     if isinstance(value, dict):
         for key, item in value.items():
-            if UNSAFE_CONTRACT_KEYS.fullmatch(str(key)):
+            if str(key) in SENSITIVE_VALUE_KEYS or UNSAFE_CONTRACT_KEYS.fullmatch(str(key)):
                 raise ContractFailure("unsafe-value-field-declared")
             reject_unsafe_value_fields(item)
     elif isinstance(value, list):
         for item in value:
             reject_unsafe_value_fields(item)
+
+
+def require_exact_keys(value: dict[str, Any], expected: set[str], code: str) -> None:
+    if set(value) != expected:
+        raise ContractFailure(code)
+
+
+def safe_identifier(value: Any, code: str) -> str:
+    identifier = safe_string(value, code)
+    if not SAFE_ID.fullmatch(identifier):
+        raise ContractFailure(code)
+    return identifier
+
+
+def safe_timestamp(value: Any, code: str) -> str:
+    timestamp = safe_string(value, code)
+    if not UTC_TIMESTAMP.fullmatch(timestamp):
+        raise ContractFailure(code)
+    try:
+        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ContractFailure(code) from error
+    if parsed.tzinfo != timezone.utc:
+        raise ContractFailure(code)
+    return timestamp
 
 
 def ids(contract: dict[str, Any]) -> tuple[dict[str, set[str]], dict[str, str]]:
@@ -196,12 +230,17 @@ def validate_configuration_shapes(contract: dict[str, Any]) -> None:
         for key in config:
             if key in SENSITIVE_VALUE_KEYS:
                 raise ContractFailure("configuration-contains-value")
+        listed_ids(config["required_fields"], "configuration-required-fields-invalid") if config.get("required_fields") else None
+        listed_ids(config["optional_fields"], "configuration-optional-fields-invalid") if config.get("optional_fields") else None
 
 
 def validate_component_content(contract: dict[str, Any]) -> None:
     for item in safe_list(contract.get("artifacts"), "artifacts-missing"):
         artifact = safe_mapping(item, "artifact-invalid")
-        safe_string(artifact.get("immutable_reference"), "artifact-immutable-reference-missing")
+        immutable_reference = safe_string(artifact.get("immutable_reference"), "artifact-immutable-reference-missing")
+        algorithm, _, digest = immutable_reference.partition(":")
+        if (algorithm, len(digest)) not in {("sha256", 64), ("sha512", 128)} or not re.fullmatch(r"[0-9a-f]+", digest):
+            raise ContractFailure("artifact-immutable-reference-invalid")
         safe_string(artifact.get("entrypoint"), "artifact-entrypoint-missing")
         safe_list(artifact.get("assertions"), "artifact-assertions-missing")
     for item in safe_list(contract.get("identities"), "identities-missing"):
@@ -215,6 +254,7 @@ def validate_component_content(contract: dict[str, Any]) -> None:
         listed_ids(profile.get("required_facts"), "observability-required-facts-missing")
     for item in safe_list(contract.get("recovery_plans"), "recovery-plans-missing"):
         recovery = safe_mapping(item, "recovery-plan-invalid")
+        safe_string(recovery.get("entry_condition"), "recovery-entry-condition-missing")
         safe_string(recovery.get("cleanup"), "recovery-cleanup-missing")
         safe_string(recovery.get("rollback"), "recovery-rollback-missing")
 
@@ -243,9 +283,46 @@ def listed_ids(value: Any, code: str) -> list[str]:
 
 def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str]], known: dict[str, str]) -> None:
     edges = edge_set(contract, known)
+    connections: dict[str, dict[str, Any]] = {}
+    channels: dict[str, dict[str, Any]] = {}
+    for item in safe_list(contract.get("connections"), "connections-missing"):
+        connection = safe_mapping(item, "connection-invalid")
+        connection_id = safe_identifier(connection.get("id"), "connection-id-invalid")
+        source = safe_identifier(connection.get("source"), "connection-source-missing")
+        destination = safe_identifier(connection.get("destination"), "connection-destination-missing")
+        if source not in known or destination not in known:
+            raise ContractFailure("connection-references-undeclared-node")
+        if known[source] != "execution-unit":
+            raise ContractFailure("connection-source-type-invalid")
+        if known[destination] not in {"state-store", "async-channel"}:
+            raise ContractFailure("connection-destination-type-invalid")
+        if (connection_id, destination) not in edges:
+            raise ContractFailure("connection-destination-edge-missing")
+        if connection.get("transport_security") not in {"verified", "not-applicable"}:
+            raise ContractFailure("connection-security-invalid")
+        connections[connection_id] = connection
+    for item in safe_list(contract.get("async_channels"), "async-channels-missing"):
+        channel = safe_mapping(item, "async-channel-invalid")
+        channel_id = safe_identifier(channel.get("id"), "async-channel-id-invalid")
+        producer = safe_identifier(channel.get("producer"), "async-producer-invalid")
+        consumers = listed_ids(channel.get("consumers"), "async-consumers-invalid")
+        if producer not in known or known[producer] != "execution-unit":
+            raise ContractFailure("async-producer-invalid")
+        if any(consumer not in known or known[consumer] != "execution-unit" for consumer in consumers):
+            raise ContractFailure("async-consumers-invalid")
+        if (producer, channel_id) not in edges or any((channel_id, consumer) not in edges for consumer in consumers):
+            raise ContractFailure("async-channel-edge-missing")
+        if channel.get("delivery") not in {"at-least-once", "at-most-once", "exactly-once-by-contract"}:
+            raise ContractFailure("async-delivery-invalid")
+        idempotency_boundary = safe_identifier(channel.get("idempotency_boundary"), "async-durability-boundary-missing")
+        if channel.get("acknowledgement") != "after-durable-completion" or idempotency_boundary not in known or known[idempotency_boundary] != "state-store":
+            raise ContractFailure("async-durability-boundary-missing")
+        channels[channel_id] = channel
+    unit_connections: dict[str, set[str]] = {}
+    unit_channels: dict[str, set[str]] = {}
     for item in safe_list(contract.get("execution_units"), "execution-units-missing"):
         unit = safe_mapping(item, "execution-unit-invalid")
-        unit_id = safe_string(unit.get("id"), "execution-unit-id-missing")
+        unit_id = safe_identifier(unit.get("id"), "execution-unit-id-missing")
         for field, group_name in UNIT_REFERENCES.items():
             raw = unit.get(field)
             references = listed_ids(raw, f"execution-unit-{field}-missing") if field.endswith("s") else [safe_string(raw, f"execution-unit-{field}-missing")]
@@ -254,20 +331,28 @@ def validate_execution_graph(contract: dict[str, Any], groups: dict[str, set[str
                     raise ContractFailure("execution-unit-references-undeclared-component")
                 if (unit_id, reference) not in edges:
                     raise ContractFailure("undeclared-dependency-edge")
-    for item in safe_list(contract.get("connections"), "connections-missing"):
-        connection = safe_mapping(item, "connection-invalid")
-        source = safe_string(connection.get("source"), "connection-source-missing")
-        destination = safe_string(connection.get("destination"), "connection-destination-missing")
-        if source not in known or destination not in known:
-            raise ContractFailure("connection-references-undeclared-node")
-        if connection.get("transport_security") not in {"verified", "not-applicable"}:
-            raise ContractFailure("connection-security-invalid")
-    for item in safe_list(contract.get("async_channels"), "async-channels-missing"):
-        channel = safe_mapping(item, "async-channel-invalid")
-        if channel.get("delivery") not in {"at-least-once", "at-most-once", "exactly-once-by-contract"}:
-            raise ContractFailure("async-delivery-invalid")
-        if channel.get("acknowledgement") != "after-durable-completion" or not isinstance(channel.get("idempotency_boundary"), str):
-            raise ContractFailure("async-durability-boundary-missing")
+        unit_connections[unit_id] = set(listed_ids(unit.get("connections"), "execution-unit-connections-missing"))
+        for connection_id in unit_connections[unit_id]:
+            if connections[connection_id]["source"] != unit_id:
+                raise ContractFailure("execution-unit-connection-source-mismatch")
+        unit_channels[unit_id] = set(listed_ids(unit.get("async_channels"), "execution-unit-async-channels-missing"))
+        for channel_id in unit_channels[unit_id]:
+            if channel_id not in channels:
+                raise ContractFailure("execution-unit-references-undeclared-component")
+            channel = channels[channel_id]
+            is_producer = channel["producer"] == unit_id
+            is_consumer = unit_id in channel["consumers"]
+            if not is_producer and not is_consumer:
+                raise ContractFailure("execution-unit-async-channel-unbound")
+            if is_producer and (unit_id, channel_id) not in edges:
+                raise ContractFailure("async-channel-edge-missing")
+            if is_consumer and (channel_id, unit_id) not in edges:
+                raise ContractFailure("async-channel-edge-missing")
+    if any(connection_id not in unit_connections[connection["source"]] for connection_id, connection in connections.items()):
+        raise ContractFailure("connection-source-unit-binding-missing")
+    for channel_id, channel in channels.items():
+        if channel_id not in unit_channels[channel["producer"]] or any(channel_id not in unit_channels[consumer] for consumer in channel["consumers"]):
+            raise ContractFailure("async-channel-unit-binding-missing")
 
 
 def validate_lifecycle(contract: dict[str, Any]) -> None:
@@ -354,63 +439,101 @@ def validate_contract(contract: dict[str, Any]) -> str:
     return identifier
 
 
-def validate_facts(facts: dict[str, Any], contract_id: str, through: str) -> None:
+def validate_facts(facts: dict[str, Any], contract_id: str, known: dict[str, str], through: str) -> None:
     reject_provider_leakage(facts)
+    reject_unsafe_value_fields(facts)
+    require_exact_keys(facts, RECOVERY_FACTS_FIELDS if through == "recovery" else FACTS_FIELDS, "normalized-facts-fields-invalid")
     if facts.get("schema") != FACTS_SCHEMA or facts.get("contract_id") != contract_id:
         raise ContractFailure("normalized-facts-schema-or-contract-invalid")
     evidence = safe_list(facts.get("gate_evidence"), "normalized-facts-evidence-missing")
-    actual: dict[str, str] = {}
-    for item in evidence:
-        entry = safe_mapping(item, "normalized-facts-entry-invalid")
-        gate = safe_string(entry.get("gate"), "normalized-facts-gate-missing")
-        verdict = safe_string(entry.get("verdict"), "normalized-facts-verdict-missing")
-        if gate not in GATE_ORDER or verdict not in {"passed", "failed"} or gate in actual:
-            raise ContractFailure("normalized-facts-entry-invalid")
-        actual[gate] = verdict
     required = GATE_ORDER[:GATE_ORDER.index(through) + 1]
-    if not set(required).issubset(actual) or any(actual[gate] != "passed" for gate in required):
-        raise ContractFailure("prerequisite-evidence-incomplete")
+    if len(evidence) != len(required):
+        raise ContractFailure("normalized-facts-evidence-sequence-invalid")
+    for index, item in enumerate(evidence):
+        entry = safe_mapping(item, "normalized-facts-entry-invalid")
+        require_exact_keys(entry, {"gate", "check_id", "timestamp", "verdict"}, "normalized-facts-entry-fields-invalid")
+        gate = safe_string(entry.get("gate"), "normalized-facts-gate-missing")
+        safe_identifier(entry.get("check_id"), "normalized-facts-check-id-invalid")
+        safe_timestamp(entry.get("timestamp"), "normalized-facts-timestamp-invalid")
+        if gate != required[index] or entry.get("verdict") != "passed":
+            raise ContractFailure("normalized-facts-evidence-sequence-invalid")
+    component_evidence = safe_list(facts.get("component_evidence"), "component-evidence-missing")
+    observed: set[str] = set()
+    for item in component_evidence:
+        entry = safe_mapping(item, "component-evidence-entry-invalid")
+        require_exact_keys(entry, {"component_id", "component_kind", "check_id", "timestamp", "verdict"}, "component-evidence-entry-fields-invalid")
+        component_id = safe_identifier(entry.get("component_id"), "component-evidence-id-invalid")
+        if component_id in observed or component_id not in known or entry.get("component_kind") != known[component_id]:
+            raise ContractFailure("component-evidence-binding-invalid")
+        safe_identifier(entry.get("check_id"), "component-evidence-check-id-invalid")
+        safe_timestamp(entry.get("timestamp"), "component-evidence-timestamp-invalid")
+        if entry.get("verdict") != "passed":
+            raise ContractFailure("component-evidence-verdict-invalid")
+        observed.add(component_id)
+    if observed != set(known):
+        raise ContractFailure("component-evidence-incomplete")
+    if through == "recovery":
+        recovery = safe_mapping(facts.get("recovery_evidence"), "recovery-evidence-missing")
+        require_exact_keys(recovery, {"predecessor_attempt_label", "recovery_attempt_label", "predecessor_terminal_state", "check_id", "timestamp", "verdict"}, "recovery-evidence-fields-invalid")
+        predecessor = safe_identifier(recovery.get("predecessor_attempt_label"), "recovery-predecessor-label-invalid")
+        recovery_label = safe_identifier(recovery.get("recovery_attempt_label"), "recovery-attempt-label-invalid")
+        if predecessor == recovery_label:
+            raise ContractFailure("recovery-label-not-new")
+        if recovery.get("predecessor_terminal_state") not in {"failed", "stopped"}:
+            raise ContractFailure("recovery-predecessor-not-terminal")
+        safe_identifier(recovery.get("check_id"), "recovery-evidence-check-id-invalid")
+        safe_timestamp(recovery.get("timestamp"), "recovery-evidence-timestamp-invalid")
+        if recovery.get("verdict") != "passed":
+            raise ContractFailure("recovery-evidence-verdict-invalid")
 
 
 def validate_change_summary(summary: dict[str, Any], contract: dict[str, Any], contract_id: str) -> None:
     reject_provider_leakage(summary)
+    reject_unsafe_value_fields(summary)
+    require_exact_keys(summary, CHANGE_SUMMARY_FIELDS, "normalized-change-summary-fields-invalid")
     if summary.get("schema") != CHANGE_SCHEMA or summary.get("contract_id") != contract_id:
         raise ContractFailure("normalized-change-summary-schema-or-contract-invalid")
+    safe_identifier(summary.get("check_id"), "normalized-change-summary-check-id-invalid")
+    safe_timestamp(summary.get("timestamp"), "normalized-change-summary-timestamp-invalid")
     counts = safe_mapping(summary.get("operation_counts"), "normalized-change-summary-counts-missing")
-    if not all(isinstance(value, int) and value >= 0 for value in counts.values()):
-        raise ContractFailure("normalized-change-summary-counts-invalid")
     shape = safe_mapping(contract["change_shape"], "change-shape-missing")
     allowed = set(shape["allowed_operation_classes"])
     forbidden = set(shape["forbidden_operation_classes"])
+    if set(counts) != allowed | forbidden or not all(isinstance(value, int) and not isinstance(value, bool) and value >= 0 for value in counts.values()):
+        raise ContractFailure("normalized-change-summary-counts-invalid")
     if any(operation not in allowed | forbidden for operation, count in counts.items() if count):
         raise ContractFailure("normalized-change-summary-operation-undeclared")
     if any(counts.get(operation, 0) for operation in forbidden):
         raise ContractFailure("normalized-change-summary-forbidden-operation")
 
 
-def emit(contract_id: str, verdict: str, codes: list[str]) -> None:
-    print(json.dumps({"schema": RESULT_SCHEMA, "contract_id": contract_id, "verdict": verdict, "findings": [{"code": code} for code in codes]}, sort_keys=True))
+def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
+    print(json.dumps({"schema": RESULT_SCHEMA, "contract_id": contract_id, "scope": scope, "verdict": verdict, "findings": [{"code": code} for code in codes]}, sort_keys=True))
 
 
 def main() -> int:
     contract_id = "unavailable"
+    scope = "unavailable"
     try:
         args = arguments()
         contract = load_yaml(args.contract, "contract-unreadable")
         contract_id = validate_contract(contract)
-        through = args.through or "recovery"
-        if args.facts:
-            validate_facts(load_yaml(args.facts, "normalized-facts-unreadable"), contract_id, through)
-        elif args.through:
-            raise ContractFailure("normalized-facts-required-for-gate")
-        if GATE_ORDER.index(through) >= GATE_ORDER.index("change-set") and args.facts and not args.change_summary:
+        if args.validate_contract:
+            emit(contract_id, "passed", [], "contract")
+            return 0
+        through = args.through
+        scope = through
+        groups, known = ids(contract)
+        del groups
+        validate_facts(load_yaml(args.facts, "normalized-facts-unreadable"), contract_id, known, through)
+        if GATE_ORDER.index(through) >= GATE_ORDER.index("change-set") and not args.change_summary:
             raise ContractFailure("normalized-change-summary-required-for-gate")
         if args.change_summary:
             validate_change_summary(load_yaml(args.change_summary, "normalized-change-summary-unreadable"), contract, contract_id)
-        emit(contract_id, "passed", [])
+        emit(contract_id, "passed", [], scope)
         return 0
     except ContractFailure as error:
-        emit(contract_id, "failed", [error.code])
+        emit(contract_id, "failed", [error.code], scope)
         return 1
 
 

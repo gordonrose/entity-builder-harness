@@ -21,9 +21,19 @@
 schema: operational-realization-normalized-facts/v1
 contract_id: harmless-delivery-route
 gate_evidence:
-  - {gate: source, verdict: passed}
-  - {gate: artifact, verdict: passed}
-  - {gate: semantic-integration, verdict: passed}
-  - {gate: live-read, verdict: passed}
-  - {gate: change-set, verdict: passed}
-  - {gate: execution-preflight, verdict: passed}
+  - {gate: source, check_id: source-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: semantic-integration, check_id: semantic-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: live-read, check_id: live-read-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: change-set, check_id: change-set-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: execution-preflight, check_id: preflight-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+component_evidence:
+  - {component_id: delivery-artifact, component_kind: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-identity, component_kind: identity, check_id: identity-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-configuration, component_kind: configuration, check_id: configuration-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-connection, component_kind: connection, check_id: connection-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-store, component_kind: state-store, check_id: state-store-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-channel, component_kind: async-channel, check_id: async-channel-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-observability, component_kind: observability-profile, check_id: observability-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-recovery, component_kind: recovery-plan, check_id: recovery-plan-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-worker, component_kind: execution-unit, check_id: worker-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}

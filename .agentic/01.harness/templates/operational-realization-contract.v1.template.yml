@@ -25,7 +25,7 @@ provider_boundary: normalized-facts-only
 
 artifacts:
   - id: replace-with-immutable-artifact
-    immutable_reference: replace-with-digest-or-content-address
+    immutable_reference: sha256:replace-with-64-lowercase-hex-characters
     entrypoint: replace-with-reviewed-entrypoint
     assertions:
       - runtime-payload-reviewed
@@ -57,6 +57,9 @@ state_stores:
 
 async_channels:
   - id: replace-with-async-channel
+    producer: replace-with-producing-execution-unit
+    consumers:
+      - replace-with-consuming-execution-unit
     delivery: at-least-once
     acknowledgement: after-durable-completion
     idempotency_boundary: replace-with-durable-boundary
@@ -69,6 +72,7 @@ observability_profiles:
 
 recovery_plans:
   - id: replace-with-recovery-plan
+    entry_condition: prior-attempt-reached-failed-or-stopped-terminal-state
     cleanup: reviewed-cleanup-action
     rollback: reviewed-rollback-action
 
@@ -100,12 +104,18 @@ edges:
   - from: replace-with-execution-unit
     to: replace-with-reviewed-connection
     purpose: connects
+  - from: replace-with-reviewed-connection
+    to: replace-with-state-store
+    purpose: reaches-state
   - from: replace-with-execution-unit
     to: replace-with-state-store
     purpose: persists
   - from: replace-with-execution-unit
     to: replace-with-async-channel
     purpose: exchanges-work
+  - from: replace-with-async-channel
+    to: replace-with-consuming-execution-unit
+    purpose: delivers-work
   - from: replace-with-execution-unit
     to: replace-with-safe-observability-profile
     purpose: emits-safe-telemetry

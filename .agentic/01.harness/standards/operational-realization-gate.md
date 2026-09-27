@@ -107,14 +107,22 @@ attempt, a new immutable attempt label, and explicit cleanup/rollback facts.
 ## Provider Adapter Boundary
 
 The core compiler accepts only `operational-realization-normalized-facts/v1`
-and `operational-realization-normalized-change-summary/v1`. Those documents
-use generic categories such as `artifact`, `identity`, `connection`,
-`state-store`, `async-channel`, `execution-unit`, and `operation-class`.
+and `operational-realization-normalized-change-summary/v1`. Facts contain
+only exact allowlisted fields: generic component IDs and kinds, stable check
+IDs, UTC timestamps, passed gate/component verdicts, and the reviewed
+recovery predecessor/new-attempt relationship. Change summaries contain only
+a stable check ID, UTC timestamp, and declared aggregate operation counts.
+Unknown fields and unsafe field names are rejected. The documents use generic
+categories such as `artifact`, `identity`, `connection`, `state-store`,
+`async-channel`, `execution-unit`, and `operation-class`.
 
 Provider adapters are separately named, outside this core. Their job is to:
 
 - inspect or plan with a provider's SDK or CLI;
 - redact and normalize provider facts;
+- prove each declared component binding, including artifact, identity,
+  configuration, connection, state store, and channel, rather than only
+  asserting a gate verdict;
 - prove their own permission boundary; and
 - pass only normalized facts/change counts to the generic compiler.
 
@@ -127,8 +135,10 @@ boundary check enforces this.
 The lifecycle must include `succeeded`, `failed`, and `stopped` terminal
 states. A terminal attempt cannot transition back to `running`. Automatic,
 unlabelled, or in-place replay is prohibited. A recovery attempt must have a
-new immutable label, explicit entry condition, maximum attempt count, safe
-cleanup action, and evidence requirement.
+new immutable label, explicit failed/stopped predecessor, entry condition,
+maximum attempt count, safe cleanup action, and evidence requirement. The
+adapter proves the label is new in the target; the generic core validates the
+safe normalized assertion and prevents in-place reuse.
 
 ## Compliance
 
