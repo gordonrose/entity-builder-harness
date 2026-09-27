@@ -60,6 +60,10 @@ let's do that
 - Summary: The planning checkpoint establishes the convergence order and provider-neutral boundaries; the operational-realization gate and PostgreSQL live proof remain unintegrated and unattempted in this session.
   Durable evidence: Durable source context: docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md; PostgreSQL source plan; current session log.
 
+
+- Summary: The controlled Stage 6 source revealed a continuation gap: bootstrap-only recovery consumed its label but the only full command would replay it. The controller now has a separately guarded continuation that verifies the successful predecessor in memory before later stages.
+  Durable evidence: Durable source: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/; target-profile Stage 6 control; Stage 6 runbook/evidence; PostgreSQL reference plan.
+
 ## Activity Log
 
 ### 2026-09-26T21:12:19Z - Session started
@@ -172,6 +176,20 @@ Mode: deterministic
 
 Action: retained the union of plan rows in lexical order and set metadata version to 3
 
+
+### 2026-09-27T13:37:40Z - Context hygiene
+
+Summary: The controlled Stage 6 source revealed a continuation gap: bootstrap-only recovery consumed its label but the only full command would replay it. The controller now has a separately guarded continuation that verifies the successful predecessor in memory before later stages.
+
+Durable evidence: Durable source: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/; target-profile Stage 6 control; Stage 6 runbook/evidence; PostgreSQL reference plan.
+
+
+### 2026-09-27T13:37:47Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a bounded execution-controller correction within the approved Stage 6 architecture; it introduces no durable architecture selection.
+
 ## Sub-Agent Activity
 
 - A dedicated PostgreSQL completion agent is executing the approved programme
@@ -218,7 +236,7 @@ Action: retained the union of plan rows in lexical order and set metadata versio
 
 ADR needed: yes
 ADR path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
-Reason: A narrowly scoped deterministic conflict-resolution rule is a durable chat-process decision and must be recorded separately from the platform planning checkpoint.
+Reason: A narrowly scoped deterministic conflict-resolution rule is a durable chat-process decision and must be recorded separately from the platform planning checkpoint. The Stage 6 continuation correction itself requires no additional ADR.
 
 ## Session Metrics
 

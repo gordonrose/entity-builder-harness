@@ -89,6 +89,19 @@ This fixed command cannot progress to migration, relay, worker, or restore.
 Those steps remain deliberately unavailable until the bootstrap verdict has
 been assessed.
 
+If, and only if, that bootstrap returns its safe passed verdict, continue with
+the separately guarded command below. It first proves that exactly one stopped
+bootstrap task exists for the fixed recovery label and that its only reviewed
+container exited successfully. It does not re-run bootstrap. It then performs
+the single migration, relay, worker, restore, and cleanup sequence.
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --execute-recovery-continuation --approve-relational-recovery-continuation
+```
+
+A failed continuation consumes its stage label. It never falls back to a
+replay: any later repair requires a new reviewed source recovery route.
+
 For a non-successful bootstrap, use only the fixed diagnostic command before
 changing source. It can inspect the consumed recovery label's terminal
 metadata and fixed log stream internally, but emits only one allowlisted

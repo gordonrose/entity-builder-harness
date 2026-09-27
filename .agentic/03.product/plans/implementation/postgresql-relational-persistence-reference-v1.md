@@ -628,6 +628,12 @@ fixed `--execute --approve-relational-stage6` sequence, and a distinct
 The bootstrap-recovery mode cannot start migration, relay, worker, or restore;
 it exists so the corrected PostgreSQL ownership boundary is proven before any
 later delivery stage is eligible.
+After that predecessor reaches one successful terminal state, the separate
+`--execute-recovery-continuation --approve-relational-recovery-continuation`
+mode verifies the consumed bootstrap label in memory and starts only the
+remaining migration, relay, worker, restore, and cleanup stages. It never
+replays bootstrap. A continuation failure consumes its own stage label and
+requires a new reviewed recovery route rather than a retry flag.
 It accepts no target, credential, payload, task, queue, database, restore
 name, network, or timeout supplied by a caller. Before each onward step it
 checks the reviewed account/region, stack readiness, public server `1/1`,

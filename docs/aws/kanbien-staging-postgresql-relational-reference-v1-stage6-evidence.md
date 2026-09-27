@@ -37,6 +37,12 @@ task definitions and existing in-place service references; it rejects all
 resource additions, removals, IAM, database, queue, routing, and listener
 changes.
 
+The bootstrap-only recovery and its continuation are deliberately separate
+commands. The continuation is available only after the one recovery bootstrap
+has a successful terminal result; it verifies that predecessor in memory and
+never starts bootstrap again. Its migration, relay, worker, restore, and
+cleanup labels remain single use.
+
 ## Required live evidence fields
 
 | Field | Allowed value shape |

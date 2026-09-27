@@ -16,12 +16,20 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: bootstrap recovery execution must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute-recovery-continuation >/dev/null 2>&1; then
+  echo "ERROR: recovery continuation execution must require its explicit fixed approval guard" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --diagnose-bootstrap-recovery >/dev/null 2>&1; then
   echo "ERROR: bootstrap failure diagnosis must require its explicit fixed approval guard" >&2
   exit 1
 fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute --execute-bootstrap-recovery --approve-relational-stage6 --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
   echo "ERROR: bootstrap recovery must be mutually exclusive with the full proof" >&2
+  exit 1
+fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute-bootstrap-recovery --execute-recovery-continuation --approve-relational-bootstrap-recovery --approve-relational-recovery-continuation >/dev/null 2>&1; then
+  echo "ERROR: recovery continuation must be mutually exclusive with bootstrap recovery" >&2
   exit 1
 fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --validate --approve-relational-stage6 >/dev/null 2>&1; then
@@ -38,6 +46,10 @@ if ! grep -q 'created = True' scripts/04.deploy/run-platform-shell-postgresql-re
 fi
 if ! rg -q 'def execute_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: bootstrap recovery must retain a dedicated one-stage execution path" >&2
+  exit 1
+fi
+if ! rg -q 'def execute_recovery_continuation' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'prior_label_succeeded\("bootstrap", policy\)' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: recovery continuation must require one successful consumed bootstrap and never replay it" >&2
   exit 1
 fi
 if ! rg -q 'def diagnose_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'logs", "get-log-events"' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
@@ -62,6 +74,17 @@ def empty_task_list(arguments, _policy, allow_not_found=False):
 module["no_prior_label"].__globals__["aws"] = empty_task_list
 module["no_prior_label"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}})
 assert [arguments[-1] for arguments in observed] == ["RUNNING", "STOPPED"]
+
+observed = []
+def successful_predecessor(arguments, _policy, allow_not_found=False):
+    observed.append(arguments)
+    if arguments[0:2] == ["ecs", "list-tasks"]:
+        return {"taskArns": ["reviewed-task"]}
+    return {"tasks": [{"containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
+
+module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
+module["prior_label_succeeded"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}, "containers": {"bootstrap": "reviewed-container"}})
+assert observed[0][-1] == "STOPPED"
 PY
 if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts || grep -q 'ALTER DEFAULT PRIVILEGES FOR ROLE' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: migration must own default privileges for its own future tables" >&2

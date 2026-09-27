@@ -31,21 +31,25 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--validate", action="store_true", help="Validate the committed policy without AWS calls.")
     parser.add_argument("--execute", action="store_true", help="Run the fixed bootstrap-to-restore proof.")
     parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
+    parser.add_argument("--execute-recovery-continuation", action="store_true", help="Continue only after the fixed recovery bootstrap succeeded.")
     parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
+    parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.diagnose_bootstrap_recovery))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
-    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("an execution approval guard is unavailable in validation mode")
-    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
-    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6 or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed bootstrap recovery requires --approve-relational-bootstrap-recovery")
-    if result.diagnose_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery_diagnostic or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery):
+    if result.execute_recovery_continuation and (not result.approve_relational_recovery_continuation or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
+        parser.error("the fixed recovery continuation requires --approve-relational-recovery-continuation")
+    if result.diagnose_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery_diagnostic or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation):
         parser.error("the fixed bootstrap recovery diagnostic requires --approve-relational-bootstrap-recovery-diagnostic")
     return result
 
@@ -111,6 +115,7 @@ def load_policy() -> dict[str, Any]:
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
         "execution_guard": "execute-and-approve-relational-stage6",
         "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
+        "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
         "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
         "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
         "foundation_stack": "kanbien-staging-platform-shell-foundation",
@@ -250,6 +255,22 @@ def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
         tasks = response.get("taskArns")
         if not isinstance(tasks, list) or tasks:
             raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
+
+
+def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
+    """Require one consumed, successful terminal stage before a continuation."""
+
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", "STOPPED"], policy)
+    tasks = listed.get("taskArns")
+    if not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], str):
+        raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
+    described = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", tasks[0]], policy)
+    current = described.get("tasks")
+    task = current[0] if isinstance(current, list) and len(current) == 1 and isinstance(current[0], dict) else None
+    containers = task.get("containers") if isinstance(task, dict) else None
+    container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"][stage]), None) if isinstance(containers, list) else None
+    if not isinstance(container, dict) or container.get("exitCode") != 0:
+        raise RelationalSmokeError("the fixed relational continuation predecessor did not succeed")
 
 
 def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None) -> None:
@@ -395,6 +416,35 @@ def execute_bootstrap_recovery(policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the bootstrap recovery did not preserve the reviewed terminal aggregate state")
 
 
+def execute_recovery_continuation(policy: dict[str, Any]) -> None:
+    """Continue a successful bootstrap once, without replaying its consumed label."""
+
+    verify_account(policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    network = worker_network(policy)
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the recovery continuation preconditions are not the reviewed dormant aggregate state")
+    source_database(policy)
+    prior_label_succeeded("bootstrap", policy)
+    run_and_wait("migration", network, policy)
+    run_and_wait("relay", network, policy)
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
+        time.sleep(5)
+    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
+        raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
+    run_and_wait("worker", network, policy)
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
+        time.sleep(5)
+    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
+    restore_and_verify(network, policy)
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the recovery continuation did not preserve the reviewed terminal aggregate state")
+
+
 def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
     """Classify one consumed recovery-1 task without emitting task or log details."""
 
@@ -459,6 +509,10 @@ def main() -> int:
             execute_bootstrap_recovery(policy)
             print('{"postgresql_relational_bootstrap_recovery":"passed"}')
             return 0
+        if parsed.execute_recovery_continuation:
+            execute_recovery_continuation(policy)
+            print('{"postgresql_relational_recovery_continuation":"passed"}')
+            return 0
         if parsed.diagnose_bootstrap_recovery:
             category = diagnose_bootstrap_recovery(policy)
             print(json.dumps({"postgresql_relational_bootstrap_recovery_diagnostic": category}, sort_keys=True))
@@ -469,6 +523,8 @@ def main() -> int:
     except RelationalSmokeError:
         if parsed.execute_bootstrap_recovery:
             print('{"postgresql_relational_bootstrap_recovery":"failed"}')
+        elif parsed.execute_recovery_continuation:
+            print('{"postgresql_relational_recovery_continuation":"failed"}')
         elif parsed.diagnose_bootstrap_recovery:
             print('{"postgresql_relational_bootstrap_recovery_diagnostic":"diagnostic-unavailable"}')
         else:
