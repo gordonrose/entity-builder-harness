@@ -114,6 +114,18 @@ expected_config = {
             "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
             "maximum_evidence_age_seconds": 900,
         },
+        "candidate_preflight_baseline_assessment": {
+            "status": "approved-administrator-only-candidate-preflight-baseline-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --candidate-onboarding --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-detect-and-status-poll-plus-fixed-source-service-steady-state-read-no-resource-detail-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "ecs:DescribeServices"],
+            "accepted_service_stack_statuses": ["UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"],
+            "source_service": "kanbien-staging-platform-shell",
+            "success_condition": "detection-complete-and-service-stack-in-sync-and-source-service-steady",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     },
     "live_role_policy_alignment": {
         "role_name": "github-platform-shell-staging-reconciliation",

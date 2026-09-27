@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging
-#   version: 5
+#   version: 6
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -209,6 +209,18 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
             "maximum_evidence_age_seconds": 900,
         },
+        "candidate_preflight_baseline_assessment": {
+            "status": "approved-administrator-only-candidate-preflight-baseline-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --candidate-onboarding --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-detect-and-status-poll-plus-fixed-source-service-steady-state-read-no-resource-detail-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "ecs:DescribeServices"],
+            "accepted_service_stack_statuses": ["UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"],
+            "source_service": "kanbien-staging-platform-shell",
+            "success_condition": "detection-complete-and-service-stack-in-sync-and-source-service-steady",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     }
     if drift_evidence != expected_drift_evidence:
         raise ReconciliationError("drift-evidence-policy-not-reviewed")
@@ -350,6 +362,11 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "maximum_age_seconds": 900,
         "classification": "in-sync",
     }
+    expected_candidate_preflight_baseline_evidence = {
+        "schema": "deploy/platform-shell-candidate-preflight-baseline-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "in-sync-steady",
+    }
     expected_service_stage_six_additions = {
         ("RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition"),
         ("RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition"),
@@ -393,9 +410,9 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     actual_candidate_onboarding_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_onboarding_scope.get("modifications", []) if isinstance(item, dict)}
     actual_candidate_image_additions = {(item.get("logical_id"), item.get("resource_type")) for item in candidate_image_scope.get("additions", []) if isinstance(item, dict)}
     actual_candidate_image_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_image_scope.get("modifications", []) if isinstance(item, dict)}
-    if candidate_onboarding_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_candidate_onboarding_additions != expected_candidate_onboarding_additions or actual_candidate_onboarding_modifications:
+    if candidate_onboarding_scope.get("service_evidence") != expected_candidate_preflight_baseline_evidence or actual_candidate_onboarding_additions != expected_candidate_onboarding_additions or actual_candidate_onboarding_modifications:
         raise ReconciliationError("candidate-preflight-onboarding-scope-not-reviewed")
-    if candidate_image_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_candidate_image_additions or actual_candidate_image_modifications != expected_candidate_image_modifications:
+    if candidate_image_scope.get("service_evidence") != expected_candidate_preflight_baseline_evidence or actual_candidate_image_additions or actual_candidate_image_modifications != expected_candidate_image_modifications:
         raise ReconciliationError("candidate-preflight-image-scope-not-reviewed")
     return {
         "account_id": account_id,
@@ -591,6 +608,37 @@ def check_service_drift_evidence(arguments: argparse.Namespace, policy: dict[str
         raise ReconciliationError("service-drift-evidence-stale")
 
 
+def check_candidate_preflight_baseline_evidence(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Accept only a new, read-only proof of a stable onboarding baseline."""
+
+    path = Path(arguments.service_drift_evidence)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-unreadable") from exception
+    expected = {
+        "schema": "deploy/platform-shell-candidate-preflight-baseline-evidence/v1",
+        "target": "kanbien/staging",
+        "account_id": policy["account_id"],
+        "region": policy["region"],
+        "service_stack": policy["service_stack"],
+        "classification": "in-sync-steady",
+        "source_service": "kanbien-staging-platform-shell",
+        "source_service_steady": True,
+    }
+    if not isinstance(document, dict) or any(document.get(key) != value for key, value in expected.items()):
+        raise ReconciliationError("candidate-preflight-baseline-evidence-not-reviewed")
+    if document.get("service_stack_status") not in {"UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"}:
+        raise ReconciliationError("candidate-preflight-baseline-stack-status-not-reviewed")
+    try:
+        issued_at = datetime.fromisoformat(str(document.get("issued_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-timestamp-invalid") from exception
+    age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
+    if age_seconds < 0 or age_seconds > policy["maximum_service_stage_six_evidence_age_seconds"]:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-stale")
+
+
 def check_reconciliation_live_role_policy(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     """Require the administrator pre-change identity to prove the role matches reviewed source."""
 
@@ -752,8 +800,7 @@ def main() -> int:
                     ("aws-account", lambda: check_identity(arguments, policy)),
                     ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
                     ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
-                    ("service-stack-status", lambda: check_stack_status(arguments, policy, policy["service_stack"], "UPDATE_COMPLETE", "service-stack-status")),
-                    ("service-active-drift-evidence", lambda: check_service_drift_evidence(arguments, policy)),
+                    ("candidate-preflight-baseline-evidence", lambda: check_candidate_preflight_baseline_evidence(arguments, policy)),
                     *artifact_bucket_checks(arguments, policy),
                     ("platform-shell-budget", lambda: check_budget(arguments, policy)),
                 ]

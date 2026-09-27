@@ -168,6 +168,11 @@ short of a claimed live proof.
   `awsvpc` configuration, waits for `RUNNING` and `HEALTHY`, stops it, and
   verifies that no task remains running for that label. Raw provider data stays
   in process memory; output is an allowlisted safe result only.
+- Candidate onboarding has one explicitly bounded recovery baseline for a
+  historical CloudFormation `UPDATE_ROLLBACK_COMPLETE`: a fresh stack scan
+  must be `IN_SYNC` and the fixed source service must be `ACTIVE` at its exact
+  declared steady state. This exception is not available to normal service,
+  persistence, routing, IAM, or data changes.
 - PostgreSQL Stage 6 now has a direct guard: before any bootstrap, migration,
   relay, worker, or restore work, the currently active immutable server image
   must have exactly one healthy, stopped candidate preflight using the reviewed

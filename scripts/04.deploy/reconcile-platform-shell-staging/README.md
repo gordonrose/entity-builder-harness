@@ -94,6 +94,25 @@ npm run platform:shell:deployment-reconciliation:role-policy-alignment
 npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-service-change-set --service-change-set reviewed-name
 ```
 
+- `pre-candidate-execution-preflight-onboarding-change-set` permits exactly
+  one new dormant candidate task definition. When a historical service-stack
+  rollback has completed, it requires a fresh candidate-baseline record that
+  proves the stack is `IN_SYNC` and the fixed source service is at steady
+  state. It does not authorize a routing, IAM, database, queue, or service
+  change.
+
+```bash
+npm run platform:shell:service-active-drift-assessment -- \
+  --candidate-onboarding \
+  --execute-approved-active-service-drift-assessment \
+  --evidence-file /tmp/candidate-baseline.json --json
+
+npm run platform:shell:deployment-reconciliation -- \
+  --mode pre-candidate-execution-preflight-onboarding-change-set \
+  --service-change-set reviewed-name \
+  --service-drift-evidence /tmp/candidate-baseline.json --json
+```
+
 - `pre-relational-stage6-bootstrap-recovery-service-change-set` is used only
   after the first Stage 6 Service composition already exists and a corrected
   immutable image must be rolled out before the one fixed bootstrap recovery.
