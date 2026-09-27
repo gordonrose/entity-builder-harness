@@ -88,6 +88,7 @@ required_fragments = {
     "foundation/relational-access.yml",
     "foundation/relational-workload-configuration.yml",
     "foundation/relational-operations.yml",
+    "foundation/relational-work-queue.yml",
 }
 if not required_fragments.issubset(set(manifest.get("fragments", []))):
     fail("foundation must retain the relational responsibility-focused source fragments")
@@ -98,8 +99,13 @@ subnets = props(foundation, "RelationalDatabaseSubnetGroup", "AWS::RDS::DBSubnet
 if subnets.get("DBSubnetGroupName") != "kanbien-staging-platform-relational-private" or subnets.get("SubnetIds") != {"!Ref": "PrivateSubnetIds"}:
     fail("RDS subnet group must use only the supplied private subnet list")
 group = props(foundation, "RelationalDatabaseSecurityGroup", "AWS::EC2::SecurityGroup")
-if group.get("VpcId") != {"!Ref": "VpcId"} or group.get("SecurityGroupEgress") != [] or "SecurityGroupIngress" in group:
-    fail("database group must be VPC-local, have no egress, and use separate ingress rules")
+expected_database_egress = [{
+    "Description": "Loopback-only rule that prevents default external database egress.",
+    "IpProtocol": "-1",
+    "CidrIp": "127.0.0.1/32",
+}]
+if group.get("VpcId") != {"!Ref": "VpcId"} or group.get("SecurityGroupEgress") != expected_database_egress or "SecurityGroupIngress" in group:
+    fail("database group must be VPC-local, loopback-only outbound, and use separate ingress rules")
 parameters = props(foundation, "RelationalDatabaseParameterGroup", "AWS::RDS::DBParameterGroup")
 if parameters.get("Family") != "postgres17" or parameters.get("Parameters") != {"rds.force_ssl": "1"}:
     fail("database parameter group must enforce TLS")
@@ -170,7 +176,11 @@ if config.get("Name") != "/kanbien/staging/platform-shell/relational-persistence
 bootstrap = props(foundation, "RelationalBootstrapTaskRole", "AWS::IAM::Role")
 migration = props(foundation, "RelationalMigrationTaskRole", "AWS::IAM::Role")
 runtime = props(foundation, "RelationalRuntimeTaskRole", "AWS::IAM::Role")
-for name, role in (("bootstrap", bootstrap), ("migration", migration), ("runtime", runtime)):
+relay = props(foundation, "RelationalRelayTaskRole", "AWS::IAM::Role")
+worker = props(foundation, "RelationalWorkerTaskRole", "AWS::IAM::Role")
+restore_verification = props(foundation, "RelationalRestoreVerificationTaskRole", "AWS::IAM::Role")
+execution = props(foundation, "RelationalTaskExecutionRole", "AWS::IAM::Role")
+for name, role in (("bootstrap", bootstrap), ("migration", migration), ("runtime", runtime), ("relay", relay), ("worker", worker), ("restore-verification", restore_verification), ("execution", execution)):
     if role.get("AssumeRolePolicyDocument", {}).get("Statement") != [{"Effect": "Allow", "Principal": {"Service": "ecs-tasks.amazonaws.com"}, "Action": "sts:AssumeRole"}]:
         fail(f"{name} task role must be ECS-task-only")
 bootstrap_statement = statements(bootstrap).get("ReadOnlyRelationalBootstrapAndRoleCredentials", {})
@@ -180,6 +190,37 @@ for role, secret in ((migration, "RelationalMigrationSecret"), (runtime, "Relati
     actual = statements(role)
     if len(actual) != 2 or not any(statement.get("Action") == ["ssm:GetParameter"] and statement.get("Resource") == {"!GetAtt": "RelationalTargetConfiguration.Arn"} for statement in actual.values()) or not any(statement.get("Action") == ["secretsmanager:GetSecretValue"] and statement.get("Resource") == {"!Ref": secret} for statement in actual.values()):
         fail("migration/runtime roles must read only their configuration and their own credential")
+restore_statements = statements(restore_verification)
+if len(restore_statements) != 2 or not any(statement.get("Action") == ["ssm:GetParameter"] and statement.get("Resource") == {"!GetAtt": "RelationalTargetConfiguration.Arn"} for statement in restore_statements.values()) or not any(statement.get("Action") == ["secretsmanager:GetSecretValue"] and statement.get("Resource") == {"!Ref": "RelationalRuntimeSecret"} for statement in restore_statements.values()):
+    fail("restore verification must read only its configuration and runtime credential")
+
+for role, sid, action in (
+    (relay, "SendOnlyTheRelationalSmokeQueue", ["sqs:SendMessage"]),
+    (worker, "ConsumeOnlyTheRelationalSmokeQueue", ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:ChangeMessageVisibility", "sqs:GetQueueAttributes"]),
+):
+    actual = statements(role)
+    if len(actual) != 3 or not any(statement.get("Action") == ["ssm:GetParameter"] and statement.get("Resource") == {"!GetAtt": "RelationalTargetConfiguration.Arn"} for statement in actual.values()) or not any(statement.get("Action") == ["secretsmanager:GetSecretValue"] and statement.get("Resource") == {"!Ref": "RelationalRuntimeSecret"} for statement in actual.values()) or actual.get(sid, {}).get("Action") != action or actual.get(sid, {}).get("Resource") != {"!GetAtt": "RelationalSmokeQueue.Arn"}:
+        fail("relay and worker roles must separate their exact relational queue permissions")
+
+execution_statements = statements(execution)
+if set(execution_statements) != {"ReadOnlyRelationalTaskConfiguration", "ReadOnlyRelationalTaskCredentials"} or execution_statements.get("ReadOnlyRelationalTaskConfiguration", {}).get("Action") != ["ssm:GetParameters"] or execution_statements.get("ReadOnlyRelationalTaskConfiguration", {}).get("Resource") != {"!GetAtt": "RelationalTargetConfiguration.Arn"} or execution_statements.get("ReadOnlyRelationalTaskCredentials", {}).get("Action") != ["secretsmanager:GetSecretValue"] or execution_statements.get("ReadOnlyRelationalTaskCredentials", {}).get("Resource") != [{"!GetAtt": "RelationalDatabase.MasterUserSecret.SecretArn"}, {"!Ref": "RelationalMigrationSecret"}, {"!Ref": "RelationalRuntimeSecret"}]:
+    fail("relational task execution must inject only the reviewed configuration and three target-owned credentials")
+if execution.get("ManagedPolicyArns") != ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]:
+    fail("relational task execution must retain only the reviewed ECS execution managed policy")
+
+for name, expected_name, retention, visibility in (
+    ("RelationalSmokeQueue", "kanbien-staging-platform-relational-smoke", 345600, 120),
+    ("RelationalSmokeDeadLetterQueue", "kanbien-staging-platform-relational-smoke-dlq", 1209600, None),
+):
+    queue = props(foundation, name, "AWS::SQS::Queue")
+    if queue.get("QueueName") != expected_name or queue.get("MessageRetentionPeriod") != retention or queue.get("ReceiveMessageWaitTimeSeconds") != 20 or queue.get("SqsManagedSseEnabled") is not True:
+        fail("relational smoke queues must retain reviewed names, long-poll, retention, and managed encryption")
+    if visibility is not None and (queue.get("VisibilityTimeout") != visibility or queue.get("MaximumMessageSize") != 262144 or queue.get("DelaySeconds") != 0 or queue.get("RedrivePolicy") != {"deadLetterTargetArn": {"!GetAtt": "RelationalSmokeDeadLetterQueue.Arn"}, "maxReceiveCount": 5}):
+        fail("relational source queue must retain its bounded delivery and redrive policy")
+for name, queue_name in (("RelationalSmokeQueueTransportPolicy", "RelationalSmokeQueue"), ("RelationalSmokeDeadLetterQueueTransportPolicy", "RelationalSmokeDeadLetterQueue")):
+    policy = props(foundation, name, "AWS::SQS::QueuePolicy")
+    if policy.get("Queues") != [{"!Ref": queue_name}] or policy.get("PolicyDocument") != {"Version": "2012-10-17", "Statement": [{"Sid": "DenyInsecureTransport", "Effect": "Deny", "Principal": "*", "Action": "sqs:*", "Resource": {"!GetAtt": f"{queue_name}.Arn"}, "Condition": {"Bool": {"aws:SecureTransport": False}}}]}:
+        fail("relational queue policies must deny non-TLS transport only for their reviewed queue")
 
 for name, metric, statistic, operator, threshold, unit in (
     ("RelationalDatabaseCpuHighAlarm", "CPUUtilization", "Average", "GreaterThanOrEqualToThreshold", 80, None),
@@ -196,8 +237,25 @@ if events.get("SnsTopicArn") != {"!Ref": "AlarmTopic"} or events.get("SourceType
     fail("RDS events must be limited to the relational instance and existing alert destination")
 
 reference = profile.get("persistence", {}).get("relational_reference", {})
-if reference.get("status") != "stage-4-foundation-change-set-reviewed-not-executed" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke":
-    fail("target profile must record passed real-engine proof and a reviewed but unexecuted Foundation target")
+if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
+    fail("target profile must record the passed real-engine proof and exact default-egress remediation boundary")
+stage_six = reference.get("stage_6_relational_smoke_composition", {})
+if stage_six.get("status") != "bootstrap-recovery-source-defined-image-publication-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
+    fail("target profile must define the reviewed isolated relational smoke task boundary")
+
+certificate = Path("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt")
+if not certificate.is_file() or __import__("hashlib").sha256(certificate.read_bytes()).hexdigest() != "a11cf9a1d0aadd7db86f92cbaa496466daeb501bf1c5e429d8ce8914a01c15d6":
+    fail("the public eu-west-1 RDS CA bundle must be present and pinned by digest")
+task_helper = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts").read_text(encoding="utf-8")
+if 'readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8")' not in task_helper or 'mode: "verify-full"' not in task_helper:
+    fail("relational task helper must require the pinned RDS CA bundle and verify-full TLS")
+if 'const dbname = stringField(candidate, "dbname")' in task_helper or 'database: "platformsmoke"' not in task_helper:
+    fail("relational task helper must use the reviewed configuration database name rather than require an optional secret dbname field")
+
+bootstrap_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts").read_text(encoding="utf-8")
+migration_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts").read_text(encoding="utf-8")
+if 'ALTER DEFAULT PRIVILEGES FOR ROLE' in bootstrap_entrypoint or 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' not in migration_entrypoint:
+    fail("default privileges must be owned by the migration identity rather than the bootstrap identity")
 
 if failures:
     for message in failures:

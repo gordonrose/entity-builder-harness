@@ -572,6 +572,74 @@ migration, alarm, and cost checks pass with no sensitive values in evidence.
 **Objective:** prove the full relational route and its recovery path at the
 same bounded scope, then state its exact operational limits.
 
+#### Stage 6 source composition (implemented; deployment and proof pending)
+
+The production server keeps its existing DynamoDB-backed default command. It
+is deliberately not repointed to PostgreSQL merely to prove an adapter. The
+relational route is instead four target-only, non-public Fargate task
+definitions plus one restore-verification task:
+
+1. **Bootstrap** injects the new target-owned master, migration, and runtime
+   credentials through ECS, creates the two database identities, and grants
+   the migration and runtime schema boundaries.
+2. **Migration** injects only the migration credential and non-secret target
+   configuration, applies the immutable foundation plus smoke-schema manifest,
+   and exits.
+3. **Relay** injects only the runtime credential/configuration and can only
+   send to the new isolated relational source queue. It accepts one fixed
+   opaque smoke work item and relays one outbox obligation.
+4. **Worker** has a distinct role: it may receive, delete, change visibility,
+   and inspect attributes only on that one isolated queue. It records durable
+   processing completion before acknowledgement and exits.
+5. **Restore verification** can read only the runtime credential/configuration
+   and connects only to a hostname matching the fixed disposable staging RDS
+   recovery pattern. It confirms the one smoke work-item and outbox fact over
+   `verify-full` TLS, then the controller removes the recovery instance.
+
+All five tasks reuse the existing dormant worker awsvpc topology solely for
+the bounded run. They have no listener, port mapping, service, scheduler, or
+default-server command. The image contains AWS's public, digest-pinned
+`eu-west-1` RDS CA bundle, so it verifies the RDS chain rather than trusting a
+generic container trust store or weakening TLS.
+
+`platform:shell:postgresql-relational-smoke` has a local `--validate` mode, a
+fixed `--execute --approve-relational-stage6` sequence, and a distinct
+`--execute-bootstrap-recovery --approve-relational-bootstrap-recovery` mode.
+The bootstrap-recovery mode cannot start migration, relay, worker, or restore;
+it exists so the corrected PostgreSQL ownership boundary is proven before any
+later delivery stage is eligible.
+It accepts no target, credential, payload, task, queue, database, restore
+name, network, or timeout supplied by a caller. Before each onward step it
+checks the reviewed account/region, stack readiness, public server `1/1`,
+dormant worker `0/0`, and isolated queue totals. It reports only safe final
+outcomes and aggregate counts; provider responses, endpoints, task IDs,
+secrets, records, messages, and raw logs stay out of output and evidence.
+
+#### Stage 6 bootstrap recovery (2026-09-26)
+
+The first fixed bootstrap label ended non-zero. No migration, relay, worker, or
+restore label started, and the required server/worker/queue aggregate boundary
+remained intact. The run is not replayed: a stopped label is now treated as
+consumed as well as a running label.
+
+Source review removed an ownership-incompatible default-privilege statement
+from bootstrap. PostgreSQL default privileges are now established by the
+migration identity for tables that it will create; bootstrap remains limited to
+identity creation and connection/schema grants. The recovery sequence requires
+a new immutable image, normal reviewed Service task-definition revisions, a
+healthy rollout and live-boundary check, then one distinct fixed `recovery-1`
+label set. It does not expose task identifiers, logs, SQL, records, or provider
+payloads while investigating or recording the recovery.
+
+The corrected-image Service revision has its own preflight policy. It accepts
+zero resource additions or removals and exactly the three existing normal plus
+five existing relational task-definition replacements and the two existing
+in-place ECS service references. It rejects IAM, database, queue, listener,
+routing, or any other stack change. Since this guard and controller are local
+deployment controls rather than runtime image inputs, their commit may follow
+the already-published byte-identical corrected runtime image without another
+image build; the applied image remains identified by its immutable digest.
+
 1. With a distinct, bounded approval, run one fixed harmless relational smoke
    request. It may create only approved opaque state, lineage, and outbox facts.
 2. Run at most one governed relay and one self-terminating worker path. Require

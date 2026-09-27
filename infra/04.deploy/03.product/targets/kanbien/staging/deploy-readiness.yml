@@ -190,7 +190,22 @@ deployment:
         maximum_evidence_age_seconds: 21600
         resource_read_contract: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
         detector_deployment_status: source-planned-not-deployed
-        operational_coverage: blocked-pending-reviewed-detector-role-workload-cost-and-live-proof
+        administrator_active_assessment_contract: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
+        administrator_active_assessment:
+          status: approved-administrator-only-foundation-drift-classification
+          command: npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json
+          execution_identity: target-profile-administrator-only-not-github
+          scope: foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change
+          allowed_operations:
+            - cloudformation:DetectStackDrift
+            - cloudformation:DescribeStackDriftDetectionStatus
+            - cloudformation:DescribeStackResourceDrifts
+            - cloudformation:DescribeStacks
+            - rds:DescribeDBInstances
+            - rds:DescribeDBParameters
+          success_condition: detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required
+          output_policy: safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values
+        operational_coverage: administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending
       live_role_policy_alignment:
         role_name: github-platform-shell-staging-reconciliation
         inline_policy_name: ReadDeclaredStagingControls
@@ -555,7 +570,7 @@ runtime:
       - bounded-worker-scale-up-and-return-to-zero
   persistence_foundation:
     relational_reference:
-      status: stage-4-foundation-change-set-reviewed-not-executed
+      status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready
       source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
       deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
       threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -604,12 +619,13 @@ runtime:
         result: passed
         evidence_scope: disposable-loopback-postgresql-only-no-aws-resource-or-credential
       stage_4_source_definition:
-        status: static-validation-and-foundation-change-set-review-passed-not-executed
+        status: foundation-executed-and-live-boundary-proven
         foundation_fragments:
           - foundation/relational-persistence.yml
           - foundation/relational-access.yml
           - foundation/relational-workload-configuration.yml
           - foundation/relational-operations.yml
+          - foundation/relational-work-queue.yml
         database_name: platformsmoke
         smoke_schema: platform_smoke
         deployment_input: PrivateSubnetIds-only-no-subnet-identifiers-in-source
@@ -622,7 +638,7 @@ runtime:
             - tls-only-policy
             - bounded-change-set-template-retention
         foundation_change_set:
-          status: reviewed-available-not-executed
+          status: executed-and-live-boundary-proven
           reviewed_on_utc: "2026-09-26"
           resource_changes:
             adds: 22
@@ -631,9 +647,43 @@ runtime:
           safety_boundary:
             - all-additions-are-named-relational-target-resources-or-direct-support
             - only-existing-resource-change-is-non-replacement-rds-event-publication-policy
-            - no-rds-instance-secret-or-foundation-change-set-executed
+            - foundation-executed-but-no-migration-smoke-write-queue-or-restore-action-ran
+            - database-default-external-egress-remediated-by-one-loopback-only-in-place-security-group-change
           evidence_scope: safe-status-and-aggregate-resource-change-facts-only
-      next_gate: stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary
+      stage_5_database_egress_remediation:
+        status: executed-and-live-boundary-proven
+        exact_change: replace-default-external-database-egress-with-one-loopback-only-ipv4-rule
+        expected_change_set: one-non-replacement-RelationalDatabaseSecurityGroup-modification-only
+        external_destinations: prohibited
+        parameter_group_representation: rds-force-ssl-required-provider-normalization-classified-safe
+        live_boundary_verifier: passed
+        next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
+      stage_6_relational_smoke_composition:
+        status: bootstrap-recovery-source-defined-image-publication-pending
+        service_change_set_preflight:
+          foundation_evidence: fresh-classified-known-rds-parameter-normalization-only
+          service_evidence: fresh-target-admin-in-sync-service-stack-detection-only
+          artifact_controls: current-private-encrypted-owned-lifecycle-and-nonpublic-bucket-reads
+        safety_boundary:
+          - one-fixed-harmless-relational-work-item-only
+          - target-owned-ecs-injected-secrets-and-non-secret-configuration-only
+          - relay-send-only-and-worker-consume-only-on-new-isolated-queue
+          - database-client-verify-full-with-pinned-public-eu-west-1-rds-ca-bundle
+          - no-server-default-command-alb-dns-cognito-or-existing-dynamodb-sqs-smoke-change
+        recovery:
+          initial_bootstrap: completed-nonzero-without-task-log-or-identifier-retention
+          corrective_ownership: migration-role-default-privileges-only
+          consumed_stage_guard: running-and-stopped-fixed-label-reads
+          service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
+          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
+        sequence:
+          - bootstrap
+          - migration
+          - one-acceptance-and-relay
+          - one-worker
+          - isolated-restore-proof
+          - cleanup-and-empty-queue-verification
+      next_gate: stage-6-reviewed-foundation-and-service-change-sets-then-controlled-delivery-and-restore-proof
     status: deployed-and-post-deployment-verified
     deployed_on_utc: "2026-09-24"
     stack_status: UPDATE_COMPLETE

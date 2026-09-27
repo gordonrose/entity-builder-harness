@@ -147,6 +147,13 @@ Resources:
                   - !GetAtt TaskRole.Arn
                   - !GetAtt WorkerTaskRole.Arn
                   - !GetAtt RelayTaskRole.Arn
+                  - !GetAtt RelationalTaskExecutionRole.Arn
+                  - !GetAtt RelationalBootstrapTaskRole.Arn
+                  - !GetAtt RelationalMigrationTaskRole.Arn
+                  - !GetAtt RelationalRuntimeTaskRole.Arn
+                  - !GetAtt RelationalRelayTaskRole.Arn
+                  - !GetAtt RelationalWorkerTaskRole.Arn
+                  - !GetAtt RelationalRestoreVerificationTaskRole.Arn
                 Condition:
                   StringEquals:
                     iam:PassedToService: ecs-tasks.amazonaws.com

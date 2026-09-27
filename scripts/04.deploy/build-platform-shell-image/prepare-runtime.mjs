@@ -89,6 +89,9 @@ writePackageShim("@kanbien/platform-adapter-aws-observability-cloudwatch", {
 writePackageShim("@kanbien/platform-adapter-aws-persistence-dynamodb", {
   ".": join(runtimeRoot, "platform/adapters/aws/persistence/dynamodb/src/index.js"),
 });
+writePackageShim("@kanbien/platform-adapter-aws-persistence-postgresql", {
+  ".": join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/src/index.js"),
+});
 writePackageShim("@kanbien/platform-adapter-aws-queue-sqs", {
   ".": join(runtimeRoot, "platform/adapters/aws/queue/sqs/src/index.js"),
 });

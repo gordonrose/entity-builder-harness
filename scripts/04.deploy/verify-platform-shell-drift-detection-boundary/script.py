@@ -41,6 +41,7 @@ MATRIX_PATH = ROOT / "infra/04.deploy/03.product/targets/kanbien/staging/drift-d
 PROFILE_PATH = ROOT / "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
 POLICY_PATH = ROOT / "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json"
 RECONCILIATION_PATH = ROOT / "scripts/04.deploy/reconcile-platform-shell-staging/script.py"
+SERVICE_ASSESSMENT_PATH = ROOT / "scripts/04.deploy/assess-platform-shell-service-drift/script.py"
 
 
 class CloudFormationLoader(yaml.SafeLoader):
@@ -184,7 +185,39 @@ def main() -> int:
         "maximum_evidence_age_seconds": 21600,
         "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
         "detector_deployment_status": "source-planned-not-deployed",
-        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+        "administrator_active_assessment_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+        "administrator_active_assessment": {
+            "status": "approved-administrator-only-foundation-drift-classification",
+            "command": "npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change",
+            "allowed_operations": [
+                "cloudformation:DetectStackDrift",
+                "cloudformation:DescribeStackDriftDetectionStatus",
+                "cloudformation:DescribeStackResourceDrifts",
+                "cloudformation:DescribeStacks",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBParameters",
+            ],
+            "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
+            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        },
+        "operational_coverage": "administrator-only-foundation-classification-available-detector-role-workload-cost-and-live-proof-pending",
+        "service_active_assessment": {
+            "status": "approved-administrator-only-service-drift-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": [
+                "sts:GetCallerIdentity",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DetectStackDrift",
+                "cloudformation:DescribeStackDriftDetectionStatus",
+            ],
+            "success_condition": "detection-complete-and-service-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     }
     if not isinstance(reconciliation, dict) or reconciliation.get("drift_evidence") != expected_drift_evidence:
         failures.append("target profile must retain the reviewed separate drift-detection boundary")
@@ -213,6 +246,31 @@ def main() -> int:
     for required in ("lastchecktimestamp", "maximum_evidence_age_seconds", "evidence-stale"):
         if required not in source:
             failures.append(f"reconciliation command must retain passive drift evidence control: {required}")
+
+    if not SERVICE_ASSESSMENT_PATH.is_file():
+        failures.append("service active-drift assessment command is missing")
+    else:
+        service_source = SERVICE_ASSESSMENT_PATH.read_text(encoding="utf-8").lower()
+        for required in (
+            "kanbien-staging-platform-shell-service",
+            "detect-stack-drift",
+            "describe-stack-drift-detection-status",
+            "sts",
+            "get-caller-identity",
+        ):
+            if required not in service_source:
+                failures.append(f"service active-drift assessment must retain {required}")
+        for prohibited in (
+            "describe-stack-resource-drifts",
+            "describe-stack-resources",
+            "create-change-set",
+            "execute-change-set",
+            "update-stack",
+            "get-secret-value",
+            "put-role-policy",
+        ):
+            if prohibited in service_source:
+                failures.append(f"service active-drift assessment must not contain {prohibited}")
 
     if failures:
         for failure in failures:

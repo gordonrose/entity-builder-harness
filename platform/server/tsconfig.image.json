@@ -65,6 +65,9 @@
       "@kanbien/platform-adapter-aws-persistence-dynamodb": [
         "platform/adapters/aws/persistence/dynamodb/src/index.ts"
       ],
+      "@kanbien/platform-adapter-aws-persistence-postgresql": [
+        "platform/adapters/aws/persistence/postgresql/src/index.ts"
+      ],
       "@kanbien/platform-adapter-aws-queue-sqs": [
         "platform/adapters/aws/queue/sqs/src/index.ts"
       ],
@@ -96,6 +99,7 @@
     "../adapters/aws/auth/cognito/src/**/*.ts",
     "../adapters/aws/observability/cloudwatch/src/**/*.ts",
     "../adapters/aws/persistence/dynamodb/src/**/*.ts",
+    "../adapters/aws/persistence/postgresql/src/**/*.ts",
     "../adapters/aws/queue/sqs/src/**/*.ts",
     "../adapters/aws/runtime/ecs-fargate/src/**/*.ts",
     "../adapters/aws/security/dynamodb-rate-limiter/src/**/*.ts"
