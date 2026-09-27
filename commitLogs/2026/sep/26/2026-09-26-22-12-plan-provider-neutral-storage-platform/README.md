@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T13:39:50Z
-latest_commit_sha: e27b0e68b0c4e5ca79c126f711ca5252af24f974
-chat_duration: 59251s (00:16:27:31)
+latest_commit_at_utc: 2026-09-27T13:52:51Z
+latest_commit_sha: 90bb87eb
+chat_duration: 60032s (00:16:40:32)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -233,6 +233,17 @@ Summary: A stale artifact-drift fact was a structural reconciliation gap, not Po
 
 Durable evidence: Durable source: scripts/04.deploy/assess-platform-shell-artifact-drift/; staging target profile; deployment reconciliation and drift-boundary checks; PostgreSQL Stage 6 runbook/evidence.
 
+
+### 2026-09-27T13:52:51Z - Commit recorded
+
+Commit: `90bb87eb`
+
+Message: fix(deploy): refresh artifact drift evidence safely
+
+Summary: Added a fixed-stack administrator-only artifact drift assessor, preserved the GitHub read boundary, and documented the safe reconciliation recovery path for PostgreSQL Stage 6.
+
+ADR impact: No ADR: this is a bounded least-privilege reconciliation control within the approved target architecture.
+
 ## Sub-Agent Activity
 
 - A dedicated PostgreSQL completion agent is executing the approved programme
@@ -261,6 +272,13 @@ Durable evidence: Durable source: scripts/04.deploy/assess-platform-shell-artifa
   Message: fix(deploy): separate relational recovery continuation
   Summary: Added a separately guarded Stage 6 continuation that requires a successful consumed bootstrap label before it runs migration, relay, worker, restore, and cleanup; refreshed target policy, runbook, evidence, static guard, and plan.
   ADR impact: No ADR: bounded controller correction within the approved Stage 6 architecture.
+
+
+- Commit: `90bb87eb`
+  Time UTC: 2026-09-27T13:52:51Z
+  Message: fix(deploy): refresh artifact drift evidence safely
+  Summary: Added a fixed-stack administrator-only artifact drift assessor, preserved the GitHub read boundary, and documented the safe reconciliation recovery path for PostgreSQL Stage 6.
+  ADR impact: No ADR: this is a bounded least-privilege reconciliation control within the approved target architecture.
 
 ## Main Refresh Conflicts
 
@@ -291,9 +309,9 @@ Reason: A narrowly scoped deterministic conflict-resolution rule is a durable ch
 ## Session Metrics
 
 Raised at UTC: 2026-09-26T21:12:19Z
-Latest commit at UTC: 2026-09-27T13:39:50Z
-Latest commit SHA: e27b0e68b0c4e5ca79c126f711ca5252af24f974
-Chat duration: 59251s (00:16:27:31)
+Latest commit at UTC: 2026-09-27T13:52:51Z
+Latest commit SHA: 90bb87eb
+Chat duration: 60032s (00:16:40:32)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
