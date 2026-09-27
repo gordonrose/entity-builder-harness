@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: harness.architecture.rules.concerns.persistence-files-storage
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 03.product
 #   domain: architecture
@@ -20,14 +20,15 @@
 #     path: .agentic/01.harness/workflows/change-harness.md
 id: concern.persistence-files-storage
 title: Persistence, files, and storage rules
-version: 1
+version: 2
 status: active
 
 description: >
   Cross-cutting rules for database-agnostic persistence contracts, transaction
   boundaries, repository conventions, pagination, optimistic locking, outbox
-  support, file storage contracts, file metadata, retention, access, tenant
-  isolation, and ownership splits across core, apps, platform, and infra.
+  support, policy-governed file storage, untrusted upload, access delivery,
+  retention, tenant isolation, derived-content protection, and ownership
+  splits across core, apps, platform, and infra.
 
 related_rulesets:
   - docs/03.product/rules/core/layers/packages-core.yml
@@ -123,6 +124,29 @@ rules:
       Treat files as security-sensitive data stores. The body, metadata, access
       path, and retention policy all need owners.
 
+  - id: persistence-files-storage.file-lifecycle-and-delivery-are-explicit
+    title: File lifecycle and delivery are explicit policy transitions
+    severity: error
+    summary: >
+      A completed byte upload is not automatically approved content, and an
+      object key or prior upload grant is not ongoing authorisation to retrieve,
+      share, process, restore, or purge a file.
+    must:
+      - "Separate transfer completion from content approval with explicit quarantine, verification, approval, rejection, deletion, restoration, and purge decisions where the selected profile requires them."
+      - "Require a current authorised, time-bounded access decision for direct delivery, preview, export, resume, restore, share, delete, and purge operations."
+      - "Use reviewed, versioned storage profiles for permitted type/size, transfer, processing, access, lifecycle, residency, quota, and observability decisions."
+      - "Make derived content such as previews, thumbnails, OCR/extracted text, transcripts, and AI output inherit at least the source object's classification, retention, residency, legal-hold, and access protections."
+      - "Treat orphan detection and provider drift as reviewable findings first; use a governed grace period and recovery path before any destructive cleanup."
+    must_not:
+      - "Do not equate a provider object key, storage URL, checksum match, or completed upload with product identity or authorisation."
+      - "Do not deliver quarantined, unscanned, rejected, deleted, expired, or otherwise unapproved content through a fallback path."
+      - "Do not put object bytes, names containing personal data, provider keys, signed URLs, raw scanner output, extracted text, or file checksums in ordinary logs, metrics, traces, audit facts, alarms, or repository evidence."
+      - "Do not let a feature directly choose provider-specific retention, archive, key, scanner, or public-access settings."
+    agent_guidance: >
+      Ask two separate questions: "Did the provider receive bytes?" and "May
+      this caller use this content now?" A safe design never treats the first
+      answer as proof of the second.
+
   - id: persistence-files-storage.layer-ownership-is-explicit
     title: Persistence and file ownership is explicit
     severity: error
@@ -157,5 +181,6 @@ success_criteria:
   - "It requires explicit transaction boundaries, optimistic locking where needed, and outbox support for state-plus-event consistency."
   - "It standardizes pagination and retention expectations."
   - "It treats files as high-risk storage with metadata, content validation, access, retention, tenant isolation, encryption, virus scanning, legal hold, and access logging where relevant."
+  - "It requires explicit transfer, approval, delivery, lifecycle, and derived-content protection decisions rather than treating a provider object or completed upload as authorisation."
   - "It defines ownership splits across core contracts, app schemas/workflows, platform implementations, and infra resources."
   - "It includes manually verified source_refs back to the core architecture guide."

@@ -14,10 +14,12 @@
     class: required
     targets:
     - llm-workbench
-  used_by:
-  - id: chat.workflows.chat-refresh-from-main
-    path: .agentic/00.chat/workflows/chat-refresh-from-main.md
-  - id: chat.script.main-refresh.apply-rehearsed-refresh
+used_by:
+- id: chat.workflows.chat-refresh-from-main
+  path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+- id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
+  path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+- id: chat.script.main-refresh.apply-rehearsed-refresh
     path: scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
   - id: chat.script.main-refresh.classify-conflict
     path: scripts/00.chat/main-refresh/classify-conflict/script.sh
@@ -135,6 +137,7 @@ Do not ask for a second approval when none of those stop conditions apply.
 | `retired-artifact-generator-conflict` | One side preserves generator behavior for a retired tracked artifact while the other side makes generation on-demand only | Preserve retired-artifact policy; keep safe print/explicit-output behavior; block recreation of the retired tracked artifact |
 | `retired-artifact-policy-script-conflict` | One side adds classifier or workflow behavior for a retired tracked artifact while the other side retires that artifact | Preserve retired-artifact policy; remove recoverability paths for the retired tracked artifact |
 | `script-add-add-conflict` | Both sides add the same script path independently | Compare behavior, tests, and call sites; if both implement the same governed capability, merge behavior and tests; otherwise stop |
+| `append-only-plan-index-conflict` | Both sides preserve an indexed-plan README and add only unique table rows | Preserve every existing and unique added row, then increment the metadata version once from the highest incoming version |
 | `normal-repo-conflict` | Conflict changes authored code/prose without a matching governed type | Stop for approval before resolving |
 | `unsupported-conflict` | No existing type fits or classification is ambiguous | Stop with missing-governance response and propose a new or expanded type |
 
@@ -297,6 +300,43 @@ Stop if:
 - The policy script behavior cannot be separated from unrelated active
   behavior.
 - The retirement source is missing or ambiguous.
+
+### append-only-plan-index-conflict
+
+Detect:
+
+- The path is `docs/<numbered-layer>/plans/README.md`.
+- Base, chat, and incoming versions retain every pre-existing Markdown plan
+  table row.
+- Each side changes no non-table content except an optional artifact-metadata
+  `version` line, and each side's plan rows are unique.
+
+Deterministic action:
+
+- Preserve all base rows and every unique row added by either side.
+- Order the added rows lexically by their complete Markdown row after the base
+  rows, so two reviewers receive the same result.
+- Set the artifact metadata version to one greater than the highest valid
+  incoming version. Do not change any other metadata, prose, or table shape.
+
+Required checks:
+
+<!-- deterministic-check: allow reason="the classifier verifies the narrow conflict shape; preserving visible authored index rows and recording their union remains deliberately reviewable rather than hidden in an automatic file rewrite" -->
+- Run `classify-conflict` and confirm this exact type.
+- Verify that the resolved index contains the union of base, chat, and incoming
+  plan rows exactly once.
+- Run `git diff --check` and the artifact metadata header check.
+
+Session log entry:
+
+- Record the index path, retained plan rows, resulting metadata version, and
+  checks.
+
+Stop if:
+
+- A pre-existing row is removed or altered.
+- Non-index prose or metadata other than the version line changes.
+- A row is duplicated, malformed, or the table structure differs.
 
 ### script-add-add-conflict
 

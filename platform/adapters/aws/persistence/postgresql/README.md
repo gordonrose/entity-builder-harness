@@ -74,14 +74,18 @@ participant/fact composition, migration checksums, and source import
 boundaries.
 
 `npm run platform:adapter:aws:persistence:postgresql:integration` adds the
-Stage 3 disposable-engine proof. It starts an ephemeral, loopback-only Docker
-PostgreSQL container with a generated, unrecorded password and a temporary
-data directory, then always removes the exact generated container. It proves
-migration checksum immutability, atomic smoke state/lineage/outbox writes,
-rollback, optimistic concurrency, synthetic tenant predicates, outbox relay
-compatibility, and lease/fence rejection on a real engine. The local fixture
-deliberately uses no AWS credentials, shared database, real record, or
-production TLS bypass: it injects a test-only non-TLS `pg` pool solely because
-the disposable loopback fixture has no trusted certificate. The public
-production pool constructor continues to require `verify-full` TLS; Stage 5
-proves that live boundary.
+Stage 3 disposable-engine proof. It first uses an ephemeral, loopback-only
+Docker PostgreSQL container when its daemon is available. Otherwise it starts
+an installed local PostgreSQL engine only in a newly generated temporary data
+directory and private socket directory. Both routes use a generated,
+unrecorded password and always remove their exact generated state. The local
+route never uses a host database, host-wide socket path, AWS credentials,
+shared database, real record, or production TLS bypass.
+
+The proof covers migration checksum immutability, atomic smoke
+state/lineage/outbox writes, rollback, optimistic concurrency, synthetic
+tenant predicates, outbox relay compatibility, and lease/fence rejection on a
+real engine. It injects a test-only non-TLS `pg` pool solely because the
+disposable loopback fixture has no trusted certificate. The public production
+pool constructor continues to require `verify-full` TLS; Stage 5 proves that
+live boundary.

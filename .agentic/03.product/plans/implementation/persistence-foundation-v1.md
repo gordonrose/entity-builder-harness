@@ -1080,6 +1080,12 @@ scheduler/event-trigger design, including its availability and cost evidence.
 - Store, queue, trace, metric, log, audit, and change-lineage records have
   different purposes. Safe references may correlate them; copying a raw record
   into all of them is prohibited.
+- [Data Governance Foundation v1](data-governance-foundation-v1.md) now owns
+  the planned shared vocabulary and resolver for classification, residency,
+  lifecycle, processing, transfer, recovery, and evidence requirements.
+  Persistence must later consume its resolved requirement at declared
+  repository/transaction boundaries; it must not become a tenant-policy store
+  or infer field handling from raw values.
 - DLQ access is restricted operational access. A message is diagnosed against
   durable records first; it is not automatically purged or blindly replayed.
 - Alarms cover table errors/throttling, relay/worker failure, queue age/depth,
@@ -1123,8 +1129,11 @@ an available platform default:
    patterns, data migration, and restore procedures. The PostgreSQL plan
    supplies the reusable relational migration and restore boundary, while a
    product still owns each actual schema and migration.
-3. Per-entity tenant keys, data classifications, retention windows, legal
-   hold, purge/anonymisation, and authorised restore policy.
+3. Per-entity tenant keys, classifications, retention windows, legal hold,
+   purge/anonymisation, and authorised restore policy. The shared
+   provider-neutral vocabulary and resolution boundary are planned in
+   `data-governance-foundation-v1.md`; an owning product still declares each
+   entity's actual values and permitted historical changes.
 4. High-availability, multi-region recovery, throughput, and recovery
    objectives beyond the low-cost smoke reference.
 5. Continuous outbox dispatch topology and the reusable scheduler module.
@@ -1140,6 +1149,9 @@ an available platform default:
 - `.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md`
   owns the next, additive relational-reference decision and implementation
   path; it does not amend the completed DynamoDB smoke proof.
+- `.agentic/03.product/plans/implementation/data-governance-foundation-v1.md`
+  owns the shared policy-resolution foundation that later persistence,
+  storage, and observability consumers will apply.
 - `infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/work-queues.yml`
   owns the existing target queue/DLQ resource fragment.
 - `.agentic/aws/workflows/plan-aws-change.md` and

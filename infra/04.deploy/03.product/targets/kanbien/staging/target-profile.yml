@@ -86,6 +86,10 @@ deployment:
     modes:
       continuous: scheduled-read-only-verification-of-declared-live-controls
       pre_foundation_change_set: required-immediately-before-any-foundation-change-set-execution
+      pre_foundation_egress_remediation_change_set: administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction
+      pre_relational_stage6_foundation_change_set: administrator-only-preflight-for-isolated-relational-queue-and-task-composition
+      pre_relational_stage6_service_change_set: administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions
+      pre_relational_stage6_bootstrap_recovery_service_change_set: administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only
       role_policy_alignment: admin-only-source-to-live-inline-policy-comparison
     workflow: .github/workflows/reconcile-platform-shell-staging.yml
     schedule_cron_utc: "15 */4 * * *"
@@ -103,7 +107,48 @@ deployment:
       maximum_evidence_age_seconds: 21600
       resource_read_contract: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
       detector_deployment_status: source-planned-not-deployed
-      operational_coverage: blocked-pending-reviewed-detector-role-workload-cost-and-live-proof
+      administrator_active_assessment_contract: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
+      administrator_active_assessment:
+        status: approved-administrator-only-foundation-drift-classification
+        command: npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json
+        execution_identity: target-profile-administrator-only-not-github
+        scope: foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change
+        allowed_operations:
+          - cloudformation:DetectStackDrift
+          - cloudformation:DescribeStackDriftDetectionStatus
+          - cloudformation:DescribeStackResourceDrifts
+          - cloudformation:DescribeStacks
+          - rds:DescribeDBInstances
+          - rds:DescribeDBParameters
+        success_condition: detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required
+        output_policy: safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values
+      artifact_active_assessment:
+        status: approved-administrator-only-artifact-drift-assessment
+        command: npm run platform:shell:artifact-active-drift-assessment -- --execute-approved-active-artifact-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json
+        execution_identity: target-profile-administrator-only-not-github
+        scope: deployment-artifact-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation
+        allowed_operations:
+          - sts:GetCallerIdentity
+          - cloudformation:DescribeStacks
+          - cloudformation:DetectStackDrift
+          - cloudformation:DescribeStackDriftDetectionStatus
+        success_condition: detection-complete-and-deployment-artifact-stack-in-sync
+        output_policy: safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values
+        maximum_evidence_age_seconds: 900
+      operational_coverage: administrator-only-foundation-artifact-and-service-assessments-available-detector-role-workload-cost-and-live-proof-pending
+      service_active_assessment:
+        status: approved-administrator-only-service-drift-assessment
+        command: npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json
+        execution_identity: target-profile-administrator-only-not-github
+        scope: service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation
+        allowed_operations:
+          - sts:GetCallerIdentity
+          - cloudformation:DescribeStacks
+          - cloudformation:DetectStackDrift
+          - cloudformation:DescribeStackDriftDetectionStatus
+        success_condition: detection-complete-and-service-stack-in-sync
+        output_policy: safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values
+        maximum_evidence_age_seconds: 900
     live_role_policy_alignment:
       role_name: github-platform-shell-staging-reconciliation
       inline_policy_name: ReadDeclaredStagingControls
@@ -161,6 +206,151 @@ deployment:
       modifications:
         - logical_id: AlarmTopicPolicy
           resource_type: AWS::SNS::TopicPolicy
+          replacement: false
+    foundation_egress_remediation_scope:
+      evidence:
+        schema: deploy/platform-shell-foundation-known-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: known-remediation-required
+        known_change_sets:
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+            - logical_resource_id: RelationalDatabaseSecurityGroup
+              resource_type: AWS::EC2::SecurityGroup
+              change_categories:
+                - add
+                - not_equal
+        tls_enforcement: required
+      modifications:
+        - logical_id: RelationalDatabaseSecurityGroup
+          resource_type: AWS::EC2::SecurityGroup
+          replacement: false
+    foundation_relational_stage6_change_set_scope:
+      evidence:
+        schema: deploy/platform-shell-foundation-known-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: known-remediation-required
+        known_change_sets:
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+        tls_enforcement: required
+      additions:
+        - logical_id: RelationalTaskExecutionRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalRelayTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalWorkerTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalRestoreVerificationTaskRole
+          resource_type: AWS::IAM::Role
+        - logical_id: RelationalSmokeQueue
+          resource_type: AWS::SQS::Queue
+        - logical_id: RelationalSmokeDeadLetterQueue
+          resource_type: AWS::SQS::Queue
+        - logical_id: RelationalSmokeQueueTransportPolicy
+          resource_type: AWS::SQS::QueuePolicy
+        - logical_id: RelationalSmokeDeadLetterQueueTransportPolicy
+          resource_type: AWS::SQS::QueuePolicy
+      modifications:
+        - logical_id: ServiceDeploymentExecutionRole
+          resource_type: AWS::IAM::Role
+          replacement: false
+    service_relational_stage6_change_set_scope:
+      foundation_evidence:
+        schema: deploy/platform-shell-foundation-known-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: known-remediation-required
+        known_change_sets:
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+        tls_enforcement: required
+      service_evidence:
+        schema: deploy/platform-shell-service-active-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: in-sync
+      additions:
+        - logical_id: RelationalBootstrapTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalMigrationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalRelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalWorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+        - logical_id: RelationalRestoreVerificationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+      modifications:
+        - logical_id: TaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: WorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: Service
+          resource_type: AWS::ECS::Service
+          replacement: false
+        - logical_id: WorkerService
+          resource_type: AWS::ECS::Service
+          replacement: false
+    service_relational_stage6_bootstrap_recovery_image_change_set_scope:
+      foundation_evidence:
+        schema: deploy/platform-shell-foundation-known-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: known-remediation-required
+        known_change_sets:
+          - - logical_resource_id: RelationalDatabaseParameterGroup
+              resource_type: AWS::RDS::DBParameterGroup
+              change_categories:
+                - remove
+        tls_enforcement: required
+      service_evidence:
+        schema: deploy/platform-shell-service-active-drift-evidence/v1
+        maximum_age_seconds: 900
+        classification: in-sync
+      additions: []
+      modifications:
+        - logical_id: TaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: WorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalBootstrapTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalMigrationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalRelayTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalWorkerTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: RelationalRestoreVerificationTaskDefinition
+          resource_type: AWS::ECS::TaskDefinition
+          replacement: true
+        - logical_id: Service
+          resource_type: AWS::ECS::Service
+          replacement: false
+        - logical_id: WorkerService
+          resource_type: AWS::ECS::Service
           replacement: false
   execution_policy:
     style: governed-manual-service-changes-plus-github-image-publication-and-read-only-synthetic
@@ -669,7 +859,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   relational_reference:
-    status: stage-4-foundation-change-set-reviewed-not-executed
+    status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready
     source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
     deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
     threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -692,6 +882,7 @@ persistence:
       database_security_group: new-platform-shell-relational-security-group
       inbound: tcp-5432-from-newly-declared-platform-workload-security-groups-only
       workload_egress: tcp-5432-from-server-worker-and-relay-to-new-database-security-group-only
+      database_egress: explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination
       tls:
         parameter_group_setting: rds.force_ssl=1
         supported_ca: rds-ca-rsa2048-g1
@@ -743,26 +934,108 @@ persistence:
         - minimal-envelope-relay-ordering-and-telemetry-redaction
       next_gate: stage-4-source-defined-relational-target-and-reviewed-change-set
     stage_4_source_definition:
-      status: static-validation-and-foundation-change-set-review-passed-not-executed
+      status: foundation-executed-and-live-boundary-proven
       foundation_fragments:
         - foundation/relational-persistence.yml
         - foundation/relational-access.yml
         - foundation/relational-workload-configuration.yml
         - foundation/relational-operations.yml
+        - foundation/relational-work-queue.yml
       database_name: platformsmoke
       smoke_schema: platform_smoke
       deployment_input: PrivateSubnetIds-only-no-subnet-identifiers-in-source
       workload_configuration: non-secret-ssm-reference-with-target-owned-secret-references
       artifact_store: private-encrypted-target-owned-template-transport-deployed-and-verified
       foundation_change_set:
-        status: reviewed-available-not-executed
+        status: executed-and-live-boundary-proven
         resource_changes:
           adds: 22
           modifies: 1
           modified_resource: AlarmTopicPolicy
-        prohibition: no-rds-secret-or-foundation-execution-in-stage-4
+        prohibition: no-migration-smoke-write-queue-or-restore-action-before-live-boundary-passes
         required_reconciliation: deployment.reconciliation.pre_foundation_change_set
-      next_gate: stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary
+      next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
+    stage_5_database_egress_remediation:
+      status: executed-and-live-boundary-proven
+      exact_change: replace-default-external-database-egress-with-one-loopback-only-ipv4-rule
+      expected_change_set: one-non-replacement-RelationalDatabaseSecurityGroup-modification-only
+      external_destinations: prohibited
+      required_evidence: fresh-administrator-only-known-remediation-classification
+      parameter_group_representation: rds-force-ssl-required-provider-normalization-classified-safe
+      live_boundary_verifier: passed
+      next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
+    stage_6_relational_smoke_composition:
+      status: bootstrap-recovery-source-defined-image-publication-pending
+      isolated_resources:
+        - relational-bootstrap-task-definition
+        - relational-migration-task-definition
+        - relational-relay-task-definition
+        - relational-worker-task-definition
+        - relational-smoke-source-queue-and-dead-letter-queue
+      fixed_acceptance: one-opaque-harmless-work-item-only
+      task_security:
+        database_tls: verify-full-with-pinned-public-eu-west-1-rds-ca-bundle
+        secret_delivery: ecs-injected-target-owned-values-only
+        relay_permission: send-only-to-isolated-relational-queue
+        worker_permission: receive-delete-visibility-and-attributes-only-on-isolated-relational-queue
+      execution_sequence:
+        - bootstrap
+        - migrate
+        - accept-and-relay
+        - worker
+        - restore-isolated-recovery-proof
+        - cleanup-and-empty-queue-verification
+      recovery_evidence:
+        initial_attempt:
+          bootstrap: one-fixed-task-exited-nonzero-without-task-log-or-identifier-retention
+          later_stages: not-started
+          preserved_boundary: server-one-worker-zero-isolated-queues-empty
+        correction:
+          default_privileges: migration-identity-owns-default-privileges-for-its-own-created-tables
+          consumed_stage_detection: running-and-stopped-task-label-reads-before-any-stage-start
+          recovery_label: one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label
+          service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
+          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
+          continuation: one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result
+      next_gate: publish-corrected-immutable-image-review-normal-service-task-definition-revisions-and-run-one-fixed-bootstrap-recovery
+      control:
+        command: npm-run-platform-shell-postgresql-relational-smoke
+        execution_guard: execute-and-approve-relational-stage6
+        bootstrap_recovery_execution_guard: execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery
+        recovery_continuation_execution_guard: execute-recovery-continuation-and-approve-relational-recovery-continuation
+        bootstrap_recovery_diagnostic_guard: diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic
+        cluster: arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging
+        foundation_stack: kanbien-staging-platform-shell-foundation
+        service_stack: kanbien-staging-platform-shell-service
+        source_database_identifier: kanbien-staging-platform-relational
+        restore_database_identifier: kanbien-staging-platform-relational-restore-proof-20260926
+        source_network: existing-dormant-worker-service-awsvpc-configuration-only
+        task_families:
+          bootstrap: kanbien-staging-platform-relational-bootstrap
+          migration: kanbien-staging-platform-relational-migration
+          relay: kanbien-staging-platform-relational-relay
+          worker: kanbien-staging-platform-relational-worker
+          restore_verification: kanbien-staging-platform-relational-restore-verify
+        task_containers:
+          bootstrap: relational-bootstrap
+          migration: relational-migration
+          relay: relational-relay
+          worker: relational-worker
+          restore_verification: relational-restore-verify
+        started_by:
+          bootstrap: kanbien-postgresql-stage6-bootstrap-20260926-recovery-1
+          migration: kanbien-postgresql-stage6-migration-20260926-recovery-1
+          relay: kanbien-postgresql-stage6-relay-20260926-recovery-1
+          worker: kanbien-postgresql-stage6-worker-20260926-recovery-1
+          restore_verification: kanbien-postgresql-stage6-restore-verify-20260926-recovery-1
+        task_wait_seconds: 900
+        restore_wait_seconds: 1800
+        required_queue_counts:
+          before: 0
+          after_relay: 1
+          terminal: 0
+        restore_cleanup: delete-disposable-recovery-instance-without-final-snapshot-only-after-restore-verification
+        output_policy: safe-stage-status-and-aggregate-counts-only-no-identifiers-endpoints-records-secrets-headers-bodies-messages-or-provider-payloads
   smoke_transactional_outbox:
     status: foundation-and-service-deployed-acceptance-proven-outbox-delivery-proven-terminal
     provider: aws-dynamodb

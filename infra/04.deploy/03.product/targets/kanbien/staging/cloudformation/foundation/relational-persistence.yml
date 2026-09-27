@@ -25,9 +25,14 @@ Resources:
       GroupDescription: PostgreSQL ingress only from approved Kanbien platform-shell workload security groups.
       GroupName: kanbien-staging-platform-relational-database
       VpcId: !Ref VpcId
-      # The database never initiates new connections. Stateful replies to an
-      # approved workload connection remain permitted by the security-group model.
-      SecurityGroupEgress: []
+      # An empty list causes CloudFormation to retain its default allow-all
+      # outbound rule. One loopback-only rule suppresses that default without
+      # permitting an external database-initiated destination. Stateful
+      # replies to approved inbound workload connections remain permitted.
+      SecurityGroupEgress:
+        - Description: Loopback-only rule that prevents default external database egress.
+          IpProtocol: "-1"
+          CidrIp: 127.0.0.1/32
       Tags:
         - Key: Name
           Value: kanbien-staging-platform-relational-database

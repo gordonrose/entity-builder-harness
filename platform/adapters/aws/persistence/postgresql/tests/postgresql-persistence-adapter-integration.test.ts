@@ -73,6 +73,7 @@ async function main(): Promise<void> {
     const smokeMigration = kanbienPlatformSmokePostgreSqlMigration(schema);
     const migrations = [foundationMigration, smokeMigration];
     const migrationRunner = createPostgreSqlMigrationRunner(configuration, { pool }, "stage3-local");
+    console.log("PostgreSQL disposable assertion phase: immutable migrations.");
     const applied = await migrationRunner.apply({ schema, migrations });
     equal(applied.ok, true, "The immutable migration manifest must apply to the disposable engine.");
 
@@ -92,6 +93,7 @@ async function main(): Promise<void> {
       telemetry: (observation) => telemetry.push(observation),
     });
     const atomicWorkItemId = required(platformSmokeWorkItemId("synthetic-work-item-atomic"));
+    console.log("PostgreSQL disposable assertion phase: atomic state, lineage, and outbox.");
     const accepted = await acceptPlatformSmokeWorkItem({
       id: atomicWorkItemId,
       acceptedAt: at(0),
@@ -103,6 +105,7 @@ async function main(): Promise<void> {
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_outbox"`), 1);
 
     const rollbackId = "synthetic-work-item-rollback";
+    console.log("PostgreSQL disposable assertion phase: atomic rollback.");
     const rollback = await smokePersistence.atomicWriter.run(async (scope) => {
       const participant = stagePostgreSqlTransactionStatement(scope.transaction, {
         text: `INSERT INTO "${schema}"."platform_smoke_work_item" (id, state, revision, accepted_at) VALUES ($1, 'accepted', 1, $2)`,
@@ -122,6 +125,7 @@ async function main(): Promise<void> {
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_record_change" WHERE record_id = $1`, [rollbackId]), 0);
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_outbox" WHERE subject_id = $1`, [rollbackId]), 0);
 
+    console.log("PostgreSQL disposable assertion phase: optimistic concurrency.");
     const updated = await rawPool.query({
       text: `UPDATE "${schema}"."platform_smoke_work_item" SET revision = $1 WHERE id = $2 AND revision = $3 RETURNING revision`,
       values: [2, String(atomicWorkItemId), 1],
@@ -133,6 +137,7 @@ async function main(): Promise<void> {
     });
     equal(stale.rowCount, 0, "A stale optimistic-concurrency revision must update no record.");
 
+    console.log("PostgreSQL disposable assertion phase: tenant predicate isolation.");
     await rawPool.query({
       text: `CREATE TABLE "${schema}"."synthetic_tenant_item" (tenant_id text NOT NULL, id text NOT NULL, state text NOT NULL, PRIMARY KEY (tenant_id, id))`,
     });
@@ -151,6 +156,7 @@ async function main(): Promise<void> {
     })).rowCount, 0);
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."synthetic_tenant_item" WHERE tenant_id = $1 AND id = $2`, ["synthetic-tenant-a", "synthetic-tenant-record"]), 1);
 
+    console.log("PostgreSQL disposable assertion phase: outbox lease fencing.");
     const outbox = createPostgreSqlPlatformOutboxStore({ configuration, pool });
     const fencedEntry = testMutation("synthetic-fenced-record", at(4), "synthetic-tenant-a").outboxEntry;
     equal((await outbox.create(fencedEntry)).ok, true);
@@ -168,7 +174,8 @@ async function main(): Promise<void> {
     if (!staleCompletion.ok) equal(staleCompletion.error.code, "PLATFORM_PERSISTENCE_STALE_FENCE");
     equal((await outbox.markPublished({ id: fencedEntry.id, fence: secondFence, publishedAt: at(6.5) })).ok, true);
 
-    const relayEntry = testMutation("synthetic-relay-record", at(8), "synthetic-tenant-a").outboxEntry;
+    console.log("PostgreSQL disposable assertion phase: relay ordering.");
+    const relayEntry = testMutation("synthetic-relay-record", at(-1), "synthetic-tenant-a").outboxEntry;
     equal((await outbox.create(relayEntry)).ok, true);
     const queue = inMemoryQueue();
     const relay = createPlatformOutboxRelay({
@@ -184,6 +191,7 @@ async function main(): Promise<void> {
     equal(queue.messages.length, 1, "The relay must emit only one minimal queue envelope.");
     equal((await outbox.get(relayEntry.id))?.state, "published");
 
+    console.log("PostgreSQL disposable assertion phase: worker processing fence.");
     const processing = createPostgreSqlPlatformProcessingStore({ configuration, pool });
     const processingFirstClaim = await processing.claim({ outboxEntryId: relayEntry.id, owner: ownerOne, acquiredAt: at(10), leaseDurationMs: 1_000 });
     equal(processingFirstClaim.ok, true);
@@ -196,6 +204,7 @@ async function main(): Promise<void> {
     if (!staleWorker.ok) equal(staleWorker.error.code, "PLATFORM_PERSISTENCE_STALE_FENCE");
     equal((await processing.complete({ outboxEntryId: relayEntry.id, fence: processingSecondFence, outcome: "succeeded", completedAt: at(12.5) })).ok, true);
 
+    console.log("PostgreSQL disposable assertion phase: telemetry safety.");
     const telemetryText = JSON.stringify(telemetry);
     equal(telemetryText.includes(environment.password), false, "Normal telemetry must not contain the fixture password.");
     equal(telemetryText.includes("synthetic-tenant-a"), false, "Normal telemetry must not contain a tenant identifier.");
