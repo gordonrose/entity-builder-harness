@@ -54,11 +54,12 @@ they are needed for repeatable operations.
 
 ## Implementation Plans
 
-- [Local to proven deployment reliability](plans/implementation/local-to-proven-deployment-reliability.md)
-  sequences complete-path planning, bounded investigations, deployment audit
-  remedies, reference reuse and tooling consolidation through the existing
-  realization programme, with executable acceptance and separately authorised
-  live proof.
+- [Engineering and deployment completeness](plans/implementation/local-to-proven-deployment-reliability.md)
+  defines the systemic harness and code refactor: independent executable
+  discovery, provider-neutral completion rules, exact-artifact qualification,
+  recoverable execution and adoption across every existing supported path
+  before feature work resumes. PostgreSQL Stage 6 remains halted pending the
+  replacement qualification process and scoped execution authority.
 
 ## Supporting Artifacts
 

@@ -36,7 +36,14 @@ publish deployment reliability plan
 
 ## Questions Asked
 
-- None recorded yet.
+
+
+- Asked: Confirmed adoption breadth, allowed refactoring and schedule.
+  Response: User requires every existing executable and deployment path before feature work resumes; permits harness/tooling/CI/internal-interface refactoring with justified public-contract changes; replaces 08:00 with completion and proof of structural repair.
+
+
+- Asked: Confirmed provider coverage, retirement and qualification environments.
+  Response: User selected all existing providers with second-execution-model/conformance portability proof; retirement after proven replacement and caller migration; disposable provider environments with synthetic data, with concrete resources and costs reviewed before execution.
 
 ## Issues Raised
 
@@ -53,12 +60,28 @@ publish deployment reliability plan
 - Decision: Verified remote main promotion at 8825b15735984ac94c03b4c5a2ba1ef598f441ce.
   Rationale: Plan commit ff248dfe and metadata-only repair 88878738 are on origin/main. Push was a normal fast-forward from 73fe69f7; all 966 headers, generated-index freshness and source eligibility passed. Local root and original source work remain preserved.
 
+
+- Decision: Replace the overnight AWS-reference sequence with a systemic full-estate refactor plan.
+  Rationale: PostgreSQL Stage 6 was terminated by the user. Take a failed/cancelled terminal handoff, preserve its six uncommitted owner changes, and do not restart under the old process. Deliver a revised independently reviewed plan on origin; implementation and cloud qualification are subsequent work.
+
 ## Context Hygiene
 
 
 
 - Summary: The source plan and audit evidence remain in the original chat worktree; root main and that source contain unrelated changes.
   Durable evidence: Import only the approved deployment plan, AWS index and original audit session log; regenerate metadata on the clean accepted baseline.
+
+
+- Summary: Prepared the overnight convergence annex after the user requested completion by 08:00 Dublin. PostgreSQL Stage 6 remains owned by its current operator; no implementation run or AWS mutation has been launched here.
+  Durable evidence: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md: overnight handoff, workstream outcome/gap matrix, single coordinator, immutable release sequence, bounded investigations, 07:00 final-verification cutoff and morning receipt. Metadata, deterministic-process and whitespace checks pass. Read-only STS verified account 337159794548 through kanbien-dev in eu-west-1; credential duration and full launch readiness are not established.
+
+
+- Summary: Launch readiness remains incomplete: read-only Docker info timed out outside the restricted sandbox after fifteen seconds. The earlier unbounded read-only probe was interrupted; no shared service was restarted.
+  Durable evidence: The overnight annex records current AWS identity success, unresolved credential duration and local build readiness, and the need to verify an existing governed CI build path if local Docker remains unavailable. Only the plan and this session log changed; implementation and deployment have not started.
+
+
+- Summary: Version 2 adds independently extracted executable/dependency coverage, generic engineering definition of done, per-entrypoint provider-shaped qualification, durable operation/evidence state, cross-attempt design-failure circuit and full-estate migration/retirement.
+  Durable evidence: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md contains confirmed scope, M0-M5/P0-P7 and A01-A25. Source review anchored at10c9c90f plus six dirty operator files. Three independent reviews passed; corrected one reversed retirement phrase. No runtime code or cloud state changed.
 
 ## Activity Log
 
@@ -149,9 +172,138 @@ Decision: Verified remote main promotion at 8825b15735984ac94c03b4c5a2ba1ef598f4
 
 Rationale: Plan commit ff248dfe and metadata-only repair 88878738 are on origin/main. Push was a normal fast-forward from 73fe69f7; all 966 headers, generated-index freshness and source eligibility passed. Local root and original source work remain preserved.
 
+
+### 2026-09-27T23:06:55Z - Context hygiene
+
+Summary: Prepared the overnight convergence annex after the user requested completion by 08:00 Dublin. PostgreSQL Stage 6 remains owned by its current operator; no implementation run or AWS mutation has been launched here.
+
+Durable evidence: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md: overnight handoff, workstream outcome/gap matrix, single coordinator, immutable release sequence, bounded investigations, 07:00 final-verification cutoff and morning receipt. Metadata, deterministic-process and whitespace checks pass. Read-only STS verified account 337159794548 through kanbien-dev in eu-west-1; credential duration and full launch readiness are not established.
+
+
+### 2026-09-27T23:07:54Z - Context hygiene
+
+Summary: Launch readiness remains incomplete: read-only Docker info timed out outside the restricted sandbox after fifteen seconds. The earlier unbounded read-only probe was interrupted; no shared service was restarted.
+
+Durable evidence: The overnight annex records current AWS identity success, unresolved credential duration and local build readiness, and the need to verify an existing governed CI build path if local Docker remains unavailable. Only the plan and this session log changed; implementation and deployment have not started.
+
+
+### 2026-09-27T23:40:57Z - Question
+
+Asked: Confirmed adoption breadth, allowed refactoring and schedule.
+
+Response: User requires every existing executable and deployment path before feature work resumes; permits harness/tooling/CI/internal-interface refactoring with justified public-contract changes; replaces 08:00 with completion and proof of structural repair.
+
+
+### 2026-09-27T23:40:57Z - Question
+
+Asked: Confirmed provider coverage, retirement and qualification environments.
+
+Response: User selected all existing providers with second-execution-model/conformance portability proof; retirement after proven replacement and caller migration; disposable provider environments with synthetic data, with concrete resources and costs reviewed before execution.
+
+
+### 2026-09-27T23:40:57Z - Decision
+
+Decision: Replace the overnight AWS-reference sequence with a systemic full-estate refactor plan.
+
+Rationale: PostgreSQL Stage 6 was terminated by the user. Take a failed/cancelled terminal handoff, preserve its six uncommitted owner changes, and do not restart under the old process. Deliver a revised independently reviewed plan on origin; implementation and cloud qualification are subsequent work.
+
+
+### 2026-09-27T23:40:57Z - Context hygiene
+
+Summary: Version 2 adds independently extracted executable/dependency coverage, generic engineering definition of done, per-entrypoint provider-shaped qualification, durable operation/evidence state, cross-attempt design-failure circuit and full-estate migration/retirement.
+
+Durable evidence: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md contains confirmed scope, M0-M5/P0-P7 and A01-A25. Source review anchored at10c9c90f plus six dirty operator files. Three independent reviews passed; corrected one reversed retirement phrase. No runtime code or cloud state changed.
+
+
+### 2026-09-27T23:40:57Z - ADR disposition
+
+ADR needed: no
+
+Reason: This commit revises the implementation programme and confirmed delivery requirements. Concrete architecture/mechanism choices remain independently reviewed M1 implementation work, with ADRs under their owning workflows.
+
+
+### 2026-09-27T23:40:57Z - Sub-agent activity recorded
+
+Agent: build_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Read-only independent build and executable-completeness review
+
+
+### 2026-09-27T23:40:57Z - Sub-agent activity recorded
+
+Agent: deploy_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Read-only independent provider/controller/qualification architecture review
+
+
+### 2026-09-27T23:40:57Z - Sub-agent activity recorded
+
+Agent: harness_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Read-only independent definition-of-done and whole-estate adoption review
+
 ## Sub-Agent Activity
 
-- None recorded yet.
+
+
+### 2026-09-27T23:40:57Z - build_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Read-only independent build and executable-completeness review
+Files touched: none
+Checks run: Plan/source inspection only; no build or live execution claimed.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Identified self-declared coverage and fixture-fidelity gaps; reviewed rewritten version2 and passed for publication.
+
+
+### 2026-09-27T23:40:57Z - deploy_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Read-only independent provider/controller/qualification architecture review
+Files touched: none
+Checks run: Plan/source inspection only; no cloud calls or deployment proof.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Reviewed generic execution profiles, operation identities, non-circular qualification setup and live authority; version2 passes.
+
+
+### 2026-09-27T23:40:57Z - harness_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Read-only independent definition-of-done and whole-estate adoption review
+Files touched: none
+Checks run: Plan/source inspection only; protection implementation remains future work.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Reviewed full-estate scope, independent challenge, workflow ownership and halt semantics; corrected retire-proven-replacements wording, otherwise passed.
 
 ## Commits
 
@@ -199,7 +351,7 @@ Rationale: Plan commit ff248dfe and metadata-only repair 88878738 are on origin/
 
 ADR needed: no
 ADR path: 
-Reason: Publishing a planning document through existing lifecycle and remote-promotion workflows; no runtime architecture change.
+Reason: This commit revises the implementation programme and confirmed delivery requirements. Concrete architecture/mechanism choices remain independently reviewed M1 implementation work, with ADRs under their owning workflows.
 
 ## Session Metrics
 

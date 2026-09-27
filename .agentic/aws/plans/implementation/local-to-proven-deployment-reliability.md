@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.local-to-proven-deployment-reliability
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: deployment.realization
@@ -12,7 +12,7 @@ disciplines:
 - security
 - sre
 kind: implementation-plan
-purpose: Establish planning and bounded investigation before implementation, then deliver a reusable route from local changes to an independently proven staging release with recoverable execution.
+purpose: Refactor the engineering harness and every existing executable and deployment path around independently verified operational completeness, provider-neutral contracts, exact-artifact qualification, and deterministic recoverable execution.
 portability:
   class: reusable
   targets:
@@ -21,704 +21,748 @@ used_by:
 - id: aws.readme
   path: .agentic/aws/README.md
 -->
-# Local to proven deployment: implementation plan
+# Engineering and deployment completeness: systemic refactor
 
-Prepared: 2026-09-27. Owner: deployment layer; one coordinating implementation
-agent owns integration and any approved live execution. Target handoff: the
-morning following the authorised implementation run, Europe/Dublin. Record the
-actual start and agreed handoff time in UTC before starting; this document does
-not start a background job or promise that the full programme fits one evening.
+Revised: 2026-09-28. Status: implementation plan, not implemented protection.
+This revision supersedes the earlier overnight sequence and AWS-reference-only
+completion boundary. The user terminated PostgreSQL Stage 6 and replaced the
+08:00 deadline with completing and proving the structural fix.
 
-## Outcome and honest scope
+## Confirmed decisions and completion boundary
 
-Deliver one repeatable path from a local source change to the exact immutable
-candidate running in AWS staging, with authenticated application behaviour,
-persistence/delivery semantics, actionable failure evidence, and verified
-cleanup/recovery. Known regressions must fail before a public rollout.
+The user confirmed all six decisions on 2026-09-28:
 
-The joined HTTP-to-durable-delivery demonstration uses the existing DynamoDB
-server composition. Qualify PostgreSQL separately through its existing dedicated
-bootstrap/migration/acceptance/relay/worker task graph. The inspected server
-does not expose PostgreSQL acceptance over HTTP. That additional composition
-remains explicitly unqualified; implement it under its own bounded capability
-slice before claiming an HTTP-to-PostgreSQL product path works.
-
-The reusable contract remains provider-neutral. The first qualified adapter is
-AWS ECS/Fargate for Kanbien staging, account 337159794548, eu-west-1. Azure,
-Oracle, other AWS targets, and other providers remain unqualified until their
-own adapters pass the same acceptance suite. A schema passing on AWS is not
-proof for another provider.
-
-Separate the following results in every status report:
-
-| Result | Required evidence |
+| Decision | Required treatment |
 | --- | --- |
-| Source-ready | Deployment design and prerequisite investigations recorded; reviewed source, clean-environment checks, executable negative cases, and target integration all pass. |
-| Staging release proven | The same candidate digest passes private execution, promotion, authenticated application checks, and the declared semantic route. |
-| Recovery proven | An approved failure/recovery exercise reaches the declared steady state and proves owned-resource cleanup. |
-| Continuous control proven | A producer refreshes drift evidence and its consumer/alert path succeeds over at least two subsequent scheduled cycles. |
-| Production-ready | Separate production, data protection, capacity, availability, restore, SLO, and operating requirements are satisfied. Not an overnight claim. |
+| Adoption breadth | Cover every existing executable and deployment path before feature work resumes. No untouched legacy-path exemption. |
+| Refactor scope | Harness, build/package tooling, CI and internal runtime interfaces may change. Preserve public application contracts unless a change is specifically justified and reviewed. |
+| Schedule | Complete and prove the structural fix. The former 08:00 deadline and overnight success dependency are withdrawn. |
+| Providers | Qualify all providers already used by the repo. Demonstrate generic portability through a second execution model and adapter conformance tests; do not add a speculative cloud provider. |
+| Consolidation | Migrate callers to proven replacements, preserve necessary compatibility during migration, then retire obsolete or duplicate paths. |
+| Qualification environments | Plan disposable provider environments with synthetic data. Review their concrete resources, costs and authority before execution. |
 
-Never relabel source-ready or a healthy HTTP process as the later results.
-The deadline does not permit weakening a gate or manufacturing evidence.
+The objective is that architecture and code changes arrive at release with a
+complete, already-qualified execution design. Release runs a reviewed immutable
+plan; it does not discover package contents, secret formats, privileges,
+entrypoints or recovery semantics for the first time.
 
-## Change to the working method
+The engineering target is zero avoidable design/configuration defects first
+discovered on the intended release target, zero diagnostic-only rebuilds needed
+to understand an ordinary failure, and zero unbounded repair/retry loops.
+A compiler or review cannot prove arbitrary software free of all defects.
+Provider outages, capacity, drift and other external failures remain possible;
+the executor must recognise them and reach a defined recoverable state.
+Do not promise that the only possible elapsed time is instance creation:
+semantic verification, data operations and bounded recovery also take time.
+Measure and reduce those phases without removing their proof.
 
-The primary intervention is earlier design and discovery. Required checks
-support that method; adding more commit or merge checks alone does not deliver
-this plan. Apply the method to this reliability programme itself before
-implementing its shared tooling, then use it for future deployment-affecting
-platform, adapter and infrastructure work.
+A first reference is an implementation milestone. The programme is complete
+only when the entire discovered estate is qualified under the shared method or
+has been deliberately retired after equivalent replacement. A missing proof,
+unresolved path, temporary independent controller or unqualified provider keeps
+the programme incomplete. Feature work resumes only after that closure.
 
-1. Describe the complete deployed behaviour and its dependency path before
-   decomposing work into code tasks. Include the image, every operational
-   entrypoint, provider bindings, data/delivery semantics and recovery.
-2. Identify what is already qualified and what remains an assumption. Assign
-   each material unknown an owner, a falsifiable question, the smallest useful
-   experiment, an effort/attempt limit and a decision it will inform.
-3. Resolve assumptions that could invalidate the design before substantial
-   dependent implementation. Small investigation code is allowed in this
-   stage. A deferred assumption must name the work and claims it blocks.
-4. Reuse a qualified reference path with explicit limits. Extend one supported
-   route through its full lifecycle before multiplying adapters or targets.
-5. Implement against that design using shared build/deploy commands. Diagnose
-   a failure as a specific failed assumption; change the hypothesis and run
-   the cheapest relevant check before repeating an expensive operation.
-6. Close work with evidence for the exact deployed release and required
-   recovery behaviour. Feed newly discovered failure modes into the reusable
-   plan/reference implementation so the next task benefits.
+## Starting state: PostgreSQL terminated, not a successful prerequisite
 
-Planning depth follows the change. A new provider, execution model, identity,
-network path, stateful dependency or migration needs explicit qualification.
-A change within a qualified path records its affected dependencies and checks,
-and reuses still-valid evidence. Documentation-only work and ordinary business
-logic changes with no deployment-contract impact do not require fresh cloud
-experiments. Do not attach the full process to every small edit or commit.
+The user-provided final Stage 6 report states that recovery-4 bootstrap failed
+before application telemetry; no subsequent migration, relay, worker or restore
+ran, the server remained healthy and worker scale was zero. These are reported
+facts, not a fresh cloud inspection by this planning revision.
 
-## Repository impact and placement
+Observed source baseline: `10c9c90f`, including managed-master credential
+correction `2775913b`. The former operator's worktree also has six uncommitted
+diagnostic/runbook changes. Preserve and review them; neither clean git state
+nor a stopped chat establishes current cloud state. This planning worktree is
+older and must not become the implementation baseline by accident.
 
-Keep existing application contracts, product composition, provider/type/service
-runtime adapter layout and CloudFormation ownership as the starting point.
-No wholesale application rewrite or repository reorganisation is required by
-this plan. Changes concentrate on planning, build/deploy tooling and evidenced
-runtime defects.
+P0 takes a terminal handoff whether the prior attempt failed, was cancelled,
+or succeeded: actual source/artifact/operation identities, last observed state,
+consumed labels, safe diagnostics, cleanup completed/outstanding, pending cloud
+operations and released ownership. Reconcile current target facts read-only.
+Do not infer that terminating the agent stopped its remote tasks.
 
-| Surface | Required change and boundary |
+No Stage 6 retry is authorised by this revision. Independent source refactoring
+starts without waiting for Stage 6 success. Any later resumption requires the
+new per-entrypoint and composed-graph qualification, reconciled state and the
+existing explicit AWS execution authority for the concrete operation.
+
+## Why the previous approach was insufficient
+
+| Structural weakness | Required correction |
 | --- | --- |
-| `.agentic/03.product/` and `.agentic/aws/` workflows | Connect runtime planning and AWS planning to one reusable deployment-design template and its relevant reference path before implementation. Store rules once and reference them from the existing workflows. |
-| `.agentic/01.harness/` | Extend the existing realization standard/schema/workflow and reusable planning shape where they own the generic contract. Keep AGENTS.md small. |
-| Build scripts, workspace manifests, TypeScript configuration and image recipes | Consolidate the reachable release dependency graph and isolated artifact checks; migrate affected consumers incrementally. |
-| `scripts/04.deploy/` | Extend the existing `operational-realization-gate/` compiler and provider mapping on the refreshed baseline; consolidate deployment execution, diagnostics and recovery. This is the largest tooling refactor. |
-| `infra/04.deploy/` | Keep target composition, environment bindings and infrastructure templates here. Add or adjust the candidate boundary and reviewed supporting resources as required. |
-| `platform/adapters/`, runtime entrypoints and tests | Make bounded provider, migration, lifecycle and diagnostic fixes; preserve app-facing boundaries unless a demonstrated defect requires a separately explained contract change. |
-| `.github/workflows/` and operator documentation | Invoke the shared commands at the appropriate stages and replace obsolete instructions after the qualified path is adopted. |
+| Healthy server treated as qualification of bootstrap/migration/relay/worker/restore | Independent executable contracts and proofs, followed by proof of their composition. Shared image identity permits reuse only of genuinely shared assertions. |
+| Author declares the inventory and then tests that same inventory | Independently extract source, artifact and rendered-infrastructure inventories; reconcile them and reject uncovered or dynamic obligations. |
+| Provider fixtures reproduce developer assumptions | Versioned provider-shaped fixtures, real engines and isolated managed-provider qualification, each with explicit limits. |
+| More prose and source-pattern checks treated as stronger planning | A complete design, independent counterexample review, executable obligations and tests which deliberately break the claimed protection. |
+| Transient console output or current provider status treated as durable history | Trusted, bound, durable phase evidence and a resumable operation journal. |
+| Every failure creates a new label/image and another full deployment | Separate artifact/operation/attempt identities; retain failure lineage and reopen the design when a premise fails. |
+| Incident logic duplicated across scripts and workflows | One generic operation controller and adapter contract, with provider/target decisions supplied as reviewed data. |
+| Only the newest product reference receives the new process | Complete estate inventory, adoption ledger, migration of all supported paths and retirement of superseded callers. |
 
-Deployment orchestration stays with 04.deploy; provider-neutral deployment
-schemas do not make it product runtime code. The earlier illustrative
-`platform/realization/` tree is not an adopted directory or a required new
-package. Use the existing owner paths on the refreshed baseline. Any necessary
-committed-file moves or retirements follow the existing artifact-path migration
-workflow and preserve required references.
+The existing plan already required separate entrypoints. Its weakness was that
+this remained a requirement the agent could claim to satisfy through a partial
+reference. This revision makes completeness independently checked and makes
+partial adoption an explicit blocker to programme completion.
 
-## Baseline, existing work, and workflow ownership
+## One engineering definition of done
 
-The audit examined worktree 8052929c and later source through 6a435b15. Planning
-review is pinned to 0c3e9cd9500f3010ebacc0e6cc1ba9cfd8dd3f1a; that revision adds
-session evidence to the same technical baseline. The planning worktree is
-older than these later commits. Do not implement blindly against it.
+Create one reusable standard under `.agentic/01.harness/standards/` (proposed
+name `engineering-definition-of-done.md`) and link it from the owning workflows.
+The definition applies to architecture, libraries, tools, applications,
+adapters and infrastructure through appropriate profiles. This deployment-owned
+plan implements and adopts that cross-layer standard; `.agentic/aws/` remains
+the repo's existing 04.deploy governance location, not the owner of universal
+engineering rules. Keep AGENTS.md a small router.
 
-At implementation startup, resolve current remote state through the governed
-chat lifecycle, select a clean assigned source worktree, record its exact SHA,
-and reconcile work already completed by other sessions. Existing local edits
-to production-reference-target-baseline.md and platform-scheduler-v1.md are
-owned by other work and must not be absorbed, overwritten, or staged.
-
-Use the current repository versions of these existing owners:
-
-- [Chat startup](../../../00.chat/workflows/chat-start.md) and its referenced
-  worktree, refresh, promotion, and git-approval workflows.
-- [Harness changes](../../../01.harness/workflows/change-harness.md) for
-  contracts, validators, instruction changes, and CI governance.
-- [Product/runtime implementation](../../../03.product/workflows/platform-runtime-implementation.md)
-  for runtime and adapter code.
-- [AWS planning](../../workflows/plan-aws-change.md),
-  [inspection](../../workflows/inspect-aws-state.md), and
-  [approved execution](../../workflows/execute-approved-aws-change.md).
-
-This plan sequences the audit remedies. It does not replace the architecture
-owned by the existing Operational Realization v2 programme. Extend that
-programme and its compiler/adapter boundary; do not build a competing release
-framework. Its inspected source is
-[the v2 programme at the planning baseline](https://github.com/gordonrose/entity-builder-harness/blob/0c3e9cd9500f3010ebacc0e6cc1ba9cfd8dd3f1a/docs/04.deploy/plans/operational-realization-v2-programme.md).
-On a refreshed worktree use docs/04.deploy/plans/operational-realization-v2-programme.md.
-The older kanbien-staging-image-execution-preflight-v1.md is explicitly
-superseded before implementation; treat its useful details as evidence, not
-as the governing design. Also integrate the existing AWS-change reliability
-programme and the PostgreSQL reference/Stage 6 programme.
-
-## Authority and unattended-work prerequisites
-
-Writing this plan has been authorised. Implementation, commits, promotion,
-image publication, repository settings, and cloud execution are separate
-action classes. A future implementation instruction authorises its stated
-source scope; do not infer external authority from this document.
-
-Before dependent actions, record the authorisation already present in that
-execution chat. Reuse valid scoped authority instead of repeatedly asking.
-Where authority is absent, finish the independent source work and prepare the
-concrete change/rollback bundle before requesting that authority.
-
-| Action | Boundary for the implementation agent |
+| State | Evidence required before the state may be claimed |
 | --- | --- |
-| Source implementation | Once instructed to implement, complete P0a/P0b for the relevant dependencies, edit the capability-owned paths below, add meaningful tests, and update their existing workflows/indexes. Bounded investigation code belongs to P0b. |
-| Local commits / merge / push | Apply the existing git approval workflow. Never force push, rewrite history, delete branches, or discard another session's work. Remote promotion must name the reviewed source SHA. |
-| GitHub changes | Reading settings/runs is inspection. Changing rulesets, required checks, environments, secrets, or permissions needs explicit scope. |
-| Image publication | Use the existing staging ECR identity and immutable digest workflow only when authorised. A publication success is not deployment proof. |
-| Candidate onboarding and proof | Review the precise task-definition addition/update, existing role use, network, maximum task count/duration, cleanup, and cost first. No implicit IAM or network repair. |
-| Service promotion / rollback | Only the reviewed staging service change and known-good restore through the declared IaC ownership path. |
-| Database / delivery / restore proof | Separate bounded synthetic operation scope, identities, attempt labels, data policy, disposable restore ownership, deletion/cleanup authority, and cost. No production data or destructive migration. |
-| Drift producer | Separate reviewed identity, permissions, workload/schedule, cost, failure alert, and rollback; not implied by candidate permission. |
+| Design reviewed | Outcome/invariants, complete paths, alternatives, ownership/compatibility, material assumptions, qualification environments, effects and recovery are explicit; independent challenge has no unresolved blocking finding. |
+| Code verified | Clean reproducible build, discovered-unit coverage, exact-artifact execution, behavioral and applicable negative/concurrency tests, safe diagnostics and consumer integration pass. |
+| Adapter qualified | Supported capability/constraint envelope and provider-shaped inputs are tested against actual semantics; managed-provider claims have isolated provider proof. |
+| Release admissible | The exact release graph is covered, proof is trusted and current, target differences are assessed, change/recovery plans are executable, authority and launch prerequisites are satisfied. |
+| Deployed and proven | The intended target runs the approved release; each required semantic route and relevant negative/recovery case passes, with durable evidence and declared steady state. |
+| Operationally observed | Required scheduled controls, alert delivery and observation windows have actually run. This state cannot be inferred from a one-time deployment. |
 
-<!-- deterministic-check: allow reason="actual cost ceilings require scoped user authority; the implementation will validate the resulting launch record" -->
-The launch record must contain the actual approved cost ceilings: incremental
-proof spend, recurring additions, and maximum concurrent/duration limits. Do
-not infer new authority from historical USD25/month or EUR50/month references.
-If live execution is not approved, report source-ready and the exact remaining
-approval bundle; do not claim the overnight live objective was achieved.
+Architecture artifacts can finish their own design milestone. Source commits
+and integration checkpoints can exist before a feature is operationally done;
+otherwise the work required to obtain proof becomes circular. Such checkpoints
+remain explicitly incomplete and cannot authorise release or close a capability.
+Every capability/change states its required final maturity in advance. A local
+tool has local execution obligations; a deployed capability requires its
+selected target proof. No author may lower maturity after a failed attempt.
 
-Check prerequisites early: fresh GitHub/AWS credentials for the expected run
-duration, required role assumption, local Docker/Buildx availability, declared
-Node/npm/Python/AWS CLI/validator versions, approved target ownership, known-good
-release, current stack state, and source/DLQ/worker steady state. Audit-time
-kanbien-dev SSO was expired. Authentication renewal needs the operator's normal
-interactive process; do not collect credentials in chat or files.
+Libraries inherit integration obligations through affected consumers. They do
+not require artificial cloud services. Documentation-only changes have an
+explicit applicability result and affected-reference checks. Product behavior
+changes still need affected behavioral and deployed-path evidence even when
+existing provider qualification can be reused.
 
-Inspect actual GitHub branch/ruleset checks, environment restrictions/approval,
-and OIDC trust. Source declarations are not proof of live GitHub enforcement.
-Unavailable settings access is an unresolved evidence gap, not a passed check.
+The feature/platform-consumption decision record supplies product semantics.
+Connect the existing root draft to this standard and the runtime graph rather
+than making authors fill out another competing questionnaire. Its current
+coverage/link checker does not prove actual feature records or their claims;
+add instance validation and evidence references as part of adoption.
 
-## Work allocation and critical path
+## Architecture: neutral contracts, execution profiles, provider adapters
 
-One coordinator owns the release manifest, integration, target lock, approvals,
-and live changes. Delegate disjoint source work only. Shared schema files,
-package.json, target-profile.yml, service templates, and release workflows must
-each have one editor; other agents propose changes to that owner.
+Extend the existing Operational Realization programme and compiler. Do not
+build a parallel framework or move deployment code into `platform/realization`.
+The current schema remains v1 despite later candidate-controller additions;
+version the full-graph extension and provide explicit compatibility/migration.
 
-| Package | Owner lane | Depends on | Required milestone |
-| --- | --- | --- | --- |
-| P0 Baseline and prerequisites | Coordinator | Launch instruction | Current source/target/authority inventory; no overlapping target operator. |
-| P0a Deployment design and reusable planning workflow | Coordinator/harness | P0 | Complete path, qualified-pattern comparison, unknowns and bounded file/refactor map recorded before substantive implementation. |
-| P0b Bounded investigations and first reference slice | Coordinator/relevant owner | P0a; authority for each experiment | Design-invalidating unknowns resolved or dependent work explicitly blocked; first supported route and evidence recorded. |
-| P1 Build and independent validation | Build/backend | P0a/P0b for its dependencies | Clean-runner PR path and exact-image tests. |
-| P2 Trusted evidence and v2 graph | Harness/security | P0a/P0b for its dependencies | Invalid/replayed proof rejected; real target contract integrated. |
-| P3 Target controller and recovery | Deploy/SRE | P0a/P0b; P2 interface | Bounded state machine, diagnostics, lock, terminal waits, cleanup. |
-| P4 Provider and migration semantics | Backend | P0a/P0b; P1 environment | Real-engine and request/IAM regressions; route-specific proof. |
-| P5 Integrated private proof and promotion | Coordinator | P1-P4; live authority | Same candidate proven, promoted, and semantically exercised. |
-| P6 Recovery and continuous reconciliation | Coordinator/SRE | P3/P5; relevant authority | Recovery/cleanup evidence; recurring producer and consumer qualified. |
-| P7 Adoption, retirement and handoff | Coordinator | Completed packages | Shared path adopted, superseded paths retired, truthful result matrix and executable operator command. |
-
-P1-P4 may run in parallel after the coordinator settles their interfaces and
-resolves the assumptions that block each package. Independent work may proceed
-while another investigation is blocked. P0b is bounded feasibility work, not a
-requirement to finish the new controller before implementing it. Its evidence
-cannot substitute for P5's exact integrated candidate proof.
-The launch record must name the first coherent source slice and its acceptance
-IDs. Completing that slice alone is partial progress unless every required
-source-ready check for the integrated candidate also passes.
-Do not wait until the end of the evening to discover expired credentials,
-missing permissions, overlapping deployments, or an unavailable real engine.
-If the time budget contracts, finish a coherent source-ready slice and its
-reviewable live bundle. The full live/continuous result remains incomplete.
-
-## P0a: design the complete deployed slice before implementation
-
-Primary surfaces: the existing product/runtime and AWS planning workflows,
-existing realization standard/schema/template, and this programme's launch
-record. Extend their current owners instead of adding a competing plan system.
-
-Deliver one reusable deployment-design template and a completed instance for
-this programme. Its structured runtime graph must reference or populate the
-existing v2 contract; do not hand-maintain a second inventory of the same roles,
-artifacts and dependencies. Keep human decisions and unknowns alongside those
-references. Include these minimum fields because each closes an audited gap:
-
-| Planning item | Required content and purpose |
+| Boundary | Responsibility |
 | --- | --- |
-| User-visible outcome and scope | Supported end-to-end route, target, exclusions and observable completion; distinguish HTTP/DynamoDB from task/PostgreSQL. |
-| Complete execution path | Build/package graph; server/bootstrap/migration/relay/worker and sidecars as applicable; data/queue, network/TLS, config/secret references, identity for each operation, readiness and telemetry. Mark genuinely inapplicable parts explicitly. |
-| Existing reference and difference | Exact qualified reference/version, supported envelope, changed bindings and assumptions. A similar-looking target is not automatically equivalent. |
-| Provider constraints | Current authoritative references with review date and the exact assumption they support; supported artifact platform, API/schema, IAM action/resource, engine and lifecycle behaviour as applicable. Record unresolved contradictions. |
-| Unknowns and experiments | Assumption ID, impact, confidence/evidence, owner, smallest distinguishing test, prerequisites/authority, time/cost/attempt bound, success/failure observations, fallback or decision, and dependent work. |
-| Proposed source changes | Exact owner/file scope, interfaces, reuse/add/refactor/retire classification, compatibility and adoption order. Identify shared-file owners before delegation. |
-| Execution and recovery | Idempotency, concurrency, deadlines, failure diagnosis, known-good state, schema compatibility, cleanup ownership and separately scoped authority. |
-| Proof plan | For each material claim: check/experiment, environment, identity, expected observation, candidate/target binding and invalidation condition. Choose the cheapest adequate proof. |
+| Generic contract and obligation compiler | Versioned graph, execution profiles, semantic assertions, effect/dependency model, applicability, evidence bindings and completeness. No provider SDK/resource vocabulary. |
+| Shared operation controller | Reviewed plan execution, journal, locks/fencing, idempotency, deadlines, observation, classified recovery and evidence lifecycle. |
+| Execution-model profiles | Different success/failure semantics for services, finite jobs, event handlers, local tools, infrastructure changes, migration, restore and static artifacts. |
+| Provider adapters | Provider schemas/APIs, identity/resource binding, request validation, current-state collection, eventual consistency and provider completion/cleanup checks. |
+| Target composition | Reviewed environment/account/region, resource bindings, policy, budgets, configuration and approved differences. |
+| Product/runtime code | Business semantics, app-facing contracts and provider-neutral runtime behavior; no infrastructure orchestration. |
 
-Review this instance before substantial implementation. The coordinator must
-trace one real request or task through the whole declared path and explain each
-dependency edge, including how resources become usable and how failure is
-recovered. A populated template or passing schema cannot certify the design.
-Record the review decision and unresolved assumptions; reuse existing scoped
-user authority instead of introducing a new permission prompt for this review.
+Adapters implement the required capabilities for inspect, prepare/plan,
+execute, observe, classify failure, reconcile an unknown outcome, and supported
+cleanup/compensation. Unsupported capability combinations fail during design or
+plan compilation. A provider-neutral name cannot conceal an ECS-only lifecycle.
+A service has readiness; a finite job has a semantic terminal result; a function
+has an invocation result; a static artifact has publication/integrity/delivery
+proof. Not every unit has a health endpoint, database or queue.
 
-Update the existing entry workflows so agents perform this planning when a
-change affects deployment dependencies. Provide a short example of a new
-adapter and a short example of an ordinary change within a qualified path.
-Exercise those two planning scenarios and a documentation-only scenario: new
-assumptions must be surfaced, valid reuse must be recognised, and irrelevant
-cloud work must not be required. Validate deterministic completeness and
-references automatically; keep architectural judgment explicit in the review.
+A reviewed specification may select among approved targets and operation
+profiles. Do not embed one incident, digest or recovery label in each script.
+Reject arbitrary unreviewed provider arguments. The adapter accepts a validated,
+authority-bound plan and cannot invent permissions, targets or recovery actions.
 
-## P0b: resolve the risky assumptions with bounded experiments
+The graph includes artifacts and assets, executable/administrative units,
+sidecars, external services, execution environments, configuration and secrets,
+identities, stores/channels, distribution, DNS/network/TLS, health/telemetry,
+resource lifecycle and recovery. Edges name phase, expected semantics, effects,
+proof obligations and invalidation dependencies. Empty categories are valid
+when supported by discovery; fabricated nodes or blanket 'not applicable' are not.
 
-Use existing checks and disposable fixtures first; write only the minimal
-investigation code needed to answer the question. Retain useful executable
-probes in their existing owner when they become regression protection. Live
-provider experiments need the relevant scoped authority even when small.
+## Workflow and file ownership
 
-1. Rank unknowns by whether failure would change the architecture, bindings or
-   execution sequence, and by how expensive late discovery would be. Resolve
-   the highest-impact dependencies first. Every investigation has an explicit
-   time/attempt budget before it starts; use stricter existing execution limits.
-2. Use current provider documentation and local static/real-engine checks to
-   reduce uncertainty cheaply. Use a minimal managed-provider experiment where
-   those cannot establish actual identity, network or service behaviour.
-   Clearly label fixture evidence and the limits of local substitutes.
-3. Select the existing HTTP/DynamoDB path as the first joined reference slice;
-   qualify the separate task/PostgreSQL graph as its own slice. Probe uncertain
-   seams before expanding implementation. For example, exercise a newly needed
-   import from the final-image environment, check the exact API/IAM mapping, or
-   test a database connection with the intended TLS and identity boundaries.
-4. Record observed results and the resulting design decision. Mark each unknown
-   resolved, rejected, or deferred with its blocked dependencies. Lack of live
-   authority or an unavailable engine leaves the dependent claim unproven;
-   independent source work may continue with that limit reported.
-5. Carry accepted findings into the design, reusable reference and proof plan.
-   A changed artifact, role, configuration or provider premise invalidates the
-   affected result. Do not repeat unchanged experiments whose evidence remains
-   applicable merely to satisfy a new commit.
+Use the current versions of [chat lifecycle](../../../00.chat/workflows/chat-start.md),
+[harness change](../../../01.harness/workflows/change-harness.md),
+[product/runtime implementation](../../../03.product/workflows/platform-runtime-implementation.md),
+[AWS planning](../../workflows/plan-aws-change.md),
+[inspection](../../workflows/inspect-aws-state.md) and
+[approved execution](../../workflows/execute-approved-aws-change.md).
 
-The exit condition is a design with no unresolved architecture-invalidating
-assumptions for the next implementation slice, plus an explicit proof plan for
-remaining integration claims. It is not a promise to eliminate all runtime
-uncertainty or a declaration that the final release is already qualified.
+| Surface | Planned refactor |
+| --- | --- |
+| `.agentic/01.harness/standards/`, templates and workflows | Own generic definition of done, complete-graph schema, profiles, independent review and evidence rules. Update build-capability and architecture workflows; remove obsolete assumptions that chat startup assigns a permanent task layer/workflow. |
+| `.agentic/03.product/` and product rule/check surfaces | Connect architecture/runtime/feature-consumption work to semantic obligations, consumer impact and required maturity. Preserve product/provider boundaries. |
+| `.agentic/02.rag-rulebook/`, `.agentic/aws/` and relevant shared/chat workflows | Adopt the same completion contract for existing service/tool/deploy paths; keep each procedure under its actual owner. |
+| `scripts/04.deploy/operational-realization-gate/` | Extend existing compiler, discovery, completeness checks and safe evidence validation. Keep generic logic free of provider imports. |
+| `scripts/04.deploy/` | Extract shared execution/journal/diagnostic mechanisms from existing controllers; provider-specific adapters remain separate. Retire incident-specific execution logic after migration. |
+| Workspace manifests, TypeScript configs, test runners and image recipes | One generated dependency/export/build closure; private outputs; final-artifact tests; declared toolchain. |
+| `platform/adapters/`, runtime and deployment composition entrypoints | Contract/semantic tests, inspectable configuration and dependency boundaries, per-entrypoint diagnostics; bounded internal refactoring where needed. |
+| `infra/04.deploy/` and target manifests | Rendered-infrastructure inventory, reviewed bindings, isolated qualification targets, profile-specific proof/recovery definitions. |
+| `.github/workflows/` and supported local release commands | Invoke the same compiler/controller and evidence checks. Inspect actual required checks, protected environments and credential boundaries, not just YAML. |
+| Existing convergence programme and operator docs | One adoption ledger and implementation order; working commands, supported profiles, proof limits, migration and retirement records. |
 
-### Breaking a repeated failure loop
+Do not rename directories or replace CloudFormation simply to look generic.
+Select structural changes through the complete design and compatibility review.
+A move/retirement follows the existing artifact-path migration workflow and
+updates callers, indexes and retrieval references in the same slice.
 
-<!-- deterministic-check: allow reason="choosing a distinguishing diagnostic experiment requires engineering judgment; controller retry limits remain executable requirements" -->
-When a build or deployment fails, record the failed stage, bound inputs,
-observations and classification. Collect independent safe diagnostics together.
-State the suspected failed assumption and an experiment that distinguishes it
-from plausible alternatives before changing code/configuration. Re-run the
-smallest check that can validate the proposed fix before another full attempt.
+## P0: preserve state and inventory the entire estate
 
-A second expensive attempt that exposes another previously unmodelled
-prerequisite triggers a dependency-design review before a third full attempt.
-Re-examine adjacent dependencies and update the unknowns register rather than
-continuing serial local patches. Exhausting an investigation's declared budget
-requires a recorded design/scope decision; it cannot silently renew the budget.
-Normal classified transient retries stay inside the controller's bounded policy.
-These are engineering review points, not automatic additional approval prompts.
+One coordinator owns integration and release selection. Refresh from reviewed
+remote source in an assigned worktree; record exact SHAs and differences.
+Preserve the original root/product drafts and the terminated operator's changes.
+A dirty worktree is an ownership handoff problem, not permission to discard work.
 
-## P1: build and independent validation
+Inventory all repository-owned executable/build/publication/deployment paths,
+not just Kanbien platform shell: package commands, executable exports, process
+entrypoints, scripts in every layer, containers/handlers, infrastructure jobs,
+scheduled workflows, RAG/rulebook service, website/legacy paths still supported,
+provisioning helpers, reconciliation, synthetic monitoring, credential setup,
+bootstrap/migration/delivery/restore and recovery commands. Third-party tools
+are dependencies with pinned compatibility, not source to refactor arbitrarily.
 
-Primary surfaces: .github/workflows/, scripts/04.deploy/build-platform-shell-image/,
-scripts/04.deploy/smoke-test-platform-shell-image/,
-infra/04.deploy/03.product/image/, platform/server/tsconfig*.json, relevant
-workspace manifests/test runners, and existing infrastructure verifiers.
+For each item record owner, callers, execution profile, effects, provider/target,
+artifact, required maturity, existing evidence, gaps, replacement and disposition.
+Separate active, dormant-but-supported, test-only, historical and retired items.
+Test-only classification requires supporting call-graph/build facts. Dormant
+paths are not exempt. Retirement requires proving no supported caller remains
+and migrating its functionality where needed; it is not a way to hide a gap.
 
-1. Define one checked-in toolchain/dependency contract and clean runner setup.
-   Install or remove every required external command explicitly. Test with rg
-   absent. Missing required tools fail before expensive work, with one useful
-   diagnostic. Keep dependencies locked and record resolved base-image digests.
-2. Add credential-free PR checks and call the same checks from publication.
-   Render the actual CloudFormation template, then run pinned provider-schema
-   validation. Validate workflows and policies independently of handwritten
-   expected dictionaries. IAM action/resource validation and actual-identity
-   authorisation proof remain distinct requirements.
-3. Build once for the reviewed target platform. Execute the final image that
-   will be published/promoted, without rebuilding a different smoke image.
-   Prove required assets, exports, all declared entrypoints, non-root/read-only
-   behaviour, startup, signals, and bounded shutdown. Inspect platform/revision
-   and verify scan/provenance against the same digest.
-4. Run checks in private output/dependency directories. Stop renaming shared
-   node_modules and eliminate stale build outputs masking absent emission.
-5. Consolidate workspace resolution from package/export/dependency facts.
-   First cover the reachable release graph; do not begin a monorepo rewrite.
-   A new transitive dependency must not require unrelated handwritten shims.
-6. Give each mandatory gate one owner. Preserve appropriate coverage after
-   the RAG gate removal; do not reintroduce unrelated corpus work on every edit.
-   Run the focused suite while editing and the required integrated suite once
-   for the reviewed candidate, rerunning affected checks when inputs change.
+Inspect actual GitHub enforcement, role assumption, build/runner availability,
+tool versions and existing target state before estimating execution. AWS
+identity was verified during planning; local Docker readiness timed out. Neither
+credential lifetime nor a working unattended builder has been established.
+Resolve or prove the existing governed CI build path before depending on it.
 
-<!-- deterministic-check: allow reason="this implementation plan specifies negative fixtures that P1 must implement in executable checks" -->
-Accept when missing CA assets, missing transitive aliases/runtime exports,
-incorrect platform, undeclared runner tools, invalid CloudFormation properties,
-and invalid IAM action fixtures are rejected before public execution.
-Do not equate schema or IAM simulation success with real provider behaviour.
+Deliver the inventory/adoption ledger and a terminal Stage 6 handoff. P0 makes
+no new bootstrap attempt. Fresh read-only inspection is required before using
+reported cloud state to prepare any later change.
 
-## P2: truthful runtime graph and trusted evidence
+## P0a: complete design and independent challenge
 
-Primary surfaces on the refreshed baseline: the existing operational-realization
-schema/standard/workflow/compiler/fixtures and target-owned adapter/mapping.
-Keep provider details outside the generic compiler.
+Before substantial dependent implementation, complete a reusable design record
+for this refactor and for each materially different capability. Reference the
+same machine-readable graph; do not maintain separate hand-written inventories.
 
-1. Implement v2's complete graph: application and sidecar artifacts, execution
-   environment, units, identities, configuration, state, async channels,
-   distribution, directed network/dependency edges, health, telemetry, and
-   recovery. Genuine empty state/queue collections are valid; fake nodes are not.
-2. Bind proof to contract content/version, source SHA, application and sidecar
-   digests/platforms, rendered task/configuration hash, target fingerprint,
-   actual operational identity, verifier/producer version, trusted run identity,
-   attempt, observation time, and expiry. Target-specific evidence may hold
-   reviewed hashes/references; generic facts retain their permitted safe shape.
-   Validate this binding at the adapter/compiler boundary without adding raw
-   endpoints, secrets, task payloads, or SQL to generic documents.
-3. Define trusted evidence production and verification. A caller-written YAML
-   verdict, fixture, failed CI run, wrong repository/workflow, or modified
-   artifact is not proof. Use verified CI evidence/attestation or a narrowly
-   controlled collector invoked by the execution controller. Verify observed
-   provider facts before normalisation; provenance alone does not prove truth.
-4. Require the correct proof kinds for each claim. A live inventory read may
-   not replace a transaction/concurrency test or an exact-artifact execution.
-5. Model evidence dependencies. Recheck mutable target facts under the target
-   lock immediately before mutation; invalidate proof after any relevant
-   artifact/configuration/identity/network/schema change. Bound clock skew and
-   handle future-dated observations explicitly.
-6. Wire the real mutation entrypoint to reject invalid proof before calling a
-   mutating provider operation. Retain safe fingerprints and correlation between
-   records; tests must show this is enforced beyond the fixture compiler.
-7. Before live execution, correct the v2 programme and its owning standard,
-   graph, controller and tests to define allowed operational side effects.
-   Matching health checks traverse a persistent rate limiter and emit logs and
-   metrics. Bound these operational writes while prohibiting business records,
-   migrations, queue work and background jobs during G5. No ALB attachment alone
-   proves none of those effects. Source-ready requires this policy to agree
-   with the tested implementation.
+Required content:
 
-Accept when year-2000, future, unrelated-check, changed-digest/version,
-wrong-target/role/producer, fixture, tampered, and replayed evidence fail with
-stable codes. Valid evidence must pass for the exact declared candidate only.
+- User-visible outcome, invariants, final maturity and observable acceptance.
+- Public contracts, ownership, compatibility and alternatives considered.
+- Complete success and failure paths from build through execution and recovery,
+  including administrative tasks, generated inputs and operational dependencies.
+- Qualified reference/version, exact differences and supported capability limits.
+- Material assumptions with source/date, falsifiable question, dependent work,
+  smallest distinguishing experiment, owner and time/cost/attempt budget.
+- Source/refactor map, shared-file ownership, migration and retirement sequence.
+- Per-claim proof type, adequate environment, producer, expected result and
+  evidence invalidation rule.
+- Effects, idempotency, concurrency, deadlines, diagnostics, recovery, cleanup,
+  permissions and cost posture for the complete operation graph.
 
-## P3: reusable controller, diagnostics, and recovery
+Use a separate reviewer, drawing on existing architecture/backend/SRE/security
+review roles, for material architecture, identity, state or lifecycle changes.
+The reviewer starts from requirements and independently traces success, partial
+completion/process loss, duplicate/concurrent execution, recovery and a changed
+or unsupported dependency. Record concrete counterexamples and their disposition,
+not a bare 'approved'. Bind review to the design revision; material changes
+reopen affected findings. This is engineering review, not another user approval
+prompt for routine implementation decisions.
 
-Primary surfaces: scripts/04.deploy/, target-profile.yml, target CloudFormation,
-release workflows, operational entrypoints, and existing rollback/runbooks.
+The coordinator resolves blocking findings before dependent implementation.
+Review and structural completeness are complementary: a valid manifest does
+not prove architectural correctness, and a confident reviewer cannot waive
+missing executable evidence.
 
-Replace incident-specific branches with a generic evaluator of a reviewed
-per-change manifest. Preserve exact change-scope review as data. Separate
-publication, candidate proof, promotion, semantic operation, and recovery.
+## P0b: bounded qualification of assumptions and failure-loop control
 
-Required state machine:
+Use static checks, provider documentation and disposable real-engine probes
+first. Use isolated managed-provider experiments when local substitutes cannot
+establish the claim. Minimal investigation code is allowed before the full
+implementation; retain useful probes as regression tests. Experiments themselves
+have a reviewed scope, effect boundary, budgets and adequate execution authority.
 
-    planned -> preflight-passed -> candidate-change-reviewed-and-authorised
-      -> candidate-definition-ready -> candidate-started -> candidate-proven
-      -> candidate-cleaned -> promotion-change-reviewed-and-authorised
-      -> promoting -> deployed
-      -> semantic-proof-passed -> steady-state-verified
+A design-invalidating unknown blocks its dependent implementation/release, not
+unrelated work. Record resolution, rejected approach or explicit blocked scope.
+Prototype evidence does not replace later proof for the exact release artifact.
 
-Every phase also has explicit failed/unknown/cleanup-required outcomes. A lost
-response is unknown, not safe to repeat. Persist safe progress and reconcile
-the provider before deciding whether an operation already happened.
-Authorisation states consume valid scoped approval already recorded; they do
-not require a new prompt for each operation within that approved scope.
+The first release-target failure exposing an unmodelled prerequisite, invalid
+provider assumption or missing diagnostic/evidence path moves the affected
+capability to `design-reopened`. Stop further dependent expensive attempts.
+Preserve diagnostics, reconcile/clean up through the approved recovery path,
+check adjacent assumptions, run a distinguishing experiment and obtain an
+independent review of the corrected design before resuming.
 
-- Enforce one target mutation owner across local and CI entrypoints. GitHub
-  concurrency alone does not coordinate local execution. Use one shared
-  controller/lock path with bounded lease renewal, fencing, and reviewed stale
-  owner recovery. Inspect the cost/authority of any new lock storage first.
-- Claim attempts atomically, use supported idempotency tokens, and pin exact
-  task-definition revisions. Avoid check-then-create and latest-family lookup.
-- Permit verified same-digest no-op and known-good baseline qualification.
-  A failed attempt can need a new reviewed attempt ID without inventing a new
-  image. Do not copy the superseded candidate-versus-active contradiction.
-- Wait for terminal CloudFormation and ECS deployment/task states. Verify
-  desired/running counts, rollout completion, all essential units, application
-  readiness and target health. Old healthy tasks must not satisfy a new rollout.
-- Prove deployed task definition and running image digest match the approved
-  candidate; correlate subsequent application/worker evidence with that release.
-- Apply per-call and whole-operation deadlines beneath the workflow timeout.
-  Retry classified transient reads only, with bounded backoff. Handle permanent
-  denial, missing config, invalid request, and expired auth immediately.
-- Emit one shared safe failure envelope: stage, logical operation, allowlisted
-  category, retryability, attempt, duration, revision and permitted correlation.
-  All bootstrap/migration/relay/worker entrypoints preserve this classification.
-- Collect independent safe preflight failures after identity/scope validation.
-  Never continue a dependent mutation after failure. Publish partial safe
-  evidence on failure/cancellation, not just on success.
-- Stop only owned candidate tasks; wait for STOPPED and verify cleanup. Add a
-  durable orphan/recovery path for process death and lost create responses.
-  A finally block alone is not a cleanup guarantee. Dispose only resources
-  positively owned by the approved synthetic proof.
-- Normal rollback uses the declared infrastructure ownership path. A reviewed
-  emergency ECS restore must include subsequent CloudFormation reconciliation.
-  Capture the known-good application/sidecar/configuration release first.
+Persist lineage by capability, design and failed hypothesis across commits,
+images, operation labels and chats. Repeated same-cause failures and exhausted
+time/cost/attempt budgets also open the circuit. Renaming an attempt, changing
+an image or receiving permission cannot reset the lineage. Only classified
+external/transient failures use the predeclared bounded retry policy; an unknown
+failure is not automatically transient. Investigation has its own finite budget
+and must produce a decision rather than becoming a hidden retry loop.
 
-Controller tests must cover duplicate requests, simultaneous operators, lease
-expiry, interruption before/after create, lost responses, timeout, delayed logs,
-partial success, old healthy deployments, same-digest requests, and orphan
-cleanup. No test may mistake requesting cleanup for proving completion.
+## P1: one build graph and exact-artifact execution
 
-## P4: provider semantics and schema compatibility
+Replace duplicated package aliases/shims with one build resolution contract
+from manifests, exports, dependency closure and compiler output. Start with a
+small implementation slice, then cover every retained path before programme
+closure. A new transitive dependency must not require edits to unrelated runners.
 
-Primary surfaces: persistence adapters/tests, PostgreSQL migrations/bootstrap,
-runtime lease identity, and the existing controlled delivery/restore fixtures.
+Declare and verify toolchain, lockfiles, validator versions, target platforms
+and resolved base artifacts. Use clean private output/dependency directories;
+remove stale-output masking and checks that rename shared `node_modules`.
+Subprocesses have bounded execution and explicit environments. Interruption or
+parallel checks must leave the workspace installation intact.
 
-- Retain fast request-construction tests; add real-engine semantic tests for
-  transaction rollback, claim/reclaim, stale fencing, concurrent claims,
-  conditional conflicts, duplicate delivery, and unused expression values.
-  Record which claims still require real managed-provider/IAM proof.
-- Use disposable PostgreSQL with TLS and distinct bootstrap/migration/runtime
-  identities for the production-relevant boundary. A non-TLS single-identity
-  fixture cannot certify those claims. Verify database name, grants, ownership,
-  trust bundle, and hostname verification.
-- Recompute migration content checksums before database access. Test changed
-  SQL with a retained checksum. Define parameter inclusion in migration identity
-  and enforce one migration owner/concurrency policy.
-- Specify application/schema compatibility through forward and rollback paths.
-  G5 does not execute migrations. Prefer compatible expansion and forward repair;
-  do not imply application image rollback reverses a database change.
-- Keep bootstrap/migration, server, relay, and worker as distinct execution
-  graphs. Server startup success cannot qualify those other entrypoints.
+Build once per release artifact. Run the final image/package after dependency
+pruning, with its actual entrypoint/command, assets, user, working directory,
+filesystem/resources and applicable shutdown constraints. Publish/promote that
+same digest. A host checkout test, a different smoke image, successful import
+or an expected missing-CA failure does not qualify executable behavior.
 
-The final PostgreSQL route must pass its own proof. An already-proven DynamoDB
-route can qualify only that supported route; it cannot close PostgreSQL work.
-Record two separate evidence chains: authenticated HTTP-to-DynamoDB delivery,
-and task-driven PostgreSQL acceptance-to-delivery. The current relational relay
-performs its own acceptance; do not describe that as an HTTP request. A future
-HTTP-to-PostgreSQL composition needs explicit implementation ownership, authz,
-transaction, network/secret bindings and integration tests before qualification.
+Generate the execution test matrix from P2's reconciled inventory. Add explicit
+semantic scenarios, positive completion and meaningful negative cases for each
+unit; generation identifies required coverage but cannot invent the assertion.
+Validate rendered infrastructure, provider API shapes, workflows and IAM action/
+resource contracts with independent validators. Static validation and permission
+simulation do not establish actual managed-provider authorization.
 
-## P5: real candidate execution and end-to-end promotion
+## P2: independently complete graph, obligations and trusted evidence
 
-Begin only after P1-P4 pass for the candidate and relevant live authority exists.
-Use the v2 target mapping/controller; do not implement the superseded v1 plan.
+### Discovery and coverage
 
-1. Inspect current target and known-good release. Diagnose any active drift,
-   unhealthy workload, or unresolved previous operation before planning mutation.
-   The recorded image-retrieval failure does not by itself identify its cause.
-   Distinguish manifest/platform, role access, DNS/network, layer retrieval,
-   repository availability, log/secret initialisation, and runtime startup.
-2. Review a dormant candidate-boundary change set using the known-good digest.
-   It must not unexpectedly change live services, IAM, network, databases,
-   queues, routing, DNS, secrets, or alert destinations. Verify baseline
-   candidate start, health, controlled stop, and cleanup first.
-3. Prepare and review the exact candidate-definition change for the new digest
-   before execution; confirm its approved scope, apply it, wait for completion,
-   and verify the resulting candidate revision. Preserve v2's G4-before-G5 order
-   on every candidate. Then prove the exact digest in the execution boundary. Model execution
-   role and task role separately. Verify application/sidecar retrieval, config
-   and secret resolution, DNS, egress/endpoint policy, TLS, startup, and health.
-   No NAT, endpoint, IAM expansion, or network repair is automatically allowed.
-<!-- deterministic-check: allow reason="P2 and P3 must implement these acceptance checks; this plan records their required live-proof sequence before those capabilities exist" -->
-4. Verify candidate/promoted equivalence: digests/platform, roles, config/secret
-   reference versions, resources, filesystem, network policy, sidecar, health,
-   and command. Allow only explicitly listed attachment differences such as
-   service/listener membership. Re-prove after a relevant change.
-5. Verify the P2/P3 operational-write boundary against the actual candidate.
-   Only its declared bounded rate-counter/log/metric effects are allowed;
-   business records, migrations, queue work and background jobs remain excluded.
-6. Prove collector readiness and a bounded export signal separately from app
-   health. Essential plus START ordering does not prove telemetry delivery.
-7. Clean up the candidate and retain bound evidence. Recheck mutable facts under
-   the lock, review the service-only change set, then promote the same digest.
-8. Wait for terminal rollout and verify the running revision/digest, TLS/DNS
-   path, public liveness, authenticated readiness, 401/403/authorised success,
-   and target health. A CloudFormation success or old 200 response is insufficient.
-9. Through separately approved synthetic lifecycles, prove the existing
-   authenticated HTTP-to-DynamoDB acceptance/outbox/relay/worker chain and the
-   PostgreSQL bootstrap, migration and task-driven acceptance/outbox/relay/worker
-   chain. Record which digest/revision executed each leg and the durable terminal
-   result. These are two distinct qualified paths, not an HTTP-to-PostgreSQL
-   claim. No direct queue injection may stand in for either outbox path. Check
-   source and DLQ totals and return workers/tasks to declared steady state.
-10. Execute the separately approved private restore/verification/cleanup proof
-    if claiming the PostgreSQL recovery milestone. Otherwise mark that milestone
-    incomplete. Retain safe statuses/counts/durations and binding fingerprints;
-    follow existing restrictions on identifiers, messages, records and SQL.
+Derive inventories from independent inputs:
 
-## P6: recovery and continuous evidence
+1. Parsed source/package commands: entrypoints, config access, provider-client
+   construction, subprocesses, filesystem/network use and executable exports.
+2. Built artifacts: actual command/handler metadata, packaged executables,
+   dependency closure, runtime assets, platform and sidecars.
+3. Rendered infrastructure/workflows: task commands, jobs/triggers, identities,
+   injected inputs, volumes, connections, dependencies and recovery operations.
+4. Observed execution: actual invocation, artifact, identity, exercised
+   dependencies, effects and terminal result.
 
-Prove one harmless candidate failure cannot reach public promotion and still
-cleans up. This proves prevention, not live rollback. Separately exercise a
-reviewed restore of the known-good release through the normal ownership path,
-verify schema compatibility and semantic health, then return to the agreed
-release. If live rollback rehearsal is not authorised, label it unproven.
+Reconcile them with the reviewed graph and proof matrix. An undeclared command,
+sidecar, asset, secret binding, dependency or supported caller fails completeness.
+Source analysis is not omniscient: dynamic launch/configuration requires an
+inspectable interface or explicit reviewable mapping and proof. An unresolved
+dynamic edge is an obligation, not an automatic pass. Runtime traces supplement
+coverage; they cannot prove paths which were never executed.
 
-Repair reconciliation lifecycle eligibility: healthy CREATE_COMPLETE and
-UPDATE_COMPLETE must be interpreted in context; in-progress, failed, and
-rollback states need explicit policy. Test legitimate artifact updates.
+Derive required proof/fault obligations from unit and dependency profiles.
+Require specific semantics, including absence/denial, timeout, partial effects,
+duplicates, concurrency, interruption, stale evidence and failed cleanup where
+applicable. Applicability rules and any exclusion have independent review.
+Mutation-test the coverage checker by introducing an undeclared executable,
+missing secret binding, untested sidecar, hidden launch or false nondeployed tag.
+Do not let the same hand-maintained expected dictionary define both the system
+and the test oracle.
 
-Complete the existing separate drift-producer design under its reviewed role,
-cost, schedule and alert boundary. Keep the GitHub consumer passive where the
-ADR requires it. Distinguish drift, unsupported coverage, stale/missing proof,
-and provider/permission failure. Prove producer failure/stale evidence reaches
-the declared operator signal. Require fresh pre/post-change evidence and at
-least two subsequent scheduled producer/consumer successes without manual
-refresh. Two manual dispatches do not prove clock-triggered operation.
+### Evidence
 
-GitHub schedule timing, 28-day SLO confidence, billing attribution, HA and
-production resilience cannot be guaranteed by the morning deadline. Keep the
-corresponding existing readiness blockers visible.
+Use a claim-to-evidence compatibility matrix, not a single ascending proof
+number: a live inventory read cannot replace a local transaction/concurrency
+test, and live server health cannot replace bootstrap proof. Keep the actual
+assertion, observation and adequacy of its environment explicit.
 
-## Acceptance matrix and evidence record
+Bind receipts to executable/profile, source/build closure, artifact and sidecar
+digests, command/config/schema versions, target fingerprint, acting identity,
+contract, verifier/producer version, trusted run, operation/attempt, observation
+time and expiry. Verify evidence production, integrity and actual observations.
+A caller-authored YAML pass or hash is not an attestation. Reject fixtures as
+live evidence, untrusted producers, tampering, replay, stale/future time,
+wrong targets and mismatched inputs with stable codes.
 
-For every row record: source/candidate/target binding, check/producer identity,
-command or trusted run reference, start/end UTC, result, safe failure category,
-and evidence expiry where applicable. Keep source, staging, recovery and
-continuous milestones separate. Missing evidence is unknown, never passed.
+Persist safe phase observations durably as they occur, including readiness
+before stopping a service and terminal job outcome before cleanup. Record
+cleanup separately. Consumers use the journal/receipts, not reconstructed
+historical health from a stopped task or the survival of terminal stdout.
+Evidence-store unavailability has a defined fail-closed/recovery behavior.
 
-| ID | Required proof | Completion rule |
+Evidence dependency graphs determine invalidation. A role, command, secret
+shape/version, image, network, schema or provider-premise change invalidates
+its affected claims. Reuse unaffected evidence with a checked equivalence
+explanation; a docs-only source SHA change does not require every cloud test.
+Current release provenance still points to the actual tested build inputs.
+
+## P3: deterministic controller and recoverable operations
+
+An operation has explicit states, for example:
+
+    planned -> validated -> prepared -> authorised -> executing -> observing
+      -> succeeded -> cleanup-verified -> closed
+
+Failure branches include `failed`, `unknown`, `cleanup-required`,
+`compensating`, `design-reopened` and `closed-with-failure`. Model resource
+state separately from controller state. A dead process or lost response does
+not establish whether its external operation happened. Authorisation consumes
+existing scoped authority; it does not require a prompt at every phase.
+
+The controller must:
+
+- Acquire a shared local/CI target/resource lock with lease, fencing and
+  controlled stale-owner recovery; atomically claim each operation.
+- Validate current facts and an immutable approved request before mutation.
+  Store intent before effects and observations/results afterward. Reconcile
+  uncertain provider outcomes before repeating anything.
+- Separate artifact, logical operation, attempt, provider idempotency token and
+  recovery identities. Permit supported same-artifact/no-op and reviewed new
+  attempts without creating an artificial image solely to obtain a fresh label.
+- Use per-call, per-phase and whole-operation deadlines. Retry only declared
+  classes within cumulative budgets; authentication, validation and permanent
+  denial fail promptly with an actionable category.
+- Use profile-specific completion predicates. Finite jobs need semantic outcome;
+  services need the actual new revision's readiness; provider acceptance alone
+  is not completion. Old healthy instances cannot satisfy a new rollout.
+- Emit shared safe failure categories covering loader/startup/configuration,
+  artifact distribution, injected inputs, identity, TLS/network, provider request,
+  semantic failure, timeout, interruption and evidence/cleanup failure. Capture
+  pre-application failures through the execution adapter, not application logs.
+- Preserve adapter failure codes. Unknown categories stop for investigation;
+  routine diagnosis must not require publishing a new diagnostic image.
+- Recover after process loss, lost create response, lease expiry and partial
+  success. Clean up only positively owned proof resources, observe completion
+  and report leftovers. A `finally` block is not the recovery design.
+- Execute only declared compensation/forward repair/restore. An application
+  rollback cannot imply reversal of database changes. Preserve known-good
+  release and application/schema compatibility through the ownership/IaC path.
+
+Replace the existing Boolean 'mutates live target' with explicit effect classes:
+read-only inspection, artifact publication, control-plane resource changes,
+operational telemetry/rate counters, synthetic data effects and business or
+irreversible effects. Each profile declares allowed/prohibited effects and
+bounds. Creating a task is a control-plane mutation; health telemetry is an
+operational effect. Neither is automatically a business operation.
+
+Gate real execution, not only an optional checker. Supported local commands,
+CI and recovery paths must invoke the same enforcement. Inspect deployed
+identity and GitHub controls; a privileged alternative shell path can bypass
+repo prose. Plan least-privilege execution credentials and restrict bypasses
+through separately reviewed settings/permissions. An emergency exception is
+recorded as waived/unproven and never becomes evidence of qualification.
+
+## P4: per-entrypoint semantics and provider-shaped qualification
+
+| Profile | Required proof, adapted to the actual capability |
+| --- | --- |
+| Local tool/build/publish | Actual invocation, dependency availability, private outputs, deterministic result, interruption/failure behavior, safe file/git/publication effects and usable diagnostics. |
+| Long-running service | Exact artifact/config shape, dependency access, readiness, authentication/authorization, declared effects, telemetry and bounded shutdown. |
+| Job/worker/event handler | Actual command/handler processes representative synthetic input; durable effect, duplicate/retry/fencing behavior, timeout, acknowledgement and terminal cleanup. |
+| Bootstrap/migration | Actual entrypoint with distinct intended identities and provider-shaped inputs; TLS, privileges/grants/ownership, real schema transition, checksum/concurrency rules and compatible application behavior on disposable state. |
+| Restore/maintenance | Actual operation on isolated state; specified data/schema invariants, recovery timing, restricted identity, retention and verified cleanup. |
+| Infrastructure operation | Independent schema/change validation plus create/update/no-op, partial failure, interruption, unknown outcome, rollback/forward repair and ownership reconciliation. |
+| Static artifact/external integration | Published integrity and route/access/configuration proof or actual external request/event semantics, with appropriate authentication, expiry, denial and recovery. No invented service-health requirement. |
+
+For PostgreSQL this explicitly includes bootstrap, migration, acceptance/relay,
+worker and restore independently. A no-op/preflight mode proves only what it
+executes; it cannot substitute for the real task's SQL, privileges or durable
+effects. Execute the actual command against disposable state before admitting
+its operation on the intended target.
+
+Provider-shaped fixtures model credential payload separately from endpoint/
+configuration payload, and deployment/retrieval/bootstrap/migration/runtime
+identities separately. Use realistic privilege restrictions, generated outputs,
+TLS chains/hostname checks and managed-service limits. Version their provenance,
+authoritative references and deviations. Superuser-only PostgreSQL or permissive
+recording clients cannot qualify managed identities or actual API semantics.
+
+Use real-engine tests for transaction rollback, outbox claim/reclaim, conditional
+conflicts, unused expression values, stale fencing, concurrent claims and
+idempotent delivery. Recompute migration checksums from actual content before
+DB access; test changed SQL retaining an old checksum and concurrent runners.
+Test forward compatibility and recovery separately from deployment success.
+
+Three evidence environments are deliberately distinct:
+
+| Environment | What it establishes |
+| --- | --- |
+| Clean local/CI and disposable real engines | Build/inventory completeness, exact-artifact behavior, fixtures, engine semantics and injected faults within stated fidelity limits. |
+| Isolated real-provider qualification | Actual managed identity/secret behavior, artifact retrieval, network/TLS/logging, API restrictions, effects and lifecycle using synthetic resources. |
+| Intended release target | Current target equivalence, approved change, actual running binding, composed semantic acceptance, recovery/cleanup and selected operating controls. |
+
+New provider-dependent behavior is qualified during implementation, before
+release admission. This may require creating isolated infrastructure: plan,
+review and authorise that preparation as its own operation with appropriate
+preconditions. Do not create a circular requirement to prove a resource before
+its first creation. Local/source proof admits the bounded qualification setup;
+that setup's observed result supplies provider proof for later target release.
+
+Irreversible/stateful work is rehearsed on disposable clones or synthetic state,
+with declared differences. Use a separately approved one-way boundary and
+backup/forward-repair plan on the intended target. If faithful rehearsal is
+impossible, the unproven assertion remains explicit and cannot receive the
+programme's qualified guarantee. No proof operation implicitly uses real data.
+
+## P5: composed qualification and release admission
+
+First qualify one complete service-plus-job reference and a distinct execution
+model using the same generic controller. Include bootstrap/migration/restore
+profiles; do not let a server demonstration close them. A non-AWS conformance
+adapter may test generic boundaries without claiming a new cloud is live-proven.
+Then apply the method to every retained provider/path in P0's ledger.
+
+The release graph defines ordering per capability, rather than universally
+promoting a server before a database operation. Its reviewed sequence includes
+foundation preparation, config/identity distribution, compatible bootstrap or
+migration, executable qualification, rollout, semantic acceptance and recovery
+as applicable. Every dependency must reach its required state before its consumer.
+
+Before admission, reconcile the final artifact/graph/obligation sets, independent
+design review, provider qualification, change classification, target facts,
+authority, resources/cost, remaining deadlines and recovery. An unresolved
+coverage or design obligation prevents release.
+
+Compare the qualified and intended environments explicitly: artifact/command,
+platform, roles/permission boundaries, secret/configuration shape and versions,
+network/TLS, resources/filesystem, sidecars, health, data/schema and telemetry.
+Only named justified differences may reuse proof. Material differences require
+new affected qualification. Validate mutable facts under the execution lock.
+
+Promote the same tested artifacts without rebuilding or silently changing
+configuration. Observe the actual new revision and exercise the composed route,
+including meaningful denial/failure behavior and durable terminal effects.
+Prove telemetry export/alert delivery independently from application health.
+Record readiness and cleanup durably. A rollout may affect a live service;
+do not claim every failure leaves it untouched.
+
+For the existing references, retain two separate chains:
+
+- Authenticated HTTP -> DynamoDB transaction/outbox -> relay -> queue -> worker
+  -> durable completion and declared steady state.
+- PostgreSQL bootstrap -> migration -> task-driven acceptance/outbox -> relay
+  -> queue -> worker -> durable completion, plus separate isolated restore.
+
+The present server does not implement HTTP-to-PostgreSQL acceptance. Do not
+invent that path to claim coverage. A new public composition is a separately
+justified capability change. Direct queue injection cannot substitute for the
+outbox route under test.
+
+## P6: recovery, drift and ongoing qualification
+
+Demonstrate prevention of bad candidate promotion, recovery after partial
+rollout and stateful restore as distinct claims. Exercise controller restart,
+lost replies, stale leases, wrong image/configuration, failed migration,
+dependency outage, delayed/missing telemetry and failed cleanup in adequate
+isolated environments. Perform only approved bounded target rehearsals.
+
+Repair reconciliation lifecycle handling: healthy create/update states,
+in-progress operations, rollback and failed states need explicit policies.
+Normal rollback follows IaC ownership; emergency out-of-band recovery requires
+subsequent ownership reconciliation. Observe terminal resource and data state.
+
+Qualify the drift producer, consumer and failure alert using their reviewed
+identities and costs. Require two subsequent scheduled cycles where that is the
+selected control requirement. Schedule intervals cannot be shortened solely to
+manufacture an observation claim. Long SLO/availability windows remain measured
+operational milestones, not implied by successful provisioning.
+
+Version provider/platform compatibility envelopes and requalification triggers.
+Provider/schema/toolchain changes, drift or expired evidence require affected
+reassessment before another release. Capability support is specific and tested;
+provider-agnostic architecture does not mean every provider is interchangeable.
+
+## P7: full-estate adoption, retirement and feature-work restart
+
+Use the existing platform-foundation convergence programme as the workstream
+adoption owner, with this method as its delivery contract. Reconcile stale
+programme statuses and remove server-proof substitution, fixed incident labels,
+new-image-for-every-failure rules and inconsistent preflight-effect definitions.
+
+Known workstream inputs include the root feature-consumption draft, data
+governance/storage foundation, scheduler/time, tenant execution authority,
+product runtime, RAG/rulebook and all other paths discovered by P0. Preserve
+source ownership. Resolve shared manifests/lockfiles, Core/contracts exports,
+worker behavior and target/profile/workflow changes through one integrator.
+
+Storage still requires its selected metadata seam, S3 adapter and target proof.
+Dynamic scheduling requires a durable schedule repository; a working PostgreSQL
+instance does not provide that implementation. Resolve fixed-trigger versus
+dynamic proof scope before marking scheduler complete. Tenant authority needs
+an authoritative target binding, not only injected fixtures. Qualify actual
+existing capability scope and finish necessary integration; do not quietly
+expand into unrelated future product features or use a fixture as live proof.
+
+For every retained consumer, record old entrypoint, shared replacement,
+compatibility contract, proof, cutover and retirement. Temporary wrappers must
+delegate to one implementation and have a removal condition. Retire obsolete
+logic and guides after migration, through the owning migration workflow.
+Supported dormant paths receive qualification too. Preserve worktree history;
+retiring code paths does not authorise deleting branches or user files.
+
+Feature work restarts only when the ledger has no unresolved retained path,
+all required acceptance results pass, the shared workflow is adopted by every
+supported caller, and the independent closing review confirms the evidence.
+A user-approved exception remains an explicit incomplete/waived scope and
+cannot silently satisfy this agreed completion boundary.
+
+## Implementation sequence and reviewable milestones
+
+| Milestone | Deliverable and exit condition |
+| --- | --- |
+| M0 / P0 | Terminal handoff and complete estate/provider/command inventory; preserved source ownership and verified execution prerequisites. |
+| M1 / P0a-P0b | Generic definition of done, programme design, independent challenge, resolved critical assumptions, versioned profile/adapter/journal interfaces and approved investigation scope. |
+| M2 / P1-P2 | Generated build closure and reconciled executable inventory; exact-artifact matrix, proof-obligation compiler and trusted receipt verification; deliberately omitted units fail. |
+| M3 / P3-P4 | Shared controller/journal, safe diagnostics, interruption/recovery tests and per-entrypoint real-engine/fixture semantics pass. |
+| M4 / P5-P6 first reference | Isolated provider qualification and approved target proof for complete service/job and relational/restore graphs; no claim of estate-wide completion yet. |
+| M5 / P7 | Every existing retained path/provider adopted and qualified; duplicates retired, operating controls proven and final independent acceptance complete. |
+
+Build/inventory, controller and semantic-test work can run in parallel after
+M1 settles interfaces and blocking assumptions. Assign one editor to each
+shared schema, manifest, lockfile, target profile and workflow. Review tested
+commits with their evidence; independently passing branches do not prove their
+integration. One coordinator owns all target mutations and release selection.
+
+Use small verified source slices and checkpoints. Final release candidates are
+frozen during proof. Any change invalidates affected results and returns to the
+appropriate earlier phase. This sequencing is incremental implementation with
+a full-estate completion boundary, not permission to leave the rest unqualified.
+
+## Acceptance matrix
+
+A01-A17 retain their audit identifiers with strengthened scope. A18-A25 close
+the systemic gaps exposed by the terminated Stage 6 and independent review.
+Every row needs an executable check/evidence producer, an adequate environment,
+required failure cases, an owner and actual evidence references at closure.
+A Markdown checkbox or another agent's assertion is insufficient.
+
+| ID | Acceptance | Required demonstration |
 | --- | --- | --- |
-| A01 | Fresh baseline, single owner, actual settings and authority | Exact source SHA and verified prerequisites recorded. |
-| A02 | Clean runner, declared tools and independent validators | Historical build/schema/action fixtures fail before promotion. |
-| A03 | Exact final artifact execution | Broken asset/export/platform/entrypoint fails; valid artifact runs. |
-| A04 | Evidence trust and binding | Stale, future, tampered, replayed, fixture and wrong-candidate facts rejected. |
-| A05 | Correct proof kinds and actual entrypoint enforcement | Inventory cannot replace semantics; mutation blocked on invalid proof. |
-| A06 | Controller concurrency and interruption | One owner; unknown outcomes reconciled; no duplicate effects/orphans. |
-| A07 | Provider semantics and migration identity | Real-engine negative/concurrency/TLS/identity/checksum cases pass. |
-| A08 | Private candidate equivalence and sidecars | Actual role/network distribution, app health, export and cleanup proven. |
-| A09 | Same-digest/no-op and promotion identity | Repeat command is safe; new rollout runs the approved digest/config. |
-| A10 | End-to-end semantics by supported route | HTTP/DynamoDB and task/PostgreSQL chains separately reach durable worker completion and steady state; HTTP/PostgreSQL remains unqualified. |
-| A11 | Failure diagnostics | Every operational entrypoint classifies injected failures on first run. |
-| A12 | Recovery and restore | Approved failure/rollback/restore paths verified with complete cleanup. |
-| A13 | Reconciliation lifecycle and ongoing evidence | Healthy updates accepted; two scheduled cycles and failure signal proven. |
-| A14 | Worktree/gate maintenance | Root/chat canonical paths agree; mandatory checks cannot silently skip. |
-| A15 | Planning before substantive implementation | Reusable template integrated with existing workflows; this programme has a reviewed complete-path instance and bounded source/refactor map; new-adapter, qualified-path and documentation-only scenarios receive appropriate planning depth. |
-| A16 | Bounded investigation and failure-loop interruption | Material unknowns have owners, distinguishing experiments, budgets, decisions and blocked dependencies; no unresolved design-invalidating assumption for the implemented slice; repeated discovery of prerequisites triggers a design review before another full attempt. |
-| A17 | Reference reuse and adoption | Supported reference/version and qualification limits published; local/CI consumers use the shared path for the qualified scope; superseded paths retired or explicitly time-bounded with an owner; changed assumptions invalidate affected evidence. |
+| A01 | Baseline, ownership and prerequisites | Current source/target/settings/authority and terminal handoff are recorded; no overlapping operator or assumed credential/runner readiness. |
+| A02 | Reproducible build and independent validation | Clean declared toolchain; broken schema/action/tool fixtures fail before target rollout. |
+| A03 | Every exact-artifact invocation | All discovered units run their real commands with required assets; broken entrypoint/export/platform/asset fails. |
+| A04 | Trusted durable evidence | Stale/future/tampered/replayed/fixture/wrong-input evidence fails; valid receipts survive controller loss. |
+| A05 | Proof adequacy and real enforcement | Wrong proof kinds and missing coverage block actual supported execution paths, including recovery. |
+| A06 | Concurrency and unknown outcomes | Concurrent owners, lease expiry, process death and lost replies produce no duplicate effects or unexplained orphans. |
+| A07 | Provider and migration semantics | Real-engine/TLS/privilege/concurrency/checksum cases pass; unsupported managed semantics fail. |
+| A08 | Environment equivalence and sidecars | Each relevant unit's identity/network/config/distribution/telemetry matches its qualified envelope; material differences invalidate evidence. |
+| A09 | Artifact versus attempt identity | Same-artifact no-op/recovery behaves correctly; new attempts do not require artificial images or erase history. |
+| A10 | Composed semantic routes | Actual supported HTTP/DynamoDB and task/PostgreSQL chains, plus every retained route in the estate, reach durable completion. |
+| A11 | First-failure diagnostics | Inject pre-application and application faults for each profile; safe actionable classification appears without a diagnostic rebuild. |
+| A12 | Recovery and cleanup | Partial effects, restore/forward repair, cancellation and cleanup reach verified states; requested cleanup alone cannot pass. |
+| A13 | Drift and ongoing evidence | Healthy updates accepted, producer/consumer/failure alert demonstrated and required subsequent cycles observed. |
+| A14 | Harness/worktree consistency | Canonical root/chat identity, current prompt routing, single gate ownership and mandatory-check execution are verified. |
+| A15 | Planning and independent challenge | Material design receives concrete counterexample review; new-provider, changed-path and documentation-only cases receive appropriate obligations. |
+| A16 | Failure-loop circuit | First unexpected release design prerequisite and repeated same-cause/budget exhaustion block dependent attempts across new labels/images/chats until reviewed resolution. |
+| A17 | Complete adoption and retirement | Every supported caller uses the shared path; replacement and removal evidence exists; no unresolved retained legacy path. |
+| A18 | Independent inventory completeness | Introduce unlisted executable, sidecar, dependency, secret binding and dynamic launch; independent discovery/coverage rejects each omission. |
+| A19 | Provider-shaped per-entrypoint proof | Credentials-only managed-secret fixtures, distinct privileges and real task commands qualify separately; server health cannot pass another task. |
+| A20 | Generic service/provider boundaries | Structurally different execution models pass common conformance; unsupported capabilities fail; every existing provider has its own actual qualification. |
+| A21 | Changed-dependency invalidation | Change command, identity, network, schema, asset or configuration; affected proof becomes invalid while unrelated valid evidence can be reused. |
+| A22 | Qualification-before-release | An isolated real-provider rehearsal catches managed-service discrepancies; intended target never serves as the first integration environment. |
+| A23 | Architecture/code definition of done | Real feature records and affected consumers are checked; false adoption, missing records and unjustified not-applicable claims cannot close a capability. |
+| A24 | Enforcement cannot self-certify | Deliberately weakened checks, fabricated receipts and alternate supported command paths are rejected; actual CI/identity controls are inspected. |
+| A25 | Whole-programme closure and repeatability | Complete estate ledger, clean-checkout operator execution and at least two representative subsequent changes use the method without design/configuration defects first discovered at target release. |
 
-Also fix the audited canonical-worktree identity disagreement and duplicated
-gate ownership within their 00.chat/01.harness owners. Protect startup from
-both root and existing chat, with default and overridden worktree roots. Avoid
-mixing unrelated scheduler/storage/product implementation into this delivery.
+For A25, use meaningful behavior/configuration changes within supported scope,
+not empty redeployments. Count every failed attempt. If an avoidable defect
+escapes, diagnose, strengthen qualification and repeat the affected acceptance;
+retain the original failure in performance evidence. Two successes demonstrate
+repeatability, not a lifetime guarantee.
 
-## P7: incremental adoption and retirement
+## Authority, cost and unattended execution
 
-Adopt the working method while implementing this programme; a document that
-only tells the next agent to plan better does not satisfy A15. Publish the
-completed design, experiments and qualified implementation as the first
-reference, including the capabilities it supports, constraints, exact source
-and evidence references, commands, owner, and conditions requiring requalification.
-Use the existing deploy documentation/target owners and reference the source of
-truth instead of copying target values into a separate pattern registry.
+This revision authorises planning work through the user's request. The user
+approved the intended refactor scope and qualification-environment design;
+that is not an approval of unspecified cloud resources, costs or data actions.
+Preserve and reuse authority already granted in the execution conversation.
+Do not ask again for routine actions within a concrete approved scope.
 
-For each affected build/deploy consumer, record its current entrypoint, intended
-shared replacement, compatibility needs, proof, cutover and retirement status.
-Prove the shared path, move local and CI consumers onto it, then retire obsolete
-implementations through the owning migration workflow. Temporary compatibility
-wrappers delegate to the shared implementation and have an owner and removal
-condition. Two independent active implementations of the same qualified path
-are unfinished consolidation, not additional resilience.
+Before dependent external work, prepare a reviewable bundle: exact target,
+provider operations/resources/roles, change sets, publication/promotion scope,
+synthetic inputs, known-good/forward-repair plan, owned cleanup, incremental
+proof spend, recurring cost ceiling, concurrency/duration/attempt limits and
+escalation conditions. Request only missing authority after the bundle exists.
+Earlier USD25/month or EUR50/month references are not this programme's budget.
 
-Start with the release graph needed by the first supported Kanbien route, then
-the separate PostgreSQL route. Existing unrelated paths remain explicitly
-unqualified; migrate them when touched or in named follow-up slices. Extend to
-another provider only with its own bindings, constraint investigation and
-acceptance evidence. Keep existing application interfaces and adapter locations
-unless a demonstrated defect justifies a separately reviewed change.
+Source implementation, git publication, image publication, repository settings,
+cloud mutation and destructive/data operations remain distinct action scopes.
+The earlier git approval covered plan publication; do not infer approval of
+arbitrary future runtime commits or production changes from this document.
+The planned implementation directive below is not an instruction to start it
+merely because an agent reads this file.
 
-Place checks where their results inform decisions: planning review before
-substantial implementation; focused checks while editing; integrated artifact
-checks before publication/promotion; target facts before mutation; semantic
-proof after deployment. Reuse applicable results and rerun affected checks when
-inputs change. Do not implement this programme by adding the entire suite to
-every commit hook or multiplying existing gates.
+Unattended launch needs a functioning runner, recorded continuing execution,
+available credentials for the duration and no undiscovered mandatory human
+approval. Do not disable protected checks. Missing authority blocks dependent
+mutations while independent source work and bundle preparation can continue.
+No background implementation or deployment is started by saving this plan.
 
-## Handoff and operating contract
+## Handoff, measurement and implementation directive
 
-Expose one documented command/workflow interface for validation, preparation,
-execution, status/resume, and recovery, backed by existing capabilities where
-possible. The implementation chooses names and records exact working commands;
-this plan does not present invented commands as existing tools.
+Provide working supported interfaces for inventory/validate, prepare, execute,
+status/resume and recovery through existing command ownership. Choose and
+record actual command names during implementation; this plan does not invent
+commands and describe them as available.
 
-Deliver a committed/source-controlled operator guide and safe evidence manifest
-through the existing ownership rules. The final report must include changed
-files/commits, tested baseline, candidate and deployed bindings, each A01-A17
-result, the completed deployment design, unknowns/experiment decisions, reference
-and consumer adoption status, failed/recovered attempts, cleanup/steady state,
-and exact remaining blockers. Never include secrets or prohibited provider
-payloads.
+The final report contains the complete estate/adoption ledger, independent
+design and closing reviews, changed commits on origin, exact artifact/target
+bindings, A01-A25 results, provider/environment limits, failed attempts,
+recovery/cleanup state, retired paths and reproducible operator instructions.
+Retain only permitted safe evidence; never publish secrets, raw provider
+payloads, SQL, records, signed URLs or sensitive object/message details.
 
-Measure elapsed time from starting work to proven deployment, including planning
-and experiments, plus first-attempt release success, failures escaping preflight,
-manual interventions, diagnostic-only deployments, phase durations and recovery
-time. Track material unknowns resolved before implementation versus discovered
-during deployment, and reference reuse versus newly qualified paths. Retain
-failed attempts in the denominator, report experimental attempts separately,
-and classify external failures. A green release obtained by moving hours of
-unreported retries into preflight is not a demonstrated improvement. Compare
-subsequent changes with the available audit baseline; do not invent historical
-time measurements. One successful evening establishes a qualified path;
-sustained reliability needs observations across subsequent changes.
+Measure total request-to-proven-delivery time, including design and experiments;
+first-attempt qualified release success; defects escaping each environment;
+manual interventions; diagnostic-only builds; failure-loop interruptions;
+phase durations; cleanup/recovery time; evidence reuse and full-estate coverage.
+Classify external failures separately without deleting them from attempt counts.
+Do not hide repeated failures inside 'preflight' or claim historical timings
+which were not measured. Control token/compute cost through bounded reviews,
+small relevant reads and reusable evidence, not lower acceptance standards.
 
-Record delegated work through the existing record-sub-agent-activity command.
-Do not claim another agent's checks passed without its returned evidence.
+Ready-to-use directive for a separately launched implementation session:
 
-## Ready-to-send implementation instruction
+> Implement this programme from fresh reviewed remote source, preserving all
+> other work. Begin with the terminated Stage 6 handoff and full-estate inventory.
+> Adopt the generic definition of done and complete independently challenged
+> design before dependent refactoring. Resolve critical assumptions with bounded
+> experiments. Implement M2-M3, then prepare concrete isolated-provider and
+> intended-target execution bundles. Use existing scoped git/external authority
+> and obtain only missing authority for prepared bundles. Do not restart Stage 6
+> through its superseded process. Qualify every executable and composed route,
+> migrate every retained path, retire obsolete paths only after their replacements
+> are proven and callers migrated, and demonstrate A01-A25.
+> Delegate disjoint source/review work after interfaces are settled; one
+> coordinator owns integration and cloud execution. Report actual partial states
+> until the full agreed completion boundary is met. Feature work remains paused
+> until programme closure; neither a deadline nor an approval converts missing
+> evidence into a pass.
 
-> Implement .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md.
-> Start with P0 against current reviewed remote source and reconcile existing v2
-> work. Complete P0a's reusable planning workflow and deployment design, then P0b's
-> bounded investigations before substantive dependent implementation. You are the
-> coordinating implementation agent. You may make the source, test, and
-> documentation changes specified by P0a/P0b/P1-P4/P7 and A14 using the owning
-> workflows, and delegate nonoverlapping source work after resolving its blocking
-> assumptions and interfaces. Preserve other sessions' files and existing owner
-> boundaries. Implement and adopt the shared path; retire superseded paths within
-> the qualified scope. Complete the source-ready milestone and prepare the
-> concrete integrated staging change, cost, permission, semantic-proof, cleanup
-> and rollback bundle.
-> Check the current chat for existing git/external authority and use it within
-> scope. This instruction alone does not authorise commits, remote promotion,
-> publication, GitHub setting changes or AWS mutations. Obtain only missing
-> authority for the reviewable bundle before dependent live execution. Once
-> authorised, complete P5-P6 without asking again for actions inside that scope.
-> Report the A01-A17 evidence matrix, planning/experiment decisions, reference
-> adoption and actual remaining state at handoff;
-> never convert source-only progress into a live-proof claim.
+## Audit traceability and review limits
 
-For an unattended live run, approve the prepared external-action bundle and
-renew credentials before leaving the agent. The bundle must enumerate exact
-target/roles/change sets, publication/promotion authority, synthetic operations,
-cleanup/restore authority, resource and cost limits, attempt/deadline limits,
-known-good rollback, detector scope if any, and conditions requiring escalation.
-Until that bundle exists, a blanket promise of tomorrow's live completion would
-be unsupported.
+The initial audit examined worktree `8052929c` and later source; the previous
+published plan was `ff248dfe`, with publication bookkeeping through `a672bd01`.
+This revision includes source review at `10c9c90f` plus the terminated operator's
+six dirty files. Implementation must reconcile newer source and cloud state.
 
-## Audit traceability and additional gaps
+Preserve existing repairs, including workspace alias `be06e419`, DynamoDB IAM
+`7b5c9b78`, outbox expressions `ccab0fa3`, CloudFormation lifecycle `bef454ce`,
+S3 IAM `aa2b6f7a`/`b0bc9969`, RDS certificate packaging `527b77b7`, portable
+smoke checks `6aeda471`, artifact platform/revision `e86f10e9` and managed-master
+credential shape `2775913b`. Convert their failure classes into behavioral
+regressions. Source repair is not proof of its deployed behavior.
 
-This revision addresses the planning gap raised after the initial audit plan:
-explicit complete-path design (P0a), time-bounded discovery before implementation
-and repeated-failure review (P0b), proportionate workflow entry conditions and
-reuse (P0a/P7), and consolidation/retirement rather than accumulating parallel
-tooling (P7). These are acceptance requirements A15-A17, not optional guidance.
-The placement table also supersedes the conversational illustrative folder tree.
+A read-only local simulation reproduced candidate-controller success followed
+by PostgreSQL-gate rejection when stopped metadata lacked the earlier healthy
+observation. It proves the controller/consumer mismatch for that scenario,
+not the actual historical task outcome. No AWS mutation was performed by that
+review. The user's final recovery-4 report remains attributed evidence pending
+P0's reconciliation.
 
-Historical repairs already present by the planning baseline include the missing
-workspace alias (be06e419), DynamoDB member IAM action (7b5c9b78), unused outbox
-expression value (ccab0fa3), CloudFormation lifecycle schema (bef454ce), S3 IAM
-action names (aa2b6f7a/b0bc9969), RDS certificate packaging (527b77b7), portable
-smoke checks (6aeda471), and published platform/revision inspection (e86f10e9).
-Preserve those repairs and add cross-boundary regressions; do not redo them.
+Independent build, deployment and harness reviews informed this revision. They
+identified incomplete executable discovery, inadequate fixture fidelity,
+self-certifying review, stale Stage 6 sequencing, service-specific lifecycle
+assumptions and missing full-estate adoption. Their findings are recorded in
+the session log; they are planning reviews, not implementation acceptance.
 
-New planning gaps beyond the initial report are explicitly assigned above:
-evidence authenticity (P2), live GitHub enforcement (P0), cross-channel locking
-and exact revisions (P3), execution-role artifact distribution (P5), candidate
-equivalence/operational writes/sidecars (P5), lost-response cleanup (P3),
-same-digest semantics (P3), schema-compatible rollback (P4/P6), and distinguishing
-private startup proof from the full bootstrap/migration/delivery graph (P4/P5).
-The additional HTTP-to-PostgreSQL composition gap is explicitly excluded from
-the two existing-route proof claims rather than hidden inside their acceptance.
+The earlier sample of 96 GitHub runs reported 11 successful/4 failed image
+publications, 1 successful/14 failed reconciliations, 15 successful synthetics,
+15 successful metric-coverage runs and 35 failed/1 cancelled former RAG checks.
+That is a workflow sample, not application availability or engineering time.
 
-The initial audit sampled 96 GitHub runs created 2026-09-24 through
-2026-09-27T20:26:14Z: image publication 11 success/4 failure; reconciliation
-1 success/14 failure; synthetic and metric coverage 15 successes each; former
-RAG checks 35 failures/1 cancellation. This is a workflow outcome sample, not
-application availability or engineering time lost. Preserve that distinction.
-
-Provider facts must be checked against current authoritative references during
-implementation. Starting references reviewed for the audit:
-[CloudFormation provider-schema lint](https://github.com/aws-cloudformation/cfn-lint),
+Provider constraints require current authoritative references and a review date
+at implementation. Existing starting references include
+[CloudFormation validation](https://github.com/aws-cloudformation/cfn-lint),
 [IAM policy validation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-policy-validation.html),
-[S3 encryption permission](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketEncryption.html),
-and [S3 lifecycle permission](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html).
+[ECS health semantics](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_HealthCheck.html)
+and [ECS task-list filters](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTasks.html).
+Do not turn an AWS-specific observation into a generic lifecycle rule.
