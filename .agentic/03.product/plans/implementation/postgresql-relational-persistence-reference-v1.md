@@ -655,7 +655,7 @@ dormant worker `0/0`, and isolated queue totals. It reports only safe final
 outcomes and aggregate counts; provider responses, endpoints, task IDs,
 secrets, records, messages, and raw logs stay out of output and evidence.
 
-#### Stage 6 bootstrap recovery (2026-09-26)
+#### Stage 6 bootstrap recovery (2026-09-26–27)
 
 The first fixed bootstrap label ended non-zero. No migration, relay, worker, or
 restore label started, and the required server/worker/queue aggregate boundary
@@ -665,11 +665,20 @@ consumed as well as a running label.
 Source review removed an ownership-incompatible default-privilege statement
 from bootstrap. PostgreSQL default privileges are now established by the
 migration identity for tables that it will create; bootstrap remains limited to
-identity creation and connection/schema grants. The recovery sequence requires
-a new immutable image, normal reviewed Service task-definition revisions, a
-healthy rollout and live-boundary check, then one distinct fixed `recovery-1`
-label set. It does not expose task identifiers, logs, SQL, records, or provider
-payloads while investigating or recording the recovery.
+identity creation and connection/schema grants. The first distinct
+`recovery-1` bootstrap also exited non-successfully; no later label started and
+the server/worker/queue boundary stayed intact. Its diagnostic derived the one
+standard awslogs stream internally and established only the safe generic
+workload-failure marker. It did not expose task identifiers, log content, SQL,
+records, or provider payloads.
+
+The next immutable image makes bootstrap emit one fixed, allowlisted failure
+class (certificate authority, database authentication, database authorization,
+database connectivity, TLS, or unclassified workload) rather than an error
+message. The compiled-image payload check also loads the PostgreSQL adapter and
+bootstrap entrypoint before publication. A new `recovery-2` label set is the
+only route that may test that observability correction; it remains bootstrap
+only until one successful terminal result is recorded.
 
 The corrected-image Service revision has its own preflight policy. It accepts
 zero resource additions or removals and exactly the three existing normal plus

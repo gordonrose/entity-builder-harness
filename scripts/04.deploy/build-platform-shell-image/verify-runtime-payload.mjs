@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v2
 //   id: deploy.script.build-platform-shell-image.verify-runtime-payload
-//   version: 5
+//   version: 6
 //   status: active
 //   layer: 04.deploy
 //   domain: infra.ci-cd
@@ -32,6 +32,7 @@ const serverEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "
 const workerEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-worker.main.js");
 const relayEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-relay.main.js");
 const persistenceCompositionEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-persistence.js");
+const relationalBootstrapEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-postgresql-bootstrap.main.js");
 const workspacePackageScope = join(repositoryRoot, "node_modules", "@kanbien");
 const hiddenWorkspaceRoot = mkdtempSync(join(tmpdir(), "platform-shell-runtime-payload-"));
 const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
@@ -41,9 +42,11 @@ const requiredPayloadFiles = [
   workerEntrypoint,
   relayEntrypoint,
   persistenceCompositionEntrypoint,
+  relationalBootstrapEntrypoint,
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-persistence-dynamodb", "index.js"),
+  join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-persistence-postgresql", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-queue-sqs", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-runtime-ecs-fargate", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-security-dynamodb-rate-limiter", "index.js"),
@@ -63,6 +66,7 @@ renameSync(workspacePackageScope, hiddenWorkspaceScope);
 
 try {
   await verifyCompiledPersistenceComposition();
+  verifyCompiledRelationalBootstrap();
 
   const serverResult = spawnSync(process.execPath, [serverEntrypoint], {
     cwd: repositoryRoot,
@@ -269,5 +273,23 @@ async function verifyCompiledPersistenceComposition() {
     || transactItems[2]?.Put?.Item?.recordType?.S !== "outbox"
   ) {
     throw new Error("Compiled persistence proof must preserve the reviewed three-write record order.");
+  }
+}
+
+function verifyCompiledRelationalBootstrap() {
+  const fixtureSecret = JSON.stringify({ username: "fixture-user", password: "fixture-password", host: "127.0.0.1", port: 1 });
+  const result = spawnSync(process.execPath, [relationalBootstrapEntrypoint], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      RELATIONAL_MASTER_SECRET_JSON: fixtureSecret,
+      RELATIONAL_MIGRATION_SECRET_JSON: fixtureSecret,
+      RELATIONAL_RUNTIME_SECRET_JSON: fixtureSecret,
+    },
+    encoding: "utf8",
+  });
+  const expected = JSON.stringify({ level: "error", message: "kanbien-platform.relational-smoke.bootstrap_completed", fields: { outcome: "failed", failure_category: "bootstrap-certificate-authority-unavailable" } });
+  if (result.status !== 1 || result.stdout.trim() !== expected) {
+    throw new Error("Compiled relational bootstrap payload must load its PostgreSQL adapter and emit only the reviewed safe failure event.");
   }
 }

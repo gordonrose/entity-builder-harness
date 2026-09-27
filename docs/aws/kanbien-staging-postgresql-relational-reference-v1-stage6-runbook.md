@@ -44,18 +44,23 @@ started, and the public server, dormant worker, and isolated queue boundary
 remained in their required terminal state. The task label is permanently
 consumed: stopped tasks count as consumed as well as running tasks.
 
-The reviewed recovery corrects the PostgreSQL ownership split before it creates
-one new fixed `recovery-1` label set. Bootstrap is limited to creating the
+The first reviewed recovery corrected the PostgreSQL ownership split and used
+one fixed `recovery-1` label set. Bootstrap is limited to creating the
 migration/runtime identities and connection/schema grants. The migration role
 sets default privileges for tables it will itself create, which matches
 PostgreSQL's role-ownership rules. A corrected immutable image, normal
 task-definition-only Service update, stack-health check, and live-boundary
-check must all pass before recovery begins. The rollout guard permits only the
+check passed before that recovery began. It nonetheless returned the safe
+generic workload-failure marker. The next recovery therefore uses a distinct
+fixed `recovery-2` label set and an immutable image that emits one allowlisted
+bootstrap failure class without error text.
+
+The rollout guard permits only the
 eight existing task-definition revision replacements and the two existing
 in-place service references: no new resources, IAM, queue, database, routing,
 or listener change is admissible. The first recovery invocation runs
 **bootstrap only**; it must pass before a separately reviewed continuation can
-touch migration or any later stage. Do not reuse the original labels or
+touch migration or any later stage. Do not reuse any consumed label or
 inspect/paste raw task logs.
 
 ## Before running
@@ -94,7 +99,7 @@ npm run platform:shell:postgresql-relational-smoke -- --validate
 ```
 
 After the guarded corrected-image revision has reached a healthy service
-rollout, invoke only the bootstrap recovery first:
+rollout, invoke only the bootstrap `recovery-2` first:
 
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --execute-bootstrap-recovery --approve-relational-bootstrap-recovery

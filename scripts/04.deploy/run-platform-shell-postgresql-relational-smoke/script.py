@@ -84,15 +84,10 @@ def load_policy(mode: str) -> dict[str, Any]:
         raise RelationalSmokeError("the relational proof target is not the reviewed staging account and region")
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
-    execution_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready",
-        "bootstrap-recovery-source-defined-image-publication-pending",
+    expected_lifecycle = (
+        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-2-source-ready",
+        "bootstrap-recovery-2-source-defined-image-publication-pending",
     )
-    diagnostic_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
-        "bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
-    )
-    expected_lifecycle = diagnostic_lifecycle if mode in {"diagnostic", "validate"} else execution_lifecycle
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
     control = mapping(stage.get("control"), "stage_6_relational_smoke_composition.control")
@@ -115,11 +110,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260926-recovery-1",
-        "migration": "kanbien-postgresql-stage6-migration-20260926-recovery-1",
-        "relay": "kanbien-postgresql-stage6-relay-20260926-recovery-1",
-        "worker": "kanbien-postgresql-stage6-worker-20260926-recovery-1",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260926-recovery-1",
+        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260927-recovery-2",
+        "migration": "kanbien-postgresql-stage6-migration-20260927-recovery-2",
+        "relay": "kanbien-postgresql-stage6-relay-20260927-recovery-2",
+        "worker": "kanbien-postgresql-stage6-worker-20260927-recovery-2",
+        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260927-recovery-2",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
@@ -571,6 +566,10 @@ def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
             safe_event = json.loads(message)
         except json.JSONDecodeError:
             continue
+        fields = safe_event.get("fields") if isinstance(safe_event, dict) else None
+        failure_category = fields.get("failure_category") if isinstance(fields, dict) else None
+        if isinstance(safe_event, dict) and safe_event.get("level") == "error" and safe_event.get("message") == "kanbien-platform.relational-smoke.bootstrap_completed" and fields == {"outcome": "failed", "failure_category": failure_category} and isinstance(failure_category, str) and failure_category in policy["bootstrap_diagnostic_categories"]:
+            return failure_category
         if safe_event == {"level": "error", "message": "kanbien-platform.relational-smoke.bootstrap_completed", "fields": {"outcome": "failed"}}:
             return "bootstrap-workload-failure-unclassified"
     return "bootstrap-workload-failure-log-marker-unavailable"

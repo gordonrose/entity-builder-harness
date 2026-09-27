@@ -65,6 +65,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: The first safe terminal classification was still too coarse for repair
   Resolution: It established that the bootstrap container exited but did not expose a log-stream name. The controller now derives only the deterministic awslogs name for that one already-consumed task, tries it internally, and falls back to the existing safe terminal category when unavailable.
 
+
+- Raised: Recovery-1 was a real bootstrap workload failure without a safe root-cause class
+  Resolution: Derived-stream diagnosis found the bootstrap's generic failure marker. No later task began and aggregates remained safe. The route now uses one new recovery-2 label and an immutable-image bootstrap that emits only an allowlisted failure category.
+
 ## Decisions Made
 
 
@@ -88,6 +92,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Decision: Use a deterministic no-log-stream diagnostic lookup before metadata fallback
   Rationale: The derived stream is target-defined, belongs only to the consumed bootstrap task, is never emitted or recorded, and cannot trigger an execution, replay, or configuration change. No ADR is needed: this is an incremental bounded diagnostic safeguard.
 
+
+- Decision: Require a compiled image payload check and category-only bootstrap outcome for recovery-2
+  Rationale: The GitHub publication workflow must compile and run the PostgreSQL bootstrap payload with fixture inputs before publishing. The next one-shot task retains an exact one-use label and cannot start later stages unless bootstrap succeeds. No ADR is needed because this implements the existing Stage 6 safety boundary.
+
 ## Context Hygiene
 
 
@@ -110,6 +118,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 
 - Summary: Current main contains the first safe classification hardening; it classified recovery-1 as an essential-container exit without an attached stream name. The follow-up source path derives the fixed awslogs stream only in memory to seek an existing safe marker before retaining that fallback.
   Durable evidence: Durable controls: relational smoke controller, target profile, static verifiers, unit tests, Stage 6 runbook/evidence. Local policy checks passed; no new AWS mutation has occurred.
+
+
+- Summary: Recovery-1 had an essential container exit; a derived deterministic stream lookup safely found only its generic bootstrap failure event. Recovery-2 is source-defined but not deployed or run. It adds category-only error classification and makes compiled payload validation load the PostgreSQL adapter/bootstrap before image publication.
+  Durable evidence: Durable controls: PostgreSQL bootstrap/helper entrypoints; runtime payload verifier; relational smoke policy/controller; target/readiness state; Stage 6 plan/runbook/evidence. Local policy gates passed. GitHub publication is the required compile/runtime image gate before service rollout.
 
 ## Activity Log
 
@@ -279,6 +291,27 @@ Message: fix(deploy): derive relational bootstrap log stream
 Summary: Added a deterministic, in-memory awslogs fallback for the consumed bootstrap task, so diagnostics can classify an existing safe marker without emitting task or stream identities; all local policy checks passed.
 
 ADR impact: not-needed: bounded operational diagnostic refinement
+
+
+### 2026-09-27T20:24:30Z - Issue
+
+Raised: Recovery-1 was a real bootstrap workload failure without a safe root-cause class
+
+Resolution: Derived-stream diagnosis found the bootstrap's generic failure marker. No later task began and aggregates remained safe. The route now uses one new recovery-2 label and an immutable-image bootstrap that emits only an allowlisted failure category.
+
+
+### 2026-09-27T20:24:30Z - Decision
+
+Decision: Require a compiled image payload check and category-only bootstrap outcome for recovery-2
+
+Rationale: The GitHub publication workflow must compile and run the PostgreSQL bootstrap payload with fixture inputs before publishing. The next one-shot task retains an exact one-use label and cannot start later stages unless bootstrap succeeds. No ADR is needed because this implements the existing Stage 6 safety boundary.
+
+
+### 2026-09-27T20:24:30Z - Context hygiene
+
+Summary: Recovery-1 had an essential container exit; a derived deterministic stream lookup safely found only its generic bootstrap failure event. Recovery-2 is source-defined but not deployed or run. It adds category-only error classification and makes compiled payload validation load the PostgreSQL adapter/bootstrap before image publication.
+
+Durable evidence: Durable controls: PostgreSQL bootstrap/helper entrypoints; runtime payload verifier; relational smoke policy/controller; target/readiness state; Stage 6 plan/runbook/evidence. Local policy gates passed. GitHub publication is the required compile/runtime image gate before service rollout.
 
 ## Sub-Agent Activity
 

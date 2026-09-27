@@ -2,6 +2,7 @@
 // from ECS-injected generated credentials, then exit without printing values.
 
 import {
+  type BootstrapFailureCategory,
   closePool,
   connectionPool,
   secretFromEnvironment,
@@ -27,12 +28,29 @@ async function main(): Promise<void> {
     await pool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });
     await pool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
     writeOutcome("bootstrap_completed", "succeeded");
-  } catch {
-    writeOutcome("bootstrap_completed", "failed");
+  } catch (error) {
+    writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error));
     process.exitCode = 1;
   } finally {
     await closePool(pool);
   }
+}
+
+function bootstrapFailureCategory(error: unknown): BootstrapFailureCategory {
+  const code = errorProperty(error, "code");
+  const message = errorProperty(error, "message");
+  if (message === "RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE") return "bootstrap-certificate-authority-unavailable";
+  if (code === "28P01" || code === "28000") return "bootstrap-database-authentication-failure";
+  if (code === "42501") return "bootstrap-database-authorization-failure";
+  if (["ECONNREFUSED", "ECONNRESET", "ENETUNREACH", "ENOTFOUND", "ETIMEDOUT"].includes(code ?? "")) return "bootstrap-database-connectivity-failure";
+  if (["CERT_HAS_EXPIRED", "ERR_TLS_CERT_ALTNAME_INVALID", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_VERIFY_LEAF_SIGNATURE"].includes(code ?? "")) return "bootstrap-database-tls-failure";
+  return "bootstrap-workload-failure-unclassified";
+}
+
+function errorProperty(error: unknown, property: "code" | "message"): string | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  const value = (error as Readonly<Record<string, unknown>>)[property];
+  return typeof value === "string" ? value : undefined;
 }
 
 async function quotedLiteral(pool: NonNullable<ReturnType<typeof connectionPool>>, value: string): Promise<string> {

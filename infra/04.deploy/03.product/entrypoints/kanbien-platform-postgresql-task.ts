@@ -25,6 +25,14 @@ export interface RelationalTaskConfiguration {
   readonly migrationSecretArn: string;
 }
 
+export type BootstrapFailureCategory =
+  | "bootstrap-certificate-authority-unavailable"
+  | "bootstrap-database-authentication-failure"
+  | "bootstrap-database-authorization-failure"
+  | "bootstrap-database-connectivity-failure"
+  | "bootstrap-database-tls-failure"
+  | "bootstrap-workload-failure-unclassified";
+
 export function secretFromEnvironment(name: string): RelationalTaskSecret {
   const raw = process.env[name];
   if (raw === undefined) throw new Error("RELATIONAL_TASK_SECRET_MISSING");
@@ -114,8 +122,11 @@ export async function closePool(pool: PostgreSqlConnectionPool | undefined): Pro
   }
 }
 
-export function writeOutcome(operation: string, outcome: "succeeded" | "failed"): void {
-  console.log(JSON.stringify({ level: outcome === "succeeded" ? "info" : "error", message: "kanbien-platform.relational-smoke." + operation, fields: { outcome } }));
+export function writeOutcome(operation: string, outcome: "succeeded" | "failed", failureCategory?: BootstrapFailureCategory): void {
+  const fields = outcome === "failed" && failureCategory !== undefined
+    ? { outcome, failure_category: failureCategory }
+    : { outcome };
+  console.log(JSON.stringify({ level: outcome === "succeeded" ? "info" : "error", message: "kanbien-platform.relational-smoke." + operation, fields }));
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
