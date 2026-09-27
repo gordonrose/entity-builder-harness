@@ -45,6 +45,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: PostgreSQL promotion was prevented by the dirty root console
   Resolution: Verified the source against origin/main, created an isolated clean integration worktree, ran the exact PostgreSQL adapter check, and advanced origin/main by a normal fast-forward without changing root user work.
 
+
+- Raised: Isolated PostgreSQL and harness promotions completed
+  Resolution: The PostgreSQL source advanced origin/main from d8270e34 to ca9cab51; the reusable remote-promotion workflow then advanced it from ca9cab51 to 8a0ce8b1. Both were normal fast-forwards from clean isolated worktrees, checked immediately before and after each push. The root console was not modified.
+
 ## Decisions Made
 
 
@@ -125,6 +129,13 @@ Rationale: The source chat was behind the remote because PostgreSQL source had j
 Summary: Remote-base refresh result: preflight agentic/preflight/chat-2026-09-27-15-32-1-please-resolve-26061c122abe/20260927193023 merged cleanly; applied commit 11de3d29. Repository-wide metadata scan has 14 pre-existing failures in PostgreSQL/deploy artifacts; scoped metadata and all changed-path checks passed.
 
 Durable evidence: Harness changes: 1120c03b; PostgreSQL promotion proof: origin/main=ca9cab51 before this refresh; root console still retains only user-owned feature-consumption harness changes.
+
+
+### 2026-09-27T19:32:38Z - Issue
+
+Raised: Isolated PostgreSQL and harness promotions completed
+
+Resolution: The PostgreSQL source advanced origin/main from d8270e34 to ca9cab51; the reusable remote-promotion workflow then advanced it from ca9cab51 to 8a0ce8b1. Both were normal fast-forwards from clean isolated worktrees, checked immediately before and after each push. The root console was not modified.
 
 ## Sub-Agent Activity
 
