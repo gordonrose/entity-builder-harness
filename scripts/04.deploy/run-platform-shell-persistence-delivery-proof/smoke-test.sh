@@ -48,7 +48,7 @@ if bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.s
   exit 1
 fi
 
-if rg -n 'add_argument\("--target-profile"|add_argument\("--aws-cli"|add_argument\("--aws-credential-source"|add_argument\("--task-definition"|add_argument\("--network-configuration"|send-message|message-body|ecs", "wait"' scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py >/dev/null; then
+if grep -Eq -- 'add_argument\("--target-profile"|add_argument\("--aws-cli"|add_argument\("--aws-credential-source"|add_argument\("--task-definition"|add_argument\("--network-configuration"|send-message|message-body|ecs", "wait"' scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py; then
   echo "ERROR: persistence delivery proof must not accept caller-selected target, credential, task, network, or direct queue-message inputs." >&2
   exit 1
 fi

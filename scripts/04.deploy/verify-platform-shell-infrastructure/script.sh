@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 38
+#   version: 39
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -41,6 +41,10 @@ bash scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
 bash scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
 bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
 bash scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh
+if grep -R -n -E --include='smoke-test.sh' '(^|[[:space:]])rg([[:space:]]|$)' scripts/04.deploy >/dev/null; then
+  echo "ERROR: deployment smoke tests must use portable POSIX tooling available in the GitHub runner image." >&2
+  exit 1
+fi
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh

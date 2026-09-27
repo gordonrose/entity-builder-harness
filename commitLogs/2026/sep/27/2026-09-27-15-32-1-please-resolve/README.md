@@ -49,6 +49,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: Isolated PostgreSQL and harness promotions completed
   Resolution: The PostgreSQL source advanced origin/main from d8270e34 to ca9cab51; the reusable remote-promotion workflow then advanced it from ca9cab51 to 8a0ce8b1. Both were normal fast-forwards from clean isolated worktrees, checked immediately before and after each push. The root console was not modified.
 
+
+- Raised: CI image publication failed before AWS access
+  Resolution: GitHub run 36345435827 stopped in its local platform-shell check because deployment smoke tests invoked ripgrep, which is absent from the standard GitHub runner. No image was published and no AWS resource changed. Replaced every deploy smoke-test ripgrep invocation with portable grep and added an early portability assertion.
+
 ## Decisions Made
 
 
@@ -60,6 +64,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Decision: Refresh the promotion harness from origin/main through a clean preflight
   Rationale: The source chat was behind the remote because PostgreSQL source had just been promoted. A non-rewriting preflight merged origin/main without conflicts, passed the scoped harness regression tests, and was then applied by fast-forward.
 
+
+- Decision: Require portable shell tooling in deploy smoke tests
+  Rationale: The staging publication workflow must depend only on commands available in its declared GitHub runner. The infrastructure gate now rejects direct ripgrep use in deploy smoke-test scripts before executing those scripts.
+
 ## Context Hygiene
 
 
@@ -70,6 +78,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 
 - Summary: Remote-base refresh result: preflight agentic/preflight/chat-2026-09-27-15-32-1-please-resolve-26061c122abe/20260927193023 merged cleanly; applied commit 11de3d29. Repository-wide metadata scan has 14 pre-existing failures in PostgreSQL/deploy artifacts; scoped metadata and all changed-path checks passed.
   Durable evidence: Harness changes: 1120c03b; PostgreSQL promotion proof: origin/main=ca9cab51 before this refresh; root console still retains only user-owned feature-consumption harness changes.
+
+
+- Summary: Stage 6 remains untouched in AWS: artifact drift passed, PostgreSQL live-boundary passed, server is 1/1, worker 0/0, and both isolated relational queues are empty. GitHub run 36345435827 failed before credentials or publication because rg is unavailable on the runner.
+  Durable evidence: Portable smoke-test repair is confined to eight scripts under scripts/04.deploy; source validation is npm run platform:shell:infrastructure:check. The local symlinked dependency reproduction was removed; its EXDEV image-payload result is not a source or CI failure.
 
 ## Activity Log
 
@@ -136,6 +148,27 @@ Durable evidence: Harness changes: 1120c03b; PostgreSQL promotion proof: origin/
 Raised: Isolated PostgreSQL and harness promotions completed
 
 Resolution: The PostgreSQL source advanced origin/main from d8270e34 to ca9cab51; the reusable remote-promotion workflow then advanced it from ca9cab51 to 8a0ce8b1. Both were normal fast-forwards from clean isolated worktrees, checked immediately before and after each push. The root console was not modified.
+
+
+### 2026-09-27T19:49:41Z - Issue
+
+Raised: CI image publication failed before AWS access
+
+Resolution: GitHub run 36345435827 stopped in its local platform-shell check because deployment smoke tests invoked ripgrep, which is absent from the standard GitHub runner. No image was published and no AWS resource changed. Replaced every deploy smoke-test ripgrep invocation with portable grep and added an early portability assertion.
+
+
+### 2026-09-27T19:49:45Z - Decision
+
+Decision: Require portable shell tooling in deploy smoke tests
+
+Rationale: The staging publication workflow must depend only on commands available in its declared GitHub runner. The infrastructure gate now rejects direct ripgrep use in deploy smoke-test scripts before executing those scripts.
+
+
+### 2026-09-27T19:49:51Z - Context hygiene
+
+Summary: Stage 6 remains untouched in AWS: artifact drift passed, PostgreSQL live-boundary passed, server is 1/1, worker 0/0, and both isolated relational queues are empty. GitHub run 36345435827 failed before credentials or publication because rg is unavailable on the runner.
+
+Durable evidence: Portable smoke-test repair is confined to eight scripts under scripts/04.deploy; source validation is npm run platform:shell:infrastructure:check. The local symlinked dependency reproduction was removed; its EXDEV image-payload result is not a source or CI failure.
 
 ## Sub-Agent Activity
 

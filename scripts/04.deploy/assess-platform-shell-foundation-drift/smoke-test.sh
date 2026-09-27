@@ -25,11 +25,11 @@ if [[ "$result" != *'"id": "source-policy"'* || "$result" != *'"verdict": "passe
   echo "ERROR: Foundation drift-classifier source validation did not emit the expected safe result" >&2
   exit 1
 fi
-if rg -q 'expectedvalue|actualvalue|create-change-set|execute-change-set|get-secret-value|put-role-policy' scripts/04.deploy/assess-platform-shell-foundation-drift/script.py; then
+if grep -Eq -- 'expectedvalue|actualvalue|create-change-set|execute-change-set|get-secret-value|put-role-policy' scripts/04.deploy/assess-platform-shell-foundation-drift/script.py; then
   echo "ERROR: Foundation drift classifier must not expose values, read secrets, or mutate configuration" >&2
   exit 1
 fi
-if ! rg -q 'describe-stack-resource-drifts' scripts/04.deploy/assess-platform-shell-foundation-drift/script.py; then
+if ! grep -Eq -- 'describe-stack-resource-drifts' scripts/04.deploy/assess-platform-shell-foundation-drift/script.py; then
   echo "ERROR: Foundation drift classifier must retain its post-assessment structural classification read" >&2
   exit 1
 fi

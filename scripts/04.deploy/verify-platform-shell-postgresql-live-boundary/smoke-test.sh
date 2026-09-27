@@ -8,7 +8,7 @@ if [[ "$result" != *'"id": "source-policy"'* || "$result" != *'"verdict": "passe
   echo "ERROR: PostgreSQL live-boundary source validation did not emit the expected safe result" >&2
   exit 1
 fi
-if rg -q 'get-secret-value|execute-change-set|create-db-instance|delete-db-instance|restore-db-instance' scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py; then
+if grep -Eq -- 'get-secret-value|execute-change-set|create-db-instance|delete-db-instance|restore-db-instance' scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py; then
   echo "ERROR: PostgreSQL live-boundary verifier must not retrieve secrets or mutate RDS" >&2
   exit 1
 fi

@@ -43,7 +43,7 @@ if bash scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.
   exit 1
 fi
 
-if rg -n 'smoke/work-items"|X-Request-Id|data=.*admission|request_acceptance|atomicWriter|repository' scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py >/dev/null; then
+if grep -Eq -- 'smoke/work-items"|X-Request-Id|data=.*admission|request_acceptance|atomicWriter|repository' scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py; then
   echo "ERROR: the admission probe must not contain a write route, request identity, request body, or persistence seam" >&2
   exit 1
 fi

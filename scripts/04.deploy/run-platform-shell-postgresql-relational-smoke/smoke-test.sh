@@ -36,7 +36,7 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: relational smoke approval must be unavailable in validation mode" >&2
   exit 1
 fi
-if rg -q 'parser\.add_argument\("--(target|database|task-definition|queue-url|secret|restore-database|timeout)' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+if grep -Eq -- 'parser\.add_argument\("--(target|database|task-definition|queue-url|secret|restore-database|timeout)' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: relational smoke must not accept caller-selected live target inputs" >&2
   exit 1
 fi
@@ -44,19 +44,19 @@ if ! grep -q 'created = True' scripts/04.deploy/run-platform-shell-postgresql-re
   echo "ERROR: relational smoke must own cleanup immediately after an accepted recovery restore" >&2
   exit 1
 fi
-if ! rg -q 'def execute_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+if ! grep -Eq -- 'def execute_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: bootstrap recovery must retain a dedicated one-stage execution path" >&2
   exit 1
 fi
-if ! rg -q 'def execute_recovery_continuation' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'prior_label_succeeded\("bootstrap", policy\)' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+if ! grep -Eq -- 'def execute_recovery_continuation' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'prior_label_succeeded\("bootstrap", policy\)' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: recovery continuation must require one successful consumed bootstrap and never replay it" >&2
   exit 1
 fi
-if ! rg -q 'def diagnose_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'logs", "get-log-events"' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+if ! grep -Eq -- 'def diagnose_bootstrap_recovery' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'logs", "get-log-events"' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: bootstrap diagnostic must retain only its fixed safe log classification path" >&2
   exit 1
 fi
-if ! rg -q 'bootstrap-runtime-module-unavailable' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! rg -q 'bootstrap-database-connectivity-failure' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+if ! grep -Eq -- 'bootstrap-runtime-module-unavailable' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'bootstrap-database-connectivity-failure' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
   echo "ERROR: bootstrap diagnostic must retain the reviewed allowlisted failure categories" >&2
   exit 1
 fi

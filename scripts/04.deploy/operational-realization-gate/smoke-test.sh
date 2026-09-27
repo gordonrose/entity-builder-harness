@@ -169,11 +169,11 @@ expect_failure "connection-destination-edge-missing" bash "$SCRIPT" --contract "
 sed 's/recovery_attempt_label: recovery-attempt/recovery_attempt_label: prior-attempt/' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/recovery-replay.yml"
 expect_failure "recovery-label-not-new" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/recovery-replay.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
 
-if rg -n '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' scripts/04.deploy/operational-realization-gate/script.py; then
+if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' scripts/04.deploy/operational-realization-gate/script.py; then
   echo "ERROR: provider adapter import leaked into generic realization core" >&2
   exit 1
 fi
-if rg -n 'subprocess|socket|urllib|requests' scripts/04.deploy/operational-realization-gate/script.py; then
+if grep -Eq -- 'subprocess|socket|urllib|requests' scripts/04.deploy/operational-realization-gate/script.py; then
   echo "ERROR: generic realization core must not invoke network or provider tooling" >&2
   exit 1
 fi

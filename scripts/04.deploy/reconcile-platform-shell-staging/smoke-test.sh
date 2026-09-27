@@ -25,19 +25,19 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-if rg -q 'ThreadPoolExecutor|concurrent\.futures' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if grep -Eq -- 'ThreadPoolExecutor|concurrent\.futures' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: reconciliation AWS calls must remain serial." >&2
   exit 1
 fi
-if ! rg -q 'role-policy-alignment requires the declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if ! grep -Eq -- 'role-policy-alignment requires the declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: reconciliation role-policy alignment must remain administrator-only." >&2
   exit 1
 fi
-if ! rg -q 'a relational Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if ! grep -Eq -- 'a relational Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: relational Service preflight must remain target-admin only." >&2
   exit 1
 fi
-if ! rg -q 'pre-relational-stage6-bootstrap-recovery-service-change-set' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if ! grep -Eq -- 'pre-relational-stage6-bootstrap-recovery-service-change-set' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: bootstrap recovery must retain its distinct Service change-set guard." >&2
   exit 1
 fi
