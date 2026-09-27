@@ -49,6 +49,10 @@ publish deployment reliability plan
 - Decision: User authorised commit, merge to main and push of the reliability plan.
   Rationale: Use an isolated publishing worktree; preserve all unrelated source and root edits. Afterwards inspect active workstreams read-only.
 
+
+- Decision: Verified remote main promotion at 8825b15735984ac94c03b4c5a2ba1ef598f441ce.
+  Rationale: Plan commit ff248dfe and metadata-only repair 88878738 are on origin/main. Push was a normal fast-forward from 73fe69f7; all 966 headers, generated-index freshness and source eligibility passed. Local root and original source work remain preserved.
+
 ## Context Hygiene
 
 
@@ -138,6 +142,13 @@ Summary: Conflict-free refresh to 73fe69f7; incoming candidate smoke and all 966
 
 ADR impact: No ADR; non-rewriting refresh.
 
+
+### 2026-09-27T22:25:43Z - Decision
+
+Decision: Verified remote main promotion at 8825b15735984ac94c03b4c5a2ba1ef598f441ce.
+
+Rationale: Plan commit ff248dfe and metadata-only repair 88878738 are on origin/main. Push was a normal fast-forward from 73fe69f7; all 966 headers, generated-index freshness and source eligibility passed. Local root and original source work remain preserved.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -203,3 +214,46 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 ## Notes
 
 - None recorded yet.
+
+## Workstream sequencing review — 2026-09-27
+
+Read-only source/worktree snapshot at 22:25 UTC, compared with published main
+8825b157. A subsequent remote refresh confirmed the same main revision.
+Worktree presence and dirty status do not establish that an agent is currently
+running. Existing source-test claims below are recorded evidence, not tests
+rerun by this review; no AWS inspection or mutation was performed.
+
+Recommendation: start the reliability programme now as the continuation of the
+existing candidate-deployment/Operational Realization workstream. Keep one
+staging execution owner and one integrated remaining-work map. Complete or
+safely stop any currently active cloud operation and reconcile target facts
+before a new owner acts. Do not wait for all other platform programmes to finish.
+
+| Workstream | Observed state | Recommended treatment |
+| --- | --- | --- |
+| Candidate execution / realization | Latest source through 73fe69f7 is on main. Target profile records the dormant boundary deployed and the current attempt terminal; full v2 graph and trustworthy end-to-end proof remain incomplete. | Fold into reliability P0-P5 under its existing owner; credit implemented work and reconcile stale programme descriptions before further attempts. |
+| PostgreSQL Stage 6 | Recovery source is on main; target profile gates bootstrap/migration/delivery/restore behind candidate proof. The old recovery agent branch has no unique commits. | Complete through the improved deployment path after candidate qualification; do not pursue a separate retry loop. |
+| Feature/platform consumption planning | Root main has 13 uncommitted paths, including a decision-record workflow/template, consumption matrix and runtime-workflow edits. | Coordinate with P0a first; connect feature decisions to deployment design and share references instead of duplicating planning systems. Its full programme is not a prerequisite. |
+| Data governance / storage | 542ca170 is one unmerged commit affecting 77 files. Local foundation and consumer seams are recorded tested; S3 adapter/target work is explicitly deferred for missing target decisions. | Continue bounded source review independently. Data governance precedes governed storage rollout, but a full S3 programme must not block qualifying the existing deployment route. |
+| Tenant execution authority | e8810937 is one unmerged commit affecting 38 files; opt-in worker enforcement and local tests are recorded, provider/target proof deferred. | Continue source review; coordinate worker/contracts/lockfile changes with the chosen release baseline, and qualify target bindings through the shared method. |
+| Scheduler/time | 78 uncommitted paths; target design is source-only. Dynamic schedules explicitly depend on the PostgreSQL runtime seam. | Preserve/checkpoint the source with its owner, finish local review as appropriate, and defer new scheduler resources until PostgreSQL and the shared deployment path are proven. |
+| Older chat worktrees | Many are fully represented on main; several retain older dirty drafts. Two old worktrees contain widespread missing tracked files. | Treat as preservation/reconciliation work, not automatic dependencies or permission to merge/delete them. |
+
+The realization scratch branch is superseded by main's compiler and target
+extensions; its hardening patch is already represented. It is not another
+pending implementation to merge blindly.
+
+Concrete collisions include package.json across root planning, storage and
+scheduler; package-lock.json across storage, scheduler and tenant authority;
+Core exports/tests across storage and scheduler; and platform contract
+exports/tests across scheduler and tenant authority. Reliability also touches
+worker, persistence, observability and deployment entrypoints. Assign one
+integrator and freeze a reviewed reference candidate; do not change its
+dependencies midway through proof.
+
+Suggested order: reconcile existing owners and planning artifacts; implement
+P0a/P0b plus the missing shared build/controller/evidence protections; prove
+the existing HTTP/DynamoDB route; finish PostgreSQL Stage 6 through that route's
+shared machinery; then qualify scheduler and storage in their own slices.
+Independent source review may continue throughout. Long-running continuous
+evidence collection is a separate milestone and need not block all local work.
