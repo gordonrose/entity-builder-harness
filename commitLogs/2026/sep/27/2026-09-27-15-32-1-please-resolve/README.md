@@ -53,6 +53,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: CI image publication failed before AWS access
   Resolution: GitHub run 36345435827 stopped in its local platform-shell check because deployment smoke tests invoked ripgrep, which is absent from the standard GitHub runner. No image was published and no AWS resource changed. Replaced every deploy smoke-test ripgrep invocation with portable grep and added an early portability assertion.
 
+
+- Raised: Portable smoke-test repair promoted to remote main
+  Resolution: The clean integration worktree passed the full infrastructure policy gate. A normal fast-forward advanced origin/main from 8d748e42 to d73bb0b9; post-push fetch verified the exact source commit. Root user work was not read, staged, changed, or merged.
+
 ## Decisions Made
 
 
@@ -180,6 +184,13 @@ Message: fix(deploy): use portable smoke test checks
 Summary: Replaced non-portable ripgrep calls in all deploy smoke tests with portable grep and added an early infrastructure-gate assertion, so GitHub image publication cannot fail after source checks due to an undeclared runner tool.
 
 ADR impact: not-needed: deployment test portability only
+
+
+### 2026-09-27T19:52:03Z - Issue
+
+Raised: Portable smoke-test repair promoted to remote main
+
+Resolution: The clean integration worktree passed the full infrastructure policy gate. A normal fast-forward advanced origin/main from 8d748e42 to d73bb0b9; post-push fetch verified the exact source commit. Root user work was not read, staged, changed, or merged.
 
 ## Sub-Agent Activity
 
