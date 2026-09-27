@@ -89,6 +89,11 @@ assert len(module["attempt_label"](image_a)) <= 36
 assert module["terminal_category"]({"containers": [{"reason": "CannotPullContainerError"}]}) == "candidate-image-distribution-failure"
 assert module["terminal_category"]({"containers": [{"reason": "ResourceInitializationError"}]}) == "candidate-runtime-initialization-failure"
 assert module["terminal_category"]({"stopCode": "TaskFailedToStart", "containers": []}) == "candidate-task-startup-failure"
+assert module["candidate_admission_category"]("AccessDeniedException: iam:PassRole") == "candidate-run-task-authorization-failure"
+assert module["candidate_admission_category"]("RESOURCE:ENI") == "candidate-run-task-network-configuration-failure"
+assert module["candidate_admission_category"]("RESOURCE:CPU") == "candidate-run-task-capacity-or-placement-failure"
+assert module["candidate_admission_category"]("unsupported FARGATE launch type") == "candidate-run-task-definition-or-launch-contract-failure"
+assert module["candidate_admission_category"]("unknown provider condition") == "candidate-run-task-provider-rejection-unclassified"
 calls = []
 def no_tasks(label, state, _policy):
     calls.append((label, state))

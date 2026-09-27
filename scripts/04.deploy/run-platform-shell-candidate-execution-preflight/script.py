@@ -159,6 +159,49 @@ def aws(arguments: list[str], policy: dict[str, Any], failure_code: str) -> dict
     return payload
 
 
+def candidate_admission_category(raw_reason: str) -> str:
+    """Reduce a RunTask rejection to one reviewed category without retaining it."""
+
+    reason = raw_reason.lower()
+    if any(token in reason for token in ("accessdenied", "access denied", "not authorized", "iam:passrole", "pass role")):
+        return "candidate-run-task-authorization-failure"
+    if any(token in reason for token in ("security group", "securitygroup", "subnet", "assignpublicip", "network configuration", "eni")):
+        return "candidate-run-task-network-configuration-failure"
+    if any(token in reason for token in ("resource:cpu", "resource:memory", "capacity", "placement", "attribute")):
+        return "candidate-run-task-capacity-or-placement-failure"
+    if any(token in reason for token in ("task definition", "taskdefinition", "launch type", "fargate", "platform version", "runtimeplatform")):
+        return "candidate-run-task-definition-or-launch-contract-failure"
+    return "candidate-run-task-provider-rejection-unclassified"
+
+
+def run_task_payload(arguments: list[str], policy: dict[str, Any]) -> dict[str, Any]:
+    """Call ECS RunTask and classify only its in-memory rejection cause."""
+
+    environment = os.environ.copy()
+    environment["AWS_PAGER"] = ""
+    environment["AWS_CLI_AUTO_PROMPT"] = "off"
+    try:
+        result = subprocess.run(
+            ["aws", *arguments, "--profile", policy["profile"], "--region", REGION, "--output", "json"],
+            capture_output=True,
+            check=False,
+            encoding="utf-8",
+            env=environment,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise CandidatePreflightError("candidate-run-task-request-unavailable") from exception
+    if result.returncode != 0:
+        raise CandidatePreflightError(candidate_admission_category(result.stderr))
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exception:
+        raise CandidatePreflightError("candidate-run-task-invalid-response") from exception
+    if not isinstance(payload, dict):
+        raise CandidatePreflightError("candidate-run-task-invalid-response")
+    return payload
+
+
 def verify_account(policy: dict[str, Any]) -> None:
     """Refuse all execution outside the reviewed staging account."""
 
@@ -298,14 +341,19 @@ def assert_fresh_attempt(label: str, policy: dict[str, Any]) -> None:
 def run_candidate(reference: str, label: str, network: dict[str, Any], policy: dict[str, Any]) -> str:
     """Start one Fargate task with the active server network and no service attachment."""
 
-    payload = aws([
+    payload = run_task_payload([
         "ecs", "run-task", "--cluster", CLUSTER, "--task-definition", reference, "--launch-type", "FARGATE", "--count", "1",
         "--network-configuration", json.dumps(network, separators=(",", ":")), "--started-by", label,
-    ], policy, "candidate-run-task-admission-failure")
+    ], policy)
     tasks = payload.get("tasks")
     failures = payload.get("failures")
     if not isinstance(tasks, list) or len(tasks) != 1 or failures or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
-        raise CandidatePreflightError("candidate-run-task-admission-failure")
+        reasons = " ".join(
+            str(item.get("reason", ""))
+            for item in failures
+            if isinstance(item, dict)
+        ) if isinstance(failures, list) else ""
+        raise CandidatePreflightError(candidate_admission_category(reasons))
     return tasks[0]["taskArn"]
 
 
