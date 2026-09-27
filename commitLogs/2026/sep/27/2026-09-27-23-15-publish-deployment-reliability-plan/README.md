@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-27T22:15:41Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: codex
+transcript_path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl
+transcript_bytes: 2732678
+transcript_source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-27T22:17:23Z
+latest_commit_sha: 870fc5ef
+chat_duration: 102s (00:00:01:42)
+estimated_chat_tokens: 683170 estimated from chat transcript bytes (2732678 bytes; source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -83,13 +83,30 @@ ADR needed: no
 
 Reason: Publishing a planning document through existing lifecycle and remote-promotion workflows; no runtime architecture change.
 
+
+### 2026-09-27T22:17:23Z - Commit recorded
+
+Commit: `870fc5ef`
+
+Message: chore(session): prepare isolated reliability plan publication
+
+Summary: Create a clean publishing session while preserving unrelated source and root edits.
+
+ADR impact: No ADR; existing publishing workflow.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `870fc5ef`
+  Time UTC: 2026-09-27T22:17:23Z
+  Message: chore(session): prepare isolated reliability plan publication
+  Summary: Create a clean publishing session while preserving unrelated source and root edits.
+  ADR impact: No ADR; existing publishing workflow.
 
 ## Main Refresh Conflicts
 
@@ -104,12 +121,12 @@ Reason: Publishing a planning document through existing lifecycle and remote-pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T22:15:41Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-27T22:17:23Z
+Latest commit SHA: 870fc5ef
+Chat duration: 102s (00:00:01:42)
+Estimated chat tokens: 683170 estimated from chat transcript bytes (2732678 bytes; source: codex path: /home/owner/.codex/sessions/2026/09/27/rollout-2026-09-27T22-12-47-01a0e4b6-9b88-7df2-a081-ebd51a436bb9.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
