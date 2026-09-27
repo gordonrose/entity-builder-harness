@@ -64,6 +64,10 @@ publish deployment reliability plan
 - Decision: Replace the overnight AWS-reference sequence with a systemic full-estate refactor plan.
   Rationale: PostgreSQL Stage 6 was terminated by the user. Take a failed/cancelled terminal handoff, preserve its six uncommitted owner changes, and do not restart under the old process. Deliver a revised independently reviewed plan on origin; implementation and cloud qualification are subsequent work.
 
+
+- Decision: Verified revised plan publication to origin/main at8518b4eba979d53b9074c83ef9c6783511f8ddd6.
+  Rationale: Normal fast-forward push from10c9c90f succeeded; fresh fetch confirmed exact remote SHA and plan commit9cf44bf9 ancestry. Published change relative to previous remote contains only the plan, AWS index and this session record. Three independent planning reviews and required repository checks passed. No PostgreSQL restart, runtime implementation or cloud mutation occurred; other worktrees and local main remain preserved.
+
 ## Context Hygiene
 
 
@@ -292,6 +296,13 @@ Message: Merge origin/main into reviewed engineering-completeness plan
 Summary: Apply the tested non-rewriting refresh to preserve accepted source while publishing the plan. No conflicts or unrelated worktree changes.
 
 ADR impact: No ADR; governed branch maintenance.
+
+
+### 2026-09-27T23:45:26Z - Decision
+
+Decision: Verified revised plan publication to origin/main at8518b4eba979d53b9074c83ef9c6783511f8ddd6.
+
+Rationale: Normal fast-forward push from10c9c90f succeeded; fresh fetch confirmed exact remote SHA and plan commit9cf44bf9 ancestry. Published change relative to previous remote contains only the plan, AWS index and this session record. Three independent planning reviews and required repository checks passed. No PostgreSQL restart, runtime implementation or cloud mutation occurred; other worktrees and local main remain preserved.
 
 ## Sub-Agent Activity
 
