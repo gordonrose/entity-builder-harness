@@ -70,7 +70,7 @@ def text(value: Any, label: str) -> str:
     return value
 
 
-def load_policy() -> dict[str, Any]:
+def load_policy(mode: str) -> dict[str, Any]:
     """Read the non-selectable committed staging target and resolve its exact control."""
 
     try:
@@ -84,12 +84,22 @@ def load_policy() -> dict[str, Any]:
         raise RelationalSmokeError("the relational proof target is not the reviewed staging account and region")
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
-    if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready" or stage.get("status") != "bootstrap-recovery-source-defined-image-publication-pending":
+    execution_lifecycle = (
+        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready",
+        "bootstrap-recovery-source-defined-image-publication-pending",
+    )
+    diagnostic_lifecycle = (
+        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
+        "bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
+    )
+    expected_lifecycle = diagnostic_lifecycle if mode in {"diagnostic", "validate"} else execution_lifecycle
+    if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
     control = mapping(stage.get("control"), "stage_6_relational_smoke_composition.control")
     task_families = mapping(control.get("task_families"), "control.task_families")
     task_containers = mapping(control.get("task_containers"), "control.task_containers")
     started_by = mapping(control.get("started_by"), "control.started_by")
+    bootstrap_diagnostic = mapping(control.get("bootstrap_recovery_diagnostic"), "control.bootstrap_recovery_diagnostic")
     expected_families = {
         "bootstrap": "kanbien-staging-platform-relational-bootstrap",
         "migration": "kanbien-staging-platform-relational-migration",
@@ -128,6 +138,32 @@ def load_policy() -> dict[str, Any]:
     }
     if any(control.get(key) != value for key, value in required.items()) or task_families != expected_families or task_containers != expected_containers or started_by != expected_labels:
         raise RelationalSmokeError("the relational proof control differs from the reviewed fixed shape")
+    expected_diagnostic = {
+        "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+        "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
+        "categories": [
+            "bootstrap-task-log-stream-unavailable",
+            "bootstrap-task-log-events-unavailable",
+            "bootstrap-task-log-stream-empty",
+            "bootstrap-runtime-module-unavailable",
+            "bootstrap-certificate-authority-unavailable",
+            "bootstrap-database-authentication-failure",
+            "bootstrap-database-authorization-failure",
+            "bootstrap-database-connectivity-failure",
+            "bootstrap-database-tls-failure",
+            "bootstrap-workload-failure-unclassified",
+            "bootstrap-workload-failure-log-marker-unavailable",
+            "bootstrap-image-retrieval-failure",
+            "bootstrap-secret-injection-failure",
+            "bootstrap-log-driver-initialization-failure",
+            "bootstrap-resource-initialization-failure",
+            "bootstrap-task-startup-failure",
+            "bootstrap-essential-container-exited-without-log-stream",
+            "bootstrap-task-terminal-metadata-unclassified",
+        ],
+    }
+    if bootstrap_diagnostic != expected_diagnostic:
+        raise RelationalSmokeError("the relational bootstrap diagnostic control differs from the reviewed fixed shape")
     if control.get("task_wait_seconds") != 900 or control.get("restore_wait_seconds") != 1800 or control.get("required_queue_counts") != {"before": 0, "after_relay": 1, "terminal": 0}:
         raise RelationalSmokeError("the relational proof duration or queue bounds differ from the reviewed values")
     return {
@@ -142,6 +178,7 @@ def load_policy() -> dict[str, Any]:
         "labels": expected_labels,
         "task_wait_seconds": 900,
         "restore_wait_seconds": 1800,
+        "bootstrap_diagnostic_categories": set(expected_diagnostic["categories"]),
     }
 
 
@@ -445,6 +482,31 @@ def execute_recovery_continuation(policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the recovery continuation did not preserve the reviewed terminal aggregate state")
 
 
+def bootstrap_metadata_category(task: dict[str, Any], container: dict[str, Any], policy: dict[str, Any]) -> str:
+    """Reduce terminal metadata to one reviewed category without emitting raw values."""
+
+    stop_code = task.get("stopCode")
+    reason = container.get("reason")
+    details = " ".join(value for value in (stop_code, reason) if isinstance(value, str)).lower()
+    if "cannotpullcontainererror" in details:
+        category = "bootstrap-image-retrieval-failure"
+    elif "resourceinitializationerror" in details and "secret" in details:
+        category = "bootstrap-secret-injection-failure"
+    elif "resourceinitializationerror" in details and "log" in details:
+        category = "bootstrap-log-driver-initialization-failure"
+    elif "resourceinitializationerror" in details:
+        category = "bootstrap-resource-initialization-failure"
+    elif stop_code == "TaskFailedToStart":
+        category = "bootstrap-task-startup-failure"
+    elif stop_code == "EssentialContainerExited":
+        category = "bootstrap-essential-container-exited-without-log-stream"
+    else:
+        category = "bootstrap-task-terminal-metadata-unclassified"
+    if category not in policy["bootstrap_diagnostic_categories"]:
+        raise RelationalSmokeError("the terminal metadata classifier selected an unapproved category")
+    return category
+
+
 def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
     """Classify one consumed recovery-1 task without emitting task or log details."""
 
@@ -464,7 +526,7 @@ def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
         raise RelationalSmokeError("the fixed bootstrap diagnostic terminal metadata differs from the reviewed recovery-1 failure")
     stream = container.get("logStreamName")
     if not isinstance(stream, str) or not stream:
-        return "bootstrap-task-log-stream-unavailable"
+        return bootstrap_metadata_category(task, container, policy)
     logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy)
     events = logged.get("events")
     if not isinstance(events, list):
@@ -501,7 +563,8 @@ def main() -> int:
 
     parsed = arguments()
     try:
-        policy = load_policy()
+        mode = "diagnostic" if parsed.diagnose_bootstrap_recovery else "validate" if parsed.validate else "execution"
+        policy = load_policy(mode)
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
             return 0

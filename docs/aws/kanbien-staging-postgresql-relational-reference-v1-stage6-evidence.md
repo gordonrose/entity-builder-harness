@@ -43,6 +43,13 @@ has a successful terminal result; it verifies that predecessor in memory and
 never starts bootstrap again. Its migration, relay, worker, restore, and
 cleanup labels remain single use.
 
+The corrected `recovery-1` bootstrap was deployed through the reviewed
+service-only rollout and then exited non-successfully. Its safe diagnostic
+found no task log stream, and no later stage started. The current source allows
+only read-only terminal-metadata diagnostic hardening: it emits an allowlisted
+class while keeping raw stop class, container reason, task identifiers, and
+logs private. It does not permit a replay.
+
 Continuous reconciliation also distinguishes expired artifact-stack drift
 evidence from an artifact mismatch. The read-only GitHub role reports an
 expired fact but cannot refresh it; the administrator-only artifact assessor

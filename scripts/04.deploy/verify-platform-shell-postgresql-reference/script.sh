@@ -237,11 +237,25 @@ if events.get("SnsTopicArn") != {"!Ref": "AlarmTopic"} or events.get("SourceType
     fail("RDS events must be limited to the relational instance and existing alert destination")
 
 reference = profile.get("persistence", {}).get("relational_reference", {})
-if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
+if reference.get("status") != "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-1-consumed-diagnostic-hardening-pending" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
     fail("target profile must record the passed real-engine proof and exact default-egress remediation boundary")
 stage_six = reference.get("stage_6_relational_smoke_composition", {})
-if stage_six.get("status") != "bootstrap-recovery-source-defined-image-publication-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
+if stage_six.get("status") != "bootstrap-recovery-1-consumed-diagnostic-hardening-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
     fail("target profile must define the reviewed isolated relational smoke task boundary")
+diagnostic = stage_six.get("control", {}).get("bootstrap_recovery_diagnostic", {})
+if diagnostic != {
+    "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+    "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
+    "categories": [
+        "bootstrap-task-log-stream-unavailable", "bootstrap-task-log-events-unavailable", "bootstrap-task-log-stream-empty",
+        "bootstrap-runtime-module-unavailable", "bootstrap-certificate-authority-unavailable", "bootstrap-database-authentication-failure",
+        "bootstrap-database-authorization-failure", "bootstrap-database-connectivity-failure", "bootstrap-database-tls-failure",
+        "bootstrap-workload-failure-unclassified", "bootstrap-workload-failure-log-marker-unavailable", "bootstrap-image-retrieval-failure",
+        "bootstrap-secret-injection-failure", "bootstrap-log-driver-initialization-failure", "bootstrap-resource-initialization-failure",
+        "bootstrap-task-startup-failure", "bootstrap-essential-container-exited-without-log-stream", "bootstrap-task-terminal-metadata-unclassified",
+    ],
+}:
+    fail("target profile must retain the reviewed no-log-stream terminal-metadata diagnostic boundary")
 
 certificate = Path("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt")
 if not certificate.is_file() or __import__("hashlib").sha256(certificate.read_bytes()).hexdigest() != "a11cf9a1d0aadd7db86f92cbaa496466daeb501bf1c5e429d8ce8914a01c15d6":

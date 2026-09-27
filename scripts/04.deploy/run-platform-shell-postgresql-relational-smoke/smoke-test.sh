@@ -60,6 +60,10 @@ if ! grep -Eq -- 'bootstrap-runtime-module-unavailable' scripts/04.deploy/run-pl
   echo "ERROR: bootstrap diagnostic must retain the reviewed allowlisted failure categories" >&2
   exit 1
 fi
+if ! grep -Eq -- 'def bootstrap_metadata_category' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'bootstrap-secret-injection-failure' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap diagnostic must safely classify no-log-stream terminal metadata" >&2
+  exit 1
+fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path
@@ -85,6 +89,27 @@ def successful_predecessor(arguments, _policy, allow_not_found=False):
 module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
 module["prior_label_succeeded"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}, "containers": {"bootstrap": "reviewed-container"}})
 assert observed[0][-1] == "STOPPED"
+
+diagnostic_policy = {"bootstrap_diagnostic_categories": {
+    "bootstrap-image-retrieval-failure",
+    "bootstrap-secret-injection-failure",
+    "bootstrap-essential-container-exited-without-log-stream",
+}}
+assert module["bootstrap_metadata_category"](
+    {"stopCode": "TaskFailedToStart"},
+    {"reason": "CannotPullContainerError"},
+    diagnostic_policy,
+) == "bootstrap-image-retrieval-failure"
+assert module["bootstrap_metadata_category"](
+    {"stopCode": "TaskFailedToStart"},
+    {"reason": "ResourceInitializationError: secret retrieval"},
+    diagnostic_policy,
+) == "bootstrap-secret-injection-failure"
+assert module["bootstrap_metadata_category"](
+    {"stopCode": "EssentialContainerExited"},
+    {},
+    diagnostic_policy,
+) == "bootstrap-essential-container-exited-without-log-stream"
 PY
 if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts || grep -q 'ALTER DEFAULT PRIVILEGES FOR ROLE' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: migration must own default privileges for its own future tables" >&2

@@ -123,6 +123,14 @@ metadata and fixed log stream internally, but emits only one allowlisted
 failure category; it does not print task identifiers, stopped reasons, log
 text, stack traces, credentials, or provider responses.
 
+If a terminal task has no log stream, the diagnostic may reduce its stop class
+and bootstrap-container reason in memory to one separately allowlisted
+category: image retrieval, secret injection, log-driver initialisation,
+resource initialisation, task startup, essential-container exit, or unknown
+terminal metadata. It never emits either raw field. A diagnostic change does
+not authorise a replay: a later recovery needs a new reviewed source route and
+new fixed label.
+
 ## Run the proof
 
 The one live command is:

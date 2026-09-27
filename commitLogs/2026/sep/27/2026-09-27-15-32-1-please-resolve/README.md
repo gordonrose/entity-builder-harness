@@ -57,6 +57,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Raised: Portable smoke-test repair promoted to remote main
   Resolution: The clean integration worktree passed the full infrastructure policy gate. A normal fast-forward advanced origin/main from 8d748e42 to d73bb0b9; post-push fetch verified the exact source commit. Root user work was not read, staged, changed, or merged.
 
+
+- Raised: Recovery-1 bootstrap diagnostic lacked a safe source classification
+  Resolution: The fixed bootstrap label is consumed after a non-successful task with no task log stream. No later Stage 6 task ran. Added an allowlisted in-memory terminal-metadata classifier so the existing task can be diagnosed read-only without emitting raw metadata, logs, identifiers, secrets, or provider payloads.
+
 ## Decisions Made
 
 
@@ -72,6 +76,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Decision: Require portable shell tooling in deploy smoke tests
   Rationale: The staging publication workflow must depend only on commands available in its declared GitHub runner. The infrastructure gate now rejects direct ripgrep use in deploy smoke-test scripts before executing those scripts.
 
+
+- Decision: Constrain no-log-stream diagnosis to allowlisted terminal categories
+  Rationale: A diagnostic may classify task stop class and bootstrap-container reason only in memory after no log stream. It emits only a reviewed category and cannot replay a consumed label or authorise later Stage 6 work. No ADR is needed because this is a bounded Stage 6 operational diagnostic refinement.
+
 ## Context Hygiene
 
 
@@ -86,6 +94,10 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 
 - Summary: Stage 6 remains untouched in AWS: artifact drift passed, PostgreSQL live-boundary passed, server is 1/1, worker 0/0, and both isolated relational queues are empty. GitHub run 36345435827 failed before credentials or publication because rg is unavailable on the runner.
   Durable evidence: Portable smoke-test repair is confined to eight scripts under scripts/04.deploy; source validation is npm run platform:shell:infrastructure:check. The local symlinked dependency reproduction was removed; its EXDEV image-payload result is not a source or CI failure.
+
+
+- Summary: Stage 6 recovery-1 consumed with a non-successful bootstrap and unavailable log stream; platform state remained server 1/1, worker 0/0, and isolated queues empty. The controller now accepts only a read-only safe terminal-metadata category before any future recovery route.
+  Durable evidence: Durable controls: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; target profile/readiness; Stage 6 runbook and evidence. Local smoke, PostgreSQL-reference, and infrastructure checks passed.
 
 ## Activity Log
 
@@ -191,6 +203,27 @@ ADR impact: not-needed: deployment test portability only
 Raised: Portable smoke-test repair promoted to remote main
 
 Resolution: The clean integration worktree passed the full infrastructure policy gate. A normal fast-forward advanced origin/main from 8d748e42 to d73bb0b9; post-push fetch verified the exact source commit. Root user work was not read, staged, changed, or merged.
+
+
+### 2026-09-27T20:12:15Z - Issue
+
+Raised: Recovery-1 bootstrap diagnostic lacked a safe source classification
+
+Resolution: The fixed bootstrap label is consumed after a non-successful task with no task log stream. No later Stage 6 task ran. Added an allowlisted in-memory terminal-metadata classifier so the existing task can be diagnosed read-only without emitting raw metadata, logs, identifiers, secrets, or provider payloads.
+
+
+### 2026-09-27T20:12:15Z - Decision
+
+Decision: Constrain no-log-stream diagnosis to allowlisted terminal categories
+
+Rationale: A diagnostic may classify task stop class and bootstrap-container reason only in memory after no log stream. It emits only a reviewed category and cannot replay a consumed label or authorise later Stage 6 work. No ADR is needed because this is a bounded Stage 6 operational diagnostic refinement.
+
+
+### 2026-09-27T20:12:15Z - Context hygiene
+
+Summary: Stage 6 recovery-1 consumed with a non-successful bootstrap and unavailable log stream; platform state remained server 1/1, worker 0/0, and isolated queues empty. The controller now accepts only a read-only safe terminal-metadata category before any future recovery route.
+
+Durable evidence: Durable controls: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; target profile/readiness; Stage 6 runbook and evidence. Local smoke, PostgreSQL-reference, and infrastructure checks passed.
 
 ## Sub-Agent Activity
 

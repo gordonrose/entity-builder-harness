@@ -1106,7 +1106,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-source-ready",
+    "status": "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1230,7 +1230,7 @@ expected_relational_reference = {
         "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
     },
     "stage_6_relational_smoke_composition": {
-        "status": "bootstrap-recovery-source-defined-image-publication-pending",
+        "status": "bootstrap-recovery-1-consumed-diagnostic-hardening-pending",
         "isolated_resources": [
             "relational-bootstrap-task-definition",
             "relational-migration-task-definition",
@@ -1267,6 +1267,13 @@ expected_relational_reference = {
                 "next_execution": "one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout",
                 "continuation": "one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result",
             },
+            "recovery_1_execution": {
+                "bootstrap": "one-fixed-task-exited-nonzero",
+                "diagnostic": "bootstrap-task-log-stream-unavailable",
+                "later_stages": "not-started",
+                "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
+                "next_gate": "source-only-terminal-metadata-diagnostic-hardening-before-any-new-recovery-route",
+            },
         },
         "next_gate": "publish-corrected-immutable-image-review-normal-service-task-definition-revisions-and-run-one-fixed-bootstrap-recovery",
         "control": {
@@ -1275,6 +1282,30 @@ expected_relational_reference = {
             "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
             "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
             "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
+            "bootstrap_recovery_diagnostic": {
+                "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-log-stream-unavailable",
+                "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
+                "categories": [
+                    "bootstrap-task-log-stream-unavailable",
+                    "bootstrap-task-log-events-unavailable",
+                    "bootstrap-task-log-stream-empty",
+                    "bootstrap-runtime-module-unavailable",
+                    "bootstrap-certificate-authority-unavailable",
+                    "bootstrap-database-authentication-failure",
+                    "bootstrap-database-authorization-failure",
+                    "bootstrap-database-connectivity-failure",
+                    "bootstrap-database-tls-failure",
+                    "bootstrap-workload-failure-unclassified",
+                    "bootstrap-workload-failure-log-marker-unavailable",
+                    "bootstrap-image-retrieval-failure",
+                    "bootstrap-secret-injection-failure",
+                    "bootstrap-log-driver-initialization-failure",
+                    "bootstrap-resource-initialization-failure",
+                    "bootstrap-task-startup-failure",
+                    "bootstrap-essential-container-exited-without-log-stream",
+                    "bootstrap-task-terminal-metadata-unclassified",
+                ],
+            },
             "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
             "foundation_stack": "kanbien-staging-platform-shell-foundation",
             "service_stack": "kanbien-staging-platform-shell-service",
