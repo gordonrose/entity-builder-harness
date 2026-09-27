@@ -102,7 +102,7 @@ npm run platform:shell:postgresql-relational-smoke -- --validate
 ```
 
 After the guarded corrected-image revision has reached a healthy service
-rollout, invoke only the bootstrap `recovery-2` first:
+rollout, invoke only the bootstrap `recovery-4` first:
 
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --execute-bootstrap-recovery --approve-relational-bootstrap-recovery

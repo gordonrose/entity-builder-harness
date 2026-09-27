@@ -5,6 +5,7 @@ import {
   type BootstrapFailureCategory,
   closePool,
   connectionPool,
+  credentialsFromEnvironment,
   secretFromEnvironment,
   writeOutcome,
 } from "./kanbien-platform-postgresql-task";
@@ -13,9 +14,10 @@ async function main(): Promise<void> {
   let pool;
   let phase: BootstrapFailureCategory = "bootstrap-input-validation-failure";
   try {
-    const master = secretFromEnvironment("RELATIONAL_MASTER_SECRET_JSON");
+    const masterCredentials = credentialsFromEnvironment("RELATIONAL_MASTER_SECRET_JSON");
     const migration = secretFromEnvironment("RELATIONAL_MIGRATION_SECRET_JSON");
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
+    const master = { ...masterCredentials, host: migration.host, port: migration.port };
     pool = connectionPool(master, "arn:aws:secretsmanager:eu-west-1:337159794548:secret:target-managed-master", "platform_smoke");
     phase = "bootstrap-password-quotation-failure";
     const migrationPassword = await quotedLiteral(pool, migration.password);

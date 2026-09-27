@@ -89,7 +89,7 @@ def load_policy(mode: str) -> dict[str, Any]:
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-3-source-ready",
+        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready",
         "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
@@ -114,11 +114,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260927-recovery-3",
-        "migration": "kanbien-postgresql-stage6-migration-20260927-recovery-3",
-        "relay": "kanbien-postgresql-stage6-relay-20260927-recovery-3",
-        "worker": "kanbien-postgresql-stage6-worker-20260927-recovery-3",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260927-recovery-3",
+        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260928-recovery-4",
+        "migration": "kanbien-postgresql-stage6-migration-20260928-recovery-4",
+        "relay": "kanbien-postgresql-stage6-relay-20260928-recovery-4",
+        "worker": "kanbien-postgresql-stage6-worker-20260928-recovery-4",
+        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260928-recovery-4",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
