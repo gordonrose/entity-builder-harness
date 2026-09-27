@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 42
+#   version: 43
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -1233,7 +1233,7 @@ expected_relational_reference = {
         "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
     },
     "stage_6_relational_smoke_composition": {
-        "status": "candidate-execution-preflight-source-defined-dormant-task-deployment-pending",
+        "status": "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
         "isolated_resources": [
             "relational-bootstrap-task-definition",
             "relational-migration-task-definition",

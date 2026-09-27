@@ -3,7 +3,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: deploy.readme.run-platform-shell-candidate-execution-preflight
-  version: 1
+  version: 2
   status: active
   layer: 04.deploy
   domain: runtime.operations
@@ -32,6 +32,11 @@ reuses the active server's `awsvpc` configuration in memory, waits for the
 candidate to reach `RUNNING` and `HEALTHY`, and always stops it. There is no
 ECS service, load balancer, listener, route, caller-selected image, network,
 task, label, or timeout.
+
+If an ordinary process interruption arrives after ECS accepts a task, the
+controller attempts the same controlled stop before it returns a safe failure
+category. A terminal digest is never replayed; recovery requires a new
+immutable candidate digest.
 
 Run source validation:
 

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
-#   version: 69
+#   version: 70
 #   status: draft
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -392,7 +392,7 @@ deployment:
           resource_type: AWS::ECS::TaskDefinition
           replacement: true
   candidate_execution_preflight:
-    status: source-ready-dormant-task-boundary-not-yet-deployed
+    status: dormant-task-boundary-deployed-current-image-attempt-terminal-new-immutable-candidate-required
     command: npm-run-platform-shell-candidate-execution-preflight
     execution_guard: execute-and-approve-candidate-execution-preflight
     realization_contract: infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
@@ -1022,7 +1022,7 @@ persistence:
       live_boundary_verifier: passed
       next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
     stage_6_relational_smoke_composition:
-      status: candidate-execution-preflight-source-defined-dormant-task-deployment-pending
+      status: candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required
       isolated_resources:
         - relational-bootstrap-task-definition
         - relational-migration-task-definition

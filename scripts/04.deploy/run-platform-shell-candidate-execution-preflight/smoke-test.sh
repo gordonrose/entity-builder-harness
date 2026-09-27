@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -46,6 +46,10 @@ if grep -Eq -- 'parser\.add_argument\("--(target|image|network|task-definition|s
 fi
 if ! grep -Eq -- 'stop_and_wait\(accepted_task, policy\)' scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py; then
   echo "ERROR: an accepted candidate task must be cleaned up on every terminal path" >&2
+  exit 1
+fi
+if ! grep -Eq -- 'signal\.signal\(signal\.SIGTERM, interrupted\)' scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py || ! grep -Eq -- 'cleanup_active_candidate\(\)' scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py; then
+  echo "ERROR: an interrupted candidate preflight must attempt controlled cleanup" >&2
   exit 1
 fi
 python3 - <<'PY'

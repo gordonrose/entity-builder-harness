@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-postgresql-reference
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: persistence.operations
@@ -240,7 +240,7 @@ reference = profile.get("persistence", {}).get("relational_reference", {})
 if reference.get("status") != "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight" or reference.get("stage_3_disposable_local_real_engine_proof", {}).get("result") != "passed" or reference.get("stage_4_source_definition", {}).get("database_name") != "platformsmoke" or reference.get("connection_security", {}).get("database_egress") != "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination" or reference.get("stage_5_database_egress_remediation", {}).get("status") != "executed-and-live-boundary-proven" or reference.get("stage_5_database_egress_remediation", {}).get("parameter_group_representation") != "rds-force-ssl-required-provider-normalization-classified-safe":
     fail("target profile must record the passed real-engine proof and exact default-egress remediation boundary")
 stage_six = reference.get("stage_6_relational_smoke_composition", {})
-if stage_six.get("status") != "candidate-execution-preflight-source-defined-dormant-task-deployment-pending" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
+if stage_six.get("status") != "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required" or stage_six.get("fixed_acceptance") != "one-opaque-harmless-work-item-only" or stage_six.get("task_security", {}).get("database_tls") != "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle" or stage_six.get("task_security", {}).get("relay_permission") != "send-only-to-isolated-relational-queue" or stage_six.get("task_security", {}).get("worker_permission") != "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue":
     fail("target profile must define the reviewed isolated relational smoke task boundary")
 diagnostic = stage_six.get("control", {}).get("bootstrap_recovery_diagnostic", {})
 if diagnostic != {

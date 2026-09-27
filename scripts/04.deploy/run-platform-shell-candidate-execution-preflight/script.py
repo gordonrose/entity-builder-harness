@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.run-platform-shell-candidate-execution-preflight
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -31,6 +31,7 @@ import json
 import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -44,6 +45,7 @@ CLUSTER = "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
 SOURCE_SERVICE = "kanbien-staging-platform-shell"
 SAFE_RESULT_SCHEMA = "deploy/platform-shell-candidate-execution-preflight-result/v1"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
+ACTIVE_CANDIDATE: tuple[str, dict[str, Any]] | None = None
 
 
 class CandidatePreflightError(Exception):
@@ -98,7 +100,7 @@ def load_policy() -> dict[str, Any]:
     if cloud.get("account_id") != ACCOUNT or cloud.get("region") != REGION or text(cloud.get("profile"), "candidate-preflight-profile-missing") != "kanbien-dev":
         raise CandidatePreflightError("candidate-preflight-target-not-reviewed")
     expected = {
-        "status": "source-ready-dormant-task-boundary-not-yet-deployed",
+        "status": "dormant-task-boundary-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
         "command": "npm-run-platform-shell-candidate-execution-preflight",
         "execution_guard": "execute-and-approve-candidate-execution-preflight",
         "realization_contract": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
@@ -355,6 +357,28 @@ def stop_and_wait(task_arn: str, policy: dict[str, Any]) -> None:
     raise CandidatePreflightError("candidate-cleanup-timeout")
 
 
+def cleanup_active_candidate() -> None:
+    """Best-effort cleanup for an accepted task when the controller is interrupted."""
+
+    global ACTIVE_CANDIDATE
+    active = ACTIVE_CANDIDATE
+    ACTIVE_CANDIDATE = None
+    if active is None:
+        return
+    task_arn, policy = active
+    stop_and_wait(task_arn, policy)
+
+
+def interrupted(_signal_number: int, _frame: Any) -> None:
+    """Stop an accepted task before surfacing a controlled interruption result."""
+
+    try:
+        cleanup_active_candidate()
+    except CandidatePreflightError as exception:
+        raise CandidatePreflightError("candidate-cleanup-failure") from exception
+    raise CandidatePreflightError("candidate-execution-interrupted")
+
+
 def safe_result(verdict: str, category: str | None = None) -> str:
     """Produce the only permitted external evidence shape."""
 
@@ -367,6 +391,7 @@ def safe_result(verdict: str, category: str | None = None) -> str:
 def execute(policy: dict[str, Any]) -> int:
     """Perform the bounded start-health-stop proof and never print raw runtime data."""
 
+    global ACTIVE_CANDIDATE
     accepted_task: str | None = None
     try:
         verify_account(policy)
@@ -378,8 +403,10 @@ def execute(policy: dict[str, Any]) -> int:
         label = attempt_label(image)
         assert_fresh_attempt(label, policy)
         accepted_task = run_candidate(candidate_reference, label, network, policy)
+        ACTIVE_CANDIDATE = (accepted_task, policy)
         wait_for_healthy(accepted_task, policy)
         stop_and_wait(accepted_task, policy)
+        ACTIVE_CANDIDATE = None
         if labelled_tasks(label, "RUNNING", policy):
             raise CandidatePreflightError("candidate-cleanup-incomplete")
         print(safe_result("passed"))
@@ -388,17 +415,21 @@ def execute(policy: dict[str, Any]) -> int:
         category = str(exception)
         if accepted_task is not None:
             try:
-                stop_and_wait(accepted_task, policy)
+                cleanup_active_candidate()
             except CandidatePreflightError:
                 category = "candidate-cleanup-failure"
         print(safe_result("failed", category))
         return 1
+    finally:
+        ACTIVE_CANDIDATE = None
 
 
 def main() -> int:
     """Dispatch source validation or the one explicit candidate execution."""
 
     arguments = parse_arguments()
+    signal.signal(signal.SIGINT, interrupted)
+    signal.signal(signal.SIGTERM, interrupted)
     try:
         policy = load_policy()
         if arguments.validate:

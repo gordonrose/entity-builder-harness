@@ -90,7 +90,7 @@ def load_policy(mode: str) -> dict[str, Any]:
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
         "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight",
-        "candidate-execution-preflight-source-defined-dormant-task-deployment-pending",
+        "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
