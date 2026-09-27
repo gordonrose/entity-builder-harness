@@ -161,6 +161,17 @@ Summary: Added a narrowly tested classifier and ADR for mechanically verified ap
 
 ADR impact: ADR 0037 added.
 
+
+### 2026-09-27T13:28:02Z - Main refresh conflict recorded
+
+Path: `docs/04.deploy/plans/README.md`
+
+Type: `append-only-plan-index-conflict`
+
+Mode: deterministic
+
+Action: retained the union of plan rows in lexical order and set metadata version to 3
+
 ## Sub-Agent Activity
 
 - A dedicated PostgreSQL completion agent is executing the approved programme
@@ -191,6 +202,17 @@ ADR impact: ADR 0037 added.
   each side adds one distinct plan row. Resolution must retain both and set a
   single incremented metadata version after the preflight classifier confirms
   the narrow safe shape.
+
+
+- Path: `docs/04.deploy/plans/README.md`
+  Type: `append-only-plan-index-conflict`
+  Mode: deterministic
+  Reason: both sides retained the base index and added one distinct valid plan row
+  Action: retained the union of plan rows in lexical order and set metadata version to 3
+  Preflight branch: `agentic/preflight/postgresql-realization-57aa8ba47324/20260927132659`
+  Preflight worktree: `/tmp/agentic-postgresql-realization-preflight-20260927132659`
+  Files changed by resolution: docs/04.deploy/plans/README.md only
+  Checks: classifier passed; base/chat/incoming row union verified; realization gate and deployment reconciliation local checks passed; diff check passed
 
 ## ADR Disposition
 
