@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T19:50:47Z
-latest_commit_sha: 6aeda471
-chat_duration: 19121s (00:05:18:41)
+latest_commit_at_utc: 2026-09-27T20:13:10Z
+latest_commit_sha: 680dc8e0
+chat_duration: 20464s (00:05:41:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -225,6 +225,17 @@ Summary: Stage 6 recovery-1 consumed with a non-successful bootstrap and unavail
 
 Durable evidence: Durable controls: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; target profile/readiness; Stage 6 runbook and evidence. Local smoke, PostgreSQL-reference, and infrastructure checks passed.
 
+
+### 2026-09-27T20:13:10Z - Commit recorded
+
+Commit: `680dc8e0`
+
+Message: fix(deploy): harden relational bootstrap diagnosis
+
+Summary: Added a target-defined, allowlisted terminal-metadata classifier for an already-consumed no-log-stream bootstrap failure; tightened policy, readiness, static verification, unit checks, runbook, and safe evidence without permitting replay or exposing raw AWS details.
+
+ADR impact: not-needed: bounded operational diagnostic refinement
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -246,6 +257,13 @@ Durable evidence: Durable controls: scripts/04.deploy/run-platform-shell-postgre
   Summary: Replaced non-portable ripgrep calls in all deploy smoke tests with portable grep and added an early infrastructure-gate assertion, so GitHub image publication cannot fail after source checks due to an undeclared runner tool.
   ADR impact: not-needed: deployment test portability only
 
+
+- Commit: `680dc8e0`
+  Time UTC: 2026-09-27T20:13:10Z
+  Message: fix(deploy): harden relational bootstrap diagnosis
+  Summary: Added a target-defined, allowlisted terminal-metadata classifier for an already-consumed no-log-stream bootstrap failure; tightened policy, readiness, static verification, unit checks, runbook, and safe evidence without permitting replay or exposing raw AWS details.
+  ADR impact: not-needed: bounded operational diagnostic refinement
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -259,9 +277,9 @@ Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T14:32:06Z
-Latest commit at UTC: 2026-09-27T19:50:47Z
-Latest commit SHA: 6aeda471
-Chat duration: 19121s (00:05:18:41)
+Latest commit at UTC: 2026-09-27T20:13:10Z
+Latest commit SHA: 680dc8e0
+Chat duration: 20464s (00:05:41:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
