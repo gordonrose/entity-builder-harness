@@ -52,6 +52,14 @@ they are needed for repeatable operations.
 - `workflows/deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment
   of the RAG/rulebook MCP service after readiness proof and explicit approval.
 
+## Implementation Plans
+
+- [Local to proven deployment reliability](plans/implementation/local-to-proven-deployment-reliability.md)
+  sequences complete-path planning, bounded investigations, deployment audit
+  remedies, reference reuse and tooling consolidation through the existing
+  realization programme, with executable acceptance and separately authorised
+  live proof.
+
 ## Supporting Artifacts
 
 Add scripts, gates, templates, or runbooks only after repeated need or a clear

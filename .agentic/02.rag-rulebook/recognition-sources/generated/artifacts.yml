@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 910
-  term_count: 1832
+  indexed_artifacts: 959
+  term_count: 1931
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -209,6 +209,18 @@ terms:
   match_type: exact
   canonical_id: chat.workflows.chat-promote-to-main
   evidence_path: .agentic/00.chat/workflows/chat-promote-to-main.md
+  confidence_weight: 1
+- term: chat.workflows.chat-promote-to-remote-main
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.workflows.chat-promote-to-remote-main
+  evidence_path: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
+  confidence_weight: 1
+- term: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.workflows.chat-promote-to-remote-main
+  evidence_path: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
   confidence_weight: 1
 - term: chat.workflows.chat-refresh-from-main
   category: artifact-id
@@ -425,6 +437,18 @@ terms:
   match_type: exact
   canonical_id: harness.architecture.adr.0030-require-formal-commit-readiness-gate-before-task-commits
   evidence_path: docs/00.chat/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md
+  confidence_weight: 1
+- term: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
+  evidence_path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
+  evidence_path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
   confidence_weight: 1
 - term: chat.adrs.readme
   category: artifact-id
@@ -1409,6 +1433,30 @@ terms:
   match_type: exact
   canonical_id: chat.script.recovery.import-active-paths-to-chat-worktree.smoke-test
   evidence_path: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/smoke-test.sh
+  confidence_weight: 1
+- term: chat.script.remote-promotion.prepare-clean-integration-worktree
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.remote-promotion.prepare-clean-integration-worktree
+  evidence_path: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh
+  confidence_weight: 1
+- term: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.remote-promotion.prepare-clean-integration-worktree
+  evidence_path: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/script.sh
+  confidence_weight: 1
+- term: chat.script.remote-promotion.prepare-clean-integration-worktree.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.remote-promotion.prepare-clean-integration-worktree.smoke-test
+  evidence_path: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.remote-promotion.prepare-clean-integration-worktree.smoke-test
+  evidence_path: scripts/00.chat/remote-promotion/prepare-clean-integration-worktree/smoke-test.sh
   confidence_weight: 1
 - term: chat.script.reporting.readme
   category: artifact-id
@@ -2778,6 +2826,18 @@ terms:
   canonical_id: harness.standards.missing-governance-stop-condition
   evidence_path: .agentic/01.harness/standards/missing-governance-stop-condition.md
   confidence_weight: 1
+- term: harness.standard.operational-realization-gate
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standard.operational-realization-gate
+  evidence_path: .agentic/01.harness/standards/operational-realization-gate.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/operational-realization-gate.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standard.operational-realization-gate
+  evidence_path: .agentic/01.harness/standards/operational-realization-gate.md
+  confidence_weight: 1
 - term: harness.standards.professional-review-agent-quality
   category: artifact-id
   match_type: exact
@@ -2916,6 +2976,48 @@ terms:
   canonical_id: harness.templates.layer-ruleset
   evidence_path: .agentic/01.harness/templates/layer-ruleset.template.yml
   confidence_weight: 1
+- term: harness.guide.operational-realization-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.guide.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.guide.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+  confidence_weight: 1
+- term: harness.schema.operational-realization-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.schema.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.schema.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
+  confidence_weight: 1
+- term: operational-realization-contract.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: harness.schema.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
+  confidence_weight: 1
+- term: harness.template.operational-realization-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.template.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.template.yml
+  confidence_weight: 1
+- term: .agentic/01.harness/templates/operational-realization-contract.v1.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: harness.template.operational-realization-contract.v1
+  evidence_path: .agentic/01.harness/templates/operational-realization-contract.v1.template.yml
+  confidence_weight: 1
 - term: harness.templates.rule-pack
   category: artifact-id
   match_type: exact
@@ -3023,6 +3125,18 @@ terms:
   match_type: exact
   canonical_id: harness.workflows.migrate-artifact-paths
   evidence_path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+  confidence_weight: 1
+- term: harness.workflow.operational-realization-gate
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflow.operational-realization-gate
+  evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/operational-realization-gate.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflow.operational-realization-gate
+  evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
   confidence_weight: 1
 - term: harness.workflows.review-rule-artifact
   category: artifact-id
@@ -5898,18 +6012,6 @@ terms:
   canonical_id: rag-rulebook.workflows.review-recognition-candidates
   evidence_path: .agentic/02.rag-rulebook/workflows/review-recognition-candidates.md
   confidence_weight: 1
-- term: rag-rulebook.workflow.github-actions.msp-checks
-  category: artifact-id
-  match_type: exact
-  canonical_id: rag-rulebook.workflow.github-actions.msp-checks
-  evidence_path: .github/workflows/rag-rulebook-msp-checks.yml
-  confidence_weight: 1
-- term: .github/workflows/rag-rulebook-msp-checks.yml
-  category: file-path
-  match_type: exact
-  canonical_id: rag-rulebook.workflow.github-actions.msp-checks
-  evidence_path: .github/workflows/rag-rulebook-msp-checks.yml
-  confidence_weight: 1
 - term: rag-rulebook.corpus.readme
   category: artifact-id
   match_type: exact
@@ -7314,6 +7416,18 @@ terms:
   canonical_id: product.readme
   evidence_path: .agentic/03.product/README.md
   confidence_weight: 1
+- term: product.plan.data-governance-foundation-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.data-governance-foundation-v1
+  evidence_path: .agentic/03.product/plans/implementation/data-governance-foundation-v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/data-governance-foundation-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.data-governance-foundation-v1
+  evidence_path: .agentic/03.product/plans/implementation/data-governance-foundation-v1.md
+  confidence_weight: 1
 - term: product.plan.persistence-foundation-v1
   category: artifact-id
   match_type: exact
@@ -7373,6 +7487,18 @@ terms:
   match_type: exact
   canonical_id: product.plan.production-reference-target-baseline
   evidence_path: .agentic/03.product/plans/implementation/production-reference-target-baseline.md
+  confidence_weight: 1
+- term: product.plan.storage-platform-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.plan.storage-platform-v1
+  evidence_path: .agentic/03.product/plans/implementation/storage-platform-v1.md
+  confidence_weight: 1
+- term: .agentic/03.product/plans/implementation/storage-platform-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: product.plan.storage-platform-v1
+  evidence_path: .agentic/03.product/plans/implementation/storage-platform-v1.md
   confidence_weight: 1
 - term: product.plan.tenant-resource-authorization-platform-seam
   category: artifact-id
@@ -8046,6 +8172,18 @@ terms:
   canonical_id: aws.readme
   evidence_path: .agentic/aws/README.md
   confidence_weight: 1
+- term: deploy.plan.local-to-proven-deployment-reliability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.local-to-proven-deployment-reliability
+  evidence_path: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+  confidence_weight: 1
+- term: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.local-to-proven-deployment-reliability
+  evidence_path: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+  confidence_weight: 1
 - term: aws.workflows.readme
   category: artifact-id
   match_type: exact
@@ -8250,6 +8388,18 @@ terms:
   canonical_id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
   evidence_path: docs/04.deploy/adrs/0035-require-fail-closed-staging-deployment-reconciliation.md
   confidence_weight: 1
+- term: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
+  evidence_path: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
+  evidence_path: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+  confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
   match_type: exact
@@ -8261,6 +8411,78 @@ terms:
   match_type: exact
   canonical_id: deploy.adrs.readme
   evidence_path: docs/04.deploy/adrs/README.md
+  confidence_weight: 1
+- term: deploy.plans.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plans.readme
+  evidence_path: docs/04.deploy/plans/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plans.readme
+  evidence_path: docs/04.deploy/plans/README.md
+  confidence_weight: 1
+- term: deploy.plan.kanbien-staging-aws-change-reliability-programme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-aws-change-reliability-programme
+  evidence_path: docs/04.deploy/plans/kanbien-staging-aws-change-reliability-programme.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/kanbien-staging-aws-change-reliability-programme.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-aws-change-reliability-programme
+  evidence_path: docs/04.deploy/plans/kanbien-staging-aws-change-reliability-programme.md
+  confidence_weight: 1
+- term: deploy.plan.kanbien-staging-image-execution-preflight-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-image-execution-preflight-v1
+  evidence_path: docs/04.deploy/plans/kanbien-staging-image-execution-preflight-v1.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/kanbien-staging-image-execution-preflight-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-image-execution-preflight-v1
+  evidence_path: docs/04.deploy/plans/kanbien-staging-image-execution-preflight-v1.md
+  confidence_weight: 1
+- term: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
+  evidence_path: docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
+  evidence_path: docs/04.deploy/plans/kanbien-staging-platform-foundation-convergence-v1.md
+  confidence_weight: 1
+- term: deploy.plan.operational-realization-gate-programme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.operational-realization-gate-programme
+  evidence_path: docs/04.deploy/plans/operational-realization-gate-programme.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/operational-realization-gate-programme.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.operational-realization-gate-programme
+  evidence_path: docs/04.deploy/plans/operational-realization-gate-programme.md
+  confidence_weight: 1
+- term: deploy.plan.operational-realization-v2-programme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.operational-realization-v2-programme
+  evidence_path: docs/04.deploy/plans/operational-realization-v2-programme.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/operational-realization-v2-programme.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.operational-realization-v2-programme
+  evidence_path: docs/04.deploy/plans/operational-realization-v2-programme.md
   confidence_weight: 1
 - term: deploy.rules.02-rag-rulebook.readme
   category: artifact-id
@@ -8682,6 +8904,30 @@ terms:
   canonical_id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
   evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
   confidence_weight: 1
+- term: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-evidence.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-evidence.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-evidence.md
+  confidence_weight: 1
+- term: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-runbook.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-runbook.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
+  evidence_path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-stage6-runbook.md
+  confidence_weight: 1
 - term: aws.threat-model.kanbien-staging-postgresql-relational-reference-v1
   category: artifact-id
   match_type: exact
@@ -8838,6 +9084,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/README.md
+  confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien.staging.iam.readme
   category: artifact-id
   match_type: exact
@@ -8898,6 +9156,114 @@ terms:
   canonical_id: deploy.scripts.readme
   evidence_path: scripts/04.deploy/README.md
   confidence_weight: 1
+- term: deploy.script.assess-platform-shell-artifact-drift.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-artifact-drift/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/README.md
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-artifact-drift.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.wrapper
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.wrapper
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-artifact-drift.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-artifact-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-foundation-drift.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-foundation-drift/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/README.md
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-foundation-drift.shell
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.shell
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.shell
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-foundation-drift.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-foundation-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-service-drift.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-service-drift/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.readme
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/README.md
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-service-drift.shell
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.shell
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.shell
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+  confidence_weight: 1
+- term: deploy.script.assess-platform-shell-service-drift.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.assess-platform-shell-service-drift.smoke-test
+  evidence_path: scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.build-platform-shell-image.readme
   category: artifact-id
   match_type: exact
@@ -8945,6 +9311,102 @@ terms:
   match_type: exact
   canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
   evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+  confidence_weight: 1
+- term: deploy.script.operational-realization-gate.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.operational-realization-gate.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.operational-realization-gate.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/README.md
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-preflight-normalized-facts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-preflight-normalized-facts
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/preflight-normalized-facts.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/preflight-normalized-facts.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-preflight-normalized-facts
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/preflight-normalized-facts.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-unknown-assumption
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-unknown-assumption
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/unknown-assumption.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/unknown-assumption.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-unknown-assumption
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/unknown-assumption.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-valid-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-contract
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-contract
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-valid-normalized-change-summary
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-normalized-change-summary
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-change-summary.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-change-summary.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-normalized-change-summary
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-change-summary.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-valid-normalized-facts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-normalized-facts
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-facts.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-facts.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-valid-normalized-facts
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-facts.yml
+  confidence_weight: 1
+- term: deploy.command.operational-realization-gate
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.operational-realization-gate
+  evidence_path: scripts/04.deploy/operational-realization-gate/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.operational-realization-gate
+  evidence_path: scripts/04.deploy/operational-realization-gate/script.sh
+  confidence_weight: 1
+- term: deploy.test.operational-realization-gate
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.operational-realization-gate
+  evidence_path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.operational-realization-gate
+  evidence_path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.provision-platform-shell-negative-authz-client.readme
   category: artifact-id
@@ -9077,6 +9539,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.render-platform-shell-foundation-template
   evidence_path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
+  confidence_weight: 1
+- term: deploy.readme.run-platform-shell-candidate-execution-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.run-platform-shell-candidate-execution-preflight
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.run-platform-shell-candidate-execution-preflight
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-candidate-execution-preflight.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-candidate-execution-preflight.wrapper
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-candidate-execution-preflight.wrapper
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-candidate-execution-preflight.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-controlled-smoke.readme
   category: artifact-id
@@ -9329,6 +9827,42 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-persistence-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-postgresql-relational-smoke.shell
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.shell
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.shell
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-rate-limit-smoke.readme
   category: artifact-id
@@ -9594,6 +10128,42 @@ terms:
   canonical_id: deploy.script.verify-platform-shell-deployment-workflow
   evidence_path: scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh
   confidence_weight: 1
+- term: deploy.script.verify-platform-shell-drift-detection-boundary.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.readme
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/README.md
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-drift-detection-boundary.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.wrapper
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.wrapper
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-drift-detection-boundary.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-drift-detection-boundary.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.verify-platform-shell-infrastructure.readme
   category: artifact-id
   match_type: exact
@@ -9677,6 +10247,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.verify-platform-shell-observability-prerequisites
   evidence_path: scripts/04.deploy/verify-platform-shell-observability-prerequisites/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-postgresql-live-boundary.shell
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-live-boundary.shell
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-live-boundary.shell
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
+  confidence_weight: 1
+- term: deploy.script.verify-platform-shell-postgresql-live-boundary.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-live-boundary.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.verify-platform-shell-postgresql-live-boundary.smoke-test
+  evidence_path: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.verify-platform-shell-postgresql-reference.readme
   category: artifact-id

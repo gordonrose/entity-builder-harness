@@ -63,6 +63,63 @@ GitHub proof without broadening the role or changing application infrastructure.
 
 ## Activity Log
 
+### 2026-09-27T22:09:25Z - Planning-first reliability revision authorised
+
+The user requested updating the saved plan and an educational walkthrough.
+The existing dirty-worktree authorisation still applies; both pre-existing
+product-plan files remain outside this task. Revised the deployment plan and
+its index to make complete-path design (P0a), bounded investigation (P0b),
+proportionate reference reuse, failure-loop review, and shared-tool adoption
+and retirement (P7) explicit requirements. Added acceptance rows A15-A17 and
+updated dependencies and the ready-to-send implementation instruction.
+
+The plan preserves existing application/adapter/infrastructure owners and
+explicitly replaces the earlier illustrative platform/realization folder idea
+with the existing realization compiler and owning deployment surfaces. It
+requires measuring full elapsed delivery time, including investigations, and
+distinguishes planning evidence from exact integrated deployment proof.
+This turn changes planning documents and bookkeeping only; no implementation,
+commit, publication, repository-setting change or cloud mutation is in scope.
+
+Validation passed: metadata headers for 925 files, generated recognition-source
+freshness, recognition validation for 7 sources / 2126 terms, all six local plan
+links, seventeen unique acceptance rows, planning-stage order, and whitespace.
+Both pre-existing product-plan file hashes match the prior authorised baseline.
+Generated recognition sources required no further changes for this revision.
+
+### 2026-09-27T21:29:31Z - Deployment reliability plan authorised
+
+The user requested a stored implementation plan following the deployment audit
+and explicitly confirmed proceeding in the dirty worktree while preserving the
+existing production-reference-target-baseline and platform-scheduler-v1 changes.
+Authoring scope is the new deploy-owned implementation plan, its index,
+required generated metadata, and session bookkeeping. Implementation, commits,
+remote promotion, and cloud mutations are not authorised by this planning task.
+
+The plan sequences the existing Operational Realization v2 programme against
+inspected source 0c3e9cd9500f3010ebacc0e6cc1ba9cfd8dd3f1a, while this worktree
+remains at 8052929c. It requires the implementing agent to establish a fresh,
+clean source baseline and coordinate with other active work before editing.
+Additional review covers evidence provenance, cross-channel locking, actual
+GitHub enforcement, exact deployed revision, operational health-check writes,
+sidecar telemetry, same-digest operations, cleanup after interruption, and
+schema-compatible recovery. Source-ready and live-proven outcomes are separate.
+
+Plan review corrected candidate-change ordering and moved operational-write
+policy corrections into the source phase. It also distinguished the existing
+authenticated HTTP/DynamoDB route from task-driven PostgreSQL acceptance;
+HTTP/PostgreSQL composition remains unqualified. The deployment reviewer passed
+the revised plan. The plan includes a ready-to-send implementation instruction
+and fourteen evidence-based acceptance rows.
+
+Validation passed: metadata headers for 925 files, local plan references,
+acceptance-row completeness, diff whitespace, generated recognition-source
+freshness, and recognition validation for 7 sources / 2126 terms. The governed
+artifact-index regeneration also removed stale references to the retired RAG
+workflow and indexed already-present artifacts, including the untouched local
+scheduler plan. Hash checks confirmed both pre-existing user files unchanged.
+No task implementation, commit, promotion, publication, or cloud mutation ran.
+
 ### 2026-09-26T15:52:55Z - Session started
 
 Initial intent: approved
@@ -104,9 +161,62 @@ Summary: Record the successful source/live alignment and identity-specific GitHu
 
 ADR impact: no ADR; existing passive-reconciliation decision applies
 
+
+### 2026-09-27T21:36:11Z - Sub-agent activity recorded
+
+Agent: deploy_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Deployment implementation plan and acceptance review
+
+
+### 2026-09-27T21:36:11Z - Sub-agent activity recorded
+
+Agent: harness_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Overnight handoff governance and evidence review
+
 ## Sub-Agent Activity
 
-- None recorded yet.
+
+
+### 2026-09-27T21:36:11Z - deploy_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Deployment implementation plan and acceptance review
+Files touched: Read-only review; no edits
+Checks run: Pinned source inspection and saved-plan review
+Git actions: none
+Blockers: Live implementation requires its own authority and fresh credentials
+Next step: Implement the qualified path through the stored acceptance matrix
+Summary: Reviewed the saved plan against the v2 baseline; identified candidate-review ordering, operational side effects, sidecar proof and the separate HTTP/DynamoDB versus task/PostgreSQL paths. Corrections incorporated.
+
+
+### 2026-09-27T21:36:11Z - harness_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Overnight handoff governance and evidence review
+Files touched: Read-only review; no edits
+Checks run: Saved-plan authority and local-reference review; pinned-baseline comparison
+Git actions: none
+Blockers: Full production or multi-provider reliability cannot be certified by one overnight proof
+Next step: Use the plan launch instruction and report each acceptance result
+Summary: Validated canonical plan placement and workflow references; reviewed baseline ownership, scoped authority, trusted evidence, concurrency and source-versus-live claims. Source/live sequencing corrections incorporated.
 
 ## Commits
 

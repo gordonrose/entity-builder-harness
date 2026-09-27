@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 116
-  workflow_files: 36
+  term_count: 120
+  workflow_files: 38
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -313,6 +313,12 @@ terms:
   canonical_id: 00.chat.workflow.chat-promote-to-main
   evidence_path: .agentic/00.chat/workflows/chat-promote-to-main.md
   confidence_weight: 1
+- term: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 00.chat.workflow.chat-promote-to-remote-main
+  evidence_path: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
+  confidence_weight: 1
 - term: .agentic/00.chat/workflows/chat-refresh-from-main.md
   category: workflow-name
   match_type: exact
@@ -390,6 +396,12 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.migrate-artifact-paths
   evidence_path: .agentic/01.harness/workflows/migrate-artifact-paths.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/operational-realization-gate.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.operational-realization-gate
+  evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
   confidence_weight: 1
 - term: .agentic/01.harness/workflows/review-rule-artifact.workflow.md
   category: workflow-name
@@ -595,6 +607,12 @@ terms:
   canonical_id: 00.chat.workflow.chat-promote-to-main
   evidence_path: .agentic/00.chat/workflows/chat-promote-to-main.md
   confidence_weight: 1
+- term: chat-promote-to-remote-main.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 00.chat.workflow.chat-promote-to-remote-main
+  evidence_path: .agentic/00.chat/workflows/chat-promote-to-remote-main.md
+  confidence_weight: 1
 - term: chat-refresh-from-main.md
   category: workflow-name
   match_type: exact
@@ -702,6 +720,12 @@ terms:
   match_type: exact
   canonical_id: education.workflow.mine-daily-learning-material
   evidence_path: .agentic/education/workflows/mine-daily-learning-material.md
+  confidence_weight: 1
+- term: operational-realization-gate.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 01.harness.workflow.operational-realization-gate
+  evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
   confidence_weight: 1
 - term: plan-aws-change.md
   category: workflow-name
