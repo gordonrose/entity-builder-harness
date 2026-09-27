@@ -11,9 +11,12 @@ disciplines:
 kind: runbook
 purpose: Operate the one bounded Kanbien staging PostgreSQL relational delivery and isolated restore rehearsal.
 portability:
-  class: target-specific
+  class: internal
   targets:
   - kanbien/staging
+used_by:
+- id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+  path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
 -->
 # Kanbien staging PostgreSQL relational Stage 6 runbook
 

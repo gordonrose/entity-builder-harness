@@ -11,9 +11,12 @@ disciplines:
 kind: evidence-record
 purpose: Record only safe evidence for the Kanbien staging PostgreSQL relational Stage 6 proof.
 portability:
-  class: target-specific
+  class: internal
   targets:
   - kanbien/staging
+used_by:
+- id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+  path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md
 -->
 # Kanbien staging PostgreSQL relational Stage 6 evidence
 

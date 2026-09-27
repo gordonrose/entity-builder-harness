@@ -1,3 +1,23 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: deploy.script.run-platform-shell-postgresql-relational-smoke.readme
+version: 1
+status: active
+layer: 04.deploy
+domain: runtime.operations
+disciplines:
+- security
+- sre
+kind: capability-readme
+purpose: Explain the bounded PostgreSQL relational proof command.
+portability:
+  class: internal
+  targets:
+  - kanbien/staging
+used_by:
+- id: deploy.script.run-platform-shell-postgresql-relational-smoke.shell
+  path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+-->
 # PostgreSQL relational smoke proof
 
 `npm run platform:shell:postgresql-relational-smoke -- --validate` checks the

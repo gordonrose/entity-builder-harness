@@ -1,3 +1,23 @@
+<!-- agentic-artifact:
+schema: agentic-artifact/v2
+id: deploy.script.assess-platform-shell-service-drift.readme
+version: 1
+status: active
+layer: 04.deploy
+domain: runtime.operations
+disciplines:
+- security
+- sre
+kind: capability-readme
+purpose: Explain the bounded Service drift assessment command.
+portability:
+  class: internal
+  targets:
+  - kanbien/staging
+used_by:
+- id: deploy.script.assess-platform-shell-service-drift.shell
+  path: scripts/04.deploy/assess-platform-shell-service-drift/script.sh
+-->
 # Staging Service active drift assessment
 
 This target-admin command refreshes one narrow fact immediately before the

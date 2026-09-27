@@ -14,6 +14,9 @@ portability:
   class: internal
   targets:
   - kanbien/staging
+used_by:
+- id: deploy.script.assess-platform-shell-foundation-drift.shell
+  path: scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
 -->
 # Foundation Drift Classifier
 

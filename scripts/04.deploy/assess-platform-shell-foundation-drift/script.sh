@@ -8,12 +8,18 @@ set -euo pipefail
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
-#   kind: command-wrapper
+#   disciplines:
+#   - security
+#   - sre
+#   kind: script
 #   purpose: Run the bounded administrator-only Foundation drift classifier.
 #   portability:
 #     class: internal
 #     targets:
 #     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.assess-platform-shell-foundation-drift.readme
+#     path: scripts/04.deploy/assess-platform-shell-foundation-drift/README.md
 #   effects:
 #   - network
 

@@ -14,12 +14,12 @@
     class: required
     targets:
     - llm-workbench
-used_by:
-- id: chat.workflows.chat-refresh-from-main
-  path: .agentic/00.chat/workflows/chat-refresh-from-main.md
-- id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
-  path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
-- id: chat.script.main-refresh.apply-rehearsed-refresh
+  used_by:
+  - id: chat.workflows.chat-refresh-from-main
+    path: .agentic/00.chat/workflows/chat-refresh-from-main.md
+  - id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
+    path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+  - id: chat.script.main-refresh.apply-rehearsed-refresh
     path: scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh
   - id: chat.script.main-refresh.classify-conflict
     path: scripts/00.chat/main-refresh/classify-conflict/script.sh

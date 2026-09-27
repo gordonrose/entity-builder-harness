@@ -8,12 +8,18 @@ set -euo pipefail
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
-#   kind: smoke-test
+#   disciplines:
+#   - security
+#   - sre
+#   kind: script
 #   purpose: Validate the bounded Foundation drift classifier without contacting AWS.
 #   portability:
 #     class: internal
 #     targets:
 #     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.assess-platform-shell-foundation-drift.readme
+#     path: scripts/04.deploy/assess-platform-shell-foundation-drift/README.md
 #   effects:
 #   - read-only
 
