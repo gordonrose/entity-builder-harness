@@ -2,6 +2,47 @@
 # controls secret retrieval; PostgreSQL grants are created by the later one-shot
 # bootstrap and migration path, never by a normal runtime task.
 Resources:
+  RelationalTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-task-execution
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: relational-task-injected-configuration-only
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalTaskConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalTaskCredentials
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !GetAtt RelationalDatabase.MasterUserSecret.SecretArn
+                  - !Ref RelationalMigrationSecret
+                  - !Ref RelationalRuntimeSecret
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-task-execution
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
   RelationalDatabaseIngressFromServer:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -163,6 +204,127 @@ Resources:
           Value: platform-shell
         - Key: component
           Value: relational-runtime
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalRelayTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-relay-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-relay-only-configuration-credential-and-send
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalRelayConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalRelayCredential
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref RelationalRuntimeSecret
+              - Sid: SendOnlyTheRelationalSmokeQueue
+                Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt RelationalSmokeQueue.Arn
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-relay
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalWorkerTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-worker-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-worker-only-configuration-credential-and-consume
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalWorkerConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalWorkerCredential
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref RelationalRuntimeSecret
+              - Sid: ConsumeOnlyTheRelationalSmokeQueue
+                Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt RelationalSmokeQueue.Arn
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-worker
+        - Key: environment
+          Value: staging
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalRestoreVerificationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-relational-restore-verify-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relational-restore-verify-only-configuration-and-credential
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadOnlyRelationalRestoreVerificationConfiguration
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !GetAtt RelationalTargetConfiguration.Arn
+              - Sid: ReadOnlyRelationalRestoreVerificationCredential
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref RelationalRuntimeSecret
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-restore-verify
         - Key: environment
           Value: staging
         - Key: managed-by

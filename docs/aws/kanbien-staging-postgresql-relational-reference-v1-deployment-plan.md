@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
-version: 6
+version: 8
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -152,8 +152,10 @@ deliberately separate from AWS deployment and from the completed DynamoDB/SQS
 smoke path:
 
 - `platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs`
-  owns the exact generated Docker container, mode-`0600` temporary credential
-  file, loopback-only port, bounded readiness wait, and exact cleanup;
+  owns the exact generated Docker fixture or, when no daemon is usable, an
+  installed local engine in an exact temporary data/socket directory; both use
+  a mode-`0600` temporary credential file, loopback-only port, bounded
+  readiness wait, and exact cleanup;
 - `postgresql-persistence-adapter-integration.test.ts` runs the real engine
   assertions without printing rows, SQL values, tenant identifiers, passwords,
   endpoints, or queue bodies; and
@@ -175,6 +177,10 @@ container and credential file. The evidence is a passed real-engine semantic
 proof—not AWS evidence: no RDS resource, target credential, endpoint, shared
 database, or product record was used. Stage 4 may now define and validate the
 source target and produce a reviewed change set.
+
+On 2026-09-27, the same assertions also passed with the portable local-engine
+fixture when the Docker daemon was unavailable. That fallback remains fully
+disposable: it uses neither a developer database nor a host-wide socket path.
 
 ## Stage 4 source-definition checkpoint
 
@@ -200,11 +206,80 @@ were verified after creation. The final relational Foundation change set used
 `PrivateSubnetIds` as the only new deployment input and retained the previous
 value for every existing Foundation parameter.
 
-The relational change set is `AVAILABLE` and remains unexecuted. It has 22
-additions and one non-replacement `AlarmTopicPolicy` modification for the
-same-account RDS SNS publication path. No RDS instance, relational secret, or
-Foundation change set has been applied. The next action is Stage 5's governed
-application of this reviewed change set followed by live-boundary verification.
+The initial relational Foundation change set was executed with 22 additions
+and one non-replacement `AlarmTopicPolicy` modification for same-account RDS
+SNS publication. It created only the new relational target resources; it did
+not migrate, write smoke state, relay an outbox obligation, start a worker, or
+restore a database.
+
+### Stage 5 recovery and live-boundary checkpoint
+
+The first live boundary assessment found the AWS default security-group egress
+behaviour that would have left the new database group with external outbound
+access. The approved correction was exactly one non-replacement, loopback-only
+`127.0.0.1/32` egress rule on the relational database security group. The
+fresh active assessment now reports only the documented CloudFormation
+parameter-group representation normalisation; the effective allowlisted
+`rds.force_ssl` control is required. The safe boundary verifier passed private
+placement, encrypted storage, TLS enforcement, the exact database network
+paths, RDS alarms, and the existing alert destination. No workload or data
+action occurred in this checkpoint.
+
+### Stage 6 composition and proof procedure
+
+#### Operational Realization Gate migration requirement — added 2026-09-26
+
+Do not execute the controller below, create a recovery label, or make another
+relational Stage 6 target change until this route has passed the generic
+[Operational Realization Gate](../04.deploy/plans/operational-realization-gate-programme.md).
+The route must first be expressed as a versioned provider-neutral realization
+contract. Target-specific inspectors and change-set readers must become a
+separate adapter that supplies safe normalized facts and operation-class counts
+to the generic compiler; target names, provider responses, credentials,
+endpoints, task identifiers, SQL, rows, and messages remain outside the core.
+
+Before a controlled execution is proposed, passing evidence is required for
+source, artifact, semantic integration, live-read, change-set, and execution
+preflight gates. A failed or stopped previous label is terminal. Any later
+recovery has a new immutable label, requires the recovery gate, and is never a
+replay. The target-specific approval and reconciliation workflow remain in
+force after this generic gate passes.
+
+The next change set adds a separate encrypted SQS source/DLQ pair, five
+non-public relational task definitions, their target-only execution/task
+roles, and outputs. It leaves the public server command, default ALB route,
+DNS, legacy site, Cognito configuration, existing DynamoDB/SQS smoke resources
+and alert destination untouched.
+
+The distinct task roles are intentional:
+
+| Task | Database authority | AWS authority |
+| --- | --- | --- |
+| Bootstrap | Initial identity/grant setup only | Read the three new target-owned credentials. |
+| Migration | Migration-manifest DDL only | Read its credential and non-secret config. |
+| Relay | Runtime DML/outbox claim only | Read runtime credential/config; **send only** to the isolated relational queue. |
+| Worker | Runtime DML/processing completion only | Read runtime credential/config; **consume only** from that queue. |
+| Restore verifier | Fixed read-only smoke-state query only | Read runtime credential/config; no queue action. |
+
+The immutable image carries AWS's public `eu-west-1` RDS CA bundle pinned by
+source digest. Every target task uses `verify-full`; no TLS bypass or generic
+host trust is accepted.
+
+After both reviewed stacks are update-complete, run the one fixed controller:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --execute --approve-relational-stage6
+```
+
+It derives its network only from the existing dormant worker service and has no
+caller's target, database, task, queue, credential, record, or timeout input.
+It preflights the staging account, server `1/1`, worker `0/0`, and empty
+isolated queues; runs bootstrap, migration, one fixed opaque acceptance/relay,
+and one worker; then restores to the exact disposable recovery identifier. A
+dedicated task verifies the fixed smoke state and outbox fact in the recovered
+database over TLS before cleanup deletes that disposable instance without a
+final snapshot. The command outputs only a safe verdict. A failed stage does
+not start a later one; recovery cleanup still runs for an instance it created.
 
 ### Mandatory reconciliation boundary
 
@@ -219,6 +294,15 @@ It does not deploy, read secrets, retrieve endpoints, or print provider
 responses. A failure is an operational blocker, not a reason to loosen the
 check or proceed with a stale review.
 
+The read-only reconciler intentionally cannot start CloudFormation drift
+detection. When the deployment-artifact stack's in-sync evidence expires, the
+target-owned administrator uses the separate active artifact assessment. It is
+limited to identity confirmation, that one fixed stack's status, drift-detect
+request, and status polling; it accepts only `in-sync` and writes a short-lived
+safe record under `/tmp`. It cannot inspect resource details or bucket
+contents, execute a change set, or change the stack. This refreshes evidence
+for reconciliation without broadening the GitHub read role.
+
 ## Observability, recovery, and rollback
 
 The adapter emits only its approved provider-neutral observability fields.
@@ -229,12 +313,14 @@ they can contain raw query text. No SQL text, bind value, endpoint, tenant
 identifier, row, credential, provider payload, or snapshot identifier belongs
 in normal logs, metrics, traces, alerts, evidence, or commits.
 
-The restore rehearsal restores a selected snapshot to a new, isolated,
-private recovery instance with a new, recovery-only security group. It never
-replaces the live reference. The verifier checks only expected migration
-version, safe record-count/checksum, duration, and live-reference non-impact.
-Any cleanup action is assessed as a planned destructive step against the
-exact disposable identifier; it is not implicit in normal deployment.
+The restore rehearsal restores the latest restorable point to one exact,
+isolated private recovery instance. It uses the reviewed relational database
+security group and subnet group but never replaces or changes the live
+reference. The verifier checks the fixed smoke state and outbox fact through a
+TLS task restricted to the recovery-hostname pattern. Cleanup is a planned
+destructive action against that exact disposable identifier and happens only
+after verification (or to recover a failed rehearsal); it is not implicit in
+normal deployment.
 
 An application/image rollout failure rolls the ECS service back to its prior
 task definition. A migration failure stops promotion for reviewed forward

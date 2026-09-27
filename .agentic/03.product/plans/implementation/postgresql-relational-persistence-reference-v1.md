@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 8
+version: 10
 status: draft
 layer: 03.product
 domain: persistence
@@ -238,13 +238,14 @@ composition and an opt-in local command:
 npm run platform:adapter:aws:persistence:postgresql:integration
 ```
 
-The command compiles the integration suite, starts one generated-name Docker
-container on loopback with temporary storage, passes its generated password
-through a mode-`0600` temporary environment file rather than command-line
-arguments, runs the proof, and removes both exact temporary resources in all
-outcomes. It never reads AWS credentials, contacts an AWS resource, uses a
-developer database, prints a secret, or changes the completed DynamoDB/SQS
-reference.
+The command compiles the integration suite, first starts one generated-name
+Docker container on loopback with temporary storage when a Docker daemon is
+available, and otherwise starts an installed local PostgreSQL engine only in a
+new temporary data and socket directory. Both routes pass a generated password
+through a mode-`0600` temporary file rather than command-line arguments, run
+the proof, and remove their exact temporary resources in all outcomes. It
+never reads AWS credentials, contacts an AWS resource, uses a developer
+database, prints a secret, or changes the completed DynamoDB/SQS reference.
 
 The test proves the Stage 3 behaviours against a real engine when it can run:
 
@@ -265,6 +266,11 @@ the end of the test. No AWS resource, shared database, real record, or
 long-lived credential was used. Stage 4 may now define and validate the AWS
 target source; it still may not create an RDS resource until its reviewed
 change-set gate passes.
+
+On 2026-09-27, the portable local-engine route also passed under the same
+disposable boundary. This is a reliability improvement to the semantic proof,
+not an alternative target database or a relaxation of the production TLS
+requirement.
 
 ## Stage 4 source-definition checkpoint — 2026-09-26
 
@@ -326,6 +332,14 @@ The command emits only check identifiers and verdicts. It does not print
 provider responses, secrets, endpoints, resource content, or change details.
 Any mismatch—including a stale repository budget name—blocks execution before
 CloudFormation is asked to change the Foundation.
+
+The read-only GitHub role is deliberately unable to start CloudFormation drift
+detection. To keep that least-privilege boundary while avoiding a permanently
+stale artifact-stack fact, a separate administrator-only command can detect
+and poll the one deployment-artifact stack and write only a short-lived
+in-sync/out-of-sync safe fact. It has no stack-resource-detail, bucket-object,
+change-set, or stack-update authority. A non-in-sync result remains a stop
+condition rather than a cue to weaken reconciliation.
 
 ## Contracts and ownership
 
@@ -571,6 +585,109 @@ migration, alarm, and cost checks pass with no sensitive values in evidence.
 
 **Objective:** prove the full relational route and its recovery path at the
 same bounded scope, then state its exact operational limits.
+
+#### Operational Realization Gate prerequisite — added 2026-09-26
+
+Stage 6 is now paused at its source/deployment boundary, not eligible for a
+direct target-specific recovery or retry. Before any new Stage 6 target action,
+the full route must migrate into the provider-neutral [Operational Realization
+Gate](../../../01.harness/standards/operational-realization-gate.md): a
+versioned realization contract must describe its immutable artifact,
+entrypoints, task identities, safe configuration shapes, connections/TLS,
+database semantics, queue delivery/acknowledgement, lifecycle state machine,
+safe observability, expected change shape, rollback/recovery and all
+assumptions.
+
+Target collectors must be made an adapter that produces only normalized facts
+and change summaries. The generic compiler must pass the source, artifact,
+semantic-integration, live-read, change-set, and execution-preflight gates
+before the Stage 6 controller is even proposed again. This replaces no target
+security check and grants no target authority; it prevents a live task from
+being used as the first test of an undeclared integration edge. Existing
+evidence may be cited only at the proof level it actually establishes.
+
+#### Stage 6 source composition (implemented; deployment and proof pending)
+
+The production server keeps its existing DynamoDB-backed default command. It
+is deliberately not repointed to PostgreSQL merely to prove an adapter. The
+relational route is instead four target-only, non-public Fargate task
+definitions plus one restore-verification task:
+
+1. **Bootstrap** injects the new target-owned master, migration, and runtime
+   credentials through ECS, creates the two database identities, and grants
+   the migration and runtime schema boundaries.
+2. **Migration** injects only the migration credential and non-secret target
+   configuration, applies the immutable foundation plus smoke-schema manifest,
+   and exits.
+3. **Relay** injects only the runtime credential/configuration and can only
+   send to the new isolated relational source queue. It accepts one fixed
+   opaque smoke work item and relays one outbox obligation.
+4. **Worker** has a distinct role: it may receive, delete, change visibility,
+   and inspect attributes only on that one isolated queue. It records durable
+   processing completion before acknowledgement and exits.
+5. **Restore verification** can read only the runtime credential/configuration
+   and connects only to a hostname matching the fixed disposable staging RDS
+   recovery pattern. It confirms the one smoke work-item and outbox fact over
+   `verify-full` TLS, then the controller removes the recovery instance.
+
+All five tasks reuse the existing dormant worker awsvpc topology solely for
+the bounded run. They have no listener, port mapping, service, scheduler, or
+default-server command. The image contains AWS's public, digest-pinned
+`eu-west-1` RDS CA bundle, so it verifies the RDS chain rather than trusting a
+generic container trust store or weakening TLS.
+
+`platform:shell:postgresql-relational-smoke` has a local `--validate` mode, a
+fixed `--execute --approve-relational-stage6` sequence, and a distinct
+`--execute-bootstrap-recovery --approve-relational-bootstrap-recovery` mode.
+The bootstrap-recovery mode cannot start migration, relay, worker, or restore;
+it exists so the corrected PostgreSQL ownership boundary is proven before any
+later delivery stage is eligible.
+After that predecessor reaches one successful terminal state, the separate
+`--execute-recovery-continuation --approve-relational-recovery-continuation`
+mode verifies the consumed bootstrap label in memory and starts only the
+remaining migration, relay, worker, restore, and cleanup stages. It never
+replays bootstrap. A continuation failure consumes its own stage label and
+requires a new reviewed recovery route rather than a retry flag.
+It accepts no target, credential, payload, task, queue, database, restore
+name, network, or timeout supplied by a caller. Before each onward step it
+checks the reviewed account/region, stack readiness, public server `1/1`,
+dormant worker `0/0`, and isolated queue totals. It reports only safe final
+outcomes and aggregate counts; provider responses, endpoints, task IDs,
+secrets, records, messages, and raw logs stay out of output and evidence.
+
+#### Stage 6 bootstrap recovery (2026-09-26–27)
+
+The first fixed bootstrap label ended non-zero. No migration, relay, worker, or
+restore label started, and the required server/worker/queue aggregate boundary
+remained intact. The run is not replayed: a stopped label is now treated as
+consumed as well as a running label.
+
+Source review removed an ownership-incompatible default-privilege statement
+from bootstrap. PostgreSQL default privileges are now established by the
+migration identity for tables that it will create; bootstrap remains limited to
+identity creation and connection/schema grants. The first distinct
+`recovery-1` bootstrap also exited non-successfully; no later label started and
+the server/worker/queue boundary stayed intact. Its diagnostic derived the one
+standard awslogs stream internally and established only the safe generic
+workload-failure marker. It did not expose task identifiers, log content, SQL,
+records, or provider payloads.
+
+The next immutable image makes bootstrap emit one fixed, allowlisted failure
+class (certificate authority, database authentication, database authorization,
+database connectivity, TLS, or unclassified workload) rather than an error
+message. The compiled-image payload check also loads the PostgreSQL adapter and
+bootstrap entrypoint before publication. A new `recovery-2` label set is the
+only route that may test that observability correction; it remains bootstrap
+only until one successful terminal result is recorded.
+
+The corrected-image Service revision has its own preflight policy. It accepts
+zero resource additions or removals and exactly the three existing normal plus
+five existing relational task-definition replacements and the two existing
+in-place ECS service references. It rejects IAM, database, queue, listener,
+routing, or any other stack change. Since this guard and controller are local
+deployment controls rather than runtime image inputs, their commit may follow
+the already-published byte-identical corrected runtime image without another
+image build; the applied image remains identified by its immutable digest.
 
 1. With a distinct, bounded approval, run one fixed harmless relational smoke
    request. It may create only approved opaque state, lineage, and outbox facts.

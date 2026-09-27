@@ -41,6 +41,7 @@ fragments:
   - foundation/relational-access.yml
   - foundation/relational-workload-configuration.yml
   - foundation/work-queues.yml
+  - foundation/relational-work-queue.yml
   - foundation/public-ingress.yml
   - foundation/public-tls.yml
   - foundation/edge-protection.yml

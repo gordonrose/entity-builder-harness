@@ -68,6 +68,21 @@ The command is a deployment control, not a substitute for review: it detects
 drift and prevents scope creep, while a current approved change set still
 defines the authorised mutation.
 
+- `pre-relational-stage6-service-change-set` is run immediately before the
+  isolated relational reference proof's Service-stack change set. It permits
+  exactly five new non-public PostgreSQL task definitions, the three normal
+  immutable-image task-definition revisions, and the two in-place service
+  references. It rejects every other resource, replacement, or stack. This
+  separates image publication from deployment while still making the
+  deployment scope mechanically reviewable.
+
+  It also requires two short-lived target-admin assessment records: the
+  classified Foundation record (which accepts only the known RDS parameter
+  normalisation) and an `IN_SYNC` record for the fixed Service stack. The
+  artifact bucket itself is verified through its current encryption, ownership,
+  public-access, lifecycle, and policy controls; a stale passive artifact
+  stack timestamp cannot suppress those direct checks or authorize a change.
+
 Before a Foundation change set can execute, the declared administrator profile
 also compares the live GitHub inline policy with the reviewed JSON source. This
 is deliberately a separate mode: GitHub proves its own usable operations in
@@ -76,4 +91,37 @@ gained a different policy.
 
 ```bash
 npm run platform:shell:deployment-reconciliation:role-policy-alignment
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-service-change-set --service-change-set reviewed-name
+```
+
+- `pre-candidate-execution-preflight-onboarding-change-set` permits exactly
+  one new dormant candidate task definition. When a historical service-stack
+  rollback has completed, it requires a fresh candidate-baseline record that
+  proves the stack is `IN_SYNC` and the fixed source service is at steady
+  state. It does not authorize a routing, IAM, database, queue, or service
+  change.
+
+```bash
+npm run platform:shell:service-active-drift-assessment -- \
+  --candidate-onboarding \
+  --execute-approved-active-service-drift-assessment \
+  --evidence-file /tmp/candidate-baseline.json --json
+
+npm run platform:shell:deployment-reconciliation -- \
+  --mode pre-candidate-execution-preflight-onboarding-change-set \
+  --service-change-set reviewed-name \
+  --service-drift-evidence /tmp/candidate-baseline.json --json
+```
+
+- `pre-relational-stage6-bootstrap-recovery-service-change-set` is used only
+  after the first Stage 6 Service composition already exists and a corrected
+  immutable image must be rolled out before the one fixed bootstrap recovery.
+  It permits no additions or removals. It permits only replacement revisions of
+  the three normal and five already-declared relational task definitions, plus
+  the two in-place ECS service references. The same fresh Foundation
+  classification and in-sync Service assessment are required. Any IAM,
+  queue, database, listener, routing, or other resource change fails closed.
+
+```bash
+npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-bootstrap-recovery-service-change-set --service-change-set reviewed-name --known-foundation-drift-evidence /tmp/fresh-foundation-evidence.json --service-drift-evidence /tmp/fresh-service-evidence.json
 ```

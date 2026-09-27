@@ -36,6 +36,7 @@ mkdir -p "$DOCKER_CONFIG"
 TAG="entity-builder-harness/03.product/platform-shell:local"
 BUILD_BASE_IMAGE="node:22-bookworm-slim"
 RUNTIME_IMAGE="gcr.io/distroless/nodejs22-debian12:nonroot"
+TARGET_PLATFORM="linux/amd64"
 REQUIRE_DIGEST_BASE=false
 NO_CACHE=false
 DOCKERFILE="infra/04.deploy/03.product/image/Dockerfile"
@@ -49,6 +50,9 @@ Usage:
 
 Builds the local platform shell image from:
   infra/04.deploy/03.product/image/Dockerfile
+
+The Kanbien staging runtime contract is fixed at linux/amd64. This wrapper
+always builds that platform; callers cannot substitute an architecture.
 
 The command builds a local image only. It does not publish, deploy, call AWS,
 or mutate GitHub.
@@ -138,6 +142,7 @@ COMMIT_SHA="$(git rev-parse HEAD)"
 
 BUILD_ARGS=(
   build
+  --platform "$TARGET_PLATFORM"
   --file "$DOCKERFILE"
   --tag "$TAG"
   --label "org.opencontainers.image.revision=$COMMIT_SHA"
@@ -159,3 +164,4 @@ echo "Built platform shell image: $TAG"
 echo "Dockerfile: $DOCKERFILE"
 echo "Build context: $CONTEXT"
 echo "Effective ignore file: $DOCKERIGNORE"
+echo "Runtime platform: $TARGET_PLATFORM"

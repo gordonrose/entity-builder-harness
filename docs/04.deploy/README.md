@@ -26,7 +26,9 @@ used_by:
 
 This directory is the RAG-readable deploy corpus package for `corpus.04.deploy`.
 
-The governing workflows for deploy work live under `.agentic/aws/`. This
+Target-provider workflows for deploy work live under `.agentic/aws/`; the
+provider-neutral [Operational Realization Gate](../../.agentic/01.harness/workflows/operational-realization-gate.md)
+lives in the harness because it applies before a target-provider workflow. This
 directory contains source material, deployment ADRs, and structured rules that
 the RAG/rulebook service can index, chunk, cite, and evaluate.
 

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-deployment-reconciliation
-#   version: 5
+#   version: 6
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -58,6 +58,7 @@ workflow = yaml_file(".github/workflows/reconcile-platform-shell-staging.yml")
 policy = json_file("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-policy.json")
 trust = json_file("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/github-platform-shell-staging-reconciliation-trust.json")
 operation_contract = yaml_file("infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml")
+active_drift_contract = yaml_file("infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml")
 scripts = json_file("package.json")["scripts"]
 
 reconciliation = profile.get("deployment", {}).get("reconciliation", {})
@@ -65,7 +66,7 @@ expected_config = {
     "status": "source-implemented-live-role-alignment-and-detector-pending",
     "command": "npm run platform:shell:deployment-reconciliation",
     "policy_check": "npm run platform:shell:deployment-reconciliation:policy-check",
-    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
+    "modes": {"continuous": "scheduled-read-only-verification-of-declared-live-controls", "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution", "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction", "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition", "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions", "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only", "pre_candidate_execution_preflight_onboarding_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-addition-without-service-routing-change", "pre_candidate_execution_preflight_image_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-immutable-image-revision-without-service-routing-change", "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison"},
     "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
     "schedule_cron_utc": "15 */4 * * *",
     "execution_identity": "github-platform-shell-staging-reconciliation",
@@ -82,7 +83,49 @@ expected_config = {
         "maximum_evidence_age_seconds": 21600,
         "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
         "detector_deployment_status": "source-planned-not-deployed",
-        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+        "administrator_active_assessment_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+        "administrator_active_assessment": {
+            "status": "approved-administrator-only-foundation-drift-classification",
+            "command": "npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change",
+            "allowed_operations": ["cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "cloudformation:DescribeStackResourceDrifts", "cloudformation:DescribeStacks", "rds:DescribeDBInstances", "rds:DescribeDBParameters"],
+            "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
+            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        },
+        "artifact_active_assessment": {
+            "status": "approved-administrator-only-artifact-drift-assessment",
+            "command": "npm run platform:shell:artifact-active-drift-assessment -- --execute-approved-active-artifact-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "deployment-artifact-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-deployment-artifact-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
+        "operational_coverage": "administrator-only-foundation-artifact-and-service-assessments-available-detector-role-workload-cost-and-live-proof-pending",
+        "service_active_assessment": {
+            "status": "approved-administrator-only-service-drift-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-service-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
+        "candidate_preflight_baseline_assessment": {
+            "status": "approved-administrator-only-candidate-preflight-baseline-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --candidate-onboarding --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-detect-and-status-poll-plus-fixed-source-service-steady-state-read-no-resource-detail-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "ecs:DescribeServices"],
+            "accepted_service_stack_statuses": ["UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"],
+            "source_service": "kanbien-staging-platform-shell",
+            "success_condition": "detection-complete-and-service-stack-in-sync-and-source-service-steady",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     },
     "live_role_policy_alignment": {
         "role_name": "github-platform-shell-staging-reconciliation",
@@ -99,6 +142,93 @@ for key, expected in expected_config.items():
 scope = reconciliation.get("foundation_change_set_scope", {})
 require(isinstance(scope, dict) and len(scope.get("additions", [])) == 22, "reconciliation must enumerate exactly 22 approved additions")
 require(scope.get("modifications") == [{"logical_id": "AlarmTopicPolicy", "resource_type": "AWS::SNS::TopicPolicy", "replacement": False}], "reconciliation must permit only the reviewed non-replacement topic-policy modification")
+remediation_scope = reconciliation.get("foundation_egress_remediation_scope", {})
+require(remediation_scope == {
+    "evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [
+            [{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}],
+            [
+                {"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]},
+                {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_categories": ["add", "not_equal"]},
+            ],
+        ],
+        "tls_enforcement": "required",
+    },
+    "modifications": [{"logical_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "replacement": False}],
+}, "reconciliation must permit only the exact fresh-evidence database-egress correction")
+stage_six_scope = reconciliation.get("foundation_relational_stage6_change_set_scope", {})
+require(stage_six_scope == {
+    "evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    },
+    "additions": [
+        {"logical_id": "RelationalTaskExecutionRole", "resource_type": "AWS::IAM::Role"},
+        {"logical_id": "RelationalRelayTaskRole", "resource_type": "AWS::IAM::Role"},
+        {"logical_id": "RelationalWorkerTaskRole", "resource_type": "AWS::IAM::Role"},
+        {"logical_id": "RelationalRestoreVerificationTaskRole", "resource_type": "AWS::IAM::Role"},
+        {"logical_id": "RelationalSmokeQueue", "resource_type": "AWS::SQS::Queue"},
+        {"logical_id": "RelationalSmokeDeadLetterQueue", "resource_type": "AWS::SQS::Queue"},
+        {"logical_id": "RelationalSmokeQueueTransportPolicy", "resource_type": "AWS::SQS::QueuePolicy"},
+        {"logical_id": "RelationalSmokeDeadLetterQueueTransportPolicy", "resource_type": "AWS::SQS::QueuePolicy"},
+    ],
+    "modifications": [{"logical_id": "ServiceDeploymentExecutionRole", "resource_type": "AWS::IAM::Role", "replacement": False}],
+}, "reconciliation must permit only the exact Stage 6 relational foundation change scope")
+service_stage_six_scope = reconciliation.get("service_relational_stage6_change_set_scope", {})
+require(service_stage_six_scope == {
+    "foundation_evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    },
+    "service_evidence": {"schema": "deploy/platform-shell-service-active-drift-evidence/v1", "maximum_age_seconds": 900, "classification": "in-sync"},
+    "additions": [
+        {"logical_id": "RelationalBootstrapTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalMigrationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalRelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalWorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+        {"logical_id": "RelationalRestoreVerificationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition"},
+    ],
+    "modifications": [
+        {"logical_id": "TaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "WorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "Service", "resource_type": "AWS::ECS::Service", "replacement": False},
+        {"logical_id": "WorkerService", "resource_type": "AWS::ECS::Service", "replacement": False},
+    ],
+}, "reconciliation must permit only the exact Stage 6 relational service change scope")
+bootstrap_recovery_scope = reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope", {})
+require(bootstrap_recovery_scope == {
+    "foundation_evidence": {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    },
+    "service_evidence": {"schema": "deploy/platform-shell-service-active-drift-evidence/v1", "maximum_age_seconds": 900, "classification": "in-sync"},
+    "additions": [],
+    "modifications": [
+        {"logical_id": "TaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "WorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalBootstrapTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalMigrationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalRelayTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalWorkerTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "RelationalRestoreVerificationTaskDefinition", "resource_type": "AWS::ECS::TaskDefinition", "replacement": True},
+        {"logical_id": "Service", "resource_type": "AWS::ECS::Service", "replacement": False},
+        {"logical_id": "WorkerService", "resource_type": "AWS::ECS::Service", "replacement": False},
+    ],
+}, "reconciliation must permit only existing task-definition revisions and in-place service references for the bootstrap recovery")
 require(profile.get("operations", {}).get("budget", {}).get("name") == "kanbien-staging-platform-shell-monthly", "operations must use the canonical live platform-shell budget name")
 require(profile.get("persistence", {}).get("relational_reference", {}).get("operations", {}).get("cost", {}).get("existing_tag_scoped_budget") == "kanbien-staging-platform-shell-monthly", "relational reference must use the canonical live platform-shell budget name")
 
@@ -175,10 +305,47 @@ require(scripts.get("platform:shell:deployment-reconciliation") == "bash scripts
 require(scripts.get("platform:shell:deployment-reconciliation:check") == "bash scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh", "package must expose the reconciliation local check")
 require(scripts.get("platform:shell:deployment-reconciliation:policy-check") == "bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh", "package must expose the reconciliation policy check")
 require(scripts.get("platform:shell:deployment-reconciliation:role-policy-alignment") == "bash scripts/04.deploy/reconcile-platform-shell-staging/script.sh --mode role-policy-alignment --json", "package must expose the administrator-only reconciliation role-policy alignment check")
+require(scripts.get("platform:shell:foundation-active-drift-assessment") == "bash scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh", "package must expose the administrator-only Foundation drift classifier")
+require(scripts.get("platform:shell:foundation-active-drift-assessment:check") == "bash scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh", "package must expose the Foundation drift-classifier local check")
+require(scripts.get("platform:shell:artifact-active-drift-assessment") == "bash scripts/04.deploy/assess-platform-shell-artifact-drift/script.sh", "package must expose the administrator-only artifact drift assessor")
+require(scripts.get("platform:shell:artifact-active-drift-assessment:check") == "bash scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh", "package must expose the artifact drift-assessor local check")
+expected_active_contract = {
+    "schema": "deploy/cloudformation-administrator-active-foundation-assessment-contract/v2",
+    "target": "kanbien/staging",
+    "status": "active",
+    "identity": "target-profile-administrator",
+    "identity_boundary": "existing-administrator-profile-only-no-github-role-policy-or-workload-change",
+    "stack_name": "kanbien-staging-platform-shell-foundation",
+    "stack_scope": "foundation-stack-only",
+    "execution_gate": "explicit-current-chat-approval-and-stable-stack-preflight",
+    "assessment_sequence": "detect-then-wait-for-completion-then-read-structural-resource-drift-only-if-drifted",
+    "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+}
+for key, expected in expected_active_contract.items():
+    require(active_drift_contract.get(key) == expected, f"administrator active-drift contract {key} must retain the reviewed value")
+expected_active_operations = {
+    ("aws-account", "sts:get-caller-identity", "sts:GetCallerIdentity"),
+    ("foundation-stack", "cloudformation:describe-stacks", "cloudformation:DescribeStacks"),
+    ("foundation-active-drift-assessment", "cloudformation:detect-stack-drift", "cloudformation:DetectStackDrift"),
+    ("foundation-active-drift-assessment", "cloudformation:describe-stack-drift-detection-status", "cloudformation:DescribeStackDriftDetectionStatus"),
+    ("foundation-drift-classification", "cloudformation:describe-stack-resource-drifts", "cloudformation:DescribeStackResourceDrifts"),
+    ("relational-tls-effective-state", "rds:describe-db-instances", "rds:DescribeDBInstances"),
+    ("relational-tls-effective-state", "rds:describe-db-parameters", "rds:DescribeDBParameters"),
+}
+actual_active_operations = {
+    (item.get("check_id"), item.get("cli_operation"), item.get("iam_action"))
+    for item in active_drift_contract.get("operations", []) if isinstance(item, dict)
+}
+require(actual_active_operations == expected_active_operations, "administrator active-drift contract must retain exactly the reviewed Foundation-only operations")
+active_source = Path("scripts/04.deploy/assess-platform-shell-foundation-drift/script.py").read_text(encoding="utf-8").lower()
+for required in ("detect-stack-drift", "describe-stack-drift-detection-status", "describe-stack-resource-drifts", "--execute-approved-active-foundation-drift-assessment"):
+    require(required in active_source, f"administrator active-drift classifier must retain {required}")
+for prohibited in ("expectedvalue", "actualvalue", "create-change-set", "execute-change-set", "get-secret-value", "put-role-policy"):
+    require(prohibited not in active_source, f"administrator active-drift classifier must not contain {prohibited}")
 source = Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8").lower()
 for prohibited in ("execute-change-set", "create-stack", "update-stack", "delete-stack", "put-object", "put-bucket", "put-budget", "get-secret-value"):
     require(prohibited not in source, f"reconciliation command must not contain {prohibited}")
-for required in ("lastchecktimestamp", "evidence-stale", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope", "get-role-policy"):
+for required in ("lastchecktimestamp", "evidence-stale", "get-bucket-policy-status", "describe-budget", "foundation-change-set-scope", "get-role-policy", "relational-stage6-bootstrap-recovery-service-change-set-scope"):
     require(required in source, f"reconciliation command must retain {required}")
 for required in ("get-public-access-block", "get-bucket-encryption", "get-bucket-ownership-controls", "get-bucket-lifecycle-configuration", "get-bucket-policy-status"):
     require(required in source, f"reconciliation command must retain the reviewed provider operation {required}")

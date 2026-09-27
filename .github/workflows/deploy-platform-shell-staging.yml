@@ -237,6 +237,23 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
 
+      - name: Verify published target-platform image
+        if: ${{ inputs.publish_image }}
+        run: |
+          set -euo pipefail
+          expected_platform="linux/amd64"
+          docker pull --platform "$expected_platform" "${{ steps.image.outputs.uri }}" >/dev/null
+          actual_platform="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{.Os}}/{{.Architecture}}')"
+          source_revision="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          if [ "$actual_platform" != "$expected_platform" ]; then
+            echo "Published image does not match the reviewed runtime platform." >&2
+            exit 1
+          fi
+          if [ "$source_revision" != "$GITHUB_SHA" ]; then
+            echo "Published image source revision does not match the checked-out commit." >&2
+            exit 1
+          fi
+
       - name: Read ECR scan finding counts
         if: ${{ inputs.publish_image }}
         id: scan

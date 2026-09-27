@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.verify-platform-shell-infrastructure
-#   version: 38
+#   version: 43
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -41,6 +41,10 @@ bash scripts/04.deploy/verify-platform-shell-deployment-artifact-store/script.sh
 bash scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
 bash scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
 bash scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.sh
+if grep -R -n -E --include='smoke-test.sh' '(^|[[:space:]])rg([[:space:]]|$)' scripts/04.deploy >/dev/null; then
+  echo "ERROR: deployment smoke tests must use portable POSIX tooling available in the GitHub runner image." >&2
+  exit 1
+fi
 bash scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh
 bash scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh
@@ -50,10 +54,13 @@ bash scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.
 bash scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh
 bash scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+bash scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
 export RENDERED_FOUNDATION
 
 python3 - <<'PY'
 import os
+import copy
 from pathlib import Path
 import sys
 import json
@@ -582,8 +589,12 @@ expected_foundation_resources = {
     "WorkerTaskRole",
     "RelayTaskRole",
     "RelationalBootstrapTaskRole",
+    "RelationalTaskExecutionRole",
     "RelationalMigrationTaskRole",
     "RelationalRuntimeTaskRole",
+    "RelationalRelayTaskRole",
+    "RelationalWorkerTaskRole",
+    "RelationalRestoreVerificationTaskRole",
     "ServiceDeploymentExecutionRole",
     "ServiceSecurityGroup",
     "WorkerSecurityGroup",
@@ -599,6 +610,10 @@ expected_foundation_resources = {
     "WorkerDeadLetterQueue",
     "WorkerQueueTransportPolicy",
     "WorkerDeadLetterQueueTransportPolicy",
+    "RelationalSmokeQueue",
+    "RelationalSmokeDeadLetterQueue",
+    "RelationalSmokeQueueTransportPolicy",
+    "RelationalSmokeDeadLetterQueueTransportPolicy",
     "TargetGroup",
     "HostRule",
     "DnsAlias",
@@ -666,17 +681,33 @@ expected_foundation_outputs = {
     "WebAclArn",
     "PlatformHostnameCertificateArn",
     "RelationalBootstrapTaskRoleArn",
+    "RelationalTaskExecutionRoleArn",
     "RelationalMigrationTaskRoleArn",
     "RelationalRuntimeTaskRoleArn",
+    "RelationalRelayTaskRoleArn",
+    "RelationalWorkerTaskRoleArn",
+    "RelationalRestoreVerificationTaskRoleArn",
     "RelationalDatabaseSecurityGroupId",
     "RelationalTargetConfigurationArn",
+    "RelationalMasterSecretArn",
+    "RelationalMigrationSecretArn",
+    "RelationalRuntimeSecretArn",
+    "RelationalSmokeQueueUrl",
+    "RelationalSmokeQueueArn",
+    "RelationalSmokeDeadLetterQueueUrl",
 }
 expected_service_resources = {
     "TaskDefinition",
+    "CandidatePreflightTaskDefinition",
     "Service",
     "WorkerTaskDefinition",
     "WorkerService",
     "RelayTaskDefinition",
+    "RelationalBootstrapTaskDefinition",
+    "RelationalMigrationTaskDefinition",
+    "RelationalRelayTaskDefinition",
+    "RelationalWorkerTaskDefinition",
+    "RelationalRestoreVerificationTaskDefinition",
     "EcsRunningCountAlarm",
     "EcsHighCpuAlarm",
     "EcsHighMemoryAlarm",
@@ -689,6 +720,27 @@ if set(foundation.get("Outputs", {})) != expected_foundation_outputs:
     fail("rendered foundation must retain the reviewed service-stack output interface")
 if set(service.get("Resources", {})) != expected_service_resources:
     fail("service template must contain exactly the reviewed workload and service-alarm resources")
+
+relational_task_definitions = {
+    "RelationalBootstrapTaskDefinition": ("kanbien-staging-platform-relational-bootstrap", "RelationalBootstrapTaskRoleArn", "relational-bootstrap", "kanbien-platform-postgresql-bootstrap.main.js", ["RELATIONAL_MASTER_SECRET_JSON", "RELATIONAL_MIGRATION_SECRET_JSON", "RELATIONAL_RUNTIME_SECRET_JSON"]),
+    "RelationalMigrationTaskDefinition": ("kanbien-staging-platform-relational-migration", "RelationalMigrationTaskRoleArn", "relational-migration", "kanbien-platform-postgresql-migration.main.js", ["RELATIONAL_MIGRATION_SECRET_JSON", "RELATIONAL_CONFIG_JSON"]),
+    "RelationalRelayTaskDefinition": ("kanbien-staging-platform-relational-relay", "RelationalRelayTaskRoleArn", "relational-relay", "kanbien-platform-postgresql-relay.main.js", ["RELATIONAL_RUNTIME_SECRET_JSON", "RELATIONAL_CONFIG_JSON"]),
+    "RelationalWorkerTaskDefinition": ("kanbien-staging-platform-relational-worker", "RelationalWorkerTaskRoleArn", "relational-worker", "kanbien-platform-postgresql-worker.main.js", ["RELATIONAL_RUNTIME_SECRET_JSON", "RELATIONAL_CONFIG_JSON"]),
+    "RelationalRestoreVerificationTaskDefinition": ("kanbien-staging-platform-relational-restore-verify", "RelationalRestoreVerificationTaskRoleArn", "relational-restore-verify", "kanbien-platform-postgresql-restore-verify.main.js", ["RELATIONAL_RUNTIME_SECRET_JSON", "RELATIONAL_CONFIG_JSON"]),
+}
+for resource_name, (family, task_role, container_name, entrypoint, secret_names) in relational_task_definitions.items():
+    definition = properties(service, resource_name, "AWS::ECS::TaskDefinition")
+    if definition.get("Family") != family or definition.get("RequiresCompatibilities") != ["FARGATE"] or definition.get("NetworkMode") != "awsvpc" or definition.get("Cpu") != "512" or definition.get("Memory") != "1024" or definition.get("ExecutionRoleArn") != {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-RelationalTaskExecutionRoleArn"}} or definition.get("TaskRoleArn") != {"Fn::ImportValue": {"!Sub": f"${{FoundationStackName}}-{task_role}"}}:
+        fail(f"{resource_name} must retain the reviewed isolated Fargate role boundary")
+    containers = definition.get("ContainerDefinitions", [])
+    if len(containers) != 1 or containers[0].get("Name") != container_name or containers[0].get("Image") != {"!Ref": "ImageUri"} or containers[0].get("Command") != [f".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/{entrypoint}"] or containers[0].get("ReadonlyRootFilesystem") is not True or containers[0].get("PortMappings") or containers[0].get("HealthCheck"):
+        fail(f"{resource_name} must remain a non-public one-shot task without a server command")
+    if [entry.get("Name") for entry in containers[0].get("Secrets", [])] != secret_names:
+        fail(f"{resource_name} must inject only its reviewed target-owned secret/configuration values")
+    if resource_name in {"RelationalRelayTaskDefinition", "RelationalWorkerTaskDefinition"}:
+        environment = containers[0].get("Environment", [])
+        if environment != [{"Name": "RELATIONAL_SMOKE_QUEUE_URL", "Value": {"Fn::ImportValue": {"!Sub": "${FoundationStackName}-RelationalSmokeQueueUrl"}}}]:
+            fail(f"{resource_name} must use only the isolated relational queue URL")
 
 for forbidden_type in ("AWS::ECR::Repository", "AWS::Cognito::UserPool", "AWS::ElasticLoadBalancingV2::LoadBalancer"):
     if any(item.get("Type") == forbidden_type for item in foundation.get("Resources", {}).values()):
@@ -1057,7 +1109,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-4-foundation-change-set-reviewed-not-executed",
+    "status": "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1082,6 +1134,7 @@ expected_relational_reference = {
         "database_security_group": "new-platform-shell-relational-security-group",
         "inbound": "tcp-5432-from-newly-declared-platform-workload-security-groups-only",
         "workload_egress": "tcp-5432-from-server-worker-and-relay-to-new-database-security-group-only",
+        "database_egress": "explicit-loopback-only-127-0-0-1-32-no-external-ipv4-ipv6-prefix-list-or-security-group-destination",
         "tls": {
             "parameter_group_setting": "rds.force_ssl=1",
             "supported_ca": "rds-ca-rsa2048-g1",
@@ -1144,12 +1197,13 @@ expected_relational_reference = {
         "next_gate": "stage-4-source-defined-relational-target-and-reviewed-change-set",
     },
     "stage_4_source_definition": {
-        "status": "static-validation-and-foundation-change-set-review-passed-not-executed",
+        "status": "foundation-executed-and-live-boundary-proven",
         "foundation_fragments": [
             "foundation/relational-persistence.yml",
             "foundation/relational-access.yml",
             "foundation/relational-workload-configuration.yml",
             "foundation/relational-operations.yml",
+            "foundation/relational-work-queue.yml",
         ],
         "database_name": "platformsmoke",
         "smoke_schema": "platform_smoke",
@@ -1157,16 +1211,144 @@ expected_relational_reference = {
         "workload_configuration": "non-secret-ssm-reference-with-target-owned-secret-references",
         "artifact_store": "private-encrypted-target-owned-template-transport-deployed-and-verified",
         "foundation_change_set": {
-            "status": "reviewed-available-not-executed",
+            "status": "executed-and-live-boundary-proven",
             "resource_changes": {
                 "adds": 22,
                 "modifies": 1,
                 "modified_resource": "AlarmTopicPolicy",
             },
-            "prohibition": "no-rds-secret-or-foundation-execution-in-stage-4",
+            "prohibition": "no-migration-smoke-write-queue-or-restore-action-before-live-boundary-passes",
             "required_reconciliation": "deployment.reconciliation.pre_foundation_change_set",
         },
-        "next_gate": "stage-5-apply-reviewed-foundation-change-set-and-verify-live-boundary",
+        "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
+    },
+    "stage_5_database_egress_remediation": {
+        "status": "executed-and-live-boundary-proven",
+        "exact_change": "replace-default-external-database-egress-with-one-loopback-only-ipv4-rule",
+        "expected_change_set": "one-non-replacement-RelationalDatabaseSecurityGroup-modification-only",
+        "external_destinations": "prohibited",
+        "required_evidence": "fresh-administrator-only-known-remediation-classification",
+        "parameter_group_representation": "rds-force-ssl-required-provider-normalization-classified-safe",
+        "live_boundary_verifier": "passed",
+        "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
+    },
+    "stage_6_relational_smoke_composition": {
+        "status": "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
+        "isolated_resources": [
+            "relational-bootstrap-task-definition",
+            "relational-migration-task-definition",
+            "relational-relay-task-definition",
+            "relational-worker-task-definition",
+            "relational-smoke-source-queue-and-dead-letter-queue",
+        ],
+        "fixed_acceptance": "one-opaque-harmless-work-item-only",
+        "task_security": {
+            "database_tls": "verify-full-with-pinned-public-eu-west-1-rds-ca-bundle",
+            "secret_delivery": "ecs-injected-target-owned-values-only",
+            "relay_permission": "send-only-to-isolated-relational-queue",
+            "worker_permission": "receive-delete-visibility-and-attributes-only-on-isolated-relational-queue",
+        },
+        "execution_sequence": [
+            "bootstrap",
+            "migrate",
+            "accept-and-relay",
+            "worker",
+            "restore-isolated-recovery-proof",
+            "cleanup-and-empty-queue-verification",
+        ],
+        "recovery_evidence": {
+            "initial_attempt": {
+                "bootstrap": "one-fixed-task-exited-nonzero-without-task-log-or-identifier-retention",
+                "later_stages": "not-started",
+                "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
+            },
+            "correction": {
+                "default_privileges": "migration-identity-owns-default-privileges-for-its-own-created-tables",
+                "consumed_stage_detection": "running-and-stopped-task-label-reads-before-any-stage-start",
+                "recovery_label": "one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label",
+                "service_update_scope": "existing-task-definition-revisions-and-in-place-service-references-only",
+                "next_execution": "one-fixed-bootstrap-recovery-2-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight",
+                "continuation": "one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result",
+            },
+            "recovery_1_execution": {
+                "bootstrap": "one-fixed-task-exited-nonzero",
+                "diagnostic": "bootstrap-workload-failure-unclassified",
+                "later_stages": "not-started",
+                "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
+                "next_gate": "reviewed-safe-bootstrap-failure-classification-and-new-recovery-2-label-before-any-new-task",
+            },
+            "recovery_2_execution": {
+                "bootstrap": "not-started",
+                "observability": "fixed-safe-failure-category-only",
+                "later_stages": "unavailable-until-one-successful-bootstrap",
+                "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
+            },
+        },
+        "next_gate": "deploy-dormant-candidate-task-prove-and-promote-one-immutable-image-then-run-one-fixed-bootstrap-recovery-2",
+        "control": {
+            "command": "npm-run-platform-shell-postgresql-relational-smoke",
+            "execution_guard": "execute-and-approve-relational-stage6",
+            "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
+            "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
+            "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
+            "bootstrap_recovery_diagnostic": {
+                "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-direct-and-derived-log-stream-unavailable",
+                "derived_log_stream_prefix": "relational-bootstrap/relational-bootstrap/",
+                "output_policy": "safe-failure-category-only-no-stop-code-reason-task-identifier-log-text-or-provider-payload",
+                "categories": [
+                    "bootstrap-task-log-stream-unavailable",
+                    "bootstrap-task-log-events-unavailable",
+                    "bootstrap-task-log-stream-empty",
+                    "bootstrap-runtime-module-unavailable",
+                    "bootstrap-certificate-authority-unavailable",
+                    "bootstrap-database-authentication-failure",
+                    "bootstrap-database-authorization-failure",
+                    "bootstrap-database-connectivity-failure",
+                    "bootstrap-database-tls-failure",
+                    "bootstrap-workload-failure-unclassified",
+                    "bootstrap-workload-failure-log-marker-unavailable",
+                    "bootstrap-image-retrieval-failure",
+                    "bootstrap-secret-injection-failure",
+                    "bootstrap-log-driver-initialization-failure",
+                    "bootstrap-resource-initialization-failure",
+                    "bootstrap-task-startup-failure",
+                    "bootstrap-essential-container-exited-without-log-stream",
+                    "bootstrap-task-terminal-metadata-unclassified",
+                ],
+            },
+            "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
+            "foundation_stack": "kanbien-staging-platform-shell-foundation",
+            "service_stack": "kanbien-staging-platform-shell-service",
+            "source_database_identifier": "kanbien-staging-platform-relational",
+            "restore_database_identifier": "kanbien-staging-platform-relational-restore-proof-20260926",
+            "source_network": "existing-dormant-worker-service-awsvpc-configuration-only",
+            "task_families": {
+                "bootstrap": "kanbien-staging-platform-relational-bootstrap",
+                "migration": "kanbien-staging-platform-relational-migration",
+                "relay": "kanbien-staging-platform-relational-relay",
+                "worker": "kanbien-staging-platform-relational-worker",
+                "restore_verification": "kanbien-staging-platform-relational-restore-verify",
+            },
+            "task_containers": {
+                "bootstrap": "relational-bootstrap",
+                "migration": "relational-migration",
+                "relay": "relational-relay",
+                "worker": "relational-worker",
+                "restore_verification": "relational-restore-verify",
+            },
+            "started_by": {
+                "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260927-recovery-2",
+                "migration": "kanbien-postgresql-stage6-migration-20260927-recovery-2",
+                "worker": "kanbien-postgresql-stage6-worker-20260927-recovery-2",
+                "relay": "kanbien-postgresql-stage6-relay-20260927-recovery-2",
+                "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260927-recovery-2",
+            },
+            "task_wait_seconds": 900,
+            "restore_wait_seconds": 1800,
+            "required_queue_counts": {"before": 0, "after_relay": 1, "terminal": 0},
+            "restore_cleanup": "delete-disposable-recovery-instance-without-final-snapshot-only-after-restore-verification",
+            "output_policy": "safe-stage-status-and-aggregate-counts-only-no-identifiers-endpoints-records-secrets-headers-bodies-messages-or-provider-payloads",
+        },
     },
 }
 if target_persistence.get("relational_reference") != expected_relational_reference:
@@ -1306,8 +1488,8 @@ service_deployment_role = properties(foundation, "ServiceDeploymentExecutionRole
 service_deployment_policy = service_deployment_role.get("Policies", [{}])[0].get("PolicyDocument", {}).get("Statement", [])
 if not contains_value(service_deployment_policy, "ecs:RegisterTaskDefinition"):
     fail("ServiceDeploymentExecutionRole must be able to register only the service task definition")
-if not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskExecutionRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "TaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "WorkerTaskRole.Arn") or not contains_intrinsic(service_deployment_policy, "!GetAtt", "RelayTaskRole.Arn"):
-    fail("ServiceDeploymentExecutionRole must pass only the reviewed platform-shell server, worker, and relay task roles")
+if any(not contains_intrinsic(service_deployment_policy, "!GetAtt", role) for role in ("TaskExecutionRole.Arn", "TaskRole.Arn", "WorkerTaskRole.Arn", "RelayTaskRole.Arn", "RelationalTaskExecutionRole.Arn", "RelationalBootstrapTaskRole.Arn", "RelationalMigrationTaskRole.Arn", "RelationalRuntimeTaskRole.Arn", "RelationalRelayTaskRole.Arn", "RelationalWorkerTaskRole.Arn", "RelationalRestoreVerificationTaskRole.Arn")):
+    fail("ServiceDeploymentExecutionRole must pass only the reviewed platform-shell and isolated relational task roles")
 
 security_group = properties(foundation, "ServiceSecurityGroup", "AWS::EC2::SecurityGroup")
 for ingress in security_group.get("SecurityGroupIngress", []):
@@ -2053,8 +2235,32 @@ else:
 image_parameter = service.get("Parameters", {}).get("ImageUri", {})
 if "@sha256" not in image_parameter.get("AllowedPattern", ""):
     fail("service ImageUri must require an immutable digest")
+candidate_image_parameter = service.get("Parameters", {}).get("CandidateImageUri", {})
+if "@sha256" not in candidate_image_parameter.get("AllowedPattern", ""):
+    fail("service CandidateImageUri must require an immutable digest")
 
 task_definition = properties(service, "TaskDefinition", "AWS::ECS::TaskDefinition")
+candidate_preflight_task_definition = properties(service, "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition")
+candidate_mirror = copy.deepcopy(candidate_preflight_task_definition)
+server_mirror = copy.deepcopy(task_definition)
+candidate_mirror.pop("Family", None)
+candidate_mirror.pop("Tags", None)
+server_mirror.pop("Family", None)
+server_mirror.pop("Tags", None)
+candidate_containers = {
+    item.get("Name"): item
+    for item in candidate_mirror.get("ContainerDefinitions", [])
+    if isinstance(item, dict)
+}
+candidate_application = candidate_containers.get("platform-shell", {})
+if candidate_preflight_task_definition.get("Family") != "kanbien-staging-platform-shell-candidate-preflight" or candidate_application.get("Image") != {"!Ref": "CandidateImageUri"}:
+    fail("candidate preflight must use its only reviewed immutable image parameter and fixed family")
+else:
+    candidate_application["Image"] = {"!Ref": "ImageUri"}
+if candidate_mirror != server_mirror:
+    fail("candidate preflight task must mirror the server task exactly except family tags and candidate image")
+if service.get("Outputs", {}).get("CandidatePreflightTaskDefinitionArn") != {"Value": {"!Ref": "CandidatePreflightTaskDefinition"}}:
+    fail("service stack must expose only the reviewed candidate preflight task-definition reference")
 task_cpu_parameter = service.get("Parameters", {}).get("Cpu", {})
 task_memory_parameter = service.get("Parameters", {}).get("Memory", {})
 if task_definition.get("Cpu") != {"!Ref": "Cpu"} or task_definition.get("Memory") != {"!Ref": "Memory"} or task_cpu_parameter.get("Default") != "512" or task_cpu_parameter.get("AllowedValues") != ["512"] or task_memory_parameter.get("Default") != "1024" or task_memory_parameter.get("AllowedValues") != ["1024"]:

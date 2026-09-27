@@ -26,15 +26,21 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  script.sh [--base <branch>] <chat-branch>
+  script.sh [--base <branch>] [--remote-main <remote>] <chat-branch>
 
 Read-only gate for merging a completed chat branch into local main.
 Classifies deterministic blocked states and exits non-zero unless the branch is
 eligible for explicit, user-approved local merge.
+
+With --remote-main, verifies the same recorded source evidence against a
+freshly fetched <remote>/<base> reference. This mode is for a clean,
+fast-forward-only remote promotion when the local integration console has
+unrelated work and must remain untouched.
 EOF
 }
 
 BASE_BRANCH="main"
+REMOTE_NAME=""
 TARGET_BRANCH=""
 
 while [ $# -gt 0 ]; do
@@ -45,6 +51,14 @@ while [ $# -gt 0 ]; do
         exit 2
       fi
       BASE_BRANCH="$2"
+      shift 2
+      ;;
+    --remote-main)
+      if [ $# -lt 2 ]; then
+        usage >&2
+        exit 2
+      fi
+      REMOTE_NAME="$2"
       shift 2
       ;;
     -h|--help)
@@ -67,13 +81,24 @@ if [ -z "$TARGET_BRANCH" ]; then
   exit 2
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
+CALLER_ROOT="$(git rev-parse --show-toplevel)"
+CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
 
 # shellcheck source=../../worktree/paths/lib.sh
-source "$REPO_ROOT/scripts/00.chat/worktree/paths/lib.sh"
+source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
 # shellcheck source=../../session-log/paths/lib.sh
-source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+
+PRIMARY_PATH="$(chat_worktree_primary_path)"
+PRIMARY_PATH="$(cd "$PRIMARY_PATH" && pwd -P)"
+
+if [ -n "$REMOTE_NAME" ]; then
+  REPO_ROOT="$PRIMARY_PATH"
+  BASE_REF="refs/remotes/${REMOTE_NAME}/${BASE_BRANCH}"
+else
+  REPO_ROOT="$CALLER_ROOT"
+  BASE_REF="refs/heads/${BASE_BRANCH}"
+fi
 
 tmp_dir="$(mktemp -d)"
 
@@ -148,7 +173,13 @@ case "$TARGET_BRANCH" in
     ;;
 esac
 
-if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
+if ! git -C "$REPO_ROOT" show-ref --verify --quiet "$BASE_REF"; then
+  if [ -n "$REMOTE_NAME" ]; then
+    block "blocked-missing-remote-base" \
+      "remote tracking reference does not exist: ${REMOTE_NAME}/${BASE_BRANCH}" \
+      "Fetch the named remote before remote promotion verification."
+  fi
+
   block "blocked-missing-base" \
     "base branch does not exist: $BASE_BRANCH" \
     "Create or select the local base branch before convergence."
@@ -160,26 +191,25 @@ if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${TARGET_BRANCH}"
     "Create or fetch the chat branch before convergence."
 fi
 
-PRIMARY_PATH="$(chat_worktree_primary_path)"
-PRIMARY_PATH="$(cd "$PRIMARY_PATH" && pwd -P)"
-
-if [ "$REPO_ROOT" != "$PRIMARY_PATH" ]; then
+if [ -z "$REMOTE_NAME" ] && [ "$REPO_ROOT" != "$PRIMARY_PATH" ]; then
     block "blocked-not-root-integration-worktree" \
     "verification is not running from the root integration worktree" \
     "Run local merge verification from the root integration worktree."
 fi
 
-current_branch="$(git -C "$REPO_ROOT" branch --show-current)"
-if [ "$current_branch" != "$BASE_BRANCH" ]; then
-  block "blocked-root-not-main" \
-    "root integration worktree is on '$current_branch', expected '$BASE_BRANCH'" \
-    "Switch the root integration worktree to $BASE_BRANCH before convergence."
-fi
+if [ -z "$REMOTE_NAME" ]; then
+  current_branch="$(git -C "$REPO_ROOT" branch --show-current)"
+  if [ "$current_branch" != "$BASE_BRANCH" ]; then
+    block "blocked-root-not-main" \
+      "root integration worktree is on '$current_branch', expected '$BASE_BRANCH'" \
+      "Switch the root integration worktree to $BASE_BRANCH before convergence."
+  fi
 
-if [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
-  block "blocked-dirty-root" \
-    "root integration worktree is dirty" \
-    "Clean or explicitly resolve root worktree changes before convergence."
+  if [ -n "$(git -C "$REPO_ROOT" status --porcelain)" ]; then
+    block "blocked-dirty-root" \
+      "root integration worktree is dirty" \
+      "Clean or explicitly resolve root worktree changes before convergence."
+  fi
 fi
 
 SESSION_ID="${TARGET_BRANCH#chat/}"
@@ -294,8 +324,8 @@ if [ -n "$(git -C "$WORKTREE_PATH" status --porcelain)" ]; then
     "Commit, inspect, preserve, or explicitly discard chat work before convergence."
 fi
 
-ahead="$(git -C "$REPO_ROOT" rev-list --count "${BASE_BRANCH}..${TARGET_BRANCH}")"
-behind="$(git -C "$REPO_ROOT" rev-list --count "${TARGET_BRANCH}..${BASE_BRANCH}")"
+ahead="$(git -C "$REPO_ROOT" rev-list --count "${BASE_REF}..${TARGET_BRANCH}")"
+behind="$(git -C "$REPO_ROOT" rev-list --count "${TARGET_BRANCH}..${BASE_REF}")"
 
 if [ "$behind" != "0" ] && [ "$ahead" != "0" ]; then
   block "blocked-diverged" \
@@ -333,8 +363,13 @@ if ! git -C "$REPO_ROOT" merge-base --is-ancestor "$metadata_latest_sha" "$TARGE
     "Record a commit that is present on the target chat branch before convergence."
 fi
 
-echo "State: eligible"
-info "Base branch" "$BASE_BRANCH"
+if [ -n "$REMOTE_NAME" ]; then
+  echo "State: eligible-remote-promotion"
+  info "Remote base" "${REMOTE_NAME}/${BASE_BRANCH}"
+else
+  echo "State: eligible"
+  info "Base branch" "$BASE_BRANCH"
+fi
 info "Branch" "$TARGET_BRANCH"
 info "Ahead of base" "$ahead"
 info "Behind base" "$behind"
@@ -342,4 +377,8 @@ info "Session log source" "$LOG_SOURCE"
 info "Session log path" "$LOG_PATH"
 info "Chat worktree" "$WORKTREE_PATH"
 info "Recorded latest task commit" "$metadata_latest_sha"
-echo "Next step: ask for explicit approval, then merge from the root integration worktree."
+if [ -n "$REMOTE_NAME" ]; then
+  echo "Next step: after explicit push approval, prepare a clean remote-promotion worktree and push without force."
+else
+  echo "Next step: ask for explicit approval, then merge from the root integration worktree."
+fi

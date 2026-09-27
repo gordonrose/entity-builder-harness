@@ -4,7 +4,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging
-#   version: 4
+#   version: 6
 #   status: active
 #   layer: 04.deploy
 #   domain: runtime.operations
@@ -53,8 +53,11 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
-    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "role-policy-alignment"), default="continuous")
-    parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for pre-foundation-change-set mode.")
+    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set", "role-policy-alignment"), default="continuous")
+    parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
+    parser.add_argument("--service-change-set", help="The reviewed service change-set name, required only for the isolated relational Stage 6 service preflight.")
+    parser.add_argument("--service-drift-evidence", help="New /tmp safe Service-drift evidence, required only for the isolated relational Stage 6 service preflight.")
+    parser.add_argument("--known-foundation-drift-evidence", help="A new safe /tmp evidence record, required only for the exact egress-remediation preflight.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE)
     parser.add_argument("--aws-cli", default="aws")
     parser.add_argument("--aws-credential-source", choices=("target-profile", "environment"), default="target-profile")
@@ -63,14 +66,43 @@ def parse_arguments() -> argparse.Namespace:
     arguments = parser.parse_args()
     if not 1 <= arguments.timeout_seconds <= 30:
         parser.error("--timeout-seconds must be between 1 and 30")
-    if arguments.validate and arguments.foundation_change_set:
-        parser.error("--validate cannot inspect a change set")
-    if arguments.mode == "pre-foundation-change-set" and not arguments.validate and not arguments.foundation_change_set:
-        parser.error("--foundation-change-set is required for pre-foundation-change-set mode")
-    if arguments.mode != "pre-foundation-change-set" and arguments.foundation_change_set:
-        parser.error("--foundation-change-set is permitted only for pre-foundation-change-set mode")
+    preflight_modes = {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}
+    relational_service_preflight_modes = {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}
+    candidate_preflight_modes = {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}
+    service_preflight_modes = relational_service_preflight_modes | candidate_preflight_modes
+    service_preflight_mode = arguments.mode in service_preflight_modes
+    if arguments.validate and (arguments.foundation_change_set or arguments.service_change_set or arguments.known_foundation_drift_evidence or arguments.service_drift_evidence):
+        parser.error("--validate cannot inspect a change set or evidence record")
+    if arguments.mode in preflight_modes and not arguments.validate and not arguments.foundation_change_set:
+        parser.error("--foundation-change-set is required for a Foundation preflight mode")
+    if arguments.mode not in preflight_modes and arguments.foundation_change_set:
+        parser.error("--foundation-change-set is permitted only for a Foundation preflight mode")
+    if service_preflight_mode and not arguments.validate and not arguments.service_change_set:
+        parser.error("--service-change-set is required for the isolated relational Stage 6 service preflight")
+    if not service_preflight_mode and arguments.service_change_set:
+        parser.error("--service-change-set is permitted only for the isolated relational Stage 6 service preflight")
+    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *relational_service_preflight_modes} and not arguments.validate:
+        if not arguments.known_foundation_drift_evidence:
+            parser.error("--known-foundation-drift-evidence is required for the exact egress-remediation preflight")
+        evidence = Path(arguments.known_foundation_drift_evidence)
+        if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
+            parser.error("--known-foundation-drift-evidence must be a direct child of /tmp")
+    if arguments.mode not in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *relational_service_preflight_modes} and arguments.known_foundation_drift_evidence:
+        parser.error("--known-foundation-drift-evidence is permitted only for a relational Foundation preflight with classified drift")
+    if service_preflight_mode and not arguments.validate:
+        if not arguments.service_drift_evidence:
+            parser.error("--service-drift-evidence is required for the isolated relational Stage 6 service preflight")
+        evidence = Path(arguments.service_drift_evidence)
+        if not evidence.is_absolute() or evidence.parent != Path("/tmp"):
+            parser.error("--service-drift-evidence must be a direct child of /tmp")
+    if not service_preflight_mode and arguments.service_drift_evidence:
+        parser.error("--service-drift-evidence is permitted only for the isolated relational Stage 6 service preflight")
     if arguments.mode == "role-policy-alignment" and not arguments.validate and arguments.aws_credential_source != "target-profile":
         parser.error("role-policy-alignment requires the declared administrator target-profile credentials")
+    if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"} and not arguments.validate and arguments.aws_credential_source != "target-profile":
+        parser.error("a relational Foundation preflight requires declared administrator target-profile credentials")
+    if service_preflight_mode and not arguments.validate and arguments.aws_credential_source != "target-profile":
+        parser.error("a controlled Service preflight requires declared administrator target-profile credentials")
     return arguments
 
 
@@ -121,6 +153,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     region = text(cloud.get("region"), "region-missing")
     aws_profile = text(cloud.get("profile"), "aws-profile-missing")
     foundation_stack = text(cloudformation.get("foundation_stack"), "foundation-stack-missing")
+    service_stack = text(cloudformation.get("service_stack"), "service-stack-missing")
     artifact_stack = text(cloudformation.get("deployment_artifact_store_stack"), "artifact-stack-missing")
     artifact_bucket = text(cloudformation.get("deployment_artifact_bucket_name"), "artifact-bucket-missing")
     if not account_id.isdigit() or len(account_id) != 12 or region != "eu-west-1":
@@ -138,7 +171,56 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "maximum_evidence_age_seconds": 21600,
         "resource_read_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
         "detector_deployment_status": "source-planned-not-deployed",
-        "operational_coverage": "blocked-pending-reviewed-detector-role-workload-cost-and-live-proof",
+        "administrator_active_assessment_contract": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+        "administrator_active_assessment": {
+            "status": "approved-administrator-only-foundation-drift-classification",
+            "command": "npm run platform:shell:foundation-active-drift-assessment -- --execute-approved-active-foundation-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change",
+            "allowed_operations": [
+                "cloudformation:DetectStackDrift",
+                "cloudformation:DescribeStackDriftDetectionStatus",
+                "cloudformation:DescribeStackResourceDrifts",
+                "cloudformation:DescribeStacks",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDBParameters",
+            ],
+            "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
+            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        },
+        "artifact_active_assessment": {
+            "status": "approved-administrator-only-artifact-drift-assessment",
+            "command": "npm run platform:shell:artifact-active-drift-assessment -- --execute-approved-active-artifact-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "deployment-artifact-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-deployment-artifact-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
+        "operational_coverage": "administrator-only-foundation-artifact-and-service-assessments-available-detector-role-workload-cost-and-live-proof-pending",
+        "service_active_assessment": {
+            "status": "approved-administrator-only-service-drift-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-only-detect-and-status-poll-no-resource-detail-read-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus"],
+            "success_condition": "detection-complete-and-service-stack-in-sync",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
+        "candidate_preflight_baseline_assessment": {
+            "status": "approved-administrator-only-candidate-preflight-baseline-assessment",
+            "command": "npm run platform:shell:service-active-drift-assessment -- --candidate-onboarding --execute-approved-active-service-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json",
+            "execution_identity": "target-profile-administrator-only-not-github",
+            "scope": "service-stack-detect-and-status-poll-plus-fixed-source-service-steady-state-read-no-resource-detail-or-mutation",
+            "allowed_operations": ["sts:GetCallerIdentity", "cloudformation:DescribeStacks", "cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "ecs:DescribeServices"],
+            "accepted_service_stack_statuses": ["UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"],
+            "source_service": "kanbien-staging-platform-shell",
+            "success_condition": "detection-complete-and-service-stack-in-sync-and-source-service-steady",
+            "output_policy": "safe-check-identifiers-and-verdicts-only-no-detection-id-provider-response-resource-detail-or-property-values",
+            "maximum_evidence_age_seconds": 900,
+        },
     }
     if drift_evidence != expected_drift_evidence:
         raise ReconciliationError("drift-evidence-policy-not-reviewed")
@@ -162,6 +244,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "modes": {
             "continuous": "scheduled-read-only-verification-of-declared-live-controls",
             "pre_foundation_change_set": "required-immediately-before-any-foundation-change-set-execution",
+            "pre_foundation_egress_remediation_change_set": "administrator-only-preflight-for-one-reviewed-non-replacement-relational-database-egress-correction",
+            "pre_relational_stage6_foundation_change_set": "administrator-only-preflight-for-isolated-relational-queue-and-task-composition",
+            "pre_relational_stage6_service_change_set": "administrator-only-preflight-for-isolated-relational-task-definitions-and-normal-immutable-image-revisions",
+            "pre_relational_stage6_bootstrap_recovery_service_change_set": "administrator-only-preflight-for-corrected-image-existing-relational-task-definition-revisions-only",
+            "pre_candidate_execution_preflight_onboarding_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-addition-without-service-routing-change",
+            "pre_candidate_execution_preflight_image_change_set": "administrator-only-preflight-for-one-dormant-candidate-task-definition-immutable-image-revision-without-service-routing-change",
             "role_policy_alignment": "admin-only-source-to-live-inline-policy-comparison",
         },
         "workflow": ".github/workflows/reconcile-platform-shell-staging.yml",
@@ -176,6 +264,12 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "drift_evidence": expected_drift_evidence,
         "live_role_policy_alignment": expected_live_role_policy_alignment,
         "foundation_change_set_scope": reconciliation.get("foundation_change_set_scope"),
+        "foundation_egress_remediation_scope": reconciliation.get("foundation_egress_remediation_scope"),
+        "foundation_relational_stage6_change_set_scope": reconciliation.get("foundation_relational_stage6_change_set_scope"),
+        "service_relational_stage6_change_set_scope": reconciliation.get("service_relational_stage6_change_set_scope"),
+        "service_relational_stage6_bootstrap_recovery_image_change_set_scope": reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope"),
+        "candidate_execution_preflight_onboarding_change_set_scope": reconciliation.get("candidate_execution_preflight_onboarding_change_set_scope"),
+        "candidate_execution_preflight_image_change_set_scope": reconciliation.get("candidate_execution_preflight_image_change_set_scope"),
     }:
         raise ReconciliationError("reconciliation-policy-not-reviewed")
     if budget.get("name") != "kanbien-staging-platform-shell-monthly" or budget.get("amount_usd") != 25 or budget.get("period") != "monthly":
@@ -222,6 +316,104 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
     declared_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in modifications if isinstance(item, dict)}
     if declared_additions != expected_additions or declared_modifications != {("AlarmTopicPolicy", "AWS::SNS::TopicPolicy", False)}:
         raise ReconciliationError("change-set-scope-not-reviewed")
+    remediation_scope = mapping(reconciliation.get("foundation_egress_remediation_scope"), "egress-remediation-scope-missing")
+    expected_remediation_evidence = {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [
+            [{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}],
+            [
+                {"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]},
+                {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_categories": ["add", "not_equal"]},
+            ],
+        ],
+        "tls_enforcement": "required",
+    }
+    if remediation_scope.get("evidence") != expected_remediation_evidence or remediation_scope.get("modifications") != [
+        {"logical_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "replacement": False},
+    ]:
+        raise ReconciliationError("egress-remediation-scope-not-reviewed")
+    stage_six_scope = mapping(reconciliation.get("foundation_relational_stage6_change_set_scope"), "relational-stage6-scope-missing")
+    expected_stage_six_evidence = {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "known-remediation-required",
+        "known_change_sets": [[{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_categories": ["remove"]}]],
+        "tls_enforcement": "required",
+    }
+    expected_stage_six_additions = {
+        ("RelationalTaskExecutionRole", "AWS::IAM::Role"),
+        ("RelationalRelayTaskRole", "AWS::IAM::Role"),
+        ("RelationalWorkerTaskRole", "AWS::IAM::Role"),
+        ("RelationalRestoreVerificationTaskRole", "AWS::IAM::Role"),
+        ("RelationalSmokeQueue", "AWS::SQS::Queue"),
+        ("RelationalSmokeDeadLetterQueue", "AWS::SQS::Queue"),
+        ("RelationalSmokeQueueTransportPolicy", "AWS::SQS::QueuePolicy"),
+        ("RelationalSmokeDeadLetterQueueTransportPolicy", "AWS::SQS::QueuePolicy"),
+    }
+    stage_six_additions = {(item.get("logical_id"), item.get("resource_type")) for item in stage_six_scope.get("additions", []) if isinstance(item, dict)}
+    if stage_six_scope.get("evidence") != expected_stage_six_evidence or stage_six_additions != expected_stage_six_additions or stage_six_scope.get("modifications") != [{"logical_id": "ServiceDeploymentExecutionRole", "resource_type": "AWS::IAM::Role", "replacement": False}]:
+        raise ReconciliationError("relational-stage6-scope-not-reviewed")
+    service_stage_six_scope = mapping(reconciliation.get("service_relational_stage6_change_set_scope"), "relational-stage6-service-scope-missing")
+    expected_service_stage_six_foundation_evidence = expected_stage_six_evidence
+    expected_service_stage_six_service_evidence = {
+        "schema": "deploy/platform-shell-service-active-drift-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "in-sync",
+    }
+    expected_candidate_preflight_baseline_evidence = {
+        "schema": "deploy/platform-shell-candidate-preflight-baseline-evidence/v1",
+        "maximum_age_seconds": 900,
+        "classification": "in-sync-steady",
+    }
+    expected_service_stage_six_additions = {
+        ("RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition"),
+        ("RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition"),
+        ("RelationalRelayTaskDefinition", "AWS::ECS::TaskDefinition"),
+        ("RelationalWorkerTaskDefinition", "AWS::ECS::TaskDefinition"),
+        ("RelationalRestoreVerificationTaskDefinition", "AWS::ECS::TaskDefinition"),
+    }
+    expected_service_stage_six_modifications = {
+        ("TaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("WorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("Service", "AWS::ECS::Service", False),
+        ("WorkerService", "AWS::ECS::Service", False),
+    }
+    actual_service_stage_six_additions = {(item.get("logical_id"), item.get("resource_type")) for item in service_stage_six_scope.get("additions", []) if isinstance(item, dict)}
+    actual_service_stage_six_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in service_stage_six_scope.get("modifications", []) if isinstance(item, dict)}
+    if service_stage_six_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or service_stage_six_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_service_stage_six_additions != expected_service_stage_six_additions or actual_service_stage_six_modifications != expected_service_stage_six_modifications:
+        raise ReconciliationError("relational-stage6-service-scope-not-reviewed")
+    bootstrap_recovery_scope = mapping(reconciliation.get("service_relational_stage6_bootstrap_recovery_image_change_set_scope"), "relational-stage6-bootstrap-recovery-service-scope-missing")
+    expected_bootstrap_recovery_modifications = {
+        ("TaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("WorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalRelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalWorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("RelationalRestoreVerificationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+        ("Service", "AWS::ECS::Service", False),
+        ("WorkerService", "AWS::ECS::Service", False),
+    }
+    actual_bootstrap_recovery_additions = {(item.get("logical_id"), item.get("resource_type")) for item in bootstrap_recovery_scope.get("additions", []) if isinstance(item, dict)}
+    actual_bootstrap_recovery_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in bootstrap_recovery_scope.get("modifications", []) if isinstance(item, dict)}
+    if bootstrap_recovery_scope.get("foundation_evidence") != expected_service_stage_six_foundation_evidence or bootstrap_recovery_scope.get("service_evidence") != expected_service_stage_six_service_evidence or actual_bootstrap_recovery_additions or actual_bootstrap_recovery_modifications != expected_bootstrap_recovery_modifications:
+        raise ReconciliationError("relational-stage6-bootstrap-recovery-service-scope-not-reviewed")
+    candidate_onboarding_scope = mapping(reconciliation.get("candidate_execution_preflight_onboarding_change_set_scope"), "candidate-preflight-onboarding-scope-missing")
+    candidate_image_scope = mapping(reconciliation.get("candidate_execution_preflight_image_change_set_scope"), "candidate-preflight-image-scope-missing")
+    expected_candidate_onboarding_additions = {("CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition")}
+    expected_candidate_image_modifications = {("CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", True)}
+    actual_candidate_onboarding_additions = {(item.get("logical_id"), item.get("resource_type")) for item in candidate_onboarding_scope.get("additions", []) if isinstance(item, dict)}
+    actual_candidate_onboarding_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_onboarding_scope.get("modifications", []) if isinstance(item, dict)}
+    actual_candidate_image_additions = {(item.get("logical_id"), item.get("resource_type")) for item in candidate_image_scope.get("additions", []) if isinstance(item, dict)}
+    actual_candidate_image_modifications = {(item.get("logical_id"), item.get("resource_type"), item.get("replacement")) for item in candidate_image_scope.get("modifications", []) if isinstance(item, dict)}
+    if candidate_onboarding_scope.get("service_evidence") != expected_candidate_preflight_baseline_evidence or actual_candidate_onboarding_additions != expected_candidate_onboarding_additions or actual_candidate_onboarding_modifications:
+        raise ReconciliationError("candidate-preflight-onboarding-scope-not-reviewed")
+    if candidate_image_scope.get("service_evidence") != expected_candidate_preflight_baseline_evidence or actual_candidate_image_additions or actual_candidate_image_modifications != expected_candidate_image_modifications:
+        raise ReconciliationError("candidate-preflight-image-scope-not-reviewed")
     return {
         "account_id": account_id,
         "region": region,
@@ -229,7 +421,9 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
         "artifact_stack": artifact_stack,
         "artifact_bucket": artifact_bucket,
         "foundation_stack": foundation_stack,
+        "service_stack": service_stack,
         "maximum_drift_evidence_age_seconds": expected_drift_evidence["maximum_evidence_age_seconds"],
+        "maximum_remediation_evidence_age_seconds": expected_remediation_evidence["maximum_age_seconds"],
         "reconciliation_role_name": expected_live_role_policy_alignment["role_name"],
         "reconciliation_inline_policy_name": expected_live_role_policy_alignment["inline_policy_name"],
         "reconciliation_policy_source": expected_live_role_policy_alignment["desired_policy_source"],
@@ -239,6 +433,26 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
             *( ("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_additions ),
             ("Modify", "AlarmTopicPolicy", "AWS::SNS::TopicPolicy", False),
         },
+        "expected_remediation_changes": {("Modify", "RelationalDatabaseSecurityGroup", "AWS::EC2::SecurityGroup", False)},
+        "expected_relational_stage6_changes": {
+            *(("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_stage_six_additions),
+            ("Modify", "ServiceDeploymentExecutionRole", "AWS::IAM::Role", False),
+        },
+        "expected_relational_stage6_service_changes": {
+            *(("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_service_stage_six_additions),
+            *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_service_stage_six_modifications),
+        },
+        "expected_relational_stage6_bootstrap_recovery_service_changes": {
+            *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_bootstrap_recovery_modifications),
+        },
+        "expected_candidate_execution_preflight_onboarding_changes": {
+            *(("Add", logical_id, resource_type, None) for logical_id, resource_type in expected_candidate_onboarding_additions),
+        },
+        "expected_candidate_execution_preflight_image_changes": {
+            *(("Modify", logical_id, resource_type, replacement) for logical_id, resource_type, replacement in expected_candidate_image_modifications),
+        },
+        "maximum_stage_six_evidence_age_seconds": expected_stage_six_evidence["maximum_age_seconds"],
+        "maximum_service_stage_six_evidence_age_seconds": expected_service_stage_six_service_evidence["maximum_age_seconds"],
     }
 
 
@@ -316,6 +530,113 @@ def check_stack_drift_evidence(arguments: argparse.Namespace, policy: dict[str, 
     age_seconds = (datetime.now(timezone.utc) - checked_at).total_seconds()
     if age_seconds < 0 or age_seconds > policy["maximum_drift_evidence_age_seconds"]:
         raise ReconciliationError(f"{check_id}-evidence-stale")
+
+
+def check_known_remediation_evidence(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Accept only a just-created, safe record from the dedicated fixed-stack classifier."""
+
+    path = Path(arguments.known_foundation_drift_evidence)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("known-foundation-drift-evidence-unreadable") from exception
+    # The active classifier emits a bounded list because CloudFormation can
+    # report both the accepted parameter-group normalisation and the reviewed
+    # security-group correction during the same assessment.  Do not retain an
+    # obsolete singular shape check here: it would reject the only safe
+    # evidence the classifier is permitted to produce.
+    if not isinstance(document, dict) or not isinstance(document.get("known_changes"), list):
+        raise ReconciliationError("known-foundation-drift-evidence-not-reviewed")
+    expected = {
+        "schema": "deploy/platform-shell-foundation-known-drift-evidence/v1",
+        "target": "kanbien/staging",
+        "account_id": policy["account_id"],
+        "region": policy["region"],
+        "foundation_stack": policy["foundation_stack"],
+        "classification": "known-remediation-required",
+        "tls_enforcement": "required",
+    }
+    allowed_changes = [
+        [{"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_category": "remove"}],
+        [
+            {"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_category": "remove"},
+            {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_category": "add"},
+        ],
+        [
+            {"logical_resource_id": "RelationalDatabaseParameterGroup", "resource_type": "AWS::RDS::DBParameterGroup", "change_category": "remove"},
+            {"logical_resource_id": "RelationalDatabaseSecurityGroup", "resource_type": "AWS::EC2::SecurityGroup", "change_category": "not_equal"},
+        ],
+    ]
+    if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
+        allowed_changes = [allowed_changes[0]]
+    if any(document.get(key) != value for key, value in expected.items()) or document.get("known_changes") not in allowed_changes:
+        raise ReconciliationError("known-foundation-drift-evidence-not-reviewed")
+    try:
+        issued_at = datetime.fromisoformat(str(document.get("issued_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError("known-foundation-drift-evidence-timestamp-invalid") from exception
+    age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
+    maximum_age = policy["maximum_stage_six_evidence_age_seconds"] if arguments.mode in {"pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"} else policy["maximum_remediation_evidence_age_seconds"]
+    if age_seconds < 0 or age_seconds > maximum_age:
+        raise ReconciliationError("known-foundation-drift-evidence-stale")
+
+
+def check_service_drift_evidence(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Accept only the new, fixed-stack, in-sync Service assessment record."""
+
+    path = Path(arguments.service_drift_evidence)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("service-drift-evidence-unreadable") from exception
+    expected = {
+        "schema": "deploy/platform-shell-service-active-drift-evidence/v1",
+        "target": "kanbien/staging",
+        "account_id": policy["account_id"],
+        "region": policy["region"],
+        "service_stack": policy["service_stack"],
+        "classification": "in-sync",
+    }
+    if not isinstance(document, dict) or any(document.get(key) != value for key, value in expected.items()):
+        raise ReconciliationError("service-drift-evidence-not-reviewed")
+    try:
+        issued_at = datetime.fromisoformat(str(document.get("issued_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError("service-drift-evidence-timestamp-invalid") from exception
+    age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
+    if age_seconds < 0 or age_seconds > policy["maximum_service_stage_six_evidence_age_seconds"]:
+        raise ReconciliationError("service-drift-evidence-stale")
+
+
+def check_candidate_preflight_baseline_evidence(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
+    """Accept only a new, read-only proof of a stable onboarding baseline."""
+
+    path = Path(arguments.service_drift_evidence)
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-unreadable") from exception
+    expected = {
+        "schema": "deploy/platform-shell-candidate-preflight-baseline-evidence/v1",
+        "target": "kanbien/staging",
+        "account_id": policy["account_id"],
+        "region": policy["region"],
+        "service_stack": policy["service_stack"],
+        "classification": "in-sync-steady",
+        "source_service": "kanbien-staging-platform-shell",
+        "source_service_steady": True,
+    }
+    if not isinstance(document, dict) or any(document.get(key) != value for key, value in expected.items()):
+        raise ReconciliationError("candidate-preflight-baseline-evidence-not-reviewed")
+    if document.get("service_stack_status") not in {"UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"}:
+        raise ReconciliationError("candidate-preflight-baseline-stack-status-not-reviewed")
+    try:
+        issued_at = datetime.fromisoformat(str(document.get("issued_at_utc")).replace("Z", "+00:00"))
+    except (TypeError, ValueError) as exception:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-timestamp-invalid") from exception
+    age_seconds = (datetime.now(timezone.utc) - issued_at).total_seconds()
+    if age_seconds < 0 or age_seconds > policy["maximum_service_stage_six_evidence_age_seconds"]:
+        raise ReconciliationError("candidate-preflight-baseline-evidence-stale")
 
 
 def check_reconciliation_live_role_policy(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
@@ -412,21 +733,26 @@ def check_budget(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     )
 
 
-def check_change_set(arguments: argparse.Namespace, policy: dict[str, Any], change_set: str) -> None:
-    """Require exactly the already-reviewed Foundation change-set scope before execution."""
+def normalized_replacement(value: Any) -> Any:
+    """Convert CloudFormation's boolean-like replacement fields to source booleans."""
 
-    payload = run_aws(arguments, policy, ["cloudformation", "describe-change-set", "--stack-name", policy["foundation_stack"], "--change-set-name", change_set, "--query", "{status:Status,execution:ExecutionStatus,changes:Changes[].ResourceChange.{action:Action,logicalId:LogicalResourceId,resourceType:ResourceType,replacement:Replacement}}"])
-    require(payload.get("status") == "CREATE_COMPLETE" and payload.get("execution") == "AVAILABLE", "foundation-change-set-state")
+    return {"True": True, "False": False}.get(value, value)
+
+
+def check_change_set(arguments: argparse.Namespace, policy: dict[str, Any], stack: str, change_set: str, expected_changes: set[tuple[Any, ...]], check_id: str) -> None:
+    """Require exactly the already-reviewed target stack change-set scope before execution."""
+
+    payload = run_aws(arguments, policy, ["cloudformation", "describe-change-set", "--stack-name", stack, "--change-set-name", change_set, "--query", "{status:Status,execution:ExecutionStatus,changes:Changes[].ResourceChange.{action:Action,logicalId:LogicalResourceId,resourceType:ResourceType,replacement:Replacement}}"])
+    require(payload.get("status") == "CREATE_COMPLETE" and payload.get("execution") == "AVAILABLE", f"{check_id}-state")
     changes = payload.get("changes")
-    require(isinstance(changes, list), "foundation-change-set-scope")
+    require(isinstance(changes, list), check_id)
     actual_changes = set()
     for change in changes:
         if not isinstance(change, dict):
-            raise ReconciliationError("foundation-change-set-scope")
-        replacement = change.get("replacement")
-        normalized_replacement = False if replacement == "False" else None if replacement is None else replacement
-        actual_changes.add((change.get("action"), change.get("logicalId"), change.get("resourceType"), normalized_replacement))
-    require(actual_changes == policy["expected_changes"] and len(changes) == len(policy["expected_changes"]), "foundation-change-set-scope")
+            raise ReconciliationError(check_id)
+        replacement = normalized_replacement(change.get("replacement"))
+        actual_changes.add((change.get("action"), change.get("logicalId"), change.get("resourceType"), replacement))
+    require(actual_changes == expected_changes and len(changes) == len(expected_changes), check_id)
 
 
 def result(mode: str, checks: list[dict[str, str]], verdict: str) -> dict[str, Any]:
@@ -455,24 +781,84 @@ def main() -> int:
                 ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
                 ("artifact-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["artifact_stack"], "artifact-stack-drift")),
                 ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
-                ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")),
                 *artifact_bucket_checks(arguments, policy),
                 ("platform-shell-budget", lambda: check_budget(arguments, policy)),
             ]
+            if arguments.mode in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set"}:
+                core_checks = [
+                    ("aws-account", lambda: check_identity(arguments, policy)),
+                    ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
+                    ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
+                    ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)),
+                    ("service-stack-status", lambda: check_stack_status(arguments, policy, policy["service_stack"], "UPDATE_COMPLETE", "service-stack-status")),
+                    ("service-active-drift-evidence", lambda: check_service_drift_evidence(arguments, policy)),
+                    *artifact_bucket_checks(arguments, policy),
+                    ("platform-shell-budget", lambda: check_budget(arguments, policy)),
+                ]
+            elif arguments.mode in {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
+                core_checks = [
+                    ("aws-account", lambda: check_identity(arguments, policy)),
+                    ("artifact-stack-status", lambda: check_stack_status(arguments, policy, policy["artifact_stack"], "CREATE_COMPLETE", "artifact-stack-status")),
+                    ("foundation-stack-status", lambda: check_stack_status(arguments, policy, policy["foundation_stack"], "UPDATE_COMPLETE", "foundation-stack-status")),
+                    ("candidate-preflight-baseline-evidence", lambda: check_candidate_preflight_baseline_evidence(arguments, policy)),
+                    *artifact_bucket_checks(arguments, policy),
+                    ("platform-shell-budget", lambda: check_budget(arguments, policy)),
+                ]
+            if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set"}:
+                core_checks.insert(4, ("known-foundation-drift-evidence", lambda: check_known_remediation_evidence(arguments, policy)))
+            elif arguments.mode not in {"pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
+                core_checks.insert(4, ("foundation-stack-drift-evidence", lambda: check_stack_drift_evidence(arguments, policy, policy["foundation_stack"], "foundation-stack-drift")))
             for check_id, check in core_checks:
                 run_check(check_id, check)
                 checks.append({"id": check_id, "verdict": "passed"})
-            if arguments.mode == "pre-foundation-change-set":
+            if arguments.mode in {"pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
                 run_check(
                     "reconciliation-live-role-policy",
                     lambda: check_reconciliation_live_role_policy(arguments, policy),
                 )
                 checks.append({"id": "reconciliation-live-role-policy", "verdict": "passed"})
-                run_check(
-                    "foundation-change-set-scope",
-                    lambda: check_change_set(arguments, policy, arguments.foundation_change_set),
-                )
-                checks.append({"id": "foundation-change-set-scope", "verdict": "passed"})
+                if arguments.mode == "pre-foundation-change-set":
+                    run_check(
+                        "foundation-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["foundation_stack"], arguments.foundation_change_set, policy["expected_changes"], "foundation-change-set-scope"),
+                    )
+                    checks.append({"id": "foundation-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-foundation-egress-remediation-change-set":
+                    run_check(
+                        "foundation-egress-remediation-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["foundation_stack"], arguments.foundation_change_set, policy["expected_remediation_changes"], "foundation-egress-remediation-change-set-scope"),
+                    )
+                    checks.append({"id": "foundation-egress-remediation-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-relational-stage6-foundation-change-set":
+                    run_check(
+                        "relational-stage6-foundation-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["foundation_stack"], arguments.foundation_change_set, policy["expected_relational_stage6_changes"], "relational-stage6-foundation-change-set-scope"),
+                    )
+                    checks.append({"id": "relational-stage6-foundation-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-relational-stage6-service-change-set":
+                    run_check(
+                        "relational-stage6-service-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_relational_stage6_service_changes"], "relational-stage6-service-change-set-scope"),
+                    )
+                    checks.append({"id": "relational-stage6-service-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-candidate-execution-preflight-onboarding-change-set":
+                    run_check(
+                        "candidate-preflight-onboarding-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_candidate_execution_preflight_onboarding_changes"], "candidate-preflight-onboarding-change-set-scope"),
+                    )
+                    checks.append({"id": "candidate-preflight-onboarding-change-set-scope", "verdict": "passed"})
+                elif arguments.mode == "pre-candidate-execution-preflight-image-change-set":
+                    run_check(
+                        "candidate-preflight-image-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_candidate_execution_preflight_image_changes"], "candidate-preflight-image-change-set-scope"),
+                    )
+                    checks.append({"id": "candidate-preflight-image-change-set-scope", "verdict": "passed"})
+                else:
+                    run_check(
+                        "relational-stage6-bootstrap-recovery-service-change-set-scope",
+                        lambda: check_change_set(arguments, policy, policy["service_stack"], arguments.service_change_set, policy["expected_relational_stage6_bootstrap_recovery_service_changes"], "relational-stage6-bootstrap-recovery-service-change-set-scope"),
+                    )
+                    checks.append({"id": "relational-stage6-bootstrap-recovery-service-change-set-scope", "verdict": "passed"})
         print(json.dumps(result(arguments.mode, checks, "passed"), sort_keys=True))
         return 0
     except ReconciliationError as exception:

@@ -42,6 +42,8 @@ except ImportError as error:
 
 WORKFLOW_PATH = Path(".github/workflows/deploy-platform-shell-staging.yml")
 TARGET_PROFILE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml")
+BUILD_SCRIPT_PATH = Path("scripts/04.deploy/build-platform-shell-image/script.sh")
+SERVICE_TEMPLATE_PATH = Path("infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml")
 
 
 def load_yaml(path: Path) -> dict:
@@ -166,6 +168,20 @@ for required_text, message in {
 }.items():
     require(required_text in build_run, message)
 
+platform_index, platform_step = step("Verify published target-platform image")
+platform_run = text(platform_step.get("run"))
+for required_text, message in {
+    'expected_platform="linux/amd64"': "published image verification must bind the reviewed runtime platform",
+    'docker pull --platform "$expected_platform"': "published image verification must pull the immutable digest for the reviewed platform",
+    'docker image inspect "${{ steps.image.outputs.uri }}"': "published image verification must inspect the immutable digest rather than a mutable tag",
+    'if [ "$source_revision" != "$GITHUB_SHA" ]; then': "published image verification must bind the image revision to the checked-out commit",
+}.items():
+    require(required_text in platform_run, message)
+require(
+    build_index >= 0 and platform_index > build_index and platform_index < scan_index,
+    "published image platform verification must occur after build/push and before scan evidence",
+)
+
 image_profile = target_profile.get("artifacts", {}).get("image", {})
 if not isinstance(image_profile, dict):
     failures.append("target profile image configuration must be a mapping")
@@ -174,6 +190,7 @@ for key, expected in {
     "build_image_policy": "pin-by-digest-for-official-build",
     "runtime_image_policy": "pin-by-digest-for-official-build",
     "runtime_image_class": "minimal-nonroot-distroless-nodejs22-debian12",
+    "runtime_platform": "linux/amd64",
 }.items():
     require(image_profile.get(key) == expected, f"target profile image {key} must be {expected}")
 registry_scanning = image_profile.get("registry_scanning", {})
@@ -246,6 +263,11 @@ for required_text, message in {
     require(required_text in summary_run, message)
 
 workflow_text = WORKFLOW_PATH.read_text(encoding="utf-8")
+build_script_text = BUILD_SCRIPT_PATH.read_text(encoding="utf-8") if BUILD_SCRIPT_PATH.is_file() else ""
+service_template_text = SERVICE_TEMPLATE_PATH.read_text(encoding="utf-8") if SERVICE_TEMPLATE_PATH.is_file() else ""
+require("TARGET_PLATFORM=\"linux/amd64\"" in build_script_text, "image build wrapper must declare the reviewed linux/amd64 target platform")
+require("--platform \"$TARGET_PLATFORM\"" in build_script_text, "image build wrapper must force the reviewed target platform")
+require("CpuArchitecture: X86_64" in service_template_text and "OperatingSystemFamily: LINUX" in service_template_text, "service template runtime platform must match the reviewed linux/amd64 target")
 for forbidden_text in (
     "aws cloudformation deploy",
     "aws cloudformation create-change-set",

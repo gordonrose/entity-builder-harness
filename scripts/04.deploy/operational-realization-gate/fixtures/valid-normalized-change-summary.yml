@@ -1,0 +1,30 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.operational-realization-valid-normalized-change-summary
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: fixture
+#   purpose: Represent a safe generic mutation summary without provider resource information.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.test.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+schema: operational-realization-normalized-change-summary/v1
+contract_id: harmless-delivery-route
+check_id: change-summary-check
+timestamp: "2026-09-27T00:00:00Z"
+operation_counts:
+  create: 1
+  update: 0
+  delete: 0
+  replace: 0
+  broaden-permission: 0

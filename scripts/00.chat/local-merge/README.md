@@ -22,9 +22,14 @@
 # Local Merge Scripts
 
 Local merge scripts help decide whether chat work can be integrated into local
-`main`. They are local coordination tools, not push tools.
+`main`, or is eligible for a separately governed fast-forward remote
+promotion. They do not push by themselves.
 
 Use this domain when checking whether a chat branch is current with `main`,
 whether related chat branches are active, or whether overlapping chat work
 needs human attention before promotion.
 
+When the root integration console has unrelated work, use
+`.agentic/00.chat/workflows/chat-promote-to-remote-main.md`. Its verifier keeps
+the same source-session and clean-worktree evidence, while comparing the chat
+branch to a freshly fetched remote base instead of altering the console.

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.script.reconcile-platform-shell-staging.smoke-test
-#   version: 4
+#   version: 5
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -25,12 +25,20 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-if rg -q 'ThreadPoolExecutor|concurrent\.futures' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if grep -Eq -- 'ThreadPoolExecutor|concurrent\.futures' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: reconciliation AWS calls must remain serial." >&2
   exit 1
 fi
-if ! rg -q 'role-policy-alignment requires the declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+if ! grep -Eq -- 'role-policy-alignment requires the declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
   echo "ERROR: reconciliation role-policy alignment must remain administrator-only." >&2
+  exit 1
+fi
+if ! grep -Eq -- 'a controlled Service preflight requires declared administrator target-profile credentials' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: controlled Service preflight must remain target-admin only." >&2
+  exit 1
+fi
+if ! grep -Eq -- 'pre-relational-stage6-bootstrap-recovery-service-change-set' scripts/04.deploy/reconcile-platform-shell-staging/script.py; then
+  echo "ERROR: bootstrap recovery must retain its distinct Service change-set guard." >&2
   exit 1
 fi
 python3 -c 'from pathlib import Path; compile(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py").read_text(encoding="utf-8"), "reconcile-platform-shell-staging.py", "exec")'
@@ -42,6 +50,34 @@ from types import SimpleNamespace
 from pathlib import Path
 
 module = runpy.run_path(Path("scripts/04.deploy/reconcile-platform-shell-staging/script.py"))
+
+assert module["normalized_replacement"]("True") is True
+assert module["normalized_replacement"]("False") is False
+assert module["normalized_replacement"](None) is None
+assert module["normalized_replacement"]("unexpected") == "unexpected"
+
+bootstrap_recovery_changes = {
+    ("Modify", "TaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "WorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalBootstrapTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalMigrationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalRelayTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalWorkerTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "RelationalRestoreVerificationTaskDefinition", "AWS::ECS::TaskDefinition", True),
+    ("Modify", "Service", "AWS::ECS::Service", False),
+    ("Modify", "WorkerService", "AWS::ECS::Service", False),
+}
+assert len(bootstrap_recovery_changes) == 10
+
+profile = module["load_yaml"](Path("infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"))
+policy = module["resolve_policy"](profile)
+assert policy["expected_candidate_execution_preflight_onboarding_changes"] == {
+    ("Add", "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", None),
+}
+assert policy["expected_candidate_execution_preflight_image_changes"] == {
+    ("Modify", "CandidatePreflightTaskDefinition", "AWS::ECS::TaskDefinition", True),
+}
 
 try:
     module["run_check"](

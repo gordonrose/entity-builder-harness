@@ -1,0 +1,84 @@
+# Isolated SQS transport for the one relational-reference proof only. It never
+# shares the already-proven DynamoDB/SQS smoke queue or its delivery history.
+Resources:
+  RelationalSmokeDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: kanbien-staging-platform-relational-smoke-dlq
+      MessageRetentionPeriod: 1209600
+      ReceiveMessageWaitTimeSeconds: 20
+      SqsManagedSseEnabled: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-smoke-dead-letter
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-message-envelope
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalSmokeQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      QueueName: kanbien-staging-platform-relational-smoke
+      DelaySeconds: 0
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 345600
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 120
+      SqsManagedSseEnabled: true
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt RelationalSmokeDeadLetterQueue.Arn
+        maxReceiveCount: 5
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: relational-smoke
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: operational-message-envelope
+        - Key: managed-by
+          Value: cloudformation
+
+  RelationalSmokeQueueTransportPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref RelationalSmokeQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: sqs:*
+            Resource: !GetAtt RelationalSmokeQueue.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  RelationalSmokeDeadLetterQueueTransportPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref RelationalSmokeDeadLetterQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: sqs:*
+            Resource: !GetAtt RelationalSmokeDeadLetterQueue.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
