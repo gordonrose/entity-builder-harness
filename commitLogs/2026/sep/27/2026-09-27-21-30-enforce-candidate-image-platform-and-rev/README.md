@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-27T20:30:32Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-27T21:17:03Z
+latest_commit_sha: e86f10e9
+chat_duration: 2791s (00:00:46:31)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -78,6 +78,17 @@ Initial intent: let's do 1
   shell syntax, and whitespace checks locally. No AWS resource was changed in
   this source-validation stage.
 
+
+### 2026-09-27T21:17:03Z - Commit recorded
+
+Commit: `e86f10e9`
+
+Message: fix(deploy): verify published runtime image contract
+
+Summary: Force the reviewed linux/amd64 image platform and verify immutable digest platform plus source revision before staging deployment continuation; record the provider-neutral realization follow-up.
+
+ADR impact: no ADR; recorded in deployment plans
+
 ## Sub-Agent Activity
 
 - Independent evidence audit: verified the source/payload seals already cover
@@ -88,7 +99,13 @@ Initial intent: let's do 1
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `e86f10e9`
+  Time UTC: 2026-09-27T21:17:03Z
+  Message: fix(deploy): verify published runtime image contract
+  Summary: Force the reviewed linux/amd64 image platform and verify immutable digest platform plus source revision before staging deployment continuation; record the provider-neutral realization follow-up.
+  ADR impact: no ADR; recorded in deployment plans
 
 ## Main Refresh Conflicts
 
@@ -105,12 +122,12 @@ this commit does not choose a new platform architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T20:30:32Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-27T21:17:03Z
+Latest commit SHA: e86f10e9
+Chat duration: 2791s (00:00:46:31)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
