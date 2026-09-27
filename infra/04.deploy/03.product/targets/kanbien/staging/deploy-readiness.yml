@@ -570,7 +570,7 @@ runtime:
       - bounded-worker-scale-up-and-return-to-zero
   persistence_foundation:
     relational_reference:
-      status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-2-source-ready
+      status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready
       source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
       deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
       threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -659,7 +659,7 @@ runtime:
         live_boundary_verifier: passed
         next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
       stage_6_relational_smoke_composition:
-        status: bootstrap-recovery-2-source-defined-image-publication-pending
+        status: bootstrap-recovery-4-source-defined-image-publication-pending
         service_change_set_preflight:
           foundation_evidence: fresh-classified-known-rds-parameter-normalization-only
           service_evidence: fresh-target-admin-in-sync-service-stack-detection-only
@@ -675,16 +675,26 @@ runtime:
           corrective_ownership: migration-role-default-privileges-only
           consumed_stage_guard: running-and-stopped-fixed-label-reads
           service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
-          next_execution: one-fixed-bootstrap-recovery-1-label-only-after-corrected-image-rollout
+          next_execution: one-fixed-bootstrap-recovery-4-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight
           recovery_1_execution:
             bootstrap: one-fixed-task-exited-nonzero
             diagnostic: bootstrap-workload-failure-unclassified
             later_stages: not-started
             preserved_boundary: server-one-worker-zero-isolated-queues-empty
-            next_gate: reviewed-safe-bootstrap-failure-classification-and-new-recovery-2-label-before-any-new-task
+          next_gate: reviewed-safe-bootstrap-failure-classification-and-new-recovery-4-label-before-any-new-task
           recovery_2_execution:
+            bootstrap: one-fixed-task-exited-nonzero
+            diagnostic: bootstrap-workload-failure-unclassified
+            later_stages: unavailable-until-one-successful-bootstrap
+            preserved_boundary: server-one-worker-zero-isolated-queues-empty
+          recovery_3_execution:
+            bootstrap: one-fixed-task-exited-nonzero
+            diagnostic: bootstrap-input-validation-failure
+            later_stages: unavailable-until-one-successful-bootstrap
+            preserved_boundary: server-one-worker-zero-isolated-queues-empty
+          recovery_4_execution:
             bootstrap: not-started
-            observability: fixed-safe-failure-category-only
+            observability: fixed-safe-bootstrap-phase-category-only
             later_stages: unavailable-until-one-successful-bootstrap
             preserved_boundary: server-one-worker-zero-isolated-queues-empty
         sequence:

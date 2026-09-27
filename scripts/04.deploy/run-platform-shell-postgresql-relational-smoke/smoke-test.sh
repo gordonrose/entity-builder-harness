@@ -90,6 +90,10 @@ if ! grep -Eq -- 'failure_category' infra/04.deploy/03.product/entrypoints/kanbi
   echo "ERROR: bootstrap must emit only an allowlisted failure category after a workload failure" >&2
   exit 1
 fi
+if ! grep -Eq -- 'credentialsFromEnvironment\("RELATIONAL_MASTER_SECRET_JSON"\)' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts || ! grep -Eq -- 'host: migration\.host, port: migration\.port' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
+  echo "ERROR: bootstrap must support a credentials-only RDS-managed master secret through the target-owned migration connection endpoint" >&2
+  exit 1
+fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path

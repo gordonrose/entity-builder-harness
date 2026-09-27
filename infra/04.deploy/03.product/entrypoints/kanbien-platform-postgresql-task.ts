@@ -17,6 +17,12 @@ export interface RelationalTaskSecret {
   readonly port: number;
 }
 
+/** A managed RDS master secret may deliberately contain credentials only. */
+export interface RelationalTaskCredentials {
+  readonly username: string;
+  readonly password: string;
+}
+
 export interface RelationalTaskConfiguration {
   readonly database: "platformsmoke";
   readonly schema: "platform_smoke";
@@ -31,26 +37,27 @@ export type BootstrapFailureCategory =
   | "bootstrap-database-authorization-failure"
   | "bootstrap-database-connectivity-failure"
   | "bootstrap-database-tls-failure"
+  | "bootstrap-input-validation-failure"
+  | "bootstrap-password-quotation-failure"
+  | "bootstrap-role-provisioning-failure"
+  | "bootstrap-database-grant-failure"
+  | "bootstrap-schema-provisioning-failure"
+  | "bootstrap-schema-grant-failure"
   | "bootstrap-workload-failure-unclassified";
 
 export function secretFromEnvironment(name: string): RelationalTaskSecret {
-  const raw = process.env[name];
-  if (raw === undefined) throw new Error("RELATIONAL_TASK_SECRET_MISSING");
-  let candidate: unknown;
-  try {
-    candidate = JSON.parse(raw);
-  } catch {
-    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
-  }
-  if (!isRecord(candidate)) throw new Error("RELATIONAL_TASK_SECRET_INVALID");
-  const username = stringField(candidate, "username");
-  const password = stringField(candidate, "password");
+  const candidate = secretObjectFromEnvironment(name);
+  const credentials = credentialsFromSecret(candidate);
   const host = stringField(candidate, "host");
   const port = numberField(candidate, "port");
-  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username) || password.length < 1 || !/^[A-Za-z0-9.-]{1,253}$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65_535) {
+  if (!/^[A-Za-z0-9.-]{1,253}$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error("RELATIONAL_TASK_SECRET_INVALID");
   }
-  return { username, password, host, port };
+  return { ...credentials, host, port };
+}
+
+export function credentialsFromEnvironment(name: string): RelationalTaskCredentials {
+  return credentialsFromSecret(secretObjectFromEnvironment(name));
 }
 
 export function configurationFromEnvironment(): RelationalTaskConfiguration {
@@ -131,6 +138,28 @@ export function writeOutcome(operation: string, outcome: "succeeded" | "failed",
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function secretObjectFromEnvironment(name: string): Readonly<Record<string, unknown>> {
+  const raw = process.env[name];
+  if (raw === undefined) throw new Error("RELATIONAL_TASK_SECRET_MISSING");
+  let candidate: unknown;
+  try {
+    candidate = JSON.parse(raw);
+  } catch {
+    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  }
+  if (!isRecord(candidate)) throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  return candidate;
+}
+
+function credentialsFromSecret(candidate: Readonly<Record<string, unknown>>): RelationalTaskCredentials {
+  const username = stringField(candidate, "username");
+  const password = stringField(candidate, "password");
+  if (!/^[A-Za-z0-9._-]{1,63}$/.test(username) || password.length < 1) {
+    throw new Error("RELATIONAL_TASK_SECRET_INVALID");
+  }
+  return { username, password };
 }
 
 function stringField(value: Readonly<Record<string, unknown>>, name: string): string {

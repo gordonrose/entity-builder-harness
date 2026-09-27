@@ -31,14 +31,16 @@ not retained in this evidence.
 
 The recovery source moves PostgreSQL default-privilege ownership to the
 migration identity and makes both running and stopped fixed task labels
-single-use. `recovery-1` did not replay the initial label, but its bootstrap
-also ended non-successfully; its derived-stream diagnostic returned only the
-safe generic workload-failure marker. No later stage ran. The next immutable
-image emits a fixed allowlisted bootstrap failure class, and defines one new
-`recovery-2` label set. The recovery rollout guard accepts only revisions of
-existing task definitions and existing in-place service references; it rejects
-all resource additions, removals, IAM, database, queue, routing, and listener
-changes.
+single-use. Recoveries 1 and 2 ended non-successfully without starting later
+stages. Recovery 3 safely classified its failure as input validation: the
+RDS-managed master credential shape supplies credentials, while the approved
+target-owned migration connection supplies the endpoint. The corrected source
+combines those two approved inputs without logging either, and defines one new
+`recovery-4` label set. Its regression check requires that exact
+credentials-only-master path. The recovery rollout guard accepts only revisions
+of existing task definitions and existing in-place service references; it
+rejects all resource additions, removals, IAM, database, queue, routing, and
+listener changes.
 
 The bootstrap-only recovery and its continuation are deliberately separate
 commands. The continuation is available only after the one recovery bootstrap
@@ -46,12 +48,10 @@ has a successful terminal result; it verifies that predecessor in memory and
 never starts bootstrap again. Its migration, relay, worker, restore, and
 cleanup labels remain single use.
 
-The corrected `recovery-1` bootstrap was deployed through the reviewed
-service-only rollout and then exited non-successfully. Its diagnostic derived
-the standard stream name in memory and found only the safe generic
-workload-failure marker. No later stage started. The next source revision emits
-an allowlisted bootstrap failure class while keeping raw task metadata,
-identifiers, and logs private. It does not permit a replay.
+No consumed label may be replayed. The next run is a new immutable candidate,
+then a new service-only rollout, then exactly one bootstrap under
+`recovery-4`. Migration, relay, worker, restore, and cleanup remain unavailable
+unless that bootstrap has a successful terminal result.
 
 When ECS omits the attached stream name, the diagnostic may derive the one
 standard awslogs stream name from the consumed task only in memory. It reads

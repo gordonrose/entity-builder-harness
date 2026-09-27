@@ -89,7 +89,7 @@ def load_policy(mode: str) -> dict[str, Any]:
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-awaiting-candidate-execution-preflight",
+        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready",
         "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
@@ -114,11 +114,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260927-recovery-2",
-        "migration": "kanbien-postgresql-stage6-migration-20260927-recovery-2",
-        "relay": "kanbien-postgresql-stage6-relay-20260927-recovery-2",
-        "worker": "kanbien-postgresql-stage6-worker-20260927-recovery-2",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260927-recovery-2",
+        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260928-recovery-4",
+        "migration": "kanbien-postgresql-stage6-migration-20260928-recovery-4",
+        "relay": "kanbien-postgresql-stage6-relay-20260928-recovery-4",
+        "worker": "kanbien-postgresql-stage6-worker-20260928-recovery-4",
+        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260928-recovery-4",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
@@ -151,6 +151,12 @@ def load_policy(mode: str) -> dict[str, Any]:
             "bootstrap-database-authorization-failure",
             "bootstrap-database-connectivity-failure",
             "bootstrap-database-tls-failure",
+            "bootstrap-input-validation-failure",
+            "bootstrap-password-quotation-failure",
+            "bootstrap-role-provisioning-failure",
+            "bootstrap-database-grant-failure",
+            "bootstrap-schema-provisioning-failure",
+            "bootstrap-schema-grant-failure",
             "bootstrap-workload-failure-unclassified",
             "bootstrap-workload-failure-log-marker-unavailable",
             "bootstrap-image-retrieval-failure",
