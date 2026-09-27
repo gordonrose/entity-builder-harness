@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T22:41:32Z
-latest_commit_sha: 265862ba
-chat_duration: 7860s (00:02:11:00)
+latest_commit_at_utc: 2026-09-27T23:05:24Z
+latest_commit_sha: 2775913b
+chat_duration: 9292s (00:02:34:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -155,6 +155,17 @@ Summary: Replace generic bootstrap failure reporting with allowlisted execution-
 
 ADR impact: Updates staging deployment proof controls only; no product contract change.
 
+
+### 2026-09-27T23:05:24Z - Commit recorded
+
+Commit: `2775913b`
+
+Message: fix(deploy): support managed relational master credential shape
+
+Summary: Corrects the PostgreSQL bootstrap contract to combine a credentials-only RDS-managed master secret with the target-owned migration endpoint; records the consumed recovery-3 input-validation result; adds the recovery-4 label set and a regression guard; all adapter, smoke, and infrastructure checks passed.
+
+ADR impact: Deployment: no wider AWS authority or resource scope; a fresh immutable candidate and candidate-only preflight remain required before the single recovery-4 bootstrap.
+
 ## Sub-Agent Activity
 
 - Independent evidence audit: verified the source/payload seals already cover
@@ -208,6 +219,13 @@ ADR impact: Updates staging deployment proof controls only; no product contract 
   Summary: Replace generic bootstrap failure reporting with allowlisted execution-phase categories and issue a new single-use recovery sequence after the second bootstrap failure.
   ADR impact: Updates staging deployment proof controls only; no product contract change.
 
+
+- Commit: `2775913b`
+  Time UTC: 2026-09-27T23:05:24Z
+  Message: fix(deploy): support managed relational master credential shape
+  Summary: Corrects the PostgreSQL bootstrap contract to combine a credentials-only RDS-managed master secret with the target-owned migration endpoint; records the consumed recovery-3 input-validation result; adds the recovery-4 label set and a regression guard; all adapter, smoke, and infrastructure checks passed.
+  ADR impact: Deployment: no wider AWS authority or resource scope; a fresh immutable candidate and candidate-only preflight remain required before the single recovery-4 bootstrap.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -223,9 +241,9 @@ this commit does not choose a new platform architecture.
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T20:30:32Z
-Latest commit at UTC: 2026-09-27T22:41:32Z
-Latest commit SHA: 265862ba
-Chat duration: 7860s (00:02:11:00)
+Latest commit at UTC: 2026-09-27T23:05:24Z
+Latest commit SHA: 2775913b
+Chat duration: 9292s (00:02:34:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
