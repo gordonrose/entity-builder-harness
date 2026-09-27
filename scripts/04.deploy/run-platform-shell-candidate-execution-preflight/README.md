@@ -55,3 +55,8 @@ npm run platform:shell:candidate-execution-preflight -- --execute --approve-cand
 Its output is a safe verdict and, on failure, one allowlisted category. It
 never emits task identifiers, raw AWS responses, endpoints, logs, headers,
 payloads, tokens, secrets, or image registry paths.
+
+An ECS admission rejection is classified only as an authorization,
+network-configuration, capacity-or-placement, task-definition-or-launch
+contract, or unclassified provider rejection. The underlying provider text is
+discarded in memory and is never written to a result, log, or evidence record.
