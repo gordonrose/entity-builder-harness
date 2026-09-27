@@ -52,12 +52,20 @@ estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 - Decision: Adopt isolated fast-forward remote promotion
   Rationale: The root integration console has unrelated user work, so promotion must preserve it while requiring a clean recorded source branch, exact remote-base comparison, an isolated worktree, normal push only, and post-push verification.
 
+
+- Decision: Refresh the promotion harness from origin/main through a clean preflight
+  Rationale: The source chat was behind the remote because PostgreSQL source had just been promoted. A non-rewriting preflight merged origin/main without conflicts, passed the scoped harness regression tests, and was then applied by fast-forward.
+
 ## Context Hygiene
 
 
 
 - Summary: origin/main now equals ca9cab51; root remains dirty only with feature-consumption harness work. The reusable remote-promotion harness source is validated locally but still needs this chat branch promoted.
   Durable evidence: Remote evidence: normal push d8270e34..ca9cab51; clean integration checkout /tmp/agentic-remote-promotions; PostgreSQL check output in current chat tool record.
+
+
+- Summary: Remote-base refresh result: preflight agentic/preflight/chat-2026-09-27-15-32-1-please-resolve-26061c122abe/20260927193023 merged cleanly; applied commit 11de3d29. Repository-wide metadata scan has 14 pre-existing failures in PostgreSQL/deploy artifacts; scoped metadata and all changed-path checks passed.
+  Durable evidence: Harness changes: 1120c03b; PostgreSQL promotion proof: origin/main=ca9cab51 before this refresh; root console still retains only user-owned feature-consumption harness changes.
 
 ## Activity Log
 
@@ -103,6 +111,20 @@ Message: feat(chat): support isolated remote main promotion
 Summary: Added an exact-commit, fast-forward-only remote promotion workflow, a clean integration-worktree preparer, remote-base eligibility, remote-aware refresh preflight, and disposable regression coverage. Verified and used the path to advance PostgreSQL source to origin/main without altering root user work.
 
 ADR impact: not-needed: narrow chat lifecycle governance enhancement
+
+
+### 2026-09-27T19:31:25Z - Decision
+
+Decision: Refresh the promotion harness from origin/main through a clean preflight
+
+Rationale: The source chat was behind the remote because PostgreSQL source had just been promoted. A non-rewriting preflight merged origin/main without conflicts, passed the scoped harness regression tests, and was then applied by fast-forward.
+
+
+### 2026-09-27T19:31:26Z - Context hygiene
+
+Summary: Remote-base refresh result: preflight agentic/preflight/chat-2026-09-27-15-32-1-please-resolve-26061c122abe/20260927193023 merged cleanly; applied commit 11de3d29. Repository-wide metadata scan has 14 pre-existing failures in PostgreSQL/deploy artifacts; scoped metadata and all changed-path checks passed.
+
+Durable evidence: Harness changes: 1120c03b; PostgreSQL promotion proof: origin/main=ca9cab51 before this refresh; root console still retains only user-owned feature-consumption harness changes.
 
 ## Sub-Agent Activity
 
