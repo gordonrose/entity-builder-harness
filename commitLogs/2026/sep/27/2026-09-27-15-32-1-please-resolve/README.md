@@ -8,16 +8,16 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-27T14:32:06Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T19:29:57Z
-latest_commit_sha: 1120c03b35c1665f1a4e2a305f1a7baa90d2c198
-chat_duration: 17871s (00:04:57:51)
+latest_commit_at_utc: 2026-09-27T19:50:47Z
+latest_commit_sha: 6aeda471
+chat_duration: 19121s (00:05:18:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -170,6 +170,17 @@ Summary: Stage 6 remains untouched in AWS: artifact drift passed, PostgreSQL liv
 
 Durable evidence: Portable smoke-test repair is confined to eight scripts under scripts/04.deploy; source validation is npm run platform:shell:infrastructure:check. The local symlinked dependency reproduction was removed; its EXDEV image-payload result is not a source or CI failure.
 
+
+### 2026-09-27T19:50:47Z - Commit recorded
+
+Commit: `6aeda471`
+
+Message: fix(deploy): use portable smoke test checks
+
+Summary: Replaced non-portable ripgrep calls in all deploy smoke tests with portable grep and added an early infrastructure-gate assertion, so GitHub image publication cannot fail after source checks due to an undeclared runner tool.
+
+ADR impact: not-needed: deployment test portability only
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -184,6 +195,13 @@ Durable evidence: Portable smoke-test repair is confined to eight scripts under 
   Summary: Added an exact-commit, fast-forward-only remote promotion workflow, a clean integration-worktree preparer, remote-base eligibility, remote-aware refresh preflight, and disposable regression coverage. Verified and used the path to advance PostgreSQL source to origin/main without altering root user work.
   ADR impact: not-needed: narrow chat lifecycle governance enhancement
 
+
+- Commit: `6aeda471`
+  Time UTC: 2026-09-27T19:50:47Z
+  Message: fix(deploy): use portable smoke test checks
+  Summary: Replaced non-portable ripgrep calls in all deploy smoke tests with portable grep and added an early infrastructure-gate assertion, so GitHub image publication cannot fail after source checks due to an undeclared runner tool.
+  ADR impact: not-needed: deployment test portability only
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -197,9 +215,9 @@ Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T14:32:06Z
-Latest commit at UTC: 2026-09-27T19:29:57Z
-Latest commit SHA: 1120c03b35c1665f1a4e2a305f1a7baa90d2c198
-Chat duration: 17871s (00:04:57:51)
+Latest commit at UTC: 2026-09-27T19:50:47Z
+Latest commit SHA: 6aeda471
+Chat duration: 19121s (00:05:18:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
