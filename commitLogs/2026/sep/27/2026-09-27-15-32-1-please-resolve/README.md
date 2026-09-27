@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-27T20:13:10Z
-latest_commit_sha: 680dc8e0
-chat_duration: 20464s (00:05:41:04)
+latest_commit_at_utc: 2026-09-27T20:18:54Z
+latest_commit_sha: 561899ed
+chat_duration: 20808s (00:05:46:48)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -269,6 +269,17 @@ Summary: Current main contains the first safe classification hardening; it class
 
 Durable evidence: Durable controls: relational smoke controller, target profile, static verifiers, unit tests, Stage 6 runbook/evidence. Local policy checks passed; no new AWS mutation has occurred.
 
+
+### 2026-09-27T20:18:54Z - Commit recorded
+
+Commit: `561899ed`
+
+Message: fix(deploy): derive relational bootstrap log stream
+
+Summary: Added a deterministic, in-memory awslogs fallback for the consumed bootstrap task, so diagnostics can classify an existing safe marker without emitting task or stream identities; all local policy checks passed.
+
+ADR impact: not-needed: bounded operational diagnostic refinement
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -297,6 +308,13 @@ Durable evidence: Durable controls: relational smoke controller, target profile,
   Summary: Added a target-defined, allowlisted terminal-metadata classifier for an already-consumed no-log-stream bootstrap failure; tightened policy, readiness, static verification, unit checks, runbook, and safe evidence without permitting replay or exposing raw AWS details.
   ADR impact: not-needed: bounded operational diagnostic refinement
 
+
+- Commit: `561899ed`
+  Time UTC: 2026-09-27T20:18:54Z
+  Message: fix(deploy): derive relational bootstrap log stream
+  Summary: Added a deterministic, in-memory awslogs fallback for the consumed bootstrap task, so diagnostics can classify an existing safe marker without emitting task or stream identities; all local policy checks passed.
+  ADR impact: not-needed: bounded operational diagnostic refinement
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -310,9 +328,9 @@ Reason: This is a narrow chat-lifecycle recovery workflow enhancement, not a pro
 ## Session Metrics
 
 Raised at UTC: 2026-09-27T14:32:06Z
-Latest commit at UTC: 2026-09-27T20:13:10Z
-Latest commit SHA: 680dc8e0
-Chat duration: 20464s (00:05:41:04)
+Latest commit at UTC: 2026-09-27T20:18:54Z
+Latest commit SHA: 561899ed
+Chat duration: 20808s (00:05:46:48)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
