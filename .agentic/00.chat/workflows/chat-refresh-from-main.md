@@ -69,6 +69,20 @@ commit while blocked.
    git branch -vv --all
    ```
 
+   If local `main` is stale and the current remote tracking ref is needed as
+   the refresh base, pass that exact ref (for example `origin/main`) to the
+   classifier and rehearsed preflight. This never changes local `main`:
+
+   ```bash
+   bash scripts/00.chat/main-refresh/classify-refresh-readiness/script.sh origin/main
+   bash scripts/01.harness/run-governed-script.sh --approved-action \
+     scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh origin/main
+   ```
+
+   The active chat worktree must be clean first. The existing preflight,
+   conflict-audit, and apply rules remain mandatory. A remote tracking ref is a
+   read-only merge input; it does not authorize a push.
+
 <!-- deterministic-check: allow reason="show-main-update-status emits the local-only freshness warning deterministically" -->
 3. If no remote exists, state that freshness is only local.
 
@@ -139,7 +153,7 @@ refresh should be rehearsed before mutating the active chat worktree.
    worktree:
 
    ```bash
-   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/main-refresh/rehearse-refresh-from-main/script.sh [base-ref]
    ```
 
 3. If preflight reports conflicts, stop before resolving. Classify each
@@ -210,14 +224,15 @@ refresh should be rehearsed before mutating the active chat worktree.
    bash scripts/00.chat/local-merge/report-chat-branch-overlaps/script.sh
    ```
 
-3. If the active chat branch is behind `main`, ask before integrating `main`
-   unless the user already explicitly requested that operation.
+3. If the active chat branch is behind `main` or the selected remote tracking
+   ref, ask before integrating it unless the user already explicitly requested
+   that operation.
 
 4. If the active chat worktree is clean and the refresh does not require
    rehearsal, an approved non-rewriting refresh may merge directly:
 
    ```bash
-   git merge --no-ff main
+   git merge --no-ff <base-ref>
    ```
 
 5. If the branch contains task commits, checkpoint commits, or uncertain merge

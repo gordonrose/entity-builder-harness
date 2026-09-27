@@ -30,6 +30,9 @@ process locations.
 - `chat-refresh-from-main.md` - refresh chat branches from `main`.
 - `chat-commit.md` - task commits, commit recording, and session checkpoints.
 - `chat-promote-to-main.md` - local convergence from chat branch to `main`.
+- `chat-promote-to-remote-main.md` - fast-forward promotion through an
+  isolated integration worktree when the local integration console has
+  unrelated work.
 - `chat-cleanup.md` - chat branch, worktree, preflight, and empty-log cleanup.
 - `chat-reporting.md` - on-demand reports from session logs.
 - `chat-upstream-reusable-lesson.md` - handoff reusable chat harness lessons

@@ -29,10 +29,10 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  script.sh [base-branch]
+  script.sh [base-ref]
 
 Creates a temporary worktree and branch from the current chat branch, then
-attempts to merge the base branch there. The active chat worktree is left
+attempts to merge the base ref there. The active chat worktree is left
 untouched. If the merge succeeds, the preflight branch contains the merge
 commit and can be applied with apply-rehearsed-refresh.
 EOF
@@ -52,8 +52,8 @@ case "$BASE_BRANCH" in
     ;;
 esac
 
-if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
-  echo "ERROR: base branch does not exist: ${BASE_BRANCH}" >&2
+if ! git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null; then
+  echo "ERROR: base ref does not resolve to a commit: ${BASE_BRANCH}" >&2
   exit 1
 fi
 

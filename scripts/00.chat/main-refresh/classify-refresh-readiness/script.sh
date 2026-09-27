@@ -27,9 +27,9 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  script.sh [base-branch]
+  script.sh [base-ref]
 
-Classifies dirty worktree state before refreshing a chat branch from main.
+Classifies dirty worktree state before refreshing a chat branch from a base ref.
 The classifier reports state only; workflows decide what actions are allowed.
 EOF
 }
@@ -48,10 +48,10 @@ case "$BASE_BRANCH" in
     ;;
 esac
 
-if ! git show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
+if ! git rev-parse --verify --quiet "${BASE_BRANCH}^{commit}" >/dev/null; then
   echo "classification=unsupported-dirty"
   echo "recoverability=blocked"
-  echo "reason=base branch does not exist: ${BASE_BRANCH}"
+  echo "reason=base ref does not resolve to a commit: ${BASE_BRANCH}"
   exit 1
 fi
 
