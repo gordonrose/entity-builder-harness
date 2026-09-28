@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-28T06:37:23Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-09-28T16:12:57Z
+latest_commit_sha: b995221b8c8b8daa14361c644b226b07d3816540
+chat_duration: 34534s (00:09:35:34)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -165,6 +165,17 @@ Fallback used: yes
 
 Scope: Phase 0 source-baseline and deployment-executable inventory inspection.
 
+
+### 2026-09-28T16:12:57Z - Commit recorded
+
+Commit: `b995221b8c8b8daa14361c644b226b07d3816540`
+
+Message: docs(deploy): define release control plane programme
+
+Summary: Defined the IaaS composition and release-control-plane programme, including the 17-stage acceptance matrix, cross-cutting contracts, ownership layout, and source-first migration sequence.
+
+ADR impact: No ADR created; the plan schedules required ADRs during implementation.
+
 ## Sub-Agent Activity
 
 
@@ -268,7 +279,13 @@ Summary: Fetched origin/main and discovered the chat branch has zero unique comm
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b995221b8c8b8daa14361c644b226b07d3816540`
+  Time UTC: 2026-09-28T16:12:57Z
+  Message: docs(deploy): define release control plane programme
+  Summary: Defined the IaaS composition and release-control-plane programme, including the 17-stage acceptance matrix, cross-cutting contracts, ownership layout, and source-first migration sequence.
+  ADR impact: No ADR created; the plan schedules required ADRs during implementation.
 
 ## Main Refresh Conflicts
 
@@ -283,12 +300,12 @@ Reason:
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-09-28T16:12:57Z
+Latest commit SHA: b995221b8c8b8daa14361c644b226b07d3816540
+Chat duration: 34534s (00:09:35:34)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
