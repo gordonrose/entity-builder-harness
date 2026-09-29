@@ -97,7 +97,7 @@ def check_observed_files(work, observed, manifest):
         raise LocalBuildFailure("local-build-output-membership-invalid")
 
 
-def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None):
+def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None, artifact_export=None):
     root, package_cache = Path(root).resolve(strict=True), Path(package_cache).resolve(strict=True)
     if scratch_root is None:
         raise LocalBuildFailure("local-build-scratch-required")
@@ -113,6 +113,14 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None):
             mounts.append((len(mount.parts), right.split()[0]))
     if not mounts or max(mounts)[1] in {"tmpfs", "ramfs"}:
         raise LocalBuildFailure("local-build-scratch-memory-backed")
+    if artifact_export is not None:
+        artifact_export = Path(artifact_export)
+        if (tuple(selected) != ("platform/server/tsconfig.image.json",)
+                or not artifact_export.is_absolute() or artifact_export.exists() or artifact_export.is_symlink()
+                or artifact_export.parent.resolve(strict=True) != artifact_export.parent
+                or not artifact_export.is_relative_to(scratch_root)
+                or artifact_export == scratch_root):
+            raise LocalBuildFailure("local-build-export-invalid")
     # Runtime helpers use the same explicitly selected persistent scratch root.
     tempfile.tempdir = str(scratch_root)
     if not selected or any(value not in CONFIGURATIONS for value in selected) or len(set(selected)) != len(selected):
@@ -181,7 +189,8 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None):
                 try:
                     runtime_executor = Sandbox(toolchain["bundle_root"], package_cache,
                                                writable=[builds[configuration]["output_root"] + "/node_modules"])
-                    runtime = run_runtime(configuration, work, runtime_closure, runtime_executor)
+                    runtime = run_runtime(configuration, work, runtime_closure, runtime_executor,
+                                          export_root=base / "verified-runtime" if artifact_export else None)
                     contracts.runtime_source_binding(runtime, manifest)
                 except Exception as error:
                     runtime = None
@@ -208,7 +217,13 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None):
         result["findings"] = sorted({row["code"]: row for row in result["findings"]}.values(), key=lambda row: row["code"])
         result["verdict"] = "failed" if result["findings"] else "passed"
         result["result_digest"] = digest(canonical(result))
-        return contracts.result(result)
+        checked = contracts.result(result)
+        if artifact_export is not None and checked["verdict"] == "passed":
+            from local_runtime import artifacts, write_files
+            exported = artifacts.artifact_files(base / "verified-runtime")
+            artifact_export.mkdir()
+            write_files(artifact_export, exported)
+        return checked
 
 
 def main(argv=None):

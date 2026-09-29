@@ -747,3 +747,81 @@ The [seventh-unit review](../../../docs/04.deploy/plans/release-control-source-a
 records 710 passing tests, the all-seven successful build result, two selected
 runtime-test runners and image shim generation. It preserves unresolved static
 predictions and the remaining final-container/hosted/provider acceptance work.
+
+
+## Exact local container qualification
+
+The existing build and image-smoke wrappers expose `--qualify-local` as their
+first argument. Both route to this capability's `local_container.py`; ordinary
+legacy flags remain compatible. Qualification never accepts the legacy skip
+flag, caller-selected commands, tags, images, credentials or saved success
+receipts. Misordered qualification flags fail before legacy parsing.
+
+Choose an existing persistent scratch directory outside the worktree. Public
+runtime-base acquisition is explicit and separate from payload preparation:
+
+```bash
+bash scripts/04.deploy/build-platform-shell-image/script.sh --qualify-local \
+  --source-root . --scratch-root /persistent/path/container-scratch --acquire-base
+bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --qualify-local \
+  --source-root . --scratch-root /persistent/path/container-scratch \
+  --package-cache /persistent/path/verified-build-packages
+```
+
+The package cache is the verified cache from `verify-local-build.sh`. A fresh
+image-only compiler run, the existing shim generator, production dependency
+selection and the public database trust bundle produce an exclusively created
+payload. Retained and excluded dependency fingerprints reconstruct the prior
+verified runtime dependency identity; package versions are checked against a
+fresh root-lock selection. Development dependencies and TypeScript source are
+absent from the final payload.
+
+`container-image.lock.json` binds the reviewed Dockerfile and a concrete Linux
+amd64 Distroless runtime manifest/configuration. The existing Dockerfile accepts
+this payload through `PAYLOAD_STAGE=verified`, with the same final runtime recipe
+as the legacy build. No compiler, package manager or apt command runs in that
+selected build path. Its context contains only the verified payload, the public
+certificate and the exact recipe. Docker's built-in frontend is used instead of
+a mutable external syntax image. Engine versions are recorded, not claimed as
+a completely pinned OS/daemon toolchain. `--network none` disables build-step
+networking and `--pull=false` avoids normal base pulling; these options do not
+prove that the Docker daemon cannot query registry metadata.
+
+Execution uses only the explicit local Docker socket and an empty Docker
+configuration. The finished image's complete `/app` file inventory must exactly
+match the verified payload fingerprints. Server tests use that immutable local
+image identity, its default command and working directory, a nonroot user,
+read-only filesystem, private loopback with no external route, no host mounts
+or published ports, reduced privileges and bounded resources. Both health
+endpoints must pass. SIGTERM must produce exit 0 without an out-of-memory event;
+removal of only the newly created owned test containers must be verified.
+The local image/cache remain available; no image pruning or shared-daemon
+configuration changes are performed.
+
+Closed `local-container-lock/v1` and `local-container-result/v1` schemas validate
+safe normalized evidence. The result records actual source/build identities,
+payload and image identities, command, test settings, engine/runtime versions,
+health, shutdown, cleanup and timestamps. `repository_head` is the checkout's
+Git checkpoint label; the nested build's source digest identifies the actual
+source bytes, including reviewed uncommitted changes. Docker image IDs may name
+an OCI configuration or manifest depending on the image store; the pinned base
+reference and configuration identity are kept separately. These local IDs are
+not a claim of registry publication or signed provenance.
+
+The source collector accounts for the image default and every selected ECS task
+container. Only `image-default` can become `local-health-passed`. AWS server,
+worker/relay, PostgreSQL bootstrap/migration/relay/worker/restore and external
+sidecar obligations stay pending. Unsupported product commands, duplicate YAML
+keys, unsafe paths and absent packaged commands fail closed. An external image
+with unresolved command/identity remains an explicit obligation. Server health
+does not establish successful database initialization, AWS authority or complete
+application behavior.
+
+All result fields retain false authorization and blocked release eligibility,
+operation authorization, qualification and source closure. The existing consumer
+rejects this producer for every purpose. Results are unsigned local observations;
+trusted admission, supply-chain scanning/signature policy, hosted CI and live
+qualification remain later. The legacy workflow still uses its original build
+path: it must not inherit this new mode's receipt or rebuild after qualification
+and assume the new image has passed. Later adoption must promote the exact
+qualified artifact with its required additional evidence.

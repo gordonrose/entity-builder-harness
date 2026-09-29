@@ -1,0 +1,8 @@
+{
+  "schema": "local-container-lock/v1",
+  "platform": "linux/amd64",
+  "runtime_image": "gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f",
+  "runtime_config_digest": "sha256:0328f6836bb0e9e2d90cf82a83ab2641c1979c8578b5e7b01607989acc2aef00",
+  "recipe_path": "infra/04.deploy/03.product/image/Dockerfile",
+  "recipe_digest": "sha256:241592a56239a84519c02ec9827b617d01d346f5a7a153ad43c6f0855e95cc41"
+}

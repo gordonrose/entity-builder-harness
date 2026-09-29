@@ -78,6 +78,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Decision: Restore the interrupted seventh slice on persistent storage and finish its local checkpoint
   Rationale: The user authorized crash recovery and continuation. Existing commits and exact recorded patches preserve the task; reviewed reconstruction and fresh local evidence are required before checkpointing. Publication and provider mutations remain outside scope.
 
+
+- Decision: Complete the eighth exact-local-container unit and its authorized local checkpoint
+  Rationale: Fresh public-wrapper acceptance and 933 clean tests passed; retain thirteen pending profiles and blocked release authority. Reuse the existing wrappers and final image recipe; next qualify packaged finite commands separately against disposable dependencies.
+
 ## Context Hygiene
 
 
@@ -88,6 +92,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 
 - Summary: Recovered seventh slice passes 710 tests and all seven genuine locked builds; two selected runtime runners and image shim generation pass, without release authority
   Durable evidence: Dated 2026-09-29-locked-builds review preserves safe full receipt, verification summary and identities. The plan and activity record preserve crash recovery, repaired failures, unresolved static findings and next final-container/hosted acceptance work. Raw patches/caches/logs stay outside Git on persistent disk.
+
+
+- Summary: Exact image construction, payload membership, local server health, shutdown and cleanup are proven within the documented local boundary. Docker manifest/configuration identity repair passed regressions and a fresh full run; no hosted or AWS proof is claimed.
+  Durable evidence: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/ contains the full safe receipt, verification summary and remaining queue. Raw diagnostics and caches remain outside Git on persistent storage.
 
 ## Activity Log
 
@@ -538,6 +546,27 @@ Summary: Restored this task to persistent storage and completed the seventh sour
 
 ADR impact: Covered by ADR 0038 and the approved IaaS release-control plan; source-only authority limits preserved.
 
+
+### 2026-09-29T19:58:41Z - Decision
+
+Decision: Complete the eighth exact-local-container unit and its authorized local checkpoint
+
+Rationale: Fresh public-wrapper acceptance and 933 clean tests passed; retain thirteen pending profiles and blocked release authority. Reuse the existing wrappers and final image recipe; next qualify packaged finite commands separately against disposable dependencies.
+
+
+### 2026-09-29T19:58:41Z - Context hygiene
+
+Summary: Exact image construction, payload membership, local server health, shutdown and cleanup are proven within the documented local boundary. Docker manifest/configuration identity repair passed regressions and a fresh full run; no hosted or AWS proof is claimed.
+
+Durable evidence: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/ contains the full safe receipt, verification summary and remaining queue. Raw diagnostics and caches remain outside Git on persistent storage.
+
+
+### 2026-09-29T19:58:41Z - ADR disposition
+
+ADR needed: no
+
+Reason: Continuation of ADR 0038 and the accepted IaaS release-control plan; extends existing source qualification without new deployment authority or a parallel framework.
+
 ## Sub-Agent Activity
 
 
@@ -937,7 +966,7 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
 
 ADR needed: no
 ADR path:
-Reason: The seventh unit implements the locked genuine build proof already required by ADR 0038 and the approved IaaS plan. It extends the same operational-realization gate, preserving source-only authority boundaries; no new architectural direction is introduced.
+Reason: Continuation of ADR 0038 and the accepted IaaS release-control plan; extends existing source qualification without new deployment authority or a parallel framework.
 
 ## Session Metrics
 
@@ -1761,3 +1790,64 @@ source/runner/inventory/graph identity checks, all 3,515 observed input bindings
 inventory retains 46 findings; all seven build identities and output comparisons
 match. The physical worktree move did not invalidate evidence. All audit commands
 exited 0 without file changes.
+
+### Eighth unit — implementation and acceptance in progress
+
+The user authorized exact local container qualification. New contracts and
+helpers extend the existing image wrappers and shared Dockerfile. All declared
+target tasks/sidecars retain separate pending obligations; local server health
+is the only selected execution proof. A fresh genuine compiler/generator payload
+run passed: 3,902 files, 19,405,615 bytes and 57 production packages. The first
+image integration failed safely because the certificate copy still referenced
+the legacy build stage. Direct copying of the same public certificate from the
+isolated context removed that dependency; the recipe lock was updated.
+
+Review strengthened dependency accounting: retained production and excluded
+runtime fingerprints must reconstruct the prior verified dependency digest,
+and names/versions must match fresh locked selection. Docker's distinction
+between manifest and configuration image identities is preserved explicitly.
+The runtime base was acquired by immutable reference after bounded transient
+registry failures; no host/Docker/proxy/DNS configuration was changed. All source
+changes remain under the owned persistent worktree. Final evidence follows only
+a complete accepted public-command run and verification.
+
+### 2026-09-29 — Eighth unit completed
+
+The exact local container unit is complete. The dated review at `docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/`
+preserves the full accepted public-wrapper result and verification summary.
+Two closed schemas, an immutable runtime lock, engine/payload/profile helpers,
+fixtures, wrappers and focused tests extend the existing realization capability
+and shared Dockerfile. Legacy workflow behavior remains compatible; its images
+cannot inherit the new mode's proof.
+
+Canonical clean validation exited 0: 933 tests in 26 suites, legacy smoke,
+provider/network core boundaries and 41 metadata headers passed. A fresh genuine
+image compilation/generation/build and exact-image inventory/run exited 0.
+All 3,902 payload files (19,405,615 bytes) and 57 production packages matched;
+both health checks passed, SIGTERM exited 0 and owned cleanup verified. Only the
+local image-default profile passed; 13 separate task/sidecar obligations remain
+pending. Compiler Node 22.23.3 and runtime Node v22.22.0 are recorded separately.
+
+Result identity: `sha256:0194119d38fc994e060f681de8b2c0da0ecc5884a99b52a9499d2b29759d14b7`.
+Image identity: `sha256:5c4f1e9164a260bf26169a19957a6bec6d19c52a2c20fc9602d519bb813b891d`.
+The receipt binds the actual source/helper bytes and records the pre-checkpoint
+HEAD as a label. It is unsigned local evidence with all release/operation
+permissions blocked. Docker/host versions are observed, not fully pinned;
+build-step network isolation does not claim daemon registry-metadata isolation.
+
+Acceptance repaired a remaining legacy certificate-stage dependency and the
+Docker configuration-ID/manifest-ID distinction; bounded metadata binding and
+negative regressions precede the successful complete rerun. No AWS, hosted
+workflow, live database or application source change occurred.
+
+Explicit next delivery unit: qualify packaged finite commands separately against
+disposable dependencies, then later AWS preflight and controlled target work.
+PostgreSQL Stage 6 stays paused. Hosted validation after approved publication,
+wider adoption/action semantics, authenticated admission, durable controls and
+provider adapters/stores remain open. No local stop condition exists.
+
+Independent read-only review validated the accepted receipt against fresh source,
+runner, schema, lock, certificate, generator, profile and production inventories.
+The common consumer rejected it for all three purposes. The reviewer independently
+counted 933 passing tests in 26 suites and found no blocker within this scope.
+Receipt file SHA-256: `a4fd917cd2ca4ed8a50f738ec23356f0020acb311652d4a823084f83203385a8`.

@@ -1,0 +1,332 @@
+{
+  "schema": "local-container-result/v1",
+  "scope": "selected-local-container",
+  "verdict": "passed",
+  "authorized": false,
+  "release_eligibility": "blocked",
+  "operation_authorization": "blocked",
+  "qualification_verdict": "blocked",
+  "source_closure": "blocked",
+  "repository_head": "1111111111111111111111111111111111111111",
+  "started_at": "2026-09-29T12:00:00Z",
+  "completed_at": "2026-09-29T12:00:02Z",
+  "runner_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "lock_digest": "sha256:434afc21ae99fa1c774db1b9969f86d5ddf5335a277c6f83b92727bfe55ebf6f",
+  "lock": {
+    "schema": "local-container-lock/v1",
+    "platform": "linux/amd64",
+    "runtime_image": "gcr.io/distroless/nodejs22-debian12@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "runtime_config_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "recipe_path": "infra/04.deploy/03.product/image/Dockerfile",
+    "recipe_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "build": {
+    "schema": "local-build-result/v1",
+    "scope": "locked-local-build",
+    "authorized": false,
+    "release_eligibility": "blocked",
+    "operation_authorization": "blocked",
+    "qualification_verdict": "blocked",
+    "source_closure": "blocked",
+    "verdict": "passed",
+    "source_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "build_inventory_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "graph_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "runner_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "toolchain": {
+      "contract_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "node_version": "22.23.3",
+      "npm_version": "10.9.9",
+      "typescript_version": "5.9.3",
+      "lock_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "dependency_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "sandbox": {
+      "filesystem": "disposable-selected-sources",
+      "network": "private-loopback-only",
+      "environment": "explicit-allowlist",
+      "timeout_seconds": 180,
+      "source_checkout": "not-mounted",
+      "authority": "none"
+    },
+    "builds": [
+      {
+        "build_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "configuration": "platform/server/tsconfig.image.json",
+        "observation": {
+          "schema": "local-typescript-observation/v1",
+          "configuration": "platform/server/tsconfig.image.json",
+          "node_version": "22.23.3",
+          "typescript_version": "5.9.3",
+          "verdict": "passed",
+          "no_emit": false,
+          "emit_skipped": false,
+          "inputs": [
+            {
+              "kind": "repository",
+              "path": "platform/server/tsconfig.image.json",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            },
+            {
+              "kind": "dependency",
+              "path": "node_modules/typescript/lib/typescript.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            }
+          ],
+          "resolutions": [],
+          "outputs": [
+            {
+              "path": ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            },
+            {
+              "path": ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            }
+          ],
+          "diagnostics": [],
+          "findings": [],
+          "observation_digest": "sha256:4cb5bd440a80c44b47a4394c5fdb949f4e60ce9639ecbeab237c0967ef133f91"
+        },
+        "runtime": {
+          "schema": "local-runtime-observation/v1",
+          "scope": "isolated-local-runtime",
+          "configuration": "platform/server/tsconfig.image.json",
+          "kind": "image-shim-generator",
+          "authorized": false,
+          "qualification_verdict": "blocked",
+          "source_inventory_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generator": {
+            "path": "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs",
+            "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "compiler_artifact_digest": "sha256:8980d3f4f46ba3a45d6ed9b773654be33c96662154cb2da5b7dd286ae7febcc2",
+          "dependency_tree_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "copied_dependency_digest": "sha256:1cec2827b7e61be0f7082b245c5b4d1a50b91d01a5dac8ada87c4d32f0e6e1d9",
+          "artifact_files": [
+            {
+              "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            },
+            {
+              "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            },
+            {
+              "path": "node_modules/@fixture/core/index.js",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            },
+            {
+              "path": "node_modules/@fixture/core/package.json",
+              "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "bytes": 1
+            }
+          ],
+          "selected_runtime_tests": [],
+          "executed_runner_count": 0,
+          "returncode": 0,
+          "stdout_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "stderr_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "receipt_digest": "sha256:099ba507bb25818826e58c4a67248f4a4744595aa00b6389e9ed226f0beb6cd5"
+        },
+        "prediction_status": "bounded",
+        "unpredicted_outputs": [],
+        "unemitted_predictions": []
+      }
+    ],
+    "findings": [],
+    "result_digest": "sha256:33402ff9d5378220cbc8f4cc13b41c3e26ea0d37c50a2767dbbf9a7b04421697"
+  },
+  "payload": {
+    "files": [
+      {
+        "path": ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      },
+      {
+        "path": ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      },
+      {
+        "path": ".cache/platform-shell-image-build/node_modules/@fixture/core/index.js",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      },
+      {
+        "path": ".cache/platform-shell-image-build/node_modules/@fixture/core/package.json",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      },
+      {
+        "path": "assets/rds-eu-west-1-bundle.crt",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      },
+      {
+        "path": "node_modules/pg/package.json",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 1
+      }
+    ],
+    "payload_digest": "sha256:87de9d7240041b7c6dfeadc799c28a2a16110ebb02273b4c40742011c32b47c7",
+    "production_dependencies": [
+      {
+        "path": "node_modules/pg",
+        "name": "pg",
+        "version": "1.0.0"
+      }
+    ],
+    "production_dependency_digest": "sha256:1cec2827b7e61be0f7082b245c5b4d1a50b91d01a5dac8ada87c4d32f0e6e1d9",
+    "certificate": {
+      "path": "assets/rds-eu-west-1-bundle.crt",
+      "source_path": "platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 1
+    },
+    "excluded_dependency_files": []
+  },
+  "base": {
+    "image_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "repo_digests": [
+      "gcr.io/distroless/nodejs22-debian12@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "os": "linux",
+    "architecture": "amd64"
+  },
+  "image": {
+    "image_id": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "os": "linux",
+    "architecture": "amd64",
+    "user": "nonroot",
+    "working_dir": "/app",
+    "entrypoint": [
+      "/nodejs/bin/node"
+    ],
+    "command": [
+      ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"
+    ],
+    "environment": [
+      {
+        "name": "HOST",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "NODE_ENV",
+        "value": "production"
+      },
+      {
+        "name": "PLATFORM_SOURCE_COMMIT_SHA",
+        "value": "1111111111111111111111111111111111111111"
+      },
+      {
+        "name": "PORT",
+        "value": "3000"
+      }
+    ],
+    "rootfs_layers": [
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ]
+  },
+  "image_payload_digest": "sha256:87de9d7240041b7c6dfeadc799c28a2a16110ebb02273b4c40742011c32b47c7",
+  "engine": {
+    "client": "29.5.2",
+    "server": "29.5.2"
+  },
+  "runtime": {
+    "image_id": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "entrypoint": [
+      "/nodejs/bin/node"
+    ],
+    "command": [
+      ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"
+    ],
+    "settings": {
+      "network": "none",
+      "read_only": true,
+      "user": "65532:65532",
+      "capabilities": "none",
+      "no_new_privileges": true,
+      "memory_bytes": 536870912,
+      "cpus": 1,
+      "pids_limit": 128,
+      "tmpfs_bytes": 16777216,
+      "published_ports": [],
+      "host_mounts": [],
+      "restart": "no",
+      "environment": {
+        "HOST": "127.0.0.1",
+        "PORT": "3000",
+        "PLATFORM_SMOKE_APP_NAME": "Release Control Local Container"
+      },
+      "health_timeout_seconds": 25,
+      "shutdown_timeout_seconds": 10
+    },
+    "checks": [
+      {
+        "path": "/livez",
+        "status": 200,
+        "body_status": "live"
+      },
+      {
+        "path": "/readyz",
+        "status": 200,
+        "body_status": "ready"
+      }
+    ],
+    "shutdown": {
+      "signal": "SIGTERM",
+      "exit_code": 0,
+      "oom_killed": false
+    },
+    "cleanup_verified": true,
+    "node_version": "v22.23.3",
+    "verdict": "passed"
+  },
+  "profiles": [
+    {
+      "id": "image-default",
+      "command": [
+        ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"
+      ],
+      "source_path": "infra/04.deploy/03.product/image/Dockerfile",
+      "source_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "kind": "service",
+      "status": "local-health-passed",
+      "image_scope": "product",
+      "reason": "local-health-verified"
+    },
+    {
+      "id": "task-bootstrap",
+      "command": [
+        ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js"
+      ],
+      "source_path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+      "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "kind": "finite-task",
+      "status": "pending",
+      "image_scope": "product",
+      "reason": "target-runtime-unqualified"
+    },
+    {
+      "id": "task-observer",
+      "command": [],
+      "source_path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+      "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "kind": "service",
+      "status": "pending",
+      "image_scope": "external",
+      "reason": "unresolved-image"
+    }
+  ],
+  "profile_inventory_digest": "sha256:346c2b355a7afc1f46002e3bf6820763800bb9654d9477241cba43973e83fb40",
+  "result_digest": "sha256:d4d1cc2bfeebc8ffe5fd29f92e70d5fba161791f87e9dea93d51306539c52195"
+}

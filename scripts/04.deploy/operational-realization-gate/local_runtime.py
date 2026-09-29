@@ -239,7 +239,7 @@ def write_files(root, files):
             stream.write(raw)
 
 
-def run_runtime(configuration, compiled_root, closure, execute):
+def run_runtime(configuration, compiled_root, closure, execute, export_root=None):
     """Return a successful local observation or raise a fixed safe diagnostic.
 
     ``execute(argv, cwd, env)`` must enforce a source-free filesystem namespace,
@@ -247,7 +247,7 @@ def run_runtime(configuration, compiled_root, closure, execute):
     stdout bytes and stderr bytes. No caller-provided program name is accepted.
     """
     try:
-        return _run_runtime(configuration, Path(compiled_root), closure, execute)
+        return _run_runtime(configuration, Path(compiled_root), closure, execute, export_root)
     except SourceFailure:
         raise
     except TimeoutError:
@@ -256,9 +256,17 @@ def run_runtime(configuration, compiled_root, closure, execute):
         raise SourceFailure("local-runtime-input-invalid") from None
 
 
-def _run_runtime(configuration, compiled_root, closure, execute):
+def _run_runtime(configuration, compiled_root, closure, execute, export_root=None):
     if configuration not in CONFIGURATIONS:
         raise SourceFailure("local-runtime-configuration-unsupported")
+    if export_root is not None:
+        export_root = Path(export_root)
+        if (configuration != "platform/server/tsconfig.image.json"
+                or not export_root.is_absolute() or export_root.exists() or export_root.is_symlink()
+                or export_root.parent.resolve(strict=True) != export_root.parent
+                or export_root.is_relative_to(compiled_root.resolve())
+                or export_root.is_relative_to(Path(closure["source_root"]).resolve())):
+            raise SourceFailure("local-runtime-export-invalid")
     if type(closure) is not dict:
         raise SourceFailure("local-runtime-closure-invalid")
     for name in ("source_inventory_digest", "external_modules_digest"):
@@ -342,4 +350,11 @@ def _run_runtime(configuration, compiled_root, closure, execute):
                   "executed_runner_count": 1 if kind == "runtime-test-runner" else 0,
                   "returncode": 0, "stdout_digest": digest(execution["stdout"]), "stderr_digest": digest(execution["stderr"])}
         result["receipt_digest"] = digest(canonical(result))
+        if export_root is not None:
+            # Export only post-checked runtime bytes, never the generator or
+            # repository sources. The parent withholds public export until its
+            # source, dependency, schema and result checks have also passed.
+            export_root.mkdir()
+            write_files(export_root, {**dependencies, **{output_root + "/" + path: content
+                                                       for path, content in actual.items()}})
         return result

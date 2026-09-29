@@ -122,3 +122,12 @@ release eligibility or operation authority; the separate existing consumption
 guard rejects them. Runtime receipts must retain the compiler artifact bytes and
 exact selected test membership. Acquisition/execution tooling lives in the
 existing operational-realization gate; it is outside the read-only generic core.
+
+
+`local-container-lock.schema.yml` and `local-container-result.schema.yml` add
+closed local final-image observation contracts. The latter embeds a validated
+image-only build result and binds runtime output to compiled/shim fingerprints,
+retained plus excluded dependency accounting, a fresh locked package selection,
+the final image file inventory and exact local health/shutdown settings.
+Every target task/container remains a separate pending obligation. Neither
+schema grants authority or admits unsigned observations into the release gate.

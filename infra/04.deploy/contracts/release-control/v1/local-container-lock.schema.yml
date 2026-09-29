@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:local-container-lock:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "platform",
+    "runtime_image",
+    "runtime_config_digest",
+    "recipe_path",
+    "recipe_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "local-container-lock/v1"
+    },
+    "platform": {
+      "const": "linux/amd64"
+    },
+    "runtime_image": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 150,
+      "pattern": "^gcr\\.io/distroless/nodejs22-debian12@sha256:[0-9a-f]{64}$"
+    },
+    "runtime_config_digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "recipe_path": {
+      "const": "infra/04.deploy/03.product/image/Dockerfile"
+    },
+    "recipe_digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

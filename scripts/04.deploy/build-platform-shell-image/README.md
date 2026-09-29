@@ -29,7 +29,8 @@ infra/04.deploy/03.product/image/Dockerfile
 The command builds a local image only. It does not publish, deploy, call AWS,
 or mutate GitHub.
 
-The Dockerfile intentionally has two image stages. The build stage uses the
+The Dockerfile separates build inputs from its shared final runtime stage. The
+legacy build stage uses the
 full Node image needed for package installation and TypeScript compilation. The
 final stage uses the minimal, non-root Distroless Node 22 runtime. Only the
 compiled payload and production dependencies cross that boundary; package
@@ -73,3 +74,18 @@ bash scripts/04.deploy/build-platform-shell-image/script.sh --no-cache
 be pinned by digest. The official GitHub deployment workflow resolves both
 tags to digests before it invokes this script. Local tags remain convenient for
 development, but they are never deployment evidence.
+
+
+## Bound local qualification
+
+Use `--qualify-local` first to invoke the existing operational-realization
+capability. This mode requires persistent scratch storage and the verified
+package cache; explicit `--acquire-base` separately obtains the pinned public
+runtime base. It freshly builds the payload, checks the exact image contents,
+runs isolated local server health/shutdown checks and emits closed safe JSON.
+Skipped execution cannot pass. Target tasks, including PostgreSQL bootstrap,
+remain separately pending. No result grants release or operation authority.
+
+See [qualification commands and boundaries](../operational-realization-gate/README.md#exact-local-container-qualification).
+The ordinary legacy invocation retains its previous behavior and receives no
+qualification credit from a different image or mode.

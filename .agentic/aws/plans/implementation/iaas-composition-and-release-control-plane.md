@@ -1288,3 +1288,65 @@ action semantics, authenticated evidence admission, durable operation controls,
 provider adapters/stores and live qualification remain open; PostgreSQL Stage 6
 stays later. Earlier dated estate counts remain historical. No local stop
 condition remains, and no external mutation or deployment was performed.
+
+### Eighth source delivery unit — exact local container evidence
+
+The user authorized continued implementation after clarifying the distinction
+between server startup and database bootstrap. Extend the existing image build
+and smoke wrappers with controlled local qualification in the operational-
+realization capability. Reuse the locked image compiler/generator output and
+production dependency closure, and the existing Dockerfile's shared final
+runtime recipe, with an explicitly pinned runtime base and isolated context.
+
+<!-- deterministic-check: allow reason="This acceptance invariant is enforced by local_container.py and local_container_contracts.py; the prose documents the implemented gate." -->
+The selected local image must contain exactly the verified payload and run its
+default server command under restricted local conditions. Require both health
+checks, graceful shutdown, owned-container cleanup and safe image-bound evidence.
+Keep every declared AWS task and sidecar as a separate pending obligation;
+server health cannot qualify bootstrap, migration, worker, relay or restore.
+The original workflow build path remains compatible and unqualified by this
+new mode's receipts. Later adoption must promote the exact tested image rather
+than rebuilding it and reusing earlier evidence.
+
+This unit does not provide real database initialization, IAM/secret/network
+proof, source-estate closure, full supply-chain admission, trusted evidence
+storage or release authority. The next unit must qualify the packaged finite
+commands separately against disposable dependencies before later AWS preflight
+and controlled target execution. PostgreSQL Stage 6 remains paused. Completion
+requires the real image run, focused positive/negative tests, clean local
+verification, durable safe evidence and a session record.
+
+### Eighth source delivery unit evidence — 2026-09-29
+
+The exact local container unit is complete. The [dated container review](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md)
+preserves the full accepted public-wrapper result and verification summary.
+Two closed schemas, an immutable runtime lock, engine/payload/profile helpers,
+fixtures, wrappers and focused tests extend the existing realization capability
+and shared Dockerfile. Legacy workflow behavior remains compatible; its images
+cannot inherit the new mode's proof.
+
+Canonical clean validation exited 0: 933 tests in 26 suites, legacy smoke,
+provider/network core boundaries and 41 metadata headers passed. A fresh genuine
+image compilation/generation/build and exact-image inventory/run exited 0.
+All 3,902 payload files (19,405,615 bytes) and 57 production packages matched;
+both health checks passed, SIGTERM exited 0 and owned cleanup verified. Only the
+local image-default profile passed; 13 separate task/sidecar obligations remain
+pending. Compiler Node 22.23.3 and runtime Node v22.22.0 are recorded separately.
+
+Result identity: `sha256:0194119d38fc994e060f681de8b2c0da0ecc5884a99b52a9499d2b29759d14b7`.
+Image identity: `sha256:5c4f1e9164a260bf26169a19957a6bec6d19c52a2c20fc9602d519bb813b891d`.
+The receipt binds the actual source/helper bytes and records the pre-checkpoint
+HEAD as a label. It is unsigned local evidence with all release/operation
+permissions blocked. Docker/host versions are observed, not fully pinned;
+build-step network isolation does not claim daemon registry-metadata isolation.
+
+Acceptance repaired a remaining legacy certificate-stage dependency and the
+Docker configuration-ID/manifest-ID distinction; bounded metadata binding and
+negative regressions precede the successful complete rerun. No AWS, hosted
+workflow, live database or application source change occurred.
+
+Explicit next delivery unit: qualify packaged finite commands separately against
+disposable dependencies, then later AWS preflight and controlled target work.
+PostgreSQL Stage 6 stays paused. Hosted validation after approved publication,
+wider adoption/action semantics, authenticated admission, durable controls and
+provider adapters/stores remain open. No local stop condition exists.

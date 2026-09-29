@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.7
-
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: infra.04-deploy.03-product.image.dockerfile
@@ -25,6 +23,9 @@
 # Build tooling needs a package manager; the running server does not.
 ARG BUILD_NODE_IMAGE=node:22-bookworm-slim
 ARG RUNTIME_NODE_IMAGE=gcr.io/distroless/nodejs22-debian12:nonroot
+# The qualification wrapper supplies an independently verified offline payload.
+# Ordinary callers retain the existing source-build stage until reviewed adoption.
+ARG PAYLOAD_STAGE=build
 
 FROM ${BUILD_NODE_IMAGE} AS build
 ARG SOURCE_COMMIT_SHA=unknown
@@ -54,6 +55,13 @@ RUN npm ci --ignore-scripts \
   && npm prune --omit=dev --ignore-scripts \
   && rm -rf /app/node_modules/@kanbien
 
+# No compiler, package manager or network runs in the verified payload stage.
+FROM scratch AS verified
+COPY payload/ /app/
+
+# Both entry paths share exactly the same final runtime recipe.
+FROM ${PAYLOAD_STAGE} AS payload
+
 FROM ${RUNTIME_NODE_IMAGE}
 ARG SOURCE_COMMIT_SHA=unknown
 
@@ -62,11 +70,11 @@ LABEL org.opencontainers.image.description="Provider-neutral Kanbien platform ru
 
 WORKDIR /app
 
-COPY --chown=nonroot:nonroot --from=build /app/.cache/ ./.cache/
-COPY --chown=nonroot:nonroot --from=build /app/node_modules/ ./node_modules/
+COPY --chown=nonroot:nonroot --from=payload /app/.cache/ ./.cache/
+COPY --chown=nonroot:nonroot --from=payload /app/node_modules/ ./node_modules/
 # This is AWS's public regional RDS trust chain, pinned in source and verified
 # by the PostgreSQL source-policy check. It is not an application secret.
-COPY --chown=nonroot:nonroot --from=build /app/platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt ./assets/rds-eu-west-1-bundle.crt
+COPY --chown=nonroot:nonroot platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt ./assets/rds-eu-west-1-bundle.crt
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0

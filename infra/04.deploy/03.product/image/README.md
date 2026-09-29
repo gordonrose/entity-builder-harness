@@ -105,3 +105,13 @@ until the repo has:
 - DNS/TLS or equivalent HTTPS boundary
 - rollback target and operational alarms
 - deploy-readiness manifest with real non-secret evidence
+
+
+The local qualification mode of the existing image wrappers selects
+`PAYLOAD_STAGE=verified`. It supplies fresh byte-verified compiled output and
+production dependencies in an isolated context, with an explicitly pinned
+runtime base. Both the legacy source build and verified payload use the same
+final runtime recipe. The public trust bundle is copied directly from the
+allowlisted context so the verified path has no dependency on the legacy
+networked build stage. The new result qualifies only its recorded local image
+and selected checks; ordinary workflow builds do not inherit it.

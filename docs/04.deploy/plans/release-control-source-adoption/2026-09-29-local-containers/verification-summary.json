@@ -1,0 +1,147 @@
+{
+  "authorized": false,
+  "build_toolchain": {
+    "contract_digest": "sha256:050d792b58e11b0c78744fd9d7e6fcc7b83992fa4e9745f6fc90d5b4ff2dfb0d",
+    "dependency_digest": "sha256:f31bb157b3bbe78818725653d2c31d69d016d0cc2204f0bbb7ee2cff7142dd11",
+    "lock_digest": "sha256:4aade50f520f42e61b68e35fb3fa5ee973182013f8cc0ee9ef431d9c28bd20c5",
+    "node_version": "22.23.3",
+    "npm_version": "10.9.9",
+    "typescript_version": "5.9.3"
+  },
+  "completed_at": "2026-09-29T19:53:53Z",
+  "engine": {
+    "client": "29.5.2",
+    "server": "29.5.2"
+  },
+  "excluded_dependency_file_count": 3,
+  "image_id": "sha256:5c4f1e9164a260bf26169a19957a6bec6d19c52a2c20fc9602d519bb813b891d",
+  "limitations": [
+    "unsigned-local-evidence",
+    "selected-image-default-local-health-only",
+    "thirteen-target-task-and-sidecar-obligations-pending",
+    "no-database-bootstrap-or-migration-proof",
+    "no-aws-identity-secrets-network-or-target-proof",
+    "no-hosted-ci-run",
+    "docker-engine-observed-not-pinned",
+    "build-step-network-disabled-not-daemon-metadata-network",
+    "legacy-build-path-not-qualified",
+    "source-closure-and-release-authority-blocked"
+  ],
+  "lock_digest": "sha256:c396dfa26a49e10aaa5f39fa6fbddc8dec2d9621eef54d8322927edd54087cbb",
+  "next_delivery_unit": "Qualify packaged finite commands separately against disposable dependencies; preserve separate later AWS preflight and controlled target execution.",
+  "payload_bytes": 19405615,
+  "payload_digest": "sha256:6852df732e40891de3268577d5b36582d1620c424bd1b18a4ea64863d2901735",
+  "payload_file_count": 3902,
+  "production_dependency_count": 57,
+  "profile_inventory_digest": "sha256:d8cf74bc22d89052afa616e6c642342aaf26904654adc7d00ebac58161a05edd",
+  "profile_status_counts": {
+    "local-health-passed": 1,
+    "pending": 13
+  },
+  "recipe_digest": "sha256:241592a56239a84519c02ec9827b617d01d346f5a7a153ad43c6f0855e95cc41",
+  "repository_head_at_execution": "90ade59806afc1bd8ccd040c48887c1536566910",
+  "result_digest": "sha256:0194119d38fc994e060f681de8b2c0da0ecc5884a99b52a9499d2b29759d14b7",
+  "result_file_sha256": "a4fd917cd2ca4ed8a50f738ec23356f0020acb311652d4a823084f83203385a8",
+  "runner_digest": "sha256:44d3852a75c00e031b9defb1edaab4902caa269751752c564ac1492410efb2e3",
+  "runtime": {
+    "checks": [
+      {
+        "body_status": "live",
+        "path": "/livez",
+        "status": 200
+      },
+      {
+        "body_status": "ready",
+        "path": "/readyz",
+        "status": 200
+      }
+    ],
+    "cleanup_verified": true,
+    "command": [
+      ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"
+    ],
+    "entrypoint": [
+      "/nodejs/bin/node"
+    ],
+    "image_id": "sha256:5c4f1e9164a260bf26169a19957a6bec6d19c52a2c20fc9602d519bb813b891d",
+    "node_version": "v22.22.0",
+    "settings": {
+      "capabilities": "none",
+      "cpus": 1,
+      "environment": {
+        "HOST": "127.0.0.1",
+        "PLATFORM_SMOKE_APP_NAME": "Release Control Local Container",
+        "PORT": "3000"
+      },
+      "health_timeout_seconds": 25,
+      "host_mounts": [],
+      "memory_bytes": 536870912,
+      "network": "none",
+      "no_new_privileges": true,
+      "pids_limit": 128,
+      "published_ports": [],
+      "read_only": true,
+      "restart": "no",
+      "shutdown_timeout_seconds": 10,
+      "tmpfs_bytes": 16777216,
+      "user": "65532:65532"
+    },
+    "shutdown": {
+      "exit_code": 0,
+      "oom_killed": false,
+      "signal": "SIGTERM"
+    },
+    "verdict": "passed"
+  },
+  "runtime_base": "gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f",
+  "runtime_base_config_digest": "sha256:0328f6836bb0e9e2d90cf82a83ab2641c1979c8578b5e7b01607989acc2aef00",
+  "runtime_node_version": "v22.22.0",
+  "scope": "review-summary-only",
+  "source_digest": "sha256:9df10ec0208757194ea38d68f11df0baee80be9807713ed138453e10e03fde50",
+  "started_at": "2026-09-29T19:51:41Z",
+  "validation": {
+    "canonical_clean_source": {
+      "exit_code": 0,
+      "log_sha256": "abe194ee78fef475fa72e6a823fc70ecc083b39aa6f7b2cc5325a2e7b75c8e34",
+      "metadata_file_count": 41,
+      "suite_count": 26,
+      "suite_test_counts": [
+        29,
+        34,
+        32,
+        23,
+        25,
+        31,
+        34,
+        13,
+        26,
+        15,
+        39,
+        29,
+        47,
+        13,
+        49,
+        50,
+        19,
+        35,
+        55,
+        37,
+        42,
+        63,
+        41,
+        56,
+        56,
+        40
+      ],
+      "test_count": 933
+    },
+    "full_public_container_wrapper": {
+      "configuration_count": 1,
+      "exit_code": 0,
+      "health_checks_passed": 2,
+      "image_build_count": 1,
+      "inventory_matches": true,
+      "owned_cleanup_verified": true
+    }
+  }
+}

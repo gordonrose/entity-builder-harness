@@ -42,3 +42,18 @@ For environments without a running Docker engine:
 ```bash
 bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --allow-skip-without-engine
 ```
+
+
+## Bound local qualification
+
+Use `--qualify-local` first to invoke the existing operational-realization
+capability. This mode requires persistent scratch storage and the verified
+package cache; explicit `--acquire-base` separately obtains the pinned public
+runtime base. It freshly builds the payload, checks the exact image contents,
+runs isolated local server health/shutdown checks and emits closed safe JSON.
+Skipped execution cannot pass. Target tasks, including PostgreSQL bootstrap,
+remain separately pending. No result grants release or operation authority.
+
+See [qualification commands and boundaries](../operational-realization-gate/README.md#exact-local-container-qualification).
+The ordinary legacy invocation retains its previous behavior and receives no
+qualification credit from a different image or mode.
