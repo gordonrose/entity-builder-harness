@@ -57,3 +57,15 @@ remain separately pending. No result grants release or operation authority.
 See [qualification commands and boundaries](../operational-realization-gate/README.md#exact-local-container-qualification).
 The ordinary legacy invocation retains its previous behavior and receives no
 qualification credit from a different image or mode.
+
+## Finite-job runner conformance
+
+`--verify-finite-jobs --source-root <root> --scratch-root <persistent-directory>`
+selects the shared finite-job runner's inert fixture suite. The flag must come
+first; legacy options, custom commands/images and saved receipts are rejected.
+The runtime base must already be acquired by the existing qualification mode.
+Successful JSON is `finite-job-conformance-result/v1`, explicitly scoped to
+fixture conformance, with each negative execution retained as a failure and
+all release authority blocked. No product task is qualified by this mode.
+See the [realization capability](../operational-realization-gate/README.md#finite-job-execution-conformance)
+for contracts, reproduction, failure cases and remaining work.

@@ -25,6 +25,7 @@ import signal
 import stat
 import subprocess
 import tempfile
+import time
 import uuid
 
 DOCKER = "/usr/bin/docker"
@@ -36,6 +37,7 @@ OWNER_LABEL = "io.agentic.release-control.run"
 NODE = "/nodejs/bin/node"
 SERVER_COMMAND = [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"]
 MAX_OUTPUT = 8 * 1024 * 1024
+JOB_COMMAND = ["jobs/task.cjs", "success"]
 SETTINGS = {
     "network": "none", "read_only": True, "user": "65532:65532",
     "capabilities": "none", "no_new_privileges": True, "memory_bytes": 536870912,
@@ -157,12 +159,14 @@ def _bounded_runner(argv, *, cwd, env, timeout, max_output):
             _fail("engine-unavailable")
         try:
             process.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
+        except (subprocess.TimeoutExpired, KeyboardInterrupt) as failure:
             try:
                 os.killpg(process.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             process.wait()
+            if isinstance(failure, KeyboardInterrupt):
+                raise
             _fail("engine-timeout")
         output.seek(0)
         errors.seek(0)
@@ -200,6 +204,13 @@ class Engine:
             _fail("engine-command-unsupported")
         if type(timeout) is not int or not 1 <= timeout <= 900 or type(max_output) is not int or not 1 <= max_output <= MAX_OUTPUT:
             _fail("engine-bound-invalid")
+        result = self._execute(args, timeout=timeout, max_output=max_output)
+        if result.returncode != 0:
+            _fail("engine-command-failed")
+        return result.stdout
+
+    def _execute(self, args, *, timeout, max_output):
+        """Shared bounded transport; callers construct reviewed vectors internally."""
         try:
             result = self.runner([DOCKER, "--host", ENDPOINT, *args], cwd=self.private,
                                  env=dict(self.env), timeout=timeout, max_output=max_output)
@@ -214,9 +225,7 @@ class Engine:
             _fail("engine-output-invalid")
         if len(result.stdout) > max_output or len(result.stderr) > max_output:
             _fail("engine-output-limit")
-        if result.returncode != 0:
-            _fail("engine-command-failed")
-        return result.stdout
+        return result
 
     def _call(self, args, **kwargs):
         key = tuple(args)
@@ -254,6 +263,13 @@ class Engine:
                 "os": "linux", "architecture": "amd64"}
 
     def inspect_image(self, image_id):
+        return self._inspect_image(image_id, SERVER_COMMAND)
+
+    def inspect_job_image(self, image_id):
+        """Accept either existing reviewed image default, preserving its identity."""
+        return self._inspect_image(image_id, JOB_COMMAND, allow_server=True)
+
+    def _inspect_image(self, image_id, command, *, allow_server=False):
         image_id = _image(image_id)
         value = _one(self._call(["image", "inspect", image_id]))
         config, rootfs = value.get("Config"), value.get("RootFS")
@@ -261,7 +277,9 @@ class Engine:
             _fail("image-identity-mismatch")
         if value.get("Os") != "linux" or value.get("Architecture") != "amd64":
             _fail("image-platform-mismatch")
-        if (config.get("Entrypoint") != [NODE] or config.get("Cmd") != SERVER_COMMAND
+        if allow_server and config.get("Cmd") == SERVER_COMMAND:
+            command = SERVER_COMMAND
+        if (config.get("Entrypoint") != [NODE] or config.get("Cmd") != command
                 or config.get("WorkingDir") != "/app" or not isinstance(config.get("User"), str)
                 or config.get("User") not in {"nonroot", "65532", "65532:65532"}):
             _fail("image-command-mismatch")
@@ -272,7 +290,7 @@ class Engine:
         for layer in layers:
             _image(layer)
         result = {"image_id": image_id, "os": "linux", "architecture": "amd64", "user": config["User"],
-                  "working_dir": "/app", "entrypoint": [NODE], "command": list(SERVER_COMMAND),
+                  "working_dir": "/app", "entrypoint": [NODE], "command": list(command),
                   "environment": environment, "rootfs_layers": layers}
         self._images[image_id] = result
         return result
@@ -302,6 +320,13 @@ class Engine:
         return dict(sorted(result.items()))
 
     def build(self, context, dockerfile, runtime_image, source_commit):
+        return self._build(context, dockerfile, runtime_image, source_commit, job_fixture=False)
+
+    def build_job_fixture(self, context, dockerfile, runtime_image, source_commit):
+        """Build an untagged conformance fixture using the existing pinned base."""
+        return self._build(context, dockerfile, runtime_image, source_commit, job_fixture=True)
+
+    def _build(self, context, dockerfile, runtime_image, source_commit, *, job_fixture):
         context, dockerfile = Path(context), Path(dockerfile)
         if (not context.is_dir() or context.is_symlink() or not dockerfile.is_file() or dockerfile.is_symlink()
                 or not context.resolve().is_relative_to(self.scratch)
@@ -314,10 +339,11 @@ class Engine:
         build_key = "build-" + uuid.uuid4().hex
         iidfile = self.private / (build_key + ".iid")
         metadatafile = self.private / (build_key + ".metadata.json")
+        build_args = [] if job_fixture else ["--build-arg", "PAYLOAD_STAGE=verified"]
         self._call(["build", "--platform", "linux/amd64", "--network", "none", "--no-cache",
                     "--provenance=false", "--pull=false", "--iidfile", str(iidfile),
                     "--metadata-file", str(metadatafile), "--file", str(dockerfile.resolve()),
-                    "--build-arg", "PAYLOAD_STAGE=verified", "--build-arg", "RUNTIME_NODE_IMAGE=" + runtime_image,
+                    *build_args, "--build-arg", "RUNTIME_NODE_IMAGE=" + runtime_image,
                     "--build-arg", "SOURCE_COMMIT_SHA=" + source_commit, str(context.resolve())], timeout=900)
         try:
             iid = _image(self._build_output(iidfile, 256, "image-id-invalid").decode("ascii").strip())
@@ -336,7 +362,7 @@ class Engine:
                 _fail("build-identity-mismatch")
         # Buildx iidfiles can contain configuration digests that Docker's containerd
         # store cannot address. Its bound manifest digest selects the exact image.
-        return self.inspect_image(manifest_id)["image_id"]
+        return self._inspect_image(manifest_id, JOB_COMMAND if job_fixture else SERVER_COMMAND)["image_id"]
 
     @staticmethod
     def _build_output(path, limit, code):
@@ -355,7 +381,7 @@ class Engine:
         except OSError:
             _fail(code)
 
-    def _create(self, image_id, *, inventory=False):
+    def _create(self, image_id, *, inventory=False, command=None, environment=None):
         _image(image_id)
         token = uuid.uuid4().hex
         name = "release-control-" + token
@@ -364,13 +390,16 @@ class Engine:
                 "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", "512m",
                 "--memory-swap", "512m", "--cpus", "1", "--pids-limit", "128", "--ipc", "none",
                 "--restart", "no", "--stop-timeout", "10", "--log-driver", "none", "--no-healthcheck"]
-        for key, value in SETTINGS["environment"].items():
+        runtime_environment = SETTINGS["environment"] if environment is None else environment
+        for key, value in runtime_environment.items():
             args.extend(["--env", key + "=" + value])
         if inventory:
             args.extend(["--entrypoint", NODE])
         args.append(image_id)
         if inventory:
             args.extend(["-e", INVENTORY_PROBE])
+        elif command is not None:
+            args.extend(command)
         self._owned[name] = {"token": token, "image": image_id, "id": None}
         try:
             raw = self._call(args, max_output=4096).decode("ascii").strip()
@@ -378,7 +407,7 @@ class Engine:
                 _fail("container-id-invalid")
             self._owned[name]["id"] = raw
             self._container(name)
-        except (EngineFailure, UnicodeError):
+        except (EngineFailure, UnicodeError, KeyboardInterrupt):
             self._cleanup(name)
             raise
         return name
@@ -398,13 +427,13 @@ class Engine:
         owned["id"] = value["Id"]
         return value
 
-    def _restrictions(self, value, image_id, *, running, inventory=False):
+    def _restrictions(self, value, image_id, *, running, inventory=False, command=None, environment=None, allow_oom=False):
         config, host, state = value.get("Config", {}), value.get("HostConfig", {}), value.get("State", {})
         if not all(isinstance(row, dict) for row in (config, host, state)):
             _fail("engine-output-invalid")
         if value.get("Image") != image_id or config.get("Image") != image_id:
             _fail("container-image-mismatch")
-        wanted_command = ["-e", INVENTORY_PROBE] if inventory else SERVER_COMMAND
+        wanted_command = ["-e", INVENTORY_PROBE] if inventory else (SERVER_COMMAND if command is None else command)
         if (config.get("Entrypoint") != [NODE] or config.get("Cmd") != wanted_command
                 or config.get("WorkingDir") != "/app" or config.get("User") != SETTINGS["user"]):
             _fail("container-command-mismatch")
@@ -419,11 +448,13 @@ class Engine:
                 or host.get("Tmpfs") != {"/tmp": "rw,noexec,nosuid,nodev,size=16m"}):
             _fail("container-restriction-mismatch")
         observed = config.get("Env")
-        expected_env = {**self._images[image_id]["environment"], **SETTINGS["environment"]}
+        runtime_environment = SETTINGS["environment"] if environment is None else environment
+        expected_env = {**self._images[image_id]["environment"], **runtime_environment}
         if (not isinstance(observed, list) or len(observed) != len(expected_env)
                 or any(not isinstance(row, str) for row in observed) or sorted(observed) != sorted(key + "=" + value for key, value in expected_env.items())):
             _fail("container-environment-mismatch")
-        if state.get("Running") is not running or state.get("OOMKilled") is not False:
+        if (type(state.get("Running")) is not bool or (running is not None and state["Running"] is not running)
+                or type(state.get("OOMKilled")) is not bool or (not allow_oom and state["OOMKilled"] is not False)):
             _fail("container-state-mismatch")
         return state
 
@@ -439,7 +470,13 @@ class Engine:
         return True
 
     def inventory(self, image_id):
-        self.inspect_image(image_id)
+        return self._inventory(image_id, job_fixture=False)
+
+    def inventory_job(self, image_id):
+        return self._inventory(image_id, job_fixture=True)
+
+    def _inventory(self, image_id, *, job_fixture):
+        (self.inspect_job_image if job_fixture else self.inspect_image)(image_id)
         name = self._create(image_id, inventory=True)
         try:
             self._restrictions(self._container(name), image_id, running=False, inventory=True)
@@ -448,27 +485,128 @@ class Engine:
             state = self._restrictions(value, image_id, running=False, inventory=True)
             if type(state.get("ExitCode")) is not int or state["ExitCode"] != 0:
                 _fail("inventory-execution-failed")
-            rows = _json(raw)
-            if not isinstance(rows, list) or not rows or len(rows) > 20000:
-                _fail("inventory-invalid")
-            total, previous = 0, None
-            for row in rows:
-                if not isinstance(row, dict) or set(row) != {"path", "digest", "bytes"}:
-                    _fail("inventory-invalid")
-                path, size = row.get("path"), row.get("bytes")
-                if (not isinstance(path, str) or len(path) > 512 or not re.fullmatch(r"[A-Za-z0-9_./@+-]+", path)
-                        or any(part in {"", ".", ".."} for part in path.split("/"))
-                        or (previous is not None and path <= previous)
-                        or type(size) is not int or not 0 <= size <= 16777216):
-                    _fail("inventory-invalid")
-                _image(row.get("digest"))
-                total += size
-                previous = path
-            if total > 268435456:
-                _fail("inventory-limit")
-            return rows
+            return self._inventory_rows(_json(raw))
         finally:
             self._cleanup(name)
+
+    @staticmethod
+    def _inventory_rows(rows):
+        if not isinstance(rows, list) or not rows or len(rows) > 20000:
+            _fail("inventory-invalid")
+        total, previous = 0, None
+        for row in rows:
+            if not isinstance(row, dict) or set(row) != {"path", "digest", "bytes"}:
+                _fail("inventory-invalid")
+            path, size = row.get("path"), row.get("bytes")
+            if (not isinstance(path, str) or len(path) > 512 or not re.fullmatch(r"[A-Za-z0-9_./@+-]+", path)
+                    or any(part in {"", ".", ".."} for part in path.split("/"))
+                    or (previous is not None and path <= previous)
+                    or type(size) is not int or not 0 <= size <= 16777216):
+                _fail("inventory-invalid")
+            _image(row.get("digest"))
+            total += size
+            previous = path
+        if total > 268435456:
+            _fail("inventory-limit")
+        return rows
+
+    def run_job(self, profile, expected_files):
+        """Observe a bound finite command; never infer business effects from exit zero."""
+        import finite_job_contracts as contracts
+
+        contracts.validate_profile(profile)
+        started = time.monotonic()
+        run_id = uuid.uuid4().hex
+        profile_hash = contracts.profile_digest(profile)
+        image_id = profile["artifact"]["image_id"]
+        command = list(profile["execution"]["command"])
+        environment = {"RELEASE_CONTROL_PROFILE_DIGEST": profile_hash,
+                       "RELEASE_CONTROL_RUN_ID": run_id}
+        before_owned = set(self._owned)
+        observation = {"outcome": "unknown", "failure_code": "observation-unavailable",
+                       "exit_code": None, "oom_killed": None, "terminal_digest": None,
+                       "checks": [], "cleanup_verified": False, "elapsed_ms": 0}
+        stage = "image"
+        try:
+            self.inspect_job_image(image_id)
+            stage = "payload"
+            expected_files = self._inventory_rows(expected_files)
+            payload_digest = contracts.digest(expected_files)
+            if payload_digest != profile["artifact"]["payload_digest"]:
+                _fail("job-payload-mismatch")
+            if any(row["path"].lower().endswith((".ts", ".tsx", ".mts", ".cts")) for row in expected_files):
+                _fail("job-payload-mismatch")
+            if self.inventory_job(image_id) != expected_files:
+                _fail("job-payload-mismatch")
+            stage = "command"
+            if command[0] not in {row["path"] for row in expected_files}:
+                _fail("job-command-mismatch")
+            stage = "isolation"
+            name = self._create(image_id, command=command, environment=environment)
+            self._restrictions(self._container(name), image_id, running=False,
+                               command=command, environment=environment)
+            stage = "start"
+            limits = profile["limits"]
+            attached = self._execute(["start", "--attach", self._owned[name]["id"]],
+                                     timeout=limits["timeout_seconds"], max_output=limits["output_bytes"])
+            stage = "observation"
+            state = self._restrictions(self._container(name), image_id, running=None,
+                                       command=command, environment=environment, allow_oom=True)
+            observation["oom_killed"] = state["OOMKilled"]
+            if (state["Running"] or type(state.get("ExitCode")) is not int
+                    or not 0 <= state["ExitCode"] <= 255):
+                _fail("job-observation-unavailable")
+            observation["exit_code"] = state["ExitCode"]
+            if state["OOMKilled"]:
+                observation.update(outcome="failed", failure_code="oom-killed")
+            elif state["ExitCode"] != 0:
+                observation.update(outcome="failed", failure_code="exit-nonzero")
+            elif attached.returncode != 0:
+                observation.update(outcome="failed", failure_code="start-failed")
+            else:
+                stage = "terminal"
+                checks = contracts.evaluate_terminal(attached.stdout, profile, run_id)
+                observation.update(outcome="completed", failure_code=None, checks=checks,
+                                   terminal_digest=contracts.terminal_digest(profile, run_id, checks))
+        except KeyboardInterrupt:
+            observation.update(outcome="interrupted", failure_code="interrupted")
+        except contracts.ReleaseFailure as failure:
+            code = "output-limit" if failure.code == "finite-job-output-limit" else "terminal-invalid"
+            observation.update(outcome="failed", failure_code=code)
+        except EngineFailure as failure:
+            code = failure.code.removeprefix("local-container-")
+            if code == "engine-timeout":
+                observation.update(outcome="timed-out", failure_code="deadline-exceeded")
+            elif code == "engine-output-limit":
+                observation.update(outcome="failed", failure_code="output-limit")
+            elif code == "engine-unavailable":
+                observation.update(outcome="unknown", failure_code="engine-unavailable")
+            elif code == "cleanup-failed":
+                observation.update(outcome="unknown", failure_code="cleanup-failed")
+            elif stage == "observation" and code in {"engine-command-failed", "engine-output-invalid", "job-observation-unavailable"}:
+                observation.update(outcome="unknown", failure_code="observation-unavailable")
+            else:
+                mapped = {"image": "image-mismatch", "payload": "payload-mismatch",
+                          "command": "command-mismatch", "isolation": "isolation-mismatch",
+                          "start": "start-failed", "observation": "isolation-mismatch",
+                          "terminal": "terminal-invalid"}
+                observation.update(outcome="failed", failure_code=mapped[stage])
+        finally:
+            cleaned = True
+            for owned_name in sorted(set(self._owned) - before_owned):
+                try:
+                    self._cleanup(owned_name)
+                except (EngineFailure, KeyboardInterrupt):
+                    cleaned = False
+            observation["cleanup_verified"] = cleaned and not (set(self._owned) - before_owned)
+            if not observation["cleanup_verified"]:
+                observation.update(outcome="unknown", failure_code="cleanup-failed")
+            elif observation["failure_code"] == "cleanup-failed":
+                observation.update(outcome="unknown", failure_code="observation-unavailable")
+            if observation["outcome"] != "completed":
+                observation.update(checks=[], terminal_digest=None)
+            observation["elapsed_ms"] = max(0, int((time.monotonic() - started) * 1000))
+        return contracts.make_result(profile, run_id, observation)
 
     def run_server(self, image_id):
         image = self.inspect_image(image_id)

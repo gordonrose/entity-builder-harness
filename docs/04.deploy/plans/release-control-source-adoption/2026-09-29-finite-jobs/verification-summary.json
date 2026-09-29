@@ -1,0 +1,205 @@
+{
+  "artifact": {
+    "image_id": "sha256:e93bfa52c2f33375b3e9c5daad2a76f10bf3e91a1a98beec155085e103ccd4c4",
+    "payload_digest": "sha256:297facb711dd052c42fa72d32b43834fbbe938cfd17a0f45dc45cdbb502b49b0",
+    "recipe_digest": "sha256:c273e1f53df36da3e63a15dc9f3b5ba344605cd6d3348b89de71d218117e65bd",
+    "runtime_config_digest": "sha256:0328f6836bb0e9e2d90cf82a83ab2641c1979c8578b5e7b01607989acc2aef00",
+    "runtime_image": "gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f"
+  },
+  "authorized": false,
+  "cases": [
+    {
+      "case": "success",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": null,
+      "outcome": "completed",
+      "profile_digest": "sha256:4b0c0bd02ee09ea9b6d4bd9ec51d8cb7681dcb3cb4615eae4b3f02ac6cde5362",
+      "result_digest": "sha256:8f074bc42dac891d833a5297797cf92ee524708f779ddf63008c1f43392554fc"
+    },
+    {
+      "case": "stderr-success",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": null,
+      "outcome": "completed",
+      "profile_digest": "sha256:e617b0301381cf8fcae00080ae2a19839c892cb761e09f20aff81b27be527094",
+      "result_digest": "sha256:a5925c7d48b418048e39914ef2c1ce2c4386ecad9960498352efff4482b7c707"
+    },
+    {
+      "case": "nonzero",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "exit-nonzero",
+      "outcome": "failed",
+      "profile_digest": "sha256:a7e438af1237f76a8c116ec30b4d8809a12339e8bd11e692c9e46b4e1cfe1b60",
+      "result_digest": "sha256:c8d9ef9f3c7ce68d7ef7863ccdeb4b175b6ddd94c23efc24cf3fcda7ed4a46a9"
+    },
+    {
+      "case": "missing",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:0ceed026d45ba8a3e2002472e224d856913ca0184a3658d1d54a7d00d972975f",
+      "result_digest": "sha256:6ab683b835c2f58061a1ac891c1571b4f5f5f30194f62cd3133cfffbfea455bf"
+    },
+    {
+      "case": "malformed",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:a8efe4e5bc9e6d041c7027e4a40393d96c37b7a28c576fd548e80ebfa9aa072d",
+      "result_digest": "sha256:b0a149a680e987139c325cc81b649499c468a1ad2a4b945cefcef0af83bd4fee"
+    },
+    {
+      "case": "wrong-run",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:3f859a78f5157400ba2423c17631cc93ae85cddc26fc3ce9d450551f9c2bbb15",
+      "result_digest": "sha256:b712c8f8e1fb53f6f396ca5eb6c89e828d3da117be8364f6adadab1a9a130ab6"
+    },
+    {
+      "case": "wrong-profile",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:d230427d68a8d7cfd0b0eec99100529798196d35a602d5a622732e088fca6624",
+      "result_digest": "sha256:213e8b07efc2c30c243e120f777ad5b18352e6edd6802abba146733776c663b5"
+    },
+    {
+      "case": "duplicate",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:ce3377e44c8e86a81938905de6f8fcdba6bb4bac72dffa09ac257cad6261b87c",
+      "result_digest": "sha256:f2ed5d6ed37cc46ea07846507ba05604eacd76872419f30af97fa547f407d1f0"
+    },
+    {
+      "case": "extra-field",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "terminal-invalid",
+      "outcome": "failed",
+      "profile_digest": "sha256:fe6193d365f5b633387fde94ffb73058f1b016e9f5b0101769f5c291b210efd3",
+      "result_digest": "sha256:27fb78b2c61281eb333079e1154df88c7f30024d3991b9039009963957c9f9b5"
+    },
+    {
+      "case": "timeout",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "deadline-exceeded",
+      "outcome": "timed-out",
+      "profile_digest": "sha256:e97e76deb550c8179e5de9572777dabfc6bfbe369febe3a7a60b3439c186ec1a",
+      "result_digest": "sha256:cb3176709db99ae8a9f9d07ce5d2ae0ea47fe21e87a6f3b790083a517474c51d"
+    },
+    {
+      "case": "excessive-output",
+      "cleanup_verified": true,
+      "conformance_verdict": "passed",
+      "failure_code": "output-limit",
+      "outcome": "failed",
+      "profile_digest": "sha256:b22c05feaccfd601afc13a6ee418f0c8869a3deb76a547bb6ba631c2aea34efb",
+      "result_digest": "sha256:5cbd19e2e4c1e12477afaff3e073016ce040e0a4cee3909273e65d54ad9114eb"
+    }
+  ],
+  "completed_at": "2026-09-29T20:40:48Z",
+  "engine": {
+    "client": "29.5.2",
+    "server": "29.5.2"
+  },
+  "execution_outcome_counts": {
+    "completed": 2,
+    "failed": 8,
+    "timed-out": 1
+  },
+  "limitations": [
+    "inert-fixture-conformance-only",
+    "semantic-effects-unverified",
+    "no-product-profile-promotion",
+    "no-external-dependency-or-provider-qualification",
+    "no-durable-lock-fence-journal-or-crash-reconciliation",
+    "unsigned-local-observations",
+    "host-and-engine-observed-not-fully-pinned",
+    "no-release-or-operation-authority"
+  ],
+  "next_delivery_unit": "Continue Phase 3 reusable independent effect/dependency verification and required artifact admission; retain all actual command-specific obligations before later durable controls and AWS qualification.",
+  "product_profile_inventory_digest": "sha256:d8cf74bc22d89052afa616e6c642342aaf26904654adc7d00ebac58161a05edd",
+  "product_profile_updates": [],
+  "repository_head_at_execution": "2245d4f0ac82300e4a1366b40c4892c0a030e5a3",
+  "result_digest": "sha256:19e6ce477cb6d3585895610a15e3de175d1be5a1ff14e4742541f2df69efa5bd",
+  "result_file_sha256": "27cddfac79d83efffe17ce422c89f311f1b5ac57a2fd3e60e905183ab95cff75",
+  "runner_digest": "sha256:f0406d0621586365f8f4a9ab6dca2257ffd26d8298d6d18c32d70c9bb97e36b4",
+  "scope": "review-summary-only",
+  "started_at": "2026-09-29T20:39:44Z",
+  "validation": {
+    "canonical_clean_source": {
+      "exit_code": 0,
+      "log_sha256": "7732d00c992083b318f5daeedda22d6e9ee04a9feccb638fcf300343190cc95a",
+      "metadata_file_count": 44,
+      "suite_count": 29,
+      "suite_test_counts": [
+        29,
+        34,
+        32,
+        23,
+        25,
+        31,
+        34,
+        13,
+        26,
+        15,
+        39,
+        29,
+        47,
+        13,
+        49,
+        50,
+        19,
+        35,
+        55,
+        37,
+        42,
+        63,
+        41,
+        56,
+        56,
+        40,
+        102,
+        45,
+        85
+      ],
+      "test_count": 1165
+    },
+    "existing_server_compatibility": {
+      "cleanup_verified": true,
+      "exit_code": 0,
+      "health_checks_passed": 2,
+      "image_id": "sha256:5c4f1e9164a260bf26169a19957a6bec6d19c52a2c20fc9602d519bb813b891d",
+      "result_file_sha256": "0b43101d4b32865d8621e23d18af07a3d8b7ae4656a21dd5be97a3c6c88cb949",
+      "shutdown_exit_code": 0
+    },
+    "independent_audit": {
+      "consumer_refusals": 36,
+      "source_and_schema_binding": "passed",
+      "source_runtime_mismatch_refusals": 4
+    },
+    "new_focused_tests": {
+      "conformance": 85,
+      "contracts": 102,
+      "engine": 45,
+      "total": 232
+    },
+    "real_fixture_conformance": {
+      "cases": 11,
+      "exit_code": 0,
+      "unique_attempts": 11,
+      "verified_cleanups": 11
+    }
+  }
+}

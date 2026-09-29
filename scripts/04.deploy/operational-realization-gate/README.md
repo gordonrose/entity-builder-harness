@@ -825,3 +825,59 @@ qualification remain later. The legacy workflow still uses its original build
 path: it must not inherit this new mode's receipt or rebuild after qualification
 and assume the new image has passed. Later adoption must promote the exact
 qualified artifact with its required additional evidence.
+
+## Finite-job execution conformance
+
+The shared `container_engine.py` now also observes bounded finite commands.
+`finite_job_contracts.py` loads the closed `finite-job-profile/v1` and
+`finite-job-result/v1` schemas. A profile binds the immutable image and payload,
+entrypoint, command, working directory, output/deadline bounds and required
+terminal checks. The current local adapter supports Node JavaScript artifacts
+in `/app` on the pinned Linux runtime; it is provider-neutral, not a claim that
+all runtimes, dependencies or providers are supported.
+
+```bash
+bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --verify-finite-jobs \
+  --source-root . --scratch-root /persistent/path/finite-job-scratch
+```
+
+This explicit mode uses a separate inert conformance image and the existing
+local engine, pinned-base/build identity checks, payload inventory, isolation
+and owned cleanup. It accepts no arbitrary image, command, environment, secret,
+saved success receipt or provider target. The existing server/image mode stays
+compatible. Its runtime base must first be acquired through the existing
+`--qualify-local ... --acquire-base` mode; conformance never pulls a new base.
+Docker daemon metadata-network and unpinned-host limitations remain as described
+above. The fixture image remains local; newly created containers are removed.
+
+Every attempt injects a fresh nonce and the digest of its profile and schemas.
+A single bounded, duplicate-free `finite-job-terminal/v1` JSON envelope must
+match those identities and the exact ordered checks. Exit zero alone cannot
+complete the execution. Changed payload, commands, isolation or bindings,
+nonzero exit, OOM, missing/extra/stale output, timeout and failed cleanup cannot
+produce a completed receipt. Interrupted/uncertain jobs are never automatically
+retried. `timeout_seconds` bounds the attached command execution; `elapsed_ms`
+includes preparation, observation and cleanup. Each cleanup call is separately
+bounded; a whole-operation deadline remains part of the later operation engine.
+Cleanup independently checks ownership and absence even after the Docker client
+times out. Raw stdout/stderr and exceptions are excluded from
+public evidence; only accepted canonical terminal facts have a digest.
+
+The eleven real fixture cases include two completions and nine expected
+refusals. A successful conformance aggregate must contain every expected case
+once, with fresh attempts and verified cleanup. Its closed safe projection
+binds current implementation, fixture recipe/payload, pinned base, constructed
+image and product-profile inventory, with `product_profile_updates: []`.
+The nested versioned results distinguish failed execution from successful
+failure detection. The common consumer rejects both new producers for source
+analysis, release eligibility and operation authorization.
+
+Terminal checks are job-reported claims: `semantic_verdict: unverified` remains
+mandatory until independent profile-specific effect verification is implemented.
+All source/release/operation/qualification authority stays blocked. Fixture
+conformance does not qualify PostgreSQL or any other product task and does not
+supply durable ownership, fencing, crash reconciliation or trusted admission.
+Next continue Phase 3 with reusable independent effect/dependency verification
+and required artifact admission; retain actual command-specific obligations.
+Durable operation controls, AWS adapter/preflight and target qualification
+follow the plan's gates. PostgreSQL Stage 6 remains paused.

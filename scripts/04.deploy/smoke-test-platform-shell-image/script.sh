@@ -25,6 +25,23 @@ set -euo pipefail
 #   - id: deploy.script.build-platform-shell-image
 #     path: scripts/04.deploy/build-platform-shell-image/script.sh
 
+# Finite-job conformance is a separate fixture-only mode on this same capability.
+for FINITE_JOB_ARGUMENT in "$@"; do
+  case "$FINITE_JOB_ARGUMENT" in
+    --verify-finite-jobs|--verify-finite-jobs=*)
+      if [ "${1:-}" != "--verify-finite-jobs" ]; then
+        printf '%s\n' '{"schema":"finite-job-conformance-error/v1","verdict":"failed","authorized":false,"release_eligibility":"blocked","operation_authorization":"blocked","qualification_verdict":"blocked","source_closure":"blocked","findings":[{"code":"finite-job-conformance-arguments-invalid"}]}'
+        exit 1
+      fi
+      ;;
+  esac
+done
+if [ "${1:-}" = "--verify-finite-jobs" ]; then
+  shift
+  FINITE_JOB_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../operational-realization-gate" && pwd)"
+  exec python3 -I -B "$FINITE_JOB_DIRECTORY/finite_job_conformance.py" "$@"
+fi
+
 # A qualification request never falls back into the legacy parser.
 for QUALIFICATION_ARGUMENT in "$@"; do
   case "$QUALIFICATION_ARGUMENT" in
@@ -60,6 +77,7 @@ CONTAINER_NAME="platform-shell-smoke-$$"
 usage() {
   cat <<'EOF'
 Usage:
+  smoke-test-platform-shell-image/script.sh --verify-finite-jobs --source-root <root> --scratch-root <persistent-directory>
   smoke-test-platform-shell-image/script.sh --qualify-local --source-root <root> --scratch-root <persistent-directory> [--acquire-base | --package-cache <verified-cache>]
   smoke-test-platform-shell-image/script.sh [--port <port>] [--allow-skip-without-engine]
 

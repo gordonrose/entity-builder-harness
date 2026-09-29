@@ -1350,3 +1350,73 @@ disposable dependencies, then later AWS preflight and controlled target work.
 PostgreSQL Stage 6 stays paused. Hosted validation after approved publication,
 wider adoption/action semantics, authenticated admission, durable controls and
 provider adapters/stores remain open. No local stop condition exists.
+
+### Ninth source delivery unit — reusable finite execution conformance
+
+The user clarified that PostgreSQL readiness was a scheduling question, not a
+request for a PostgreSQL implementation slice, then authorized continuation.
+The IaaS programme remains primary. The eighth-unit queue wording about packaged
+finite commands is refined: first establish reusable finite-execution protocol
+conformance in the existing realization engine, using inert packaged fixtures.
+No PostgreSQL, AWS adapter or product task implementation is part of this unit.
+
+Closed profile/result contracts bind image, payload, command, schema revision,
+fresh attempt, output/deadline limits, terminal checks and cleanup. Real fixture
+execution exercises completion and refusal paths through the existing smoke
+wrapper. Terminal claims remain semantic-unverified; product-profile updates
+stay empty and release authority stays blocked. This unit cannot close Phase 3
+or promote the thirteen pending target-task/sidecar obligations.
+
+The next Phase 3 unit is reusable independent effect/dependency verification
+and required artifact admission, retaining all actual command-specific proof
+obligations. Source coverage gaps remain open. Durable operation journal/lease/
+fencing, AWS integration and per-task preflight, followed by controlled target
+qualification, retain their later gates. PostgreSQL Stage 6 is a readiness
+milestone within that programme and stays paused. Completion evidence follows
+a frozen conformance run and canonical source verification.
+
+### Ninth source delivery unit evidence — 2026-09-29
+
+The reusable finite-execution conformance unit is complete. The dated review at
+`docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/`
+contains exact public conformance output, safe product-server compatibility
+observations, the verification summary and scope limitations. Two versioned
+schemas, contracts, the shared engine extension, the existing smoke wrapper,
+inert fixtures and focused tests extend the IaaS capability. PostgreSQL/product
+source, AWS resources and deployment workflows were not changed.
+
+Final canonical clean verification exited 0: 1,165 tests in 29 suites, legacy
+smoke, provider/network boundaries and 44 metadata headers passed. The 232 new
+tests cover contracts (102), engine behavior (45) and CLI/conformance (85).
+The final real fixture run exited 0 in 64 seconds: two completed executions,
+eight expected failures and one expected timeout, with eleven unique attempts
+and eleven verified cleanups. The previously qualified immutable product image
+also passed both server health checks, graceful shutdown and cleanup using the
+final extended runner. That observation is compatibility evidence only.
+
+Review found and repaired a concrete alternate-source-root binding defect:
+supplied helper/schema bytes now have to match the actual executing modules and
+loaded schemas before building. Four mismatch negatives and an identical-copy
+case cover it. A fresh complete clean run and real conformance rerun passed
+following repair. Earlier 1,160-test verification and uncommitted review
+artifacts remain historical; superseded review files were preserved outside Git.
+
+Independent final review matched current source/schema/lock/head/profile
+bindings, reproduced all four refusals and checked all thirty-six consumer
+rejections. Result: `sha256:19e6ce477cb6d3585895610a15e3de175d1be5a1ff14e4742541f2df69efa5bd`.
+Image: `sha256:e93bfa52c2f33375b3e9c5daad2a76f10bf3e91a1a98beec155085e103ccd4c4`.
+Runner: `sha256:f0406d0621586365f8f4a9ab6dca2257ffd26d8298d6d18c32d70c9bb97e36b4`.
+
+Every job's semantic effect remains unverified and all release/operation
+permissions remain blocked. Product-profile updates are empty; the thirteen
+pending target-task/sidecar obligations stay pending. A completed protocol is
+not independent business-state verification or durable execution authority.
+
+Explicit next unit: continue Phase 3 reusable independent effect/dependency
+verification and required artifact admission, retaining actual command-specific
+proof obligations and open source-coverage gaps. Durable operation controls,
+AWS adapters/per-task preflight, hosted validation after approved publication,
+and target qualification remain later. PostgreSQL Stage 6 stays paused as a
+readiness milestone in the IaaS programme. No local stop condition exists; no
+provider mutation, publication, push, merge, reset or other-worktree change
+occurred. The local checkpoint is authorized under the continuing source batch.

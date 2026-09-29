@@ -218,6 +218,7 @@ REALIZATION_SOURCES=(
   scripts/04.deploy/operational-realization-gate/build_contracts.py
   scripts/04.deploy/operational-realization-gate/local_build_contracts.py
   scripts/04.deploy/operational-realization-gate/local_container_contracts.py
+  scripts/04.deploy/operational-realization-gate/finite_job_contracts.py
   scripts/04.deploy/operational-realization-gate/build_contracts_cli.py
   scripts/04.deploy/release-control/compiler.py
   scripts/04.deploy/release-control/discovery/source_inventory.py
@@ -261,4 +262,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/oper
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_container_profiles.py' -v
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_container_contracts.py' -v
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_container_cli.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_contracts.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_engine.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_conformance.py' -v
 echo "Operational Realization Gate local tests passed."

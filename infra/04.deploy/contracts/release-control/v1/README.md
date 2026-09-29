@@ -131,3 +131,11 @@ retained plus excluded dependency accounting, a fresh locked package selection,
 the final image file inventory and exact local health/shutdown settings.
 Every target task/container remains a separate pending obligation. Neither
 schema grants authority or admits unsigned observations into the release gate.
+
+The finite-job profile and result schemas bind local finite execution to an
+immutable artifact/payload, exact command, deadline, output limit, fresh attempt,
+terminal protocol and verified cleanup. Both schema identities participate in
+the profile digest. Completed execution requires more than exit zero; all
+semantic effect claims remain unverified and release/operation authority stays
+blocked. These schemas currently support the reviewed local Node adapter and
+its inert conformance fixtures; no product/provider proof is implied.
