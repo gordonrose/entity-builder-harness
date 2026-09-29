@@ -1,0 +1,58 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.source-finding-triage.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Define revision-bound open finding intake without coverage waivers.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-finding-triage
+#     path: scripts/04.deploy/operational-realization-gate/finding_triage.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:source-finding-triage:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "inventory_digest", "collector_revision", "policy_revision", "entries"],
+  "properties": {
+    "schema": {"const": "source-finding-triage/v1"},
+    "inventory_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "collector_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "policy_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "entries": {
+      "type": "array",
+      "maxItems": 2000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "source_digest", "code", "intake_owner", "route", "next_action", "status"],
+        "properties": {
+          "source_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "source_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "code": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"},
+          "intake_owner": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"},
+          "route": {"enum": ["phase-2-source", "phase-3-artifact", "phase-5-provider"]},
+          "next_action": {
+            "enum": [
+              "trace-command-callers",
+              "trace-package-entrypoint",
+              "extend-resource-source-grammar",
+              "support-source-yaml-grammar",
+              "trace-workflow-action",
+              "extend-image-command-grammar",
+              "resolve-image-source-binding",
+              "inspect-final-artifact-command",
+              "qualify-image-build",
+              "investigate-source-grammar"
+            ]
+          },
+          "status": {"const": "open"}
+        }
+      }
+    }
+  }
+}

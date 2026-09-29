@@ -1,0 +1,431 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.release-control-valid-release
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: fixture
+#   purpose: Declare a release with seventeen unstarted gates without claiming live evidence.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.test.operational-realization-release-compiler
+#     path: scripts/04.deploy/operational-realization-gate/test_release_compiler.py
+
+# Fixture digests are synthetic except the binding to valid-contract.yml.
+schema: release-definition/v1
+release_id: delivery-release
+source_revision: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+target_composition_revision: sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+artifact_digests:
+- artifact_id: delivery-artifact
+  digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+target_id: sandbox/delivery
+risk_tier: standard-risk
+operation_graph:
+- operation_id: delivery-operation
+  execution_unit: delivery-worker
+  operation_profile: queue-consumer
+  artifact_id: delivery-artifact
+  acting_identity: delivery-identity
+  command_ref: delivery-entrypoint
+  depends_on: []
+environment_contract_revision: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+acceptance_matrix:
+  schema: release-acceptance-matrix/v1
+  rows:
+  - gate: scope-risk
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: scope-risk-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: acceptance-contract
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: acceptance-contract-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: source-contracts
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: source-contracts-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: unit-contract-tests
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: unit-contract-tests-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: integration-tests
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: integration-tests-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: disposable
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: exact-artifact-tests
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: exact-artifact-tests-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: disposable
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: supply-chain-proof
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: supply-chain-proof-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: iac-static-validation
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: iac-static-validation-proof
+      proof_level: locally-proven
+      max_age_seconds: 86400
+      environment: source
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: change-set-review
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: change-set-review-proof
+      proof_level: live-read-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: drift-dependency-preflight
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: drift-dependency-preflight-proof
+      proof_level: live-read-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: candidate-runtime-proof
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: candidate-runtime-proof-proof
+      proof_level: live-execution-proven
+      max_age_seconds: 86400
+      environment: candidate
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: per-task-live-preflight
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: per-task-live-preflight-proof
+      proof_level: live-execution-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: controlled-state-change
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: controlled-state-change-proof
+      proof_level: live-execution-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: post-change-verification
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: post-change-verification-proof
+      proof_level: live-read-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: rollback-recovery
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: rollback-recovery-proof
+      proof_level: live-execution-proven
+      max_age_seconds: 86400
+      environment: disposable
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: evidence-retention
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: evidence-retention-proof
+      proof_level: live-read-proven
+      max_age_seconds: 86400
+      environment: target
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+  - gate: continuous-operation
+    owner: release-owner
+    acting_identity: delivery-identity
+    operation_profile: queue-consumer
+    command_ref: delivery-entrypoint
+    operation_ids:
+    - delivery-operation
+    evidence_requirements:
+    - check_id: continuous-operation-proof
+      proof_level: live-read-proven
+      max_age_seconds: 86400
+      environment: target
+      observation_window_seconds: 2419200
+    invalidated_by:
+    - release-definition
+    - target-state
+    - identity
+    - configuration
+    - policy
+    - telemetry
+    failure_state: failed
+    recovery_route: delivery-recovery
+    cleanup_route: reviewed-cleanup
+    verdict: not-started
+evidence_policy_revision: sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+realization_contract_digest: sha256:7940193928481a8326c95d1ac8ec081d415c99f33c6eb729916b096af0bc030e

@@ -1,0 +1,22 @@
+{
+  "authorized": false,
+  "classification_verdict": "complete",
+  "collector_revision": "sha256:fba3e024de55ae3cb0040c3fc4d892d19009e6971e93b39570970e7cc577c1e0",
+  "counts": {
+    "by_route": {
+      "phase-2-source": 188,
+      "phase-3-artifact": 5,
+      "phase-5-provider": 0
+    },
+    "classified_findings": 193,
+    "entries": 193,
+    "source_findings": 193,
+    "sources": 303
+  },
+  "coverage_verdict": "blocked",
+  "findings": [],
+  "inventory_digest": "sha256:42222803bc99d027d8772cc00c8e141c123eebfefeee40457b441bb71db60d68",
+  "policy_revision": "sha256:3b39b20b14d0669438789129d10d09da0f8450a2b28bea1b0f3b6db158a81257",
+  "schema": "source-triage-result/v1",
+  "scope": "finding-triage"
+}

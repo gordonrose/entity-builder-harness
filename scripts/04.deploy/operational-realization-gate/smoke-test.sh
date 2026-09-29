@@ -205,12 +205,49 @@ expect_failure "connection-destination-edge-missing" bash "$SCRIPT" --contract "
 sed 's/recovery_attempt_label: recovery-attempt/recovery_attempt_label: prior-attempt/' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/recovery-replay.yml"
 expect_failure "recovery-label-not-new" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/recovery-replay.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
 
-if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' scripts/04.deploy/operational-realization-gate/script.py; then
+REALIZATION_SOURCES=(
+  scripts/04.deploy/operational-realization-gate/script.py
+  scripts/04.deploy/operational-realization-gate/release_compiler.py
+  scripts/04.deploy/operational-realization-gate/source_coverage.py
+  scripts/04.deploy/operational-realization-gate/caller_coverage.py
+  scripts/04.deploy/operational-realization-gate/finding_triage.py
+  scripts/04.deploy/operational-realization-gate/result_consumption.py
+  scripts/04.deploy/operational-realization-gate/result_consumption_cli.py
+  scripts/04.deploy/operational-realization-gate/operation_contracts.py
+  scripts/04.deploy/operational-realization-gate/operation_contracts_cli.py
+  scripts/04.deploy/operational-realization-gate/build_contracts.py
+  scripts/04.deploy/operational-realization-gate/build_contracts_cli.py
+  scripts/04.deploy/release-control/compiler.py
+  scripts/04.deploy/release-control/discovery/source_inventory.py
+  scripts/04.deploy/release-control/discovery/caller_inventory.py
+  scripts/04.deploy/release-control/discovery/operation_inventory.py
+  scripts/04.deploy/release-control/discovery/action_observations.py
+  scripts/04.deploy/release-control/discovery/build_inventory.py
+  scripts/04.deploy/release-control/discovery/build_artifacts.py
+)
+if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' "${REALIZATION_SOURCES[@]}"; then
   echo "ERROR: provider adapter import leaked into generic realization core" >&2
   exit 1
 fi
-if grep -Eq -- 'subprocess|socket|urllib|requests' scripts/04.deploy/operational-realization-gate/script.py; then
+if grep -Eq -- 'subprocess|socket|urllib|requests' "${REALIZATION_SOURCES[@]}"; then
   echo "ERROR: generic realization core must not invoke network or provider tooling" >&2
   exit 1
 fi
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_release_compiler.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_source_coverage.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_source_inventory.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finding_triage.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_caller_coverage.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_caller_inventory.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_result_consumption.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_result_consumption_cli.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_clean_environment.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_validation_workflow.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_operation_inventory.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_action_observations.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_operation_contracts.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_operation_contracts_cli.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_build_inventory.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_build_artifacts.py' -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_build_contracts_cli.py' -v
 echo "Operational Realization Gate local tests passed."

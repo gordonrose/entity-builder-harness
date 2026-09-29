@@ -1,0 +1,26 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.source-operations.workflow
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: fixture
+#   purpose: Describe inert script and external action source for operation contract tests.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.test.operation-contracts-cli
+#     path: scripts/04.deploy/operational-realization-gate/test_operation_contracts_cli.py
+name: Inert operation source fixture
+"on": workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: npm run verify

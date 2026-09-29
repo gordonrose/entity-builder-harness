@@ -75,8 +75,10 @@ model and one controlled operation protocol.
 
 - No legacy-site, DNS, default-ALB-routing, non-staging, or stored-secret
   change is implied by this plan.
-- A target mutation still needs explicit current-chat approval under
-  `.agentic/aws/workflows/execute-approved-aws-change.md`.
+- An external mutation needs explicit approval scoped to its provider, identity,
+  resources, effects and cost. AWS mutations additionally follow
+  `.agentic/aws/workflows/execute-approved-aws-change.md`; that workflow does
+  not grant authority over another provider or an externally owned dependency.
 - The control plane records secret *references and schemas*, never values,
   tokens, request bodies, raw provider responses, task IDs or customer data.
 - Release operations fail closed on unresolved coverage, changed source/artifact
@@ -85,8 +87,9 @@ model and one controlled operation protocol.
 - A normal release may never use a break-glass exception. An emergency action
   has an independently auditable, time-bounded exception record and mandatory
   post-incident review; it cannot silently become the normal deployment path.
-- The new recurring AWS cost must be estimated and approved before it is
-  created. Initial source work requires no cloud mutation.
+- New recurring and disposable costs across every selected provider must be
+  estimated and approved before creation. Initial source work requires no
+  provider access or external mutation.
 
 ### Explicit non-goals
 
@@ -136,6 +139,23 @@ decommissioning obligations, and its consumed data-governance contract
 revision. Edges declare the phase, effect, dependency, completion predicate,
 proof obligations and invalidation conditions.
 
+### Provider and resource ownership boundaries
+
+Every resource and dependency binding identifies its provider/service boundary,
+provider namespace (such as account/tenant and region where meaningful), logical
+resource reference, accountable owner, acting identity, allowed effects and
+inspection capability. A target may contain several providers; a target-level
+provider name is never sufficient authority for every resource below it.
+
+Bindings distinguish release-managed resources from externally owned
+consume-only or inspect-only dependencies. Consumption permits only the named
+application actions; inspection permits only declared safe reads. Neither
+permits provisioning, policy changes, replacement, teardown or deletion of the
+external resource. Cleanup may close this release's client/session or remove
+separately declared disposable resources within its authority. It cannot infer
+ownership of the external dependency from that dependency's inclusion in the
+graph. Missing authority, inspection capability or ownership stays unresolved.
+
 An empty category is allowed only when independent discovery confirms it. An
 unsupported dynamic launch or configuration edge remains an explicit
 unresolved obligation, not a silent exemption.
@@ -152,6 +172,7 @@ this matrix. It is the authoritative answer to “may this release advance?”;
 the phases below describe how the repository obtains the capability to answer
 each row.
 
+<!-- deterministic-check: allow reason="This acceptance invariant is enforced by the release compiler and ordered execution gates; it is not a manual procedure." -->
 Each generated row must bind: the release and target-composition revisions;
 the accountable owner and acting identity; the selected operation profile and
 command/adapter; required safe evidence; evidence expiry/invalidation
@@ -172,25 +193,71 @@ the named gate.
 | 3 | **Source contracts:** are configuration and secret schemas, permissions, data lifecycle/governance, telemetry, timeouts and failure categories explicit? Evidence: validated versioned contracts and negative fixtures. | Phase 1 contracts; Phase 4 diagnostics; consumed data-governance revision. | Reject an implicit configuration/secret shape, authority edge, governance decision or unclassified failure. Reopen design and add a contract. | Partial: managed-master secret shape was initially missed. |
 | 4 | **Unit and contract tests:** do functions reject invalid input and preserve safe semantics? Evidence: deterministic positive, negative, boundary, concurrency and mutation tests for each contract. | Phase 1 exit gate and Phase 2 mutation tests; generated test obligations per profile. | Reject uncovered behavior or a failing invariant. Fix source/contract; do not substitute a live test for a deterministic unit defect. | Stronger coverage exists for persistence and source policies; needs exhaustive generated obligations. |
 | 5 | **Integration tests:** do actual dependency engines behave correctly in a disposable adequate environment? Evidence: profile-specific integration receipt, isolated inputs and cleanup result. | Phase 5 adapter conformance and disposable qualification targets. | Reject fixture-only claims where a real engine/provider behavior is required. Repair integration or use a reviewed disposable qualification environment. | Local PostgreSQL adapter integration exists; full ECS/RDS task execution does not. |
-| 6 | **Exact-image tests:** does every real container command run in its final artifact under actual user/filesystem/security constraints? Evidence: final digest, command, exit/semantic receipt and shutdown/cleanup result. | Phase 3 exact-artifact qualification; finite-job profiles. | Reject host-workspace, import-only or server-only substitution. Rebuild and qualify the exact command before publication/promotion. | Server: yes. Bootstrap/migration/relay/worker/restore: insufficient. |
+| 6 | **Exact-artifact tests:** does each actual command or versioned provider-native definition behave correctly in its immutable final artifact under its execution constraints? Evidence: digest/revision, exact command/definition, identity, semantic result and shutdown/cleanup receipt; container profiles also prove user/filesystem/security constraints. | Phase 3 exact-artifact qualification; finite-job profiles. | Reject host-workspace, import-only or server-only substitution. Rebuild and qualify the exact command before publication/promotion. | Server: yes. Bootstrap/migration/relay/worker/restore: insufficient. |
 | 7 | **Supply-chain proof:** is the artifact immutable, scanned, SBOM/provenance-attested and tied to source? Evidence: verified digest, SBOM, scan policy result, attestation/provenance, base artifact and signature receipt where supported. | Phase 3 supply-chain admission. | Reject unknown, unsigned/unverified, stale, vulnerable beyond policy or source/digest-mismatched artifact. Rebuild from reviewed source. | Present. |
-| 8 | **IaC static validation:** do rendered templates, IAM, network, encryption, tags, alarms, retention and references match target policy? Evidence: rendered-template, policy, schema and negative-test receipts. | Phase 2 discovery; Phase 5 target-composition compiler and AWS adapter fixtures. | Reject invalid template/reference, policy mismatch or unmodelled resource edge. Correct source; do not attempt provider execution. | Largely present; becomes one compiler gate. |
-| 9 | **Change-set review:** does the actual provider plan contain only allowed changes? Evidence: immutable safe change summary bound to release, target fingerprint, permissions/cost delta and reviewed rollback. | AWS CloudFormation change-set operation profile; Phase 6 `plan`. | Reject replacement/destructive/broader-scope/unexpected-cost change. Revise composition or create a separately reviewed recovery plan. | Present and working. |
-| 10 | **Drift and dependency preflight:** are account, region, quotas, capacity, cost boundary, resources and stack state expected? Evidence: fresh normalized observed-state record. | Phase 0 inspection; Phase 5 capacity/limit adapter checks; Phase 8 candidate entry. | Reject stale/mismatched account/region, drift, insufficient capacity, unavailable quota or unapproved cost. Reconcile or safely remediate before a new plan. | Present for reviewed boundaries; must become one readiness contract. |
-| 11 | **Candidate runtime proof:** can the immutable image start safely without serving production traffic? Evidence: profile-specific candidate receipt for service or job, including actual identity, image, command and observation route. | Phase 3 exact image; Phase 4 non-mutating candidate mode; Phase 8 qualification. | Reject server-only proof for a finite task, old-revision health, or candidate with no observable terminal result. Fix candidate prerequisites before live operation. | Present for the HTTP server only. |
-| 12 | **Per-task live preflight:** can every selected task use real IAM, injected secret schema, network, TLS and logging/evidence paths without writing business state? Evidence: no-effect preflight receipt per task/profile. | Phase 4.6; Phase 8.2. | Reject any missing command, identity, input, network/TLS or observation capability. Reopen design; do not use a state-changing run as diagnosis. | Missing; decisive Stage 6 gap. |
+| 8 | **Infrastructure and authority validation:** do rendered resource definitions, authority policies, network, encryption, ownership, alarms, retention and references match target policy? Evidence: rendered-template, policy, schema and negative-test receipts. | Phase 2 discovery; Phase 5 target-composition compiler and AWS adapter fixtures. | Reject invalid template/reference, policy mismatch or unmodelled resource edge. Correct source; do not attempt provider execution. | Largely present; becomes one compiler gate. |
+| 9 | **Provider effect-plan review:** does the provider's reviewed change plan or equivalent bounded effect description contain only allowed changes? Evidence: immutable safe change summary bound to release, target fingerprint, permissions/cost delta and reviewed rollback. | Provider-specific planning profile (AWS reference: CloudFormation change set); Phase 6 `plan`. | Reject replacement/destructive/broader-scope/unexpected-cost change. Revise composition or create a separately reviewed recovery plan. | Present and working. |
+| 10 | **Drift and dependency preflight:** are provider namespace, target fingerprint, quotas, capacity, cost boundary, resources and dependency state expected? Evidence: fresh normalized observed-state record. | Phase 0 inspection; Phase 5 capacity/limit adapter checks; Phase 8 candidate entry. | Reject stale/mismatched provider namespace or target, drift, insufficient capacity, unavailable quota or unapproved cost. Reconcile or safely remediate before a new plan. | Present for reviewed boundaries; must become one readiness contract. |
+| 11 | **Candidate runtime proof:** can the immutable artifact execute safely within the candidate boundary? Evidence: profile-specific candidate receipt for service or job, including provider, actual identity, artifact, command/definition and observation route. | Phase 3 exact artifact; Phase 4 non-mutating candidate mode; Phase 8 qualification. | Reject server-only proof for a finite task, old-revision health, or candidate with no observable terminal result. Fix candidate prerequisites before live operation. | Present for the HTTP server only. |
+| 12 | **Per-task live preflight:** can every selected task use its real provider authority, injected secret schema, network, TLS and logging/evidence paths without writing business state? Evidence: no-effect preflight receipt per task/profile. | Phase 4.6; Phase 8.2. | Reject any missing command, identity, input, network/TLS or observation capability. Reopen design; do not use a state-changing run as diagnosis. | Missing; decisive Stage 6 gap. |
 | 13 | **Controlled state change:** can bootstrap/migration/relay/worker run once, idempotently and within a bounded blast radius? Evidence: operation journal, semantic completion, effect receipt, fence/idempotency proof and cleanup. | Phase 4 controller; Phase 8.3 ordered operation graph. | Stop on unknown outcome, duplicate ownership, non-idempotent effect or budget breach. Reconcile journal before retrying; use declared compensation/forward repair. | Not proven because bootstrap has not passed. |
 | 14 | **Post-change verification:** are health, authorization, queue/database invariants, telemetry, alarms, cost and steady state correct? Evidence: bound profile-specific verification receipts. | Phase 8.4–5; observability and target-policy adapters. | Reject partial health as full success. Quarantine/recover through the operation graph, then re-observe after cleanup. | Partly designed; end-to-end proof has not run. |
-| 15 | **Rollback and recovery:** can service rollback, forward repair, restore and cleanup be demonstrated safely? Evidence: executed recovery receipt, restoration invariant and declared post-recovery state. | Phase 1 lifecycle; Phase 6 lifecycle gates; Phase 8 controlled recovery proof. | Reject theoretical-only restore/rollback. Use an isolated rehearsal and fail closed if data, retention or cleanup policy would be violated. | Service rollback approach exists; relational restore is designed but not live-proven. |
+| 15 | **Rollback and recovery:** can service rollback, forward repair, restore and cleanup be demonstrated safely? Evidence: executed recovery receipt, restoration invariant and declared post-recovery state. | Phase 1 lifecycle; Phase 6 lifecycle gates; Phase 8 controlled recovery proof. | Reject theoretical-only restore/rollback. Use an isolated rehearsal; data, retention or cleanup policy violations block recovery qualification. | Service rollback approach exists; relational restore is designed but not live-proven. |
 | 16 | **Evidence retention:** is safe evidence durable, queryable, digest-bound and free of secrets/raw provider data? Evidence: verified receipt/journal storage, access policy, expiry/invalidation and redaction checks. | §4 records; Phase 4 journal; Phase 6 evidence upload; Phase 9 dashboard. | Reject terminal-only, unbound, untrusted, replayed, stale or sensitive evidence. Re-run the affected proof after secure evidence storage is available. | Partial: some evidence is transient terminal output. |
 | 17 | **Continuous operation:** are SLOs, alerts, telemetry-loss detection, patching, cost controls, expiry and recovery rehearsals operating? Evidence: scheduled-control history over required windows and alert-delivery/rehearsal receipts. | Phase 9 continuous assurance; supply-chain admission drives patch/requalification. | Alert and open a recoverable operation for missed control, expired proof, unsupported dependency, budget breach or failed rehearsal. A one-time release proof cannot satisfy this row. | Observability baseline exists; long-window SLO and relational periodic rehearsal remain incomplete. |
 
-The release state ledger records a row as `not-applicable` only when the
-composition compiler produces an independently reviewable applicability result
-with supporting discovery facts. “Not applicable” is never a free-text
-override. The matrix is generated from the composition graph; humans review the
-generated result and safe evidence rather than maintaining a second handwritten
-checklist.
+### Assertion subjects and generated applicability
+
+Keep all 17 ordered gates. Within a gate, an assertion identifies its subject
+scope: **release**, **artifact**, **operation**, **resource** or **dependency**.
+It binds the subject ID/revision, provider boundary when relevant, owner,
+operation profile, expected predicate, evidence kind and adequate environment,
+identity/effect boundary, invalidation dependencies and recovery/cleanup route.
+A shared artifact proof may support several operations only through explicit
+bindings; one operation's completion cannot stand in for a sibling operation.
+
+The compiler derives obligations and applicability per gate and subject from
+independent discovery facts, reviewed composition and versioned profile rules.
+An applicability result includes the subject, rule ID/version, input-fact
+references/digests and reason code. It cannot be supplied as free text or by
+calling a path `test-only`. Unsupported facts/profile mappings remain unresolved
+and block progression. A whole row may be `not-applicable` only if every expected
+subject has a supported result and the risk policy permits that aggregate;
+no row is removed. Humans review generated results and safe evidence.
+
+The first compiler unit deliberately requires every declared operation at all
+17 gates and rejects all `not-applicable` claims. Retain that conservative
+compatibility behavior until generated subject obligations can be validated
+against independent coverage. Historical schema identifiers such as
+`exact-image` remain compatibility aliases; they do not justify omitting a
+provider-native executable. Such an executable requires an equivalent exact
+versioned-definition proof or remains unsupported and blocking.
+
+### Mixed-provider acceptance example
+
+Use synthetic source fixtures for an AWS-hosted query service and finite loading
+job consuming an externally owned warehouse (for example a proposed Snowflake
+integration). This example makes no claim about a provider's implemented
+capabilities. Product/runtime connectors under `platform/adapters/` implement
+query/load behavior; release-control deployment adapters inspect and qualify
+provider facts within declared authority. Neither supplies the other's proof.
+
+The service and loader have separate commands, identities, artifact bindings,
+completion predicates and recovery routes. Artifact-scoped checks qualify their
+actual packaged commands; operation-scoped evidence separately establishes
+service readiness and terminal loader completion. Resource/dependency checks
+bind the warehouse's provider, ownership, approved consumption and safe
+inspection method. Release-scoped checks aggregate approved effects and costs
+across both providers. No warehouse provisioning or deletion is implied.
+
+Conformance tests must reject: deleting an external resource through a
+consume-only binding; evidence from the wrong provider or identity; HTTP health
+as finite-job completion; a container command falsely labelled provider-native
+to evade artifact tests; omitted dependencies or unsupported applicability; and
+success when cleanup remains failed or unknown. Provider-native definitions,
+if later supported, need their own immutable artifact and semantic proofs.
+Local fixtures prove these checking rules only; live authority, behavior and
+cleanup require later adapter qualification and evidence verification.
 
 ### Required cross-cutting control contracts
 
@@ -201,7 +268,7 @@ platform” claim in place of one.
 | Contract | Mandatory content | Matrix gates it controls |
 | --- | --- | --- |
 | **Risk tier** | A machine-readable tier based on effects, data classification, privilege, reversibility, target exposure and cost. The tier selects the minimum non-waivable gate set, independent-review depth, qualification environment and recovery proof. A lower tier can add gates but cannot omit its mandatory gates. | 1, 2, 5, 9, 13–15, 17 |
-| **Environment contract** | Account, region, target fingerprint, identities, network paths, certificates/domains, external dependencies, database/queue/storage bindings, quotas, capacity and cost ceilings. Each binding has an owner, source, expiry and safe inspection method. | 1, 3, 8, 10–12, 14 |
+| **Environment contract** | Per-resource provider/service and namespace, target fingerprint, identities, network paths, certificates/domains, external dependencies, database/queue/storage bindings, quotas, capacity and cost ceilings. Each binding has ownership mode, allowed effects, owner, source, expiry and safe inspection method; consume/inspect-only dependencies exclude lifecycle mutation. | 1, 3, 8, 10–12, 14 |
 | **Configuration lifecycle** | Versioned schema, defaults and override precedence, compatibility range, secret reference shape, rotation, revocation, expiry, rollout and rollback rules. Validation occurs before any candidate starts. | 3, 4, 6, 11–13 |
 | **Compatibility contract** | Backward/forward compatibility for API versions, queue envelopes, database schema, cache values, feature flags and rolling deployments. It states mixed-version duration, upgrade order, safe rollback point and incompatibility detection. | 2–6, 11–15 |
 | **Data-migration safety** | Explicit `expand → migrate → backfill → validate → contract → retention/purge` phases; data invariants, resumability, idempotency, forward repair, backup/restore point and irreversible-change approval. | 1–6, 12–15 |
@@ -209,8 +276,8 @@ platform” claim in place of one.
 | **Failure-injection matrix** | Profile-appropriate controlled faults: dependency loss, rotated/expired secret, denied permission, network/TLS failure, task restart, queue redelivery, telemetry loss, rollback/recovery and cleanup failure. It declares safe fault mechanism, bounds, expected signal and restoration. | 4, 5, 11–17 |
 | **Telemetry-health contract** | Expected logs/metrics/traces, collector/exporter dependency, signal freshness, cardinality bounds, redaction rule, missing-telemetry detector, alert route and false-green prevention. Missing telemetry is a failed control, never a successful SLO. | 3, 10–11, 14, 16–17 |
 | **Break-glass diagnostic policy** | Restricted diagnostic categories, accountable operator, permitted secure location, time-bounded access, redaction, retention/destruction, audit receipt and escalation when safe categories cannot diagnose a failure. It never permits secrets/raw bodies into Git, terminal evidence or commit logs. | 1, 3, 12–16 |
-| **Cleanup and expiry contract** | Every disposable task, restore instance, artifact, temporary role/client, synthetic resource and evidence lease has an owner, effect boundary, cleanup action, deadline, verification, cost check and escalation path. | 1, 5, 9, 13–17 |
-| **Continuous reconciliation contract** | Scheduled checks for declared resources, IAM, network, certificate expiry, image vulnerability/patch state, budget, backup status, alarm delivery, telemetry health, restore readiness and evidence expiry. It defines cadence, owner, alert and recovery operation. | 10, 14, 16–17 |
+| **Cleanup and expiry contract** | Every disposable task, restore instance, artifact, temporary role/client, synthetic resource and evidence lease has an owner, effect boundary, cleanup action, deadline, verification, cost check and escalation path. Cleanup cannot mutate an externally owned dependency; failed/unknown cleanup blocks successful closure. | 1, 5, 9, 13–17 |
+| **Continuous reconciliation contract** | Scheduled checks for declared resources, provider authority, network, certificate expiry, image vulnerability/patch state, budget, backup status, alarm delivery, telemetry health, restore readiness and evidence expiry. It defines cadence, owner, alert and recovery operation. | 10, 14, 16–17 |
 | **Exception contract** | Time-bounded risk owner, affected gates, justified impossibility, compensating control, approved scope, expiry, follow-up deadline, closure evidence and escalation. An exception cannot conceal a failed gate or bypass target/data/secret safety rules. | Every gate |
 | **Harness self-verification** | Tests for manifest parsing, composition coverage, profile applicability, state transitions, locks/fences, idempotency, evidence redaction/invalidation, adapter conformance and refusal of unsafe/unapproved actions. Negative fixtures must prove each control fails closed. | Every gate |
 
@@ -323,12 +390,17 @@ inventory exist; every supported path has an owner and a disposition.
    `observe`, `classify`, `reconcile_unknown_outcome`, and `cleanup` methods.
    Each method consumes a validated, immutable request and emits only safe
    normalized facts.
-4. Define an evidence compatibility matrix. For example, a healthy service
-   cannot satisfy a finite-job proof; a fixture cannot satisfy a managed-RDS
-   proof; provider acceptance cannot satisfy a semantic migration completion.
+4. Define an evidence compatibility matrix using the assertion scopes above.
+   For example, a healthy service cannot satisfy a finite-job proof; a fixture
+   cannot satisfy a managed-RDS proof; provider acceptance cannot satisfy a
+   semantic migration completion. Bind provider, subject, artifact and identity;
+   include the mixed-provider negative examples in harness conformance tests.
 5. Define identity and policy bindings: every operation names the acting
    identity, exact provider actions/resources, justification, and an
-   authority-expiry rule. A generic adapter may not invent permissions.
+   authority-expiry rule. Resource ownership and permitted effects constrain
+   every adapter action, including cleanup; consume/inspect-only resources can
+   never inherit managed-resource authority. A generic adapter may not invent
+   permissions.
 6. Define interruption behavior: lease, fencing, idempotency keys, operation
    journal, retry classification, fixed cumulative limits, and recovery paths.
 7. Define an exception and break-glass contract. It requires a severity/reason,
@@ -372,14 +444,20 @@ data-migration recovery, capacity exhaustion and decommissioning dependencies.
    invocations, task definitions, container commands, sidecars, injected
    configuration/secret references and supported script entrypoints.
 2. Make collectors emit observations, not a maintainer-authored expected list.
-   Parse failures, symlinks, dynamic process launches and unsupported formats
-   become unresolved findings.
+   Declare supported source roots/formats and scan them independently of the
+   composition's paths. Bind observations to source digests and collector/rule
+   versions. Parse failures, symlinks, dynamic process launches and unsupported
+   formats become unresolved findings, never an empty successful inventory.
 3. Reconcile discovered observations against composition declarations. Reject
    undeclared executable units, bindings, sidecars, artifacts, identity edges,
-   operational effects, callers or required proofs.
+   operational effects, callers or required proofs. Generate scoped subject
+   obligations and applicability as defined above; retain unsupported mappings
+   as blocking findings. A bounded source scan cannot claim final-artifact or
+   live-estate closure while those collectors or evidence remain absent.
 4. Implement mutation tests that introduce an unlisted command, hidden sidecar,
-   missing secret binding and false `test-only` label. The coverage gate must
-   fail each case.
+   missing secret binding and false `test-only` label. Include the mixed-provider
+   ownership, evidence-binding and false-exemption cases. The coverage gate must
+   fail each case; scopes awaiting later collectors have explicit blocking tests.
 5. Generate an adoption matrix mapping every existing `scripts/04.deploy/`
    capability, workflow and target operation to its replacement controller
    profile or deliberate retirement plan.
@@ -388,9 +466,14 @@ data-migration recovery, capacity exhaustion and decommissioning dependencies.
    provider-adapter response. Each test must include a counterexample which is
    rejected before a mutating operation can begin.
 
-**Exit gate:** discovered inventory and declared graph reconcile with zero
-unresolved supported paths; negative coverage tests pass; the adoption ledger
-has no undocumented exclusions.
+**Exit gate:** all supported source paths and caller relationships are accounted
+for in the declared graph, with no unresolved source-coverage gap or undocumented
+exclusion. Every later artifact/provider obligation has a subject, owner, evidence
+requirement and blocking gate. Recording such an obligation is not satisfying
+it: final-artifact behavior belongs to Phase 3, provider qualification to Phase
+5 and target qualification to Phase 8. Those gates remain blocked until their
+evidence exists. Negative coverage tests must reject hidden callers and false
+exemptions. A scoped source delivery unit does not close this whole-estate gate.
 
 ### Phase 3 — make build and artifact proof exact
 
@@ -402,7 +485,9 @@ has no undocumented exclusions.
 3. For each executable profile, run the final artifact with its actual
    entrypoint/command, user, working directory, assets, environment shape and
    shutdown constraints. Test one-shot task definitions separately from server
-   readiness.
+   readiness. A supported provider-native profile qualifies its immutable
+   versioned definition and semantic completion under the equivalent artifact
+   rules; changing its label cannot exempt a packaged container command.
 4. Add provider-shaped input fixtures, including managed-secret schemas and
    configuration versioning. Fixtures validate parser behavior; they are never
    evidence of managed-provider authorization.
@@ -717,9 +802,415 @@ successful AWS run exists. It is complete when:
 
 ## 8. Immediate next slice
 
-Start with migration steps 1–2 as source-only work: preserve the PostgreSQL
-handoff, complete the inventory/adoption ledger, ratify the durable-store and
-bootstrap decisions, and publish the four-record, profile/evidence, risk-tier
-and self-verification contracts. Do not make another PostgreSQL or AWS
-deployment attempt until migration step 6 can enumerate and validate every
-finite task involved in the proposed operation graph.
+Implementation proceeds under the `source-batch` envelope in
+`.agentic/01.harness/standards/autonomous-delivery-envelope.v1.md`: each
+delivery unit includes contract, source, focused tests, documentation,
+verification and the next queued unit. Routine local failures and Git
+housekeeping are repaired internally rather than treated as handoff points.
+
+The explicitly scoped first source delivery unit is complete (2026-09-28):
+versioned release-definition and seventeen-stage acceptance-matrix schemas,
+immutable bindings, full per-stage operation coverage, normalized compilation,
+compatibility with the existing Operational Realization Gate, fixtures, focused
+positive/negative tests and documentation. The existing command now accepts
+`--release` with `--contract`; see
+[`scripts/04.deploy/operational-realization-gate/README.md`](../../../../scripts/04.deploy/operational-realization-gate/README.md).
+The combined `deployment:realization:check` passed: 29 release tests, existing
+gate smoke tests and artifact metadata checks. Safe compilation is not target
+qualification or authority: all stages remain `not-started`, all unsupported
+applicability claims are rejected, and output always has `authorized: false`.
+
+The follow-up request authorizes plan refinement followed directly by the next
+source delivery unit: **independent discovery and composition coverage**.
+Complete this bounded unit before proceeding to its explicitly recorded queue:
+
+1. Load versioned composition, discovery/coverage and adoption-ledger schemas
+   with closed fields, stable subject IDs, provider/ownership/effect boundaries
+   and safe normalized output.
+2. Independently scan documented supported source roots/formats; reconcile
+   discovered paths, commands and bindings with composition and the adoption
+   ledger. Unsupported/dynamic sources, parse failures and ambiguous ownership
+   remain explicit blocking findings. Ledger dispositions require evidence;
+   a declaration alone cannot hide an executable or establish retirement.
+3. Generate profile obligations and applicability per gate/subject using
+   versioned rules and discovery facts. Preserve the first compiler's strict
+   behavior through compatibility; source-only output remains unauthorized and
+   cannot claim execution evidence or complete live-estate qualification.
+4. Add positive fixtures and negative/mutation tests for missing/hidden paths,
+   stale facts, false disposition/applicability, mismatched bindings and the
+   supported mixed-provider ownership boundaries. Clearly identify later
+   evidence-admission/cleanup executor obligations instead of claiming fixtures
+   execute them.
+5. Extend the existing Operational Realization Gate command and documentation;
+   run focused verification and record exact results, limitations, changed files
+   and the next delivery unit in the session log.
+
+A completed source delivery unit means its declared collector boundary and
+failure behavior are tested; Phase 2's full-estate exit gate stays open until
+all supported paths are reconciled. Queue additional collector coverage before
+claiming estate closure, then exact-artifact qualification. AWS adapters,
+durable AWS stores, PostgreSQL Stage 6 and live target qualification are later
+units; no source batch authorizes their external effects. Preserve the
+PostgreSQL handoff and do not attempt deployment until migration step 6 can
+enumerate and validate every finite task in the proposed operation graph.
+
+### Second source delivery unit evidence — 2026-09-28
+
+The bounded independent discovery/composition-coverage unit is complete and
+uncommitted. The existing gate now provides `--discover` and `--coverage`, loads
+three additional closed versioned schemas, reconciles fresh source inventory
+with composition and adoption, and generates seventeen scoped obligation rows.
+The first release compiler's strict matrix remains compatible. Every successful
+source coverage result remains `authorized: false`; generated applicability
+waives only a scoped managed-effect assertion, never an entire stage or external
+access-authority requirement.
+
+`npm run deployment:realization:check` passed, exit 0: 29 release tests, 34 coverage
+tests, 32 collector tests, existing smoke cases, boundary scans and metadata
+checks. Mutation/review cases caught and repaired omitted dependency consumers,
+collapsed containers, swapped artifacts, false provider-native labels, unknown
+executable resource types, dynamic commands and unbound package target bytes.
+
+The [pending source adoption plan](../../../../docs/04.deploy/plans/release-control-source-adoption/README.md)
+records 273 sources, 1,054 observations and 169 unresolved findings. Its ledger
+contains 273 pending review entries. Actual discovery correctly exited 1;
+opaque execution, unsupported resource/image grammar and other unresolved
+source semantics have not been approved away. The next unit must account for
+and route these findings; it must not claim that static parsing alone resolves
+the later artifact/provider evidence. They are not evidence of estate coverage.
+
+Next delivery unit: additional collector/caller coverage and reviewed adoption
+for the actual source estate, including arbitrary import/default entrypoint
+coverage, explicit profile classification and production/test caller proof.
+Phase 2 remains open. Runtime profile suitability, final artifact provenance,
+authenticated authority and live provider ownership still require later
+qualification. Exact-artifact proof may be implemented once its own source
+inputs and callers are accounted for; it must not wait for its own future
+receipts to close source discovery. Release eligibility still requires every
+applicable coverage and evidence gate. External adapters/stores, PostgreSQL
+Stage 6 and live target qualification remain later.
+
+### Third source delivery unit — finding triage and staging callers
+
+The user authorized this bounded continuation on 2026-09-29. First clarify the
+phase boundary above, then extend the existing capability with closed contracts
+for finding triage and independently discovered caller accounting. Preserve the
+first two units and their unresolved evidence; do not create a second controller.
+
+1. Bind every finding to its source/collector identity, intake owner, next action
+   and required phase/gate. Triage cannot mark a source resolved, grant a reviewed
+   adoption disposition, or suppress a coverage finding. Preserve the recorded
+   169-finding baseline and distinguish a fresh inventory from it.
+2. Select the staging image-publication command family, starting with its
+   workflow, package commands and repository script invocations. This workflow
+   publishes an artifact; source inspection must not misclassify it as an ECS
+   rollout. Discover invocations independently of the reviewed caller list.
+3. Support a bounded literal invocation grammar with source-bound caller edges.
+   Account explicitly for npm lifecycle callers, working directories, wrapper
+   arguments and external/dynamic execution boundaries; unsupported semantics
+   stay blocking. Never execute an inspected command to discover its effects.
+4. Reconcile all selected subjects/edges with reviewed operation profiles and
+   required later evidence. A complete source accounting report can retain
+   unresolved behavior; it must distinguish accounting from coverage or release
+   qualification. Only existing evidence rules may establish stage success.
+5. Add positive, negative and mutation tests for missing commands/callers,
+   stale source, false test-only exclusions, dynamic shell, alias/cycle/unsafe
+   parsing and safe normalized output. Extend existing CLI/docs/checks, record
+   exact local results and publish the selected family's reviewable source map.
+
+The delivery exit is tested triage plus complete accounting within this declared
+invocation boundary and explicit blocking obligations for every opaque terminal.
+Phase 2 estate closure remains open. Next units broaden supported caller/import
+coverage and adoption for other operation families, then prove exact artifacts;
+AWS stores/adapters, PostgreSQL Stage 6 and live operations remain later work.
+
+### Third source delivery unit evidence — 2026-09-29
+
+This bounded source unit is complete, verified locally and uncommitted. The
+existing gate now accepts `--triage` and `--callers`; three closed schemas,
+finding assignment, independent caller discovery, reviewed subject/edge
+reconciliation, focused fixtures/tests and documentation are present. Classified
+findings stay open. Caller accounting cannot grant release qualification or
+authority, suppress the earlier source inventory, or approve adoption exclusions.
+
+The [dated triage and staging source map](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md)
+preserves all 169 baseline findings (164 Phase 2, five Phase 3). The fresh source
+snapshot contains 282 files and 175 findings; the six additional findings are
+new analysis/test modules. All current findings have open intake assignments:
+170 Phase 2, five Phase 3, none assigned to live provider proof. Classification
+is complete while source coverage remains blocked.
+
+The selected image-publication graph independently discovers 23 workflow steps,
+14 package commands, nine script subjects and seven tool subjects, plus its
+workflow root: 54 subjects, 53 edges and 11 bound source files. Reviewed profiles
+account for every subject/edge; qualification remains blocked by 38 explicit
+opaque command/script/tool/action boundaries. Four production-reachable files
+under test directories are bound rather than excluded. No ECS rollout is claimed.
+
+`npm run deployment:realization:check` passed, exit 0: 174 tests (29 release,
+34 source coverage, 32 source collector, 23 triage, 25 caller accounting and
+31 caller collector), legacy smoke cases, provider/network boundary checks and
+metadata validation. Independent adversarial review found and verified repairs
+for cwd-changing shell builtins, npm configuration, Git environment selectors
+and explicit source targets outside normal analysis roots. The actual public
+CLI validated both current triage and caller review, exit 0, with coverage or
+qualification still explicitly blocked and `authorized: false`.
+
+Next delivery unit: source contracts and caller/profile/argument coverage for
+the nine selected script terminals and external workflow actions, with build/
+import closure and mutation tests. Resolve relevant Phase 2 findings through
+supported semantics or evidenced adoption decisions; retain later artifact and
+provider obligations at their blocking gates. Then address other supported
+operation families and exact-artifact proof as their source inputs become known.
+Phase 2 whole-estate closure remains open. No real stop condition is present;
+no external operation, inspected deployment command, commit or push occurred.
+
+### Fourth source delivery unit — repeatable validation and result consumption
+
+The user authorized this reliability slice on 2026-09-29, before resuming
+caller-semantic expansion. Keep the first three units' source-only boundaries
+and historical snapshots intact.
+
+1. Pin the supported validation runtime and the complete Python dependency
+   closure with verified artifact hashes. A fresh, isolated environment must run
+   the same public local check, without relying on globally installed packages.
+2. Add a separate validation-only workflow with read-only repository permission.
+   It must run the clean check on source changes without obtaining deployment
+   credentials or invoking publication. Preparing workflow source is authorized;
+   publishing it and enabling a required repository check are separate actions.
+3. Include the delivery envelope, sustained workflow, this implementation plan
+   and source-adoption documentation in the ordinary metadata check. These
+   checks must no longer depend on remembering an extra manual invocation.
+4. Define a closed source-result consumption decision. Accept successful source
+   analysis only when it matches a fresh local recomputation of the same inputs.
+   Source compilation, coverage, triage and caller-accounting results cannot
+   establish release eligibility or operation authorization, even when their
+   analysis command exits zero. Preserve those useful producer exit statuses.
+5. Test clean-environment failures, unsafe CI changes, stale/forged results and
+   attempts to consume successful analysis as authority. Refresh affected source
+   review snapshots as a new dated candidate, retaining all historical evidence.
+
+The exit is a locally verified reliability unit with contracts, code, fixtures,
+negative tests, documentation and session evidence. This adds no runtime
+evidence-admission engine and closes no opaque source or provider finding.
+After this unit, resume source contracts and caller/profile/argument coverage
+for the selected nine script terminals and external workflow actions, followed
+by wider adoption and exact-artifact proof. Phases 2 and 6 remain open; AWS
+adapters/stores, PostgreSQL Stage 6 and live target qualification remain later.
+
+### Fourth source delivery unit evidence — 2026-09-29
+
+The authorized reliability slice is complete, locally verified and uncommitted.
+The existing gate now has a hash-locked eight-wheel Python dependency closure,
+a fresh-environment verification wrapper, a closed source-result consumption
+contract and public guarded consumption mode. The ordinary check includes all
+five previously omitted governance/planning documents. A separate validation-only
+workflow is prepared with read-only repository permissions and pinned actions.
+It enters the wrapper directly and does not invoke artifact publication.
+
+The clean wrapper passed with CPython 3.14.4/Linux x86_64, installing only the
+verified locked wheels into a new virtual environment. The canonical
+`deployment:realization:check` then passed, exit 0: **262 tests** (174 existing
+and 88 new), legacy smoke cases, provider/network boundary scans and metadata
+validation for 28 files. Real installer negatives rejected a changed wheel hash
+and omitted transitive dependency. Independent review found a possible false
+success through npm configuration; the repaired wrapper isolates npm config,
+rejects project `.npmrc` and preserves failure through nested commands. CI
+enters the wrapper directly so this safeguard cannot be skipped by outer npm.
+
+Fresh public-command tests accepted valid current source analysis and rejected
+both release-eligibility and operation-authorization use, including otherwise
+successful triage and caller accounting. They also rejected stale historical
+review inputs. This guard compares normalized producer output; it is not signed
+evidence admission and does not authenticate intake owners or live authority.
+
+The [new dated review candidate](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md)
+preserves the historical snapshots. It records 293 sources, 1,093 observations
+and 185 open findings: 180 Phase 2 and five Phase 3. The staging graph still has
+54 subjects, 53 edges and 38 unresolved boundaries. Only its package-manifest
+source binding changed; subjects, edges and findings were compared before
+retaining the previous declared profiles. Accounting remains complete,
+qualification blocked and authorization false.
+
+Next delivery unit: source contracts and caller/profile/argument semantics,
+with build/import closure, for the nine selected script terminals and external
+workflow actions. Then expand supported families/adoption and exact-artifact
+proof. Phase 2 estate closure and Phase 6 evidence/authorization remain open.
+The workflow has not been published or run on GitHub; required-check enforcement
+has not been enabled. No real stop condition exists within this completed source
+slice. No external resource mutation or Git publication occurred.
+
+
+### Fifth source delivery unit — selected operation contracts and dependencies
+
+The user authorized this next bounded source unit on 2026-09-29. Extend the
+existing gate's independently discovered staging callers with explicit operation
+contracts for nine script subjects, nine external action instances and the seven
+reachable build-tool invocations. Preserve all earlier source interfaces and
+historical review snapshots. Do not execute inspected commands or fetch remote
+action implementations to infer their behavior.
+
+1. Independently bind each subject's current callers and argument variants.
+   Require a reviewed owner/profile consistent with the existing caller review,
+   an exact observed-variant boundary, failure/recovery requirements and later
+   source, artifact, supply-chain, authority and recovery evidence obligations.
+2. Enumerate and content-bind supported literal imports, local source references,
+   reachable build configurations and their source-file membership. Added or
+   changed members invalidate review. Declare the bounded grammar; unsupported
+   language/configuration features, generated artifacts and dynamic enumeration
+   remain explicit unresolved findings. Literal reference extraction cannot
+   establish complete arbitrary-program behavior or whole-estate import closure.
+3. Account separately for each external action instance, its exact reference,
+   explicit inputs, condition, upstream output references and inherited execution
+   context. Mutable references, action defaults and remote implementation remain
+   unresolved. A pinned reference alone never proves action behavior or authority.
+4. Reconcile every discovered subject, invocation, observation and dependency
+   against a closed versioned contract. Generated bindings remain pending.
+   Contract completion means exact source accounting; source closure and runtime
+   qualification remain blocked until independent evidence can establish them.
+5. Add safe CLI modes, guarded source-result consumption, positive/negative
+   fixtures, mutation tests, documentation and a new dated review candidate.
+   Run focused tests and the established clean-environment verification command.
+
+This unit makes the selected arguments and dependency declarations checkable; it
+does not silently resolve the existing opaque script/tool/action findings.
+In particular, generated package shims and dynamically selected built tests need
+exact-artifact proof, and conditional publication does not reduce inherited
+workflow permissions. The complete seventeen-stage release matrix remains the
+authority for later gates.
+
+Next unit: supported semantic coverage for the remaining dynamic/script/action
+boundaries and build/import resolution, followed by exact-artifact qualification
+for the selected image-publication family as its inputs become known. Broader
+source adoption, evidence admission and provider/live qualification stay open.
+
+### Fifth source delivery unit evidence — 2026-09-29
+
+The selected operation input-accounting unit is complete, locally verified and
+uncommitted. Two closed schemas, independent operation/action collectors,
+generic contract reconciliation, public `--operations` commands, guarded result
+consumption, inert fixtures, tests and documentation extend the existing gate.
+No selected deployment script, action reference or workflow behavior was changed.
+
+The [dated source review candidate](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md)
+accounts for nine scripts, nine action instances and seven build-tool subjects:
+25 incoming variants, 1,495 observations and 731 dependency relationships across
+238 bound source records. Current caller ownership/profiles and exact observed
+inputs are acknowledged in reviewed source contracts. The selected caller graph
+is unchanged from the fourth unit. All 148 combined caller/operation findings
+remain visible; contracts are complete while source closure and qualification
+remain blocked and authorization false.
+
+The bounded collector binds supported literal references and build membership;
+it does not prove arbitrary language behavior, TypeScript emission, generated
+runtime membership or remote action implementation/defaults. All nine action
+instances still use mutable tags. Conditions do not reduce inherited declared
+permissions. The full seventeen-stage matrix remains required; supplementary
+obligations reference stages 3, 6, 7, 8 and 15 without waiving other gates.
+
+The clean-environment wrapper passed, exit 0: **390 tests** (262 prior and 128
+new), legacy smoke cases, generic provider/network checks and metadata validation
+for 33 files. Actual public commands accepted the fresh operation contracts and
+their saved result for source analysis; both release-eligibility and operation-
+authorization consumption were rejected. Independent review verified repairs
+for unbound competing import candidates, stale empty caller graphs, private
+dotenv variants and inconsistent discovery schema validation. Hard resource
+limits reject truncated collection. Only the internal inventory node budget
+was enlarged explicitly; ordinary file byte/node limits remain unchanged.
+
+The fresh estate snapshot contains 303 sources, 1,111 observations and 193 open
+findings: 188 Phase 2 and five Phase 3. The eight new implementation/test modules
+account for the additional findings. No earlier finding or adoption obligation
+was silently closed. Earlier dated snapshots remain intact.
+
+Next delivery unit: workspace-aware build/import resolution for the seven
+selected TypeScript invocations, followed by binding generated shim/runtime-test
+membership to exact emitted artifacts. Keep arbitrary script behavior and remote
+action implementation obligations explicit; extend them through supported
+semantics or later evidence, not declarations. Broader adoption, authenticated
+evidence/authority and provider/live qualification remain open. No real stop
+condition exists within this completed bounded slice; no external mutation,
+deployment execution or Git publication occurred.
+
+### Sixth source delivery unit — workspace build resolution and artifact accounting
+
+The user authorized the recorded next source unit. Extend the existing public
+gate with independent discovery for the seven selected build invocations:
+workspace manifests/exports, local compiler inheritance, bounded aliases,
+literal imports and predicted output membership. Bind source bytes and collector
+versions; ambiguous or unsupported semantics remain explicit findings.
+
+Keep no-emission checks, declaration builds and JavaScript builds distinct.
+Do not equate all emitted test files with tests selected by a runtime runner.
+Observe generated package forwarding targets and selected test membership using
+a declared bounded grammar; unsupported generators cannot qualify by declaration.
+
+An optional read-only local artifact comparison may bind actual file bytes to
+the current predictions. It must reject missing/extra outputs, invalid forwarding
+targets, source fallback, unsafe paths and stale supplied identities. Local
+membership accounting cannot establish compiler provenance, runtime behavior,
+supply-chain admission, release eligibility or operation authority. Preserve
+those blocked states even when a fixture's file accounting is complete.
+
+No application/TypeScript dependency installation or legacy deployment-script
+execution is needed for this source unit. This worktree has no installed TypeScript
+compiler or actual output tree; final-artifact evidence therefore remains open.
+The next unit must introduce a reviewed isolated build/provenance path and actual
+artifact execution proof, alongside deeper semantics and wider source adoption.
+
+### Sixth source delivery unit evidence — 2026-09-29
+
+The workspace build resolution and local artifact-accounting unit is complete,
+locally verified and uncommitted. Two closed schemas, two independent collectors,
+a schema/reference validator, public `--builds` mode, inert fixtures, focused
+tests and documentation extend the existing realization gate. The existing
+staging workflow, selected build scripts and caller graph are unchanged.
+
+The [dated workspace build review](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md)
+records seven builds across 209 sources, 6,596 bindings and 3,958 dependency edges,
+with 46 explicit unresolved findings. Two no-emission checks and the server
+runtime-test build have bounded source predictions. Four builds retain unresolved
+resolution/emission conditions. All seven still require compiler/toolchain and
+exact-artifact proof; neither a predicted member nor a source finding is a
+runtime result.
+
+Optional read-only artifact comparison binds actual bytes and membership to
+fresh source observations, recognized package forwarding files and selected
+runtime-test membership. The supported image/server-test/product-test generators
+describe 35/21/26 export forwards. Exact audited helper/scaffold identities
+bound that grammar. Only synthetic fixtures were compared: no actual compiler,
+generator, runtime-test runner or deployment program was executed. Accounting
+success retains unproven provenance, blocked qualification and false authority.
+
+Final isolated clean verification returned **exit 0: 508 tests**, comprising
+390 previous tests and 118 new tests (49 build collector, 50 artifact binder,
+19 public CLI), plus legacy smoke, provider/network boundaries and metadata
+headers for 36 files. The initial clean run passed 507 tests but identified two
+missing fixture metadata headers; these and one additional malformed-unused-
+mapping regression were resolved before the final complete run. Whitespace and
+final documentation metadata checks passed.
+
+Fresh public commands reproduced the saved build inventory (expected exit 1
+with unresolved findings), the estate intake (exit 0, classification complete,
+coverage blocked) and synthetic artifact result (exit 0, local accounting only).
+The current estate record has 312 sources and 200 open findings: 195 assigned
+to Phase 2, five to Phase 3. Seven added implementation/test modules explain
+the seven additional findings; no previous obligation was waived.
+
+Independent review and regression tests cover omitted/missing inputs, dotted
+extensionless imports, long named imports, scoped-name diagnostics, legitimate
+`secrets.ts` code versus excluded private directories, malformed unused path
+mappings and generator changes that could otherwise hide shim obligations.
+Large observation arrays use explicit linear identity checks instead of
+quadratic schema uniqueness checks.
+
+Next delivery unit: introduce a reviewed isolated locked TypeScript build path,
+reconcile real compiler resolution/emission with source predictions, bind genuine
+output to source/lock/toolchain identities, and exercise exact artifact commands
+and selected tests. Deeper script/action semantics and wider adoption remain
+open, followed by authenticated evidence/authority, provider integration and
+approved live qualification. PostgreSQL Stage 6 stays later.
+
+No real stop condition exists within this completed bounded unit. No external
+mutation, live deployment, Git publication, commit, reset, discard or other
+worktree change occurred.

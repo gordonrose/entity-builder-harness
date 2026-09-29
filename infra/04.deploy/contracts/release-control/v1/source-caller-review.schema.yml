@@ -1,0 +1,101 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.source-caller-review.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Bind discovered invocation subjects and their source review without execution authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-caller-coverage
+#     path: scripts/04.deploy/operational-realization-gate/caller_coverage.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:source-caller-review:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "source-caller-review/v1"
+    },
+    "graph_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "target_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,63}(?:/[a-z][a-z0-9-]{1,63})*$"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "operation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{2,79}$"
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{2,79}$"
+          },
+          "operation_profile": {
+            "enum": [
+              "static-artifact",
+              "inspection",
+              "service-rollout",
+              "finite-job",
+              "queue-consumer",
+              "infrastructure-change",
+              "migration",
+              "restore",
+              "scheduled-control",
+              "unclassified"
+            ]
+          },
+          "review_status": {
+            "enum": [
+              "pending",
+              "reviewed"
+            ]
+          }
+        },
+        "required": [
+          "node_id",
+          "operation_id",
+          "owner",
+          "operation_profile",
+          "review_status"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 10000,
+      "uniqueItems": true
+    },
+    "edge_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "minItems": 0,
+      "maxItems": 10000,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "graph_digest",
+    "target_id",
+    "bindings",
+    "edge_ids"
+  ]
+}

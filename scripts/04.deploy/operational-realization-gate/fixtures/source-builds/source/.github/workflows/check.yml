@@ -1,0 +1,18 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.build-source-workflow
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture]
+#   kind: workflow
+#   purpose: Supply inert workflow source for independent build discovery tests.
+#   portability: {class: source-only, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.test.build-contracts-cli
+#     path: scripts/04.deploy/operational-realization-gate/test_build_contracts_cli.py
+jobs:
+  check:
+    steps:
+      - run: npm run check

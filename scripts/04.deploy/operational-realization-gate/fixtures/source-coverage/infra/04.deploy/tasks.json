@@ -1,0 +1,55 @@
+{
+  "Resources": {
+    "QueryAndLoadTask": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "TaskRoleArn": "synthetic-task-identity-reference",
+        "ContainerDefinitions": [
+          {
+            "Name": "query-service",
+            "Image": "fixture/query-service@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "Command": [
+              "node",
+              "query.js"
+            ],
+            "Environment": [
+              {
+                "Name": "WAREHOUSE_REFERENCE",
+                "Value": "synthetic-warehouse-reference"
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "WAREHOUSE_CREDENTIAL",
+                "ValueFrom": "synthetic-credential-reference"
+              }
+            ]
+          },
+          {
+            "Name": "loading-job",
+            "Image": "fixture/loading-job@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "Command": [
+              "node",
+              "load.js"
+            ],
+            "Environment": [
+              {
+                "Name": "WAREHOUSE_REFERENCE",
+                "Value": "synthetic-warehouse-reference"
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "WAREHOUSE_CREDENTIAL",
+                "ValueFrom": "synthetic-credential-reference"
+              }
+            ]
+          }
+        ],
+        "ExternalWarehouse": {
+          "Fn::ImportValue": "synthetic-external-warehouse-reference"
+        }
+      }
+    }
+  }
+}

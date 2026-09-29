@@ -1,0 +1,57 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: github.workflow.release-control-source-validation
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Run the source-only release-control checks in an isolated hash-locked Python environment without release authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   effects: [network]
+#   used_by:
+#   - id: package.script.deployment-realization-clean-check
+#     path: package.json
+
+name: Release control source validation
+
+# Unfiltered events keep the named check available for every proposed change.
+# Repository required-check settings are a separate, explicitly approved action.
+"on":
+  pull_request: {}
+  push: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  source-validation:
+    name: Release control source validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out proposed source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          clean: false
+
+      - name: Set up command runner
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22.23.3"
+          architecture: x64
+          package-manager-cache: false
+
+      - name: Set up supported Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14.4"
+          architecture: x64
+          freethreaded: false
+
+      - name: Verify source contracts and metadata
+        shell: bash
+        run: bash scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh --python python3

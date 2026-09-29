@@ -1,0 +1,519 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.acceptance-matrix.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Define seventeen ordered gates with fail-closed evidence and recovery requirements.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-release-compiler
+#     path: scripts/04.deploy/operational-realization-gate/release_compiler.py
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: urn:release-control:acceptance-matrix:v1
+title: Release acceptance matrix v1
+description: Seventeen ordered gates with declared evidence requirements; a source compiler never grants
+  runtime acceptance.
+type: object
+additionalProperties: false
+required:
+- schema
+- rows
+properties:
+  schema:
+    const: release-acceptance-matrix/v1
+  rows:
+    type: array
+    minItems: 17
+    maxItems: 17
+    prefixItems:
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: scope-risk
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/declaration_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/declaration_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: acceptance-contract
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/declaration_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/declaration_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: source-contracts
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/declaration_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/declaration_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: unit-contract-tests
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/source_test_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/source_test_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: integration-tests
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/integration_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/integration_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: exact-artifact-tests
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/artifact_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/artifact_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: supply-chain-proof
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/source_test_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/source_test_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: iac-static-validation
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/source_test_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/source_test_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: change-set-review
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_read_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_read_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: drift-dependency-preflight
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_read_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_read_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: candidate-runtime-proof
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/candidate_execution_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/candidate_execution_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: per-task-live-preflight
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_execution_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_execution_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: controlled-state-change
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_execution_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_execution_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: post-change-verification
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_read_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_read_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: rollback-recovery
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/recovery_execution_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/recovery_execution_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: evidence-retention
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/target_read_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/target_read_evidence'
+    - allOf:
+      - $ref: '#/$defs/row'
+      - properties:
+          gate:
+            const: continuous-operation
+          evidence_requirements:
+            items:
+              $ref: '#/$defs/continuous_operation_evidence'
+          operation_overrides:
+            items:
+              properties:
+                evidence_requirements:
+                  items:
+                    $ref: '#/$defs/continuous_operation_evidence'
+    items: false
+$defs:
+  safe_id:
+    type: string
+    pattern: ^[a-z][a-z0-9-]{2,63}$
+  operation_profile:
+    type: string
+    enum:
+    - static-artifact
+    - inspection
+    - service-rollout
+    - finite-job
+    - queue-consumer
+    - infrastructure-change
+    - migration
+    - restore
+    - scheduled-control
+  evidence_requirement:
+    type: object
+    additionalProperties: false
+    required:
+    - check_id
+    - proof_level
+    - max_age_seconds
+    - environment
+    properties:
+      check_id:
+        $ref: '#/$defs/safe_id'
+      proof_level:
+        type: string
+        enum:
+        - declared
+        - locally-proven
+        - live-read-proven
+        - live-execution-proven
+      max_age_seconds:
+        type: integer
+        minimum: 1
+        maximum: 31536000
+      environment:
+        type: string
+        enum:
+        - source
+        - disposable
+        - candidate
+        - target
+      observation_window_seconds:
+        type: integer
+        minimum: 1
+  row:
+    type: object
+    additionalProperties: false
+    required:
+    - gate
+    - owner
+    - acting_identity
+    - operation_profile
+    - command_ref
+    - operation_ids
+    - evidence_requirements
+    - invalidated_by
+    - failure_state
+    - recovery_route
+    - cleanup_route
+    - verdict
+    properties:
+      gate:
+        type: string
+      owner:
+        $ref: '#/$defs/safe_id'
+      acting_identity:
+        $ref: '#/$defs/safe_id'
+      operation_profile:
+        $ref: '#/$defs/operation_profile'
+      command_ref:
+        $ref: '#/$defs/safe_id'
+      operation_ids:
+        type: array
+        items:
+          $ref: '#/$defs/safe_id'
+        minItems: 1
+        uniqueItems: true
+      evidence_requirements:
+        type: array
+        items:
+          $ref: '#/$defs/evidence_requirement'
+        minItems: 1
+      invalidated_by:
+        type: array
+        items:
+          type: string
+          enum:
+          - release-definition
+          - target-state
+          - identity
+          - configuration
+          - policy
+          - telemetry
+        uniqueItems: true
+        contains:
+          const: release-definition
+      failure_state:
+        type: string
+        enum:
+        - failed
+        - unknown
+        - cleanup-required
+        - design-reopened
+      recovery_route:
+        $ref: '#/$defs/safe_id'
+      cleanup_route:
+        $ref: '#/$defs/safe_id'
+      verdict:
+        type: string
+        enum:
+        - not-started
+        - passed
+        - failed
+        - unknown
+        - expired
+        - invalidated
+        - not-applicable
+      operation_overrides:
+        type: array
+        items:
+          $ref: '#/$defs/operation_override'
+        uniqueItems: true
+        description: Override evidence and execution bindings for a listed operation; duplicate operation
+          identifiers are rejected by the compiler.
+  operation_override:
+    type: object
+    additionalProperties: false
+    required:
+    - operation_id
+    - acting_identity
+    - operation_profile
+    - command_ref
+    - evidence_requirements
+    - recovery_route
+    - cleanup_route
+    properties:
+      operation_id:
+        $ref: '#/$defs/safe_id'
+      acting_identity:
+        $ref: '#/$defs/safe_id'
+      operation_profile:
+        $ref: '#/$defs/operation_profile'
+      command_ref:
+        $ref: '#/$defs/safe_id'
+      evidence_requirements:
+        type: array
+        items:
+          $ref: '#/$defs/evidence_requirement'
+        minItems: 1
+      recovery_route:
+        $ref: '#/$defs/safe_id'
+      cleanup_route:
+        $ref: '#/$defs/safe_id'
+  declaration_evidence:
+    properties:
+      proof_level:
+        enum:
+        - declared
+        - locally-proven
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - source
+        - disposable
+        - candidate
+        - target
+  source_test_evidence:
+    properties:
+      proof_level:
+        enum:
+        - locally-proven
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - source
+        - disposable
+  integration_evidence:
+    properties:
+      proof_level:
+        enum:
+        - locally-proven
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - disposable
+  artifact_evidence:
+    properties:
+      proof_level:
+        enum:
+        - locally-proven
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - disposable
+        - candidate
+  target_read_evidence:
+    properties:
+      proof_level:
+        enum:
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - target
+  candidate_execution_evidence:
+    properties:
+      proof_level:
+        enum:
+        - live-execution-proven
+      environment:
+        enum:
+        - candidate
+  target_execution_evidence:
+    properties:
+      proof_level:
+        enum:
+        - live-execution-proven
+      environment:
+        enum:
+        - target
+  recovery_execution_evidence:
+    properties:
+      proof_level:
+        enum:
+        - live-execution-proven
+      environment:
+        enum:
+        - disposable
+        - target
+  continuous_operation_evidence:
+    properties:
+      proof_level:
+        enum:
+        - live-read-proven
+        - live-execution-proven
+      environment:
+        enum:
+        - target
+    required:
+    - observation_window_seconds

@@ -1,0 +1,8 @@
+{
+  "name": "build-fixture",
+  "private": true,
+  "workspaces": [],
+  "scripts": {
+    "check": "tsc -p platform/server/tsconfig.json"
+  }
+}

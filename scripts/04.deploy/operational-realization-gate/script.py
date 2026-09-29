@@ -553,6 +553,59 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] in {"--consume-result", "--purpose"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import result_consumption_cli
+        except ImportError:
+            print(json.dumps({"schema": "source-result-consumption/v1", "scope": "source-result-consumption",
+                              "purpose": "source-analysis", "verdict": "rejected", "authorized": False,
+                              "release_eligibility": "blocked", "operation_authorization": "blocked",
+                              "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return result_consumption_cli.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] in {"--builds", "--build-id", "--artifact-root", "--expect-inventory-digest", "--expect-artifact-digest"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import build_contracts_cli
+        except ImportError:
+            print(json.dumps({"schema": "source-build-result/v1", "scope": "build-accounting",
+                              "authorized": False, "verdict": "incomplete",
+                              "source_closure": "blocked", "qualification_verdict": "blocked",
+                              "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return build_contracts_cli.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] in {"--operations", "--operation-contracts", "--operation-template"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import operation_contracts_cli
+        except ImportError:
+            print(json.dumps({"schema": "source-operation-result/v1", "scope": "operation-contracts",
+                              "authorized": False, "contracts_verdict": "incomplete",
+                              "source_closure": "blocked", "qualification_verdict": "blocked",
+                              "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return operation_contracts_cli.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] in {"--discover", "--coverage", "--composition", "--adoption-ledger", "--source-root", "--ledger-template", "--triage", "--finding-triage", "--callers", "--workflow", "--caller-review", "--review-template"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import source_coverage
+        except ImportError:
+            print(json.dumps({"schema": "source-coverage-result/v1", "scope": "source-coverage",
+                              "verdict": "failed", "authorized": False,
+                              "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return source_coverage.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] in {"--release", "--baseline-release"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import release_compiler
+        except ImportError:
+            print(json.dumps({"schema": "release-control-result/v1", "scope": "release-definition",
+                              "verdict": "failed", "authorized": False,
+                              "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return release_compiler.main(sys.argv[1:])
     contract_id = "unavailable"
     scope = "unavailable"
     try:

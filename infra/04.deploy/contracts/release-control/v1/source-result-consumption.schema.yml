@@ -1,0 +1,198 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.source-result-consumption.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Keep independently recomputed source analysis distinct from release or operation authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-result-consumption
+#     path: scripts/04.deploy/operational-realization-gate/result_consumption.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:source-result-consumption:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "source-result-consumption/v1"
+    },
+    "scope": {
+      "const": "source-result-consumption"
+    },
+    "purpose": {
+      "enum": [
+        "source-analysis",
+        "release-eligibility",
+        "operation-authorization",
+        "unsupported"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "accepted",
+        "rejected"
+      ]
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "source_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "enum": [
+            "release-control-result/v1",
+            "source-coverage-result/v1",
+            "source-triage-result/v1",
+            "source-caller-result/v1",
+            "source-operation-result/v1"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "release-definition",
+            "source-coverage",
+            "finding-triage",
+            "caller-accounting",
+            "operation-contracts"
+          ]
+        },
+        "analysis_verdict": {
+          "enum": [
+            "compiled",
+            "covered",
+            "complete",
+            "accounted"
+          ]
+        },
+        "qualification_status": {
+          "const": "not-established"
+        }
+      },
+      "oneOf": [
+        {"properties": {"schema": {"const": "release-control-result/v1"}, "scope": {"const": "release-definition"}, "analysis_verdict": {"const": "compiled"}}},
+        {"properties": {"schema": {"const": "source-coverage-result/v1"}, "scope": {"const": "source-coverage"}, "analysis_verdict": {"const": "covered"}}},
+        {"properties": {"schema": {"const": "source-triage-result/v1"}, "scope": {"const": "finding-triage"}, "analysis_verdict": {"const": "complete"}}},
+        {"properties": {"schema": {"const": "source-caller-result/v1"}, "scope": {"const": "caller-accounting"}, "analysis_verdict": {"const": "accounted"}}},
+        {"properties": {"schema": {"const": "source-operation-result/v1"}, "scope": {"const": "operation-contracts"}, "analysis_verdict": {"const": "complete"}}}
+      ],
+      "required": [
+        "schema",
+        "scope",
+        "analysis_verdict",
+        "qualification_status"
+      ]
+    },
+    "source_result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "contract_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "policy_revision": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "source-result-purpose-unsupported",
+              "source-result-authority-unavailable",
+              "source-result-invalid",
+              "source-result-producer-unsupported",
+              "source-result-authority-invalid",
+              "source-result-analysis-unsuccessful",
+              "source-result-recomputation-required",
+              "source-result-recomputation-invalid",
+              "source-result-snapshot-mismatch",
+              "arguments-invalid",
+              "source-result-unreadable",
+              "producer-recompute-failed"
+            ]
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "scope",
+    "purpose",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "contract_digest",
+    "policy_revision",
+    "findings"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "accepted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "purpose": {
+            "const": "source-analysis"
+          },
+          "findings": {
+            "maxItems": 0
+          }
+        },
+        "required": [
+          "source_result",
+          "source_result_digest"
+        ]
+      },
+      "else": {
+        "properties": {
+          "findings": {
+            "minItems": 1
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "source_result"
+              ]
+            },
+            {
+              "required": [
+                "source_result_digest"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

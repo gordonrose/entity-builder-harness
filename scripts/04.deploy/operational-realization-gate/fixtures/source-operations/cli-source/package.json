@@ -1,0 +1,1 @@
+{"name":"source-operation-fixture","private":true,"scripts":{"verify":"node scripts/04.deploy/task.mjs"}}

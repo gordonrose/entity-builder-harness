@@ -1,0 +1,1673 @@
+{
+  "collector_revision": "sha256:fba3e024de55ae3cb0040c3fc4d892d19009e6971e93b39570970e7cc577c1e0",
+  "entries": [
+    {
+      "code": "container-command-inherited",
+      "intake_owner": "release-control-programme",
+      "next_action": "inspect-final-artifact-command",
+      "route": "phase-3-artifact",
+      "source_digest": "sha256:a70fd374e96091eafe89d596ca61ad87ff0f5983e88e676f9e525fa2cdf07352",
+      "source_id": "sha256:00762f855f10d786339071154d067c40471048580263e41cb1d77a4ae78498ba",
+      "status": "open"
+    },
+    {
+      "code": "container-image-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "resolve-image-source-binding",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a70fd374e96091eafe89d596ca61ad87ff0f5983e88e676f9e525fa2cdf07352",
+      "source_id": "sha256:00762f855f10d786339071154d067c40471048580263e41cb1d77a4ae78498ba",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a70fd374e96091eafe89d596ca61ad87ff0f5983e88e676f9e525fa2cdf07352",
+      "source_id": "sha256:00762f855f10d786339071154d067c40471048580263e41cb1d77a4ae78498ba",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:35fd2a1a126822a571c77866aabf68932343c350677eee8492b62151b7a7adfa",
+      "source_id": "sha256:00f6b299ee89c5847de70d83596626f5bd5ed14d4acc0d7140be4c2c10603a35",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1798cca4354180efde78e5a7ef7e7d3de09275e760c25cabbb3f8c7e6e8cbca8",
+      "source_id": "sha256:031a6e00c3ef0e20b800615670c99e172b1dab38c9647531d2ecb100557dd820",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:75893498484d4f81c586f455ef49776bca34f780a4f4958648e5f7072eb98778",
+      "source_id": "sha256:03a9c5ba19c02ec0a813922d578692af2f68a624ef240933d53b1d1de695484e",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:65085b60aeb6ed1336f5cd6a4dcaa8d9e20be1690e14d365e5e164c34f6a2cc2",
+      "source_id": "sha256:03bb671c17be754cfecd134ab4333efaf9a1315f49ec259278554d6141dae850",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:dd7598ae307547827a898bcc8d436d13d01720aefff9ca6d7fd25cbd69cac56c",
+      "source_id": "sha256:067a6b401b8cbe3c2a4f4e07a8240b154d483bdbeaa31186caf4de9fc4a8a0e2",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9b411f2867f3485ee5900b2c61a28ede341c9aa7656d905a64fe2410badda4f3",
+      "source_id": "sha256:092b87d198010fe8bcf914e859ebc01ce7514ec2f6a7c1915249793efdde886c",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1333deb72295ae6dde9c800ea32b1ca41a05bb2c7a9a673f0580f40ac0b461b0",
+      "source_id": "sha256:0b810c38f3c138a3d5e44854edefd5eb966617ca84e62f06511f60acc40546c7",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:2aab00a59a9fce296f9f57097f89c44984a6742746fe8e277dbdd6e89d955043",
+      "source_id": "sha256:0bae61481b8f71428817d9309cd5eff4e9035afc440900bbbf7fd864d9b2a9c7",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8c40c852e7293b26b423e20d1e327273fd8589c373c470b2908707200955c526",
+      "source_id": "sha256:103b3b3b6a913433e4520bb7da60b34bf44639a8ebdf5ee1f9bc45692a83f334",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5cf73adb9c17ee5a5598206bff6d8b58fc7b34fc7c35cacf63070e6f4728dcbb",
+      "source_id": "sha256:109285874d47c341857e557d14a5483a1159fe34e7ed33c5aa4c2d2da19673af",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:21173d1acd70b4b8a4294c90a11cf970c66fedbe4af7a6cece99c0f64ee46d09",
+      "source_id": "sha256:13091c1331241b5a7ea33f9034ae8ca1443bc94934e1c00ace43d7510c3e28b3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:6d71b83d70363d43d09f1b1faaa1b9c492bf6127d0bc32f3d99c1bce51c6f87b",
+      "source_id": "sha256:13aa2c3d020f0638fa6601ee482dc77759a1d1efc4ac565da61a4ce4ed734dee",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:4268360317ac745b4fe965950d3a70170434a7f77b486c2894f36626948b37bf",
+      "source_id": "sha256:14dc01d551bd5b31a9d19693c0a4bf9ce473c77e99dc7499f9b8265a04b6bc48",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8af1d11721df65cb4d500f3cd026b6e25526ecbb47e732b9cdcc8657d109c238",
+      "source_id": "sha256:186fae47bbb5a3fa7f200fe360d17e515bf7f77b63b98b26052d9b48493c2435",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:4559cc0add4bdc9da4e34690a03b5dfad5c507d643bf48d5090ca454010b9b62",
+      "source_id": "sha256:199e0e753f98a74871e331158cac63b24db256978ebe78d686e09c4169634d41",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a437ffba8dd5977b4ec1c0ad4c934954c593b6e43d036dca0a53c5f6ab6bf076",
+      "source_id": "sha256:19f179bfe32e3a4cf094ca237942276ff0b15079e279e6c63af81d7d53d03de1",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:bf68d138f2f6d5a58696e60b595c63c3505640558d9ec3b7e5b555e33cdbea9c",
+      "source_id": "sha256:1a533cb63648eafb250fa7581a548824ce8e8a32802f19c1cf844c364d77a5e5",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:0ae6b9828489e97cac57766b66d6d04cb1ae0a6086e6d96dfc7695bd1b48492a",
+      "source_id": "sha256:1a7683126d3d26d41b924117f056e9c069bd1017dad1320d5dc3e0aabeabffeb",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9f3069f409fdfd19f9ada8c9dd32dbc94f8f46747f3d66b080604c3222edfa22",
+      "source_id": "sha256:1c73caf81225139c48501aa084fd411ea39e7fe90f353414cfbc40c910926e8e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:3307db04e9b43e91978ad85231db9dd2ac2db41c3fd6c88c1dc0b7aa5078fbec",
+      "source_id": "sha256:1cffafa2e991206e04a2785920161a9b0a04b796bff413d70681a8b6a04432f8",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:c00e0e97b0dab4a97110fb1d7549c1694737188d60a385ef5cc775b9c5267742",
+      "source_id": "sha256:1e01dfbe569ec5b8242c8cd3b43b8a3b5c3bb5503228e72ba58ec782bf81099d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:cce145a818846b2d09224e81c8868365c59074c92a5449b3f6c4dcc89d843ef0",
+      "source_id": "sha256:1e24245d420a4f135da420028b03c89a1b333a4f2a8206fc5f401159a4dbd5b1",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:02c41c0e3d9a796bb394f8a41e0eb9140baecbeffb8aa315ba05f555d1d37f14",
+      "source_id": "sha256:1eed3be0069eac2266368c8ed7fec3af7295d9cfa89dda23414c0a5169ae48b9",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:7d817bc061bd2caba976ce96c2990530b59e63f8f249f8d1828c0c27eb08d278",
+      "source_id": "sha256:23f1e9639027b5993dbd7be078d443c29966495e34879d8ffb3b4732e639caaa",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:78db6e2d09253fd4312202bc6e93e2164efc031c139704cf614b27de267fc506",
+      "source_id": "sha256:25d94e858f70e7453509fd1fb33f0ad0a0ff99e6db6acfca18f7cac6592a51ff",
+      "status": "open"
+    },
+    {
+      "code": "source-alias-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "support-source-yaml-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:7603537595f80c9425ebd8ac0f79b6daee53b4bf394d5161e431781435f0887c",
+      "source_id": "sha256:26c08ed268e27e01cce303b2fd04b6e666719b43c47074835b59b144bff175cc",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:f9ba58a5116183f30da1793ee1d89502b8e222b7e39b3bfc244622955c929167",
+      "source_id": "sha256:278f5dc417b8788029f275cdbe0ece39982b6b4a72cae77228dc7e22f35e7306",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8d373b858b2cde4d59d069dae31bce613301b6c1bd0366c9f8267af226e297cc",
+      "source_id": "sha256:29feeb32d8bd219f71f2373535f2c59ab14b228f23b022f5f98c2519fe7bd982",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:74f6d5590024d455c99a86e4c1f9baf539c7b39aeff330d1bec00d055858aec3",
+      "source_id": "sha256:2f57caf00648904e6fd4fceeee21b0609cdda8b9b23f1aa0330c2ee4568c8de5",
+      "status": "open"
+    },
+    {
+      "code": "image-command-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-image-command-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:dda9a0dfa10dfed68359a9772e71eaba7aa8b4fe08ca4f69612644cf216605d3",
+      "source_id": "sha256:31095d6136be60f6577e77a0134c0c6dc941791c5ca0093ebff64aa0acd89b6d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-image-build",
+      "intake_owner": "release-control-programme",
+      "next_action": "qualify-image-build",
+      "route": "phase-3-artifact",
+      "source_digest": "sha256:dda9a0dfa10dfed68359a9772e71eaba7aa8b4fe08ca4f69612644cf216605d3",
+      "source_id": "sha256:31095d6136be60f6577e77a0134c0c6dc941791c5ca0093ebff64aa0acd89b6d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:d281f7a49557092c5cfe40a6fbd0d397f65e95e8f8bdb358d4df812c2c8c22ba",
+      "source_id": "sha256:333ee84a7107a80660832d8d0d605ce6e12667f5e7688acd9ea028ee70ede63c",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:fba3e024de55ae3cb0040c3fc4d892d19009e6971e93b39570970e7cc577c1e0",
+      "source_id": "sha256:33bfa65e7e5879695da6e18e40d82f25c06133a9e21653f2be137e2f7754bade",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:ad9a2eb178ab2c8c08838d5efec0b2b6340b1f7c462f4769dea4ac0b7d3b6eb0",
+      "source_id": "sha256:3445966e89eae34f80ea9c815cbbc01db3e2b0c95b99558dc5c0d9c303e7dd34",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:29cd508d9d075fbd0a93d95b53069d544c0e73fc80127c2cccc25b240488c8d0",
+      "source_id": "sha256:36282760504d0ee3c40d6b34ccc1510bdb2454d093e1388761fb0f1082bb4b89",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a358a344adc41e3a0b2f57fe032457dc6df26288d34017f70f938c07c7cd3e63",
+      "source_id": "sha256:36f198eaf10b4ae6affb3381b7ec42ec37882bd9ad8752424bb07da50b427b2f",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:0185f413c2ed7672ad22c344169ec00a9d37fa9efc769733cb9e724b370e4595",
+      "source_id": "sha256:378f08ba525c455da0e49a18a96bd67cc2c777d4009a4f23d029b44c8b1c8442",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:4e588aca76145145582144c67bc80978030039b24d5dd44a099a9bca932004b9",
+      "source_id": "sha256:382b4aacca6384a881c112954a95bff9f4d099421d4215ee6385687834753ca7",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:da1f7910524164f6a8358e6a4503bc32577e21b789e5edc8e10b05ff708387fc",
+      "source_id": "sha256:38a0e8bbf97631804765d2097240ebba6e79f4dae26a5d38a6a3a7f72c0eb8ac",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5b0d64d62ba0e3a6e0b5a107bb0ae707cb7c31fa59f30b689d03389c4a599ec0",
+      "source_id": "sha256:390e70a9b661e430198844056764efc5eee9428af1b1852b142dc1d4dcd6aa6a",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a365001aff7a76307eaf6548b0c729b78198fbb39edbdfcdb51f0fbe003f3d70",
+      "source_id": "sha256:390fa4cd50c521cb8cf5dea4e8af221bcea6a44e26956fde3710c4747f0e2a47",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:14d675df94dd6947e9615c3e3a658ddc2154ef3f13b85e725efd958704d3a764",
+      "source_id": "sha256:396a32a9a70e13638a55b88c5c714b3dfc527a46575b842593181b32aa63f0e6",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b143375b8ce0962ec4697c9bfaade8e356611df829aca7c09b3003f889019af6",
+      "source_id": "sha256:3b3dd752c185eb0608c7f431cd647366113ac6e147c73dcceb7ba60d8620c102",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:96b5538fdfaefab7dcf8b27c8a030f96f4b6c863cb603800af0c18f7d800e35a",
+      "source_id": "sha256:3bc7c812cf6b744fd2676a6c2521ce0fcce8fb41041bcacce663882c33f2cd20",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e30924363d511085604dae331702a44907953319af3a74a0ba05169176edee01",
+      "source_id": "sha256:3c4a49626d59d077072511eb01fc04ab3168d35be90115f3d9cb56f16d17be0a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:51ff1ba4110536a35e28a05b2883901a1c848be6180242be4f553bb5382f43ba",
+      "source_id": "sha256:3ce0b97c2cd0ee9bb36b0fb45f5f2f42b26adc8bcb7e288c5b9dc010f458ebce",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1e58682c75638ff76dfc2a0eb7b50da0399e0b305be3e92ebc5cda63bbc54656",
+      "source_id": "sha256:3d30c3ca35b91943a02f7fbfe20ca3b050e27b772f4afb710e243397bd714e90",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:d2b338a97bfe08dc870486d88058b91c7c1922a84f832e5e8b19d032c2e5778e",
+      "source_id": "sha256:3dc4d1311e1d53f88ec959d247b83411d9369511721d6c11a75f26bd95704df5",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:fecd4d3cd67bb6a0c1bc71d4a5f5fe4f6ffbd71e6a30e15393b2915d1945f6c1",
+      "source_id": "sha256:3f05e48f2c4c2526779420e73f006256170a2ad941547b56835dd7d5aa05c966",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:fecd4d3cd67bb6a0c1bc71d4a5f5fe4f6ffbd71e6a30e15393b2915d1945f6c1",
+      "source_id": "sha256:3f05e48f2c4c2526779420e73f006256170a2ad941547b56835dd7d5aa05c966",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:34804dbc948e0fb93c790cfca17dbaad36b776292bd51c1f26b07d7d7a42414a",
+      "source_id": "sha256:427293b3560d2a5c9b6b6e431905a65165b4f541c754eaf40c584044c6a0309e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:77aaab3aad82084abbe809179a155717115fb2e6c314726917a733d808e9d372",
+      "source_id": "sha256:42afeb979956a11186c143604b485f2a841592bdb9990d74e85048918be81419",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:719a3d38f29005a5356bdd5da6592e8a74d72994f77c7558dc895d452dbd140c",
+      "source_id": "sha256:438444c907ac3a6637faa2e5b83d3cd64f0fd8dc935425837b17f8a92b175c54",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:7f25e57364d42f3aa3b6781eb2bd6aee8c2ded3aef142f9a6435e0f2c1509777",
+      "source_id": "sha256:45842cd31b5fac9902a36fac7dc5d0eaa71e872f98081a9d32079a62b3358996",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:633dfdf5f9c4245511933c0943aef3a9f53ec650e07ec7a9c276a984f4a5447c",
+      "source_id": "sha256:4596904ae13e6126877b7f5161cdd96b682d24daf5858dd2e35b05c9d5580b22",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9fe5f24a898f7c9d16a9064d3224e142e0af53262e5f97fb87e29a0a3cf11e2b",
+      "source_id": "sha256:470829e9fac720c15b9a3cbae8a8c80319b89b17df57769966ec507c52744293",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:cfb4a08d36e24efcecbd05ec84f5ea13dd3fbd7b4253eea765d08ed0149019c1",
+      "source_id": "sha256:470f9726e7bc02272f6c6ec7cf2cc3bc2bc25a283a9e39e4cb79ffd05e4ff1e9",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b6386653c064962611f5502455b8f0383cbda1b4b1e72355e9f0a8e9c8e9b798",
+      "source_id": "sha256:477fa26cfa7fc5398885738659a84777b10076ceb7d80bd5bba8ea0b8eeb1e50",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a185c8de22faff6ba9e7343ad945c2549ec92ed405e97192f7e9da728a959d20",
+      "source_id": "sha256:4abd8f999861b52624e751ecad112c944334d82f4493646dd84fa2bb3ff43e33",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9f88e96b5562bf3cf5be3062198c7c15b8dddc09c56cf632ae0fb4b93ae40a77",
+      "source_id": "sha256:4d26f14dddc6c6a35e6fa6a60ca4a866347994f71a3488e9dff2ac77f30dba26",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1db74015c3ad99064f4571e2250b4f8cf026bd067ebd53906bc37040583652f2",
+      "source_id": "sha256:4e68fd5fb08fc38e6e6112468caef0cd473b47bd83d35a8b39f4f53aa0c0c77e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:3ff380ae14232bcaf2e91e6c98a485488cfef172d29060d43f23bc2342d17593",
+      "source_id": "sha256:4fa7e2c502084df3a0aaeb8645acce17f9c3ad667a7d3b9990ad6d20b9824633",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:75ca1a2d6f8ab8cdc628579b9339095c5f6b9a17eab97f9003aaf6d1ddca5d17",
+      "source_id": "sha256:514c9c279827abf7be6ca075c8f438bff717069668b70b72d56c9d93f505dcbd",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:013784354dfbff11c4f57b98422d2cda7d236b945af82defde85aba194117cc8",
+      "source_id": "sha256:52a0142bc3a4b52bf2f715375dc1bd424a61ca352f5caea92170144b3610b7c6",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9da7d03a443e097d7366352129fb0c460642e3ea21cb22387d0d0509f35f25b6",
+      "source_id": "sha256:53c3909939b1d98f479d919ae218d5de0969cde1b58ae544bc3a85b057b48c03",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:6eb93a1ffddd3381566030d8fc49bd26f7a24447885e3d4ca04a5026e739a1dc",
+      "source_id": "sha256:54a9513e6cc43f167df70ce3a9165375f5c6297e79caebc57128ee78d3da4e02",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:d372699d20bb80a60f48100f17d88afd07a2aa7ea78d83e7674d7f93ca8de9d8",
+      "source_id": "sha256:552c52026054945451243e01c33de0a1221418de790b877a246294dac5e2b69e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b86670fc0eba2bb809902c9ac5633ac927c31898c81e4907b9bc14ac82a34ddc",
+      "source_id": "sha256:5571782ce435bf24cb60209228932bc3dbbbeb2a93dd04f91c10c18c9bfb3c56",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:2c4cf12d72bf05e6f3e1e3ad90b7d757fe6eb691db89f2fbb5c5c8d33dc827d6",
+      "source_id": "sha256:56c4dcd0b083cbc192f846a306a63e8923d2602b4ea66e412327a12035a445ab",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:89bf7438c94047ecd419a30cd63b7b000f454bfdaa81cff0bff05fc6a3590317",
+      "source_id": "sha256:5d08cb5a04b596c4e890570f1a268f62a1411f1e20e189b0887a49cdfdcc676d",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:65ca34bd4b4aebfc60819fab1d8702540f07a6da57a216ac559f0229fb42150c",
+      "source_id": "sha256:6099eb54d77a8d17d2fa4b299918cd09cd4f1c4e9f0ec8323865096301b40236",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b72ed0e793edfae02446836cbbd1839140c0061c12826dd2db874e71d6eb6170",
+      "source_id": "sha256:61595196531b81e815f25e20c5d516430cbe0040f8836e3459700cc4e9ddcf90",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9d0d807eb3ecd3ca4fa19ae352dc4c8ab48af5ef936019c071bbf8d2fca23117",
+      "source_id": "sha256:6c19f7a18b91c98fd4b360deda18bd3896fde92a32b84fb2e6e94246add19177",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1a927e01b108d9790a79b522f5a48a85e31d0411d7c21ecfbfdc5368d1022163",
+      "source_id": "sha256:6c9e3f053f04abef9237ec705491b0e72d11d6c9d33647d402e38e01bed2bd52",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:bd82c6c833e04c73ed59492180b56dec5cc029b44b95acdd218c2e122a41ea18",
+      "source_id": "sha256:6e27bbf8c886eb0c38b090c978c8735f28c6f47df37886ac6c33abd392d8b9d2",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:302222194a04cc00d214bbf79162d6d199b59af6d7dcaa269c1c6031de88fec7",
+      "source_id": "sha256:70fc088fb53d098f8dbadad56ebddbec36886ab388a4d35a3c041895ea5b50fb",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8ad0dda6d0d3bc3bd020eb7970ce3f8082b537fa1ce2693b777ebf89d7c4d36e",
+      "source_id": "sha256:723a9fe7279781110cf3c5ccec3751ad847bbf5c4c946df8247fc209c88a49c3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:061d04ba4f7bcdd2cb1752a8fb609108bbef01add8126ef615bd7621beb9f965",
+      "source_id": "sha256:729a8c14516dd5431b876f7589254d740c600b295575223b1c736fa2ed60d23d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:fa1ef323cb35528f960f3f376aabd048d04311fcf2039c2267c1ce0db4e61af8",
+      "source_id": "sha256:74a8c4e8170ad5673b0a03b8cbca8297d779be815fed267b84f52f9d43da87f7",
+      "status": "open"
+    },
+    {
+      "code": "container-command-inherited",
+      "intake_owner": "release-control-programme",
+      "next_action": "inspect-final-artifact-command",
+      "route": "phase-3-artifact",
+      "source_digest": "sha256:bb559a776d9fe78a0fa95bf9e4aecb2cafbca0cdcdeeb0b8effd69ba7a8a078e",
+      "source_id": "sha256:76d2c4ef66c657b8bc277e8c8bf1c49495cef3e7ca8fef8b79de2fb612a90be3",
+      "status": "open"
+    },
+    {
+      "code": "container-image-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "resolve-image-source-binding",
+      "route": "phase-2-source",
+      "source_digest": "sha256:bb559a776d9fe78a0fa95bf9e4aecb2cafbca0cdcdeeb0b8effd69ba7a8a078e",
+      "source_id": "sha256:76d2c4ef66c657b8bc277e8c8bf1c49495cef3e7ca8fef8b79de2fb612a90be3",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:bb559a776d9fe78a0fa95bf9e4aecb2cafbca0cdcdeeb0b8effd69ba7a8a078e",
+      "source_id": "sha256:76d2c4ef66c657b8bc277e8c8bf1c49495cef3e7ca8fef8b79de2fb612a90be3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:0c30776e4dd97953f01c4b213fa711ad3412f7fe0e4b6dd7813aba523f63ddfd",
+      "source_id": "sha256:78ac78055d8fe395afce0fd87a4d33678b3359458549beda0abacbd21df3f143",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:60880d005a2daca61d29ca992ff433a88dba66a8a18521829f2fd0b97f9ab466",
+      "source_id": "sha256:78f7aa4429599ae4685690d7dcde6338d657906f7610a9eb89e82a803640de2e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:94d7469de34326e67868560048c09e210cf1102d9aca3e9ed1c97886034c252c",
+      "source_id": "sha256:7916c3c5b83691d6060a54286607bc12f7216ce3b5963703720f1adffd86e76d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:af9bc44819615e20a0f9accbf1cefb4909c40865339eab5adcc2abf80393a472",
+      "source_id": "sha256:7ae45ad102eab3b6d7e7896acd08c427a9b25b346470d7bc6507b6481575d519",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:91f3748f721946cd07337f5be082875fc0080e587ce935afadb4db171f507d32",
+      "source_id": "sha256:7b8da4bbdaa9b99918f345a5003ab097de3f3e3a94dc21a055537581d758886a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:cda49588100cf123cc715ac451a648ff1ba9c617ea59b9f52dbe3cdffd0a78fe",
+      "source_id": "sha256:7b9af033a8a8a0ebc282bf56ebe77a39fcdb01aac55424288555f2779fe24f81",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a1f63f9787be577bf4ac85966087e458e577605c6395ff0b11bf7afd313155e7",
+      "source_id": "sha256:7dc254a5bde2573470c39c03829eb80a2cda0fcb2239eefa37e39c41bfb56598",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8e3fdbbdfb87efc8c119c3c78eeb1d12448415ee4e2b4c7b1f118ae6efe299ee",
+      "source_id": "sha256:7dc6b15ae59575941fe48333bafdc01700bf4b5cae498b5cc71710943348ea5e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:4241f8a18d6fa6c02d3433e6eeab7ce168d179ca13d4f39785c283607a18b62d",
+      "source_id": "sha256:7dd0cb88c49fb9abb86532449d20bbad5bc0d443e78500a7cc494286307969da",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:89bb0f2dca41c5b5515fb5477e7575398cdfc0fbf78d205de3d11bf2ad4fa486",
+      "source_id": "sha256:7e77e8f8d0e860059741566955e19c47cd232fed7e5bc040284afaf989e33d97",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e308a140e5b32bdc6be0b6c062caf690c31c7d217455c5cb924695224473023d",
+      "source_id": "sha256:7ed9be065db12a12568fe72f68e13fde1fce32924d0344aa847d0888b3b248c0",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:66169427e9afe2014f46fe785dc3fc2ca5f6540842635c546e47b7cc778ac7da",
+      "source_id": "sha256:7f5f19f892ea01cd915e5d943a0584c3584196b9d208518a720602278b6d089b",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:66169427e9afe2014f46fe785dc3fc2ca5f6540842635c546e47b7cc778ac7da",
+      "source_id": "sha256:7f5f19f892ea01cd915e5d943a0584c3584196b9d208518a720602278b6d089b",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:697d17d8c02c63a900a2fcd871add4a6ccda7e99bba6cd33d9ddc6f8cc021a89",
+      "source_id": "sha256:856ed576ed05bb677c3ddab3d4c55d802ee49c3c329ca086529d72ce3bbc6371",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:908539e04fd2eb40e6c553d1f687b7067ca42d72f34a2c18fd4177687281763c",
+      "source_id": "sha256:858cad9e15a3778062549650f9c47144e9ae5abada29100975cd9631a4c61ae4",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:78cff87c5c1d4bf7dfd828819e32aaeb2ee0b3a2e57fac13ebe7bf37aaeb2b34",
+      "source_id": "sha256:8698280fad345a7615a88b42a9eb31abb26637807bd0fc21b67b7412e9fd9e95",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:888ce40f63b6c33275e424c560b001c68f938c33cc003258fac1cda458b5b810",
+      "source_id": "sha256:8777be07fb929ec91a2f5e86f9a8115bb35fac330387684732ab5f1e718fc0d5",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:d9c07a23872b050dd17e37b9b9bec2cccc10588e8c30601ffe47ec8260cd4178",
+      "source_id": "sha256:87e72daaaf63714a69f9414f8fc145d4cd8a2c25000e0ef644295d353fb3934c",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1e8d579fe35aff072bb3f3c956a16534c9463604725c15894b69276e28b5061d",
+      "source_id": "sha256:8e0c29770ac892e44a764f67be34a4f2c755e3c0f884ea82aabd6fb07a74a829",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:c5438f2ace002c957c0c980c03464e88b8e7fccb1138a7b22ca966511f6c26a2",
+      "source_id": "sha256:90c32ef75c80e519d94bcadf8272529bc8ab086b0233d1b3cc4276d9b6d007a4",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:55979063702410516f1ee5ce8d368cb54702b4815603679a400d4d1453841f53",
+      "source_id": "sha256:92c9304ad0b999597751fe1298014deff47cf7977613d0e4b203daa8372c545e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:7e52067c85ce7bfd62fbe640afb7ff15cc0d395ed90588ad79fde1dfe46533f1",
+      "source_id": "sha256:92fbfc286b934aee831187a0580b1e6164b306a70cd603519852af7e5f2eaab9",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:7e52067c85ce7bfd62fbe640afb7ff15cc0d395ed90588ad79fde1dfe46533f1",
+      "source_id": "sha256:92fbfc286b934aee831187a0580b1e6164b306a70cd603519852af7e5f2eaab9",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:3914134eaadd154c365dcc91ebd0d21e5bb653cd5e22a0a9f8be331df663d45f",
+      "source_id": "sha256:93c99731dbca5a2ff80e8760b5278308a27e32fb0aa219a1d0263df7e60779b8",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:2e741741ea4ffa0c52ce36c8135243acfde3c44523891e4de1d8a3a2aff1ef50",
+      "source_id": "sha256:946bdc20dfa67af6a4015c6c92611857c7601c7afa94a13942048ee95dcc3b8c",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:65626b29e89119b36b417adcbf5eec5bffc668151a081e7b2e0b112087ed7daf",
+      "source_id": "sha256:94cff67cc8ab741f5dd598fc24a0445da279f145d3c7af51e863bb3b8ec701c3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:f6591b63ce0d9daeca9f6cedf1897e6226d779900b5e286fb266e9945d0054f3",
+      "source_id": "sha256:966e4362d566c50a596791db66a623be33fed25b1558e109a66e85f76279ea3b",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:79dc2bc94aa3476546b0645f790d0483998ea33fab6715861aab452120d66f69",
+      "source_id": "sha256:9b44d854642da7d3ef235b3d44105b51ba818a857ed33a0f26266850e378c145",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:ffefa44ee9669c8de90090115c9d90ab8481c1121b2558552427ce40cba9a73c",
+      "source_id": "sha256:9b6d56f5e873b58ed46b9ccf9b7476ae1a6b6fa7a2690a57b95033a531fc4419",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:ad735cdc18ea01664356ab49f8b4b4b6cfe503c18acb58275046bcd2a2747799",
+      "source_id": "sha256:9dd6b875b0aeffdcb0276567b9e69ce26f8347ed7e5f563958e901c3c0b67797",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:6dc5975066639e084457bafcaa33f227af0da9968ba6fd1af8ffaed69d6847ab",
+      "source_id": "sha256:9f10d71eb1588e0642cf089835ff1be8e76ca4cf7aec4bf1764c45bb99c26470",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:02e1208f2f8c591b0445e8c3ef67c90c0962cc36c1219f702eef58c485a6ced5",
+      "source_id": "sha256:a0cc5720743f6c301dc69b7a44fef2606bd7a5e5331597e2ea1a71f60ca221e7",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e69b834d58162b8ebeaf157289e56697899771eaa8354cc21ef0542b47128591",
+      "source_id": "sha256:a1749081351333ba4d7d8483c4bae959e4dcacf3f65911efd5c893aa767c319d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:71d2104a33e9b1c0b4036f131a9b92312da0c6049799a0f302dc7ced7313539c",
+      "source_id": "sha256:a418266886e448e550e8548daba93de2e32aacda7420d9bca7331ca3abcbc71d",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:72d7e8da356baf8cc26d2442b2e1dc94bb286888f2a254f510e2f7e5a5af14e3",
+      "source_id": "sha256:a5a869aabc52fdb1b18f517d78188701d7d6e6e9bd2aea4728aa875eb613c7fa",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:09dc8ee0aff1f4a722c02b7696cce89ecc0c400c32a2b10aebb0a1f7b0081922",
+      "source_id": "sha256:a657097108c5d2a57645f1c1b1abb9eef15cf1de9ab1b6b37d450cfd90da09c2",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b7857680695b1b9d9d2209e489fb93542f118a2d79a7edecd0da6e3143de588e",
+      "source_id": "sha256:a688ffcc467b9f4903a2a9c1196b27008d1a11152fc5f57b10c494ca073c9f30",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a7ccda8d51e3186b871f143a7d21bad1d67fd9a4194e3af145a6ed9c8bcd7fe8",
+      "source_id": "sha256:a889a41eca68c44fd8ef4cced16ea01397b60b88e603af531009fb75c53cf3b9",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e4fd87158be6f75a9199562e703179e31915ada56eb5934ef9437c778057e245",
+      "source_id": "sha256:a8ea03911ff147055a15534b8890e1896bc0e4675a3ede88ed30df7930d0b1a9",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:23590ade994e0bc6dcf582681fd78efc845f50417f8e5fab383179d6dbf4c4af",
+      "source_id": "sha256:a919db419c85712e62cd0a92aa8c556ef94d8b5a3343d404c82b142e7f9ae054",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:16c699ab422321cc31f1e96e77c4171f7abdae763e8c74c7222dd44956ce487f",
+      "source_id": "sha256:ac03990910b036878362b68f27465dffc60a49596666055b91e7addfb47c3561",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e168efb54e5fe5735b1829f6be662db00eef7cda1679892d23c4aed090fdb802",
+      "source_id": "sha256:acff194fa2f52a25cae64ef249e45540c55c4238a5832c822931af66d3efcaf8",
+      "status": "open"
+    },
+    {
+      "code": "image-command-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-image-command-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b2fbca26a53aedde6bda6991f0d50154302860ecc995226794cd3f6c051995c8",
+      "source_id": "sha256:b25a61816390089668455327a89d69eb06c13f68a475c58017dac1cfe090972d",
+      "status": "open"
+    },
+    {
+      "code": "image-entrypoint-inherited",
+      "intake_owner": "release-control-programme",
+      "next_action": "inspect-final-artifact-command",
+      "route": "phase-3-artifact",
+      "source_digest": "sha256:b2fbca26a53aedde6bda6991f0d50154302860ecc995226794cd3f6c051995c8",
+      "source_id": "sha256:b25a61816390089668455327a89d69eb06c13f68a475c58017dac1cfe090972d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-image-build",
+      "intake_owner": "release-control-programme",
+      "next_action": "qualify-image-build",
+      "route": "phase-3-artifact",
+      "source_digest": "sha256:b2fbca26a53aedde6bda6991f0d50154302860ecc995226794cd3f6c051995c8",
+      "source_id": "sha256:b25a61816390089668455327a89d69eb06c13f68a475c58017dac1cfe090972d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:2151ca313cb212d75321ac2dcfd4a12a06015b8f6709fa639cb4c420f9e04724",
+      "source_id": "sha256:b33f18ba12aed9147829d4c355b69989d8dcfb571d04e0a3c8f616ee1b08d71e",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:cbd01afe1e152c4ee9e0134489a7f5656b618aa757e8053d7faa5adef85dc822",
+      "source_id": "sha256:b365742bb34218348dca88f5404c09315687bcdf6f6fda902c6395cda802f1a9",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9ed24b7ec1b9e91950194f19ba6d13e990c156acb7a3ff2b271fc28bb1037239",
+      "source_id": "sha256:b42f699b8146c490a13730c7ab2cb5a3f24967bd33175bb2562473cc59ebb1af",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:bddae8e8a80a1751d453e5775ba80e87ae5a547ae0e6fcf6bfe07fb653599167",
+      "source_id": "sha256:b5f22889fb72b9acdb988e45c0ffb76410d83285e6f8c970e21fbd478e1741c2",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8dde61df5809c8a0d49998ad0dee53d8fedbd96d50e04486a6b09bae4d9fd696",
+      "source_id": "sha256:b67c3b83ba4260a6776d4db5dc29db78e8e3983478be51dfd34dd4ef5a02454a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1ba78bfe9e07393c42520e8963dc91fe44bdcba7fa0c434aedadeae6e8922110",
+      "source_id": "sha256:b85eff166445775ea9d1264bcc7835b69097788af278e81d82a4094d68d2b3f3",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1ba78bfe9e07393c42520e8963dc91fe44bdcba7fa0c434aedadeae6e8922110",
+      "source_id": "sha256:b85eff166445775ea9d1264bcc7835b69097788af278e81d82a4094d68d2b3f3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:aa2a36fefc30bfeb94df4f105b68539369cb23521f0cc9c4734e863cb31c2238",
+      "source_id": "sha256:b85fd8354c02d843e012f9b39352aaa65266adeffa079da04cc7f0ad06ae7938",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:3430246705983826dc8199a19c315f0d8f2861cb516b9ce7f79eb4dd1095b650",
+      "source_id": "sha256:b9764b5313d9387a8ebbbf53911da419a92d18d914307b8920256ba47bf6a5ce",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:f14642b416c0ed3508be899cb362ebdbabd379462123ef0b113fdd121ac27657",
+      "source_id": "sha256:be8e944592683b2b79b7b3dc254c5e06f10aeebbd421b66a0ea30699fe0932da",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:f34677a46b6819a4c735f5716ea457ed5c0947a2f360fc66fa088f2e09087caf",
+      "source_id": "sha256:c1092a27aef7ddaf4fae4f3ae778cd5908d3cc93c2e3e0956425916308aaf2ba",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:cf1350dd1bd70d54bcdceeeeec449242ba73f653c4188c62fc8731e23f856ce6",
+      "source_id": "sha256:c1cee865188a37043f29d240707db425898c580740b5080172759442df92ce24",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:343bbcf65d1a1a6786e8d551db456a8e0d7a3f4c0572d2ab89ac2f2f6ac555ee",
+      "source_id": "sha256:c49a4956a2a363b7532411815d4f83da3ab72cb1b12562bab176c85ad0500946",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:0e0d1546ed967dac3804e16f44ccf9e1f9e1a1f37c1842d1dfe08bdbf873722c",
+      "source_id": "sha256:c4a345edb8100d0161ea0ebdc24ad79dbc2879fed4e74b39dcca3dd7cb33820c",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:87e66c708227fb3b8e86818f16e856a2478ddedcbca1190d6b7cc029ba734839",
+      "source_id": "sha256:c4c74ae1d70a8488f3becea6126ee1c8dc2fa8e145782cec2032313335d46378",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:b8da3192397a4f8d429e28aaf9fd434894bd13bb9e50c212bfef15a5a96a4488",
+      "source_id": "sha256:c5682a8de94807c5b03d05adfde74c8be48bbfbe593430ef9fb283817dc27697",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:db88cf4c3ab9e35b13486dbbf90bc37bb27621db6979714b5e25f5708589bae3",
+      "source_id": "sha256:c642e17a7462f3f789b31877016f8848028575be78cb22840b8a6bbdbbef0fab",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:62c50ea18c6c21c581ae49f6c7b8c95a48207f70ffb33f48f0e603dca43ae754",
+      "source_id": "sha256:c65eb2ead139b1fc2b4ef20439fcd12a66ee3691ea78c9273d29d9136c3bacdc",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:311cfd235deca7e0052f2961d5f5b3befed937a6fce49c2ca8a515af97d6d903",
+      "source_id": "sha256:c692ee8ee428d711b6c72a8f0e9901ac322a5745cbf68998f30cc1bdacceea99",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:311cfd235deca7e0052f2961d5f5b3befed937a6fce49c2ca8a515af97d6d903",
+      "source_id": "sha256:c692ee8ee428d711b6c72a8f0e9901ac322a5745cbf68998f30cc1bdacceea99",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5ea9e22b61bdd07ea3b38592b3a9e31ce99c54986138be79dd95e6c7ad601edf",
+      "source_id": "sha256:c7667ecb73173b5e19f12be5a5d7f8e463501534825026e40f61e0a87727cd67",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:aa59675576f4b2ede0391eced21a299809856d97b7a5b4addbe8aad677cbc7c1",
+      "source_id": "sha256:c7ffb7d675ae05fbde1963926dc334f36c03a4cff1c6550fed9102f5d61435f0",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e32676b2801b32af67b38c23cd7bd39319e1da722b6e2836474b613ca8244a88",
+      "source_id": "sha256:c9767a20389019c03608e97f5ce1c82660431a9900f982fc5fa3acc0827fb941",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:33cebc088d67a016abb3818e9e7878a6a087f0a4c745afb4be33d1fdd837dddb",
+      "source_id": "sha256:cfef54ce89338b54330e420e21fc1eade5df7fd686ccbccab5831b8253a6918a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:39c1a924a5c3767ba9af5b82981ec5ddb6d995e4a7297e1a43fc1effb07ee1fb",
+      "source_id": "sha256:d01a4de51f43cdc7564d70505c0c9e57be550f90fdbfe4d413f8cb6e676cea6f",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5d6232172e8cdda0e44ede72fec334d5047fff76eca660758c70b86e83264795",
+      "source_id": "sha256:d4781f048ddd3f5c131e665888e3297d3d6b3d5aa5ca3779851bf81a1c92e5eb",
+      "status": "open"
+    },
+    {
+      "code": "workflow-action-unresolved",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-workflow-action",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5d6232172e8cdda0e44ede72fec334d5047fff76eca660758c70b86e83264795",
+      "source_id": "sha256:d4781f048ddd3f5c131e665888e3297d3d6b3d5aa5ca3779851bf81a1c92e5eb",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:c9303b48d21162ccb11d4e8c53acfe4648b9a3b9ccd18cdfbcfecb256b05a7ce",
+      "source_id": "sha256:d4fa5ad3eaaa3e82de00d1c32a2d2ba83e291b32b1c59ed6a773b1bec1678ab3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:26b10e0a0499606c7653379fb9cb5bdd126a8ea1c821208a03c56ad291d792d1",
+      "source_id": "sha256:d730fca466ec3c147406eb4bad802fe60cd78ddf779814e5262b2efea214c410",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:fc81995076895e7ca33dd95e5bfd434693aec2f206da3688c01e48eb422335ca",
+      "source_id": "sha256:d7f9bf6ec4ae199a50fe289d6585bd6c31f54fb724d928750bd9024f22222b7b",
+      "status": "open"
+    },
+    {
+      "code": "opaque-export-target",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-package-entrypoint",
+      "route": "phase-2-source",
+      "source_digest": "sha256:e0ab6d1c37431e114101fc817c5613e3a345fda0d9d4c341efeec7c3e8f58b39",
+      "source_id": "sha256:d9512e9e98472f5ac30031363e3c7b88a0fa362ee8402fd641b917bf9b1acbd6",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:783c7dc69c382abfaa96bcb1885af30231fbdcdbcc3d7c68e25d981533940344",
+      "source_id": "sha256:d95cb1cfeb6e68e584f51438c018b58d380041f21ee825b8494bb1abc7ba1fc0",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:d3361f33d33a1b70241385a9ad70b81bc4c99d731364b361487e1759c07b0a5d",
+      "source_id": "sha256:db52e96819c5f5355437dafc40ca1d2c3f7a8cc0273660a096bc3e73b5c582ab",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:41ffa4ce08029dad7bf88e2399d4980370ffc19697e871d07b0daeb73a7d2926",
+      "source_id": "sha256:dde4413cbc993fa95497b40bf2bdb9e283e59bd2e3bb0bf4d4fed15b7ffe0ba1",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:06a37f89d66f540592465ae71d393be29f852091709a88799e6fb2a4b61b4695",
+      "source_id": "sha256:de96dd15bf796db6085543990dddf9e6e54ec5cb1a812c1eb2a591015c608f0a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:43e89ea83aae03c087575b715510bf9123426efe6ada60d9dd328b91364692c5",
+      "source_id": "sha256:df99f7cf9f5893f899321170ffe298a5e405247d758786e6108626b9d803c1d1",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:a3570997f00722c5e76e206e79ab6ab3b26d401c9834956da35a752a24e1d077",
+      "source_id": "sha256:dfe6cd4aa7ebc3042068cfc794f88a561be9733664bbdcb15729cc07f4454503",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9be33fc00e8874ddabf6f8af163b4c8e418352d99bc618682d77130068f7891d",
+      "source_id": "sha256:e0d10def591ce212a175b634ca888539380e463b41fbe989862885df79faa54a",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:f1f56e1a4ec0f754c0b426682dfec64b06282b7113322b05017f8447623fe126",
+      "source_id": "sha256:e226f9c6fef33728ead249ebbdbbc7f43fca91602599a2e60f3b67fcbafe5266",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1daff12a10650f2d20af2e18ad1e43a8c23e283f5b62ad9b40a053d7c58ac6ef",
+      "source_id": "sha256:e3c64cb28cebe03072fa18ee662786a102fb093d02b227493a564ef4a1be68fc",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:dcd2a8108ae3dcbf9b868d62980731079ab7a13f3b911f6039453e5e138847a5",
+      "source_id": "sha256:e44c525eb7f85c0c7123b4b2a185a83394f890d5df55cbfe14f32d5c5af755fc",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:4c546a4f06c2c328ae343450642bf0013d852010a614e01cfac4235251308932",
+      "source_id": "sha256:e4d808c051eaed8254bd3539ebaf88bad51413ec3a6392cd0bca5d9b56620be1",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:9abb5cc8b70be147d01d369a27d947b08bbd614b0ce3a09973faafc57cd01de3",
+      "source_id": "sha256:e766d659209e8227cf22b166787ec6349cdb21a03d4d0b3f69d91dad97a37bd7",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:abd1cee2840541d1d1c0adf00ea4624280f3c99ad219f49989b3d6c827e63bee",
+      "source_id": "sha256:e8a7356d8e2535bf1fbb71344b91a3dcb3af84e26cfb19aaef745743ce5310d3",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:31038a8d4eb22a4f059bc9e162b88f6dad5b69896f21bab28bab90f697719dab",
+      "source_id": "sha256:eabeae85ec128e627ece5fe7d11335b899e4135453d2a95199cc9b3770f7cfb0",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:2559eea7df2aed3e1a4b8d87756596cdf07996c183b61907975da9e67bc273ea",
+      "source_id": "sha256:edccd8dee7435e498c440a49364ba3bd96418c24f76f4ffd90286890273f9f11",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:93718eaa6c6df7a50544b9300e321e253fbe476ff55bb39eb5d1c9186f7bc150",
+      "source_id": "sha256:f079513fb4c4b65e3fc5aada994a7ebcc0725f63ab210af27c2b48216dbc2d0f",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:572eea1615ca590730dde648a741f457b574addc845644f39b5dcbdeb9f8319d",
+      "source_id": "sha256:f241a5b9018c225e03bd2b2e559176154ecf541836b50240b8bf751fcfec827d",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:92619f2ad06b935f6c07d1a0f4cda6e6c51a2cb883ab565af137154ba3e9eaa9",
+      "source_id": "sha256:f3cffaab188f8bc0496723427bce40159aad056e09f8a36f7fa3fb6816afb992",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:5646d521c9b0d15e68406aaee71cefc38ef22b436cd2ae6952b88061b99a2d58",
+      "source_id": "sha256:f688110fcff42be6711a93f2bafaf2e96aa120f1d23f21dde323c78e34de5cb1",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:ff05de83bce01df97821fc59bcefa6cd3020e5230a46fd253031f6012c740833",
+      "source_id": "sha256:f86a33e9db8f1b547ed77a5c1645a46a59b4b66730e6e2a107724eaba2d38da0",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8f6036dab78c41c7e93af9a53762bc0191d607b003d2bbc940d5a23176c25225",
+      "source_id": "sha256:f8ab01b693fc0163944b50d5142c11af4ffa8b95145eca545d7e1e64baf752c4",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:423054b2b61d6c5d4b32553bcd2d1c9b2d9127b696a274a4cd34c51c0004ec5f",
+      "source_id": "sha256:f96f746e3d69e513f4808772eab47499a9553e1062818b2c7c9e718a3e374c80",
+      "status": "open"
+    },
+    {
+      "code": "opaque-executable",
+      "intake_owner": "release-control-programme",
+      "next_action": "trace-command-callers",
+      "route": "phase-2-source",
+      "source_digest": "sha256:1bf0d55636431b5f4cd22f004a585f791cc853a38e80e11d7c4862e1f17e0356",
+      "source_id": "sha256:fc04080ba98ef0902c158ea674094c16362a0596a8555a2070383a3bbe9ca0d7",
+      "status": "open"
+    },
+    {
+      "code": "resource-type-unsupported",
+      "intake_owner": "release-control-programme",
+      "next_action": "extend-resource-source-grammar",
+      "route": "phase-2-source",
+      "source_digest": "sha256:8349f6c27b1b8b9448023a424aa5e2ebdfe3032a4f65cd949fed04c7d32b267a",
+      "source_id": "sha256:fee9bb8d1c860a155e4b249800145ea9da00abbdcbfc1f98a2a846919a20afad",
+      "status": "open"
+    }
+  ],
+  "inventory_digest": "sha256:08e7346b42cf8b97658821ec21ca75421d3e4a999f2dba62247d48936a567c36",
+  "policy_revision": "sha256:3b39b20b14d0669438789129d10d09da0f8450a2b28bea1b0f3b6db158a81257",
+  "schema": "source-finding-triage/v1"
+}

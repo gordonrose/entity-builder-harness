@@ -26,4 +26,4 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-exec python3 scripts/04.deploy/operational-realization-gate/script.py "$@"
+exec python3 -B scripts/04.deploy/operational-realization-gate/script.py "$@"

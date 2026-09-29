@@ -26,8 +26,18 @@
 | File | Responsibility |
 | --- | --- |
 | `script.py` | Generic compiler for graph completeness, proof levels, gate order, lifecycle safety, strict normalized evidence, and provider leakage. It uses no provider SDK, CLI, resource type, or adapter import. |
+| `release_compiler.py` | Schema-backed immutable release definition and 17-stage acceptance-matrix compilation, reusing the realization contract validator. |
+| `source_coverage.py` | Reconciles fresh independent inventory, reviewed adoption and composition; generates scoped source obligations. |
+| `finding_triage.py` | Checks that every discovery finding has a current, policy-consistent open work assignment. |
+| `caller_coverage.py` | Reconciles every discovered caller subject and edge with a reviewed source profile; keeps qualification blocked. |
+| `operation_contracts.py`, `operation_contracts_cli.py` | Reconcile selected script/action/tool input contracts against freshly discovered invocation and dependency observations. |
+| `result_consumption.py`, `result_consumption_cli.py` | Require fresh recomputation before accepting saved analysis and reject source results as release or operation authority. |
 | `script.sh` | Repository-root command wrapper. |
 | `smoke-test.sh` | Deterministic positive and negative contract fixtures plus the core-boundary scan. |
+| `test_release_compiler.py` | Release binding, schema, graph, ordered gate, input/output safety and compatibility tests. |
+| `test_source_coverage.py` | Source mutations, adoption, ownership, per-operation bindings and mixed-provider applicability tests. |
+| `requirements.txt`, `requirements.lock` | Hash-enforcing installer entrypoint and the complete pinned validation dependency closure. |
+| `verify-clean-environment.sh`, `clean_environment.py` | Create an isolated validation environment and run the ordinary public check. |
 | `fixtures/` | Safe, provider-neutral examples. They are tests of compiler behavior, not live target specifications. |
 
 ## Commands
@@ -53,3 +63,600 @@ generic component bindings, check IDs, UTC timestamps, gate verdicts, recovery
 attempt relationships, and operation-class counts. Unknown fields—including
 raw provider data and secret-like names—fail closed. Adapter code must live
 outside this directory and must be tested independently.
+
+## Source release compilation
+
+The release mode extends this capability. Existing eight-gate contract/fact
+commands retain their result schema and behavior. The seventeen release stages
+are planning obligations above that protocol; compiling them does not replace
+runtime verification or grant execution authority.
+
+Python must have the dependencies in `requirements.txt` available. The compiler
+loads both versioned YAML JSON Schemas from
+`infra/04.deploy/contracts/release-control/v1/` on every compilation. Schema
+references resolve locally; no schema or provider is fetched.
+
+```bash
+npm run deployment:realization:validate -- \
+  --release scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml \
+  --contract scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml
+
+# Detect an attempted rebind of a previously recorded source definition:
+npm run deployment:realization:validate -- \
+  --release candidate.yml --contract realization.yml \
+  --baseline-release previous-definition.yml
+
+npm run deployment:realization:check
+```
+
+Release mode accepts only `--release`, `--contract`, optional
+`--baseline-release` and `--json`. It always emits JSON and returns 0 for
+`compiled`, 1 for `failed`. Mixing runtime evidence arguments into this mode
+fails. The former draft path delegates to this implementation through its
+[compatibility wrapper](../release-control/README.md).
+
+### Immutable definition and operation graph
+
+The source definition requires a full source commit hash; immutable digests for
+composition, environment and evidence policy revisions; artifact IDs/digests;
+a logical target ID; a risk-tier reference; and a digest of the complete existing
+realization contract. Human-readable IDs cannot substitute for these digests.
+Target and risk-tier IDs are symbolic reviewed references, not provider names
+or an invented risk-classification policy.
+
+The selected operation graph lists an operation ID, realization execution unit,
+profile, artifact ID, acting identity, symbolic command reference and ordered
+dependencies. All realization execution units and artifacts must be bound.
+The compiler checks their identities, entrypoints, immutable artifact references,
+recovery and cleanup routes against the existing realization contract. A
+runtime-bound artifact must receive a concrete digest in the release. Duplicate
+IDs, missing references, cycles and dependencies on later operations fail.
+Command references are declarative names and are never executed.
+
+The release digest hashes canonical JSON containing the entire definition and
+both loaded schema digests: sorted object keys, compact separators, ASCII JSON
+escaping, UTF-8 bytes, SHA-256. Mapping order and YAML formatting do not change
+identity; ordered arrays do. The realization contract digest uses the same
+encoding of the parsed contract. Fixtures contain synthetic revisions and
+policy references; they prove local compiler behavior only.
+
+With `--baseline-release`, a different definition using the same release ID is
+rejected. A changed definition needs a new release ID and yields a new digest.
+This is a stateless compiler: it cannot establish global release-ID uniqueness,
+resolve external revision existence, retain previous schema versions, or detect
+an omitted/tampered baseline. The complete content digest is the immutable
+identity that a later governed ledger must retain and compare.
+
+### Matrix and safe result
+
+The matrix schema is the authority for the exact seventeen ordered stage names.
+Every row requires an owner, acting identity, operation profile and command,
+selected operation IDs, nonempty evidence rules with proof level/environment
+and positive expiry, invalidation rules, failure state, recovery and cleanup
+routes, and a verdict. Every selected operation must occur in the matrix.
+Every stage must cover **all** selected operations: omitting an operation from
+one stage is an unsupported exemption. Row fields provide common defaults;
+optional closed `operation_overrides` provide identity, profile, command,
+evidence, recovery and cleanup requirements for a different operation. Overrides
+must refer to selected operations, be unique, and leave at least one operation
+using the defaults. Output expands these into explicit `operation_bindings`
+for every operation at every stage. Each binding includes the exact execution
+unit and artifact digest. Evidence check IDs are scoped to that operation and
+stage; one operation's receipt cannot satisfy another's obligation.
+
+The schema enforces minimum evidence proof levels and environments: unit,
+integration and artifact stages need local proof or better; target inspection
+stages need live-read proof or better; candidate, per-task, controlled-change
+and recovery stages require live-execution proof requirements. Integration uses
+a disposable environment, candidate proof uses a candidate environment, and
+target gates require target evidence. Recovery can use a disposable rehearsal.
+Continuous operation requires a positive observation-window declaration; a
+single instantaneous proof cannot fulfill that requirement. The selected policy
+must later resolve the required window, maximum ages and stronger risk-specific
+obligations. Profile classification is declared here; independently proving that
+classification belongs to the next discovery/coverage unit.
+
+`release-definition` is a mandatory invalidation dependency, so any changed
+binding, graph, rule or schema invalidates the compiled identity.
+
+This source-only version accepts `not-started` verdicts. Other verdicts require
+the future evidence ledger and verifier. All `not-applicable` claims are rejected
+with `applicability-unsupported`; free-text explanations, claimed review and
+embedded discovery facts cannot waive a gate. Independent discovery and reviewed
+applicability generation must exist before exemptions can be supported.
+
+Successful `release-control-result/v1` output contains:
+
+| Field | Meaning |
+| --- | --- |
+| `scope`, `verdict`, `authorized` | `release-definition`, `compiled`, and always `false`. |
+| `release_digest`, `schema_digests` | Immutable content bindings for definition and schema semantics. |
+| `risk_tier`, `operation_graph` | Validated symbolic policy reference and ordered operations. |
+| `acceptance_matrix` | Seventeen normalized rows with stage numbers, all earlier stage prerequisites, immutable release/target/artifact/contract bindings, and explicit per-operation requirements. |
+| `findings` | Empty on success; fixed diagnostic codes on failure. |
+
+Failure output omits source values, paths, YAML snippets and partial compilation.
+Closed schemas reject unknown fields at every source boundary. Strict loading
+rejects duplicate/non-string keys, YAML anchors/aliases, non-JSON types, control
+characters, inputs over 1 MiB, nesting beyond 32 levels and oversized trees.
+Only symbolic identifiers, digests, enums, bounded numbers and their structured
+relationships reach success output. Inputs must contain no secret values;
+identifier syntax validation is not a general secret-redaction service.
+
+### Verification and next delivery unit
+
+`deployment:realization:check` runs the existing positive/negative smoke cases,
+release compiler tests, provider/network boundary scans and artifact metadata
+checks for governed documentation, shell wrappers and fixtures. The release
+tests validate the schemas themselves. The focused
+suite can also run with `python3 -B -m unittest discover -s
+scripts/04.deploy/operational-realization-gate -p 'test_release_compiler.py' -v`.
+
+Independent discovery and composition coverage are described below. Evidence
+admission, policy resolution, durable journals/locks, provider adapters, live
+preflight and target qualification remain subsequent units. This compiler does
+not evaluate runtime freshness or advancement.
+
+## Independent source discovery and coverage
+
+The existing wrapper also exposes `--discover` and `--coverage`. The collector
+lives in [release-control/discovery](../release-control/discovery/README.md),
+outside the generic compiler because source formats contain provider-specific
+syntax. It reads files only. It never invokes discovered commands, builds an
+image, retrieves a secret or calls a provider.
+
+```bash
+# Exit 1 with structured observations if any source remains unresolved.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --discover --source-root . --json
+
+# Generates pending review entries, never approved dispositions.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --discover --source-root . --ledger-template --json
+
+# Always recollects from disk; an inventory file cannot replace discovery.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --coverage --source-root . --composition composition.yml \
+  --adoption-ledger adoption.yml --json
+
+# Additionally bind source coverage to the first unit's immutable release.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --coverage --source-root . --composition composition.yml \
+  --adoption-ledger adoption.yml --release release.yml --contract realization.yml
+```
+
+Use the direct wrapper when capturing JSON; npm prints its own command banner.
+These modes accept only the options shown; duplicates, mixed legacy options
+and a release without its contract fail. Coverage returns 0 for `covered`, 1
+for `blocked` or `failed`, always with `authorized: false`. Discovery exit 1
+can mean a complete inventory containing unresolved sources, not a tool crash.
+
+### Contracts and reconciliation
+
+Three additional closed v1 schemas define the inventory, source composition and
+adoption ledger. Their versions and schema integrity are checked locally;
+remote references are prohibited. The collector independently enumerates its
+versioned roots, hashes source bytes, and records stable observation/parent
+identities. Commands, environment values, resource names and secret references
+are represented by digests. Safe relative source paths are included for review.
+
+Composition binds each discovered executable to one operation and artifact,
+then binds its command, configuration, secret and authority observations. A
+shared task authority must bind every operation using that task. Multiple
+executables cannot be collapsed into one operation, and sibling artifacts
+cannot substitute for an operation's own artifact. Resource declarations
+include provider boundary, owner, managed/external classification, authority
+revision, permitted effects and cleanup owner. Every source dependency must
+have its consumer access represented. External resources permit inspection
+and consumption only; their cleanup remains externally owned.
+
+The ledger must cover every discovered source at its current digest with a
+reviewed disposition. Generated entries stay `pending`. Temporary compatibility
+requires a replacement profile and future expiry; it cannot suppress unresolved
+source semantics. Historical, retired and test-only claims remain blocked until
+independent caller/retirement proof is implemented. An owner or review string
+is a reviewed source assertion, not authenticated approval or live authority.
+
+Changes to source content, collector, composition, ledger, schemas, rules or
+evaluation date change coverage identity. Supplying an older inventory digest
+blocks coverage. With `--release`, target/composition revision, operation IDs,
+execution units, profiles and artifact IDs/digests must also match the existing
+release definition. Artifact digests and authority revisions remain declared
+source bindings: final artifact inspection and authority verification are later
+evidence, not facts established by this scanner.
+
+### Scoped obligations and compatibility
+
+Successful coverage generates all seventeen ordered stage rows with explicit
+assertion subjects:
+
+| Stages | Assertion scope |
+| --- | --- |
+| 1–4, 16 | Whole release |
+| 7 | Every artifact |
+| 8–10 | Whole release and each managed resource/external dependency |
+| 5–6, 11–15, 17 | Every operation, with its reviewed profile and artifact |
+
+Rules reuse the matrix schema's minimum proof levels, environments and
+continuous-observation requirement. They are obligations, not receipts or gate
+verdicts. A container cannot be relabelled provider-native to avoid Stage 6.
+The bounded v1 grammar requires an exact-command-in-artifact obligation;
+provider-native execution grammar/qualification is still unresolved.
+
+An external dependency can have a generated `not-applicable` assertion for
+managed-resource effects at stages 8–9, with rule version and source basis.
+Its access-authority assertion at stage 8 and dependency assertion at stage 10
+remain required, as do aggregate release assertions. No entire gate is waived.
+Callers cannot submit their own applicability or success verdict. The first
+unit's `--release` matrix retains its strict all-operation/all-stage behavior
+and rejects every submitted `not-applicable` claim. Generated scoped obligations
+are a separate source result; merging them with execution receipts requires the
+future evidence-admission contract.
+
+The mixed fixture represents two hosted container operations and an externally
+owned warehouse reference. It tests coverage and ownership rules applicable to
+a future Snowflake integration; it does not implement or qualify Snowflake.
+
+### Boundary and remaining queue
+
+`covered` means reconciliation within the documented source grammar, not complete
+repository discovery or target qualification. Profiles are reviewed declarations;
+their runtime suitability is not inferred from arbitrary code. Unsupported
+resource types, opaque scripts/actions, dynamic infrastructure and unresolved
+image semantics block coverage even when declared in a composition or ledger.
+The repository's initial adoption inventory therefore remains unresolved.
+
+Next delivery unit: expand collector and caller coverage for the observed opaque
+paths, with explicit profile classification, production-to-test caller proof and
+adoption dispositions. Keep Phase 2 open until the actual estate reconciles.
+Then implement exact-artifact qualification, followed by evidence admission and
+the later approved control-plane/adapters/live work. No local source result
+authorizes these external effects.
+
+`npm run deployment:realization:check` includes legacy smoke cases, release tests,
+source coverage/mutation tests, collector tests, boundary scans and metadata.
+The checked-in fixture README explains reproducible local coverage. A safe
+pending adoption snapshot is review work, never evidence of a successful release.
+
+## Finding triage and caller accounting
+
+These source modes extend the same public command. They answer which work owns
+each finding and whether a selected invocation graph has been fully accounted
+for. Their output cannot satisfy the existing release matrix or waive coverage.
+
+```bash
+# Generate open intake entries for the fresh source inventory.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --triage --source-root . --json
+
+# Verify every finding is accounted for under the current routing policy.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --triage --source-root . --finding-triage finding-triage.json --json
+
+# Discover every step and supported literal call reachable from this workflow.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --callers --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml --json
+
+# Generate an unclassified, pending review; it cannot approve itself.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --callers --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml --review-template
+
+# Check a source review against freshly collected callers.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --callers --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml \
+  --caller-review caller-review.json --json
+```
+
+### Triage contract
+
+`source-finding-triage/v1` binds the inventory, collector and triage policy
+revisions. Each unique `(source_id, code)` finding has its current source digest,
+intake owner, next action, delivery phase and `status: open`. Entries must exactly
+cover findings, including observation issues promoted to their source. Duplicate,
+missing, invented, stale, resolved or waived entries reject. Routing is governed
+by the versioned implementation; an opaque command cannot be assigned to later
+provider evidence to hide a source-discovery gap. Unknown diagnostics receive an
+investigation candidate but prevent complete classification until policy supports
+them. Owners are source intake assignments, not authenticated operation approvals.
+
+The recorded 169-finding baseline routes 164 findings to Phase 2 and five to
+Phase 3; none is a live-provider failure. Unsupported resource types first need
+source grammar because they may conceal executable operations. Later provider
+proof is an additional obligation. `classification_verdict: complete` means
+every finding has an appropriate open assignment. `coverage_verdict: blocked`
+continues to hold whenever findings exist; even `clear-source-findings` is not
+coverage, execution or deployment authority. Triage never edits the inventory,
+adoption ledger or coverage result.
+
+### Caller contract
+
+`caller-inventory/v1` records a selected workflow, content-bound source files,
+typed subjects, invocation edges and fixed unresolved findings. Collection is
+independent of `source-caller-review/v1`, which must bind every subject exactly
+once to an operation ID, owner, profile and reviewed status, and acknowledge
+every edge. Missing subjects/edges, collapsed operation IDs, stale graphs and
+pending/unclassified entries cannot produce `accounting_verdict: accounted`.
+Changes to profile/owner/target or the review/schema/policy change accounting
+identity. The graph's collector revision also binds its shared source parser.
+
+All `source-caller-result/v1` responses retain `qualification_verdict: blocked`
+and `authorized: false`. Source profile assignments express reviewed intent;
+they do not establish runtime behavior, caller absence elsewhere or permission
+to mutate. Original opaque-terminal findings are retained with owned pending
+gate-2 obligations. The existing seventeen-stage compiler remains the authority
+for later release requirements; these accounting rows cannot replace its matrix.
+
+The collector understands a deliberately narrow grammar of complete literal
+blocks, root-manifest npm script fanout (including pre/post hooks), direct local
+script calls and an exact repository-root Python dispatch wrapper. It hashes
+arguments without emitting them. Production references to `tests/` files are
+followed and content-bound. Conditional/dynamic shell, external actions, custom
+working directories/shells/npm configuration and unsupported argument forwarding
+remain unresolved. Tool and complex script bodies retain their own blocking
+findings. The supplied stable source root is the assumed checkout root; runtime
+binary resolution and ambient environment are not proved by source parsing.
+See the collector README for the precise boundary and no-follow file handling.
+
+The selected staging workflow publishes an image; it does not perform an ECS
+rollout. Its literal checks reach fourteen package-command declarations. The
+source map and reviewed profiles remain separate from proving those operations
+behave correctly. Whole-workflow dynamic publication steps and external actions
+stay explicit boundaries rather than being guessed from command names.
+
+### Exit meanings and queue
+
+| Command result | Exit | Meaning |
+| --- | ---: | --- |
+| Triage template with findings | 1 | Open work generated; coverage remains blocked. |
+| Validated triage, classification complete | 0 | Complete assignment only; read the separate coverage verdict. |
+| Caller graph containing unresolved findings | 1 | Graph collected, opaque behavior retained. |
+| Caller review template | 1 | Pending and unclassified; review required. |
+| Caller accounting complete | 0 | Exact subject/edge accounting; qualification still blocked. |
+| Invalid, stale or incomplete document | 1 | Fixed diagnostics; no authority or partial approval. |
+
+Phase 2 closes source/caller accounting gaps. Exact-artifact proof can be
+implemented when its own source inputs are accounted for, without waiting for
+its future receipts to satisfy discovery. Every unresolved proof continues to
+block the relevant release gate. Next units extend actual script/action/import
+coverage and adoption for the remaining operation families, then qualify the
+exact artifacts. Source triage must not turn into an unlimited static analyzer.
+
+## Consuming a source result
+
+Exit zero reports success of the requested analysis. It is never a release
+eligibility or operation-authorization decision. The optional consumption mode
+makes that distinction executable for callers saving and later reading results.
+
+```bash
+# Save compiler output using the wrapper, avoiding npm's command banner.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --release scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml \
+  --contract scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml \
+  > /tmp/release-source-result.json
+
+# Recompute the same analysis from current inputs and compare normalized output.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --consume-result /tmp/release-source-result.json --purpose source-analysis -- \
+  --release scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml \
+  --contract scripts/04.deploy/operational-realization-gate/fixtures/valid-contract.yml
+```
+
+After `--`, provide an existing `--release`, `--coverage`, validated `--triage`,
+reviewed `--callers` or complete `--operations` contract invocation.
+Templates, discovery-only output and legacy
+runtime facts are not accepted as source-analysis receipts. The command never
+executes inspected commands and does not accept an expected-result file.
+
+The closed `source-result-consumption/v1` contract emits `accepted` (exit 0)
+only for successful recognized analysis with a full canonical match to the
+fresh producer result. Stale bindings, changed normalized output, forged
+success, unsupported scopes, unsafe fields and failed recomputation reject
+(exit 1). Existing producer interfaces and exit meanings remain unchanged.
+The comparison covers the producer's normalized result; a summary such as
+triage does not encode every review field or prove that source files stayed
+unchanged after collection. This is a local analysis check, not signed or
+durable evidence admission.
+
+Both `--purpose release-eligibility` and `--purpose operation-authorization`
+always reject source results, including complete triage, accounted callers,
+covered source and a compiled seventeen-stage matrix. Every decision retains
+`authorized: false`, `release_eligibility: blocked` and
+`operation_authorization: blocked`. No source verdict can be promoted into a
+passed runtime gate. If the decision schema cannot be loaded or validated,
+the command returns a safe rejection without claiming a schema digest.
+
+The in-process helper accepts `expected_result` only from a trusted producer
+rerun. Supplying two matching saved documents to that internal API is not a
+trust boundary. Future orchestrators must use this guard for source analysis
+and the later Phase 6 evidence-admission/authorization protocol for advancement.
+
+## Repeatable source validation
+
+```bash
+# Fresh environment, verified dependency artifacts, full existing check:
+bash scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh \
+  --python /path/to/python3
+
+# Offline after obtaining the exact locked wheels from a trusted source:
+bash scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh \
+  --python /path/to/python3 --wheelhouse /path/to/locked-wheels
+```
+
+The supported clean-check runtime is CPython 3.14.4 with the standard GIL build
+on Linux x86_64 with glibc 2.17 or newer. The complete dependency closure,
+including the pip bootstrap, is pinned by wheel hash in `requirements.lock`;
+`requirements.txt` requires that lock, hashes and binary wheels. The wrapper
+checks this contract, creates a fresh
+temporary virtual environment, verifies installation, and runs
+`npm run deployment:realization:check`. It cannot substitute a weaker test
+command. A mismatched runtime, missing dependency or changed wheel fails the
+check. Git, Bash, Node and npm are host prerequisites; the Python lock is not a
+claim of a hermetic operating system or byte-identical hosted runner.
+
+The direct wrapper is the authoritative entrypoint. The npm
+`deployment:realization:clean-check` alias is a convenience subject to the
+outer npm process's configuration. Inside the wrapper, validation rejects a
+project `.npmrc`, isolates npm configuration and shell startup settings, and
+forces the test shell and failure propagation. CI invokes the wrapper directly
+so a project npm setting cannot bypass validation before the wrapper starts.
+
+The ordinary check covers all source compiler/collector tests, consumer and
+environment tests, workflow safety checks, legacy smoke cases and provider/
+network boundary scans. Its metadata paths include the autonomous delivery
+envelope, sustained implementation workflow, IaaS plan, source-adoption
+documentation and validation workflow, alongside the existing gate docs.
+
+The separate
+[`release-control-source-validation.yml`](../../../.github/workflows/release-control-source-validation.yml)
+workflow runs this same clean check on pull requests, pushes and manual
+dispatches. It uses pinned action revisions and runtime versions with
+read-only repository permissions. It installs validation dependencies only;
+it does not invoke the staging publication workflow or obtain AWS credentials.
+Adding this file locally does not publish it, run GitHub CI or enable a required
+repository check. Those external activation steps remain separately governed.
+
+The reliability slice closes local repeatability, check-coverage and safe
+consumption gaps. It does not resolve the source estate's opaque execution,
+artifact provenance or live-provider obligations. The next delivery unit is
+selected script/action caller semantics, profile/argument contracts and build/
+import closure, then broader adoption and exact-artifact proof.
+
+## Selected operation source contracts
+
+`--operations` extends the existing selected-workflow caller inventory. It
+independently selects script entrypoints, external action instances and tool
+invocations, then binds their observed arguments and dependency declarations.
+For staging image publication this boundary contains nine scripts, nine action
+instances and seven TypeScript build-tool invocations. The analysis never runs
+an inspected command, imports repository code or retrieves an action.
+
+```bash
+# Discover current selected subjects, inputs and unresolved boundaries.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --operations --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml
+
+# Requires an already current, complete caller review; emits pending bindings.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --operations --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml \
+  --caller-review caller-review.json --operation-template
+
+# Recollect callers and dependency observations, then check reviewed contracts.
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --operations --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml \
+  --caller-review caller-review.json --operation-contracts operation-contracts.json
+```
+
+The closed `source-operation-inventory/v1` shape binds the fresh caller graph,
+source bytes, collector revision, selected subjects, all observed incoming
+invocations, observations and dependency edges. Build-config membership and
+supported local references are independently collected; a contract cannot
+provide a substitute inventory. Full source values, action inputs, arguments
+and locators are represented by digests. Only safe relative paths, identities,
+fixed kinds and diagnostic codes leave collection.
+
+The closed `source-operation-contracts/v1` shape covers every selected subject
+once. Owner, operation ID and profile must match its existing caller review.
+Every invocation variant, observation and dependency must be acknowledged.
+Generated declarations are pending; reviewed declarations require an
+`observed-variants-only` argument policy, blocked unknown variants, completion/
+failure/recovery rules and source, artifact, supply-chain, authority and recovery
+proof requirements. Extra fields cannot assert successful effects or authority.
+
+All nine actual script calls currently have empty trailing arguments. This is
+a source-contract boundary, not a claim that the programs reject extra flags.
+Eight do not inspect argv; the container-boundary script has explicit options.
+A changed caller argument invalidates the old review even if a script might
+ignore it at runtime.
+
+Action observations preserve each instance separately, including both
+attestations. Reference, explicit input set/values, condition, upstream output
+references and inherited execution context are content-bound. Empty inputs
+do not establish safe defaults. Mutable references stay unresolved, and even a
+full commit pin retains implementation/default obligations. A conditional
+publishing step does not reduce inherited workflow permissions.
+
+Dependency extraction has a declared bounded grammar described in the
+[collector README](../release-control/discovery/README.md). Literal references
+are observed relationships, not proof that a branch executes or that all dynamic
+inputs were found. Generated package shims, dynamically enumerated built tests,
+computed paths/imports, arbitrary language semantics and external implementations
+remain explicit source/artifact obligations. Neither contracts nor intake
+assignments can waive those findings or approve an adoption exclusion.
+
+`source-operation-result/v1` returns `contracts_verdict: complete` and exit 0
+only for exact current source-contract accounting. It always keeps
+`source_closure: blocked`, `qualification_verdict: blocked` and
+`authorized: false`. Obligations point to source coverage, exact-artifact,
+supply-chain, authority and recovery proof; they supplement the complete
+seventeen-stage release matrix and never replace it. Templates and inventories
+with findings return 1; stale, unsafe or incomplete contracts return 1.
+
+Saved complete results can be consumed with the existing
+`--consume-result result.json --purpose source-analysis --` followed by the
+complete operation-contract invocation above. The guard recomputes all source
+inputs and compares normalized results. Release-eligibility and
+operation-authorization purposes still reject unconditionally. Earlier release,
+coverage, triage and caller interfaces remain compatible.
+
+Focused operation collector, action, compiler and public-command mutation suites
+run in the ordinary realization check and clean environment. The next delivery
+unit is deeper supported semantic/build-import coverage for remaining dynamic
+boundaries, followed by exact-artifact qualification for this selected family
+as its inputs become known. Whole-estate adoption and provider/live proof remain
+open.
+
+## Workspace build inputs and local artifact accounting
+
+The existing public command exposes a read-only build mode:
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --builds --source-root . \
+  --workflow .github/workflows/deploy-platform-shell-staging.yml
+```
+
+It discovers build subjects from fresh caller analysis, resolves the supported
+workspace/configuration/import grammar and emits `source-build-inventory/v1`.
+Builds distinguish no-emission checks, declaration output and JavaScript output.
+The source-derived expected paths are bounded predictions, not compiler output
+receipts. Unsupported resolution and final-artifact obligations remain findings;
+an inventory with findings exits 1. Neither a source inventory nor an empty
+build selection is a passing release.
+
+To compare a separately produced local output directory, select a build ID from
+that inventory and add `--build-id <sha256-id> --artifact-root <directory>`.
+The output uses `source-build-artifact/v1`. Complete local file accounting exits
+0; missing/unexpected files, unsafe paths and unsupported mappings exit 1.
+Generated package forwarding targets and runtime-test selection are checked
+within the documented collector grammar. No script, compiler, test runner,
+artifact executable or provider operation is executed by this mode.
+
+Optional `--expect-inventory-digest <sha256-digest>` and
+`--expect-artifact-digest <sha256-digest>` compare current observations with
+previously recorded identities. The latter requires artifact mode. Every
+invocation recollects source inputs; there is no saved-inventory input option.
+Changed artifact bytes change the artifact identity even when paths are equal.
+A digest comparison establishes identity, not trusted build provenance.
+
+All local artifact results retain `authorized: false`,
+`qualification_verdict: blocked` and `provenance: unproven`.
+A matching directory can contain arbitrary behavior; structural accounting is
+not runtime verification. This producer is deliberately not admitted by
+`--consume-result`, including for source-analysis; existing supported producer
+behavior is unchanged. Release eligibility and operation authorization remain
+blocked. Unknown flags, mixed modes, malformed digests and duplicate options
+fail with safe fixed diagnostics.
+
+Versioned closed schemas, inert fixtures and focused positive/negative tests
+cover this interface. The ordinary and isolated clean checks include both new
+collectors and the public build command. The current repository has no installed
+TypeScript toolchain or emitted build tree; actual artifact execution and build
+provenance remain the next qualification work. See the
+[collector grammar](../release-control/discovery/README.md) for supported
+resolution and generator limits.
