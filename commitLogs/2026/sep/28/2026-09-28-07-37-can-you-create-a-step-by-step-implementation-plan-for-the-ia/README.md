@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-29T20:01:20Z
-latest_commit_sha: 441f334bd364521fbece48ce4d7d8853f70da0dd
-chat_duration: 134637s (01:13:23:57)
+latest_commit_at_utc: 2026-09-29T20:53:51Z
+latest_commit_sha: 17398c069f812e0728593b18b7f989e449a5c3f0
+chat_duration: 137788s (01:14:16:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -618,6 +618,17 @@ Summary: Ninth IaaS source unit completed: final clean run passed 1,165 tests in
 
 Durable evidence: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/ holds exact final safe receipts, log hash, counts and limits. Next Phase 3 independent effect/dependency verification and artifact admission; PostgreSQL Stage 6 remains a later readiness milestone.
 
+
+### 2026-09-29T20:53:51Z - Commit recorded
+
+Commit: `17398c069f812e0728593b18b7f989e449a5c3f0`
+
+Message: feat(deploy): verify reusable finite-job execution
+
+Summary: Completed ninth IaaS source unit in 23 files: closed finite-job contracts, existing runner and smoke-wrapper extension, inert packaged fixtures, safe evidence and docs. Final clean validation passed 1,165 tests in 29 suites; eleven real cases and product-server compatibility passed with verified cleanup. Independent review confirmed the alternate-source-root binding repair and all authority refusals. Product effects and thirteen task/sidecar obligations remain unqualified; next Phase 3 independent effect/dependency verification and artifact admission.
+
+ADR impact: Continuation of ADR 0038; no new provider architecture or authority model.
+
 ## Sub-Agent Activity
 
 
@@ -1016,6 +1027,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Completed eighth source-only unit: 33 files; existing image wrappers and final recipe now bind fresh locked payload to a constructed and tested exact image. Canonical clean verification passed 933 tests in 26 suites; 3902 payload files, two health checks, graceful shutdown and owned cleanup passed. Independent review passed. Thirteen task/sidecar profiles and all release authority remain pending or blocked. Next qualify packaged finite commands against disposable dependencies; hosted and AWS qualification remain later.
   ADR impact: Continuation of ADR 0038; no new architecture decision.
 
+
+- Commit: `17398c069f812e0728593b18b7f989e449a5c3f0`
+  Time UTC: 2026-09-29T20:53:51Z
+  Message: feat(deploy): verify reusable finite-job execution
+  Summary: Completed ninth IaaS source unit in 23 files: closed finite-job contracts, existing runner and smoke-wrapper extension, inert packaged fixtures, safe evidence and docs. Final clean validation passed 1,165 tests in 29 suites; eleven real cases and product-server compatibility passed with verified cleanup. Independent review confirmed the alternate-source-root binding repair and all authority refusals. Product effects and thirteen task/sidecar obligations remain unqualified; next Phase 3 independent effect/dependency verification and artifact admission.
+  ADR impact: Continuation of ADR 0038; no new provider architecture or authority model.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1029,9 +1047,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-29T20:01:20Z
-Latest commit SHA: 441f334bd364521fbece48ce4d7d8853f70da0dd
-Chat duration: 134637s (01:13:23:57)
+Latest commit at UTC: 2026-09-29T20:53:51Z
+Latest commit SHA: 17398c069f812e0728593b18b7f989e449a5c3f0
+Chat duration: 137788s (01:14:16:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
