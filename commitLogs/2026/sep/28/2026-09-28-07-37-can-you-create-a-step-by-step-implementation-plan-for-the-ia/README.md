@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-28T16:12:57Z
-latest_commit_sha: b995221b8c8b8daa14361c644b226b07d3816540
-chat_duration: 34534s (00:09:35:34)
+latest_commit_at_utc: 2026-09-29T16:01:22Z
+latest_commit_sha: 094d6418
+chat_duration: 120239s (01:09:23:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -487,6 +487,17 @@ Raised: Independent review confirms six source slices but identifies unproven ex
 
 Resolution: Preserve source-only authority limits. Checkpoint the locally verified foundation; next pin and execute Node, npm and TypeScript with the complete package closure in isolated disposable copies. Publication and hosted acceptance remain pending approval.
 
+
+### 2026-09-29T16:01:22Z - Commit recorded
+
+Commit: `094d6418`
+
+Message: feat(deploy): establish source-only release-control foundation
+
+Summary: Checkpoint six source-only delivery units, reviewed schemas, 508-test clean verifier, prepared read-only CI and historical adoption snapshots. Release and operation authority remain blocked; hosted execution and genuine locked build proof are next. A final staged whitespace check identified seven extra EOF blank lines; record and correct in a follow-up without rewriting this checkpoint.
+
+ADR impact: ADR 0038 records the single-capability source foundation and explicit remaining qualification boundaries.
+
 ## Sub-Agent Activity
 
 
@@ -864,6 +875,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Defined the IaaS composition and release-control-plane programme, including the 17-stage acceptance matrix, cross-cutting contracts, ownership layout, and source-first migration sequence.
   ADR impact: No ADR created; the plan schedules required ADRs during implementation.
 
+
+- Commit: `094d6418`
+  Time UTC: 2026-09-29T16:01:22Z
+  Message: feat(deploy): establish source-only release-control foundation
+  Summary: Checkpoint six source-only delivery units, reviewed schemas, 508-test clean verifier, prepared read-only CI and historical adoption snapshots. Release and operation authority remain blocked; hosted execution and genuine locked build proof are next. A final staged whitespace check identified seven extra EOF blank lines; record and correct in a follow-up without rewriting this checkpoint.
+  ADR impact: ADR 0038 records the single-capability source foundation and explicit remaining qualification boundaries.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -877,9 +895,9 @@ Reason: The approved implementation establishes a durable single-capability sour
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-28T16:12:57Z
-Latest commit SHA: b995221b8c8b8daa14361c644b226b07d3816540
-Chat duration: 34534s (00:09:35:34)
+Latest commit at UTC: 2026-09-29T16:01:22Z
+Latest commit SHA: 094d6418
+Chat duration: 120239s (01:09:23:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
