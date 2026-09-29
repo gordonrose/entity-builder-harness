@@ -405,7 +405,8 @@ def discover_callers(root: Path, workflow_path: str) -> dict:
             used_sources = {node["source_id"] for node in collector.nodes.values()}
             collector.sources = {key: value for key, value in collector.sources.items() if key in used_sources}
     dependency = Path(__file__).with_name("source_inventory.py")
-    revision = digest(canonical([digest(Path(__file__).read_bytes()), digest(dependency.read_bytes())]))
+    revision = digest(canonical([digest(Path(__file__).read_bytes()), digest(dependency.read_bytes()),
+                                 digest(Path(__file__).with_name("cloudformation_inventory.py").read_bytes())]))
     result = {
         "schema": "caller-inventory/v1", "collector_revision": revision,
         "entrypoint": {"path": entry_path, "node_id": entry_id},

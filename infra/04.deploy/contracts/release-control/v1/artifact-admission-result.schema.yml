@@ -1,0 +1,286 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.artifact-admission-result
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Define bounded artifact supply-chain evidence and preserve independent release authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.artifact-admission
+#     path: scripts/04.deploy/operational-realization-gate/artifact_admission.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:artifact-admission-result:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "verdict",
+    "policy_digest",
+    "subject_digest",
+    "verifier_digest",
+    "trusted_root_digest",
+    "verified_evidence",
+    "evidence_digests",
+    "observed_at",
+    "findings",
+    "result_digest",
+    "runner_digest",
+    "schema_digests",
+    "image_config_digest",
+    "lock_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "artifact-admission-result/v1"
+    },
+    "scope": {
+      "const": "artifact-supply-chain"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "verdict": {
+      "enum": [
+        "verified",
+        "blocked"
+      ]
+    },
+    "policy_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subject_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verifier_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "trusted_root_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verified_evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "provenance",
+          "sbom",
+          "scan"
+        ]
+      }
+    },
+    "evidence_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance",
+        "sbom",
+        "scan"
+      ],
+      "properties": {
+        "provenance": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sbom": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scan": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "observed_at": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "enum": [
+              "policy-invalid",
+              "policy-incomplete",
+              "policy-expired",
+              "artifact-unreadable",
+              "artifact-digest-mismatch",
+              "artifact-manifest-invalid",
+              "bundle-invalid",
+              "verifier-unavailable",
+              "verifier-integrity",
+              "verifier-failed",
+              "verifier-timeout",
+              "verifier-output-limit",
+              "verifier-output-invalid",
+              "identity-mismatch",
+              "subject-mismatch",
+              "predicate-mismatch",
+              "provenance-mismatch",
+              "sbom-invalid",
+              "scan-invalid",
+              "scan-stale",
+              "scan-future",
+              "scan-vulnerable",
+              "scan-version-mismatch",
+              "scan-binding-mismatch",
+              "trust-root-expired",
+              "input-invalid",
+              "tool-acquisition-failed",
+              "schema-invalid",
+              "dependency-unavailable",
+              "input-changed"
+            ]
+          }
+        }
+      }
+    },
+    "result_digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "schema_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact-admission-policy",
+        "artifact-admission-result",
+        "artifact-verifier-lock",
+        "artifact-scan-predicate"
+      ],
+      "properties": {
+        "artifact-admission-policy": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-admission-result": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-verifier-lock": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-scan-predicate": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "image_config_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lock_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

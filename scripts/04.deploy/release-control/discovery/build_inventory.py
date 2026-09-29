@@ -615,7 +615,7 @@ def discover_builds(root: Path, workflow_path: str, graph=None) -> dict:
     except RecursionError:
         raise SourceFailure("build-limit-exceeded") from None
     revision = digest(canonical([digest(Path(__file__).with_name(name).read_bytes()) for name in
-        ("build_inventory.py", "operation_inventory.py", "caller_inventory.py", "source_inventory.py")]))
+        ("build_inventory.py", "operation_inventory.py", "caller_inventory.py", "source_inventory.py", "cloudformation_inventory.py")]))
     result = {
         "schema": "source-build-inventory/v1", "graph_digest": fresh["graph_digest"], "collector_revision": revision,
         "sources": sorted(collector.sources.values(), key=lambda row: row["id"]),

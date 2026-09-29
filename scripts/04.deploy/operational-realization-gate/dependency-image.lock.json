@@ -1,0 +1,8 @@
+{
+  "schema": "dependency-image-lock/v1",
+  "image": "docker.io/library/postgres@sha256:91eb910c44c7ed13f7f1a4ccadaa9ca72ef14cddc04cacb6e070e48eb44731a3",
+  "config_digest": "sha256:248efd5e58cd743f2a0e0daec8ea4649e5580145ec2a12e2345bc710d4a77201",
+  "engine_version": "17.11",
+  "platform": "linux/amd64",
+  "source": "https://github.com/docker-library/postgres/tree/2603e26e245e558218728ee14e0a42dcb020dc7f/17/bookworm"
+}

@@ -1,0 +1,174 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.artifact-verifier-conformance
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Record authentic public signature-fixture conformance without production admission or authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.artifact-verifier-conformance
+#     path: scripts/04.deploy/operational-realization-gate/artifact_verifier_conformance.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:artifact-verifier-conformance:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "production_admission",
+    "verdict",
+    "artifact_digest",
+    "bundle_digest",
+    "verified_statement_digest",
+    "verifier_digest",
+    "trusted_root_digest",
+    "observed_at",
+    "cases",
+    "result_digest",
+    "runner_digest",
+    "schema_digests",
+    "lock_digest",
+    "conformance_schema_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "artifact-verifier-conformance/v1"
+    },
+    "scope": {
+      "const": "public-upstream-signature-fixture"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "production_admission": {
+      "const": "unproven"
+    },
+    "verdict": {
+      "const": "passed"
+    },
+    "artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "bundle_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "verified_statement_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "verifier_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "trusted_root_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observed_at": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "outcome"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "authentic-offline-signature",
+              "wrong-repository",
+              "wrong-ref",
+              "wrong-workflow",
+              "wrong-commit",
+              "wrong-subject-name",
+              "wrong-predicate",
+              "modified-artifact",
+              "modified-signature",
+              "modified-payload",
+              "modified-certificate",
+              "modified-timestamp"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "verified",
+              "rejected"
+            ]
+          }
+        }
+      }
+    },
+    "result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "schema_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact-admission-policy",
+        "artifact-admission-result",
+        "artifact-verifier-lock",
+        "artifact-scan-predicate"
+      ],
+      "properties": {
+        "artifact-admission-policy": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-admission-result": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-verifier-lock": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "artifact-scan-predicate": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "lock_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "conformance_schema_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

@@ -274,6 +274,34 @@ def compile_coverage(inventory, composition, ledger, as_of=None, release_documen
                 if not any(access["resource_id"] == dependency_resource and access["effect"] == "consume"
                            for access in operation["resource_access"]):
                     issue("operation-dependency-coverage-incomplete", observation_id)
+    # The reviewed composition must acknowledge every independently resolved
+    # template edge. Acknowledgement never substitutes for provider policy or
+    # actual parameter/secret value qualification.
+    expected_references = {oid for oid, value in observations.items()
+                           if value["kind"] == "infrastructure-reference"}
+    declared_references = set(composition.get("infrastructure_references", []))
+    for oid in expected_references - declared_references:
+        issue("infrastructure-reference-undeclared", oid)
+    for oid in declared_references - expected_references:
+        issue("infrastructure-reference-unknown", oid)
+    for oid in expected_references:
+        value = observations[oid]
+        target = observations.get(value["target_id"])
+        consumer = observations.get(value["subject_id"])
+        allowed = {"resource", "infrastructure-symbol"}
+        if target is None or consumer is None or target["kind"] not in allowed or consumer["kind"] not in allowed:
+            issue("infrastructure-reference-target-invalid", oid)
+            continue
+        target_kind = "resource" if target["kind"] == "resource" else target.get("symbol_kind")
+        permitted = {"ref": {"resource", "parameter", "pseudo-parameter"},
+                     "sub": {"resource", "parameter", "pseudo-parameter"},
+                     "get-att": {"resource"}, "depends-on": {"resource"},
+                     "condition": {"condition"}, "mapping": {"mapping"}}
+        if target_kind not in permitted[value["reference_kind"]]:
+            issue("infrastructure-reference-target-kind-invalid", oid)
+        for endpoint in (target, consumer):
+            if endpoint["kind"] == "resource" and endpoint["id"] not in resource_observations:
+                issue("infrastructure-reference-resource-undeclared", oid)
     # A container's source-owned resource must be within its declared access graph.
     for observation_id, operation_id in operation_observations.items():
         observed = observations.get(observation_id)

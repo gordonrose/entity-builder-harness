@@ -414,7 +414,7 @@ def discover_operations(root: Path, workflow_path: str, graph=None) -> dict:
         if row["subject_id"] in collector.subjects:
             collector.issue(row["subject_id"], row["code"])
     revision = digest(canonical([digest(Path(__file__).with_name(name).read_bytes()) for name in
-                               ("operation_inventory.py", "action_observations.py", "caller_inventory.py", "source_inventory.py")]))
+                               ("operation_inventory.py", "action_observations.py", "caller_inventory.py", "source_inventory.py", "cloudformation_inventory.py")]))
     result = {"schema": "source-operation-inventory/v1", "graph_digest": graph["graph_digest"], "collector_revision": revision,
               "sources": sorted(collector.sources.values(), key=lambda row: row["id"]),
               "subjects": sorted(collector.subjects.values(), key=lambda row: row["id"]),

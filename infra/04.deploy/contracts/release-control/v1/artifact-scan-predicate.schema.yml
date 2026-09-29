@@ -1,0 +1,147 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.artifact-scan-predicate
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Define bounded artifact supply-chain evidence and preserve independent release authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.artifact-admission
+#     path: scripts/04.deploy/operational-realization-gate/artifact_admission.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:artifact-scan-predicate:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "subject_digest",
+    "source_commit",
+    "bases",
+    "scanner",
+    "scan_status",
+    "scanned_at",
+    "vulnerability_database_updated_at",
+    "counts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "artifact-scan-predicate/v1"
+    },
+    "subject_digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "source_commit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "bases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build_digest",
+        "runtime_digest"
+      ],
+      "properties": {
+        "build_digest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "runtime_digest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "const": "aws-ecr-basic"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*$"
+        }
+      }
+    },
+    "scan_status": {
+      "const": "COMPLETE"
+    },
+    "scanned_at": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "vulnerability_database_updated_at": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "informational",
+        "undefined"
+      ],
+      "properties": {
+        "critical": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "informational": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "undefined": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    }
+  }
+}

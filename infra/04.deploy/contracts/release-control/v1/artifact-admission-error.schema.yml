@@ -1,0 +1,73 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.artifact-admission-error
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Define a fixed safe rejection when admission source or schema loading is unavailable.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.artifact-admission-cli
+#     path: scripts/04.deploy/operational-realization-gate/artifact_admission_cli.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:artifact-admission-error:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "verdict",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "artifact-admission-error/v1"
+    },
+    "scope": {
+      "const": "artifact-supply-chain"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "verdict": {
+      "const": "blocked"
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "enum": [
+              "schema-invalid",
+              "dependency-unavailable"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

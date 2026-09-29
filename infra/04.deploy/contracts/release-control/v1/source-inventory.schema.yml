@@ -105,7 +105,9 @@
               "secret-binding",
               "identity-binding",
               "resource",
-              "external-dependency"
+              "external-dependency",
+              "infrastructure-symbol",
+              "infrastructure-reference"
             ]
           },
           "locator_digest": {
@@ -128,6 +130,29 @@
             },
             "minItems": 0,
             "uniqueItems": true
+          },
+          "target_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "reference_kind": {
+            "enum": [
+              "ref",
+              "get-att",
+              "sub",
+              "condition",
+              "depends-on",
+              "mapping"
+            ]
+          },
+          "symbol_kind": {
+            "enum": [
+              "parameter",
+              "condition",
+              "mapping",
+              "output",
+              "pseudo-parameter"
+            ]
           }
         },
         "required": [
@@ -138,6 +163,60 @@
           "subject_id",
           "detail_digest",
           "issues"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "infrastructure-reference"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "target_id",
+                "reference_kind"
+              ]
+            },
+            "else": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "target_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "reference_kind"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "infrastructure-symbol"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "symbol_kind"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "symbol_kind"
+                ]
+              }
+            }
+          }
         ]
       },
       "minItems": 0,

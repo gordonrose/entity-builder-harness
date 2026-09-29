@@ -553,6 +553,17 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] in {"--artifact-admission", "--artifact-verifier-acquire", "--artifact-verifier-conformance"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import artifact_admission_cli
+        except ImportError:
+            print(json.dumps({"schema": "artifact-admission-error/v1", "scope": "artifact-supply-chain",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked", "verdict": "blocked",
+                              "findings": [{"code": "dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return artifact_admission_cli.main(sys.argv[1:])
     if any(argument.split("=", 1)[0] in {"--consume-result", "--purpose"} for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:

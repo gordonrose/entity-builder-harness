@@ -1,0 +1,28 @@
+{
+  "upstream_repository": "https://github.com/cli/cli",
+  "upstream_commit": "0cf1092493af067646fc5f3db9421c6a6ec9c938",
+  "upstream_license": "MIT; see LICENSE.cli",
+  "fixture_directory": "pkg/cmd/attestation/test/data",
+  "fixture_artifact": "github_provenance_demo-0.0.12-py3-none-any.whl",
+  "fixture_bundle": "github_provenance_demo-0.0.12-py3-none-any-bundle.jsonl",
+  "trust_root_acquisition": "gh 2.101.0 attestation trusted-root; built-in TUF bootstrap; empty credential environment",
+  "trust_root_observed_at": 1790717363,
+  "files": {
+    "LICENSE.cli": {
+      "sha256": "6da4adc42392c8485e40b4251c7e332fc3352df1947c9ffade71dd60b14a7a4f",
+      "bytes": 1068
+    },
+    "upstream-provenance.bundle.jsonl": {
+      "sha256": "4f8c096e38a0eee242574ab100d16701928605409225e59784a3636f742bb27e",
+      "bytes": 4885
+    },
+    "trusted-root.jsonl": {
+      "sha256": "65ca537f6ed8a47fd0e560c421baa1f6c1efb8b25fc200d8c5c02c0e92eb2b9c",
+      "bytes": 34634
+    },
+    "upstream-artifact.whl": {
+      "sha256": "ae57936def59bc4c75edd3a837d89bcefc6d3a5e31d55a6fa7a71624f92c3c3b",
+      "bytes": 1437
+    }
+  }
+}

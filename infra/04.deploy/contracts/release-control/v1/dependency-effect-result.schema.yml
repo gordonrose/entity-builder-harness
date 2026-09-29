@@ -1,0 +1,375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:dependency-effect-result:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "source_closure",
+    "profile",
+    "profile_digest",
+    "run_id",
+    "certificate_digest",
+    "engine",
+    "cases",
+    "assertions",
+    "cleanup_verified",
+    "pending_tasks",
+    "result_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dependency-effect-result/v1"
+    },
+    "scope": {
+      "const": "local-packaged-postgresql-effects"
+    },
+    "verdict": {
+      "const": "passed"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "source_closure": {
+      "const": "blocked"
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "scope",
+        "repository_head",
+        "source_digest",
+        "build_result_digest",
+        "runner_digest",
+        "lock_digest",
+        "expectations_digest",
+        "artifact",
+        "dependency",
+        "commands",
+        "schema_digests"
+      ],
+      "properties": {
+        "schema": {
+          "const": "dependency-effect-profile/v1"
+        },
+        "scope": {
+          "const": "local-packaged-postgresql-effects"
+        },
+        "repository_head": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "build_result_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "runner_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "lock_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "expectations_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "image_id",
+            "payload_digest"
+          ],
+          "properties": {
+            "image_id": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "maxLength": 71
+            },
+            "payload_digest": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "maxLength": 71
+            }
+          }
+        },
+        "dependency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "image",
+            "image_id",
+            "engine_version",
+            "network",
+            "published_ports",
+            "tls"
+          ],
+          "properties": {
+            "image": {
+              "type": "string",
+              "pattern": "^docker\\.io/library/postgres@sha256:[a-f0-9]{64}$"
+            },
+            "image_id": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "maxLength": 71
+            },
+            "engine_version": {
+              "const": "17.11"
+            },
+            "network": {
+              "const": "owned-internal"
+            },
+            "published_ports": {
+              "const": []
+            },
+            "tls": {
+              "const": "verify-full-local-ca"
+            }
+          }
+        },
+        "commands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bootstrap",
+            "migration"
+          ],
+          "properties": {
+            "bootstrap": {
+              "const": [
+                ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js"
+              ]
+            },
+            "migration": {
+              "const": [
+                ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.js"
+              ]
+            }
+          }
+        },
+        "schema_digests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dependency-effect-profile/v1",
+            "dependency-effect-result/v1"
+          ],
+          "properties": {
+            "dependency-effect-profile/v1": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "maxLength": 71
+            },
+            "dependency-effect-result/v1": {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "maxLength": 71
+            }
+          }
+        }
+      }
+    },
+    "profile_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "maxLength": 32
+    },
+    "certificate_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "client",
+        "server"
+      ],
+      "properties": {
+        "client": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "server": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "task",
+          "outcome",
+          "exit_code",
+          "attempt_id",
+          "terminal_digest",
+          "before_digest",
+          "after_digest",
+          "assertions",
+          "elapsed_ms"
+        ],
+        "properties": {
+          "case": {
+            "type": "string",
+            "enum": [
+              "bootstrap-binding-invalid",
+              "bootstrap-untrusted-ca",
+              "bootstrap-bad-password",
+              "bootstrap",
+              "bootstrap-repeat",
+              "migration-denied",
+              "migration",
+              "migration-repeat",
+              "migration-checksum-mismatch"
+            ]
+          },
+          "task": {
+            "enum": [
+              "bootstrap",
+              "migration"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "succeeded",
+              "failed"
+            ]
+          },
+          "exit_code": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "attempt_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "terminal_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "before_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "after_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "verdict"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z-]{1,63}$"
+                },
+                "verdict": {
+                  "const": "passed"
+                }
+              }
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 180000
+          }
+        }
+      },
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "verdict"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z-]{1,63}$"
+          },
+          "verdict": {
+            "const": "passed"
+          }
+        }
+      },
+      "minItems": 10,
+      "maxItems": 10
+    },
+    "cleanup_verified": {
+      "const": true
+    },
+    "pending_tasks": {
+      "const": [
+        "relay",
+        "worker",
+        "restore-verify"
+      ]
+    },
+    "result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    }
+  }
+}

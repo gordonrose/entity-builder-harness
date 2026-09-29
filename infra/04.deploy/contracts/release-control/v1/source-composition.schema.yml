@@ -260,6 +260,14 @@
       },
       "minItems": 0,
       "uniqueItems": true
+    },
+    "infrastructure_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "uniqueItems": true
     }
   },
   "required": [

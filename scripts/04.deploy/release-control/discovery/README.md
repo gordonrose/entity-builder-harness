@@ -18,8 +18,8 @@ used_by:
 Use the existing [Operational Realization Gate](../../operational-realization-gate/README.md#independent-source-discovery-and-coverage)
 `--discover` or `--coverage` command. This collector supplies source observations
 to the generic compiler; it does not provide another deployment command or
-execute source. Its policy is `source-surface/v1`, with the collector file's
-SHA-256 as its revision.
+execute source. Its policy is `source-surface/v1`, with a revision binding both the source collector and its CloudFormation
+reference helper.
 
 ## Enumerated boundary
 
@@ -41,9 +41,10 @@ inference are outside v1; a scope-complete estate audit requires the next unit.
 | Dockerfiles | Final command/configuration declarations; inherited entrypoints, opaque build commands and unsupported command forms block. Final image contents/provenance require later artifact inspection. |
 | Infrastructure JSON/YAML | Literal task-definition structure, containers, commands, configuration, secrets, identity bindings and external imports. Other resource grammars/macros remain unresolved. |
 
-The supported infrastructure grammar is deliberately narrow:
-`Resources` contains `AWS::ECS::TaskDefinition` entries with a properties mapping
-and nonempty `ContainerDefinitions`. Each container has a unique string name,
+The supported infrastructure grammar recognises the explicitly listed
+declarative resource families in `cloudformation_inventory.py` and preserves
+separate executable rules for `AWS::ECS::TaskDefinition`. Each task definition
+requires a properties mapping and nonempty `ContainerDefinitions`. Each container has a unique string name,
 a literal nonempty image string and a literal nonempty string-array command
 or entrypoint. Optional healthcheck commands use the same array form. Environment
 and secret lists require unique names and `Value`/`ValueFrom` respectively.
@@ -282,3 +283,93 @@ safe file reader caps individual inputs at 2 MiB; inherited glob traversal has
 stricter 3,000 directory/result and depth-30 bounds. Limit exhaustion fails the
 collection rather than returning a truncated success. Config values, import
 specifiers and commands are hashed rather than copied into normal output.
+
+
+## CloudFormation structural references
+
+`cloudformation_inventory.py` extends the existing `--discover` / `--coverage`
+source path. It reads no cloud state, executes no renderer or template, and
+uses only source bytes already obtained through the collector's no-follow
+reader. The independent graph includes resources, parameters, conditions,
+mappings, outputs and the finite recognised AWS pseudo-parameter set.
+
+Recognised literal `deploy/cloudformation-composition/v1` manifests join the
+exact declared fragment files into one symbol scope. The grammar mirrors the
+existing foundation renderer's supported root sections; duplicate fragments,
+shared fragments, duplicate names, absent or unsafe paths and unsupported
+fragment sections block. Standalone templates have their own symbol tables:
+an unrelated template cannot satisfy a missing local reference. Every manifest
+and fragment stays separately content-bound in the source inventory.
+
+Both short YAML tags and long JSON/YAML intrinsic forms are handled. `Ref`,
+`GetAtt`, `Sub`, `DependsOn`, condition references and `FindInMap` generate
+explicit target-bound edges. Nested supported expressions are traversed without
+evaluation; both `If` branches and every substitution-map value are included.
+Substitution variable precedence and escaped placeholders follow the
+[AWS Sub syntax](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/intrinsic-function-reference-sub.html).
+Condition references cannot depend on resources, consistent with the
+[AWS condition restriction](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html).
+`DependsOn` supports a literal name or a nonempty literal list, as specified by
+[AWS](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-attribute-dependson.html).
+
+`ImportValue` observations cover every template section, including outputs,
+conditions and nested intrinsic branches. Their identities bind the exact raw
+source locator, owning resource/symbol and original tagged or long-form subtree.
+Existing resource imports retain their observation identities without duplicate
+edges. The current composition contract can map resource consumers only; an
+import or dynamic secret reference owned by an output, condition or other
+nonresource symbol therefore adds `infrastructure-external-consumer-unresolved`.
+AWS-specific and SSM parameter types also produce an external dependency owned
+by the parameter symbol. Their existing-resource/value lookup behavior follows
+the [AWS parameter-type documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-supplied-parameter-types.html).
+Unrecognised nonprimitive parameter types remain explicitly unsupported.
+These observations remain blocking until that consumer grammar is implemented;
+recognising an import is not proof that it resolves or is accessible.
+
+Missing or ambiguous names, reference cycles, unknown intrinsic functions,
+unsupported macros and malformed supported expressions produce fixed blocking
+findings. The collector conservatively rejects cycles across all observed
+branches. Resource metadata/creation/update policies, root metadata/rules,
+nested stacks and native executable resource types remain unsupported; they
+cannot hide additional command execution behind structural resource coverage.
+Parameter defaults and mappings cannot contain dependency references in this
+bounded grammar. YAML anchors/aliases remain rejected, as does a source-supplied
+`$tag` key masquerading as the parser's internal tagged representation.
+
+The limits are 256 composition fragments, 256 template groups, 10,000 symbols
+and 50,000 references per template group, in addition to the existing file,
+depth and parser-node limits. Exhaustion leaves a blocking finding. No partial
+traversal becomes a clear source result. The scanner still requires a stable
+checkout; it is not an atomic repository snapshot.
+
+Only safe source paths, observation identities, fixed symbol/reference kinds
+and content digests are emitted. Parameter names, resource names, attribute
+names, policy contents, secret references and resolved values are not printed.
+Every `infrastructure-reference` carries a target observation identity and
+its consumer identity. `infrastructure-symbol` carries a fixed symbol kind.
+The closed versioned source inventory schema validates these fields.
+
+A reviewed source composition must acknowledge the exact independently found
+reference IDs in `infrastructure_references`. This optional field preserves
+compatibility for reference-free compositions; it becomes mandatory in effect
+when references exist. Missing, extra, duplicate, wrongly typed or undeclared
+resource endpoints block source coverage. A changed target or fragment changes
+the inventory identity and invalidates the prior review. The inventory and
+all caller/operation/build revisions bind the helper bytes; locked local-build
+implementation receipts bind them too.
+
+This is structural source proof only. Recognising a resource type does not
+validate its provider property schema, IAM policy, property values, available
+attributes, import resolution, deployed ownership, dependency access, changeset
+or runtime effects. Existing provider and seventeen-stage acceptance obligations
+remain mandatory. The estate's executable, export, action, artifact and alias
+findings are preserved; this unit does not close Phase 2 whole-estate coverage.
+
+Focused verification:
+
+```bash
+python3 -B -m unittest discover -s scripts/04.deploy/release-control/discovery \
+  -p test_cloudformation_inventory.py -v
+python3 -B -m unittest discover -s scripts/04.deploy/operational-realization-gate \
+  -p test_cloudformation_coverage.py -v
+```

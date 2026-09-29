@@ -101,6 +101,7 @@ export function connectionConfiguration(secret: RelationalTaskSecret, reference:
 }
 
 export function connectionPool(secret: RelationalTaskSecret, reference: string, schema = "platform_smoke"): PostgreSqlConnectionPool {
+  validateLocalQualificationBinding(secret);
   const credentials: PostgreSqlConnectionCredentials = {
     username: secret.username,
     password: secret.password,
@@ -114,9 +115,29 @@ function relationalCertificateAuthority(): string {
   // target-region bundle inside the immutable image avoids weakening TLS when
   // a distroless image lacks an operating-system trust-store entry for RDS.
   try {
+    if (process.env["RELATIONAL_TLS_CA_MODE"] === "local-qualification-v1") {
+      const certificate = readFileSync("/run/release-control/ca.crt", "utf8");
+      if (certificate.length > 16_384 || !certificate.startsWith("-----BEGIN CERTIFICATE-----")) {
+        throw new Error("RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE");
+      }
+      return certificate;
+    }
     return readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8");
   } catch {
     throw new Error("RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE");
+  }
+}
+
+// This explicit local binding changes only the trusted CA input, never TLS
+// verification. Target descriptors are checked to forbid these local fields.
+// The runner binds the fixed CA mount and isolated dependency to its receipt.
+function validateLocalQualificationBinding(secret: RelationalTaskSecret): void {
+  const mode = process.env["RELATIONAL_TLS_CA_MODE"];
+  const attempt = process.env["RELATIONAL_LOCAL_QUALIFICATION_ID"];
+  if (mode === undefined && attempt === undefined) return;
+  if (mode !== "local-qualification-v1" || attempt === undefined || !/^[a-f0-9]{32}$/.test(attempt)
+      || secret.host !== "release-control-postgresql" || secret.port !== 5432) {
+    throw new Error("RELATIONAL_TASK_CONFIGURATION_INVALID");
   }
 }
 

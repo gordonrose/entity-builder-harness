@@ -1,0 +1,100 @@
+{
+  "authentic_signature_accepted": 1,
+  "authorized": false,
+  "canonical_clean_source": {
+    "command": "bash scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh --python /usr/bin/python3",
+    "exit_code": 0,
+    "log_sha256": "b1f0c2cc9645deb1b1c973aec4c42c8d7fb35f4e165f0402457043e75a0e69b2",
+    "metadata_file_count": 51,
+    "suite_count": 38,
+    "suite_test_counts": [
+      29,
+      34,
+      32,
+      23,
+      25,
+      31,
+      34,
+      13,
+      26,
+      15,
+      39,
+      29,
+      47,
+      13,
+      49,
+      50,
+      19,
+      35,
+      55,
+      37,
+      42,
+      63,
+      41,
+      56,
+      56,
+      40,
+      102,
+      45,
+      85,
+      35,
+      41,
+      49,
+      52,
+      29,
+      15,
+      49,
+      15,
+      5
+    ],
+    "test_count": 1455
+  },
+  "cryptographic_cases": 12,
+  "current_verifier_bindings": "matched",
+  "focused_test_count": 96,
+  "limitations": [
+    "public-fixture-conformance-only",
+    "production-publisher-materials-unproven",
+    "production-signed-scanner-policy-and-producer-pending",
+    "sbom-component-completeness-unproven",
+    "no-release-or-operation-authority"
+  ],
+  "mutated_evidence_rejected": 11,
+  "next_delivery_unit": "Durable local operation journal, leases, fencing and interruption recovery; continue existing-caller coverage and authenticated producer integration.",
+  "public_wrapper": {
+    "command": "bash scripts/04.deploy/operational-realization-gate/script.sh --artifact-verifier-conformance --verifier-cache <pinned-cache>",
+    "exit_code": 0,
+    "stderr_empty": true
+  },
+  "receipts": [
+    {
+      "consumer_checks": [
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "operation-authorization",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "release-eligibility",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-producer-unsupported"
+          ],
+          "purpose": "source-analysis",
+          "verdict": "rejected"
+        }
+      ],
+      "file_sha256": "9049deb2254928de5fbe378e3f4cf6706359ef8ce5c714c979d73a10d9f2eb8b",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/conformance-result.json",
+      "schema": "artifact-verifier-conformance/v1"
+    }
+  ],
+  "scope": "review-summary-only"
+}

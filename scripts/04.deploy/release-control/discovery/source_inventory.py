@@ -28,6 +28,8 @@ import stat
 
 import yaml
 
+import cloudformation_inventory
+
 ROOTS = ["package.json", "apps", "products", "packages", "platform",
          "scripts/04.deploy", "infra/04.deploy", ".github/workflows"]
 EXCLUDED = {"node_modules", ".git", ".cache", "build", "dist", "generated", "__pycache__", "tests", "fixtures"}
@@ -65,7 +67,7 @@ class SourceLoader(yaml.SafeLoader):
         result = {}
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
-            if type(key) is not str or key in result:
+            if type(key) is not str or key in result or key == "$tag":
                 raise SourceFailure("source-key-invalid")
             result[key] = self.construct_object(value_node, deep=deep)
         return result
@@ -99,7 +101,7 @@ def checked_document(raw, json_only=False):
     def mapping(pairs):
         value = {}
         for key, item in pairs:
-            if key in value:
+            if key in value or key == "$tag":
                 raise SourceFailure("source-key-invalid")
             value[key] = item
         return value
@@ -132,6 +134,7 @@ class Collector:
         self.sources = {}
         self.observations = {}
         self.findings = set()
+        self.infrastructure_documents = {}
 
     def issue(self, source_id, code):
         self.findings.add((code, source_id))
@@ -330,6 +333,7 @@ class Collector:
                 self.observation(source, "image-command", [key, index], value, issues=["image-command-unsupported"])
 
     def infrastructure(self, source, document):
+        self.infrastructure_documents[source["id"]] = (source, document)
         if not isinstance(document, dict):
             self.issue(source["id"], "infrastructure-shape-unsupported")
             return
@@ -343,7 +347,7 @@ class Collector:
         for name, resource in document["Resources"].items():
             if not isinstance(resource, dict) or not isinstance(resource.get("Type"), str):
                 raise SourceFailure("resource-shape-invalid")
-            issues = [] if resource["Type"] in SUPPORTED_RESOURCE_TYPES else ["resource-type-unsupported"]
+            issues = [] if resource["Type"] in SUPPORTED_RESOURCE_TYPES | cloudformation_inventory.DECLARATIVE_RESOURCE_TYPES else ["resource-type-unsupported"]
             parent = self.observation(source, "resource", ["Resources", name], resource, issues=issues)
             self.dependencies(source, resource, ["Resources", name], parent)
             properties = resource.get("Properties", {})
@@ -511,8 +515,12 @@ def discover(root: Path) -> dict:
                 collector.walk(path, name in {"scripts/04.deploy", "infra/04.deploy", ".github/workflows"})
             elif path.exists():
                 collector.add(name, b"", "source-type-unsupported")
+    cloudformation_inventory.collect(collector)
     result = {
-        "schema": "source-inventory/v1", "collector_revision": digest(Path(__file__).read_bytes()),
+        "schema": "source-inventory/v1", "collector_revision": digest(canonical([
+            digest(Path(__file__).read_bytes()),
+            digest(Path(cloudformation_inventory.__file__).read_bytes()),
+        ])),
         "scope": {"roots": ROOTS.copy(), "policy": "source-surface/v1"},
         "sources": sorted(collector.sources.values(), key=lambda item: item["id"]),
         "observations": sorted(collector.observations.values(), key=lambda item: item["id"]),

@@ -25,6 +25,23 @@ set -euo pipefail
 #   - id: deploy.script.build-platform-shell-image
 #     path: scripts/04.deploy/build-platform-shell-image/script.sh
 
+# Exact packaged command/dependency qualification stays within this capability.
+for DEPENDENCY_EFFECT_ARGUMENT in "$@"; do
+  case "$DEPENDENCY_EFFECT_ARGUMENT" in
+    --verify-dependency-effects|--verify-dependency-effects=*)
+      if [ "${1:-}" != "--verify-dependency-effects" ]; then
+        printf '%s\n' '{"schema":"dependency-effect-error/v1","verdict":"failed","authorized":false,"release_eligibility":"blocked","operation_authorization":"blocked","qualification_verdict":"blocked","source_closure":"blocked","findings":[{"code":"dependency-effect-arguments-invalid"}]}'
+        exit 1
+      fi
+      ;;
+  esac
+done
+if [ "${1:-}" = "--verify-dependency-effects" ]; then
+  shift
+  DEPENDENCY_EFFECT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../operational-realization-gate" && pwd)"
+  exec python3 -I -B "$DEPENDENCY_EFFECT_DIRECTORY/dependency_effects.py" "$@"
+fi
+
 # Finite-job conformance is a separate fixture-only mode on this same capability.
 for FINITE_JOB_ARGUMENT in "$@"; do
   case "$FINITE_JOB_ARGUMENT" in

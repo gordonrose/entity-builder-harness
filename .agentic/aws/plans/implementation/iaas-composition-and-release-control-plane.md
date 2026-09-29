@@ -1420,3 +1420,96 @@ and target qualification remain later. PostgreSQL Stage 6 stays paused as a
 readiness milestone in the IaaS programme. No local stop condition exists; no
 provider mutation, publication, push, merge, reset or other-worktree change
 occurred. The local checkpoint is authorized under the continuing source batch.
+
+### Continued full-programme source batch — 2026-09-29
+
+The user chose to retain the existing full IaaS plan after considering a narrower
+AWS/PostgreSQL milestone, and authorized progressing through multiple delivery
+units per batch. No target-scoped exception or prerequisite reduction is adopted.
+The requested 2026-10-03 completion date is a delivery target, not a promise or
+permission to omit acceptance work. The 28-day observation milestone necessarily
+extends beyond that date. External provider mutation, publication and hosted
+activation retain their existing separate approval boundaries.
+
+Execute independent source work in parallel where file ownership and contracts
+permit it; accept each delivery unit independently with contract, implementation,
+focused positive/negative tests, public wrapper, documentation, local evidence,
+session record and next queue entry. Do not count multiple internal tasks as
+additional completed delivery units. The previously discussed 15–20 remaining
+slices is a planning estimate, not an approved fixed decomposition.
+
+Current queue: independent finite-job effect/dependency verification and artifact
+admission; remaining source coverage/contracts; durable execution/journal/locking
+and evidence; AWS adapters and per-task preflight; orchestration/adoption; approved
+target qualification and ongoing assurance. Preserve the existing engine and all
+open actual-command, whole-estate and provider proof obligations. PostgreSQL Stage
+6 remains a readiness milestone under the unchanged plan. No new external action
+is authorized by this batch declaration.
+
+### Tenth through twelfth source delivery units — accepted batch
+
+The three independently bounded source units are complete: packaged dependency
+side-effect verification; pinned offline cryptographic artifact-evidence
+admission conformance; and CloudFormation structural reference coverage. Their
+schemas, implementations, focused positive/negative tests, existing public
+wrappers, fixtures and dated review receipts are included in this checkpoint.
+These units extend the existing realization gate; they do not complete Phase 2,
+Phase 3 or the full release-control programme.
+
+Final frozen-source clean verification exited 0: **1,455 tests in 38 suites**,
+legacy smoke, provider/network boundaries and **51 metadata headers** passed.
+The complete local log hash is
+`b1f0c2cc9645deb1b1c973aec4c42c8d7fb35f4e165f0402457043e75a0e69b2`.
+Dated review directories under
+`docs/04.deploy/plans/release-control-source-adoption/` retain safe normalized
+receipts and verification summaries for dependency effects, artifact admission
+and infrastructure references. Raw credentials, raw dependency logs and private
+scratch databases are excluded.
+
+The final fresh dependency run passed nine packaged command cases (four success,
+five expected failure), ten independent effect assertions and owned cleanup.
+All 3,902 payload files and the full upstream build receipt were retained and
+independently matched to current source, schema, lock and runner bytes. The
+qualified local image is
+`sha256:03432806c5bf2b4e39ea43a52b8722346b1d4e223eb9b9c2fc021c8d785ad512`.
+Bootstrap and migration effects include verified TLS/password authentication,
+roles/schema/history, runtime DDL refusal, transactional DML, repeated-operation
+stability and four deliberately revoked privileges. The production RDS CA
+remains the default; staging descriptors reject local qualification overrides.
+All actual relay/worker/restore and other target-task/sidecar obligations remain
+open. This is disposable IaaS proof, not live PostgreSQL Stage 6.
+
+The pinned offline verifier passed twelve real cryptographic cases: one authentic
+public signature accepted and eleven mutations refused. Production publisher
+materials, signed scans and owner-reviewed scanner assurance/freshness remain
+open. SBOM shape/subject checks do not establish independent component completeness.
+All nine checked source-result consumer uses of effect, build and cryptographic
+conformance receipts were refused, including release and operation authority.
+
+Same-source comparison covered 376 files in both collectors. Current inventory
+has 1,813 observations and 223 findings, compared with 1,235 and 244. Exactly 23
+unsupported template findings were resolved structurally; all other 221 baseline
+findings remain, and two new findings expose seven provider-resolved parameter
+dependencies. The graph contains 442 reference edges and 129 symbols. This is
+precise supported syntax coverage, not whole-estate closure or provider proof.
+
+Acceptance preserved failed attempts and repaired initializer socket handling,
+non-resource imports, provider-resolved parameters and safe upstream diagnostics.
+The first clean attempt failed metadata after 1,423 tests; an intermediate 1,439
+test pass preceded later repairs. The third attempt overlapped test authoring and
+failed twelve test-helper errors. Only the frozen fourth run above is final
+canonical evidence. An earlier dependency refresh returned a generic error whose
+underlying cause was not retained; reviewed fixed-code diagnostics now preserve
+known upstream failures and redact all unknown/private values. Final real build
+and clean verification ran sequentially and passed without relaxing deadlines.
+
+ADR disposition: this batch implements the accepted plan and existing ADR 0038
+boundaries; it introduces no provider authority or production policy decision.
+Explicit next units: provider-neutral local durable journal/lease/fencing/evidence
+conformance; existing-caller/lifecycle coverage and adoption delta; then durable
+finite-engine interruption reconciliation. Scratch preparation is underway in
+parallel; repository integration follows this checkpoint. AWS adapters, production
+artifact producers, orchestrator/caller adoption, hosted validation and approved
+target qualification remain queued. PostgreSQL Stage 6 stays paused. No real
+local stop condition exists; no external provider mutation, publication, push,
+merge or other-worktree change occurred.

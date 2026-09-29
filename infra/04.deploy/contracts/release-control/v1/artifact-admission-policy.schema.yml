@@ -1,0 +1,143 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.artifact-admission-policy
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Define bounded artifact supply-chain evidence and preserve independent release authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.artifact-admission
+#     path: scripts/04.deploy/operational-realization-gate/artifact_admission.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:artifact-admission-policy:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "target_id",
+    "repository",
+    "ref",
+    "workflow",
+    "source_commit",
+    "subject",
+    "bases",
+    "scan",
+    "trust_root_maximum_age_seconds",
+    "platform"
+  ],
+  "properties": {
+    "schema": {
+      "const": "artifact-admission-policy/v1"
+    },
+    "target_id": {
+      "const": "kanbien-staging"
+    },
+    "repository": {
+      "const": "gordonrose/entity-builder-harness"
+    },
+    "ref": {
+      "const": "refs/heads/main"
+    },
+    "workflow": {
+      "const": ".github/workflows/deploy-platform-shell-staging.yml"
+    },
+    "source_commit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "digest",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "const": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell"
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "kind": {
+          "const": "oci-manifest"
+        }
+      }
+    },
+    "bases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build_digest",
+        "runtime_digest"
+      ],
+      "properties": {
+        "build_digest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "runtime_digest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scanner_id",
+        "scanner_version",
+        "maximum_age_seconds"
+      ],
+      "properties": {
+        "scanner_id": {
+          "const": "aws-ecr-basic"
+        },
+        "scanner_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*$"
+        },
+        "maximum_age_seconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 604800
+        }
+      }
+    },
+    "trust_root_maximum_age_seconds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 604800
+    },
+    "platform": {
+      "const": "linux/amd64"
+    }
+  }
+}

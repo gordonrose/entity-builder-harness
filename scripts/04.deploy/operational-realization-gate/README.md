@@ -881,3 +881,91 @@ Next continue Phase 3 with reusable independent effect/dependency verification
 and required artifact admission; retain actual command-specific obligations.
 Durable operation controls, AWS adapter/preflight and target qualification
 follow the plan's gates. PostgreSQL Stage 6 remains paused.
+
+## Infrastructure composition references
+
+The existing `--discover` and `--coverage` modes now include scoped infrastructure
+symbols and references. Literal `deploy/cloudformation-composition/v1` manifests
+bind their exact fragment set; each standalone template has a separate symbol
+table. Both branches of a supported conditional are discovered. Missing,
+duplicate, cyclic, cross-scope and unsupported references remain findings.
+
+A reviewed source composition must acknowledge all discovered references using
+`infrastructure_references`. Resource endpoints must also occur in its reviewed
+resource graph. Reference acknowledgement cannot exempt an executable, invent
+provider ownership or bypass another source finding. Structural support for a
+resource family does not validate every provider property, permission, attribute,
+actual parameter value, imported export or runtime behavior. The collector and
+all consuming build/caller revisions bind the structural helper's exact bytes.
+
+## Independent packaged dependency effects
+
+```bash
+# Explicit public acquisition of the locked local dependency image:
+bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh \
+  --verify-dependency-effects --source-root . \
+  --scratch-root /persistent/path/dependency-scratch --acquire-dependency
+
+# Fresh exact product build and independently observed command effects:
+bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh \
+  --verify-dependency-effects --source-root . \
+  --scratch-root /persistent/path/dependency-scratch \
+  --package-cache /persistent/path/verified-package-cache
+```
+
+This mode runs the actual packaged bootstrap and migration commands against a
+locked disposable PostgreSQL engine. It extends the same bounded container
+transport, with an owned internal network and fixed read-only fixture inputs.
+The ordinary server and finite-job modes retain their no-network settings.
+
+The exact final product image supports a narrow local certificate binding:
+`RELATIONAL_TLS_CA_MODE=local-qualification-v1`, a fresh qualification identifier,
+the fixed dependency hostname/port, and `/run/release-control/ca.crt`. Full TLS
+verification stays mandatory. Without that binding, the existing pinned RDS CA
+remains the default. The production target checker rejects local binding fields
+in target descriptors; independent positive/negative tests exercise that check.
+The evidence identifies the local input binding and does not claim RDS/ECS/IAM
+or production-secret injection proof.
+
+Workload output supplies a bounded terminal observation. Separate database
+queries verify roles, permissions, schema and migration history; repeated
+operations and deliberate invalid-input/state cases must produce their expected
+outcomes. Credentials and raw database/container logs are never public evidence.
+The result remains local proof with release/operation permissions blocked.
+Relay, worker, restore, whole-estate adoption and live qualification retain their
+own pending obligations. See the dated dependency-effects acceptance record for
+exact verified cases and limitations.
+
+## Authenticated artifact evidence
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --artifact-verifier-acquire --verifier-cache /persistent/path/verifier-cache
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --artifact-verifier-conformance --verifier-cache /persistent/path/verifier-cache
+```
+
+The artifact-admission mode re-verifies raw signed provenance, SBOM and scan
+bundles using a digest-locked maintained verifier and pinned trust roots inside
+a process with no network access or ambient credentials. Public inputs cannot
+supply an alternate executable, trust root or preverified-result file.
+
+Production policy fixes the official repository, branch and publication workflow;
+source revision, exact OCI manifest identity, platform and evidence policy must
+match. A Docker image/configuration digest cannot substitute for the registry
+manifest identity. Required policy values such as scan freshness and scanner
+version must be reviewed inputs; absent values block admission. Existing
+CRITICAL/HIGH refusal is preserved.
+
+Real conformance verifies a public signed upstream artifact with an explicit
+fixture identity. It does not qualify a platform image or prove the publication
+workflow has run. A production supply-chain result remains evidence for one
+acceptance gate, with release and operation authority blocked. Signed SBOM shape
+and subject binding alone do not establish independent package completeness.
+
+The existing publisher still needs actual base-material provenance and a signed
+scan predicate before it can supply every required production input. Unsigned
+saved scan counts and desired base-image constants cannot fill those gaps.
+Publication, hosted acceptance and provider operations retain separate approval
+boundaries. See the artifact-admission fixture documentation for full command
+inputs, trust acquisition provenance and conformance limitations.

@@ -1,0 +1,132 @@
+{
+  "authorized": false,
+  "canonical_clean_source": {
+    "command": "bash scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh --python /usr/bin/python3",
+    "exit_code": 0,
+    "log_sha256": "b1f0c2cc9645deb1b1c973aec4c42c8d7fb35f4e165f0402457043e75a0e69b2",
+    "metadata_file_count": 51,
+    "suite_count": 38,
+    "suite_test_counts": [
+      29,
+      34,
+      32,
+      23,
+      25,
+      31,
+      34,
+      13,
+      26,
+      15,
+      39,
+      29,
+      47,
+      13,
+      49,
+      50,
+      19,
+      35,
+      55,
+      37,
+      42,
+      63,
+      41,
+      56,
+      56,
+      40,
+      102,
+      45,
+      85,
+      35,
+      41,
+      49,
+      52,
+      29,
+      15,
+      49,
+      15,
+      5
+    ],
+    "test_count": 1455
+  },
+  "cleanup_verified": true,
+  "command_cases": 9,
+  "expected_failure_cases": 5,
+  "focused_test_count": 130,
+  "independent_assertions": 10,
+  "independent_current_source_binding_review": "passed",
+  "limitations": [
+    "disposable-local-dependency-only",
+    "no-target-profile-promotion",
+    "remaining-relay-worker-restore-and-sidecar-obligations-open",
+    "unsigned-local-evidence",
+    "provider-identity-and-iam-unqualified",
+    "no-release-or-operation-authority"
+  ],
+  "next_delivery_unit": "Durable local operation journal, leases, fencing and interruption recovery; continue existing-caller coverage and authenticated producer integration.",
+  "payload_file_count": 3902,
+  "public_wrapper": {
+    "command": "bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --verify-dependency-effects --source-root . --scratch-root <owned-scratch> --package-cache <locked-cache>",
+    "exit_code": 0,
+    "stderr_empty": true
+  },
+  "receipts": [
+    {
+      "consumer_checks": [
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "operation-authorization",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "release-eligibility",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-producer-unsupported"
+          ],
+          "purpose": "source-analysis",
+          "verdict": "rejected"
+        }
+      ],
+      "file_sha256": "8d451876691887a6e81f6392e742fd07d8cb0d9ca41e9497c9af035899b134a9",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/effect-result.json",
+      "schema": "dependency-effect-result/v1"
+    },
+    {
+      "consumer_checks": [
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "operation-authorization",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-authority-unavailable"
+          ],
+          "purpose": "release-eligibility",
+          "verdict": "rejected"
+        },
+        {
+          "codes": [
+            "source-result-invalid"
+          ],
+          "purpose": "source-analysis",
+          "verdict": "rejected"
+        }
+      ],
+      "file_sha256": "9361c714bd9accab66075ca65c3569cae049c28d1d580caf9872c046cccc1c16",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/build-result.json",
+      "schema": "local-container-result/v1"
+    }
+  ],
+  "scope": "review-summary-only",
+  "successful_cases": 4
+}

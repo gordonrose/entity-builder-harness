@@ -57,7 +57,7 @@ def implementation_digest():
     for path in sorted(release.SCHEMA_DIR.glob("local-*.schema.yml")):
         rows.append({"path": path.name, "digest": digest(path.read_bytes())})
     for name in ("build_inventory.py", "build_artifacts.py", "source_inventory.py", "caller_inventory.py",
-                 "operation_inventory.py"):
+                 "operation_inventory.py", "cloudformation_inventory.py"):
         rows.append({"path": name, "digest": digest((DIRECTORY.parent / "release-control/discovery" / name).read_bytes())})
     return digest(canonical(rows))
 

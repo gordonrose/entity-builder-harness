@@ -219,9 +219,11 @@ REALIZATION_SOURCES=(
   scripts/04.deploy/operational-realization-gate/local_build_contracts.py
   scripts/04.deploy/operational-realization-gate/local_container_contracts.py
   scripts/04.deploy/operational-realization-gate/finite_job_contracts.py
+  scripts/04.deploy/operational-realization-gate/dependency_effect_contracts.py
   scripts/04.deploy/operational-realization-gate/build_contracts_cli.py
   scripts/04.deploy/release-control/compiler.py
   scripts/04.deploy/release-control/discovery/source_inventory.py
+  scripts/04.deploy/release-control/discovery/cloudformation_inventory.py
   scripts/04.deploy/release-control/discovery/caller_inventory.py
   scripts/04.deploy/release-control/discovery/operation_inventory.py
   scripts/04.deploy/release-control/discovery/action_observations.py
@@ -236,33 +238,60 @@ if grep -Eq -- 'subprocess|socket|urllib|requests' "${REALIZATION_SOURCES[@]}"; 
   echo "ERROR: generic realization core must not invoke network or provider tooling" >&2
   exit 1
 fi
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_release_compiler.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_source_coverage.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_source_inventory.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finding_triage.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_caller_coverage.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_caller_inventory.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_result_consumption.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_result_consumption_cli.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_clean_environment.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_validation_workflow.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_operation_inventory.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_action_observations.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_operation_contracts.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_operation_contracts_cli.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_build_inventory.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/release-control/discovery -p 'test_build_artifacts.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_build_contracts_cli.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_build.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_locked_toolchain.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_runtime.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_build_bindings.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_container_engine.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_container_payload.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_container_profiles.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_container_contracts.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_local_container_cli.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_contracts.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_engine.py' -v
-PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_finite_job_conformance.py' -v
+# A missing/empty suite must fail instead of unittest discovery passing zero tests.
+run_unit_suite() {
+  PYTHONDONTWRITEBYTECODE=1 python3 - "$1" "$2" <<'PY_SUITE'
+from pathlib import Path
+import sys
+import unittest
+
+root, pattern = sys.argv[1:]
+if not (Path(root) / pattern).is_file():
+    raise SystemExit("ERROR: required realization test suite is missing")
+suite = unittest.defaultTestLoader.discover(root, pattern=pattern)
+if suite.countTestCases() == 0:
+    raise SystemExit("ERROR: required realization test suite is empty")
+result = unittest.TextTestRunner(verbosity=2).run(suite)
+raise SystemExit(0 if result.wasSuccessful() else 1)
+PY_SUITE
+}
+
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_release_compiler.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_source_coverage.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_source_inventory.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finding_triage.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_caller_coverage.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_caller_inventory.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_result_consumption.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_result_consumption_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_clean_environment.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_validation_workflow.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_operation_inventory.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_action_observations.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_operation_contracts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_operation_contracts_cli.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_build_inventory.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_build_artifacts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_build_contracts_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_build.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_locked_toolchain.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_runtime.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_build_bindings.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_engine.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_payload.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_profiles.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_container_contracts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_container_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_contracts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_engine.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_conformance.py'
 echo "Operational Realization Gate local tests passed."
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effect_contracts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effect_engine.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effects.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_artifact_admission.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_artifact_verifier.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_artifact_admission_cli.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_cloudformation_inventory.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_cloudformation_coverage.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_target_boundary.py'
