@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-29T17:38:08Z
-latest_commit_sha: 134a4bc489a9142556595776f62c14df4bfd3b2f
-chat_duration: 126045s (01:11:00:45)
+latest_commit_at_utc: 2026-09-29T20:01:20Z
+latest_commit_sha: 441f334bd364521fbece48ce4d7d8853f70da0dd
+chat_duration: 134637s (01:13:23:57)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -567,6 +567,17 @@ ADR needed: no
 
 Reason: Continuation of ADR 0038 and the accepted IaaS release-control plan; extends existing source qualification without new deployment authority or a parallel framework.
 
+
+### 2026-09-29T20:01:20Z - Commit recorded
+
+Commit: `441f334bd364521fbece48ce4d7d8853f70da0dd`
+
+Message: feat(deploy): qualify exact local container artifacts
+
+Summary: Completed eighth source-only unit: 33 files; existing image wrappers and final recipe now bind fresh locked payload to a constructed and tested exact image. Canonical clean verification passed 933 tests in 26 suites; 3902 payload files, two health checks, graceful shutdown and owned cleanup passed. Independent review passed. Thirteen task/sidecar profiles and all release authority remain pending or blocked. Next qualify packaged finite commands against disposable dependencies; hosted and AWS qualification remain later.
+
+ADR impact: Continuation of ADR 0038; no new architecture decision.
+
 ## Sub-Agent Activity
 
 
@@ -958,6 +969,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Restored this task to persistent storage and completed the seventh source-only unit in 40 files. 710 tests passed (677 clean-source plus 33 real-compiler fixtures); all seven genuine locked builds, both selected runtime runners and image shim generation passed. Safe receipts and recovery evidence are in the dated locked-build review. Independent bindings audit, staged whitespace, metadata for 10 applicable changed files and full commit-readiness gates passed. No release authority, container qualification, hosted run or external mutation. Next: isolated final-container qualification and hosted acceptance after approved publication.
   ADR impact: Covered by ADR 0038 and the approved IaaS release-control plan; source-only authority limits preserved.
 
+
+- Commit: `441f334bd364521fbece48ce4d7d8853f70da0dd`
+  Time UTC: 2026-09-29T20:01:20Z
+  Message: feat(deploy): qualify exact local container artifacts
+  Summary: Completed eighth source-only unit: 33 files; existing image wrappers and final recipe now bind fresh locked payload to a constructed and tested exact image. Canonical clean verification passed 933 tests in 26 suites; 3902 payload files, two health checks, graceful shutdown and owned cleanup passed. Independent review passed. Thirteen task/sidecar profiles and all release authority remain pending or blocked. Next qualify packaged finite commands against disposable dependencies; hosted and AWS qualification remain later.
+  ADR impact: Continuation of ADR 0038; no new architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -971,9 +989,9 @@ Reason: Continuation of ADR 0038 and the accepted IaaS release-control plan; ext
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-29T17:38:08Z
-Latest commit SHA: 134a4bc489a9142556595776f62c14df4bfd3b2f
-Chat duration: 126045s (01:11:00:45)
+Latest commit at UTC: 2026-09-29T20:01:20Z
+Latest commit SHA: 441f334bd364521fbece48ce4d7d8853f70da0dd
+Chat duration: 134637s (01:13:23:57)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
