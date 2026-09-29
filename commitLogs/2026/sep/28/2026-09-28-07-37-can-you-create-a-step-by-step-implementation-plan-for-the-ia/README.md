@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-29T16:01:22Z
-latest_commit_sha: 094d6418
-chat_duration: 120239s (01:09:23:59)
+latest_commit_at_utc: 2026-09-29T17:38:08Z
+latest_commit_sha: 134a4bc489a9142556595776f62c14df4bfd3b2f
+chat_duration: 126045s (01:11:00:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -527,6 +527,17 @@ ADR needed: no
 
 Reason: The seventh unit implements the locked genuine build proof already required by ADR 0038 and the approved IaaS plan. It extends the same operational-realization gate, preserving source-only authority boundaries; no new architectural direction is introduced.
 
+
+### 2026-09-29T17:38:08Z - Commit recorded
+
+Commit: `134a4bc489a9142556595776f62c14df4bfd3b2f`
+
+Message: feat(deploy): verify locked local builds and runtime artifacts
+
+Summary: Restored this task to persistent storage and completed the seventh source-only unit in 40 files. 710 tests passed (677 clean-source plus 33 real-compiler fixtures); all seven genuine locked builds, both selected runtime runners and image shim generation passed. Safe receipts and recovery evidence are in the dated locked-build review. Independent bindings audit, staged whitespace, metadata for 10 applicable changed files and full commit-readiness gates passed. No release authority, container qualification, hosted run or external mutation. Next: isolated final-container qualification and hosted acceptance after approved publication.
+
+ADR impact: Covered by ADR 0038 and the approved IaaS release-control plan; source-only authority limits preserved.
+
 ## Sub-Agent Activity
 
 
@@ -911,6 +922,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Checkpoint six source-only delivery units, reviewed schemas, 508-test clean verifier, prepared read-only CI and historical adoption snapshots. Release and operation authority remain blocked; hosted execution and genuine locked build proof are next. A final staged whitespace check identified seven extra EOF blank lines; record and correct in a follow-up without rewriting this checkpoint.
   ADR impact: ADR 0038 records the single-capability source foundation and explicit remaining qualification boundaries.
 
+
+- Commit: `134a4bc489a9142556595776f62c14df4bfd3b2f`
+  Time UTC: 2026-09-29T17:38:08Z
+  Message: feat(deploy): verify locked local builds and runtime artifacts
+  Summary: Restored this task to persistent storage and completed the seventh source-only unit in 40 files. 710 tests passed (677 clean-source plus 33 real-compiler fixtures); all seven genuine locked builds, both selected runtime runners and image shim generation passed. Safe receipts and recovery evidence are in the dated locked-build review. Independent bindings audit, staged whitespace, metadata for 10 applicable changed files and full commit-readiness gates passed. No release authority, container qualification, hosted run or external mutation. Next: isolated final-container qualification and hosted acceptance after approved publication.
+  ADR impact: Covered by ADR 0038 and the approved IaaS release-control plan; source-only authority limits preserved.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -924,9 +942,9 @@ Reason: The seventh unit implements the locked genuine build proof already requi
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-29T16:01:22Z
-Latest commit SHA: 094d6418
-Chat duration: 120239s (01:09:23:59)
+Latest commit at UTC: 2026-09-29T17:38:08Z
+Latest commit SHA: 134a4bc489a9142556595776f62c14df4bfd3b2f
+Chat duration: 126045s (01:11:00:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
