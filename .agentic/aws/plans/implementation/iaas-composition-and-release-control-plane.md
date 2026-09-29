@@ -1214,3 +1214,77 @@ approved live qualification. PostgreSQL Stage 6 stays later.
 No real stop condition exists within this completed bounded unit. No external
 mutation, live deployment, Git publication, commit, reset, discard or other
 worktree change occurred.
+
+
+### Seventh source delivery unit — locked local build and execution evidence
+
+The six source units were checkpointed at `094d6418`, with session bookkeeping
+at `27d81529`. A WSL restart cleared the original memory-backed worktree; the
+branch and all 112 foundation file objects survived verified hash checks. The
+authorized recovery restored the same branch into persistent ext4 storage.
+Historical unit statements about uncommitted work are superseded by this record.
+
+This unit extends the existing realization capability with a pinned Node/npm/
+TypeScript dependency closure and real compiler observations for the seven
+selected configurations. Actual compiler bytes, module resolutions and outputs
+are bound to selected source and lock identities. Generated runtime forwarding
+packages and the two existing selected test runners are exercised in disposable
+source-free environments, with network namespaces and read-only inputs. Image
+shim generation does not constitute a Docker build or final-container proof.
+
+The execution wrapper requires persistent scratch storage, never a RAM-backed
+`/tmp` build tree. Public dependency acquisition is a separate explicit step;
+installation and execution are offline. Closed versioned contracts, adversarial
+fixtures and exact byte checks reject stale or inconsistent local observations.
+All successful local results keep source closure, release qualification and
+authority blocked. A diagnostic single-configuration run identifies its subset;
+delivery acceptance includes all seven configurations and the required runtime
+receipts, followed by the complete source validation suite.
+
+Completion evidence will record the actual results, any ordinary source repairs,
+changed inventory identities and precise gaps. Next acceptance work is final
+container construction/exact-command qualification and the first hosted source
+check after separately approved publication. Broader Phase 2 adoption, remote
+action semantics, authenticated evidence admission, durable operation controls,
+provider adapters and live qualification remain open.
+
+### Seventh source delivery unit evidence — 2026-09-29
+
+The locked local build/execution unit is complete and verified after recovery.
+The [dated locked-build review](../../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md)
+contains the actual all-seven result and a compact verification summary. Four
+closed schemas, a verified Node 22.23.3/npm 10.9.9/TypeScript 5.9.3 closure,
+offline sandboxed build wrapper, real compiler observer, runtime receipt binding,
+fixtures and tests extend the existing capability. No application/configuration
+repair or deployment-workflow replacement was needed.
+
+Final clean verification passed 677 tests in 21 suites, legacy smoke, core
+provider/network boundaries and 39 metadata headers (exit 0). Real compiler
+fixtures passed 33 additional tests with zero skips (exit 0): 710 distinct tests.
+All seven real compiler invocations passed; both existing selected runtime-test
+runners and image shim generation passed. The exact selected test files, source,
+lock, implementation, compiler input/resolution/output and artifact identities
+are preserved. An actual isolation probe confirmed protected inputs, blocked
+external routes and available private loopback.
+
+The accepted result is `sha256:4724812c2efbf86e344519ec90ef1633b19402d360cf9571758f297aa342fcb9`.
+Two extra incremental build-information files are recorded; no predicted output
+is absent. Four source predictions remain unresolved. Compilation and the two
+selected test files do not imply whole-estate source closure, complete action
+semantics, a constructed container, startup qualification, hosted validation or
+provider proof. These unsigned local observations retain blocked release
+eligibility/operation authority and are rejected by the common result consumer.
+
+Ordinary recovery repairs included draft runtime interface/binding corrections,
+verified partial-cache resume and a compiler-observer fix for Node10/baseUrl
+existence probes. Unsafe explicit reads/writes remain blocked. The dated review
+records failed initial attempts and their successful replacement evidence.
+
+Next delivery unit: isolated final-container construction and exact-command
+qualification, binding base image, build inputs, image digest and startup/runtime
+receipts under the common authority boundary. The first hosted source-validation
+run remains separately pending approved publication. Wider Phase 2 adoption and
+action semantics, authenticated evidence admission, durable operation controls,
+provider adapters/stores and live qualification remain open; PostgreSQL Stage 6
+stays later. Earlier dated estate counts remain historical. No local stop
+condition remains, and no external mutation or deployment was performed.

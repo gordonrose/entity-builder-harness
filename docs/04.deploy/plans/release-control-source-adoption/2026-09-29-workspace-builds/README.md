@@ -110,4 +110,3 @@ toolchain, generated shims and selected tests to immutable genuine output, then
 exercise exact commands. Broader operation semantics/adoption, authenticated
 evidence/authority, provider adapters and live target qualification remain later.
 The full seventeen-stage matrix remains mandatory.
-

@@ -3,12 +3,11 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "Node10",
-    "noEmit": false,
-    "declaration": false,
+    "strict": true,
+    "noEmitOnError": true,
+    "types": [],
     "rootDir": "src",
-    "outDir": "../../.cache/build-fixture"
+    "outDir": ".cache/output"
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

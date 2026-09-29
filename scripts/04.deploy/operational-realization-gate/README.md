@@ -655,8 +655,95 @@ fail with safe fixed diagnostics.
 
 Versioned closed schemas, inert fixtures and focused positive/negative tests
 cover this interface. The ordinary and isolated clean checks include both new
-collectors and the public build command. The current repository has no installed
-TypeScript toolchain or emitted build tree; actual artifact execution and build
-provenance remain the next qualification work. See the
+collectors and the public build command. The original sixth-unit evidence used synthetic artifacts only. The following
+locked-build interface adds genuine local compilation and selected execution;
+final-container and admitted provenance proof remain open. See the
 [collector grammar](../release-control/discovery/README.md) for supported
 resolution and generator limits.
+
+
+## Locked local builds and selected runtime execution
+
+`verify-local-build.sh` is execution tooling inside this existing capability.
+The provider-neutral compiler and `--builds` accounting mode remain read-only.
+The new wrapper freshly discovers the seven selected staging-workflow TypeScript
+configurations, copies bounded repository inputs into disposable disk-backed
+snapshots, installs the locked dependency closure, and invokes the real compiler.
+It accepts no arbitrary executable or saved success receipt as input.
+
+`node-toolchain.lock.json` and `local-build-toolchain.schema.yml` pin Node 22.23.3
+(Linux x64), its bundled npm 10.9.9, TypeScript 5.9.3 and the exact root lockfile.
+The closure contains 61 external distributions and 20 workspace links. Node's
+archive SHA256 and every tarball's SHA512 are verified before extraction. Offline
+`npm ci` disables lifecycle scripts, user configuration, audit and update calls;
+installed package files are checked against the verified archives. Changes to the
+lock, package closure or tool versions require review and a new lock binding.
+The host requires Linux x86_64, glibc >=2.28 and usable bubblewrap namespaces.
+This does not pin an operating-system image or qualify a final container.
+
+Acquisition and execution are separate. Choose new absolute directories on a
+persistent disk outside the checkout. The acquisition command can resume an
+exact partial cache: it rehashes existing entries, refuses unrelated, mismatched
+or linked files, and creates missing files without overwriting. Transient public
+download failures receive at most three attempts. URLs and hashes remain locked.
+For example, after creating the scratch directory:
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/verify-local-build.sh \
+  --source-root . --acquire-cache /persistent/path/build-package-cache
+bash scripts/04.deploy/operational-realization-gate/verify-local-build.sh \
+  --source-root . --package-cache /persistent/path/build-package-cache \
+  --scratch-root /persistent/path/build-scratch
+```
+
+Execution refuses memory-backed scratch mounts. The owned checkout is never
+mounted as a tree; only the trusted observer file is mounted read-only from it.
+Host credentials are absent. Toolchain and compiler inputs are read-only; only
+declared output directories are writable. A private network
+namespace permits isolated loopback tests but has no external route. Environment
+variables are constructed explicitly; Node hooks, credentials and provider
+metadata settings are not inherited. An unavailable sandbox fails closed; there
+is no host-execution fallback. Commands have time, CPU, output and file limits.
+These limits support the selected reviewed programs; this is not a general
+hostile-code resource scheduler.
+
+The compiler observer retains the selected compiler options and records actual
+configuration, source, dependency, type-library and module-resolution identities,
+plus emitted file hashes and numeric diagnostic codes. Every configuration uses
+a fresh copy, including separate incremental build information. Repository and
+implementation identities are checked before and after execution. Predicted
+versus emitted membership is reported explicitly; unresolved static predictions
+are not silently declared complete by a successful compiler invocation.
+
+For the two runtime-test configurations, the existing runners execute against
+compiled JavaScript, generated forwarding packages and verified external
+dependencies in a separate source-free snapshot. Immediate selected test files
+are recorded individually. The image configuration executes its existing shim
+generator only. The Docker build, image startup verifier, live engines, provider
+commands and final-container qualification remain later acceptance work.
+
+Versioned `local-typescript-observation/v1`, `local-runtime-observation/v1` and
+`local-build-result/v1` contracts reject unsafe fields, stale digests and
+inconsistent bindings. Success means the selected local checks passed; it always
+retains `authorized: false`, blocked release eligibility, blocked operation
+authorization, blocked source closure and blocked release qualification. These
+local observations are not signed attestations or universal authority controls.
+The existing result-consumption guard rejects this producer for all purposes.
+
+`--configuration` limits a diagnostic rerun to one of the seven supported paths;
+its result identifies that subset and cannot represent the full selected graph.
+Use the default all-seven command for delivery acceptance. Results contain safe
+paths, fingerprints and diagnostic codes, never raw compiler/runtime output.
+
+The canonical source check includes toolchain, orchestration and runtime-helper
+unit tests. Real compiler fixtures require the verified Node and TypeScript
+paths in `RELEASE_CONTROL_NODE` and `RELEASE_CONTROL_TYPESCRIPT_ROOT`, with
+`RELEASE_CONTROL_REQUIRE_TYPESCRIPT_TESTS=1`; run `test_typescript_observer.py`
+explicitly. An absent toolchain is never counted as passing real-compiler proof.
+The completed-unit session record provides exact commands, results and remaining
+qualification obligations.
+
+The [seventh-unit review](../../../docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md)
+records 710 passing tests, the all-seven successful build result, two selected
+runtime-test runners and image shim generation. It preserves unresolved static
+predictions and the remaining final-container/hosted/provider acceptance work.

@@ -1,0 +1,31 @@
+{
+  "schema": "local-build-toolchain/v1",
+  "platform": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "libc_minimum": "2.28"
+  },
+  "node": {
+    "version": "22.23.3",
+    "filename": "node-v22.23.3-linux-x64.tar.xz",
+    "url": "https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz",
+    "sha256": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+  },
+  "npm": {
+    "version": "10.9.9"
+  },
+  "typescript": {
+    "version": "5.9.3"
+  },
+  "dependencies": {
+    "lock_path": "package-lock.json",
+    "lock_sha256": "4aade50f520f42e61b68e35fb3fa5ee973182013f8cc0ee9ef431d9c28bd20c5",
+    "external_packages": 61,
+    "workspaces": 20
+  },
+  "policy": {
+    "install_scripts": "disabled",
+    "execution_network": "disabled",
+    "source_only": true
+  }
+}

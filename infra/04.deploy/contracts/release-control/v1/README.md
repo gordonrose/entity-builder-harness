@@ -112,3 +112,13 @@ returning normal results. No remote schema references or saved build inventories
 are accepted by its public build mode. Optional expected digests detect changed
 observations. These outputs are not supported evidence-admission producers and
 cannot be consumed as release eligibility or operation authorization.
+
+
+The local build execution contracts are `local-build-toolchain.schema.yml`,
+`local-typescript-observation.schema.yml`, `local-runtime-observation.schema.yml`
+and `local-build-result.schema.yml`. They bind locked dependency identities to
+actual compiler inputs/outputs and selected isolated execution. They cannot grant
+release eligibility or operation authority; the separate existing consumption
+guard rejects them. Runtime receipts must retain the compiler artifact bytes and
+exact selected test membership. Acquisition/execution tooling lives in the
+existing operational-realization gate; it is outside the read-only generic core.

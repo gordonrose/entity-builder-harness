@@ -67,4 +67,3 @@ a successful process exit.
 
 The implementation plan and dated review candidates record exact verification,
 remaining findings and the next delivery unit.
-

@@ -626,4 +626,3 @@ def discover_builds(root: Path, workflow_path: str, graph=None) -> dict:
     }
     result["inventory_digest"] = digest(canonical(result))
     return result
-

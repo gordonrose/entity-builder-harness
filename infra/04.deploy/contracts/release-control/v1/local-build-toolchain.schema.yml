@@ -1,0 +1,151 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.local-build-toolchain.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Bind pinned local Node, npm, TypeScript and dependency closure identities to offline execution policy.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-locked-toolchain
+#     path: scripts/04.deploy/operational-realization-gate/locked_toolchain.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:local-build-toolchain:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "platform",
+    "node",
+    "npm",
+    "typescript",
+    "dependencies",
+    "policy"
+  ],
+  "properties": {
+    "schema": {
+      "const": "local-build-toolchain/v1"
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "machine",
+        "libc_minimum"
+      ],
+      "properties": {
+        "system": {
+          "const": "Linux"
+        },
+        "machine": {
+          "const": "x86_64"
+        },
+        "libc_minimum": {
+          "const": "2.28"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "filename",
+        "url",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "const": "22.23.3"
+        },
+        "filename": {
+          "const": "node-v22.23.3-linux-x64.tar.xz"
+        },
+        "url": {
+          "const": "https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz"
+        },
+        "sha256": {
+          "const": "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de"
+        }
+      }
+    },
+    "npm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "const": "10.9.9"
+        }
+      }
+    },
+    "typescript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "const": "5.9.3"
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lock_path",
+        "lock_sha256",
+        "external_packages",
+        "workspaces"
+      ],
+      "properties": {
+        "lock_path": {
+          "const": "package-lock.json"
+        },
+        "lock_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "external_packages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        },
+        "workspaces": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "install_scripts",
+        "execution_network",
+        "source_only"
+      ],
+      "properties": {
+        "install_scripts": {
+          "const": "disabled"
+        },
+        "execution_network": {
+          "const": "disabled"
+        },
+        "source_only": {
+          "const": true
+        }
+      }
+    }
+  }
+}

@@ -24,7 +24,8 @@ import source_coverage
 
 SCHEMA_DIR = release.SCHEMA_DIR
 MAX_INTERNAL_NODES = 500000
-NAMES = {"source-build-inventory", "source-build-artifact"}
+NAMES = {"source-build-inventory", "source-build-artifact", "local-typescript-observation",
+         "local-runtime-observation", "local-build-result"}
 
 
 def validate_schema(name, document):

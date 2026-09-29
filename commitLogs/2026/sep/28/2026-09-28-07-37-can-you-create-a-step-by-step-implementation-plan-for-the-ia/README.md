@@ -4,7 +4,7 @@
 id: 2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia
 task: can you create a step by step implementation plan for the IaaS work we've discussed above?
 branch: chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia
-worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia-3394027405
+worktree: /home/owner/projects/entity-builder-harness-001-worktrees/chat_2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia-3394027405
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-28T06:37:23Z
@@ -74,12 +74,20 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Decision: Proceed with a local checkpoint of the six reviewed source-only slices, then the locked real-build slice
   Rationale: The user replied let us go to the proposed checkpoint and implementation sequence. Local staging and task commit are in scope; push, PR publication, hosted activation and external deployment remain unapproved.
 
+
+- Decision: Restore the interrupted seventh slice on persistent storage and finish its local checkpoint
+  Rationale: The user authorized crash recovery and continuation. Existing commits and exact recorded patches preserve the task; reviewed reconstruction and fresh local evidence are required before checkpointing. Publication and provider mutations remain outside scope.
+
 ## Context Hygiene
 
 
 
 - Summary: Six source slices passed the complete508-test clean verification and independent review; retain explicit source-only limits
   Durable evidence: The IaaS plan, dated source-adoption reviews and sixth-unit session record preserve exact source identities and remaining work. Node/npm are not yet locked by the Python verifier; hosted workflow and genuine builds remain unproven.
+
+
+- Summary: Recovered seventh slice passes 710 tests and all seven genuine locked builds; two selected runtime runners and image shim generation pass, without release authority
+  Durable evidence: Dated 2026-09-29-locked-builds review preserves safe full receipt, verification summary and identities. The plan and activity record preserve crash recovery, repaired failures, unresolved static findings and next final-container/hosted acceptance work. Raw patches/caches/logs stay outside Git on persistent disk.
 
 ## Activity Log
 
@@ -498,6 +506,27 @@ Summary: Checkpoint six source-only delivery units, reviewed schemas, 508-test c
 
 ADR impact: ADR 0038 records the single-capability source foundation and explicit remaining qualification boundaries.
 
+
+### 2026-09-29T17:34:34Z - Decision
+
+Decision: Restore the interrupted seventh slice on persistent storage and finish its local checkpoint
+
+Rationale: The user authorized crash recovery and continuation. Existing commits and exact recorded patches preserve the task; reviewed reconstruction and fresh local evidence are required before checkpointing. Publication and provider mutations remain outside scope.
+
+
+### 2026-09-29T17:34:34Z - Context hygiene
+
+Summary: Recovered seventh slice passes 710 tests and all seven genuine locked builds; two selected runtime runners and image shim generation pass, without release authority
+
+Durable evidence: Dated 2026-09-29-locked-builds review preserves safe full receipt, verification summary and identities. The plan and activity record preserve crash recovery, repaired failures, unresolved static findings and next final-container/hosted acceptance work. Raw patches/caches/logs stay outside Git on persistent disk.
+
+
+### 2026-09-29T17:34:34Z - ADR disposition
+
+ADR needed: no
+
+Reason: The seventh unit implements the locked genuine build proof already required by ADR 0038 and the approved IaaS plan. It extends the same operational-realization gate, preserving source-only authority boundaries; no new architectural direction is introduced.
+
 ## Sub-Agent Activity
 
 
@@ -888,9 +917,9 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
 
 ## ADR Disposition
 
-ADR needed: yes
-ADR path: docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md
-Reason: The approved implementation establishes a durable single-capability source-discovery and evidence-consumption architecture with explicit qualification and authority boundaries.
+ADR needed: no
+ADR path:
+Reason: The seventh unit implements the locked genuine build proof already required by ADR 0038 and the approved IaaS plan. It extends the same operational-realization gate, preserving source-only authority boundaries; no new architectural direction is introduced.
 
 ## Session Metrics
 
@@ -1617,3 +1646,100 @@ No real stop condition exists. No AWS/GitHub/DNS/secret/legacy-resource mutation
 live deployment, inspected program execution, other-worktree/main change,
 commit, push, merge, rebase, reset or discard occurred. All source changes remain
 reviewable and uncommitted in the recorded IaaS worktree.
+
+
+### 2026-09-29 — WSL crash recovery and seventh-unit continuation
+
+The WSL restart removed the memory-backed `/tmp` worktree, temporary caches and
+uncommitted seventh-unit files. The persistent branch remained at `27d81529`
+after the six-unit foundation checkpoint `094d6418`. Read-only recovery checks
+passed Git connectivity and verified all 112 foundation blobs (10,382,194 bytes)
+against their Git object hashes. The surviving worktree index matched HEAD and
+contained none of the seventh-unit draft. The recorded 508-test success remains
+historical validation; it is not a post-recovery rerun.
+
+The user authorized recovery and continuation. The saved index was materialized
+into this new persistent ext4 worktree, and only this worktree registration was
+repaired. Branch history, main, other worktrees and provider state were unchanged.
+Seventh-unit source is being reconstructed from the exact recorded tool patches,
+with every recovered edit treated as an unfinished draft. Earlier statements
+that all six units remain uncommitted are superseded by the checkpoint above.
+
+Pre-crash milestones were 45 toolchain helper tests, 37 runtime helper tests, and
+a real verified installation of 61 external packages plus 20 workspace links.
+Compiler test repairs and the seven-build integration run had no final accepted
+result. These must be rerun; no vanished terminal output is accepted as new proof.
+
+The active unit remains locked Node/npm/TypeScript compilation, bound actual
+inputs/outputs and selected isolated runtime execution. Its completion requires
+contracts, implementation, positive/negative fixtures, wrappers, documentation,
+local verification and recorded evidence. Build scratch directories now belong
+on persistent disk, not memory-backed `/tmp`. Hosted CI/publication, broader
+adoption, authenticated authority and provider/live qualification remain later.
+
+### 2026-09-29 — Seventh unit completed after recovery
+
+The persistent restored branch now has complete locked local build and execution
+support inside the existing operational-realization gate: four versioned schemas,
+Node/npm/TypeScript lock, verified package acquisition and offline installation,
+compiler observer, sandbox, runtime/binding helpers, command wrapper, inert
+fixtures, focused positive/negative tests and documentation. The dated
+`docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/`
+review contains the exact successful normalized receipt and verification summary.
+No application source, TypeScript configuration or deployment workflow changed.
+Seven older trailing-blank-line corrections are whitespace-only.
+
+Post-recovery acceptance: canonical clean validation exit 0, 677 tests across
+21 suites, legacy smoke, core provider/network checks and 39 metadata headers;
+verified real-compiler fixtures exit 0, 33 tests with zero skips. Total: 710
+distinct tests passed. The all-seven real build command exited 0; both selected
+runtime-test runners and the image shim generator passed. A kernel probe
+confirmed read-only inputs, unavailable external routes and working isolated
+loopback. Each current test runner selects one immediate runtime-test file;
+this does not claim all emitted tests, a Docker build or container startup proof.
+
+The first full build run exposed an observer defect in Node10/baseUrl metadata
+probes for names such as node:crypto. Treating unsupported existence probes as
+absent without filesystem access fixed those probes; explicit unsafe source and
+output access stays blocked. New positive/negative real-compiler fixtures and
+the successful full rerun validate the repair. An earlier clean run interrupted
+by editing its executing smoke script was rejected; the frozen final run passed.
+Bounded cache retries/resume recovered public transport failures without changing
+pins. Draft runtime link arguments and receipt bindings were also repaired.
+
+Final evidence identities:
+- Result: `sha256:4724812c2efbf86e344519ec90ef1633b19402d360cf9571758f297aa342fcb9`.
+- Source: `sha256:9df10ec0208757194ea38d68f11df0baee80be9807713ed138453e10e03fde50`.
+- Runner: `sha256:b929a551c1fbfb5ec19000124a8b0b31c004cc220f3431be1420a27ec266dab3`.
+- Build inventory: `sha256:e27f35678005a52bc6924835097672c3a71152126a8a2c3315d25f6b552f2b57`.
+- Caller graph: `sha256:40bf4c1259ebf3a1136bca8db48b2fde221524fea97e306c47266ed415ef6717`.
+
+The two declaration builds each emitted an additional .cache/tsconfig.tsbuildinfo;
+those actual bytes are recorded separately. No predicted output is missing.
+Four source predictions remain unresolved. Real compilation does not close the
+static source estate or confer authenticated evidence/authority. All results
+retain false authorization and blocked source closure, release eligibility,
+operation authority and release qualification.
+
+The worktree registration now uses its canonical branch-derived directory under
+persistent storage. The existing AGENTIC_CHAT_WORKTREE_ROOT environment override
+is used for local chat gates; the shorter iaas-release-control-plane path is a
+friendly symlink. No harness path policy, main or other worktree was changed.
+Recovered patches and raw logs remain outside Git on persistent disk; only safe
+normalized evidence is proposed for this task checkpoint.
+
+Explicit next delivery unit: isolated final-container construction and
+exact-command qualification for the selected artifact. First hosted validation
+requires separately approved publication; no hosted run or required-check
+activation has occurred. Wider adoption/action semantics, authenticated admission,
+durable controls, provider adapters/stores and approved live qualification follow;
+PostgreSQL Stage 6 remains later. No real stop condition exists for local
+completion. No AWS/GitHub/DNS/secret/legacy-resource mutation, deployment, push,
+merge, rebase, reset, discard or other-worktree/main change occurred.
+
+Independent final review returned no blocker: nested receipt validation, current
+source/runner/inventory/graph identity checks, all 3,515 observed input bindings,
+61 cached distribution rehashes and 7,188 dependency fingerprints passed. Fresh
+inventory retains 46 findings; all seven build identities and output comparisons
+match. The physical worktree move did not invalidate evidence. All audit commands
+exited 0 without file changes.
