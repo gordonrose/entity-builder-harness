@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-30T20:15:57Z
-latest_commit_sha: 4d02ba4686f2f32adb7b26997c747478f08500f8
-chat_duration: 221914s (02:13:38:34)
+latest_commit_at_utc: 2026-09-30T20:47:26Z
+latest_commit_sha: e8909569
+chat_duration: 223803s (02:14:10:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -706,6 +706,17 @@ Summary: Accepted U17-U19 with 2115 clean tests and 67 separate task tests, exac
 
 ADR impact: ADR0040 records the user-approved shared-store and executor operating policy for source implementation only.
 
+
+### 2026-09-30T20:47:26Z - Commit recorded
+
+Commit: `e8909569`
+
+Message: feat(deploy): add selected shared-store source conformance
+
+Summary: Accepted U20 in 22 reviewed paths: versioned selected operation, conditional shared snapshots/events and exact evidence readback, with no live transport or execution authority. Final clean verification passed 2173 tests in 68 suites, zero skips; metadata and all commit-readiness checks passed. Independent source and documentation review passed. The accepted register is now 20 components; M1-M4 remain partial and M5 open. Next is the existing candidate lifecycle through durable control and selected-caller integration. No external mutation, push or merge.
+
+ADR impact: Implements approved ADR 0040 source policy; no new architecture decision or cloud activation.
+
 ## Sub-Agent Activity
 
 
@@ -1160,6 +1171,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Accepted U17-U19 with 2115 clean tests and 67 separate task tests, exact local image/database/SBOM proof, passive stale-drift refusal, and explicit unfinished M4/M5 boundaries; no publication or AWS mutation.
   ADR impact: ADR0040 records the user-approved shared-store and executor operating policy for source implementation only.
 
+
+- Commit: `e8909569`
+  Time UTC: 2026-09-30T20:47:26Z
+  Message: feat(deploy): add selected shared-store source conformance
+  Summary: Accepted U20 in 22 reviewed paths: versioned selected operation, conditional shared snapshots/events and exact evidence readback, with no live transport or execution authority. Final clean verification passed 2173 tests in 68 suites, zero skips; metadata and all commit-readiness checks passed. Independent source and documentation review passed. The accepted register is now 20 components; M1-M4 remain partial and M5 open. Next is the existing candidate lifecycle through durable control and selected-caller integration. No external mutation, push or merge.
+  ADR impact: Implements approved ADR 0040 source policy; no new architecture decision or cloud activation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1173,9 +1191,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-30T20:15:57Z
-Latest commit SHA: 4d02ba4686f2f32adb7b26997c747478f08500f8
-Chat duration: 221914s (02:13:38:34)
+Latest commit at UTC: 2026-09-30T20:47:26Z
+Latest commit SHA: e8909569
+Chat duration: 223803s (02:14:10:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
