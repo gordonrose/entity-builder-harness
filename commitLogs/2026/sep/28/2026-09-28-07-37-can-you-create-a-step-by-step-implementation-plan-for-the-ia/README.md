@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-29T22:48:06Z
-latest_commit_sha: 393a8361
-chat_duration: 144643s (01:16:10:43)
+latest_commit_at_utc: 2026-09-30T11:06:25Z
+latest_commit_sha: HEAD
+chat_duration: 188942s (02:04:29:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -640,6 +640,17 @@ Summary: Accepted source units 10–12: 1455 tests across 38 suites; fresh packa
 
 ADR impact: Implements the accepted IaaS plan and ADR 0038 boundaries; no new production policy or external authority.
 
+
+### 2026-09-30T11:06:25Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: feat(deploy): persist local controls and reconcile caller coverage
+
+Summary: Accepted source units 13–14 in 54 paths. Frozen clean verification passed 1645 tests in 46 suites and 56 metadata headers; real ten-case durable-process proof and same-source 403-file caller/adoption evidence retained. All authority blocked; next is existing finite-engine recovery integration.
+
+ADR impact: ADR 0039 records local operation-control conformance boundaries.
+
 ## Sub-Agent Activity
 
 
@@ -1052,6 +1063,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Accepted source units 10–12: 1455 tests across 38 suites; fresh packaged dependency effects, real offline signature conformance, and exact infrastructure reference inventory receipts. All provider and release authority remains blocked.
   ADR impact: Implements the accepted IaaS plan and ADR 0038 boundaries; no new production policy or external authority.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-09-30T11:06:25Z
+  Message: feat(deploy): persist local controls and reconcile caller coverage
+  Summary: Accepted source units 13–14 in 54 paths. Frozen clean verification passed 1645 tests in 46 suites and 56 metadata headers; real ten-case durable-process proof and same-source 403-file caller/adoption evidence retained. All authority blocked; next is existing finite-engine recovery integration.
+  ADR impact: ADR 0039 records local operation-control conformance boundaries.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1065,9 +1083,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-29T22:48:06Z
-Latest commit SHA: 393a8361
-Chat duration: 144643s (01:16:10:43)
+Latest commit at UTC: 2026-09-30T11:06:25Z
+Latest commit SHA: HEAD
+Chat duration: 188942s (02:04:29:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
