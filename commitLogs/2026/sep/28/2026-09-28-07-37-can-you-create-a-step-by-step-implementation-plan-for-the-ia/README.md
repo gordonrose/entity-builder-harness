@@ -2601,3 +2601,47 @@ change. Three files changed: the new ledger, plan index and current session log.
 No runtime implementation, provider, hosted setting or other worktree changed.
 Next delivery remains R1.2. No real local stop condition exists; external and
 policy decisions remain attached to their explicit later checkpoints.
+
+
+### 2026-09-30 — MVP and backlog-first scope revision
+
+The user said the programme was ballooning and requested an MVP, with newly
+found checks backlogged unless a high risk of blockers or drift justified
+implementation now. Recorded B02 in `docs/04.deploy/plans/iaas-release-control-mvp.md`,
+linked it from the original plan and progress ledger, and superseded the broad
+R1.2 next-unit sequence with M1 selected target/release blueprint and compiler acceptance.
+The five MVP milestones target one controlled existing AWS staging path; all
+sixteen accepted deliveries remain credited. This is an explicit scope revision
+for the first usable milestone, not another estimate or a completed runtime unit.
+
+Nine deferred backlog categories preserve wider R1–R8 requirements and concrete
+revisit triggers. Necessary-now promotion requires affected operation, observed
+risk, missing control, smallest repair, test and batch impact. Source/parser
+opacity alone no longer generates an open-ended implementation chain. Existing
+checks stay enabled. A known high-risk selected-path gap blocks that operation;
+backlog status cannot waive it. Mandatory gates remain visible, source results
+remain non-authoritative, and Stage 17 long-window evidence stays pending.
+
+The MVP retains exact artifacts, selected-command/effect proof, AWS task preflight,
+current authority, enforceable one-writer protection, durable intent/evidence,
+unknown-outcome reconciliation, recovery and cleanup. If existing facilities
+cannot enforce shared ownership or durability, minimal store work remains MVP.
+No live operation, hosted activation, new PostgreSQL feature work or other-worktree
+change is authorized by this document. Next is M1; no implementation batch began.
+Last allowance report is 26%, with 20% stop instruction and no live usage meter.
+ADR disposition: delivery scope/prioritization only; storage/authority design
+changes still require their normal reviewed decisions. Verification pending.
+
+
+B02 verification passed: five unique MVP milestones, nine deferred backlog
+categories, sixteen accepted-unit entries, and all twenty-two unchanged full-
+roadmap acceptance criteria. Twenty-two local links/anchors resolve; metadata
+passed for all three governed documents; `git diff --check` passed. Original
+plan requirements from Section 1 onward remain byte-for-byte unchanged; B02
+explicitly revises delivery scope rather than falsely completing those gates.
+Independent review found no additional safety/authority blocker. M1 requires an
+actual versioned selected target/release blueprint accepted by the existing
+compiler with focused positive/negative tests; another planning-only report
+cannot complete it. Four documentation files changed including this session log.
+Implementation tests were not rerun because no runtime code changed. No current
+local stop condition exists; approval is still required before live effects.

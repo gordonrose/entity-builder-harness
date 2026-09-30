@@ -16,6 +16,15 @@ used_by:
 
 # IaaS release-control progress ledger
 
+## Active scope — B02, 2026-09-30
+
+The user requested an [MVP with backlog-first intake](iaas-release-control-mvp.md).
+M1–M5 are now the active delivery queue for one controlled AWS staging path.
+New checks are deferred unless an evidenced blocker, unsafe-effect or material-
+drift risk requires them. The R1–R8 register below remains the full-roadmap
+baseline; it is not all prerequisite work for this scoped MVP. No R checkpoint
+is marked complete or exempt by deferral. Accepted delivery count remains 16.
+
 ## Current position — baseline B01, 2026-09-30
 
 **16 delivery units accepted; seven accepted since the 15–20 estimate.**
@@ -254,8 +263,12 @@ beyond it. No new numerical forecast is asserted in B01.
 | Earlier estimate, after U09 | 9 | Source compiler, selected coverage, locked builds, container and finite-job foundations accepted | 15–20 rough estimate lacked a fixed decomposition | Effects/trust, coverage and durable controls |
 | Implementation through U16 | 16 (+7) | U10–U16 accepted as registered above; broader AWS/orchestration/live milestones remain open | Original work within coverage/contracts and local-versus-production integration was underestimated; 12–17 was not a tracked forecast | R1.2 |
 | B01 reporting correction | 16 (+0) | Fixed backlog, acceptance criteria, dependency/approval boundaries and accepted evidence register established; no implementation gate newly passed | No programme scope change; both numerical forecasts superseded as progress measures | R1.2 action material and input/default reconciliation |
+| B02 MVP scope revision | 16 (+0) | M1–M5 and backlog-first intake adopted; no implementation gate newly passed | User-directed scope reduction for the first usable target path; full R requirements remain deferred/open where outside that path | M1 selected target/release blueprint and compiler acceptance |
 
-## Next bounded delivery unit
+## Historical next unit at B01 — superseded by B02
+
+Current next unit is M1 in the linked MVP scope. The following R1.2 queue entry
+records the earlier full-programme sequence; it no longer directs the next run.
 
 **R1.2: immutable workflow action material and input/default reconciliation.**
 Extend the existing action collector, operation contracts, schema/fixtures,

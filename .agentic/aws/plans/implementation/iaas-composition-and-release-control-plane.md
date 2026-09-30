@@ -24,6 +24,16 @@ used_by:
 
 ## Current progress and fixed remaining backlog
 
+**Active delivery scope, B02:** the user requested an
+[MVP and backlog-first intake](../../../../docs/04.deploy/plans/iaas-release-control-mvp.md)
+after the full programme proved too expansive. Deliver one controlled
+`kanbien/staging` path using existing capabilities. Additional checks are deferred
+unless concrete blocker, unsafe-effect or material-drift evidence makes them
+necessary now. This supersedes the full-roadmap next-unit sequencing, not its
+historical acceptance records or safety/approval rules. M1 is the next unit;
+whole-estate R1 closure is not the immediate milestone. The broad requirements
+below remain the future roadmap and are not relabeled complete or inapplicable.
+
 Use the [progress ledger](../../../../docs/04.deploy/plans/iaas-release-control-progress.md)
 for the current accepted-delivery register, stable R1–R8 milestones, remaining
 acceptance checkpoints, dependencies and changes between implementation runs.
