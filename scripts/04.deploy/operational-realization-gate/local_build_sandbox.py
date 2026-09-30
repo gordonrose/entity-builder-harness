@@ -35,7 +35,8 @@ CONFIGURATIONS = (
 )
 SOURCE_ROOTS = ("apps", "packages", "platform", "products", "infra/04.deploy/03.product/entrypoints")
 SOURCE_FILES = ("package.json", "package-lock.json",
-                "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs")
+                "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs",
+                "scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs")
 SUFFIXES = {".ts", ".tsx", ".js", ".mjs", ".cjs", ".json"}
 PRIVATE = {".git", ".aws", ".ssh", ".codex", ".agents", "secrets", "credentials"}
 MAX_SOURCE_FILES, MAX_SOURCE_BYTES = 10000, 128 * 1024 * 1024

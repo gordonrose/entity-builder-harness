@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-30T11:06:25Z
-latest_commit_sha: f87b584e
-chat_duration: 188942s (02:04:29:02)
+latest_commit_at_utc: 2026-09-30T11:39:53Z
+latest_commit_sha: a8a28fc9103870ed0053e16e9965be57c2740f0e
+chat_duration: 190950s (02:05:02:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -651,6 +651,17 @@ Summary: Accepted source units 13–14 in 54 paths. Frozen clean verification pa
 
 ADR impact: ADR 0039 records local operation-control conformance boundaries.
 
+
+### 2026-09-30T11:39:53Z - Commit recorded
+
+Commit: `a8a28fc9103870ed0053e16e9965be57c2740f0e`
+
+Message: feat(deploy): reconcile interrupted local finite operations
+
+Summary: Accepted source unit 15 in 29 files: 1735 tests/51 suites, 58 metadata headers, 198 focused/shared regressions and independent 31-test public review passed. Fresh real proof passed eight scenarios with seven killed/reopened processes; seven operations closed, ambiguous create remained unknown, all owned resources absent. All authority blocked. Next: compiler-backed package exports.
+
+ADR impact: Covered by ADR 0039 local process conformance boundary.
+
 ## Sub-Agent Activity
 
 
@@ -1070,6 +1081,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Accepted source units 13–14 in 54 paths. Frozen clean verification passed 1645 tests in 46 suites and 56 metadata headers; real ten-case durable-process proof and same-source 403-file caller/adoption evidence retained. All authority blocked; next is existing finite-engine recovery integration.
   ADR impact: ADR 0039 records local operation-control conformance boundaries.
 
+
+- Commit: `a8a28fc9103870ed0053e16e9965be57c2740f0e`
+  Time UTC: 2026-09-30T11:39:53Z
+  Message: feat(deploy): reconcile interrupted local finite operations
+  Summary: Accepted source unit 15 in 29 files: 1735 tests/51 suites, 58 metadata headers, 198 focused/shared regressions and independent 31-test public review passed. Fresh real proof passed eight scenarios with seven killed/reopened processes; seven operations closed, ambiguous create remained unknown, all owned resources absent. All authority blocked. Next: compiler-backed package exports.
+  ADR impact: Covered by ADR 0039 local process conformance boundary.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1083,9 +1101,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-30T11:06:25Z
-Latest commit SHA: f87b584e
-Chat duration: 188942s (02:04:29:02)
+Latest commit at UTC: 2026-09-30T11:39:53Z
+Latest commit SHA: a8a28fc9103870ed0053e16e9965be57c2740f0e
+Chat duration: 190950s (02:05:02:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -2383,3 +2401,89 @@ The draft remains intact and excluded from this accepted recovery checkpoint.
 Its SHA-256 is `1ddb1d0a91c7ce1d62b909d8827ba43f8dabf35faad02b834a7b8f9a960625ea`. No alternate move/delete mechanism is attempted.
 Reviewed recovery source can be committed independently; session bookkeeping may
 remain dirty until the draft-location question is resolved.
+
+
+### Sixteenth source delivery unit — integration in progress
+
+Compiler-backed package-export reconciliation now replaces the three handwritten
+runtime maps in the existing image preparation and server/product test runners.
+Only 37 reviewed manifest-listed source, schema, test and documentation paths
+were integrated after every base and output hash matched. The independent source
+collector retains all export declarations and executable/owner obligations. New
+versioned emission observations bind actual compiler source-to-output callbacks;
+modern runtime receipts bind the exact compiler-plus-generated file union. The
+server-main image alias remains explicitly source-bound. Direct generators reject
+saved projection arguments and freshly verify current outputs; their stricter
+pinned-version/Python prerequisites are documented. The isolated locked path
+compiles once and uses a fixed internal driver. All release/operation authority
+remains blocked.
+
+Independent review accepted the projection, current declaration joins, safe file
+reads, private handoff, exact artifact union and authority boundary. The combined
+focused suite is running; fresh all-seven locked compilation/runtime acceptance
+and canonical clean verification remain outstanding. Container consumer review
+identified a duplicated legacy embedded build schema; a narrow compatibility
+amendment is being verified before source freeze. Prior container receipts remain
+historical and do not qualify changed output bytes. This unit is not accepted yet.
+
+Next: finish that compatibility amendment and integrated evidence, then reconcile
+the next supported caller/action boundary into estate coverage while preserving
+owner and executable-behavior blockers. Production artifact evidence, durable
+provider stores, AWS adapters/preflight, release orchestration/adoption and approved
+target qualification remain open. PostgreSQL Stage 6 stays paused.
+
+The documented read-only Codex account/rateLimits/read query returned no usage
+windows. The user's weekly 20% stopping instruction remains active, with the
+percentage question pending; no threshold is inferred. The separately pending
+automatically rejected README move has not been retried. Its bytes remain intact
+and excluded; canonical session-only bookkeeping cannot run with that dirty file.
+
+Unit 16 first integrated acceptance correctly remains failed. The all-seven
+wrapper exited 1 with empty stderr: every compiler passed, server runtime and
+image preparation passed, but product runtime was refused. Static diagnosis
+identified TypeScript's external-library flag on a workspace-linked PostgreSQL
+adapter whose actual repository source and emitted JavaScript matched. The
+repair will use the exact source/emission binding instead of that classification
+flag; actual external targets remain subject to strict refusal. Failed result
+SHA-256: `a38f453c5ef632a7ba3d8b411b696ca2b9d89505f67994a177ba6d7f0eda99ad`.
+
+The first clean verifier stopped at an existing payload-tampering test that still
+used the old fixture path. Changing only that path to the shared fixture's
+`main_output` preserved the exact artifact-changed rejection; all 41 payload
+tests then passed in 1.218 seconds. Failed clean log SHA-256:
+`46c841ac50760ecb10a1676cd7d574e9db022231764fcc9a8edf4e4e6a4166b0`.
+Both failed attempts remain preserved. Fresh normal-wrapper acceptance and a
+complete canonical rerun are required after the workspace-resolution repair.
+
+
+### Sixteenth source delivery unit — accepted
+
+Compiler-backed package exports are complete within the local execution scope.
+The final all-seven normal wrapper exited 0 with empty stderr: seven compiler
+checks, both selected runtime-test runners and image preparation passed. All
+38 declarations are accounted for per runtime: server 27 selected/11 outside,
+image 37/1 plus its explicit server-main alias, product 38/0. The image now
+contains the previously omitted core files/localization/security forwarding
+entries. New receipts bind exact compiler/generated membership and preserve
+all remaining source, behavior, owner and authority obligations.
+
+Final clean verification exited 0: **1,834 tests / 57 suites**, legacy
+smoke and provider/network boundaries, and **61 metadata files** passed. Another
+44 genuine compiler fixtures and five direct-command compiler fixtures passed
+without skips: **1,883 distinct tests**. Independent current-source receipt
+verification passed with 54 consumer refusals and exact 40-file/source/runner/
+selected-graph bindings. Result: `sha256:d728989d9ac3c36c3b6ecd43e5c32e683884798405e92a5b33f325b22a207a2b`.
+Clean log SHA-256: `7230c1cd8538a3733f7ebb8deb7a954a9009ac78ffa014d73ec2f7a40d48422b`.
+Dated normalized evidence is in
+`docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/`.
+
+The actual product workspace-resolution refusal and stale payload test path
+were repaired and freshly reverified; both first failed attempts remain recorded.
+Changed generated artifacts require fresh final-container qualification; older
+receipts stay historical. No AWS, GitHub, DNS, secrets, live PostgreSQL, main or
+other worktree was changed. Nothing was pushed or published.
+
+Explicit next unit: immutable workflow action material and input/default
+reconciliation using the existing collectors/contracts. Production artifact
+evidence, durable provider stores, AWS adapters/preflight, orchestration/adoption
+and approved target qualification remain queued. PostgreSQL Stage 6 stays paused.

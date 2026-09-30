@@ -139,3 +139,26 @@ the profile digest. Completed execution requires more than exit zero; all
 semantic effect claims remain unverified and release/operation authority stays
 blocked. These schemas currently support the reviewed local Node adapter and
 its inert conformance fixtures; no product/provider proof is implied.
+
+
+The compiler-backed package-export unit adds six closed contracts:
+
+- `local-typescript-emission-observation.schema.yml` records actual compiler
+  source-to-output relationships and distinguishes fresh output from read-only
+  verification of existing output.
+- `source-package-export-inventory.schema.yml` independently records workspace
+  export declarations while retaining unsupported and executable findings.
+- `local-workspace-export-projection.schema.yml` binds selected exports to
+  current declarations and unique actual CommonJS outputs.
+- `local-package-export-reconciliation.schema.yml` accounts for every discovered
+  export as emitted or outside this selected compilation; it does not waive
+  obligations for declarations outside the selection.
+- `local-workspace-runtime-observation.schema.yml` binds the projection, fixed
+  execution driver, shared helper and exact compiler-plus-generated file union.
+- `package-export-error.schema.yml` constrains safe failures at the direct helper.
+
+The existing local-build result composes the new observations. Legacy observation
+identities remain readable, but cannot stand in for compiler-backed export proof.
+Generated package membership is not executable behavior, owner approval, final
+container qualification or authority; the common result consumer refuses these
+producers. The three existing generators share this implementation.

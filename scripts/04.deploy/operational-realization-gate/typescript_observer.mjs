@@ -52,6 +52,10 @@ function safeRelative(value) {
       && !/\.(?:pem|key|p12|pfx)$/.test(part.toLowerCase()));
 }
 function argumentsFrom(argv) {
+  const verifyCount = argv.filter((value) => value === "--verify-existing-outputs").length;
+  if (verifyCount > 1) fail("observer-arguments-invalid");
+  const verifyExisting = verifyCount === 1;
+  argv = argv.filter((value) => value !== "--verify-existing-outputs");
   if (argv.length !== 6) fail("observer-arguments-invalid");
   const options = {};
   for (let index = 0; index < argv.length; index += 2) {
@@ -68,15 +72,19 @@ function argumentsFrom(argv) {
   if (fs.realpathSync(path.dirname(output)) !== path.dirname(output)
       || output === root || output.startsWith(root + path.sep)) fail("observer-receipt-path-unsafe");
   if (fs.existsSync(output)) fail("observer-receipt-exists");
-  return { root, configuration: options["--config"], output };
+  return { root, configuration: options["--config"], output, verifyExisting };
 }
 
 function observe(options) {
-  const result = { schema: "local-typescript-observation/v1", configuration: options.configuration,
+  const result = { schema: "local-typescript-emission-observation/v1", configuration: options.configuration,
     node_version: process.versions.node, typescript_version: null, verdict: "failed",
-    no_emit: false, emit_skipped: true, inputs: [], resolutions: [], outputs: [], diagnostics: [], findings: [] };
+    no_emit: false, emit_skipped: true, inputs: [], resolutions: [], outputs: [], diagnostics: [], findings: [],
+    output_mode: options.verifyExisting ? "verify-existing" : "fresh-exclusive", existing_remainder: [],
+    emission_map: { schema: "local-typescript-emission-map/v1", module_kind: "other", entries: [] } };
   const inputs = new Map();
   const outputs = new Map();
+  const emissions = new Map();
+  const outputRoots = new Set();
   const resolutions = new Map();
   const directories = new Map();
   let totalInputBytes = 0;
@@ -213,15 +221,82 @@ function observe(options) {
     }
     return { absolute, relative };
   }
-  function writeFile(value, data, bom) {
+  function existingOutput(value) {
     const target = outputName(value);
-    if (outputs.has(target.relative) || fs.existsSync(target.absolute)) fail("observer-output-exists");
+    const descriptor = fs.openSync(target.absolute, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    try {
+      const before = fs.fstatSync(descriptor);
+      if (!before.isFile() || before.size > MAX_FILE_BYTES) fail("observer-existing-output-invalid");
+      const raw = fs.readFileSync(descriptor);
+      const after = fs.fstatSync(descriptor);
+      if (raw.length > MAX_FILE_BYTES || before.size !== after.size || before.ino !== after.ino
+          || before.dev !== after.dev || before.mtimeMs !== after.mtimeMs || before.ctimeMs !== after.ctimeMs) {
+        fail("observer-existing-output-changed");
+      }
+      return raw;
+    } finally { fs.closeSync(descriptor); }
+  }
+  function existingMembership() {
+    const files = new Map();
+    let bytes = 0;
+    let visited = 0;
+    function visit(value) {
+      if (++visited > MAX_ROWS) fail("observer-limit-exceeded");
+      const target = outputName(value);
+      const info = fs.lstatSync(target.absolute);
+      if (info.isDirectory()) {
+        for (const name of fs.readdirSync(target.absolute).sort()) visit(path.join(target.absolute, name));
+      } else {
+        if (!info.isFile()) fail("observer-existing-output-invalid");
+        if (files.has(target.relative)) return;
+        const raw = existingOutput(target.absolute); bytes += raw.length;
+        if (files.size >= MAX_FILES || bytes > MAX_TOTAL_BYTES) fail("observer-limit-exceeded");
+        const row = { path: target.relative, digest: hash(raw), bytes: raw.length };
+        const expected = outputs.get(target.relative);
+        if (expected && canonical(expected) !== canonical(row)) fail("observer-existing-output-changed");
+        files.set(target.relative, row);
+      }
+    }
+    for (const directory of outputRoots) if (fs.existsSync(directory)) visit(directory);
+    for (const output of outputs.keys()) if (!files.has(output)) visit(path.join(options.root, output));
+    return [...files.values()].filter((row) => !outputs.has(row.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  }
+  function emissionKind(relative) {
+    if (/\.d\.(?:ts|mts|cts)$/.test(relative)) return "declaration";
+    if (/\.map$/.test(relative)) return "source-map";
+    if (/\.tsbuildinfo$/.test(relative)) return "build-info";
+    if (/\.(?:js|mjs|cjs)$/.test(relative)) return "javascript";
+    return "other";
+  }
+  function writeFile(value, data, bom, onError, sourceFiles) {
+    const target = outputName(value);
+    if (outputs.has(target.relative) || (!options.verifyExisting && fs.existsSync(target.absolute))) fail("observer-output-exists");
+    const origins = [];
+    if (sourceFiles !== undefined && !Array.isArray(sourceFiles)) fail("observer-emission-source-invalid");
+    for (const source of sourceFiles ?? []) {
+      if (!source || typeof source.fileName !== "string") fail("observer-emission-source-invalid");
+      const item = inspect(source.fileName, false);
+      const relative = relativeName(item.real);
+      if (!inputs.has(relative) || origins.includes(relative)) fail("observer-emission-source-invalid");
+      origins.push(relative);
+    }
+    origins.sort();
+    const kind = emissionKind(target.relative);
+    if (kind === "javascript" && (!origins.length || origins.some((name) => /\.d\.(?:ts|mts|cts)$/.test(name) || !/\.(?:tsx?|mts|cts|jsx?|mjs|cjs)$/.test(name)))) {
+      fail("observer-emission-source-invalid");
+    }
     const raw = Buffer.from((bom ? "\ufeff" : "") + data, "utf8");
     totalOutputBytes += raw.length;
     if (raw.length > MAX_FILE_BYTES || totalOutputBytes > MAX_TOTAL_BYTES || outputs.size >= MAX_FILES) fail("observer-limit-exceeded");
-    fs.mkdirSync(path.dirname(target.absolute), { recursive: true });
-    fs.writeFileSync(target.absolute, raw, { flag: "wx", mode: 0o600 });
+    if (options.verifyExisting) {
+      const actual = existingOutput(target.absolute);
+      if (!actual.equals(raw)) fail("observer-existing-output-changed");
+    } else {
+      fs.mkdirSync(path.dirname(target.absolute), { recursive: true });
+      fs.writeFileSync(target.absolute, raw, { flag: "wx", mode: 0o600 });
+    }
     outputs.set(target.relative, { path: target.relative, digest: hash(raw), bytes: raw.length });
+    emissions.set(target.relative, { output_path: target.relative, source_paths: origins, kind });
   }
   function recordDiagnostics(phase, values) {
     for (const diagnostic of values) {
@@ -264,6 +339,7 @@ function observe(options) {
         value, extensions, excludes, includes, true, options.root, depth, entries, realpath)),
       writeFile: enforce(writeFile), createDirectory: enforce((value) => {
         outputName(path.join(value, "directory-check"));
+        if (options.verifyExisting) fail("observer-existing-output-write-refused");
         fs.mkdirSync(absoluteName(value), { recursive: true });
       }),
     };
@@ -275,17 +351,26 @@ function observe(options) {
         path.dirname(configurationPath), undefined, configurationPath);
       recordDiagnostics("config", parsed.errors);
       result.no_emit = parsed.options.noEmit === true;
+      result.emission_map.module_kind = ts.getEmitModuleKind(parsed.options) === ts.ModuleKind.CommonJS ? "commonjs" : "other";
       for (const key of ["outDir", "declarationDir"]) {
-        if (parsed.options[key]) outputName(path.join(parsed.options[key], "output-check"));
+        if (parsed.options[key]) {
+          outputName(path.join(parsed.options[key], "output-check"));
+          outputRoots.add(absoluteName(parsed.options[key]));
+        }
       }
       for (const key of ["outFile", "tsBuildInfoFile"]) {
         if (parsed.options[key]) outputName(parsed.options[key]);
       }
+      if (parsed.options.outFile) outputRoots.add(path.dirname(absoluteName(parsed.options.outFile)));
       // These execution features require separate contracts; do not approximate.
       if (parsed.projectReferences?.length || parsed.options.plugins?.length || parsed.options.watch) fail("observer-project-feature-unsupported");
       for (const name of parsed.fileNames) relativeName(name);
       if (!result.diagnostics.some((row) => row.category === "error")) {
         const host = ts.createIncrementalCompilerHost(parsed.options, system);
+        // The generic system writeFile wrapper drops sourceFiles; capture the compiler callback directly.
+        host.writeFile = enforce(writeFile);
+        // Recompute every emission with unchanged options; never reuse historical build-info.
+        if (options.verifyExisting) host.getBuildInfo = () => undefined;
         const moduleCache = ts.createModuleResolutionCache(options.root, (name) => name, parsed.options);
         host.resolveModuleNameLiterals = (literals, from, redirected, compilerOptions, containingSourceFile) => literals.map((literal) => {
           const mode = ts.getModeForUsageLocation(containingSourceFile, literal, compilerOptions);
@@ -310,6 +395,7 @@ function observe(options) {
         if (result.no_emit && outputs.size) fail("observer-no-emit-violation");
         // Re-read observed inputs after emission to detect concurrent mutation.
         for (const row of [...inputs.values()]) readBytes(path.join(options.root, row.path));
+        if (options.verifyExisting) result.existing_remainder = existingMembership();
         if (!result.findings.length && !result.diagnostics.some((row) => row.category === "error")) result.verdict = "passed";
       }
     }
@@ -321,6 +407,7 @@ function observe(options) {
   const lexical = (left, right) => left < right ? -1 : left > right ? 1 : 0;
   result.inputs = [...inputs.values()].sort((left, right) => lexical(left.path, right.path));
   result.outputs = [...outputs.values()].sort((left, right) => lexical(left.path, right.path));
+  result.emission_map.entries = [...emissions.values()].sort((left, right) => lexical(left.output_path, right.output_path));
   result.resolutions = [...resolutions.values()].sort((left, right) => lexical(canonical(left), canonical(right)));
   result.diagnostics.sort((left, right) => lexical(canonical(left), canonical(right)));
   result.observation_digest = hash(Buffer.from(canonical(result), "utf8"));

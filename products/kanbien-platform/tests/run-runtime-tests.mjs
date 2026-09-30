@@ -1,104 +1,31 @@
+// agentic-artifact:
+//   schema: agentic-artifact/v2
+//   id: deploy.test.product-platform-workspace-runtime
+//   version: 1
+//   status: active
+//   layer: 04.deploy
+//   domain: deployment.realization
+//   disciplines: [architecture, sre]
+//   kind: script
+//   purpose: Run emitted runtime tests with freshly reconciled workspace package exports.
+//   portability: {class: reusable, targets: [entity-builder]}
+//   effects: [writes-files]
+//   used_by:
+//   - id: deploy.script.operational-realization-local-runtime
+//     path: scripts/04.deploy/operational-realization-gate/local_runtime.py
+
+import { prepareWorkspaceRuntime } from '../../../scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs';
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import path, { join } from "node:path";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
 
-const runtimeRoot = ".cache/product-kanbien-platform-runtime";
-const testDirectory = join(runtimeRoot, "products/kanbien-platform/tests");
-const coreModules = [
-  "audit",
-  "authn",
-  "authz",
-  "config",
-  "diagnostics",
-  "events",
-  "i18n",
-  "logging",
-  "monitoring",
-  "persistence",
-  "queues",
-  "shared",
-  "tenancy",
-  "validation",
-];
+const runtimeRoot = '.cache/product-kanbien-platform-runtime';
+prepareWorkspaceRuntime('products/kanbien-platform/tsconfig.runtime-test.json', runtimeRoot);
 
-writePackageShim("@kanbien/app-platform-smoke", {
-  ".": join(runtimeRoot, "apps/platform-smoke/src/index.js"),
-});
-writePackageShim("@kanbien/core", {
-  ".": join(runtimeRoot, "packages/core/src/index.js"),
-  ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
-});
-writePackageShim("@kanbien/platform-config", {
-  ".": join(runtimeRoot, "platform/config/src/index.js"),
-});
-writePackageShim("@kanbien/platform-contracts", {
-  ".": join(runtimeRoot, "platform/contracts/src/index.js"),
-});
-writePackageShim("@kanbien/platform-health", {
-  ".": join(runtimeRoot, "platform/health/src/index.js"),
-});
-writePackageShim("@kanbien/platform-observability", {
-  ".": join(runtimeRoot, "platform/observability/src/index.js"),
-});
-writePackageShim("@kanbien/platform-persistence", {
-  ".": join(runtimeRoot, "platform/persistence/src/index.js"),
-});
-writePackageShim("@kanbien/platform-runtime", {
-  ".": join(runtimeRoot, "platform/runtime/src/index.js"),
-});
-writePackageShim("@kanbien/platform-security", {
-  ".": join(runtimeRoot, "platform/security/src/index.js"),
-});
-writePackageShim("@kanbien/platform-server", {
-  ".": join(runtimeRoot, "platform/server/src/index.js"),
-});
-writePackageShim("@kanbien/platform-testing", {
-  ".": join(runtimeRoot, "platform/testing/src/index.js"),
-});
-writePackageShim("@kanbien/platform-workers", {
-  ".": join(runtimeRoot, "platform/workers/src/index.js"),
-});
-
-const testFiles = readdirSync(testDirectory)
-  .filter((fileName) => fileName.endsWith("-runtime.test.js"))
-  .sort();
-
-if (testFiles.length === 0) {
-  throw new Error(`No Kanbien Platform runtime tests found in ${testDirectory}.`);
-}
-
+const testDirectory = join(runtimeRoot, 'products/kanbien-platform/tests');
+const testFiles = readdirSync(testDirectory).filter(name => name.endsWith('-runtime.test.js')).sort();
+if (!testFiles.length) throw new Error('workspace-runtime-tests-empty');
 for (const testFile of testFiles) {
-  const result = spawnSync(process.execPath, [join(testDirectory, testFile)], {
-    stdio: "inherit",
-  });
-
-  if (result.status !== 0) {
-    process.exitCode = result.status ?? 1;
-    break;
-  }
-}
-
-function writePackageShim(packageName, exportsMap) {
-  const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));
-  mkdirSync(packageRoot, { recursive: true });
-
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    const shimPath = exportName === "."
-      ? join(packageRoot, "index.js")
-      : join(packageRoot, exportName.slice(2), "index.js");
-    mkdirSync(path.dirname(shimPath), { recursive: true });
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(relativeRequirePath(shimPath, targetPath))});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-
-  writeFileSync(
-    join(packageRoot, "package.json"),
-    `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`,
-  );
-}
-
-function relativeRequirePath(fromFile, toFile) {
-  const relativePath = path.relative(path.dirname(fromFile), toFile).replaceAll(path.sep, "/");
-  return relativePath.startsWith(".") ? relativePath : `./${relativePath}`;
+  const result = spawnSync(process.execPath, [join(testDirectory, testFile)], {stdio: 'inherit'});
+  if (result.status !== 0) { process.exitCode = result.status ?? 1; break; }
 }

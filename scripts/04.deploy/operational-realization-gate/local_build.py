@@ -52,13 +52,14 @@ def unique_pairs(items):
 def implementation_digest():
     names = ("local_build.py", "local_build_sandbox.py", "local_build_contracts.py",
              "locked_toolchain.py", "typescript_observer.mjs", "local_runtime.py", "node-toolchain.lock.json",
-             "build_contracts.py", "release_compiler.py")
+             "build_contracts.py", "release_compiler.py", "package_exports.py", "package_exports_cli.py")
     rows = [{"path": name, "digest": digest((DIRECTORY / name).read_bytes())} for name in names]
     for path in sorted(release.SCHEMA_DIR.glob("local-*.schema.yml")):
         rows.append({"path": path.name, "digest": digest(path.read_bytes())})
     for name in ("build_inventory.py", "build_artifacts.py", "source_inventory.py", "caller_inventory.py",
-                 "operation_inventory.py", "cloudformation_inventory.py"):
+                 "operation_inventory.py", "cloudformation_inventory.py", "package_export_inventory.py"):
         rows.append({"path": name, "digest": digest((DIRECTORY.parent / "release-control/discovery" / name).read_bytes())})
+    rows.append({"path": "source-package-export-inventory.schema.yml", "digest": digest((release.SCHEMA_DIR / "source-package-export-inventory.schema.yml").read_bytes())})
     return digest(canonical(rows))
 
 
@@ -170,7 +171,9 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None, artifac
                                  "--config", configuration, "--output", str(output)], work, {})
             observed = json.loads(tools._read(output, 16 * 1024 * 1024),
                                   object_pairs_hook=unique_pairs)
-            contracts.observation(observed)
+            contracts.emission_map_binding(observed)
+            if observed["output_mode"] != "fresh-exclusive":
+                raise LocalBuildFailure("local-build-fresh-emission-required")
             if (response["returncode"] == 0) != (observed["verdict"] == "passed"):
                 raise LocalBuildFailure("local-build-exit-observation-mismatch")
             check_observed_files(work, observed, manifest + external)
@@ -181,6 +184,7 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None, artifac
             if observed["verdict"] == "passed" and configuration in RUNTIME_CONFIGS:
                 from local_runtime import run_runtime
                 runtime_closure = {"source_root": master, "node_path": toolchain["node"],
+                                   "compiler_observation": observed,
                                    "external_modules_root": work / "node_modules",
                                    "external_modules": closure["external"],
                                    "workspace_links": [row["path"] for row in closure["links"]],
@@ -191,6 +195,8 @@ def run(root, package_cache, selected=CONFIGURATIONS, scratch_root=None, artifac
                                                writable=[builds[configuration]["output_root"] + "/node_modules"])
                     runtime = run_runtime(configuration, work, runtime_closure, runtime_executor,
                                           export_root=base / "verified-runtime" if artifact_export else None)
+                    if runtime.get("schema") != "local-workspace-runtime-observation/v1":
+                        raise LocalBuildFailure("local-build-runtime-export-proof-required")
                     contracts.runtime_source_binding(runtime, manifest)
                 except Exception as error:
                     runtime = None

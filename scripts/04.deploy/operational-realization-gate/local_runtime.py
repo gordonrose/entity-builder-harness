@@ -32,6 +32,7 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "release-control/discovery"))
 import build_artifacts as artifacts
+import package_exports
 from source_inventory import SourceFailure, canonical, checked_document, digest
 
 CONFIGURATIONS = {
@@ -278,13 +279,28 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
     output_root, kind = CONFIGURATIONS[configuration]
     generator_path = artifacts.CONFIG_GENERATORS[configuration]
     raw = read_generator(closure["source_root"], generator_path)
-    declared_root, generated, targets, test_dir = artifacts.literal_generator(raw)
-    if declared_root != output_root:
+    maintained_root = Path(__file__).resolve().parents[3]
+    if raw != read_generator(maintained_root, generator_path):
         raise SourceFailure("local-runtime-generator-unsupported")
+    helper_path = package_exports.SHARED_HELPER
+    helper_raw = read_generator(closure["source_root"], helper_path)
+    if helper_raw != read_generator(maintained_root, helper_path):
+        raise SourceFailure("local-runtime-helper-unsupported")
+    observed = closure.get("compiler_observation")
+    if not isinstance(observed, dict) or observed.get("output_mode") != "fresh-exclusive":
+        raise SourceFailure("local-runtime-emission-required")
+    projection, export_receipt = package_exports.prepare_projection(closure["source_root"], observed, compiled_root)
+    if projection["configuration"] != configuration or projection["output_root"] != output_root:
+        raise SourceFailure("local-runtime-projection-binding-invalid")
+    generated = package_exports.generated_files(projection)
+    test_dir = {"platform/server/tsconfig.runtime-test.json": "platform/server/tests",
+                "products/kanbien-platform/tsconfig.runtime-test.json": "products/kanbien-platform/tests"}.get(configuration)
+    projection_raw = canonical(projection) + b"\n"
+    driver_raw = package_exports.driver_bytes(configuration)
     compiled = artifacts.artifact_files(compiled_root / output_root)
     if not compiled or any(source_fallback(path) or path.startswith("node_modules/") for path in compiled):
         raise SourceFailure("local-runtime-source-fallback")
-    if set(compiled) & generated.keys() or any(target["target_path"] not in compiled for target in targets):
+    if set(compiled) & generated.keys() or any(row["output_path"] not in compiled for row in projection["entries"]):
         raise SourceFailure("local-runtime-shim-target-missing")
     selected = sorted(path for path in compiled if path.endswith("-runtime.test.js")
                       and str(Path(path).parent) == test_dir)
@@ -300,8 +316,9 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
     with tempfile.TemporaryDirectory(prefix="release-control-runtime-") as temporary:
         runtime_root = Path(temporary)
         artifact_inputs = {output_root + "/" + path: content for path, content in compiled.items()}
-        files = {**artifact_inputs, **dependencies, generator_path: raw}
-        if len(files) != len(artifact_inputs) + len(dependencies) + 1:
+        files = {**artifact_inputs, **dependencies, generator_path: raw, helper_path: helper_raw,
+                 package_exports.PROJECTION_INPUT: projection_raw, package_exports.RUNTIME_DRIVER: driver_raw}
+        if len(files) != len(artifact_inputs) + len(dependencies) + 4:
             raise SourceFailure("local-runtime-input-collision")
         write_files(runtime_root, files)
         # Keep a directory for an empty closure so post-execution checks need no
@@ -309,7 +326,7 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
         (runtime_root / "node_modules").mkdir(exist_ok=True)
         environment = {"PATH": str(Path(node).parent), "HOME": str(runtime_root), "LANG": "C.UTF-8", "TZ": "UTC"}
         try:
-            execution = execute([node, generator_path], runtime_root, environment)
+            execution = execute([node, package_exports.RUNTIME_DRIVER], runtime_root, environment)
         except TimeoutError:
             raise SourceFailure("local-runtime-timeout") from None
         except Exception:
@@ -328,6 +345,11 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
             raise SourceFailure("local-runtime-artifact-changed")
         if tree_members(runtime_root) != set(files) | {output_root + "/" + path for path in generated}:
             raise SourceFailure("local-runtime-unexpected-file")
+        if (read_generator(runtime_root, helper_path) != helper_raw
+                or read_generator(closure["source_root"], helper_path) != helper_raw
+                or read_generator(runtime_root, package_exports.PROJECTION_INPUT) != projection_raw
+                or read_generator(runtime_root, package_exports.RUNTIME_DRIVER) != driver_raw):
+            raise SourceFailure("local-runtime-generator-changed")
         if read_generator(runtime_root, generator_path) != raw:
             raise SourceFailure("local-runtime-generator-changed")
         copied_closure = {**closure, "external_modules_root": runtime_root / "node_modules"}
@@ -339,10 +361,13 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
             raise SourceFailure("local-runtime-compiler-artifact-changed")
         if dependency_files(closure) != dependencies:
             raise SourceFailure("local-runtime-dependency-changed")
-        result = {"schema": "local-runtime-observation/v1", "scope": "isolated-local-runtime",
+        result = {"schema": "local-workspace-runtime-observation/v1", "scope": "isolated-local-runtime",
                   "configuration": configuration, "kind": kind, "authorized": False,
                   "qualification_verdict": "blocked", "source_inventory_digest": closure["source_inventory_digest"],
                   "generator": {"path": generator_path, "digest": digest(raw)},
+                  "generator_helpers": [{"path": helper_path, "digest": digest(helper_raw)}],
+                  "projection_input_digest": digest(projection_raw), "execution_driver_digest": digest(driver_raw),
+                  "workspace_exports": export_receipt,
                   "compiler_artifact_digest": file_set_digest(compiled),
                   "dependency_tree_digest": closure["external_modules_digest"],
                   "copied_dependency_digest": file_set_digest(dependencies),
@@ -350,6 +375,7 @@ def _run_runtime(configuration, compiled_root, closure, execute, export_root=Non
                   "executed_runner_count": 1 if kind == "runtime-test-runner" else 0,
                   "returncode": 0, "stdout_digest": digest(execution["stdout"]), "stderr_digest": digest(execution["stderr"])}
         result["receipt_digest"] = digest(canonical(result))
+        package_exports.check_runtime(result)
         if export_root is not None:
             # Export only post-checked runtime bytes, never the generator or
             # repository sources. The parent withholds public export until its

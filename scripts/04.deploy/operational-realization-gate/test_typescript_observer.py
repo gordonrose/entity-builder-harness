@@ -104,6 +104,93 @@ class TypeScriptObserverTests(unittest.TestCase):
             self.assertEqual(row["bytes"], len(raw))
         self.assertIn('require("./math")', (self.root / ".cache/output/index.js").read_text())
 
+    def test_actual_writefile_origins_are_closed_and_complete(self):
+        result=self.passed()
+        self.assertEqual(result['schema'],'local-typescript-emission-observation/v1')
+        self.assertEqual(result['output_mode'],'fresh-exclusive')
+        self.assertEqual(result['existing_remainder'],[])
+        self.assertEqual(result['emission_map'],{'schema':'local-typescript-emission-map/v1','module_kind':'commonjs',
+            'entries':[{'output_path':'.cache/output/index.js','source_paths':['src/index.ts'],'kind':'javascript'},
+                       {'output_path':'.cache/output/math.js','source_paths':['src/math.ts'],'kind':'javascript'}]})
+
+    def test_copied_json_has_actual_origin_but_is_not_executable_javascript(self):
+        self.config(resolveJsonModule=True)
+        (self.root/'src/value.json').write_text('{"value": 2}')
+        (self.root/'src/index.ts').write_text('import value = require("./value.json"); export const n = value.value;')
+        result=self.passed()
+        row=next(row for row in result['emission_map']['entries'] if row['output_path'].endswith('value.json'))
+        self.assertEqual(row,{'output_path':'.cache/output/value.json','source_paths':['src/value.json'],'kind':'other'})
+
+    def test_actual_bundle_origins_are_not_inferred_from_output_filename(self):
+        target=self.root/'tsconfig.json';value=json.loads(target.read_text())
+        value['compilerOptions'].pop('outDir');value['compilerOptions'].update(module='AMD',outFile='.cache/bundle.js')
+        target.write_text(json.dumps(value))
+        result=self.passed()
+        self.assertEqual(result['emission_map']['module_kind'],'other')
+        self.assertEqual(result['emission_map']['entries'],[{'output_path':'.cache/bundle.js',
+            'source_paths':['src/index.ts','src/math.ts'],'kind':'javascript'}])
+
+    def test_declarations_maps_and_build_info_keep_actual_kinds(self):
+        self.config(composite=True,declaration=True,declarationMap=True,sourceMap=True)
+        result=self.passed();entries=result['emission_map']['entries']
+        self.assertEqual({row['kind'] for row in entries},{'javascript','declaration','source-map','build-info'})
+        self.assertEqual(next(row for row in entries if row['kind']=='build-info')['source_paths'],[])
+        self.assertEqual(next(row for row in entries if row['output_path'].endswith('index.d.ts'))['source_paths'],['src/index.ts'])
+        self.assertEqual({row['output_path'] for row in entries},{row['path'] for row in result['outputs']})
+
+    def replay(self):
+        self.receipt=self.directory/'verification.json'
+        return self.invoke(extra=('--verify-existing-outputs',))
+
+    def test_verify_existing_recomputes_bytes_without_touching_outputs(self):
+        original=self.passed();files={row['path']:((self.root/row['path']).read_bytes(),(self.root/row['path']).stat().st_mtime_ns) for row in original['outputs']}
+        code,status,result=self.replay()
+        self.assertEqual(code,0,result or status)
+        self.assertEqual(result['output_mode'],'verify-existing')
+        self.assertEqual(result['outputs'],original['outputs'])
+        self.assertEqual(result['emission_map'],original['emission_map'])
+        self.assertEqual(result['existing_remainder'],[])
+        for path,(raw,stamp) in files.items():
+            self.assertEqual((self.root/path).read_bytes(),raw)
+            self.assertEqual((self.root/path).stat().st_mtime_ns,stamp)
+
+    def test_verify_existing_incremental_cache_cannot_skip_emission(self):
+        self.config(composite=True,declaration=True)
+        original=self.passed();code,status,result=self.replay()
+        self.assertEqual(code,0,result or status)
+        self.assertEqual(result['outputs'],original['outputs'])
+        self.assertEqual(result['emission_map'],original['emission_map'])
+        self.assertGreater(len(result['outputs']),2)
+
+    def test_verify_existing_reports_every_generated_extra_without_admitting_it(self):
+        self.passed();extra=self.root/'.cache/output/node_modules/@fixture/core/index.js'
+        extra.parent.mkdir(parents=True);raw=b'module.exports = {};';extra.write_bytes(raw)
+        code,status,result=self.replay();self.assertEqual(code,0,result or status)
+        self.assertEqual(result['existing_remainder'],[{'path':'.cache/output/node_modules/@fixture/core/index.js','digest':digest(raw),'bytes':len(raw)}])
+        self.assertEqual(extra.read_bytes(),raw)
+
+    def test_verify_existing_changed_bytes_fail_without_repair(self):
+        self.passed();target=self.root/'.cache/output/index.js';target.write_bytes(b'changed output')
+        code,status,result=self.replay();self.assertEqual(code,1,result or status)
+        self.assertIn({'code':'observer-existing-output-changed'},result['findings'])
+        self.assertEqual(target.read_bytes(),b'changed output')
+
+    def test_verify_existing_missing_output_is_not_created(self):
+        self.passed();target=self.root/'.cache/output/index.js';target.unlink()
+        code,status,result=self.replay();self.assertEqual(code,1,result or status)
+        self.assertFalse(target.exists())
+
+    def test_verify_existing_stale_source_cannot_reuse_old_output(self):
+        self.passed();target=self.root/'.cache/output/math.js';before=target.read_bytes()
+        (self.root/'src/math.ts').write_text('export const twice = (n: number) => n * 3;')
+        code,status,result=self.replay();self.assertEqual(code,1,result or status)
+        self.assertEqual(target.read_bytes(),before)
+
+    def test_verify_existing_extra_symlink_is_rejected(self):
+        self.passed();(self.root/'.cache/output/foreign.js').symlink_to(self.root/'src/math.ts')
+        code,status,result=self.replay();self.assertEqual(code,1,result or status)
+        self.assertIn({'code':'observer-output-link-unsafe'},result['findings'])
+
     def test_actual_inputs_include_config_compiler_package_and_default_libraries(self):
         result = self.passed()
         paths = {row["path"] for row in result["inputs"]}

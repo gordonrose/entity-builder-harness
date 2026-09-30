@@ -297,7 +297,7 @@ class RuntimeExportTests(unittest.TestCase):
     def test_tampered_runtime_does_not_export(self):
         def execute(*args):
             result = self.fixture.execute(*args)
-            (args[1] / self.fixture.output / "src/index.js").write_text("changed")
+            (args[1] / self.fixture.output / self.fixture.main_output).write_text("changed")
             return result
         with self.assertRaisesRegex(runtime.SourceFailure, "local-runtime-artifact-changed"):
             self.run_export(execute)

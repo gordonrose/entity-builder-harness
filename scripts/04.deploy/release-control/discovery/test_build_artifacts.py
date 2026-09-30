@@ -84,7 +84,7 @@ class BuildArtifactTests(unittest.TestCase):
         """Copy source text as inert data; independently construct expected bytes."""
         path = "platform/server/tests/run-runtime-tests.mjs" if runtime else "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs"
         config = "platform/server/tsconfig.runtime-test.json" if runtime else "platform/server/tsconfig.image.json"
-        raw = (REPO / path).read_text()
+        raw = (Path(__file__).parent / "fixtures/package-exports" / ("legacy-server.txt" if runtime else "legacy-image.txt")).read_text()
         self.build["output_root"] = ".cache/example"
         raw = re.sub(r'^const runtimeRoot = "[^"]+";', 'const runtimeRoot = ".cache/example";', raw, flags=re.M)
         raw = re.sub(r'const coreModules = \[[^\]]*\];', 'const coreModules = [];', raw)
@@ -368,14 +368,21 @@ class BuildArtifactTests(unittest.TestCase):
         self.source(path, (self.root / path).read_text().replace('endsWith("-runtime.test.js")', 'endsWith(".js")'))
         self.assertIn("artifact-generator-unsupported", self.bind()["findings"])
 
-    def test_all_current_selected_generator_grammars_are_supported(self):
+    def test_historical_selected_generator_grammars_remain_supported(self):
         counts = {"scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs": (54, 35),
                   "platform/server/tests/run-runtime-tests.mjs": (29, 21),
                   "products/kanbien-platform/tests/run-runtime-tests.mjs": (38, 26)}
+        labels = dict(zip(counts, ("image", "server", "product")))
         for path, expected in counts.items():
             with self.subTest(path=path):
-                _, generated, targets, _ = artifacts.literal_generator((REPO / path).read_bytes())
+                _, generated, targets, _ = artifacts.literal_generator((Path(__file__).parent / "fixtures/package-exports" / ("legacy-" + labels[path] + ".txt")).read_bytes())
                 self.assertEqual(expected, (len(generated), len(targets)))
+
+    def test_observation_dependent_current_generators_are_not_legacy_syntax_proof(self):
+        for path in artifacts.CONFIG_GENERATORS.values():
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(SourceFailure, "artifact-generator-unsupported"):
+                    artifacts.literal_generator((REPO / path).read_bytes())
 
     def test_result_matches_versioned_closed_schema(self):
         import yaml

@@ -21,7 +21,6 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
-import re
 import sys
 import tempfile
 import unittest
@@ -30,6 +29,10 @@ from unittest.mock import patch
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).parent))
 import local_runtime as runtime
+import package_exports as exports
+import local_build_contracts as contracts
+import release_compiler
+from test_package_exports import fixture as export_fixture
 from source_inventory import SourceFailure, canonical, digest
 
 REPO = Path(__file__).resolve().parents[3]
@@ -60,25 +63,38 @@ class LocalRuntimeTests(unittest.TestCase):
         target.write_bytes(value.encode() if type(value) is str else value)
         return target
 
+    def reseal_observation(self):
+        self.observation['outputs'].sort(key=lambda row: row['path'])
+        self.observation['emission_map']['entries'].sort(key=lambda row: row['output_path'])
+        exports.seal(self.observation,'observation_digest')
+        self.closure['compiler_observation']=self.observation
+
+    def add_compiled(self,relative,raw='// inert fixture\n'):
+        source=relative[:-3]+'.ts'
+        source_file=self.put(self.root,source,'export {};\n')
+        self.observation['inputs'].append({'kind':'repository','path':source,'digest':digest(source_file.read_bytes()),'bytes':source_file.stat().st_size})
+        output=self.put(self.compiled,self.output+'/'+relative,raw)
+        self.observation['outputs'].append({'path':self.output+'/'+relative,'digest':digest(output.read_bytes()),'bytes':output.stat().st_size})
+        self.observation['emission_map']['entries'].append({'output_path':self.output+'/'+relative,'source_paths':[source],'kind':'javascript'})
+        self.reseal_observation()
+
     def generator_fixture(self, configuration=None):
         if configuration:
             self.configuration = configuration
         self.output, self.kind = runtime.CONFIGURATIONS[self.configuration]
         self.entry = runtime.artifacts.CONFIG_GENERATORS[self.configuration]
-        raw = (REPO / self.entry).read_text()
-        raw = re.sub(r'const coreModules = \[[^\]]*\];', 'const coreModules = [];', raw)
-        calls = list(re.finditer(r'^writePackageShim\(.*?^\}\);\n', raw, re.M | re.S))
-        for match in reversed(calls):
-            raw = raw[:match.start()] + raw[match.end():]
-        point = raw.index('const coreModules = [];') + len('const coreModules = [];')
-        raw = raw[:point] + '\n\nwritePackageShim("@fixture/core", {\n  ".": join(runtimeRoot, "src/index.js"),\n});\n' + raw[point:]
-        self.put(self.root, self.entry, raw)
-        self.put(self.compiled, self.output + "/src/index.js", "exports.value = 1;\n")
+        self.put(self.root,self.entry,(REPO/self.entry).read_bytes())
+        self.put(self.root,exports.SHARED_HELPER,(REPO/exports.SHARED_HELPER).read_bytes())
+        self.observation=export_fixture(self.root,self.configuration)
+        for row in self.observation['outputs']:
+            self.put(self.compiled,row['path'],(self.root/row['path']).read_bytes())
+        self.main_output='packages/core/src/index.js'
         self.test_path = None
         if self.kind == "runtime-test-runner":
             folder = "platform/server" if self.configuration.startswith("platform/") else "products/kanbien-platform"
             self.test_path = folder + "/tests/example-runtime.test.js"
-            self.put(self.compiled, self.output + "/" + self.test_path, "// inert fixture\n")
+            self.add_compiled(self.test_path)
+        self.reseal_observation()
 
     def dependency(self, name="external", main="index.js", files=None):
         base = "node_modules/" + name
@@ -93,12 +109,16 @@ class LocalRuntimeTests(unittest.TestCase):
 
     def execute(self, argv, cwd, env):
         self.calls.append((argv, cwd, env))
-        self.assertEqual(["/pinned/bin/node", self.entry], argv)
-        self.assertTrue((cwd / self.entry).is_file())
+        self.assertEqual(["/pinned/bin/node", exports.RUNTIME_DRIVER], argv)
+        self.assertEqual((cwd/exports.RUNTIME_DRIVER).read_bytes(),exports.driver_bytes(self.configuration))
+        self.assertEqual((cwd/self.entry).read_bytes(),(self.root/self.entry).read_bytes())
+        self.assertEqual((cwd/exports.SHARED_HELPER).read_bytes(),(self.root/exports.SHARED_HELPER).read_bytes())
         self.assertFalse(any(path.suffix == ".ts" for path in cwd.rglob("*")))
         self.assertEqual({"PATH", "HOME", "LANG", "TZ"}, set(env))
-        self.put(cwd, self.output + "/node_modules/@fixture/core/index.js", 'module.exports = require("../../../src/index.js");\n')
-        self.put(cwd, self.output + "/node_modules/@fixture/core/package.json", json.dumps({"name": "@fixture/core", "type": "commonjs", "exports": {".": "./index.js"}}, indent=2) + "\n")
+        projection=json.loads((cwd/exports.PROJECTION_INPUT).read_bytes())
+        self.assertEqual(projection['compiler_observation_digest'],self.observation['observation_digest'])
+        for relative,raw in exports.generated_files(projection).items():
+            self.put(cwd,self.output+'/'+relative,raw)
         return {"returncode": 0, "stdout": b"private output that must not be exposed", "stderr": b""}
 
     def run_local(self, execute=None):
@@ -111,15 +131,35 @@ class LocalRuntimeTests(unittest.TestCase):
     def test_runtime_receipt_binds_source_compiler_dependency_and_observed_files(self):
         self.dependency()
         result = self.run_local()
-        self.assertEqual("local-runtime-observation/v1", result["schema"])
+        self.assertEqual("local-workspace-runtime-observation/v1", result["schema"])
         self.assertFalse(result["authorized"])
         self.assertEqual("blocked", result["qualification_verdict"])
         self.assertEqual(1, result["executed_runner_count"])
         self.assertEqual([self.test_path], result["selected_runtime_tests"])
-        self.assertEqual(4, len(result["artifact_files"]))
+        self.assertEqual(6, len(result["artifact_files"]))
+        self.assertEqual(result['execution_driver_digest'],digest(exports.driver_bytes(self.configuration)))
+        self.assertEqual(result['workspace_exports']['compiler_observation_digest'],self.observation['observation_digest'])
+        self.assertEqual(result['generator_helpers'],[{'path':exports.SHARED_HELPER,'digest':digest((self.root/exports.SHARED_HELPER).read_bytes())}])
         self.assertEqual(result["receipt_digest"], digest(canonical({key: value for key, value in result.items() if key != "receipt_digest"})))
         self.assertNotIn("private output", json.dumps(result))
         self.assertFalse(self.calls[0][1].exists())
+
+    def test_modern_receipt_binds_full_artifact_union_and_fresh_helper_source(self):
+        result=self.run_local()
+        contracts.runtime(result)
+        contracts.runtime_compiler_binding(result,self.observation)
+        sources=[{'path':path,'digest':digest((self.root/path).read_bytes())} for path in (self.entry,exports.SHARED_HELPER)]
+        contracts.runtime_source_binding(result,sources)
+        sources[-1]['digest']=digest(b'changed helper')
+        with self.assertRaisesRegex(release_compiler.ReleaseFailure,'local-build-runtime-generator-binding-invalid'):
+            contracts.runtime_source_binding(result,sources)
+
+    def test_rehashed_hidden_runtime_artifact_cannot_enter_compiler_generated_union(self):
+        result=self.run_local()
+        result['artifact_files'].append({'path':'node_modules/hidden/index.js','digest':digest(b'hidden'),'bytes':6})
+        exports.seal(result,'receipt_digest')
+        with self.assertRaisesRegex(release_compiler.ReleaseFailure,'local-build-runtime-compiler-binding-invalid'):
+            contracts.runtime_compiler_binding(result,self.observation)
 
     def test_image_preparation_does_not_claim_test_execution(self):
         self.generator_fixture("platform/server/tsconfig.image.json")
@@ -130,8 +170,8 @@ class LocalRuntimeTests(unittest.TestCase):
 
     def test_product_runner_selects_only_own_immediate_tests(self):
         self.generator_fixture("products/kanbien-platform/tsconfig.runtime-test.json")
-        self.put(self.compiled, self.output + "/platform/server/tests/other-runtime.test.js", "// inert")
-        self.put(self.compiled, self.output + "/products/kanbien-platform/tests/nested/other-runtime.test.js", "// inert")
+        self.add_compiled("platform/server/tests/other-runtime.test.js")
+        self.add_compiled("products/kanbien-platform/tests/nested/other-runtime.test.js")
         self.assertEqual([self.test_path], self.run_local()["selected_runtime_tests"])
 
     def test_unknown_configuration_never_executes(self):
@@ -149,9 +189,30 @@ class LocalRuntimeTests(unittest.TestCase):
 
     def test_changed_generator_helper_rejects_before_execution(self):
         path = self.root / self.entry
-        path.write_text(path.read_text().replace('relativePath.startsWith(".")', 'relativePath.startsWith("..")'))
-        self.failure("artifact-generator-unsupported")
+        path.write_text(path.read_text().replace('prepareWorkspaceRuntime(', 'changedWorkspaceRuntime('))
+        self.failure("local-runtime-generator-unsupported")
         self.assertEqual([], self.calls)
+
+    def test_changed_shared_helper_rejects_before_execution(self):
+        path=self.root/exports.SHARED_HELPER
+        path.write_bytes(path.read_bytes()+b'\n// changed helper\n')
+        self.failure('local-runtime-helper-unsupported')
+        self.assertEqual([],self.calls)
+
+    def test_missing_or_legacy_observation_never_executes(self):
+        for observed in (None,{'schema':'local-typescript-observation/v1'}):
+            with self.subTest(observed=observed):
+                self.closure['compiler_observation']=observed
+                self.failure('local-runtime-emission-required')
+                self.assertEqual([],self.calls)
+
+    def test_projection_or_private_driver_mutation_is_rejected(self):
+        for target in (exports.PROJECTION_INPUT,exports.RUNTIME_DRIVER,exports.SHARED_HELPER):
+            def mutate(argv,cwd,env):
+                result=self.execute(argv,cwd,env)
+                self.put(cwd,target,'changed')
+                return result
+            with self.subTest(target=target):self.failure('local-runtime-generator-changed',mutate)
 
     def test_changed_generator_root_rejects(self):
         path = self.root / self.entry
@@ -160,19 +221,23 @@ class LocalRuntimeTests(unittest.TestCase):
 
     def test_executable_typescript_in_compiled_output_rejects(self):
         self.put(self.compiled, self.output + "/src/index.ts", "export {};")
-        self.failure("local-runtime-source-fallback")
+        self.failure("package-export-remainder-mismatch")
 
     def test_preexisting_shim_dependency_directory_rejects(self):
         self.put(self.compiled, self.output + "/node_modules/evil/index.js", "evil")
-        self.failure("local-runtime-source-fallback")
+        self.failure("package-export-remainder-mismatch")
 
     def test_missing_shim_target_rejects_before_execution(self):
-        (self.compiled / self.output / "src/index.js").unlink()
-        self.failure("local-runtime-shim-target-missing")
+        (self.compiled / self.output / self.main_output).unlink()
+        self.failure("package-export-compiler-bytes-invalid")
         self.assertEqual([], self.calls)
 
     def test_empty_runtime_membership_rejects(self):
         (self.compiled / self.output / self.test_path).unlink()
+        target=self.output+'/'+self.test_path
+        self.observation['outputs']=[row for row in self.observation['outputs'] if row['path']!=target]
+        self.observation['emission_map']['entries']=[row for row in self.observation['emission_map']['entries'] if row['output_path']!=target]
+        self.reseal_observation()
         self.failure("local-runtime-tests-empty")
 
     def test_compiled_symlink_rejects(self):
@@ -261,7 +326,7 @@ class LocalRuntimeTests(unittest.TestCase):
     def test_compiled_bytes_modified_by_runtime_rejects(self):
         def mutate(argv, cwd, env):
             result = self.execute(argv, cwd, env)
-            self.put(cwd, self.output + "/src/index.js", "changed")
+            self.put(cwd, self.output + "/" + self.main_output, "changed")
             return result
         self.failure("local-runtime-artifact-changed", mutate)
 
@@ -311,7 +376,7 @@ class LocalRuntimeTests(unittest.TestCase):
     def test_original_compiler_output_changes_during_execution_rejects(self):
         def mutate(argv, cwd, env):
             result = self.execute(argv, cwd, env)
-            self.put(self.compiled, self.output + "/src/index.js", "changed")
+            self.put(self.compiled, self.output + "/" + self.main_output, "changed")
             return result
         self.failure("local-runtime-compiler-artifact-changed", mutate)
 

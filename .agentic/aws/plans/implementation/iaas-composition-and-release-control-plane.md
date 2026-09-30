@@ -1651,3 +1651,66 @@ integration, independent review, genuine locked build/runtime proof and canonica
 verification. All future production evidence, stores, adapters, orchestration and
 approved target work remains queued. PostgreSQL Stage 6 stays paused; no current
 local stop condition exists and nothing has been published or pushed.
+
+
+### Sixteenth source delivery unit — integration in progress
+
+Compiler-backed package-export reconciliation now replaces the three handwritten
+runtime maps in the existing image preparation and server/product test runners.
+Only 37 reviewed manifest-listed source, schema, test and documentation paths
+were integrated after every base and output hash matched. The independent source
+collector retains all export declarations and executable/owner obligations. New
+versioned emission observations bind actual compiler source-to-output callbacks;
+modern runtime receipts bind the exact compiler-plus-generated file union. The
+server-main image alias remains explicitly source-bound. Direct generators reject
+saved projection arguments and freshly verify current outputs; their stricter
+pinned-version/Python prerequisites are documented. The isolated locked path
+compiles once and uses a fixed internal driver. All release/operation authority
+remains blocked.
+
+Independent review accepted the projection, current declaration joins, safe file
+reads, private handoff, exact artifact union and authority boundary. The combined
+focused suite is running; fresh all-seven locked compilation/runtime acceptance
+and canonical clean verification remain outstanding. Container consumer review
+identified a duplicated legacy embedded build schema; a narrow compatibility
+amendment is being verified before source freeze. Prior container receipts remain
+historical and do not qualify changed output bytes. This unit is not accepted yet.
+
+Next: finish that compatibility amendment and integrated evidence, then reconcile
+the next supported caller/action boundary into estate coverage while preserving
+owner and executable-behavior blockers. Production artifact evidence, durable
+provider stores, AWS adapters/preflight, release orchestration/adoption and approved
+target qualification remain open. PostgreSQL Stage 6 stays paused.
+
+
+### Sixteenth source delivery unit — accepted
+
+Compiler-backed package exports are complete within the local execution scope.
+The final all-seven normal wrapper exited 0 with empty stderr: seven compiler
+checks, both selected runtime-test runners and image preparation passed. All
+38 declarations are accounted for per runtime: server 27 selected/11 outside,
+image 37/1 plus its explicit server-main alias, product 38/0. The image now
+contains the previously omitted core files/localization/security forwarding
+entries. New receipts bind exact compiler/generated membership and preserve
+all remaining source, behavior, owner and authority obligations.
+
+Final clean verification exited 0: **1,834 tests / 57 suites**, legacy
+smoke and provider/network boundaries, and **61 metadata files** passed. Another
+44 genuine compiler fixtures and five direct-command compiler fixtures passed
+without skips: **1,883 distinct tests**. Independent current-source receipt
+verification passed with 54 consumer refusals and exact 40-file/source/runner/
+selected-graph bindings. Result: `sha256:d728989d9ac3c36c3b6ecd43e5c32e683884798405e92a5b33f325b22a207a2b`.
+Clean log SHA-256: `7230c1cd8538a3733f7ebb8deb7a954a9009ac78ffa014d73ec2f7a40d48422b`.
+Dated normalized evidence is in
+`docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/`.
+
+The actual product workspace-resolution refusal and stale payload test path
+were repaired and freshly reverified; both first failed attempts remain recorded.
+Changed generated artifacts require fresh final-container qualification; older
+receipts stay historical. No AWS, GitHub, DNS, secrets, live PostgreSQL, main or
+other worktree was changed. Nothing was pushed or published.
+
+Explicit next unit: immutable workflow action material and input/default
+reconciliation using the existing collectors/contracts. Production artifact
+evidence, durable provider stores, AWS adapters/preflight, orchestration/adoption
+and approved target qualification remain queued. PostgreSQL Stage 6 stays paused.

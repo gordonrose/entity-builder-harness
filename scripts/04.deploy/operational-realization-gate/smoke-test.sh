@@ -229,6 +229,8 @@ REALIZATION_SOURCES=(
   scripts/04.deploy/release-control/discovery/action_observations.py
   scripts/04.deploy/release-control/discovery/build_inventory.py
   scripts/04.deploy/release-control/discovery/build_artifacts.py
+  scripts/04.deploy/release-control/discovery/package_export_inventory.py
+  scripts/04.deploy/operational-realization-gate/package_exports.py
 )
 if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto|azure|oci|oracle)' "${REALIZATION_SOURCES[@]}"; then
   echo "ERROR: provider adapter import leaked into generic realization core" >&2
@@ -276,11 +278,17 @@ run_unit_suite scripts/04.deploy/operational-realization-gate 'test_build_contra
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_build.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_locked_toolchain.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_runtime.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_typescript_emissions.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_package_exports.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_package_exports_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_workspace_runtime.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_workspace_export_authority.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_build_bindings.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_engine.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_payload.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_profiles.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_container_contracts.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_container_emission_compatibility.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_container_cli.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_contracts.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_engine.py'

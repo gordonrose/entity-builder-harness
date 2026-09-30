@@ -58,7 +58,10 @@ def unique_paths(rows):
 
 
 def observation(document):
-    build_contracts.validate_schema("local-typescript-observation", document)
+    identity = document.get("schema") if isinstance(document, dict) else None
+    if identity not in {"local-typescript-observation/v1", "local-typescript-emission-observation/v1"}:
+        raise release.ReleaseFailure("local-build-observation-schema-invalid")
+    build_contracts.validate_schema(identity.split("/")[0], document)
     checked_digest(document, "observation_digest")
     inputs, outputs = unique_paths(document["inputs"]), unique_paths(document["outputs"])
     if not safe_relative(document["configuration"]) or any(not path.startswith(".cache/") for path in outputs):
@@ -85,11 +88,88 @@ def observation(document):
             raise release.ReleaseFailure("local-build-observation-inconsistent")
     elif not document["findings"] and not any(row["category"] == "error" for row in document["diagnostics"]):
         raise release.ReleaseFailure("local-build-observation-inconsistent")
+    if identity == "local-typescript-emission-observation/v1":
+        _emission_map(document)
     return document
 
 
+def emission_kind(path):
+    if re.search(r"\.d\.(?:ts|mts|cts)$", path):
+        return "declaration"
+    if path.endswith(".map"):
+        return "source-map"
+    if path.endswith(".tsbuildinfo"):
+        return "build-info"
+    if path.endswith((".js", ".mjs", ".cjs")):
+        return "javascript"
+    return "other"
+
+
+def executable_source(path):
+    return emission_kind(path) != "declaration" and re.search(r"\.(?:tsx?|mts|cts|jsx?|mjs|cjs)$", path) is not None
+
+
+def _emission_map(document):
+    inputs = {row["path"]: row for row in document["inputs"]}
+    outputs = {row["path"]: row for row in document["outputs"]}
+    entries = document["emission_map"]["entries"]
+    paths = [entry["output_path"] for entry in entries]
+    if paths != sorted(outputs) or len(set(paths)) != len(paths):
+        raise release.ReleaseFailure("local-build-emission-membership-invalid")
+    for entry in entries:
+        origins = entry["source_paths"]
+        if (origins != sorted(set(origins)) or any(path not in inputs for path in origins)
+                or entry["kind"] != emission_kind(entry["output_path"])):
+            raise release.ReleaseFailure("local-build-emission-source-invalid")
+        if entry["kind"] == "javascript" and (not origins or any(not executable_source(path) for path in origins)):
+            raise release.ReleaseFailure("local-build-emission-source-invalid")
+    remainder = unique_paths(document["existing_remainder"])
+    if (remainder & (set(inputs) | set(outputs)) or any(not path.startswith(".cache/") for path in remainder)
+            or [row["path"] for row in document["existing_remainder"]] != sorted(remainder)
+            or document["output_mode"] == "fresh-exclusive" and remainder):
+        raise release.ReleaseFailure("local-build-existing-remainder-invalid")
+    return document["emission_map"]
+
+
+def emission_map_binding(document, require_commonjs=False):
+    """Legacy observations remain readable but cannot establish emission proof."""
+    observation(document)
+    if document["schema"] != "local-typescript-emission-observation/v1":
+        raise release.ReleaseFailure("local-build-emission-required")
+    value = document["emission_map"]
+    if require_commonjs and value["module_kind"] != "commonjs":
+        raise release.ReleaseFailure("local-build-emission-module-unsupported")
+    return value
+
+
+def runtime_emission(document, source_path, output_root, *, source_digest, configuration):
+    """Join a current source digest to one actual executable output; caller binds output bytes."""
+    mapping = emission_map_binding(document, require_commonjs=True)
+    if (document["verdict"] != "passed" or document["no_emit"] or document["emit_skipped"]
+            or document["configuration"] != configuration
+            or not safe_relative(source_path) or source_path.startswith(("node_modules/", ".cache/"))
+            or not executable_source(source_path)
+            or not safe_relative(output_root) or not output_root.startswith(".cache/")):
+        raise release.ReleaseFailure("local-build-runtime-emission-invalid")
+    source = next((row for row in document["inputs"] if row["path"] == source_path), None)
+    if source is None or source["kind"] != "repository" or source["digest"] != source_digest:
+        raise release.ReleaseFailure("local-build-runtime-emission-source-changed")
+    matches = [row for row in mapping["entries"] if row["kind"] == "javascript" and source_path in row["source_paths"]]
+    if (len(matches) != 1 or matches[0]["source_paths"] != [source_path]
+            or not matches[0]["output_path"].startswith(output_root + "/")
+            or not matches[0]["output_path"].endswith((".js", ".cjs"))):
+        raise release.ReleaseFailure("local-build-runtime-emission-ambiguous")
+    return next(dict(row) for row in document["outputs"] if row["path"] == matches[0]["output_path"])
+
+
 def runtime(document):
-    build_contracts.validate_schema("local-runtime-observation", document)
+    identity = document.get("schema") if isinstance(document, dict) else None
+    if identity not in {"local-runtime-observation/v1", "local-workspace-runtime-observation/v1"}:
+        raise release.ReleaseFailure("local-build-runtime-schema-invalid")
+    build_contracts.validate_schema(identity.split("/")[0], document)
+    if identity == "local-workspace-runtime-observation/v1":
+        from package_exports import check_runtime
+        check_runtime(document)
     checked_digest(document, "receipt_digest")
     layout = RUNTIME_LAYOUTS.get(document["configuration"])
     if (layout is None or document["kind"] != layout[1]
@@ -119,13 +199,19 @@ def runtime_source_binding(document, source_manifest):
     this producer-side check supplies the otherwise unavailable source bytes.
     """
     runtime(document)
-    rows = [row for row in source_manifest if row["path"] == document["generator"]["path"]]
-    if len(rows) != 1 or rows[0]["digest"] != document["generator"]["digest"]:
-        raise release.ReleaseFailure("local-build-runtime-generator-binding-invalid")
+    for source in [document["generator"], *document.get("generator_helpers", [])]:
+        rows = [row for row in source_manifest if row["path"] == source["path"]]
+        if len(rows) != 1 or rows[0]["digest"] != source["digest"]:
+            raise release.ReleaseFailure("local-build-runtime-generator-binding-invalid")
     return document
 
 
 def runtime_compiler_binding(document, observed):
+    if document["schema"] == "local-workspace-runtime-observation/v1":
+        emission_map_binding(observed, require_commonjs=True)
+        if (observed["output_mode"] != "fresh-exclusive"
+                or document["workspace_exports"]["compiler_observation_digest"] != observed["observation_digest"]):
+            raise release.ReleaseFailure("local-build-runtime-emission-binding-invalid")
     prefix = RUNTIME_LAYOUTS[document["configuration"]][0] + "/"
     compiled = sorted(({**row, "path": row["path"][len(prefix):]}
                        for row in observed["outputs"] if row["path"].startswith(prefix)),
@@ -135,6 +221,13 @@ def runtime_compiler_binding(document, observed):
         raise release.ReleaseFailure("local-build-runtime-compiler-binding-invalid")
     actual = {row["path"]: row for row in document["artifact_files"]}
     expected = {row["path"]: row for row in compiled}
+    if document["schema"] == "local-workspace-runtime-observation/v1":
+        generated_rows = document["workspace_exports"]["generated_files"]
+        generated = {row["path"]: row for row in generated_rows}
+        if (len(actual) != len(document["artifact_files"]) or len(generated) != len(generated_rows)
+                or set(expected) & set(generated) or actual != {**expected, **generated}):
+            raise release.ReleaseFailure("local-build-runtime-compiler-binding-invalid")
+        return
     if (any(actual.get(path) != row for path, row in expected.items())
             or any(not path.startswith("node_modules/") for path in actual.keys() - expected.keys())):
         raise release.ReleaseFailure("local-build-runtime-compiler-binding-invalid")
@@ -151,10 +244,16 @@ def result(document):
     finding_codes = {row["code"] for row in document["findings"]}
     for row in document["builds"]:
         observation(row["observation"])
+        if (row["observation"]["schema"] == "local-typescript-emission-observation/v1"
+                and row["observation"]["output_mode"] != "fresh-exclusive"):
+            raise release.ReleaseFailure("local-build-fresh-emission-required")
         if row["configuration"] != row["observation"]["configuration"]:
             raise release.ReleaseFailure("local-build-identity-invalid")
         if row["runtime"] is not None:
             runtime(row["runtime"])
+            if (row["observation"]["schema"] == "local-typescript-emission-observation/v1"
+                    and row["runtime"]["schema"] != "local-workspace-runtime-observation/v1"):
+                raise release.ReleaseFailure("local-build-runtime-export-proof-required")
             if (row["runtime"]["configuration"] != row["configuration"]
                     or row["runtime"]["source_inventory_digest"] != document["build_inventory_digest"]
                     or row["runtime"]["dependency_tree_digest"] != document["toolchain"]["dependency_digest"]
