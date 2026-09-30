@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-30T11:39:53Z
-latest_commit_sha: a8a28fc9103870ed0053e16e9965be57c2740f0e
-chat_duration: 190950s (02:05:02:30)
+latest_commit_at_utc: 2026-09-30T12:58:35Z
+latest_commit_sha: 2b940bd4a2df364b3348151abc2c938f28b859cd
+chat_duration: 195672s (02:06:21:12)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -662,6 +662,17 @@ Summary: Accepted source unit 15 in 29 files: 1735 tests/51 suites, 58 metadata 
 
 ADR impact: Covered by ADR 0039 local process conformance boundary.
 
+
+### 2026-09-30T12:58:35Z - Commit recorded
+
+Commit: `2b940bd4a2df364b3348151abc2c938f28b859cd`
+
+Message: feat(deploy): derive runtime exports from compiler emissions
+
+Summary: Completed Unit 16 in 46 reviewed paths: 1,834 canonical cases across 57 suites and 61 metadata files passed; 49 real compiler/direct fixtures passed, 1,883 distinct cases total. All seven locked builds, two runtime runners and image preparation passed. Independent source verification checked 40 frozen paths and 54 consumer refusals. Replaced three handwritten maps with compiler-bound shared generation; repaired actual workspace-link classification and preserved failed attempts. Exact evidence is in 2026-09-30-workspace-exports. Next: immutable action material/input reconciliation. Pending weekly-balance information and rejected draft README relocation remain explicit; no external mutation or publication.
+
+ADR impact: Covered by accepted IaaS plan Phase3.1 and existing source-only realization contracts; no new provider policy.
+
 ## Sub-Agent Activity
 
 
@@ -1088,6 +1099,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Accepted source unit 15 in 29 files: 1735 tests/51 suites, 58 metadata headers, 198 focused/shared regressions and independent 31-test public review passed. Fresh real proof passed eight scenarios with seven killed/reopened processes; seven operations closed, ambiguous create remained unknown, all owned resources absent. All authority blocked. Next: compiler-backed package exports.
   ADR impact: Covered by ADR 0039 local process conformance boundary.
 
+
+- Commit: `2b940bd4a2df364b3348151abc2c938f28b859cd`
+  Time UTC: 2026-09-30T12:58:35Z
+  Message: feat(deploy): derive runtime exports from compiler emissions
+  Summary: Completed Unit 16 in 46 reviewed paths: 1,834 canonical cases across 57 suites and 61 metadata files passed; 49 real compiler/direct fixtures passed, 1,883 distinct cases total. All seven locked builds, two runtime runners and image preparation passed. Independent source verification checked 40 frozen paths and 54 consumer refusals. Replaced three handwritten maps with compiler-bound shared generation; repaired actual workspace-link classification and preserved failed attempts. Exact evidence is in 2026-09-30-workspace-exports. Next: immutable action material/input reconciliation. Pending weekly-balance information and rejected draft README relocation remain explicit; no external mutation or publication.
+  ADR impact: Covered by accepted IaaS plan Phase3.1 and existing source-only realization contracts; no new provider policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1101,9 +1119,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-30T11:39:53Z
-Latest commit SHA: a8a28fc9103870ed0053e16e9965be57c2740f0e
-Chat duration: 190950s (02:05:02:30)
+Latest commit at UTC: 2026-09-30T12:58:35Z
+Latest commit SHA: 2b940bd4a2df364b3348151abc2c938f28b859cd
+Chat duration: 195672s (02:06:21:12)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
@@ -2487,3 +2505,33 @@ Explicit next unit: immutable workflow action material and input/default
 reconciliation using the existing collectors/contracts. Production artifact
 evidence, durable provider stores, AWS adapters/preflight, orchestration/adoption
 and approved target qualification remain queued. PostgreSQL Stage 6 stays paused.
+
+
+Unit 16 task checkpoint: `2b940bd4a2df364b3348151abc2c938f28b859cd`. All 46
+reviewed paths, including normalized evidence and the acceptance record, are
+committed locally. Commit-readiness and staged whitespace gates passed. The
+commit-record update remains uncommitted. The canonical session-only dry-run
+refuses the untracked root `compiler-emission.README.md`; that exact relocation
+is still awaiting explicit user approval after automatic approval review rejected
+it. The original bytes remain unchanged and no alternate removal was attempted.
+
+Before starting another large unit, the current weekly remaining percentage was
+requested again: the read-only usage query exposed no windows, so the user's
+20% stop threshold cannot be checked. It has not been asserted as reached.
+Next-unit design is recorded; implementation has not begun. Both questions are
+pending. The source work is complete; approval and budget-boundary information
+are the outstanding handoff conditions, not an unresolved test or code failure.
+
+
+### 2026-09-30T13:31:13Z — approved draft relocation
+
+The user explicitly approved moving the misplaced compiler-emission README.
+Moved only that new untracked draft from the worktree root into its intended
+owned compiler scratch documentation folder, using no-clobber behavior. The
+destination did not exist. Before/after SHA-256 matched exactly: `1ddb1d0a91c7ce1d62b909d8827ba43f8dabf35faad02b834a7b8f9a960625ea`. No existing file was overwritten.
+The draft remains outside committed implementation; the prior automatic-review
+block is resolved by this explicit approval. Session bookkeeping can now finish.
+
+The user reports 26% weekly allowance remaining; the requested stopping floor
+is still 20%. The current request is this housekeeping action and an updated
+estimate of remaining slices. No new implementation unit has been started.
