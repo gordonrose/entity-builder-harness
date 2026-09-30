@@ -29,7 +29,9 @@ NAMES = {"source-build-inventory", "source-build-artifact", "local-typescript-ob
          "finite-job-profile", "finite-job-result", "dependency-effect-profile", "dependency-effect-result",
          "artifact-admission-policy", "artifact-admission-result", "artifact-verifier-lock", "artifact-scan-predicate", "artifact-verifier-conformance", "artifact-admission-error", "operation-control", "operation-journal", "operation-evidence",
          "control-store-conformance", "control-store-error", "estate-caller-inventory",
-         "estate-caller-reconciliation", "estate-caller-error"}
+         "estate-caller-reconciliation", "estate-caller-error", "finite-recovery-attempt",
+         "finite-recovery-observation", "finite-recovery-result", "finite-recovery-conformance",
+         "finite-recovery-error", "finite-recovery-image-lock", "operation-action-record"}
 
 
 def validate_schema(name, document):

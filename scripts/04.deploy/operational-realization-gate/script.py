@@ -554,6 +554,24 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] == "--finite-recovery-conformance" for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            # Remove exactly one selector; the runner strictly validates every
+            # remaining argument before any Engine call or fixture creation.
+            if sys.argv[1:].count("--finite-recovery-conformance") != 1:
+                raise ValueError()
+            import finite_recovery_conformance
+            return finite_recovery_conformance.main([
+                argument for argument in sys.argv[1:] if argument != "--finite-recovery-conformance"])
+        except Exception:
+            # Bootstrap refusal must not depend on loading the failed module or schema.
+            print(json.dumps({"schema": "finite-recovery-error/v1", "verdict": "failed",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked",
+                              "source_closure": "blocked",
+                              "findings": [{"code": "finite-recovery-conformance-failed"}]}, sort_keys=True))
+            return 1
     if any(argument.split("=", 1)[0] == "--control-store-conformance" for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:

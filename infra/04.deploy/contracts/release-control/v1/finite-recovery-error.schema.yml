@@ -1,0 +1,67 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.finite-recovery-error
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Emit a fixed redacted failure for bounded inert recovery conformance.
+#   portability: {class: reusable, targets: [entity-builder]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:finite-recovery-error:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "source_closure",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "finite-recovery-error/v1"
+    },
+    "verdict": {
+      "const": "failed"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "source_closure": {
+      "const": "blocked"
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "const": "finite-recovery-conformance-failed"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,262 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.finite-recovery-attempt
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Bind inert finite fixture identity and observations across local process recovery.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.finite-recovery-contracts
+#     path: scripts/04.deploy/operational-realization-gate/finite_recovery_contracts.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:finite-recovery-attempt:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation_id",
+    "run_id",
+    "resource",
+    "profile",
+    "expected_files",
+    "limits"
+  ],
+  "properties": {
+    "schema": {
+      "const": "finite-recovery-attempt/v1"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$",
+      "maxLength": 64
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "maxLength": 32
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name",
+        "ownership_token"
+      ],
+      "properties": {
+        "kind": {
+          "const": "docker-container"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^release-control-[0-9a-f]{32}$",
+          "maxLength": 48
+        },
+        "ownership_token": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "maxLength": 32
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "artifact",
+        "execution",
+        "limits",
+        "completion"
+      ],
+      "properties": {
+        "schema": {
+          "const": "finite-job-profile/v1"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,63}$",
+          "maxLength": 64
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "image_id",
+            "payload_digest"
+          ],
+          "properties": {
+            "image_id": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "maxLength": 71
+            },
+            "payload_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "maxLength": 71
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entrypoint",
+            "command",
+            "working_dir"
+          ],
+          "properties": {
+            "entrypoint": {
+              "const": [
+                "/nodejs/bin/node"
+              ]
+            },
+            "command": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 9,
+              "prefixItems": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512,
+                  "pattern": "^[A-Za-z0-9_.@+-]+(?:/[A-Za-z0-9_.@+-]+)*\\.(?:js|mjs|cjs)$"
+                }
+              ],
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "working_dir": {
+              "const": "/app"
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timeout_seconds",
+            "output_bytes"
+          ],
+          "properties": {
+            "timeout_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120
+            },
+            "output_bytes": {
+              "type": "integer",
+              "minimum": 128,
+              "maximum": 65536
+            }
+          }
+        },
+        "completion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "protocol",
+            "required_checks"
+          ],
+          "properties": {
+            "protocol": {
+              "const": "finite-job-terminal/v1"
+            },
+            "required_checks": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,63}$",
+                "maxLength": 64
+              },
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "expected_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "digest",
+          "bytes"
+        ],
+        "properties": {
+          "path": {
+            "const": "jobs/task.cjs"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "maxLength": 71
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16384
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recovery_timeout_ms",
+        "action_limits"
+      ],
+      "properties": {
+        "recovery_timeout_ms": {
+          "const": 30000
+        },
+        "action_limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "create",
+            "start",
+            "inspect",
+            "logs",
+            "cleanup"
+          ],
+          "properties": {
+            "create": {
+              "const": 1
+            },
+            "start": {
+              "const": 1
+            },
+            "inspect": {
+              "const": 32
+            },
+            "logs": {
+              "const": 3
+            },
+            "cleanup": {
+              "const": 3
+            }
+          }
+        }
+      }
+    }
+  }
+}

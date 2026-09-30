@@ -202,7 +202,7 @@ class Engine:
         if (not isinstance(args, list) or not args or any(type(arg) is not str or '\x00' in arg for arg in args)
                 or tuple(args) not in self._approved):
             _fail("engine-command-unsupported")
-        if type(timeout) is not int or not 1 <= timeout <= 900 or type(max_output) is not int or not 1 <= max_output <= MAX_OUTPUT:
+        if type(timeout) not in (int, float) or not 0 < timeout <= 900 or type(max_output) is not int or not 1 <= max_output <= MAX_OUTPUT:
             _fail("engine-bound-invalid")
         result = self._execute(args, timeout=timeout, max_output=max_output)
         if result.returncode != 0:
@@ -381,15 +381,20 @@ class Engine:
         except OSError:
             _fail(code)
 
-    def _create(self, image_id, *, inventory=False, command=None, environment=None):
+    def _create_arguments(self, image_id, name, token, *, inventory=False, command=None,
+                          environment=None, retain_fixture_terminal=False):
+        """Shared isolation recipe; retained logs are for the exact inert recovery fixture only."""
+        if (type(retain_fixture_terminal) is not bool or type(token) is not str
+                or not re.fullmatch(r'[0-9a-f]{32}', token) or name != 'release-control-' + token):
+            _fail('container-reservation-invalid')
         _image(image_id)
-        token = uuid.uuid4().hex
-        name = "release-control-" + token
-        args = ["create", "--name", name, "--label", OWNER_LABEL + "=" + token, "--network", "none",
+        args = ["create", "--pull=never", "--name", name, "--label", OWNER_LABEL + "=" + token, "--network", "none",
                 "--read-only", "--user", SETTINGS["user"], "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m",
                 "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--memory", "512m",
                 "--memory-swap", "512m", "--cpus", "1", "--pids-limit", "128", "--ipc", "none",
-                "--restart", "no", "--stop-timeout", "10", "--log-driver", "none", "--no-healthcheck"]
+                "--restart", "no", "--stop-timeout", "10", "--log-driver", "local" if retain_fixture_terminal else "none", "--no-healthcheck"]
+        if retain_fixture_terminal:
+            args.extend(["--log-opt", "max-size=16k", "--log-opt", "max-file=1", "--log-opt", "compress=false"])
         runtime_environment = SETTINGS["environment"] if environment is None else environment
         for key, value in runtime_environment.items():
             args.extend(["--env", key + "=" + value])
@@ -400,6 +405,14 @@ class Engine:
             args.extend(["-e", INVENTORY_PROBE])
         elif command is not None:
             args.extend(command)
+        return args
+
+    def _create(self, image_id, *, inventory=False, command=None, environment=None):
+        _image(image_id)
+        token = uuid.uuid4().hex
+        name = "release-control-" + token
+        args = self._create_arguments(image_id, name, token, inventory=inventory,
+                                      command=command, environment=environment)
         self._owned[name] = {"token": token, "image": image_id, "id": None}
         try:
             raw = self._call(args, max_output=4096).decode("ascii").strip()

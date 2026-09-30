@@ -1,0 +1,324 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.finite-recovery-conformance
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Record real inert process interruption and owned cleanup while retaining all authority blocks.
+#   portability: {class: reusable, targets: [entity-builder]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:finite-recovery-conformance:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "started_at",
+    "completed_at",
+    "runner_digest",
+    "artifact",
+    "payload_files",
+    "engine",
+    "cases",
+    "semantic_verdict",
+    "product_profile_updates",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "source_closure",
+    "result_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "finite-recovery-conformance/v1"
+    },
+    "scope": {
+      "const": "local-inert-process-recovery"
+    },
+    "verdict": {
+      "const": "passed"
+    },
+    "started_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "completed_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_id",
+        "payload_digest"
+      ],
+      "properties": {
+        "image_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "payload_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "payload_files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "digest",
+          "bytes"
+        ],
+        "properties": {
+          "path": {
+            "const": "jobs/task.cjs"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16384
+          }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "client",
+        "server"
+      ],
+      "properties": {
+        "client": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "server": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "controller_interrupted",
+          "verdict",
+          "recorded_resource_id",
+          "result"
+        ],
+        "properties": {
+          "case": {
+            "enum": [
+              "normal",
+              "intent-committed",
+              "create-reserved",
+              "create-effect",
+              "start-effect",
+              "terminal-observed",
+              "cleanup-effect",
+              "cleanup-verified"
+            ]
+          },
+          "controller_interrupted": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "const": "passed"
+          },
+          "recorded_resource_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "result": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "scope",
+              "operation_id",
+              "attempt_digest",
+              "state",
+              "terminal_observed",
+              "cleanup_verified",
+              "resource_id",
+              "action_counts",
+              "journal_digest",
+              "action_journal_digest",
+              "semantic_verdict",
+              "product_profile_updates",
+              "authorized",
+              "release_eligibility",
+              "operation_authorization",
+              "qualification_verdict",
+              "source_closure"
+            ],
+            "properties": {
+              "schema": {
+                "const": "finite-recovery-result/v1"
+              },
+              "scope": {
+                "const": "local-inert-recovery"
+              },
+              "operation_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{2,63}$"
+              },
+              "attempt_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "state": {
+                "enum": [
+                  "prepared",
+                  "executing",
+                  "observing",
+                  "unknown",
+                  "succeeded",
+                  "failed",
+                  "cleanup-verified",
+                  "closed"
+                ]
+              },
+              "terminal_observed": {
+                "type": "boolean"
+              },
+              "cleanup_verified": {
+                "type": "boolean"
+              },
+              "resource_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "action_counts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "create",
+                  "start",
+                  "inspect",
+                  "logs",
+                  "cleanup"
+                ],
+                "properties": {
+                  "create": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "start": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "inspect": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32
+                  },
+                  "logs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  },
+                  "cleanup": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3
+                  }
+                }
+              },
+              "journal_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "action_journal_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "semantic_verdict": {
+                "const": "unverified"
+              },
+              "product_profile_updates": {
+                "const": []
+              },
+              "authorized": {
+                "const": false
+              },
+              "release_eligibility": {
+                "const": "blocked"
+              },
+              "operation_authorization": {
+                "const": "blocked"
+              },
+              "qualification_verdict": {
+                "const": "blocked"
+              },
+              "source_closure": {
+                "const": "blocked"
+              }
+            }
+          }
+        }
+      }
+    },
+    "semantic_verdict": {
+      "const": "unverified"
+    },
+    "product_profile_updates": {
+      "const": []
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "source_closure": {
+      "const": "blocked"
+    },
+    "result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

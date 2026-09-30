@@ -1035,3 +1035,29 @@ The source-result consumer refuses this proposal. See the detailed
 Next source coverage work must bind package exports to actual compiler emissions
 and extend supported implementation/tool/action semantics. Whole-estate closure
 cannot be inferred from file reachability or the intake owner label.
+
+## Durable finite-fixture recovery
+
+The existing public command connects durable local controls to the shared finite
+container Engine. It commits immutable intent and consumes each action reservation
+before dispatch. A replacement process reconciles the exact image, ownership,
+resource identity and recorded observations; it cannot repeat an ambiguous create
+or start request. Completion requires current terminal and cleanup evidence.
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --finite-recovery-conformance --source-root /absolute/repository \
+  --scratch-root /absolute/private-scratch --image-id sha256:...
+```
+
+The image must match the source-owned previously qualified inert fixture pin.
+This command never builds or pulls an image. It checks eight interruption windows,
+including seven killed/reopened processes, and preserves private stores outside
+Git. Success proves local protocol recovery only; all release, operation, source
+closure and product qualification verdicts remain blocked. The common consumer
+refuses both the aggregate and per-attempt results for every purpose.
+
+See [the recovery contract and limits](finite-recovery.README.md) for fixed action
+budgets, refusal states, local image availability, evidence and source bindings.
+Provider stores, production artifact evidence, AWS preflight and target execution
+remain separate delivery work. This does not resume PostgreSQL Stage 6.

@@ -303,4 +303,10 @@ run_unit_suite scripts/04.deploy/release-control/discovery 'test_estate_caller_i
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_estate_caller_coverage.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_adoption_migration.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_estate_caller_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_operation_actions.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_recovery_engine.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_recovery_controller.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_recovery_conformance.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_recovery_cli.py'
+
 echo "Operational Realization Gate local tests passed."

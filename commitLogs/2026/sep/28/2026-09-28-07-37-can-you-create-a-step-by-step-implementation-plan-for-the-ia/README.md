@@ -2313,3 +2313,73 @@ and action semantics, production artifact evidence, durable provider stores, AWS
 adapters/preflight, orchestration/adoption and approved target qualification remain
 open. PostgreSQL Stage 6 stays paused. There is no current local stop condition;
 no provider mutation, publication, push, merge or other-worktree change occurred.
+
+### Fifteenth source unit — integrated recovery proof
+
+Copied only nineteen manifest-listed recovery source paths after exact source and
+base hash checks, then connected the existing gate dispatch, seven versioned
+schemas, five canonical suites and documentation. Ninety focused recovery/public
+boundary tests and 108 existing Engine regressions passed together: 198 tests,
+78.803 seconds. Independent final public review passed 31 tests in 2.295 seconds.
+Output is revalidated against the closed schema, self-digest and current runtime
+binding; shell/Python wrappers are included. All consumer purposes refuse aggregate
+and per-attempt recovery receipts; source recomputation cannot dispatch this mode.
+
+Fresh frozen integrated conformance exited 0 with empty stderr. Eight actual
+Docker scenarios passed, including seven killed/reopened private processes.
+Seven operations closed with verified owned cleanup. An unconfirmed consumed
+create stayed unknown without replay; every scenario independently proved exact
+owned container absence. Receipt:
+`sha256:74f7d69142ee6e23da31ae52d6df42c3e2ff2feb23a4c4db722c592057c3d319`.
+Runner: `sha256:1c1bdbe8a6e953f10a52659446e2ddf2d5cda0ca01eece118634586c3c1c991b`.
+The image is the existing qualified inert fixture; no image pull/build or provider
+operation occurred. The complete clean verifier is running against frozen source.
+This unit remains pending canonical acceptance; older scratch passes are historical.
+
+The next source unit is compiler-backed package-export reconciliation. Read-only
+assessment found twenty opaque export-target findings for thirty-eight declarations
+across twenty manifests, and three handwritten runtime maps. The image map omits
+three declared core exports and retains a server main alias required by an existing
+entrypoint. Independent scratch work will derive mappings from manifests and actual
+TypeScript emission, preserving that alias through explicit source-bound compatibility.
+No unfinished scratch files are integrated. Production evidence/stores, AWS adapters,
+release orchestration/adoption and approved target qualification remain open.
+No current local stop condition exists; PostgreSQL Stage 6 remains paused.
+
+### Fifteenth source delivery unit — accepted
+
+Durable local finite-engine recovery is complete within the reviewed inert-fixture
+boundary. Final clean verification exited 0: **1,735 tests / 51 suites**, legacy
+smoke, provider/network boundaries and **58 metadata headers** passed. Log SHA-256:
+`52020da926dc277b62f52a63e6c24cccba35de4b2a2b4765c8b3e5666b20be0c`.
+The preceding full attempt passed all tests but failed one missing README used_by
+metadata link. That documentation-only omission was repaired; both the exact
+metadata command and the complete clean wrapper passed afterward. No functional
+source or real receipt binding changed during the repair. Earlier failure evidence
+is preserved instead of relabeled.
+
+The retained real receipt still matches the exact final runtime binding and records
+eight passed cases, seven killed/reopened processes, seven safely closed operations
+and one deliberately unknown consumed-create operation. Every exact owned fixture
+resource was independently absent. Schemas, immutable action journals, shared Engine
+transport, controller, public gate mode, fixtures/tests, README and normalized review
+evidence are included. ADR 0039 covers the local reference boundary. No provider,
+product semantic, distributed/power-loss or production authority claim is made.
+
+Next delivery unit: compiler-backed package-export reconciliation. Its two owned
+scratch drafts extend actual TypeScript emission observations and replace three
+handwritten runtime maps with source-bound projections. They are unaccepted until
+integration, independent review, genuine locked build/runtime proof and canonical
+verification. All future production evidence, stores, adapters, orchestration and
+approved target work remains queued. PostgreSQL Stage 6 stays paused; no current
+local stop condition exists and nothing has been published or pushed.
+
+Checkpoint staging refused an unexpected compiler-emission README at repository
+root before any files were staged. The compiler draft author confirmed accidental
+creation of this new owned document only; source implementation remains scratch-only.
+Automatic approval review rejected moving it to the intended scratch directory,
+requiring explicit user authorization. A narrow approval question is pending.
+The draft remains intact and excluded from this accepted recovery checkpoint.
+Its SHA-256 is `1ddb1d0a91c7ce1d62b909d8827ba43f8dabf35faad02b834a7b8f9a960625ea`. No alternate move/delete mechanism is attempted.
+Reviewed recovery source can be committed independently; session bookkeeping may
+remain dirty until the draft-location question is resolved.
