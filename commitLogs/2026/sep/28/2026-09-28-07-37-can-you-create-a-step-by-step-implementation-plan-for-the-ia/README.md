@@ -16,7 +16,7 @@ latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
 latest_commit_at_utc: 2026-09-30T11:06:25Z
-latest_commit_sha: HEAD
+latest_commit_sha: f87b584e
 chat_duration: 188942s (02:04:29:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
@@ -643,7 +643,7 @@ ADR impact: Implements the accepted IaaS plan and ADR 0038 boundaries; no new pr
 
 ### 2026-09-30T11:06:25Z - Commit recorded
 
-Commit: `HEAD`
+Commit: `f87b584e`
 
 Message: feat(deploy): persist local controls and reconcile caller coverage
 
@@ -1064,7 +1064,7 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   ADR impact: Implements the accepted IaaS plan and ADR 0038 boundaries; no new production policy or external authority.
 
 
-- Commit: `HEAD`
+- Commit: `f87b584e`
   Time UTC: 2026-09-30T11:06:25Z
   Message: feat(deploy): persist local controls and reconcile caller coverage
   Summary: Accepted source units 13–14 in 54 paths. Frozen clean verification passed 1645 tests in 46 suites and 56 metadata headers; real ten-case durable-process proof and same-source 403-file caller/adoption evidence retained. All authority blocked; next is existing finite-engine recovery integration.
@@ -1084,7 +1084,7 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 
 Raised at UTC: 2026-09-28T06:37:23Z
 Latest commit at UTC: 2026-09-30T11:06:25Z
-Latest commit SHA: HEAD
+Latest commit SHA: f87b584e
 Chat duration: 188942s (02:04:29:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
