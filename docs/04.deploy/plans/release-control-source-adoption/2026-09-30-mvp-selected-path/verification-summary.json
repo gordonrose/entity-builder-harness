@@ -1,0 +1,259 @@
+{
+  "scope": "selected-mvp-source-and-local-acceptance",
+  "authorized": false,
+  "release_eligibility": "blocked",
+  "operation_authorization": "blocked",
+  "base_revision": "2fe812edaa49d3a0352cd8d87db3ecde55517381",
+  "canonical": {
+    "exit_code": 0,
+    "tests": 2115,
+    "suites": 66,
+    "skipped": 0,
+    "metadata_files": 66,
+    "log_sha256": "33e20a9739226ecc2e1b194c84012335ca3eadf9cb6319329291fb7cdd289668",
+    "python": "3.14.4",
+    "node": "22.23.3",
+    "npm": "10.9.9",
+    "hash_locked_python_distributions": 8
+  },
+  "additional_task_preflight_tests": {
+    "passed": 67,
+    "failed": 0,
+    "skipped": 0
+  },
+  "actual_dependency_cases": {
+    "effects": 9,
+    "preflights": 8,
+    "cleanup_verified": true
+  },
+  "actual_container": {
+    "verdict": "passed",
+    "duration_seconds": 167,
+    "same_image_dependency_reuse": true,
+    "post_integration_handoff": "matched"
+  },
+  "actual_sbom": {
+    "verdict": "passed",
+    "tool": "Syft 1.42.3",
+    "schema": "SPDX-2.3",
+    "packages": 88,
+    "expected_production_packages": 57,
+    "matched_production_packages": 57,
+    "completeness_claimed": false
+  },
+  "passive_target": {
+    "verdict": "blocked",
+    "reason": "readiness-passive-drift-stale",
+    "provider_effects_requested": 0,
+    "secret_values_requested": 0
+  },
+  "source_files": [
+    {
+      "path": ".github/workflows/deploy-platform-shell-staging.yml",
+      "sha256": "49bfa1bf50faa4b5edb0354869c6bd64ff83f4b83e8981484d58cb00d779f77b"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts",
+      "sha256": "f7188cec3f93e426fe280d15c372fd28055c62da1fcfac1f69cce8215b783ba2"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts",
+      "sha256": "825b048ffac16766663f5db476e354ba0269cd74d4886cb568038a05b502781a"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts",
+      "sha256": "3a7f94f6c2eb9afc42c5691a15374fc228747ed9b2b2241651544a3d864a7a0f"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts",
+      "sha256": "061b3b7524a61e5e180401d02e99788fc18a08e8ab532d5feb94e059b722b0e4"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts",
+      "sha256": "65c02264524f2068db9df3eca58822b221d30c3d4039fb8008269134e8d375c2"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts",
+      "sha256": "9716032df0c170ca5996280f8dd62c80daee91219e5f5dbb863933ca1171b973"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-acceptance-policy.v1.yml",
+      "sha256": "8948ec3025499f90a86853e2350cc6ca83a4e9f9a431151ea470abe953987587"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-realization.v1.yml",
+      "sha256": "bb9443247f1be442e728666c3c92e51d52a512a831dfdb7e3ac42a2e4c4305dc"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-release-blueprint.v1.yml",
+      "sha256": "c58429cc602c500b4f5e374bae713c597463adc5b9271491e3837bb7b7bfd724"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+      "sha256": "1395bae8a54accbde5651ddb8a231e3a8561095103aa009c4e227e6fbb2a0ece"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/dependency-preflight-result.schema.yml",
+      "sha256": "f87893cc2777bd1e2bf5e6ec4fa7119d57de402f8361d86523354b9b5b5a1ce8"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/qualified-image-handoff.schema.yml",
+      "sha256": "3464828691ea88bd7c0ce320cdeb83cef941d5657a25fad05aae638649f4820d"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/relational-task-preflight.schema.yml",
+      "sha256": "3127ec70b48567e35799192baf321500c103cf9d4d1d8387bd6c0c42de0d3f90"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-readiness-error.schema.yml",
+      "sha256": "1bb72a0c574a62549ef0c1e3e9b486590344b5456a31a64f58d22e8447d5a9ae"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-readiness-result.schema.yml",
+      "sha256": "31d477528b0d55b25d6e1aa386a93f52fbfedd420c404928b5c3503d1880fa59"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-release-blueprint.schema.yml",
+      "sha256": "1661c5a29f94a672f51cbe7d5dd028e7c797b1f87d62f8b70d5d43fcf844e7a3"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/README.md",
+      "sha256": "ef628fbdf1e2869727f27ad63863782ebe5ba567a2a2dcd6c301adf0dbb79d37"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/blueprint_cli.py",
+      "sha256": "afcfc5c09cd7b5df30e2800e37870a25e84eb9c109edabbd5b4c2d6c6f53facf"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/build_contracts.py",
+      "sha256": "2705ec9f9157c218f64c2d27ff06c5b4975d507c92a6300f77e0aeb84b114cb7"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/container_engine.py",
+      "sha256": "e8a14ed3cbaccd264017b36075241c1bfca853e498734c00c314589927ea98a3"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md",
+      "sha256": "c229a9803244585bbd1e08f9b5e9ab6346919353392a76f6c39c8f0332390af4"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_effect_engine.py",
+      "sha256": "61f545e9d4b067299c7e139614b9803a4db98542941ea809d0b02a13f46f20f7"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_effects.py",
+      "sha256": "c39d277478e7cebcd17e7a5ab5b0e8192b5a0440757e573249ae8b652eab3174"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py",
+      "sha256": "70e549c40fa79193560d8506c5c4b6be4fd4730b78e0c77dc377d0cde0ce9797"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/local_container.py",
+      "sha256": "f86e13f1e42c1fa0f1ba729d0d917d50166a734c49de5ef371371e5c53e44509"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/qualified-publication.README.md",
+      "sha256": "d58be56a9b09280530f225ad596e969a778b1ac768398783a10047af39b1f9b9"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/qualified_publication.py",
+      "sha256": "629be3e87217408d3660010760d03a3b3f40d99a53bda367c03c55a9644394e6"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/script.py",
+      "sha256": "042690be6c77aad482e393f78da470738d1f25d2b255a4098006becc42f915a7"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md",
+      "sha256": "2cb68d85180c01b69044d5621d8f68d7a006e0182aed0d08fa0891dca01a1a1a"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/selected_readiness_cli.py",
+      "sha256": "a345c1bc7008e150bcd7b42cacedd7b05f87cae170f7588e2f9fa0e070d88c00"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+      "sha256": "985e40514d65405e354d158aafa5e8b9cd1128a0ba43a49558c461dc908dcec9"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_blueprint_cli.py",
+      "sha256": "33e7140fbece71fb5868d1be1524f99d220ec292b2745c568d2904b516513891"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_preflights.py",
+      "sha256": "470e95b2f92b85d5fd8b23e71f5c4f954aef6f727be7be90f4af1dca7daef797"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication.py",
+      "sha256": "71ae6df0a92d1f0534bf4a801a9be47570e3ad29315deb8c4ed99081ca7076ae"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication_workflow.py",
+      "sha256": "3dca7f4d78d53c42c3f505d6444da2ad9bea9055e6170ab4f193ddc445261589"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_blueprint.py",
+      "sha256": "71579934266871c3f94726423545800900c0dddf2c97188f6cdd2bf71628fee9"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness.py",
+      "sha256": "5dd41be6bfeaa98374b93736d1bfac7b5bfe2194eae0a3e367bb45697b120487"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness_cli.py",
+      "sha256": "8c040690f74e5ac1a8e0217445968367f85ecfcd303a5ef83a396d92c37c050e"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/adapters/aws/README.md",
+      "sha256": "ef1b5f176768883f5a20922a530d9646a36bc05ecdcf7894cb96841325acb4d9"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected_readiness.py",
+      "sha256": "1297dd1d84a9a86de0da1ac2e7cc6522750fd18530d34bf8ad855b4aa6ef5d9d"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/selected_blueprint.py",
+      "sha256": "b1438f558f062d22fbe1b95c19b22071eb013500aad004431883b3d5936efdce"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md",
+      "sha256": "45473c2141c30c4536be18a92b3c6a8d01cc6f632b9eb25be806a74b361c2113"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py",
+      "sha256": "b27b83c891f65a7e0ea9d5e6b4103d17aa7d205c26aabc9f96437a8b66a28d91"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+      "sha256": "d746a1a04fcbcde1532860c619fa3180f1e188cc486537eba9e653eea74d2dab"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_contract.py",
+      "sha256": "2005cd9a5e9baca76f00e50ac37de0e7a9e33fb1efac056335d54a1fc4f09a21"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs",
+      "sha256": "2b2e67dd7535e5efd1444bf2d5743ae463974f4abe0f92fc67bedde02faf2745"
+    },
+    {
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_task_revision_binding.py",
+      "sha256": "c093e8a58732070c8455ac9c368b613f989e406d216eaef375bf7983801ad9b7"
+    },
+    {
+      "path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md",
+      "sha256": "de3a60558712bfd50f5bd406db3cd08e9f16e443096998ee32e9239ecd93be92"
+    },
+    {
+      "path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
+      "sha256": "e73f0d0326bfa5c07840d02055600559ae62e22a6a0dc1ca8726f1f39a8cc6cc"
+    }
+  ],
+  "remaining": [
+    "hosted-publication-and-artifact-admission",
+    "selected-source-and-live-equivalence",
+    "per-task-live-identity-network-preflight-and-effects",
+    "shared-durable-execution-and-caller-integration",
+    "approved-staging-rehearsal"
+  ]
+}

@@ -1,0 +1,306 @@
+{
+  "scope": "local-syft-CLI-and-selected-production-package-presence",
+  "authority": "none",
+  "spdx_version": "SPDX-2.3",
+  "spdx_schema_sha256": "239208b7ac287b3cf5d9a9af23f9d69863971102a5e1587a27a398b43490b89b",
+  "spdx_schema_validation": "passed",
+  "sbom_sha256": "3123cbe4be9320c3a4c328c331529ae83cb43fad6b489b3b221ce4ed3bdd46af",
+  "sbom_bytes": 1221899,
+  "package_count": 88,
+  "expected_production_package_count": 57,
+  "matched_production_package_count": 57,
+  "missing_production_packages": [],
+  "production_package_presence": [
+    {
+      "name": "@aws-sdk/client-dynamodb",
+      "version": "3.1127.0",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/client-sqs",
+      "version": "3.1127.0",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/core",
+      "version": "3.978.1",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-env",
+      "version": "3.972.72",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-http",
+      "version": "3.972.74",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-ini",
+      "version": "3.973.17",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-login",
+      "version": "3.972.79",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-node",
+      "version": "3.972.84",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-process",
+      "version": "3.972.72",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-sso",
+      "version": "3.973.16",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/credential-provider-web-identity",
+      "version": "3.972.78",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/dynamodb-codec",
+      "version": "3.973.44",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/endpoint-cache",
+      "version": "3.972.11",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/middleware-endpoint-discovery",
+      "version": "3.972.30",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/middleware-sdk-sqs",
+      "version": "3.972.43",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/nested-clients",
+      "version": "3.997.46",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/signature-v4-multi-region",
+      "version": "3.996.47",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/token-providers",
+      "version": "3.1138.0",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/types",
+      "version": "3.974.6",
+      "present": true
+    },
+    {
+      "name": "@aws-sdk/xml-builder",
+      "version": "3.972.41",
+      "present": true
+    },
+    {
+      "name": "@aws/lambda-invoke-store",
+      "version": "0.3.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/api",
+      "version": "1.9.1",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/api-logs",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/core",
+      "version": "2.11.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/exporter-metrics-otlp-http",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/exporter-metrics-otlp-proto",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/otlp-exporter-base",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/otlp-transformer",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/resources",
+      "version": "2.11.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/sdk-logs",
+      "version": "0.222.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/sdk-metrics",
+      "version": "2.11.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/sdk-trace",
+      "version": "2.11.0",
+      "present": true
+    },
+    {
+      "name": "@opentelemetry/semantic-conventions",
+      "version": "1.43.0",
+      "present": true
+    },
+    {
+      "name": "@smithy/core",
+      "version": "3.35.0",
+      "present": true
+    },
+    {
+      "name": "@smithy/credential-provider-imds",
+      "version": "4.5.2",
+      "present": true
+    },
+    {
+      "name": "@smithy/fetch-http-handler",
+      "version": "5.8.0",
+      "present": true
+    },
+    {
+      "name": "@smithy/node-http-handler",
+      "version": "4.12.1",
+      "present": true
+    },
+    {
+      "name": "@smithy/signature-v4",
+      "version": "5.7.3",
+      "present": true
+    },
+    {
+      "name": "@smithy/types",
+      "version": "4.19.0",
+      "present": true
+    },
+    {
+      "name": "bowser",
+      "version": "2.14.1",
+      "present": true
+    },
+    {
+      "name": "mnemonist",
+      "version": "0.38.3",
+      "present": true
+    },
+    {
+      "name": "obliterator",
+      "version": "1.6.1",
+      "present": true
+    },
+    {
+      "name": "pg",
+      "version": "8.23.0",
+      "present": true
+    },
+    {
+      "name": "pg-cloudflare",
+      "version": "1.4.0",
+      "present": true
+    },
+    {
+      "name": "pg-connection-string",
+      "version": "2.14.0",
+      "present": true
+    },
+    {
+      "name": "pg-int8",
+      "version": "1.0.1",
+      "present": true
+    },
+    {
+      "name": "pg-pool",
+      "version": "3.14.0",
+      "present": true
+    },
+    {
+      "name": "pg-protocol",
+      "version": "1.16.0",
+      "present": true
+    },
+    {
+      "name": "pg-types",
+      "version": "2.2.0",
+      "present": true
+    },
+    {
+      "name": "pgpass",
+      "version": "1.0.5",
+      "present": true
+    },
+    {
+      "name": "postgres-array",
+      "version": "2.0.0",
+      "present": true
+    },
+    {
+      "name": "postgres-bytea",
+      "version": "1.0.1",
+      "present": true
+    },
+    {
+      "name": "postgres-date",
+      "version": "1.0.7",
+      "present": true
+    },
+    {
+      "name": "postgres-interval",
+      "version": "1.2.0",
+      "present": true
+    },
+    {
+      "name": "split2",
+      "version": "4.2.0",
+      "present": true
+    },
+    {
+      "name": "tslib",
+      "version": "2.8.1",
+      "present": true
+    },
+    {
+      "name": "xtend",
+      "version": "4.0.2",
+      "present": true
+    }
+  ],
+  "limits": [
+    "not SBOM completeness proof",
+    "not registry publication or signature/attestation proof",
+    "not hosted workflow acceptance",
+    "not release or operation authority"
+  ]
+}

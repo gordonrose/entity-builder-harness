@@ -24,7 +24,7 @@ import source_coverage
 
 SCHEMA_DIR = release.SCHEMA_DIR
 MAX_INTERNAL_NODES = 500000
-NAMES = {"source-build-inventory", "source-build-artifact", "local-typescript-observation", "local-typescript-emission-observation",
+NAMES = {"qualified-image-handoff", "source-build-inventory", "source-build-artifact", "local-typescript-observation", "local-typescript-emission-observation",
          "local-runtime-observation", "local-workspace-runtime-observation", "local-build-result", "local-container-lock", "local-container-result",
          "finite-job-profile", "finite-job-result", "dependency-effect-profile", "dependency-effect-result",
          "artifact-admission-policy", "artifact-admission-result", "artifact-verifier-lock", "artifact-scan-predicate", "artifact-verifier-conformance", "artifact-admission-error", "operation-control", "operation-journal", "operation-evidence",

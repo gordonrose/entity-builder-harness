@@ -52,17 +52,25 @@ Nothing is marked newly complete by this planning change.
 | --- | --- | --- |
 | M1 / partial | Produce a versioned selected target/release blueprint validated by the existing compiler with positive/negative fixtures; freeze its graph, commands, artifact inputs, resource/identity boundary and recovery routes. Trace reachable build/deployment callers and dependencies; reconcile missing or hidden selected paths. Bind current source/configuration revisions and explicit owners, permissions, cost/attempt limits, authority expiry and cleanup rules. Classify every discovered gap as necessary now or backlog. | U01–U05/U12/U14/U16; selected parts of R1. No whole-repository zero-findings requirement. |
 | M2 / partial | Qualify the current exact image and every selected command with appropriate dependency/effect tests. Reuse existing build, SBOM, scan, provenance and signature controls with verified current receipts. Changed artifacts invalidate affected proofs; health cannot replace job completion or restore proof. | U07–U11/U16; selected R2. Renew the image proof invalidated by U16; do not rebuild generic verification machinery. |
-| M3 / open | Connect existing AWS inspection, template/change-plan and preflight commands through thin profiles in the existing gate. Verify selected account/region/resource identity, IAM, injected configuration/secret shape, network/TLS, dependency reachability, capacity/cost and evidence paths. Candidate runtime proof and each task's no-effect preflight are distinct. Return one safe, source/digest/target-bound readiness and effect summary. | Existing deployment checks; selected R4 and R7.1. Source fixtures first; current provider proof stays separate. |
+| M3 / partial | Connect existing AWS inspection, template/change-plan and preflight commands through thin profiles in the existing gate. Verify selected account/region/resource identity, IAM, injected configuration/secret shape, network/TLS, dependency reachability, capacity/cost and evidence paths. Candidate runtime proof and each task's no-effect preflight are distinct. Return one safe, source/digest/target-bound readiness and effect summary. | Existing deployment checks; selected R4 and R7.1. Source fixtures first; current provider proof stays separate. |
 | M4 / partial | Wire one supported release command to the existing compiler/engine and selected workflow. Enforce current evidence/authority, one writer, durable intent before effects, bounded attempts, unknown-outcome reconciliation, safe receipt retention and cleanup. Existing supported callers for this target join that boundary. Prove interruption/retry refusal and recovery through the public path. | U01/U04/U13/U15; necessary R3/R5/R6. Local SQLite alone does not prove shared writer exclusion or production durability. |
 | M5 / open | After specific approval, rehearse the immutable staging graph with its actual artifact, identities and commands. Verify intended effects, basic telemetry and alert receipt, interruption/denial handling, rollback or forward repair/restore, and final cleanup/steady state. Preserve evidence and prove stale inputs are refused before a subsequent operation. | Selected R7 with minimum R8 signals. Source-ready is not live-proven. |
 
-Next unit is **M1: produce the selected target/release blueprint through the
-existing compiler and public wrapper, with focused positive/negative tests**.
-While implementing it, record the existing command/profile for each step, reusable
-checks, exact missing connections, and necessary-now versus backlog decisions.
-A further planning-only report does not complete M1. Do not spend the next batch finishing all of R1 or
-building a universal action analyser. Selected action material/input checks stay
-necessary wherever they establish this path's source, artifact or authority.
+The selected blueprint, exact-image publication handoff and task/passive
+preflight components are now accepted as U17–U19; see the
+[B03 acceptance record](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) for before/after outcomes and exact evidence.
+This closes named source/local subcriteria, not the five complete milestones.
+The first AWS passive observation blocked on stale drift evidence; no task or
+resource was changed. Hosted publication and per-task live proof remain open.
+
+Next is **M4: versioned selected operation/shared-store records and conditional
+backend conformance**, reusing the existing journal/action machinery. The user
+accepted the [operating policy](iaas-release-control-mvp-control-policy-proposal.md)
+for source implementation. Follow with common controlled execution, unknown
+outcome/cleanup reconciliation and selected-caller migration; then specifically
+approved hosted/target acceptance and M5 rehearsal. No extra milestone is added.
+The current batch ends by 21:10 UTC under the user's three-hour maximum; this
+supersedes the earlier weekly-allowance stop for this batch.
 
 ## Safety floor and honest qualification
 
@@ -161,5 +169,7 @@ integration work before another estimate is offered.
 B02 delta: accepted deliveries remain 16; no new runtime capability. The user
 changed the active scope from completing the entire roadmap to an MVP with
 backlog-first intake. Whole-R1 completion is no longer the immediate goal.
-The last user-reported allowance is 26%, with a 20% stop floor; no live allowance
-meter was available. This planning update starts no implementation or live run.
+That planning update started no implementation or live run. The subsequent
+B03 batch is authorized and uses the user-approved maximum roughly three-hour
+timebox, ending by 21:10 UTC; the user explicitly withdrew the allowance stop
+for this batch. B03 acceptance and remaining criteria are recorded above.

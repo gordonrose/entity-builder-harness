@@ -26,9 +26,11 @@ import tempfile
 DIRECTORY = Path(__file__).resolve().parent
 sys.path.insert(0, str(DIRECTORY))
 import dependency_effect_contracts as contracts
+import dependency_preflight_contracts as preflight
 from dependency_effect_engine import DependencyEngine
 import local_container
 import container_profiles
+import qualified_publication
 from container_engine import EngineFailure
 from locked_toolchain import ToolchainFailure
 import release_compiler as release
@@ -98,8 +100,8 @@ locked-toolchain-workspace-pattern-unsupported
 
 def snapshot(root):
     paths = [LOCK, EXPECTATIONS, *('scripts/04.deploy/operational-realization-gate/' + name for name in
-        ('dependency_effects.py', 'dependency_effect_engine.py', 'dependency_effect_contracts.py')),
-        *('infra/04.deploy/contracts/release-control/v1/' + name + '.schema.yml' for name in contracts.SCHEMAS)]
+        ('dependency_effects.py', 'dependency_effect_engine.py', 'dependency_effect_contracts.py', 'dependency_preflight_contracts.py')),
+        *('infra/04.deploy/contracts/release-control/v1/' + name + '.schema.yml' for name in (*contracts.SCHEMAS, *preflight.SCHEMAS))]
     files = {name: local_container.read(root, name) for name in paths}
     for name in paths[2:]:
         folder = contracts.build_contracts.SCHEMA_DIR if name.endswith('.schema.yml') else DIRECTORY
@@ -169,9 +171,20 @@ def profile(build, revision, lock, dependency_id, expected):
         'commands': contracts.COMMANDS, 'schema_digests': contracts.schema_digests()})
 
 
-def run(root, scratch, package_cache):
+def qualified_build(root, scratch, publication_directory):
+    handoff = qualified_publication.verify(root, scratch, publication_directory)
+    built = qualified_publication.checked_document(qualified_publication.read(
+        Path(publication_directory) / 'container-result.json'), json_only=True)
+    if built.get('result_digest') != handoff['container_result_digest']:
+        contracts.fail('preflight-qualified-image-changed')
+    return qualified_publication.current_result(root, built)
+
+
+def run(root, scratch, package_cache=None, *, publication_directory=None):
     root = Path(root).resolve(strict=True)
     scratch = local_container.checked_scratch(root, scratch)
+    if bool(package_cache) == bool(publication_directory):
+        contracts.fail('arguments-invalid')
     files, revision = snapshot(root)
     lock = contracts.validate_lock(json.loads(files[LOCK]))
     expected = contracts.validate_expectations(json.loads(files[EXPECTATIONS]))
@@ -180,7 +193,8 @@ def run(root, scratch, package_cache):
     engine = DependencyEngine(work)
     try:
         dependency_id = engine.dependency_identity(lock)
-        built = local_container.run(root, package_cache, scratch)
+        built = (qualified_build(root, scratch, publication_directory) if publication_directory
+                 else local_container.run(root, package_cache, scratch))
         bound_profile = profile(built, revision, lock, dependency_id, expected)
         image_id = bound_profile['artifact']['image_id']
         engine.inspect_image(image_id)
@@ -192,7 +206,12 @@ def run(root, scratch, package_cache):
         engine.start_dependency(dependency_id)
         engine.verify_tls()
         cases = []
+        preflight_cases = [preflight.observe(engine, image_id, name) for name in
+                           ('bootstrap-ready', 'bootstrap-denied-identity')]
         for name, task, outcome, assertions in contracts.CASES:
+            if name == 'migration-denied':
+                preflight_cases.extend(preflight.observe(engine, image_id, item) for item in
+                                       ('migration-ready', 'migration-denied-identity'))
             if name == 'migration-checksum-mismatch':
                 engine.sql('corrupt')
             before = engine.snapshot()
@@ -206,10 +225,14 @@ def run(root, scratch, package_cache):
         final_state = engine.snapshot()
         if not migration_state(final_state, expected):
             contracts.fail('independent-effect-mismatch')
+        preflight_cases.extend(preflight.observe(engine, image_id, item) for item in ('relay-ready', 'worker-ready'))
         for privilege in ('select', 'insert', 'update', 'delete'):
             engine.sql('revoke-' + privilege)
             if migration_state(engine.snapshot(), expected):
                 contracts.fail('grant-fault-not-detected')
+            if privilege in {'select', 'delete'}:
+                preflight_cases.append(preflight.observe(engine, image_id,
+                    'relay-denied-select' if privilege == 'select' else 'worker-denied-delete'))
             engine.sql('grant-' + privilege)
         engine.sql('runtime-denied', expected_failure=True)
         engine.sql('runtime-dml')
@@ -226,10 +249,11 @@ def run(root, scratch, package_cache):
         engine.cleanup_all()
         shutil.rmtree(work)
     result = contracts.make_result(bound_profile, engine.run_id, cases, certificate_digest, version)
+    preflight_result = preflight.make_result(result, preflight_cases)
     # Retain the complete validated upstream receipt; a digest alone is not reviewable evidence.
     evidence = scratch / ('dependency-effect-evidence-' + engine.run_id)
     evidence.mkdir(mode=0o700)
-    for name, document in (('build-result.json', built), ('effect-result.json', result)):
+    for name, document in (('build-result.json', built), ('effect-result.json', result), ('preflight-result.json', preflight_result)):
         with (evidence / name).open('xb') as stream:
             stream.write(canonical(document) + b'\n')
         (evidence / name).chmod(0o600)
@@ -263,8 +287,9 @@ def main(argv=None):
         parser.add_argument('--scratch-root', required=True)
         parser.add_argument('--package-cache')
         parser.add_argument('--acquire-dependency', action='store_true')
+        parser.add_argument('--qualified-publication-directory')
         args = parser.parse_args(argv)
-        if bool(args.package_cache) == args.acquire_dependency:
+        if sum((bool(args.package_cache), args.acquire_dependency, bool(args.qualified_publication_directory))) != 1:
             contracts.fail('arguments-invalid')
         root = Path(args.source_root).resolve(strict=True)
         scratch = local_container.checked_scratch(root, args.scratch_root)
@@ -276,7 +301,7 @@ def main(argv=None):
             result = {'schema': 'dependency-effect-acquisition/v1', 'verdict': 'verified', **contracts.BLOCKED,
                       'image': lock['image'], 'image_id': image_id}
         else:
-            result = run(root, scratch, args.package_cache)
+            result = run(root, scratch, args.package_cache, publication_directory=args.qualified_publication_directory)
         status = 0
     except (Exception, KeyboardInterrupt) as error:
         code = safe_failure_code(error)

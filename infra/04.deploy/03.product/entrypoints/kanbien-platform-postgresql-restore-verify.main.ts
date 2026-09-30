@@ -3,17 +3,24 @@
 // to the reviewed staging RDS recovery-name pattern before a TLS connection.
 
 import { outboxEntryId } from "@kanbien/core/persistence";
-import { closePool, configurationFromEnvironment, connectionPool, secretFromEnvironment, writeOutcome } from "./kanbien-platform-postgresql-task";
+import { closePool, configurationFromEnvironment, connectionPool, relationalTaskMode, secretFromEnvironment, verifyRelationalTaskPreflight, writeOutcome, writePreflightOutcome } from "./kanbien-platform-postgresql-task";
 
 const fixedWorkItem = "postgresql-stage6-smoke-20260926-a";
 
 async function main(): Promise<void> {
   let pool;
+  let preflight = process.argv.slice(2).includes("--preflight");
   try {
+    preflight = relationalTaskMode() === "preflight";
     const configuration = configurationFromEnvironment();
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
     const restoreHost = restoreHostFromEnvironment();
     pool = connectionPool({ ...runtime, host: restoreHost }, configuration.runtimeSecretArn, configuration.schema);
+    if (preflight) {
+      await verifyRelationalTaskPreflight(pool, "restore-verify", runtime.username);
+      writePreflightOutcome("restore-verify", "passed");
+      return;
+    }
     const workItem = await pool.query<{ readonly count: string }>({
       text: 'SELECT COUNT(*)::text AS count FROM "platform_smoke"."platform_smoke_work_item" WHERE id = $1 AND state = $2',
       values: [fixedWorkItem, "accepted"],
@@ -25,7 +32,8 @@ async function main(): Promise<void> {
     if (workItem.rows[0]?.count !== "1" || outbox.rows[0]?.count !== "1") throw new Error("RELATIONAL_RESTORE_PROOF_NOT_FOUND");
     writeOutcome("restore_verified", "succeeded");
   } catch {
-    writeOutcome("restore_verified", "failed");
+    if (preflight) writePreflightOutcome("restore-verify", "failed");
+    else writeOutcome("restore_verified", "failed");
     process.exitCode = 1;
   } finally {
     await closePool(pool);

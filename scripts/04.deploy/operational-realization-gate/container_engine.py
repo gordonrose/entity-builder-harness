@@ -196,6 +196,7 @@ class Engine:
         self._approved = set()
         self._owned = {}
         self._images = {}
+        self._build_identities = {}
 
     def invoke(self, args, *, timeout=30, max_output=MAX_OUTPUT):
         """Execute only argument vectors constructed by the reviewed methods below."""
@@ -339,7 +340,9 @@ class Engine:
         build_key = "build-" + uuid.uuid4().hex
         iidfile = self.private / (build_key + ".iid")
         metadatafile = self.private / (build_key + ".metadata.json")
-        build_args = [] if job_fixture else ["--build-arg", "PAYLOAD_STAGE=verified"]
+        build_args = [] if job_fixture else ["--build-arg", "PAYLOAD_STAGE=verified",
+            "--label", "org.opencontainers.image.revision=" + source_commit,
+            "--label", "org.opencontainers.image.source=entity-builder-harness"]
         self._call(["build", "--platform", "linux/amd64", "--network", "none", "--no-cache",
                     "--provenance=false", "--pull=false", "--iidfile", str(iidfile),
                     "--metadata-file", str(metadatafile), "--file", str(dockerfile.resolve()),
@@ -362,7 +365,21 @@ class Engine:
                 _fail("build-identity-mismatch")
         # Buildx iidfiles can contain configuration digests that Docker's containerd
         # store cannot address. Its bound manifest digest selects the exact image.
-        return self._inspect_image(manifest_id, JOB_COMMAND if job_fixture else SERVER_COMMAND)["image_id"]
+        try:
+            image_id = self._inspect_image(manifest_id, JOB_COMMAND if job_fixture else SERVER_COMMAND)["image_id"]
+        except EngineFailure as error:
+            if str(error) not in {"local-container-engine-command-failed", "local-container-image-identity-mismatch"} or config_id == manifest_id:
+                raise
+            image_id = self._inspect_image(config_id, JOB_COMMAND if job_fixture else SERVER_COMMAND)["image_id"]
+        self._build_identities[image_id] = {"daemon_image_id": image_id,
+            "manifest_digest": manifest_id, "configuration_digest": config_id}
+        return image_id
+
+    def build_identity(self, image_id):
+        image_id = _image(image_id)
+        if image_id not in self._build_identities:
+            _fail("build-identity-unavailable")
+        return dict(self._build_identities[image_id])
 
     @staticmethod
     def _build_output(path, limit, code):

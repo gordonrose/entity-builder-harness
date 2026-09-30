@@ -8,6 +8,9 @@ import { platformPersistenceLeaseOwner } from "@kanbien/platform-persistence";
 import { createPostgreSqlPlatformProcessingStore } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import {
   closePool,
+  relationalTaskMode,
+  verifyRelationalTaskPreflight,
+  writePreflightOutcome,
   configurationFromEnvironment,
   connectionPool,
   secretFromEnvironment,
@@ -18,11 +21,18 @@ const expectedOutboxEntry = "platform-smoke.work-item-accepted.postgresql-stage6
 
 async function main(): Promise<void> {
   let pool;
+  let preflight = process.argv.slice(2).includes("--preflight");
   try {
+    preflight = relationalTaskMode() === "preflight";
     const configuration = configurationFromEnvironment();
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
     const queueUrl = requiredEnvironment("RELATIONAL_SMOKE_QUEUE_URL");
     pool = connectionPool(runtime, configuration.runtimeSecretArn, configuration.schema);
+    if (preflight) {
+      await verifyRelationalTaskPreflight(pool, "worker", runtime.username);
+      writePreflightOutcome("worker", "passed");
+      return;
+    }
     const queue = createAwsSdkPlatformSqsWorkerQueue({ queueUrl, region: "eu-west-1", waitTimeSeconds: 20, visibilityTimeoutSeconds: 120 });
     const delivery = await queue.receive();
     if (delivery.kind !== "delivery") throw new Error("RELATIONAL_TASK_WORKER_DELIVERY_INVALID");
@@ -45,7 +55,8 @@ async function main(): Promise<void> {
     await queue.acknowledge(delivery.receiptHandle);
     writeOutcome("worker_completed", "succeeded");
   } catch {
-    writeOutcome("worker_completed", "failed");
+    if (preflight) writePreflightOutcome("worker", "failed");
+    else writeOutcome("worker_completed", "failed");
     process.exitCode = 1;
   } finally {
     await closePool(pool);

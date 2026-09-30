@@ -554,6 +554,30 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] in {"--selected-readiness", "--inspect-target"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import selected_readiness_cli
+        except Exception:
+            print(json.dumps({"schema": "selected-readiness-error/v1",
+                              "scope": "selected-target-passive-readiness", "verdict": "blocked",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked",
+                              "findings": [{"code": "readiness-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return selected_readiness_cli.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] == "--blueprint" for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import blueprint_cli
+        except Exception:
+            print(json.dumps({"schema": "selected-release-blueprint-error/v1",
+                              "scope": "selected-release-blueprint", "verdict": "failed",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked",
+                              "findings": [{"code": "blueprint-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return blueprint_cli.main(sys.argv[1:])
     if any(argument.split("=", 1)[0] == "--finite-recovery-conformance" for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:

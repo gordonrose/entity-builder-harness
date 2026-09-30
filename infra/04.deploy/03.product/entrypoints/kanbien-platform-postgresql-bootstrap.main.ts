@@ -4,6 +4,9 @@
 import {
   type BootstrapFailureCategory,
   closePool,
+  relationalTaskMode,
+  verifyRelationalTaskPreflight,
+  writePreflightOutcome,
   connectionPool,
   credentialsFromEnvironment,
   secretFromEnvironment,
@@ -12,13 +15,24 @@ import {
 
 async function main(): Promise<void> {
   let pool;
+  let preflight = process.argv.slice(2).includes("--preflight");
   let phase: BootstrapFailureCategory = "bootstrap-input-validation-failure";
   try {
+    preflight = relationalTaskMode() === "preflight";
     const masterCredentials = credentialsFromEnvironment("RELATIONAL_MASTER_SECRET_JSON");
     const migration = secretFromEnvironment("RELATIONAL_MIGRATION_SECRET_JSON");
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
     const master = { ...masterCredentials, host: migration.host, port: migration.port };
+    if (preflight && (migration.username !== "psmokemigrate" || runtime.username !== "psmokeruntime"
+        || runtime.host !== migration.host || runtime.port !== migration.port)) {
+      throw new Error("RELATIONAL_TASK_PREFLIGHT_FAILED");
+    }
     pool = connectionPool(master, "arn:aws:secretsmanager:eu-west-1:337159794548:secret:target-managed-master", "platform_smoke");
+    if (preflight) {
+      await verifyRelationalTaskPreflight(pool, "bootstrap", master.username);
+      writePreflightOutcome("bootstrap", "passed");
+      return;
+    }
     phase = "bootstrap-password-quotation-failure";
     const migrationPassword = await quotedLiteral(pool, migration.password);
     const runtimePassword = await quotedLiteral(pool, runtime.password);
@@ -37,7 +51,8 @@ async function main(): Promise<void> {
     await pool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
     writeOutcome("bootstrap_completed", "succeeded");
   } catch (error) {
-    writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error, phase));
+    if (preflight) writePreflightOutcome("bootstrap", "failed");
+    else writeOutcome("bootstrap_completed", "failed", bootstrapFailureCategory(error, phase));
     process.exitCode = 1;
   } finally {
     await closePool(pool);

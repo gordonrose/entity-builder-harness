@@ -26,14 +26,6 @@ name: Publish Platform Shell Staging Image
 on:
   workflow_dispatch:
     inputs:
-      base_image_ref:
-        description: Build-stage Node image tag or digest to resolve and pin for this staging build.
-        required: true
-        default: node:22-bookworm-slim
-      runtime_image_ref:
-        description: Final minimal Node runtime image tag or digest to resolve and pin for this staging build.
-        required: true
-        default: gcr.io/distroless/nodejs22-debian12:nonroot
       publish_image:
         description: Push the checked, scanned, and attested image to the staging ECR repository; this workflow never deploys it.
         required: true
@@ -66,7 +58,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
 
@@ -78,23 +70,27 @@ jobs:
           fi
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "22"
+          node-version: "22.23.3"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
-          python-version: "3.11"
+          python-version: "3.14.4"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        with:
+          version: v0.37.2
+          driver: docker-container
+          driver-opts: image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
 
       - name: Install repository dependencies
         run: npm ci --ignore-scripts
 
       - name: Install script dependencies
-        run: python -m pip install PyYAML==6.0.2
+        run: python -m pip install --require-hashes -r scripts/04.deploy/operational-realization-gate/requirements.lock
 
       - name: Run platform shell checks
         run: |
@@ -115,62 +111,34 @@ jobs:
 
       - name: Configure AWS credentials
         if: ${{ inputs.publish_image }}
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Log in to Amazon ECR
         if: ${{ inputs.publish_image }}
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
 
-      - name: Resolve digest-pinned build and runtime images
+      - name: Acquire reviewed qualification inputs
         id: base-image
         run: |
           set -euo pipefail
-
-          resolve_image() {
-            local reference="$1"
-            local kind="$2"
-            local repository
-            local digest
-            local image
-
-            if [[ "$reference" == *@sha256:* ]]; then
-              repository="${reference%@sha256:*}"
-              digest="sha256:${reference##*@sha256:}"
-              image="$reference"
-            else
-              repository="${reference%:*}"
-              if [ "$repository" = "$reference" ]; then
-                echo "$kind image must include a tag or digest: $reference" >&2
-                exit 1
-              fi
-              digest="$(docker buildx imagetools inspect "$reference" --format '{{.Manifest.Digest}}')"
-              image="${repository}@${digest}"
-            fi
-
-            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-              echo "Resolved $kind image digest has invalid shape: $digest" >&2
-              exit 1
-            fi
-
-            printf '%s\t%s\t%s\n' "$repository" "$digest" "$image"
-          }
-
-          IFS=$'\t' read -r build_repository build_digest build_image < <(
-            resolve_image "${{ inputs.base_image_ref }}" "build"
-          )
-          IFS=$'\t' read -r runtime_repository runtime_digest runtime_image < <(
-            resolve_image "${{ inputs.runtime_image_ref }}" "runtime"
-          )
-
-          echo "build_repository=$build_repository" >> "$GITHUB_OUTPUT"
-          echo "build_digest=$build_digest" >> "$GITHUB_OUTPUT"
-          echo "build_image=$build_image" >> "$GITHUB_OUTPUT"
-          echo "runtime_repository=$runtime_repository" >> "$GITHUB_OUTPUT"
-          echo "runtime_digest=$runtime_digest" >> "$GITHUB_OUTPUT"
-          echo "runtime_image=$runtime_image" >> "$GITHUB_OUTPUT"
+          mkdir -m 700 "$RUNNER_TEMP/qualified-image"
+          bash scripts/04.deploy/operational-realization-gate/verify-local-build.sh \
+            --source-root . --acquire-cache "$RUNNER_TEMP/qualified-packages"
+          bash scripts/04.deploy/build-platform-shell-image/script.sh --qualify-local \
+            --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" --acquire-base
+          python3 - <<'PYTHON'
+          import hashlib, json, os
+          from pathlib import Path
+          gate = Path('scripts/04.deploy/operational-realization-gate')
+          runtime = json.loads((gate / 'container-image.lock.json').read_text())
+          toolchain = (gate / 'node-toolchain.lock.json').read_bytes()
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
+              stream.write('runtime_digest=' + runtime['runtime_image'].split('@')[1] + '\n')
+              stream.write('toolchain_digest=sha256:' + hashlib.sha256(toolchain).hexdigest() + '\n')
+          PYTHON
 
       - name: Select immutable staging image tag
         id: image-tag
@@ -202,17 +170,78 @@ jobs:
           fi
 
       - name: Build platform shell image
-        if: ${{ !inputs.publish_image || steps.existing-image.outputs.exists != 'true' }}
+        id: qualified-image
         run: |
-          bash scripts/04.deploy/build-platform-shell-image/script.sh \
-            --tag "${{ steps.image-tag.outputs.uri }}" \
-            --base-image "${{ steps.base-image.outputs.build_image }}" \
-            --runtime-image "${{ steps.base-image.outputs.runtime_image }}" \
-            --require-digest-base
+          set -euo pipefail
+          git diff --quiet
+          git diff --cached --quiet
+          git ls-files --others --exclude-standard -z | python3 -c 'import sys; raise SystemExit(bool(sys.stdin.buffer.read(1)))'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --qualify-local \
+            --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
+            --package-cache "$RUNNER_TEMP/qualified-packages" \
+            --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \
+            > "$RUNNER_TEMP/qualified-image/result.json"
+          python3 -I -B scripts/04.deploy/operational-realization-gate/qualified_publication.py \
+            --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
+            --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \
+            > "$RUNNER_TEMP/qualified-image/checked.json"
+          python3 - <<'PYTHON'
+          import json, os
+          from pathlib import Path
+          value = json.loads((Path(os.environ['RUNNER_TEMP']) / 'qualified-image/checked.json').read_text())
+          if value['source_commit'] != os.environ['GITHUB_SHA']:
+              raise SystemExit('Qualified source does not match this workflow commit')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as stream:
+              stream.write('image_id=' + value['artifact']['daemon_image_id'] + '\n')
+              stream.write('manifest_digest=' + value['artifact']['manifest_digest'] + '\n')
+              stream.write('configuration_digest=' + value['artifact']['configuration_digest'] + '\n')
+          PYTHON
+          git diff --quiet
+          git diff --cached --quiet
+          git ls-files --others --exclude-standard -z | python3 -c 'import sys; raise SystemExit(bool(sys.stdin.buffer.read(1)))'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Retain normalized qualification receipts
+        id: qualification-receipts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: qualified-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/qualified-image/handoff/container-result.json
+            ${{ runner.temp }}/qualified-image/handoff/handoff.json
+          retention-days: 7
+          include-hidden-files: false
+          overwrite: false
+          if-no-files-found: error
 
       - name: Push platform shell image
-        if: ${{ inputs.publish_image && steps.existing-image.outputs.exists != 'true' }}
-        run: docker push "${{ steps.image-tag.outputs.uri }}"
+        if: ${{ inputs.publish_image }}
+        run: |
+          set -euo pipefail
+          git diff --quiet
+          git diff --cached --quiet
+          git ls-files --others --exclude-standard -z | python3 -c 'import sys; raise SystemExit(bool(sys.stdin.buffer.read(1)))'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -I -B scripts/04.deploy/operational-realization-gate/qualified_publication.py \
+            --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
+            --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \
+            > "$RUNNER_TEMP/qualified-image/ready-to-publish.json"
+          if [ "${{ steps.existing-image.outputs.exists }}" = "true" ]; then
+            if [ "${{ steps.existing-image.outputs.digest }}" != "${{ steps.qualified-image.outputs.manifest_digest }}" ]; then
+              echo "Existing immutable tag identifies a different image; publication refused." >&2
+              exit 1
+            fi
+          else
+            docker tag "${{ steps.qualified-image.outputs.image_id }}" "${{ steps.image-tag.outputs.uri }}"
+            actual_id="$(docker image inspect "${{ steps.image-tag.outputs.uri }}" --format '{{.Id}}')"
+            if [ "$actual_id" != "${{ steps.qualified-image.outputs.image_id }}" ]; then
+              echo "Publication tag does not identify the qualified image." >&2
+              exit 1
+            fi
+            docker push "${{ steps.image-tag.outputs.uri }}"
+          fi
 
       - name: Resolve immutable image digest
         if: ${{ inputs.publish_image }}
@@ -234,8 +263,33 @@ jobs:
             exit 1
           fi
 
+          if [ "$digest" != "${{ steps.qualified-image.outputs.manifest_digest }}" ]; then
+            echo "Published manifest differs from the qualified manifest." >&2
+            exit 1
+          fi
+          aws ecr batch-get-image --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageDigest="$digest" \
+            --accepted-media-types application/vnd.oci.image.manifest.v1+json application/vnd.docker.distribution.manifest.v2+json \
+            --output json > "$RUNNER_TEMP/qualified-image/published-image.json"
+          python3 -I -B scripts/04.deploy/operational-realization-gate/qualified_publication.py \
+            --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
+            --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \
+            --published-image "$RUNNER_TEMP/qualified-image/published-image.json" \
+            > "$RUNNER_TEMP/qualified-image/publication-check.json"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Retain normalized publication receipt
+        id: publication-receipt
+        if: ${{ inputs.publish_image && steps.image.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: published-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qualified-image/publication-check.json
+          retention-days: 7
+          include-hidden-files: false
+          overwrite: false
+          if-no-files-found: error
 
       - name: Verify published target-platform image
         if: ${{ inputs.publish_image }}
@@ -338,18 +392,29 @@ jobs:
       - name: Generate image SBOM
         if: ${{ inputs.publish_image }}
         id: sbom
-        uses: anchore/sbom-action@v0
-        with:
-          image: ${{ steps.image.outputs.uri }}
-          format: spdx-json
-          output-file: ${{ runner.temp }}/platform-shell.sbom.spdx.json
-          upload-artifact: false
-          upload-release-assets: false
+        env:
+          SYFT_IMAGE: ${{ steps.image.outputs.uri }}
+          SYFT_CHECK_FOR_APP_UPDATE: "false"
+        run: |
+          set -euo pipefail
+          [[ "$SYFT_IMAGE" =~ ^[a-z0-9][a-z0-9./:-]*@sha256:[a-f0-9]{64}$ ]]
+          umask 077
+          tool_dir="$(mktemp -d "$RUNNER_TEMP/reviewed-syft.XXXXXX")"
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            https://github.com/anchore/syft/releases/download/v1.42.3/syft_1.42.3_linux_amd64.tar.gz \
+            --output "$tool_dir/archive.tar.gz"
+          printf '%s  %s\n' 0d6be741479eddd2c8644a288990c04f3df0d609bbc1599a005532a9dff63509 "$tool_dir/archive.tar.gz" | sha256sum --check --status
+          tar --extract --gzip --file "$tool_dir/archive.tar.gz" --directory "$tool_dir" --no-same-owner --no-same-permissions syft
+          test -f "$tool_dir/syft" && test ! -L "$tool_dir/syft"
+          printf '%s  %s\n' 6c1eb5c6f15c177fa3dd727ee186c61a660a3939a4e1dc1bc4b3e00eafec098e "$tool_dir/syft" | sha256sum --check --status
+          chmod 700 "$tool_dir/syft"
+          test "$("$tool_dir/syft" version --output json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')" = "1.42.3"
+          "$tool_dir/syft" scan "docker:$SYFT_IMAGE" --output "spdx-json=$RUNNER_TEMP/platform-shell.sbom.spdx.json"
 
       - name: Attest image provenance
         if: ${{ inputs.publish_image }}
         id: provenance-attestation
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-name: ${{ env.ECR_URI }}
           subject-digest: ${{ steps.image.outputs.digest }}
@@ -359,7 +424,7 @@ jobs:
       - name: Attest image SBOM
         if: ${{ inputs.publish_image }}
         id: sbom-attestation
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-name: ${{ env.ECR_URI }}
           subject-digest: ${{ steps.image.outputs.digest }}
@@ -374,13 +439,13 @@ jobs:
             echo ""
             echo "- Commit: ${GITHUB_SHA}"
             echo "- Workflow run: ${GITHUB_RUN_ID}"
-            echo "- Build image: ${{ steps.base-image.outputs.build_image }}"
-            echo "- Build digest: ${{ steps.base-image.outputs.build_digest }}"
-            echo "- Runtime image: ${{ steps.base-image.outputs.runtime_image }}"
+            echo "- Locked compiler contract: ${{ steps.base-image.outputs.toolchain_digest }}"
             echo "- Runtime digest: ${{ steps.base-image.outputs.runtime_digest }}"
             echo "- Image tag: ${{ steps.image-tag.outputs.tag }}"
+            echo "- Qualification receipts: ${{ steps.qualification-receipts.outputs.artifact-url }} (7 days)"
             if [ "${{ inputs.publish_image }}" = "true" ]; then
               echo "- Image digest: ${{ steps.image.outputs.digest }}"
+              echo "- Publication receipt: ${{ steps.publication-receipt.outputs.artifact-url }} (7 days)"
               echo "- Deploy image URI: ${{ steps.image.outputs.uri }}"
               echo "- ECR scan status: ${{ steps.scan.outputs.status }}"
               echo "- ECR scan CRITICAL: ${{ steps.scan.outputs.critical }}"

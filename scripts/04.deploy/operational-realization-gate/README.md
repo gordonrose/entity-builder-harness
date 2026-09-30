@@ -25,7 +25,7 @@
 
 | File | Responsibility |
 | --- | --- |
-| `script.py` | Generic compiler for graph completeness, proof levels, gate order, lifecycle safety, strict normalized evidence, and provider leakage. It uses no provider SDK, CLI, resource type, or adapter import. |
+| `script.py` | Generic compiler for graph completeness, proof levels, gate order, lifecycle safety, strict normalized evidence, and provider leakage. Its compiler modes use no provider tooling; explicit selected-target inspection dispatches through a separate adapter. |
 | `release_compiler.py` | Schema-backed immutable release definition and 17-stage acceptance-matrix compilation, reusing the realization contract validator. |
 | `source_coverage.py` | Reconciles fresh independent inventory, reviewed adoption and composition; generates scoped source obligations. |
 | `finding_triage.py` | Checks that every discovery finding has a current, policy-consistent open work assignment. |
@@ -1076,3 +1076,28 @@ See [the recovery contract and limits](finite-recovery.README.md) for fixed acti
 budgets, refusal states, local image availability, evidence and source bindings.
 Provider stores, production artifact evidence, AWS preflight and target execution
 remain separate delivery work. This does not resume PostgreSQL Stage 6.
+
+## Selected staging MVP integrations
+
+The existing public gate now accepts a source-bound selected staging blueprint.
+See [selected blueprint compilation](selected-release-blueprint.README.md) for
+the exact command, source invalidation, nine task groups and thirteen container
+obligations. This compiles all seventeen acceptance rows; it grants no operation
+authority and does not mark the proposed target policy approved.
+
+[Qualified image publication](qualified-publication.README.md) connects the
+existing final-image verifier to the existing staging publisher on the same
+host. It preserves the tested manifest/configuration identity through registry
+verification. Hosted execution remains a separate acceptance step.
+
+The existing [relational task commands](../run-platform-shell-postgresql-relational-smoke/README.md)
+also expose one fixed read-only database preflight mode. Its result is distinct
+from task effect completion. The durable AWS controller must bind that mode to
+the exact task revision and apply it in dependency order before live effects.
+
+## Passive selected-target inspection
+
+The existing wrapper also exposes the strictly selected, read-only AWS mode
+[documented in the maintained adapter](../release-control/adapters/aws/README.md).
+Both `--selected-readiness` and `--inspect-target` are required. It retains
+blocked release/operation authority and never starts a task or refreshes drift.

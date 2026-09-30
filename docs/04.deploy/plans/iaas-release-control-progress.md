@@ -23,9 +23,30 @@ M1–M5 are now the active delivery queue for one controlled AWS staging path.
 New checks are deferred unless an evidenced blocker, unsafe-effect or material-
 drift risk requires them. The R1–R8 register below remains the full-roadmap
 baseline; it is not all prerequisite work for this scoped MVP. No R checkpoint
-is marked complete or exempt by deferral. Accepted delivery count remains 16.
+is marked complete or exempt by deferral. B02 retained 16 accepted deliveries;
+B03 adds the three bounded components recorded below.
 
-## Current position — baseline B01, 2026-09-30
+## Current position — B03, 2026-09-30
+
+**19 delivery units accepted: three added in this MVP batch.**
+[Exact acceptance and before/after outcomes](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) record the selected
+blueprint, exact-image publication handoff, and selected task/passive preflight.
+The fresh canonical run passed 2,115 tests in 66 suites; the separate task test
+suite passed 67. Actual image qualification, nine database effect cases and eight
+database preflight cases passed. The first passive AWS inspection correctly
+blocked on stale drift evidence. No AWS mutation or hosted publication occurred.
+
+M1, M2, M3 and M4 remain partial; M5 remains open. Their concrete new completed
+subcriteria are shown in the acceptance record, rather than hidden by those
+aggregate statuses. Full shared execution, caller migration, hosted artifact
+acceptance and the approved staging rehearsal remain unimplemented/unproven.
+The user accepted the [M4 operating policy](iaas-release-control-mvp-control-policy-proposal.md)
+for source work. Next is the versioned selected-operation/shared-store seam,
+followed by controlled execution/reconciliation and existing-caller integration.
+The ongoing batch has a hard 21:10 UTC handoff; the earlier weekly allowance
+threshold was explicitly withdrawn for this batch.
+
+## Historical position — baseline B01, 2026-09-30
 
 **16 delivery units accepted; seven accepted since the 15–20 estimate.**
 The latest implementation checkpoint is `2b940bd4a2df364b3348151abc2c938f28b859cd`.
@@ -79,6 +100,9 @@ and environment, not every later revision.
 | U14 | Aggregate caller graph and adoption-delta reconciliation | [Caller record](release-control-source-adoption/2026-09-30-estate-callers/README.md) | R1, R6 |
 | U15 | Durable finite-operation recovery after real process interruption | [Recovery record](release-control-source-adoption/2026-09-30-finite-recovery/README.md) | R3 |
 | U16 | Compiler-derived package exports replacing three handwritten maps | [Export record](release-control-source-adoption/2026-09-30-workspace-exports/README.md) | R1, R2 |
+| U17 | Current selected-target blueprint: 13 subjects, nine task groups, all 17 gates and immutable source bindings | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M1; R1, R5 |
+| U18 | Same-host exact qualified-image publication handoff and bounded selected publisher drift controls | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M2; R2, R5 |
+| U19 | Fixed task database preflight, passive AWS inspection and immutable deployed task revision binding | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M3 and part of M4; R4 |
 
 U10–U16 account for the seven deliveries since the earlier estimate: two artifact/
 effect capabilities, three discovery/build relationship capabilities, and two
@@ -264,6 +288,7 @@ beyond it. No new numerical forecast is asserted in B01.
 | Implementation through U16 | 16 (+7) | U10–U16 accepted as registered above; broader AWS/orchestration/live milestones remain open | Original work within coverage/contracts and local-versus-production integration was underestimated; 12–17 was not a tracked forecast | R1.2 |
 | B01 reporting correction | 16 (+0) | Fixed backlog, acceptance criteria, dependency/approval boundaries and accepted evidence register established; no implementation gate newly passed | No programme scope change; both numerical forecasts superseded as progress measures | R1.2 action material and input/default reconciliation |
 | B02 MVP scope revision | 16 (+0) | M1–M5 and backlog-first intake adopted; no implementation gate newly passed | User-directed scope reduction for the first usable target path; full R requirements remain deferred/open where outside that path | M1 selected target/release blueprint and compiler acceptance |
+| B03 selected MVP source acceptance | 19 (+3) | U17–U19 accepted; actual local image and database proof renewed; passive target attempt blocked on stale drift | No milestone expansion; mutable selected publisher/task bindings repaired within M2/M4; shared operating policy approved for source implementation | Selected operation/shared-store seam, then common execution/caller integration and approved hosted/target acceptance |
 
 ## Historical next unit at B01 — superseded by B02
 
@@ -284,9 +309,8 @@ R2.1's image requalification is explicitly queued under its existing acceptance
 criterion. It must bind U16's changed outputs before those outputs are used in
 later artifact or target acceptance. It is not a newly invented delivery slice.
 
-No current external or policy stop blocks the next source unit. Production
-policy choices and live approvals remain at their named boundaries. Last
-reported weekly allowance is 26%; stop at 20% as requested. The account meter
-was unavailable, so a new percentage must come from the user; elapsed time is
-not evidence that the threshold has or has not been reached. This documentation
-update does not start another implementation batch.
+At B01, no external or policy stop blocked the then-next source unit; the
+reported allowance rule was 26% remaining with a 20% stop. This is historical.
+For B03 the user explicitly replaced that rule with a roughly three-hour maximum
+ending by 21:10 UTC and accepted M4 operating policy for source implementation.
+Specific AWS mutations and hosted activation still require approval.

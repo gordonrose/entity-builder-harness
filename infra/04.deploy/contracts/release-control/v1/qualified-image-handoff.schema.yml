@@ -1,0 +1,166 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.qualified-image-handoff
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Bind a qualified same-host image to its exact publication manifest without deployment authority.
+#   portability: {class: internal, targets: [kanbien-staging]}
+#   used_by:
+#   - id: deploy.script.qualified-image-publication
+#     path: scripts/04.deploy/operational-realization-gate/qualified_publication.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:qualified-image-handoff:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "same_host_only",
+    "registry",
+    "phase",
+    "published_digest",
+    "source_commit",
+    "artifact",
+    "container_result_digest",
+    "source_digest",
+    "container_runner_digest",
+    "recipe_digest",
+    "lock_digest",
+    "handoff_runner_digest",
+    "schema_digest",
+    "handoff_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "qualified-image-handoff/v1"
+    },
+    "scope": {
+      "const": "same-host-qualified-image"
+    },
+    "verdict": {
+      "const": "matched"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "same_host_only": {
+      "const": true
+    },
+    "registry": {
+      "const": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell"
+    },
+    "phase": {
+      "enum": [
+        "local-ready",
+        "registry-matched"
+      ]
+    },
+    "published_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "maxLength": 40,
+      "minLength": 40
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "daemon_image_id",
+        "manifest_digest",
+        "configuration_digest"
+      ],
+      "properties": {
+        "daemon_image_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "maxLength": 71,
+          "minLength": 71
+        },
+        "manifest_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "maxLength": 71,
+          "minLength": 71
+        },
+        "configuration_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "maxLength": 71,
+          "minLength": 71
+        }
+      }
+    },
+    "container_result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "source_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "container_runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "recipe_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "lock_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "handoff_runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "schema_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    },
+    "handoff_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 71,
+      "minLength": 71
+    }
+  }
+}

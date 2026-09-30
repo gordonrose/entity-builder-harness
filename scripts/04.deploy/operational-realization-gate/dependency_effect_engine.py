@@ -26,6 +26,7 @@ import uuid
 
 import container_engine as containers
 import dependency_effect_contracts as contracts
+import dependency_preflight_contracts as preflight
 
 HOST = 'release-control-postgresql'
 LABEL = containers.OWNER_LABEL
@@ -54,6 +55,10 @@ HISTORY_SQL = '''SELECT COALESCE(json_agg(json_build_object('id',migration_id,'c
 SQL = {
     'state': STATE_SQL,
     'history': HISTORY_SQL,
+    'preflight-counts': "SELECT json_build_object(" + ','.join(
+        "'" + name + "',(SELECT count(*) FROM platform_smoke." + name + ')'
+        for name in preflight.TABLES) + " )::text",
+
     'version': "SELECT current_setting('server_version_num')",
     'tls': "SELECT ssl::text FROM pg_stat_ssl WHERE pid=pg_backend_pid()",
     'corrupt': "UPDATE platform_smoke.platform_migration_history SET checksum=repeat('0',64) WHERE migration_id='v0002_platform_smoke_work_item'",
@@ -182,7 +187,7 @@ class DependencyEngine(containers.Engine):
         user = DB_USER if dependency else containers.SETTINGS['user']
         entrypoint = ['/bin/bash'] if dependency else [containers.NODE]
         command = DB_COMMAND if dependency else command
-        if not dependency and command not in contracts.COMMANDS.values():
+        if not dependency and command not in [*contracts.COMMANDS.values(), *preflight.COMMANDS.values()]:
             fail('command-invalid')
         directory = self.fixture if dependency else self.authority
         destination = '/qualification' if dependency else '/run/release-control'
@@ -314,9 +319,30 @@ class DependencyEngine(containers.Engine):
         value['history'] = containers._json(self.sql('history')) if any(t.get('name') == 'platform_migration_history' for t in value['tables']) else []
         return value
 
+    def preflight_snapshot(self):
+        state = self.snapshot()
+        present = {row['name'] for row in state['tables']} & set(preflight.TABLES)
+        if present and present != set(preflight.TABLES):
+            fail('preflight-observer-tables-invalid')
+        counts = containers._json(self.sql('preflight-counts')) if present else {}
+        if (type(counts) is not dict or set(counts) != present
+                or any(type(value) is not int or value < 0 for value in counts.values())):
+            fail('preflight-observer-output-invalid')
+        return {'state': state, 'row_counts': counts}
+
     def run_task(self, image_id, task, case, expected):
-        if task not in contracts.COMMANDS or case not in {c[0] for c in contracts.CASES}:
+        if task not in contracts.COMMANDS or (case, task, expected) not in {
+                row[:3] for row in contracts.CASES}:
             fail('command-invalid')
+        return self._run_packaged(image_id, task, case, expected, preflight_mode=False)
+
+    def run_preflight(self, image_id, task, case, expected):
+        if task not in preflight.COMMANDS or (case, task, expected) not in {
+                row[:3] for row in preflight.CASES}:
+            fail('preflight-command-invalid')
+        return self._run_packaged(image_id, task, case, expected, preflight_mode=True)
+
+    def _run_packaged(self, image_id, task, case, expected, *, preflight_mode):
         attempt = uuid.uuid4().hex
         secret = lambda username, password: json.dumps({'username': username, 'password': password, 'host': HOST, 'port': 5432}, separators=(',', ':'))
         environment = {
@@ -333,24 +359,27 @@ class DependencyEngine(containers.Engine):
         elif case == 'bootstrap-untrusted-ca':
             environment.pop('RELATIONAL_TLS_CA_MODE')
             environment.pop('RELATIONAL_LOCAL_QUALIFICATION_ID')
-        elif case == 'bootstrap-bad-password':
+        elif case in {'bootstrap-bad-password', 'bootstrap-denied-identity'}:
             environment['RELATIONAL_MASTER_SECRET_JSON'] = json.dumps({'username': 'postgres', 'password': secrets.token_hex(24)})
-        elif case == 'migration-denied':
+        elif case in {'migration-denied', 'migration-denied-identity'}:
             environment['RELATIONAL_MIGRATION_SECRET_JSON'] = environment['RELATIONAL_RUNTIME_SECRET_JSON']
+        if task in {'relay', 'worker'}:
+            environment['RELATIONAL_SMOKE_QUEUE_URL'] = 'https://invalid.example/local-preflight-only'
         # Match each actual target task's least-privilege injection, including omissions.
         allowed = {'RELATIONAL_TLS_CA_MODE', 'RELATIONAL_LOCAL_QUALIFICATION_ID'} | (
             {'RELATIONAL_MASTER_SECRET_JSON', 'RELATIONAL_MIGRATION_SECRET_JSON', 'RELATIONAL_RUNTIME_SECRET_JSON'}
-            if task == 'bootstrap' else {'RELATIONAL_MIGRATION_SECRET_JSON', 'RELATIONAL_CONFIG_JSON'})
+            if task == 'bootstrap' else ({'RELATIONAL_MIGRATION_SECRET_JSON', 'RELATIONAL_CONFIG_JSON'}
+            if task == 'migration' else {'RELATIONAL_RUNTIME_SECRET_JSON', 'RELATIONAL_CONFIG_JSON', 'RELATIONAL_SMOKE_QUEUE_URL'}))
         environment = {key: value for key, value in environment.items() if key in allowed}
         started = time.monotonic()
-        name = self._create_bound(image_id, command=contracts.COMMANDS[task], environment=environment)
+        name = self._create_bound(image_id, command=(preflight.COMMANDS if preflight_mode else contracts.COMMANDS)[task], environment=environment)
         try:
             result = self._execute(['start', '--attach', self._owned[name]['id']], timeout=90, max_output=4096)
             state = self.inspect_bound(name, running=False)
-            wanted_exit = 0 if expected == 'succeeded' else 1
+            wanted_exit = 0 if expected in {'succeeded', 'passed'} else 1
             if result.returncode != wanted_exit or type(state.get('ExitCode')) is not int or state['ExitCode'] != wanted_exit:
                 fail('task-outcome-mismatch')
-            terminal = contracts.terminal(result.stdout, task, expected, failure_category={
+            terminal = preflight.terminal(result.stdout, task, expected) if preflight_mode else contracts.terminal(result.stdout, task, expected, failure_category={
                 'bootstrap-binding-invalid': 'bootstrap-input-validation-failure',
                 'bootstrap-untrusted-ca': 'bootstrap-database-tls-failure',
                 'bootstrap-bad-password': 'bootstrap-database-authentication-failure',

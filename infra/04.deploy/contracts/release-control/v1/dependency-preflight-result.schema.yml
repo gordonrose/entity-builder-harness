@@ -1,0 +1,334 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.dependency-preflight-result.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Bind independent local read-only database prerequisite observations separately from task effects.
+#   portability: {class: internal, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.dependency-preflight-contracts
+#     path: scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:dependency-preflight-result:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "source_closure",
+    "effect_result_digest",
+    "profile_digest",
+    "run_id",
+    "artifact",
+    "certificate_digest",
+    "runner_digest",
+    "schema_digests",
+    "commands",
+    "cases",
+    "cleanup_verified",
+    "pending",
+    "result_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "dependency-preflight-result/v1"
+    },
+    "scope": {
+      "const": "local-packaged-postgresql-prerequisites"
+    },
+    "verdict": {
+      "const": "passed"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "source_closure": {
+      "const": "blocked"
+    },
+    "effect_result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "profile_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "maxLength": 32
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_id",
+        "payload_digest"
+      ],
+      "properties": {
+        "image_id": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "payload_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        }
+      }
+    },
+    "certificate_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "runner_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    },
+    "schema_digests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependency-preflight-result/v1",
+        "relational-task-preflight/v1"
+      ],
+      "properties": {
+        "dependency-preflight-result/v1": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        },
+        "relational-task-preflight/v1": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "maxLength": 71
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrap",
+        "migration",
+        "relay",
+        "worker"
+      ],
+      "properties": {
+        "bootstrap": {
+          "const": [
+            ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.js",
+            "--preflight"
+          ]
+        },
+        "migration": {
+          "const": [
+            ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.js",
+            "--preflight"
+          ]
+        },
+        "relay": {
+          "const": [
+            ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.js",
+            "--preflight"
+          ]
+        },
+        "worker": {
+          "const": [
+            ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.js",
+            "--preflight"
+          ]
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "operation",
+          "verdict",
+          "phase",
+          "attempt_id",
+          "exit_code",
+          "terminal_digest",
+          "elapsed_ms",
+          "before_digest",
+          "after_digest",
+          "observed_row_counts",
+          "assertions"
+        ],
+        "properties": {
+          "case": {
+            "enum": [
+              "bootstrap-ready",
+              "bootstrap-denied-identity",
+              "migration-ready",
+              "migration-denied-identity",
+              "relay-ready",
+              "worker-ready",
+              "relay-denied-select",
+              "worker-denied-delete"
+            ]
+          },
+          "operation": {
+            "enum": [
+              "bootstrap",
+              "migration",
+              "relay",
+              "worker"
+            ]
+          },
+          "verdict": {
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "before-bootstrap",
+              "after-bootstrap",
+              "after-migration",
+              "after-revoke-select",
+              "after-revoke-delete"
+            ]
+          },
+          "attempt_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "exit_code": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "terminal_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120000
+          },
+          "before_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "after_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "maxLength": 71
+          },
+          "observed_row_counts": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "platform_outbox",
+                  "platform_processing",
+                  "platform_record_change",
+                  "platform_smoke_work_item"
+                ],
+                "properties": {
+                  "platform_outbox": {
+                    "const": 0
+                  },
+                  "platform_processing": {
+                    "const": 0
+                  },
+                  "platform_record_change": {
+                    "const": 0
+                  },
+                  "platform_smoke_work_item": {
+                    "const": 0
+                  }
+                }
+              }
+            ]
+          },
+          "assertions": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "verdict"
+              ],
+              "properties": {
+                "id": {
+                  "enum": [
+                    "selected-schema-and-grants-unchanged",
+                    "selected-data-empty-unchanged"
+                  ]
+                },
+                "verdict": {
+                  "const": "passed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cleanup_verified": {
+      "const": true
+    },
+    "pending": {
+      "const": [
+        "aws-identity-and-injection",
+        "queue-permissions-and-effects",
+        "isolated-restore-target"
+      ]
+    },
+    "result_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "maxLength": 71
+    }
+  }
+}

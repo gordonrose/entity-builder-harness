@@ -90,15 +90,10 @@ workflow_inputs = workflow.get("on", {}).get("workflow_dispatch", {}).get("input
 if not isinstance(workflow_inputs, dict):
     failures.append("workflow_dispatch inputs must be a mapping")
     workflow_inputs = {}
-for input_name, expected_default in {
-    "base_image_ref": "node:22-bookworm-slim",
-    "runtime_image_ref": "gcr.io/distroless/nodejs22-debian12:nonroot",
-}.items():
-    config = workflow_inputs.get(input_name, {})
-    require(isinstance(config, dict), f"workflow input {input_name} must be a mapping")
-    if isinstance(config, dict):
-        require(config.get("required") == "true", f"workflow input {input_name} must be required")
-        require(config.get("default") == expected_default, f"workflow input {input_name} must default to the reviewed image")
+require(set(workflow_inputs) == {"publish_image"}, "qualified publication accepts only its existing publish toggle; build inputs come from source locks")
+publish = workflow_inputs.get("publish_image", {})
+require(isinstance(publish, dict) and publish.get("required") == "true" and publish.get("type") == "boolean"
+        and publish.get("default") == "true", "existing explicit publication toggle must be preserved")
 
 jobs = workflow.get("jobs", {})
 job = jobs.get("build-image", {}) if isinstance(jobs, dict) else {}
@@ -119,6 +114,47 @@ def step(name: str) -> tuple[int, dict]:
         return (-1, {})
     return matches[0]
 
+
+# Selected action implementations are a reviewed closed set. A different SHA
+# requires source review; a tag or additional action cannot bypass this guard.
+REVIEWED_ACTIONS = {'Check out repository': 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262',
+ 'Set up Node': 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020',
+ 'Set up Python': 'actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065',
+ 'Set up Docker Buildx': 'docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f',
+ 'Configure AWS credentials': 'aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a',
+ 'Log in to Amazon ECR': 'aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd',
+ 'Attest image provenance': 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6',
+ 'Attest image SBOM': 'actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6',
+ 'Retain normalized qualification receipts': 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+ 'Retain normalized publication receipt': 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02'}
+for name, expected in REVIEWED_ACTIONS.items():
+    _, selected_action = step(name)
+    require(selected_action.get("uses") == expected, f"{name} must use its reviewed immutable action commit")
+for selected_action in steps:
+    if isinstance(selected_action, dict) and "uses" in selected_action:
+        require(selected_action.get("name") in REVIEWED_ACTIONS
+                and selected_action.get("uses") == REVIEWED_ACTIONS.get(selected_action.get("name")),
+                "every action must belong to the reviewed immutable selected set")
+_, buildx_step = step("Set up Docker Buildx")
+require(buildx_step.get("with") == {
+    "version": "v0.37.2",
+    "driver": "docker-container",
+    "driver-opts": "image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
+}, "Buildx and its BuildKit image must use the reviewed fixed version and immutable digest")
+
+main_index, main_step = step("Enforce remote-main deploy source")
+require('"$GITHUB_REF" != "refs/heads/main"' in text(main_step.get("run")), "publication source must remain main-only")
+require(job.get("environment") == "staging", "publication must retain the staging environment")
+_, credentials_step = step("Configure AWS credentials")
+require(credentials_step.get("if") == "${{ inputs.publish_image }}"
+        and credentials_step.get("with", {}).get("role-to-assume") == "${{ env.AWS_ROLE_ARN }}", "publication must retain the existing conditional OIDC role")
+for name, version in (("Set up Node", "22.23.3"), ("Set up Python", "3.14.4")):
+    _, setup = step(name)
+    key = "node-version" if name == "Set up Node" else "python-version"
+    require(setup.get("with", {}).get(key) == version, "qualification host tool version must match source support")
+_, dependencies_step = step("Install script dependencies")
+require("--require-hashes -r scripts/04.deploy/operational-realization-gate/requirements.lock" in text(dependencies_step.get("run")),
+        "qualification must install the complete hash-locked Python schema dependency closure")
 
 ordered_names = [
     "Resolve immutable image digest",
@@ -149,24 +185,44 @@ for required_text, message in {
 }.items():
     require(required_text in scan_run, message)
 
-base_image_index, base_image_step = step("Resolve digest-pinned build and runtime images")
+base_image_index, base_image_step = step("Acquire reviewed qualification inputs")
 base_image_run = text(base_image_step.get("run"))
 for required_text, message in {
-    "inputs.base_image_ref": "workflow must resolve the selected build image",
-    "inputs.runtime_image_ref": "workflow must resolve the selected runtime image",
-    "build_digest": "workflow must record the immutable build-image digest",
-    "runtime_digest": "workflow must record the immutable runtime-image digest",
+    "verify-local-build.sh": "workflow must acquire the hash-locked compiler closure",
+    "--acquire-cache": "workflow must acquire reviewed package bytes",
+    "--qualify-local": "runtime base acquisition must use the existing qualified path",
+    "--acquire-base": "workflow must explicitly acquire the locked runtime base",
 }.items():
     require(required_text in base_image_run, message)
 
 build_index, build_step = step("Build platform shell image")
 build_run = text(build_step.get("run"))
+REVIEWED_CLEAN_SOURCE = 'git diff --quiet\ngit diff --cached --quiet\ngit ls-files --others --exclude-standard -z | python3 -c \'import sys; raise SystemExit(bool(sys.stdin.buffer.read(1)))\'\ntest "$(git rev-parse HEAD)" = "$GITHUB_SHA"\n'
+require(build_run.startswith("set -euo pipefail\n" + REVIEWED_CLEAN_SOURCE) and build_run.endswith(REVIEWED_CLEAN_SOURCE),
+        "qualification must bind HEAD and reject unstaged, staged and untracked source changes before and after the build")
 for required_text, message in {
-    '--base-image "${{ steps.base-image.outputs.build_image }}"': "build step must use the resolved immutable build image",
-    '--runtime-image "${{ steps.base-image.outputs.runtime_image }}"': "build step must use the resolved immutable runtime image",
-    "--require-digest-base": "build step must require both image references to be digest pinned",
+    "--qualify-local": "build must freshly qualify the exact final image",
+    "--publication-directory": "build must retain the exact qualified image handoff",
+    "qualified_publication.py": "build must verify source and image handoff before publication",
+    "--package-cache": "build must consume verified package cache",
+    "GITHUB_SHA": "handoff must bind the current workflow commit",
 }.items():
     require(required_text in build_run, message)
+require("--base-image" not in build_run and "--tag" not in build_run,
+        "qualified build must not fall back to the legacy source Docker build")
+push_index, push_step = step("Push platform shell image")
+push_run = text(push_step.get("run"))
+require(push_run.startswith("set -euo pipefail\n" + REVIEWED_CLEAN_SOURCE),
+        "publication must recheck HEAD and reject unstaged, staged and untracked source changes before handoff or push")
+for required_text in ("qualified_publication.py", "steps.qualified-image.outputs.image_id", "steps.qualified-image.outputs.manifest_digest", "docker tag", "docker push"):
+    require(required_text in push_run, "publication must preserve the verified qualified image identity")
+require(push_step.get("if") == "${{ inputs.publish_image }}", "push must retain the explicit publication toggle")
+resolve_index, resolve_step = step("Resolve immutable image digest")
+resolve_run = text(resolve_step.get("run"))
+for required_text in ("steps.qualified-image.outputs.manifest_digest", "batch-get-image", "--published-image", "qualified_publication.py"):
+    require(required_text in resolve_run, "registry resolution must verify exact qualified manifest/configuration binding")
+require(base_image_index >= 0 and base_image_index < build_index < push_index < resolve_index,
+        "qualified acquisition/build/publish/registry verification must be ordered")
 
 platform_index, platform_step = step("Verify published target-platform image")
 platform_run = text(platform_step.get("run"))
@@ -182,12 +238,36 @@ require(
     "published image platform verification must occur after build/push and before scan evidence",
 )
 
+# Only the explicitly named normalized receipts may leave the hosted runner.
+for name, identity, condition, artifact_name, paths, lower, upper in (
+    ("Retain normalized qualification receipts", "qualification-receipts", "${{ success() }}",
+     "qualified-image-${{ github.run_id }}-${{ github.run_attempt }}",
+     ["${{ runner.temp }}/qualified-image/handoff/container-result.json", "${{ runner.temp }}/qualified-image/handoff/handoff.json"], build_index, push_index),
+    ("Retain normalized publication receipt", "publication-receipt", "${{ inputs.publish_image && steps.image.outcome == 'success' }}",
+     "published-image-${{ github.run_id }}-${{ github.run_attempt }}",
+     ["${{ runner.temp }}/qualified-image/publication-check.json"], resolve_index, platform_index),
+):
+    index, upload = step(name)
+    require(lower < index < upper, "receipt retention must follow its successful producer and precede later failure-prone steps")
+    require(upload.get("id") == identity and upload.get("if") == condition,
+            "receipt upload may run only after its normalized producer succeeds")
+    require(upload.get("uses") == "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "receipt uploader must use the reviewed immutable official action")
+    inputs = upload.get("with", {})
+    require(isinstance(inputs, dict) and set(inputs) == {"name", "path", "retention-days", "include-hidden-files", "overwrite", "if-no-files-found"},
+            "receipt upload inputs must remain the bounded reviewed set")
+    if not isinstance(inputs, dict): inputs = {}
+    require(text(inputs.get("path")).splitlines() == paths,
+            "receipt upload must name only the explicit normalized files without directories or globs")
+    for key, expected in {"name": artifact_name, "retention-days": "7", "include-hidden-files": "false", "overwrite": "false", "if-no-files-found": "error"}.items():
+        require(inputs.get(key) == expected, "receipt upload must retain bounded nonoverwriting seven-day storage and fail on missing files")
+
 image_profile = target_profile.get("artifacts", {}).get("image", {})
 if not isinstance(image_profile, dict):
     failures.append("target profile image configuration must be a mapping")
     image_profile = {}
 for key, expected in {
-    "build_image_policy": "pin-by-digest-for-official-build",
+    "build_image_policy": "locked-toolchain-verified-payload",
     "runtime_image_policy": "pin-by-digest-for-official-build",
     "runtime_image_class": "minimal-nonroot-distroless-nodejs22-debian12",
     "runtime_platform": "linux/amd64",
@@ -213,19 +293,27 @@ require(repository_filter.get("type") == "WILDCARD", "target profile registry sc
 
 sbom_index, sbom_step = ordered_steps[2]
 require(sbom_step.get("id") == "sbom", "SBOM step must have the stable sbom id")
-require(sbom_step.get("uses") == "anchore/sbom-action@v0", "SBOM step must use anchore/sbom-action@v0")
-sbom_with = sbom_step.get("with", {})
-if not isinstance(sbom_with, dict):
-    failures.append("SBOM step must provide action inputs")
-    sbom_with = {}
-for key, expected in {
-    "image": "${{ steps.image.outputs.uri }}",
-    "format": "spdx-json",
-    "output-file": "${{ runner.temp }}/platform-shell.sbom.spdx.json",
-    "upload-artifact": "false",
-    "upload-release-assets": "false",
-}.items():
-    require(sbom_with.get(key) == expected, f"SBOM input {key} must be {expected}")
+require(sbom_step.get("if") == "${{ inputs.publish_image }}", "SBOM generation must retain the publication condition")
+require(set(sbom_step) == {"name", "if", "id", "env", "run"}, "SBOM generation must use the reviewed direct verified tool path")
+require(sbom_step.get("env") == {"SYFT_IMAGE": "${{ steps.image.outputs.uri }}", "SYFT_CHECK_FOR_APP_UPDATE": "false"},
+        "SBOM must bind the immutable image and disable update lookup")
+REVIEWED_SBOM_RUN = r"""set -euo pipefail
+[[ "$SYFT_IMAGE" =~ ^[a-z0-9][a-z0-9./:-]*@sha256:[a-f0-9]{64}$ ]]
+umask 077
+tool_dir="$(mktemp -d "$RUNNER_TEMP/reviewed-syft.XXXXXX")"
+curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+  https://github.com/anchore/syft/releases/download/v1.42.3/syft_1.42.3_linux_amd64.tar.gz \
+  --output "$tool_dir/archive.tar.gz"
+printf '%s  %s\n' 0d6be741479eddd2c8644a288990c04f3df0d609bbc1599a005532a9dff63509 "$tool_dir/archive.tar.gz" | sha256sum --check --status
+tar --extract --gzip --file "$tool_dir/archive.tar.gz" --directory "$tool_dir" --no-same-owner --no-same-permissions syft
+test -f "$tool_dir/syft" && test ! -L "$tool_dir/syft"
+printf '%s  %s\n' 6c1eb5c6f15c177fa3dd727ee186c61a660a3939a4e1dc1bc4b3e00eafec098e "$tool_dir/syft" | sha256sum --check --status
+chmod 700 "$tool_dir/syft"
+test "$("$tool_dir/syft" version --output json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')" = "1.42.3"
+"$tool_dir/syft" scan "docker:$SYFT_IMAGE" --output "spdx-json=$RUNNER_TEMP/platform-shell.sbom.spdx.json"
+"""
+require(text(sbom_step.get("run")) == REVIEWED_SBOM_RUN,
+        "SBOM command must verify the fixed archive, binary, version and digest input before exact-image SPDX generation")
 
 for name, expected_id, requires_sbom in [
     ("Attest image provenance", "provenance-attestation", False),
@@ -233,7 +321,7 @@ for name, expected_id, requires_sbom in [
 ]:
     _, attestation_step = step(name)
     require(attestation_step.get("id") == expected_id, f"{name} must have id {expected_id}")
-    require(attestation_step.get("uses") == "actions/attest@v4", f"{name} must use actions/attest@v4")
+    require(attestation_step.get("uses") == REVIEWED_ACTIONS[name], f"{name} must use the reviewed immutable attestation action")
     inputs = attestation_step.get("with", {})
     if not isinstance(inputs, dict):
         failures.append(f"{name} must provide action inputs")
@@ -285,7 +373,7 @@ require(
 )
 
 for required_text, message in {
-    "steps.base-image.outputs.build_digest": "deployment summary must record the build-image digest",
+    "steps.base-image.outputs.toolchain_digest": "deployment summary must record the locked compiler contract",
     "steps.base-image.outputs.runtime_digest": "deployment summary must record the runtime-image digest",
 }.items():
     require(required_text in summary_run, message)

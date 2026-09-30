@@ -30,15 +30,18 @@ after the full programme proved too expansive. Deliver one controlled
 `kanbien/staging` path using existing capabilities. Additional checks are deferred
 unless concrete blocker, unsafe-effect or material-drift evidence makes them
 necessary now. This supersedes the full-roadmap next-unit sequencing, not its
-historical acceptance records or safety/approval rules. M1 is the next unit;
-whole-estate R1 closure is not the immediate milestone. The broad requirements
+historical acceptance records or safety/approval rules. B03 accepted the selected
+blueprint, exact-image publication handoff and task/passive-preflight components
+(U17–U19). Next is M4 shared operation/control-store integration under the approved
+source policy; whole-estate R1 closure is not the immediate milestone. The broad requirements
 below remain the future roadmap and are not relabeled complete or inapplicable.
 
 Use the [progress ledger](../../../../docs/04.deploy/plans/iaas-release-control-progress.md)
 for the current accepted-delivery register, stable R1–R8 milestones, remaining
 acceptance checkpoints, dependencies and changes between implementation runs.
 Baseline B01 records 16 accepted delivery units, including seven since the old
-15–20 estimate. Those units do not close the full AWS release programme.
+15–20 estimate. B03 adds three scoped MVP components; all five full MVP milestones
+still have remaining criteria. Those units do not close the AWS release programme.
 
 The earlier 15–20 and later 12–17 slice forecasts lacked a fixed decomposition
 and are superseded as progress measures. Future batches report against ledger

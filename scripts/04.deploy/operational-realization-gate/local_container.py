@@ -67,7 +67,8 @@ def load_lock(root):
 
 def implementation_digest(root):
     files = ['local_container.py', 'local_container_contracts.py', 'container_engine.py',
-             'container_payload.py', 'container_profiles.py', 'container-image.lock.json']
+             'container_payload.py', 'container_profiles.py', 'container-image.lock.json',
+             'qualified_publication.py']
     rows = [{'path': name, 'digest': digest(read(DIRECTORY, name))} for name in files]
     rows.extend({'path': path, 'digest': digest(read(root, path))} for path in WRAPPERS)
     rows.append({'path': 'locked-build-implementation', 'digest': local_build.implementation_digest()})
@@ -109,9 +110,12 @@ def check_base(base, lock):
         fail('base-binding-invalid')
 
 
-def run(root, package_cache, scratch):
+def run(root, package_cache, scratch, publication_directory=None):
     root = Path(root).resolve(strict=True)
     scratch = checked_scratch(root, scratch)
+    if publication_directory is not None:
+        import qualified_publication
+        qualified_publication.destination(root, scratch, publication_directory, existing=False)
     lock = load_lock(root)
     revision = implementation_digest(root)
     profiles = container_profiles.discover(root)
@@ -162,7 +166,10 @@ def run(root, package_cache, scratch):
                   'profiles': contracts.promote_local_profile(profiles),
                   'profile_inventory_digest': digest(canonical(profiles))}
         result['result_digest'] = contracts.digest(result)
-        return contracts.validate_result(result, profiles, production)
+        result = contracts.validate_result(result, profiles, production)
+        if publication_directory is not None:
+            qualified_publication.create(root, scratch, publication_directory, result, executor)
+        return result
 
 
 def main(argv=None):
@@ -176,8 +183,9 @@ def main(argv=None):
         parser.add_argument('--scratch-root', required=True)
         parser.add_argument('--package-cache')
         parser.add_argument('--acquire-base', action='store_true')
+        parser.add_argument('--publication-directory')
         args = parser.parse_args(argv)
-        if bool(args.package_cache) == args.acquire_base:
+        if bool(args.package_cache) == args.acquire_base or (args.acquire_base and args.publication_directory):
             fail('arguments-invalid')
         root = Path(args.source_root).resolve(strict=True)
         scratch = checked_scratch(root, args.scratch_root)
@@ -189,7 +197,8 @@ def main(argv=None):
             result = {'schema': 'local-container-acquisition/v1', 'verdict': 'verified', 'authorized': False,
                       'runtime_image': lock['runtime_image'], 'image_id': base['image_id']}
         else:
-            result = run(root, args.package_cache, scratch)
+            result = (run(root, args.package_cache, scratch, args.publication_directory)
+                      if args.publication_directory is not None else run(root, args.package_cache, scratch))
         status = 0
     except Exception as error:
         code = getattr(error, 'code', str(error))

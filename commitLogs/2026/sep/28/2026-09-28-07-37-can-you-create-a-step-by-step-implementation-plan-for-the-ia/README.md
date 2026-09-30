@@ -2663,3 +2663,222 @@ compiler with focused positive/negative tests; another planning-only report
 cannot complete it. Four documentation files changed including this session log.
 Implementation tests were not rerun because no runtime code changed. No current
 local stop condition exists; approval is still required before live effects.
+
+
+### 2026-09-30 — timed MVP implementation batch started
+
+The user authorized proceeding toward the MVP tonight and remains available for
+specific AWS/GitHub access decisions. The later instruction explicitly overrides
+the weekly 20% stopping rule: stop after at most roughly three hours of work.
+Recorded a conservative hard handoff deadline of 2026-09-30T21:10:00Z, with time
+reserved beforehand to verify/checkpoint and report unfinished work. The current
+batch starts M1 selected blueprint/compiler integration while independently
+preparing the exact-qualified-image publication bridge for M2. No external
+mutation or push/merge/main change is newly authorized.
+
+Concrete necessary-now findings: the current legacy image recipe lacks the new
+shared generator's Python/schema dependencies; the relational runner uses task
+families rather than immutable revisions, lacks independent terminal effect
+receipts, and has timeout/recovery state gaps. These map to M2/M4; ordinary
+unrelated coverage remains deferred. Existing target policy still permits only
+main-based hosted publication for deployable images; local image proof alone
+cannot authorize deployment. Implementation and focused acceptance are underway,
+not complete. No user policy choice has been silently made.
+
+
+Timed MVP batch intermediate acceptance: M1 now has three versioned selected
+target assets, a closed blueprint schema, source reader, strict public gate mode,
+focused tests and README. First integrated 38-test run passed in 55.292s. Review
+made task grouping explicit: thirteen container obligations in nine task
+definitions, with shared execution-group digests. A later test-registration
+edit correctly made its pinned source stale; only that reviewed wrapper binding
+was refreshed. Final grouped-source verification remains pending the full run.
+The selected manifest is not transitive whole-estate closure or policy approval.
+
+M2's reviewed same-host publication handoff is integrated into the existing image
+qualifier and staging publisher; 38 integrated publication tests passed in
+31.410s. Existing publication/manual/main/scan/attestation boundaries remain.
+The workflow retains explicitly named normalized receipts for seven days; this
+is CI retention, not an approved production journal/evidence policy. Hosted
+publication has not run. Current source compilation, payload accounting, health,
+shutdown and cleanup passed with the actual local image from 18:57:03Z through
+18:59:50Z (167s). Image manifest: sha256:b4fb03d4c3b19f0983f20665f872e1ff00ee9b37d20f0b41675b9eae14e45356;
+configuration: sha256:8301f035e995d795be2aad5f8fbfb7608407fe3f75a8d74f4da1180bdfdeb4a7.
+Result digest: sha256:5561acef981307fbb9ba9d7a71a80f8e33563eb1577523f386b3477f1baa23d8.
+A separate actual same-host handoff verification passed, with current source and
+payload checks. Receipts are in the owned persistent batch scratch under
+`mvp-qualified-image-handoff-01/`, with the full result in
+`mvp-container-attempt-01.json`. These are local, unauthorized receipts bound to
+pre-checkpoint HEAD 2fe812ed and the actual source-content digest, not deployable
+main provenance. No publication, deployment or target job was performed.
+
+M3's fixed --preflight branches are integrated in the existing shared helper and
+five relational entrypoints. The existing relational source wrapper plus67mocked
+preflight cases passed (0failed/0skipped). Independent review confirmed no writes
+or queue calls in that mode, rollback before success and unchanged no-argument
+execution bodies. Seven closed-schema cases had passed in the reviewed draft;
+actual disposable-PostgreSQL preflight proof is being integrated through the
+existing dependency verifier. The restore preflight still needs a real isolated
+restore and is not represented by the local database hostname.
+
+Read-only target identity inspection found the configured kanbien-dev login
+expired or missing; the user is renewing it. No raw provider error or credentials
+were disclosed. A thin passive-inspection mode is being prepared from existing
+checks; it cannot prove unresolved source-to-live equivalence or authorize effects.
+The shared durable AWS controller remains unimplemented: local-fixture v1 store
+records are not silently widened into production records. Exact task revisions,
+intent-before-call, unknown-outcome reconciliation, shared writer exclusion and
+reviewed store/authority policy remain the M4 acceptance boundary.
+
+Remaining batch queue: finish actual dependency/preflight evidence; selected
+passive readiness adapter; immutable pins for existing selected publisher action
+references (material artifact/authority drift control); focused/full clean checks,
+progress ledger and local checkpoint. No scope expansion to other providers or
+unrelated estate findings. The original temporary wheelhouse was absent; eight
+hash-locked wheels were reacquired with the existing verified pip bootstrap into
+owned persistent scratch. Generated bytecode was moved intact out of source into
+owned scratch. The hard handoff deadline remains21:10UTC; no new external mutation
+is authorized.
+
+
+Actual disposable dependency acceptance passed using the same qualified image,
+without rebuilding: nine existing bootstrap/migration effect cases and eight
+new preflight cases. Four correct prerequisite cases passed; wrong bootstrap
+credentials, wrong migration identity, revoked relay SELECT and revoked worker
+DELETE were correctly rejected. Independent before/after schema/grant/history
+and empty selected-table observations matched, and all owned task/database/
+network cleanup was verified. Effect result digest:
+sha256:47dbd4cf75e9dc49b1bcf3907140465f3463cf83a7d7356f91a1be284d127fa6.
+Separate preflight result digest:
+sha256:59f381485b4868fffa6a42465826182dd411da3c19c83595c1fc5f52f751a11e.
+The three bound receipts are preserved in persistent batch scratch under
+`dependency-effect-evidence-0ada77fec3ea44659382cdbd57b54fb1/`. The distinct
+preflight receipt does not claim an AWS identity, queue effect or isolated
+restore proof. Independent source review accepted the bounded producer/observer
+join. Full source verification follows the remaining source integrations.
+
+Metadata review found a missing new README header and an unsupported portability
+class in the new runtime test; these and the same class in two new blueprint
+files were corrected without executable behavior changes. No provider or
+existing artifact was mutated.
+
+Necessary-now publisher review found mutable selected action tags and a pinned
+SBOM action that still fetched `syft/main/install.sh`. The smallest repair pins
+existing action majors and build tooling, and substitutes verified fixed Syft
+CLI generation while retaining the existing SPDX/attestation path. This avoids
+a concrete unreviewed-code/artifact drift route rather than starting a general
+action analyzer. Also preparing the existing relational runner's exact task
+revision binding: stable stack output plus image/command/returned-task identity,
+so a newly registered family revision cannot silently replace the reviewed task.
+That repair does not close durable unknown-response ownership or shared locking.
+
+
+### 2026-09-30T20:00Z — reconnect recovery and final integration
+
+The user lost the WSL connection and asked for status, then challenged the long
+context-compaction delay. Recovered the persistent owned worktree and scratch
+manifests, verified base/output hashes before integration, and preserved interrupted
+zero-byte SBOM outputs. No missing source file, ownership conflict or whitespace
+error was found; final canonical verification is still running. The former
+sub-agent sessions had ended, so bounded draft recovery/review was reassigned.
+
+Integrated the four reviewed publisher pin/clean-checkout files and seven new
+passive readiness files. The existing public gate dispatch and registry now
+include the passive adapter and both test suites. The AWS adapter remains outside
+the generic compiler core. The existing relational runner's exact task revision
+binding is integrated; its README now reflects current recovery-4 source policy
+and explicitly denies fresh authority from historical attempts. A required test
+metadata kind was repaired without changing behavior. All 73 selected source
+pins currently match; 50 changed source/contract/workflow/documentation files
+are fingerprinted in persistent scratch for recovery.
+
+Verification after integration: publisher workflow source check passed; 28 focused
+workflow tests passed in 23.407s. Existing relational validation passed, including
+85 immutable-revision cases and 67 mocked task-preflight cases, zero failures or
+skips. Passive adapter/CLI draft acceptance passed 42 tests before integration;
+its registered final-source runs are included in the running clean verifier.
+Current public blueprint command compiled 13 subjects / nine task groups / 17
+stages / 221 operation bindings, result digest
+sha256:c217c834e1b79c2435890197fe564ffca08c8e7f62095c9b062d4013943cbd2b.
+The integrated exact-image handoff was freshly rechecked and still matched the
+same recorded source and runner digests. No rebuild was needed or performed.
+
+The recovered genuine Syft 1.42.3 scan completed in 27.817s, with local network
+isolation, fixed archive/binary hashes and the retained exact image. SPDX 2.3
+schema validation passed; all 57 expected production dependency name/version
+pairs occur among 88 entries. This proves bounded tool compatibility and package
+presence, not completeness, vulnerability clearance, attestation or authority.
+
+Renewed kanbien-dev identity matched the selected account. The public passive
+AWS inspection at 19:46:51Z confirmed the account and artifact stack status, then
+blocked on stale passive drift evidence; no task group was inspected. It requested
+zero provider effects and zero secret-value reads. The three existing active
+drift-assessment commands passed local --validate. User approval for those exact
+three assessments is pending; no active assessment has been started. Source/local
+work continues independently. Normalized historical receipts, their hash inventory
+and acceptance explanation now live in the 2026-09-30-mvp-selected-path review
+folder; these records deliberately retain blocked operation/release authority.
+
+The next M4 operating-policy proposal is concrete but unapproved: one protected
+GitHub executor, private shared operation/evidence stores, explicit retention,
+recovery, absolute authority and cost limits. It is recorded in
+iaas-release-control-mvp-control-policy-proposal.md. Asked for the user's policy
+decision separately from any eventual AWS creation/change-set approval. No cloud
+resource, IAM role, workflow activation, push, merge or main change occurred.
+No new architecture is adopted by this proposal. Current implementation reuses
+the already approved gate/adapter plan, so no new implementation ADR is needed;
+an accepted M4 shared-store/executor decision needs its own later ADR.
+
+The full clean CPython/hash-locked-wheelhouse run has 2,115 registered cases in
+66 suites. Do not report it passed until its exit and all summaries are checked.
+Next queue: finish that run and focused repairs if needed, finalize the stable
+MVP delta/evidence, perform the authorized local checkpoint, then the policy-bound
+M4 shared execution integration and specifically approved target acceptance.
+Hard handoff remains 21:10 UTC. The 20% allowance stop was explicitly superseded
+by the user's maximum roughly three-hour timebox. External drift refresh and new
+operating policy are genuine pending approval boundaries; no routine source stop
+or ownership conflict exists.
+
+
+### 2026-09-30T20:10:03Z — M4 operating policy accepted
+
+The user explicitly answered: Adopt the proposed policy for source implementation.
+The linked operating policy is accepted for source work. AWS creation, hosted
+activation and per-operation execution remain unapproved. Active drift assessment
+approval remains a separate pending question. The next bounded source component
+is the selected operation/store record seam and injected conditional-store
+conformance; local v1 remains unchanged and source results grant no authority.
+Drafts stay in owned scratch until reviewed and verified. The complete selected
+AWS controller, caller migration, execution/reconciliation and live proof remain
+open. The original 21:10 UTC handoff deadline remains unchanged.
+
+
+### 2026-09-30T20:13:56Z — B03 final source/local acceptance
+
+Fresh CPython 3.14.4 with eight hash-locked wheels and Node 22.23.3/npm10.9.9
+passed all 2,115 registered tests in 66 suites, zero skips. Canonical metadata
+validation passed for 66 files. Clean log SHA256:
+33e20a9739226ecc2e1b194c84012335ca3eadf9cb6319329291fb7cdd289668.
+The separate 67 actual-entrypoint mock tests passed; the 85 revision tests are
+already part of the canonical count and are not added twice. Publisher and
+relational source validation passed; current image handoff still matched after
+all source integrations. Receipt-file hashes were independently rechecked.
+
+Accepted U17 selected blueprint, U18 exact qualified-image publication handoff,
+and U19 fixed task/passive preflight. Necessary publisher/task-revision repairs
+and refreshed image/database proof are included in those units, not counted as
+extra deliveries. B03 updates the fixed ledger from16to19 accepted components,
+with concrete before/after behavior; M1/M2/M3/M4 remain partial and M5 open.
+Durable normalized receipts, source-file fingerprints, exact verification and
+remaining limits live in docs/04.deploy/plans/release-control-source-adoption/
+2026-09-30-mvp-selected-path/. These historical receipts bind working-tree bytes
+and pre-checkpoint HEAD; they are not clean-main or later-commit release proof.
+
+The user-approved M4 operating policy now has ADR0040 in the deploy-owned root.
+No cloud resource or role has been created. The next record/backend seam is
+being prepared in scratch independently while this reviewed unit is checkpointed.
+No runtime/source implementation was changed after the accepted verification;
+subsequent edits are evidence, progress, policy and session documentation.
+The first permission-review attempt for the local policy-document update timed
+out before execution; its permitted single retry succeeded. This was not an
+unsafe-action rejection and left no unresolved approval-tool block.

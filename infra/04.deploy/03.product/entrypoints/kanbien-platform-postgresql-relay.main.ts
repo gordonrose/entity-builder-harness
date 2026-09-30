@@ -10,6 +10,9 @@ import { createPostgreSqlPlatformOutboxStore } from "@kanbien/platform-adapter-a
 import { createKanbienPlatformPostgreSqlSmokePersistence } from "./kanbien-platform-postgresql-persistence";
 import {
   closePool,
+  relationalTaskMode,
+  verifyRelationalTaskPreflight,
+  writePreflightOutcome,
   configurationFromEnvironment,
   connectionPool,
   secretFromEnvironment,
@@ -20,11 +23,18 @@ const workItemValue = "postgresql-stage6-smoke-20260926-a";
 
 async function main(): Promise<void> {
   let pool;
+  let preflight = process.argv.slice(2).includes("--preflight");
   try {
+    preflight = relationalTaskMode() === "preflight";
     const configuration = configurationFromEnvironment();
     const runtime = secretFromEnvironment("RELATIONAL_RUNTIME_SECRET_JSON");
     const queueUrl = requiredEnvironment("RELATIONAL_SMOKE_QUEUE_URL");
     pool = connectionPool(runtime, configuration.runtimeSecretArn, configuration.schema);
+    if (preflight) {
+      await verifyRelationalTaskPreflight(pool, "relay", runtime.username);
+      writePreflightOutcome("relay", "passed");
+      return;
+    }
     const persistence = createKanbienPlatformPostgreSqlSmokePersistence({
       configuration: { ...configurationFromEnvironmentToAdapter(configuration, runtime), runtimeCredentialSecretReference: configuration.runtimeSecretArn },
       pool,
@@ -47,7 +57,8 @@ async function main(): Promise<void> {
     if (!result.ok || result.value.status !== "published") throw new Error("RELATIONAL_TASK_RELAY_FAILED");
     writeOutcome("relay_completed", "succeeded");
   } catch {
-    writeOutcome("relay_completed", "failed");
+    if (preflight) writePreflightOutcome("relay", "failed");
+    else writeOutcome("relay_completed", "failed");
     process.exitCode = 1;
   } finally {
     await closePool(pool);

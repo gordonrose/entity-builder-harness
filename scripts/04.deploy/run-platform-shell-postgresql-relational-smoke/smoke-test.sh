@@ -153,4 +153,6 @@ if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, IN
   echo "ERROR: migration must own default privileges for its own future tables" >&2
   exit 1
 fi
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s scripts/04.deploy/run-platform-shell-postgresql-relational-smoke -p 'test_task_revision_binding.py'
+node --test scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs
 echo "PostgreSQL relational smoke local validation passed."
