@@ -105,7 +105,8 @@ def load_schema(name):
     return _parse_schema(name,read_source(SCHEMA_DIR/(name+'.schema.yml')))
 
 @lru_cache(maxsize=8)
-def _parse_schema(name,raw):
+def _parse_schema(name,raw,version="v1"):
+    if version not in ("v1","v2"):fail("schema-invalid")
     class UniqueLoader(yaml.SafeLoader):pass
     def mapping(loader,node,deep=False):
         result={}
@@ -117,9 +118,9 @@ def _parse_schema(name,raw):
     UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,mapping)
     try:
         schema=yaml.load(raw,Loader=UniqueLoader)
-        if (type(schema) is not dict or schema.get('$id')!='urn:release-control:'+name+':v1'
+        if (type(schema) is not dict or schema.get('$id')!='urn:release-control:'+name+':'+version
                 or schema.get('$schema')!='https://json-schema.org/draft/2020-12/schema'
-                or schema.get('properties',{}).get('schema')!={'const':name+'/v1'}):fail('schema-invalid')
+                or schema.get('properties',{}).get('schema')!={'const':name+'/'+version}):fail('schema-invalid')
         pending=[(schema,0)];seen=set();count=0
         while pending:
             part,depth=pending.pop();count+=1

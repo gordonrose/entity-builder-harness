@@ -24,27 +24,35 @@ New checks are deferred unless an evidenced blocker, unsafe-effect or material-
 drift risk requires them. The R1–R8 register below remains the full-roadmap
 baseline; it is not all prerequisite work for this scoped MVP. No R checkpoint
 is marked complete or exempt by deferral. B02 retained 16 accepted deliveries;
-B03 adds the three bounded components recorded below.
+B03 adds three bounded components; B04 accepts the selected store conformance
+component. Their exact boundaries are recorded below.
 
-## Current position — B03, 2026-09-30
+## Current position — B04, 2026-09-30
 
-**19 delivery units accepted: three added in this MVP batch.**
-[Exact acceptance and before/after outcomes](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) record the selected
-blueprint, exact-image publication handoff, and selected task/passive preflight.
-The fresh canonical run passed 2,115 tests in 66 suites; the separate task test
-suite passed 67. Actual image qualification, nine database effect cases and eight
-database preflight cases passed. The first passive AWS inspection correctly
-blocked on stale drift evidence. No AWS mutation or hosted publication occurred.
+**20 delivery units accepted: four added during the timed MVP batch.**
+B03 accepted the selected blueprint, exact-image publication handoff and selected
+task/passive preflight (U17–U19). B04 adds U20's versioned selected-operation and
+conditional shared-store source conformance. The latest fresh canonical run
+passed **2,173 tests in 68 suites**, zero skips, and metadata checks for 69 files.
+[U20 acceptance and next integration](release-control-source-adoption/2026-09-30-selected-store-conformance/README.md)
+bind the exact files, tests and scope limits. Independent review found no blocker.
 
-M1, M2, M3 and M4 remain partial; M5 remains open. Their concrete new completed
-subcriteria are shown in the acceptance record, rather than hidden by those
-aggregate statuses. Full shared execution, caller migration, hosted artifact
-acceptance and the approved staging rehearsal remain unimplemented/unproven.
-The user accepted the [M4 operating policy](iaas-release-control-mvp-control-policy-proposal.md)
-for source work. Next is the versioned selected-operation/shared-store seam,
-followed by controlled execution/reconciliation and existing-caller integration.
-The ongoing batch has a hard 21:10 UTC handoff; the earlier weekly allowance
-threshold was explicitly withdrawn for this batch.
+The new component checks ownership and immutable operation/evidence bindings
+using an injected fixture transport. It does not contact AWS, run a controller,
+prove production durability or grant operation authority. The prior actual image
+and database proofs remain historical evidence for their recorded bytes. The
+first passive AWS inspection blocked on stale drift; its approval to refresh
+that evidence remains pending. No AWS mutation or hosted publication occurred.
+
+M1, M2, M3 and M4 remain partial; M5 remains open. Next integrate one existing
+candidate start, health observation and controlled stop through durable control:
+authenticated admission, separate start/stop intent, unknown-outcome recovery,
+exact task identity and selected-caller refusal. Actual store/role bootstrap,
+hosted artifact acceptance and the specifically approved staging rehearsal
+remain separate acceptance boundaries. The approved operating policy covers
+source implementation only. The live MVP is not complete within this timed batch.
+The hard handoff remains 21:10 UTC; the earlier weekly allowance threshold was
+explicitly withdrawn for this batch.
 
 ## Historical position — baseline B01, 2026-09-30
 
@@ -103,6 +111,7 @@ and environment, not every later revision.
 | U17 | Current selected-target blueprint: 13 subjects, nine task groups, all 17 gates and immutable source bindings | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M1; R1, R5 |
 | U18 | Same-host exact qualified-image publication handoff and bounded selected publisher drift controls | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M2; R2, R5 |
 | U19 | Fixed task database preflight, passive AWS inspection and immutable deployed task revision binding | [MVP acceptance](release-control-source-adoption/2026-09-30-mvp-selected-path/README.md) | M3 and part of M4; R4 |
+| U20 | Versioned selected operation and conditional shared-store/evidence conformance, with no live authority | [Store conformance record](release-control-source-adoption/2026-09-30-selected-store-conformance/README.md) | R3, R5; MVP M4 |
 
 U10–U16 account for the seven deliveries since the earlier estimate: two artifact/
 effect capabilities, three discovery/build relationship capabilities, and two
@@ -289,6 +298,7 @@ beyond it. No new numerical forecast is asserted in B01.
 | B01 reporting correction | 16 (+0) | Fixed backlog, acceptance criteria, dependency/approval boundaries and accepted evidence register established; no implementation gate newly passed | No programme scope change; both numerical forecasts superseded as progress measures | R1.2 action material and input/default reconciliation |
 | B02 MVP scope revision | 16 (+0) | M1–M5 and backlog-first intake adopted; no implementation gate newly passed | User-directed scope reduction for the first usable target path; full R requirements remain deferred/open where outside that path | M1 selected target/release blueprint and compiler acceptance |
 | B03 selected MVP source acceptance | 19 (+3) | U17–U19 accepted; actual local image and database proof renewed; passive target attempt blocked on stale drift | No milestone expansion; mutable selected publisher/task bindings repaired within M2/M4; shared operating policy approved for source implementation | Selected operation/shared-store seam, then common execution/caller integration and approved hosted/target acceptance |
+| B04 selected store source acceptance | 20 (+1) | U20 accepted: versioned records, conditional snapshots/events, exact evidence readback, 58 new tests and full 2,173-test regression passed | No milestone or programme expansion; live shared execution remains open | One existing candidate start/observe/stop through durable controller, authenticated transport and selected-caller boundary |
 
 ## Historical next unit at B01 — superseded by B02
 

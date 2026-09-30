@@ -1101,3 +1101,10 @@ The existing wrapper also exposes the strictly selected, read-only AWS mode
 [documented in the maintained adapter](../release-control/adapters/aws/README.md).
 Both `--selected-readiness` and `--inspect-target` are required. It retains
 blocked release/operation authority and never starts a task or refreshes drift.
+
+## Selected operation/store conformance
+
+The [selected v2 record seam](selected-operation.README.md) and
+[conditional AWS store requests](../release-control/adapters/aws/selected-store.README.md)
+are tested by the existing source-check command. Local v1 remains unchanged;
+these new conformance records also refuse every claim of execution authority.

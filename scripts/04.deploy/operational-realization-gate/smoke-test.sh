@@ -313,6 +313,8 @@ run_unit_suite scripts/04.deploy/operational-realization-gate 'test_cloudformati
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_target_boundary.py'
 
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_operation_journal.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_operation.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_store.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_control_store.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_control_store_conformance.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_control_store_cli.py'

@@ -1,0 +1,119 @@
+{
+  "scope": "selected-operation-shared-store-source-conformance",
+  "acceptance": "accepted-source-conformance",
+  "authorized": false,
+  "release_eligibility": "blocked",
+  "operation_authorization": "blocked",
+  "base_revision": "ab6889c83b127f1ce9c2ca2535c5aa7ea655475e",
+  "focused": {
+    "command": "python3 -B -m unittest discover -s scripts/04.deploy/operational-realization-gate -p 'test_selected_*.py'",
+    "tests": 125,
+    "new_tests": 58,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 41.811
+  },
+  "independent_review": {
+    "verdict": "no-blocker-within-declared-source-scope",
+    "backend_tests": 31,
+    "v1_compatibility_tests": 12,
+    "failed": 0,
+    "skipped": 0,
+    "adds_to_canonical_count": false
+  },
+  "canonical": {
+    "exit_code": 0,
+    "tests": 2173,
+    "suites": 68,
+    "skipped": 0,
+    "metadata_files": 69,
+    "log_sha256": "c9e8b3c7354406fd9f1b750377e730fe2300187b4318015546eb1c810d7e03be",
+    "python": "3.14.4",
+    "node": "22.23.3",
+    "npm": "10.9.9",
+    "hash_locked_python_distributions": 8,
+    "summed_suite_seconds": 853.203
+  },
+  "source_files": [
+    {
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-operation-evidence.schema.yml",
+      "sha256": "370c082d6caf1837581e7d2f00b24ac1c01d3fc3470dcc27e1ddda9fbc9b9d98"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-operation-record.schema.yml",
+      "sha256": "8434314b8ee1abc693a798b522e46a5e60b729212ed117de25ca1db7fad34166"
+    },
+    {
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-store-event.schema.yml",
+      "sha256": "332d85522ebe7fd5929e48d8bc5fe9a495bbae743a90c2aa1b2038329204ff8b"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/README.md",
+      "sha256": "237bd9155d02fffff97d8f101f6287ea69867924122f838f6eb2bf647829feec"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/invalid-authority.json",
+      "sha256": "b5f1863b13800b5f2fc5e27cf7e51c9618f2f372ae05b2e621b5004d3a3de212"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/valid-record.json",
+      "sha256": "fd23bfc5db05054a76d0e9c18f49e3ee9335cfa9ba3e9e8bdc3c5590bfd4e35c"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/operation_journal.py",
+      "sha256": "d3f913de45a61ba73d10d06f1cd37906800195a261510d2052b5f9aaa3bf3238"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/selected-operation.README.md",
+      "sha256": "63c2a851a88e068288c176ae94da2976c01670648cab21943d22f8a23c7cf9e8"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/selected_operation.py",
+      "sha256": "3f5e3958108681d6bc0fa9c8f4dfbd499145365354a8b046efe6a656d2a6deb7"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/selected_store_evidence.py",
+      "sha256": "6660c251cccc93559790116853d2e741f691152de7d68e8701eef39cdd42cd53"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+      "sha256": "a564713d311d8417de0232fff7948362d845fa557985f960f6865f7f2c01ac86"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_operation.py",
+      "sha256": "63f6097900fc06d8015368bbda7421611f16c45a64ba7d9d6c7540979ab35588"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_store.py",
+      "sha256": "4dd02f024475e6f5eae5a282b60988d1eb225943756b5603caa837967ca23ace"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/adapters/aws/README.md",
+      "sha256": "5c77b9798f5acfbaca5acb8a5e84489b83ec1d0d5a1e6a1c45f241a59c3c65f2"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected-store.README.md",
+      "sha256": "be802876012c7b5cafbddbde7f5e81f74deb11906f29b3b20552c6d4536787e0"
+    },
+    {
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected_store.py",
+      "sha256": "c159e4d745c87785bc1e9c54be965f84d535f20cfb0c8f80244e6f032205fd2c"
+    }
+  ],
+  "provider_effects_requested": 0,
+  "limits": [
+    "private-fixture-transport-only",
+    "no-live-identity-or-cloud-durability-proof",
+    "process-local-unknown-response-quarantine",
+    "no-operation-authority",
+    "no-controller-or-caller-migration",
+    "no-scope-reuse-or-old-writer-recovery"
+  ],
+  "next": [
+    "authenticated-authority-and-bounded-live-transport",
+    "durable-unknown-outcome-and-old-writer-reconciliation",
+    "existing-controller-and-selected-caller-integration",
+    "reviewed-bootstrap-and-approved-hosted-target-qualification"
+  ],
+  "delivery_unit": "U20"
+}

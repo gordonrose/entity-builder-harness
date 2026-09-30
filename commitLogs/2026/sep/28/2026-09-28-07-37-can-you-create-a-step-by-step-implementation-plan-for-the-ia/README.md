@@ -2900,3 +2900,67 @@ subsequent edits are evidence, progress, policy and session documentation.
 The first permission-review attempt for the local policy-document update timed
 out before execution; its permitted single retry succeeded. This was not an
 unsafe-action rejection and left no unresolved approval-tool block.
+
+
+### 2026-09-30T20:35Z — selected shared-store source integration
+
+Integrated 16 reviewed component paths: three versioned schemas, two fixtures,
+record/transition and evidence modules, an injected AWS request adapter, two test
+suites, two component guides and existing loader/wrapper/README links. The v1
+loader default is unchanged. All new records explicitly deny operation authority.
+No live transport, controller, cloud resource or provider effect was added.
+
+The integrated selected-component run passed 125 tests in 41.811 seconds, including
+58 new cases. Independent review found no code blocker within the declared source
+conformance boundary; 31 backend and 12 v1 journal cases passed independently.
+The review verified transaction generation/snapshot conditions, unique submission
+tokens, exact evidence joins and unconditional authority refusal. It confirmed
+that unknown-response quarantine is process-local and live identity/durability/
+restart recovery remain unproven. Five eligible new metadata files passed.
+
+Full fresh canonical verification is running; component acceptance and delivery
+count are pending its result. Source fingerprints and bounded evidence are in
+2026-09-30-selected-store-conformance. No routine source stop exists. Active AWS
+drift refresh and any store creation/hosted activation remain unapproved. The
+user-approved operating policy permits source implementation only. The next unit
+is existing controller/authority and selected-caller integration, with durable
+unknown-effect/old-writer reconciliation before live execution. Hard handoff
+remains 21:10 UTC; no new milestone or backlog expansion.
+
+
+### 2026-09-30T20:42Z — U20 source conformance accepted
+
+Final clean verification exited 0: 2,173 tests in 68 suites, zero skips,
+metadata checks for 69 files, CPython 3.14.4 and eight hash-locked distributions.
+Selected Node 22.23.3/npm 10.9.9 tools were used. Log SHA256:
+c9e8b3c7354406fd9f1b750377e730fe2300187b4318015546eb1c810d7e03be.
+Focused acceptance was 125 tests, including 58 new cases; independent review
+reran 31 backend and 12 existing v1 cases without failures. These are not added
+twice to the canonical total. All 16 implementation/contract/fixture/guide file
+fingerprints match the acceptance record. Whitespace and owned-location checks
+passed. No executable change followed the completed test run.
+
+Independent final documentation review corrected one ambiguity: an unlinked
+object cannot advance the operation, but a lost journal acknowledgement may hide
+a committed transition. Both guides now require reconciliation rather than an
+assumption of failure or replay. This was wording only and matches existing tests.
+ADR 0040 covers the approved selected store/executor policy; this implementation
+adds no different architecture or new policy choice. No additional ADR is needed.
+
+B04 accepts U20, moving the stable register from 19 to 20 components, four more
+than the timed batch's starting 16. M1–M4 remain partial and M5 open. Source
+conformance is not a live shared store, controller or operation authorization.
+The next unit is one existing candidate start/observe/stop through durable
+control. Separate start/stop reservations, baseline-versus-candidate image
+admission and local-v1 controller compatibility are concrete remaining M4
+integration requirements. Their exact file map and acceptance boundary are in
+the dated evidence README; broader unrelated coverage stays deferred.
+
+The live MVP cannot be finished within the remaining timebox. Preparing the
+authorized local checkpoint and explicit handoff before 21:10 UTC. Active drift
+refresh, actual store/role creation, hosted activation and live task qualification
+remain unapproved. No AWS/GitHub/DNS/secret/legacy/main/other-worktree mutation,
+push or merge occurred. No source corruption or ownership conflict was found.
+Durable carry-forward is the dated acceptance summary, exact file fingerprints,
+fixed progress ledger and next integration map; raw tool output stays in private
+batch scratch. No routine source stop or unresolved approval-tool rejection.

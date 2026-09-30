@@ -63,12 +63,18 @@ This closes named source/local subcriteria, not the five complete milestones.
 The first AWS passive observation blocked on stale drift evidence; no task or
 resource was changed. Hosted publication and per-task live proof remain open.
 
-Next is **M4: versioned selected operation/shared-store records and conditional
-backend conformance**, reusing the existing journal/action machinery. The user
-accepted the [operating policy](iaas-release-control-mvp-control-policy-proposal.md)
-for source implementation. Follow with common controlled execution, unknown
-outcome/cleanup reconciliation and selected-caller migration; then specifically
-approved hosted/target acceptance and M5 rehearsal. No extra milestone is added.
+The next bounded M4 component is also accepted as **U20: versioned selected
+operation/shared-store records and conditional backend conformance**; see the
+[B04 evidence](release-control-source-adoption/2026-09-30-selected-store-conformance/README.md).
+The full clean run passed 2,173 tests in 68 suites. This uses an injected fixture
+transport and cannot grant authority or prove live durability. M4 stays partial.
+The user accepted the [operating policy](iaas-release-control-mvp-control-policy-proposal.md)
+for source implementation. Next integrate one existing candidate start, health
+observation and controlled stop through durable shared execution, authenticated
+admission, unknown-outcome/cleanup reconciliation and selected-caller refusal.
+Specifically approved store bootstrap, hosted/target acceptance and M5 rehearsal
+remain ahead. No extra milestone is added; the live MVP is not complete tonight
+within this batch's timebox.
 The current batch ends by 21:10 UTC under the user's three-hour maximum; this
 supersedes the earlier weekly-allowance stop for this batch.
 

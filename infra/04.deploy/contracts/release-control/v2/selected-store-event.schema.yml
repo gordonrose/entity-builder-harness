@@ -1,0 +1,120 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.selected-store-event-v2
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Bind append-only shared store events to the exact conditional record and immutable evidence version.
+#   portability: {class: internal, targets: [kanbien/staging]}
+#   used_by:
+#   - id: deploy.script.aws-selected-store
+#     path: scripts/04.deploy/release-control/adapters/aws/selected_store.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:selected-store-event:v2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "selected-store-event/v2"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "event": {
+      "enum": [
+        "prepare",
+        "claim",
+        "renew",
+        "reserve",
+        "mark-unknown",
+        "reconcile",
+        "observe",
+        "verify-cleanup",
+        "close",
+        "block"
+      ]
+    },
+    "observed_at_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "previous_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "record_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "evidence_reference": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generation",
+            "operation_id",
+            "digest",
+            "version_id"
+          ],
+          "properties": {
+            "generation": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "operation_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{2,63}$"
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[A-Za-z0-9._~+/=-]+$"
+            }
+          }
+        }
+      ]
+    },
+    "authorized": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema",
+    "operation_id",
+    "generation",
+    "revision",
+    "event",
+    "observed_at_ms",
+    "previous_digest",
+    "record_digest",
+    "evidence_reference",
+    "authorized"
+  ]
+}

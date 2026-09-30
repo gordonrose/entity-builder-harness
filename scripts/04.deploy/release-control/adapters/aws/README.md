@@ -77,3 +77,10 @@ after its prerequisites exist, establish independent effects and cleanup, add
 approved durable operation control, and satisfy the full seventeen release gates.
 Per-task preflight cannot be aggregated before bootstrap creates its dependent
 identities. Restore qualification needs an actual isolated restore target.
+
+## Selected shared-store source conformance
+
+The [conditional store adapter](selected-store.README.md) reuses the versioned
+selected-operation and existing journal contracts. The normal gate source-check
+command tests its fixed injected transport. It exposes no live AWS operation
+and does not qualify shared durability or grant execution authority.
