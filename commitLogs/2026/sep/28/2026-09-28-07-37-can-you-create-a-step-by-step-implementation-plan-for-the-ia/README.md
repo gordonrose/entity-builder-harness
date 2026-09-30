@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-30T12:58:35Z
-latest_commit_sha: 2b940bd4a2df364b3348151abc2c938f28b859cd
-chat_duration: 195672s (02:06:21:12)
+latest_commit_at_utc: 2026-09-30T14:32:26Z
+latest_commit_sha: e21f41dc342eeddbd40be7dd54a2525eae043664
+chat_duration: 201303s (02:07:55:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -673,6 +673,17 @@ Summary: Completed Unit 16 in 46 reviewed paths: 1,834 canonical cases across 57
 
 ADR impact: Covered by accepted IaaS plan Phase3.1 and existing source-only realization contracts; no new provider policy.
 
+
+### 2026-09-30T14:32:26Z - Commit recorded
+
+Commit: `e21f41dc342eeddbd40be7dd54a2525eae043664`
+
+Message: docs(deploy): establish fixed release-control progress ledger
+
+Summary: Established baseline B01 with sixteen credited deliveries, eight stable remaining milestones and twenty-two named acceptance checkpoints. Replaced untracked slice estimates with explicit per-run changes, evidence currency, scope accounting and approval dependencies. Independent traceability review, eighteen links, metadata, unchanged original requirements and commit-readiness checks passed. Documentation only; next implementation remains R1.2.
+
+ADR impact: No new ADR: reporting and traceability for the unchanged approved IaaS plan.
+
 ## Sub-Agent Activity
 
 
@@ -1106,6 +1117,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Completed Unit 16 in 46 reviewed paths: 1,834 canonical cases across 57 suites and 61 metadata files passed; 49 real compiler/direct fixtures passed, 1,883 distinct cases total. All seven locked builds, two runtime runners and image preparation passed. Independent source verification checked 40 frozen paths and 54 consumer refusals. Replaced three handwritten maps with compiler-bound shared generation; repaired actual workspace-link classification and preserved failed attempts. Exact evidence is in 2026-09-30-workspace-exports. Next: immutable action material/input reconciliation. Pending weekly-balance information and rejected draft README relocation remain explicit; no external mutation or publication.
   ADR impact: Covered by accepted IaaS plan Phase3.1 and existing source-only realization contracts; no new provider policy.
 
+
+- Commit: `e21f41dc342eeddbd40be7dd54a2525eae043664`
+  Time UTC: 2026-09-30T14:32:26Z
+  Message: docs(deploy): establish fixed release-control progress ledger
+  Summary: Established baseline B01 with sixteen credited deliveries, eight stable remaining milestones and twenty-two named acceptance checkpoints. Replaced untracked slice estimates with explicit per-run changes, evidence currency, scope accounting and approval dependencies. Independent traceability review, eighteen links, metadata, unchanged original requirements and commit-readiness checks passed. Documentation only; next implementation remains R1.2.
+  ADR impact: No new ADR: reporting and traceability for the unchanged approved IaaS plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1119,9 +1137,9 @@ Reason: Implements the existing finite-job profile and Phase 3 self-verification
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-30T12:58:35Z
-Latest commit SHA: 2b940bd4a2df364b3348151abc2c938f28b859cd
-Chat duration: 195672s (02:06:21:12)
+Latest commit at UTC: 2026-09-30T14:32:26Z
+Latest commit SHA: e21f41dc342eeddbd40be7dd54a2525eae043664
+Chat duration: 201303s (02:07:55:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
