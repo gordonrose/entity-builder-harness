@@ -100,7 +100,7 @@ def make_ledger(inventory):
     }
 
 
-def compile_coverage(inventory, composition, ledger, as_of=None, release_document=None, contract=None):
+def compile_coverage(inventory, composition, ledger, as_of=None, release_document=None, contract=None, source_root=None):
     """Internal API; public commands always collect from the source tree afresh."""
     schema_digests = {name: validate_schema(name, value) for name, value in (
         ("source-inventory", inventory), ("source-composition", composition), ("source-adoption-ledger", ledger),
@@ -122,6 +122,18 @@ def compile_coverage(inventory, composition, ledger, as_of=None, release_documen
     artifacts = unique(composition["artifacts"], "id")
     resources = unique(composition["resources"], "id")
     findings = set()
+    caller_reconciliation = None
+    resolved_observations, resolved_source_findings = set(), set()
+    if source_root is not None:
+        # Only a fresh local collection can supply structural resolutions. There
+        # is deliberately no uploaded graph/proof argument to this public seam.
+        import estate_caller_coverage
+        caller_reconciliation = estate_caller_coverage.reconcile_estate(source_root, inventory)
+        resolved_observations = {row['observation_id'] for row in caller_reconciliation['resolved_observations']}
+        resolved_source_findings = {(row['code'], row['source_id'])
+                                    for row in caller_reconciliation['resolved_source_findings']}
+        findings.update((row['code'], row['subject_id'])
+                        for row in caller_reconciliation['boundary_findings'])
 
     def issue(code, subject="source-scope"):
         findings.add((code, subject))
@@ -132,9 +144,11 @@ def compile_coverage(inventory, composition, ledger, as_of=None, release_documen
         if observed["subject_id"] not in observations:
             issue("observation-subject-unknown", observed["id"])
         for code in observed["issues"]:
-            issue(code, observed["id"])
+            if code != 'opaque-executable' or observed['id'] not in resolved_observations:
+                issue(code, observed["id"])
     for finding in inventory["findings"]:
-        issue(finding["code"], finding["source_id"])
+        if (finding['code'], finding['source_id']) not in resolved_source_findings:
+            issue(finding["code"], finding["source_id"])
     if composition["inventory_digest"] != inventory["inventory_digest"] or ledger["inventory_digest"] != inventory["inventory_digest"]:
         issue("source-snapshot-stale")
     if set(entries) != set(sources):
@@ -333,6 +347,8 @@ def compile_coverage(inventory, composition, ledger, as_of=None, release_documen
         "findings": [{"code": code, "subject_id": subject} for code, subject in sorted(findings)],
         "acceptance_obligations": [],
     }
+    if caller_reconciliation is not None:
+        result['caller_reconciliation'] = caller_reconciliation
     if not findings:
         rules = release.load_schemas(SCHEMA_DIR)["release-acceptance-matrix/v1"]
         schema_digests["acceptance-matrix"] = release.digest_document(rules)
@@ -341,6 +357,7 @@ def compile_coverage(inventory, composition, ledger, as_of=None, release_documen
             "inventory": inventory["inventory_digest"], "composition": composition, "ledger": ledger,
             "schema_digests": schema_digests, "policy_revision": policy_revision, "as_of": today.isoformat(),
             "release_digest": compiled_release["release_digest"] if compiled_release else None,
+            "caller_reconciliation_digest": caller_reconciliation["result_digest"] if caller_reconciliation else None,
         })
         result["policy_revision"] = policy_revision
         result["acceptance_obligations"] = generate_obligations(composition, rules)
@@ -461,7 +478,8 @@ def main(argv=None):
             inventory = discover(Path(args.source_root))
             result = compile_coverage(inventory, release.load_document(args.composition), release.load_document(args.adoption_ledger),
                                       release_document=release.load_document(args.release) if args.release else None,
-                                      contract=release.load_document(args.contract) if args.contract else None)
+                                      contract=release.load_document(args.contract) if args.contract else None,
+                                      source_root=Path(args.source_root))
             status = 0 if result["verdict"] == "covered" else 1
     except release.ReleaseFailure as error:
         result = {"schema": "source-coverage-result/v1", "scope": "source-coverage", "verdict": "failed",

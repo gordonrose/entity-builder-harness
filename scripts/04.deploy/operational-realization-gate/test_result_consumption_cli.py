@@ -38,6 +38,7 @@ import finding_triage
 import result_consumption_cli as cli
 import caller_coverage
 import caller_inventory
+import estate_caller_coverage
 from test_source_coverage import fixture_composition
 
 SENTINEL = "SENTINEL-SENSITIVE-DO-NOT-PRINT"
@@ -133,7 +134,10 @@ class ResultConsumptionCliTests(unittest.TestCase):
                     "--adoption-ledger", str(ledger_path)]
         original = self.command(producer)
         self.assertEqual(original.returncode, 0, original.stdout + original.stderr)
-        self.assertEqual(json.loads(original.stdout)["verdict"], "covered")
+        covered = json.loads(original.stdout)
+        self.assertEqual(covered["verdict"], "covered")
+        self.assertEqual(covered["caller_reconciliation"]["structural_verdict"], "accounted")
+        self.assertEqual(covered["caller_reconciliation"]["inventory_digest"], covered["inventory_digest"])
         self.result_path.write_text(original.stdout)
         decision = self.assert_decision(self.consume(producer=producer), accepted=True)
         self.assertEqual(decision["source_result"]["scope"], "source-coverage")
@@ -219,6 +223,78 @@ class ResultConsumptionCliTests(unittest.TestCase):
                       "--", *self.producer]):
             with self.subTest(arguments=len(args)):
                 self.assert_decision(self.command(args))
+
+    def estate_fixture(self):
+        source = self.base / "estate-source"
+        source.mkdir()
+        (source / "package.json").write_text('{"name":"estate-fixture"}')
+        producer = ["--estate-callers", "--source-root", str(source)]
+        original = self.command(producer)
+        self.assertEqual(original.returncode, 0, original.stdout + original.stderr)
+        self.result_path.write_text(original.stdout)
+        return source, producer
+
+    def test_estate_public_receipt_requires_fresh_source_recomputation(self):
+        source, producer = self.estate_fixture()
+        decision = self.assert_decision(self.consume(producer=producer), accepted=True)
+        self.assertEqual(decision["source_result"]["schema"], "estate-caller-reconciliation/v1")
+        self.assertEqual(decision["source_result"]["qualification_status"], "not-established")
+        for purpose in ("release-eligibility", "operation-authorization"):
+            self.assert_decision(self.consume(purpose, producer))
+        (source / "package.json").write_text('{"name":"changed-estate"}')
+        decision = self.assert_decision(self.consume(producer=producer))
+        self.assertEqual(decision["findings"], [{"code": "source-result-snapshot-mismatch"}])
+
+    def test_blocked_estate_recomputation_cannot_be_overridden_by_saved_success(self):
+        source, producer = self.estate_fixture()
+        script = source / "scripts/04.deploy/task.py"
+        script.parent.mkdir(parents=True)
+        script.write_text("print('unqualified')\n")
+        decision = self.assert_decision(self.consume(producer=producer))
+        self.assertEqual(decision["findings"], [{"code": "producer-recompute-failed"}])
+
+    def test_estate_saved_graph_cannot_be_substituted_for_recomputation(self):
+        _, producer = self.estate_fixture()
+        for extra in (["--graph", str(self.result_path)], ["--expected-result", str(self.result_path)],
+                      ["--callers"], ["--coverage"]):
+            with self.subTest(option=extra[0]):
+                self.assert_decision(self.consume(producer=producer + extra))
+
+    def test_pending_migration_public_output_is_explicitly_unconsumable(self):
+        source, _ = self.estate_fixture()
+        ledger = source_coverage.make_ledger(source_coverage.discover(source))
+        ledger_path = self.base / "adoption.json"
+        ledger_path.write_text(json.dumps(ledger))
+        producer = ["--adoption-migration", "--source-root", str(source),
+                    "--previous-adoption-ledger", str(ledger_path)]
+        original = self.command(producer)
+        self.assertEqual(original.returncode, 1, original.stdout + original.stderr)
+        self.assertEqual(json.loads(original.stdout)["review_verdict"], "pending")
+        self.result_path.write_text(original.stdout)
+        decision = self.assert_decision(self.consume(producer=producer))
+        self.assertEqual(decision["findings"], [{"code": "source-result-proposal-unconsumable"}])
+        proposal = json.loads(original.stdout)
+        proposal["review_verdict"] = "reviewed"
+        self.result_path.write_text(json.dumps(proposal))
+        self.assertEqual(self.assert_decision(self.consume(producer=producer))["findings"],
+                         [{"code": "source-result-proposal-unconsumable"}])
+
+    def test_migration_snapshot_is_rejected_before_producer_runs(self):
+        self.result_path.write_text('{"schema":"source-adoption-migration/v1"}')
+        output = StringIO()
+        with patch.object(cli, "recompute", side_effect=AssertionError("must not run")) as recompute, \
+             redirect_stdout(output):
+            status = cli.main(["--consume-result", str(self.result_path), "--purpose", "source-analysis",
+                               "--", "--estate-callers", "--source-root", str(self.source)])
+        self.assertEqual(status, 1)
+        recompute.assert_not_called()
+        self.assertEqual(json.loads(output.getvalue())["findings"],
+                         [{"code": "source-result-proposal-unconsumable"}])
+
+    def test_migration_mode_is_rejected_even_with_a_different_saved_producer(self):
+        decision = self.assert_decision(self.consume(producer=["--adoption-migration", "--source-root", str(self.source),
+                                                               "--previous-adoption-ledger", SENTINEL]))
+        self.assertEqual(decision["findings"], [{"code": "source-result-proposal-unconsumable"}])
 
     def test_ordinary_release_compilation_keeps_interface_and_guard(self):
         producer = ["--release", str(DIRECTORY / "fixtures/valid-release.yml"),

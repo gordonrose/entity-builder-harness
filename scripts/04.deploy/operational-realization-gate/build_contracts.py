@@ -27,7 +27,9 @@ MAX_INTERNAL_NODES = 500000
 NAMES = {"source-build-inventory", "source-build-artifact", "local-typescript-observation",
          "local-runtime-observation", "local-build-result", "local-container-lock", "local-container-result",
          "finite-job-profile", "finite-job-result", "dependency-effect-profile", "dependency-effect-result",
-         "artifact-admission-policy", "artifact-admission-result", "artifact-verifier-lock", "artifact-scan-predicate", "artifact-verifier-conformance", "artifact-admission-error"}
+         "artifact-admission-policy", "artifact-admission-result", "artifact-verifier-lock", "artifact-scan-predicate", "artifact-verifier-conformance", "artifact-admission-error", "operation-control", "operation-journal", "operation-evidence",
+         "control-store-conformance", "control-store-error", "estate-caller-inventory",
+         "estate-caller-reconciliation", "estate-caller-error"}
 
 
 def validate_schema(name, document):

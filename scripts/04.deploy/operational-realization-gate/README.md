@@ -969,3 +969,69 @@ saved scan counts and desired base-image constants cannot fill those gaps.
 Publication, hosted acceptance and provider operations retain separate approval
 boundaries. See the artifact-admission fixture documentation for full command
 inputs, trust acquisition provenance and conformance limitations.
+
+## Local durable operation controls
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --control-store-conformance --scratch-root /owned/private/scratch
+```
+
+This extends the existing gate with immutable operation intent, an append-only
+validated journal, atomic resource-scope claims, persistent fencing generations
+and full bounded typed evidence in a local SQLite reference store. Expired claims
+permit reconciliation only. Unresolved effects retain their scope across release
+identities; completed operations retain it until current fenced cleanup evidence
+is verified. A hash alone cannot substitute for missing evidence content.
+
+The command creates a fresh private fixture store and runs real competing and
+interrupted processes. It cannot open an existing deployment database or accept
+an arbitrary provider command. Fixed error output remains safe when schema or
+module loading fails. Successful conformance is not release eligibility or
+operation authorization, and the common source-result consumer rejects it.
+
+The store binds its schema revision and host boot, refuses backward host time,
+and uses verified SQLite DELETE journaling with FULL synchronization. It is a
+single-host local reference, not distributed or authenticated production storage.
+Process-crash tests do not establish power-loss, host-reboot or cloud durability.
+Fixture lease/time limits are explicit test inputs, not production policy.
+
+See [fixture and API documentation](fixtures/control-store/README.md). The next
+unit connects the existing finite container engine to these records and proves
+reconciliation after interruption. Provider-side effect fencing, production
+storage, live preflight and release authority retain their separate gates.
+
+## Aggregate caller coverage and adoption proposals
+
+```bash
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --estate-callers --source-root . --json
+bash scripts/04.deploy/operational-realization-gate/script.sh \
+  --adoption-migration --source-root . \
+  --previous-adoption-ledger docs/04.deploy/plans/release-control-source-adoption/ledger.json --json
+```
+
+Aggregate collection starts from every root package command and discovered
+workflow. Supported command bodies and complete dispatch wrappers have exact
+source/edge proofs; npm lifecycle invocation contexts remain distinct. A parsed
+wrapper does not establish its child implementation or tool/action semantics.
+Raw source findings, structurally resolved findings and remaining graph boundaries
+are reported separately. The original selected-workflow caller mode remains.
+
+Existing `--coverage` now recollects this graph internally. It can remove only
+current machine-proved structural findings, retains every unresolved boundary,
+and still requires composition and adoption checks. There is no saved proof,
+allowlist or reviewed-label shortcut. A successful structural result can be used
+for source analysis only after fresh in-process recomputation; release and
+operation authority always remain blocked.
+
+Adoption migration produces a candidate plus an added/changed/unchanged/removed
+delta. Every current row is pending, including previously reviewed unchanged rows.
+Prior owner/disposition text remains a proposal. The original ledger is never
+modified, paths are not retired, and the command exits 1 while review is pending.
+The source-result consumer refuses this proposal. See the detailed
+[caller reference](../release-control/discovery/estate-callers.README.md).
+
+Next source coverage work must bind package exports to actual compiler emissions
+and extend supported implementation/tool/action semantics. Whole-estate closure
+cannot be inferred from file reachability or the intake owner label.

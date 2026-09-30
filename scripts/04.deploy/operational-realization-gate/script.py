@@ -20,6 +20,7 @@
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: harness.workflow.operational-realization-gate
 #     path: .agentic/01.harness/workflows/operational-realization-gate.md
@@ -553,6 +554,17 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] == "--control-store-conformance" for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import control_store_cli
+        except Exception:
+            print(json.dumps({"schema": "control-store-error/v1", "scope": "local-process-restart-conformance",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked", "verdict": "blocked",
+                              "findings": [{"code": "dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return control_store_cli.main(sys.argv[1:])
     if any(argument.split("=", 1)[0] in {"--artifact-admission", "--artifact-verifier-acquire", "--artifact-verifier-conformance"} for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:
@@ -575,6 +587,17 @@ def main() -> int:
                               "findings": [{"code": "compiler-dependency-unavailable"}]}, sort_keys=True))
             return 1
         return result_consumption_cli.main(sys.argv[1:])
+    if any(argument.split("=", 1)[0] in {"--estate-callers", "--adoption-migration"} for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import estate_caller_cli
+        except Exception:
+            print(json.dumps({"schema": "estate-caller-error/v1", "scope": "estate-source-analysis",
+                              "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked", "verdict": "blocked",
+                              "findings": [{"code": "dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return estate_caller_cli.main(sys.argv[1:])
     if any(argument.split("=", 1)[0] in {"--builds", "--build-id", "--artifact-root", "--expect-inventory-digest", "--expect-artifact-digest"} for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:

@@ -26,6 +26,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from jsonschema import Draft202012Validator
 
@@ -35,6 +36,7 @@ sys.path.insert(0, str(DIRECTORY))
 import result_consumption as consumption
 import release_compiler as release
 import source_coverage as coverage
+import estate_caller_coverage as estate
 import finding_triage as triage
 import caller_coverage as callers
 import caller_inventory
@@ -62,6 +64,12 @@ class ResultConsumptionTests(unittest.TestCase):
             "coverage": coverage.compile_coverage(inventory, fixture_composition(inventory), ledger,
                                                   as_of="2026-09-29"),
         }
+        cls.results["coverage-estate"] = coverage.compile_coverage(
+            inventory, fixture_composition(inventory), ledger, as_of="2026-09-29", source_root=root)
+        estate_root = Path(temporary.name) / "estate-source"
+        estate_root.mkdir()
+        (estate_root / "package.json").write_text('{"name":"estate-fixture"}')
+        cls.results["estate"] = estate.reconcile_estate(estate_root)
         (root / "package.json").write_text(json.dumps({
             "name": "fixture", "scripts": {"deploy": "bash scripts/04.deploy/deploy.sh"},
         }))
@@ -305,6 +313,103 @@ class ResultConsumptionTests(unittest.TestCase):
             altered = deepcopy(valid)
             del altered[field]
             self.assertTrue(list(Draft202012Validator(self.schema).iter_errors(altered)))
+
+    def test_estate_success_retains_every_authority_boundary(self):
+        result = self.results["estate"]
+        self.assertEqual(result["structural_verdict"], "accounted")
+        self.assertEqual(result["remaining_source_findings"], [])
+        self.assertEqual(result["boundary_findings"], [])
+        self.assertEqual(result["qualification_verdict"], "blocked")
+        self.assertEqual(result["review_verdict"], "not-evaluated")
+        self.assertNotIn("findings", result)
+        self.assertEqual(self.consume("estate")["source_result"]["scope"], "structural-caller-reconciliation")
+
+    def test_blocked_estate_is_not_consumable(self):
+        result = deepcopy(self.results["estate"])
+        result["structural_verdict"] = "blocked"
+        self.assert_rejected(self.consume("estate", result), "source-result-analysis-unsuccessful")
+
+    def test_estate_closed_contract_rejects_nested_and_authority_mutations(self):
+        for field, value in (("roots", True), ("qualification_verdict", "qualified"),
+                             ("review_verdict", "reviewed"), ("release_eligibility", "eligible"),
+                             ("operation_authorization", "authorized"), ("findings", []),
+                             ("boundary_findings", [{"code": "unknown-tool-boundary", "subject_id": CHANGED}]),
+                             ("remaining_source_findings", [{"code": "opaque-executable", "source_id": CHANGED}]),
+                             ("resolved_observations", [{"observation_id": CHANGED, "node_id": CHANGED,
+                                "rule": "literal-package-command/v1", "proof_digest": CHANGED, "secret": SENTINEL}])):
+            with self.subTest(field=field):
+                result = deepcopy(self.results["estate"])
+                result[field] = value
+                result["result_digest"] = release.digest_document({k: v for k, v in result.items() if k != "result_digest"})
+                self.assert_rejected(self.consume("estate", result), "source-result-invalid")
+
+    def test_estate_checksum_does_not_replace_fresh_recomputation(self):
+        result = deepcopy(self.results["estate"])
+        result["graph_digest"] = CHANGED
+        result["result_digest"] = release.digest_document({k: v for k, v in result.items() if k != "result_digest"})
+        self.assert_rejected(self.consume("estate", result), "source-result-snapshot-mismatch")
+        self.assert_rejected(consumption.consume_result(result, "source-analysis"), "source-result-recomputation-required")
+
+    def test_estate_wrong_result_digest_is_rejected(self):
+        result = deepcopy(self.results["estate"])
+        result["result_digest"] = CHANGED
+        self.assert_rejected(self.consume("estate", result), "source-result-invalid")
+
+    def test_estate_accounted_verdict_cannot_hide_source_findings(self):
+        result = deepcopy(self.results["estate"])
+        result["raw_source_findings"] = [{"code": "unsupported-resource", "source_id": CHANGED}]
+        result["result_digest"] = release.digest_document({k: v for k, v in result.items() if k != "result_digest"})
+        self.assert_rejected(self.consume("estate", result), "source-result-invalid")
+        result["resolved_source_findings"] = deepcopy(result["raw_source_findings"])
+        result["result_digest"] = release.digest_document({k: v for k, v in result.items() if k != "result_digest"})
+        self.assert_rejected(self.consume("estate", result), "source-result-invalid")
+
+    def test_coverage_legacy_and_nested_estate_success_remain_compatible(self):
+        self.assertNotIn("caller_reconciliation", self.results["coverage"])
+        self.assertIn("caller_reconciliation", self.results["coverage-estate"])
+        self.assertEqual(self.consume("coverage")["verdict"], "accepted")
+        self.assertEqual(self.consume("coverage-estate")["verdict"], "accepted")
+
+    def test_coverage_nested_estate_requires_same_inventory(self):
+        result = deepcopy(self.results["coverage-estate"])
+        nested = result["caller_reconciliation"]
+        nested["inventory_digest"] = CHANGED
+        nested["result_digest"] = release.digest_document({k: v for k, v in nested.items() if k != "result_digest"})
+        self.assert_rejected(self.consume("coverage-estate", result), "source-result-invalid")
+
+    def test_coverage_nested_estate_requires_accounted_closed_receipt(self):
+        for field, value, code in (("structural_verdict", "blocked", "source-result-analysis-unsuccessful"),
+                                   ("authorized", True, "source-result-authority-invalid"),
+                                   ("result_digest", CHANGED, "source-result-invalid"),
+                                   ("secret", SENTINEL, "source-result-invalid")):
+            result = deepcopy(self.results["coverage-estate"])
+            result["caller_reconciliation"][field] = value
+            self.assert_rejected(self.consume("coverage-estate", result), code)
+
+    def test_proposed_adoption_is_unconsumable_regardless_of_claimed_review(self):
+        for verdict in ("pending", "reviewed", "accounted"):
+            proposal = {"schema": "source-adoption-migration/v1", "review_verdict": verdict}
+            self.assert_rejected(consumption.consume_result(proposal, "source-analysis", proposal),
+                                 "source-result-proposal-unconsumable")
+
+    def test_missing_open_or_referenced_estate_schema_is_rejected(self):
+        original = release.load_document
+        schema_path = consumption.SCHEMA_DIR / "estate-caller-reconciliation.schema.yml"
+        for mutation in ("missing", "open", "reference", "weaken-authority"):
+            def changed(path, *args, **kwargs):
+                document = original(path, *args, **kwargs)
+                if Path(path) == schema_path:
+                    if mutation == "missing":
+                        raise OSError(SENTINEL)
+                    if mutation == "open":
+                        document["additionalProperties"] = True
+                    elif mutation == "reference":
+                        document["$ref"] = "https://example.invalid/" + SENTINEL
+                    else:
+                        document["properties"]["qualification_verdict"] = {"type": "string"}
+                return document
+            with self.subTest(mutation=mutation), patch.object(release, "load_document", side_effect=changed):
+                self.assert_rejected(self.consume("estate"), "source-result-invalid")
 
     def schema_mutation(self, mutate, expected_code):
         schema = deepcopy(self.schema)

@@ -1,0 +1,180 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.operation-journal
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Define local control-store conformance without cloud authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operation-journal
+#     path: scripts/04.deploy/operational-realization-gate/operation_journal.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:operation-journal:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation_id",
+    "sequence",
+    "event",
+    "state",
+    "attempt",
+    "owner",
+    "fences",
+    "mode",
+    "observed_at_ms",
+    "lease_expires_at_ms",
+    "deadline_at_ms",
+    "intent_digest",
+    "evidence_digest",
+    "previous_digest",
+    "event_digest"
+  ],
+  "properties": {
+    "schema": {
+      "const": "operation-journal/v1"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$",
+      "maxLength": 128
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "event": {
+      "enum": [
+        "prepared",
+        "claimed",
+        "renewed",
+        "effect-intent",
+        "observed",
+        "succeeded",
+        "failed",
+        "unknown",
+        "reconciled-absent",
+        "reconciled-completed",
+        "cleanup-verified",
+        "closed",
+        "evidence-attached"
+      ]
+    },
+    "state": {
+      "enum": [
+        "prepared",
+        "executing",
+        "observing",
+        "succeeded",
+        "failed",
+        "unknown",
+        "cleanup-verified",
+        "closed"
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "owner": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "maxLength": 128
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fences": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope_id",
+          "generation"
+        ],
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "maxLength": 128
+          },
+          "generation": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          }
+        }
+      }
+    },
+    "mode": {
+      "enum": [
+        "execute",
+        "reconcile",
+        "none"
+      ]
+    },
+    "observed_at_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "lease_expires_at_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9223372036854775807
+    },
+    "deadline_at_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    },
+    "intent_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 128
+    },
+    "evidence_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "maxLength": 128
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "previous_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "maxLength": 128
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "event_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "maxLength": 128
+    }
+  }
+}

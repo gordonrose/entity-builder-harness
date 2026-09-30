@@ -20,6 +20,7 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: package.script.deployment-realization-validate
 #     path: package.json

@@ -1,0 +1,31 @@
+{
+  "files": {
+    ".github/workflows/check.yml": {
+      "jobs": {
+        "check": {
+          "runs-on": "ubuntu-latest",
+          "steps": [
+            {
+              "run": "npm run check"
+            }
+          ]
+        }
+      },
+      "on": {
+        "workflow_dispatch": {}
+      }
+    },
+    "package.json": {
+      "scripts": {
+        "check": "bash scripts/04.deploy/check/script.sh",
+        "postcheck": "node scripts/04.deploy/hooks/after.mjs",
+        "precheck": "python3 scripts/04.deploy/hooks/before.py"
+      }
+    },
+    "scripts/04.deploy/check/script.py": "def main():\n    return 0\n",
+    "scripts/04.deploy/check/script.sh": "#!/usr/bin/env bash\nset -euo pipefail\nROOT=\"$(git rev-parse --show-toplevel)\"\ncd \"$ROOT\"\nexec python3 scripts/04.deploy/check/script.py \"$@\"\n",
+    "scripts/04.deploy/hooks/after.mjs": "export const after = true;\n",
+    "scripts/04.deploy/hooks/before.py": "def before():\n    return 0\n"
+  },
+  "schema": "estate-caller-fixture/v1"
+}

@@ -285,7 +285,6 @@ run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_contai
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_contracts.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_engine.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_finite_job_conformance.py'
-echo "Operational Realization Gate local tests passed."
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effect_contracts.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effect_engine.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_effects.py'
@@ -295,3 +294,13 @@ run_unit_suite scripts/04.deploy/operational-realization-gate 'test_artifact_adm
 run_unit_suite scripts/04.deploy/release-control/discovery 'test_cloudformation_inventory.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_cloudformation_coverage.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_dependency_target_boundary.py'
+
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_operation_journal.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_local_control_store.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_control_store_conformance.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_control_store_cli.py'
+run_unit_suite scripts/04.deploy/release-control/discovery 'test_estate_caller_inventory.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_estate_caller_coverage.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_adoption_migration.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_estate_caller_cli.py'
+echo "Operational Realization Gate local tests passed."

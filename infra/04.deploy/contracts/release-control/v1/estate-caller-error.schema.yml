@@ -1,0 +1,76 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.release-control.estate-caller-error.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Close safe estate command failures without raw paths, input values or authority.
+#   portability: {class: reusable, targets: [entity-builder]}
+#   used_by:
+#   - id: deploy.script.operational-realization-gate
+#     path: scripts/04.deploy/operational-realization-gate/script.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:estate-caller-error:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "verdict",
+    "authorized",
+    "release_eligibility",
+    "operation_authorization",
+    "qualification_verdict",
+    "findings"
+  ],
+  "properties": {
+    "schema": {
+      "const": "estate-caller-error/v1"
+    },
+    "scope": {
+      "const": "estate-source-analysis"
+    },
+    "verdict": {
+      "const": "blocked"
+    },
+    "authorized": {
+      "const": false
+    },
+    "release_eligibility": {
+      "const": "blocked"
+    },
+    "operation_authorization": {
+      "const": "blocked"
+    },
+    "qualification_verdict": {
+      "const": "blocked"
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "enum": [
+              "arguments-invalid",
+              "dependency-unavailable",
+              "source-analysis-failed",
+              "adoption-ledger-unreadable",
+              "adoption-migration-failed"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

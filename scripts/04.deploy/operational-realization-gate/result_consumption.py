@@ -37,6 +37,10 @@ ConsumptionFailure = release.ReleaseFailure
 # These are producer output contracts, not release pass states. Every successful
 # output is matched in full to a fresh, trusted producer invocation before use.
 PRODUCERS = {
+    "estate-caller-reconciliation/v1": {
+        "scope": "structural-caller-reconciliation", "verdict_field": "structural_verdict",
+        "success": "accounted", "closed_contract": "estate-caller-reconciliation",
+    },
     "source-operation-result/v1": {
         "scope": "operation-contracts", "verdict_field": "contracts_verdict", "success": "complete",
         "required": {"source_closure", "qualification_verdict", "target_id", "inventory_digest",
@@ -53,7 +57,7 @@ PRODUCERS = {
     "source-coverage-result/v1": {
         "scope": "source-coverage", "verdict_field": "verdict", "success": "covered",
         "required": {"inventory_digest", "coverage_digest", "policy_revision", "acceptance_obligations"},
-        "optional": {"compiled_release"},
+        "optional": {"compiled_release", "caller_reconciliation"},
         "digests": {"inventory_digest", "coverage_digest", "policy_revision"}, "rows": "acceptance_obligations",
     },
     "source-triage-result/v1": {
@@ -104,11 +108,61 @@ def load_contract(schema_dir=SCHEMA_DIR):
     return schema
 
 
+def validate_estate_success(result):
+    """Apply the full closed producer contract and its source-only invariants.
+
+    The producer has separate source and boundary findings, not the generic
+    findings field used by older receipts. A checksum alone is never evidence:
+    consume_result still requires a complete match with a fresh producer run.
+    """
+    schema = release.load_document(SCHEMA_DIR / "estate-caller-reconciliation.schema.yml",
+                                   "source-result-invalid")
+    constants = {"schema": "estate-caller-reconciliation/v1",
+                 "scope": "structural-caller-reconciliation", "authorized": False,
+                 "release_eligibility": "blocked", "operation_authorization": "blocked",
+                 "qualification_verdict": "blocked", "review_verdict": "not-evaluated"}
+    if (schema.get("$id") != "urn:release-control:estate-caller-reconciliation:v1"
+            or schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema"
+            or schema.get("type") != "object"
+            or not set(constants) <= set(schema.get("required", []))
+            or any(schema.get("properties", {}).get(key) != {"const": value}
+                   for key, value in constants.items())):
+        raise ConsumptionFailure("source-result-invalid")
+    stack = [schema]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, dict):
+            if (any(key in item for key in ("$ref", "$dynamicRef", "$recursiveRef"))
+                    or item.get("type") == "object" and item.get("additionalProperties") is not False):
+                raise ConsumptionFailure("source-result-invalid")
+            stack.extend(item.values())
+        elif isinstance(item, list):
+            stack.extend(item)
+    Draft202012Validator.check_schema(schema)
+    if next(Draft202012Validator(schema).iter_errors(result), None):
+        raise ConsumptionFailure("source-result-invalid")
+    raw = {(row["code"], row["source_id"]) for row in result["raw_source_findings"]}
+    resolved = {(row["code"], row["source_id"]) for row in result["resolved_source_findings"]}
+    remaining = {(row["code"], row["source_id"]) for row in result["remaining_source_findings"]}
+    observations = result["resolved_observations"]
+    if (result["boundary_findings"] or remaining or raw != resolved
+            or any(code != "opaque-executable" for code, _ in resolved)
+            or len({row["observation_id"] for row in observations}) != len(observations)
+            or len({row["node_id"] for row in observations}) != len(observations)
+            or result["roots"] > result["nodes"] or len(observations) > result["nodes"]
+            or resolved and not observations
+            or release.digest_document({key: value for key, value in result.items()
+                                        if key != "result_digest"}) != result["result_digest"]):
+        raise ConsumptionFailure("source-result-invalid")
+
+
 def validate_success(result):
     """Check safe top-level semantics before comparing all nested source data."""
     release.bounded_json(result)
     if not isinstance(result, dict):
         raise ConsumptionFailure("source-result-invalid")
+    if result.get("schema") == "source-adoption-migration/v1":
+        raise ConsumptionFailure("source-result-proposal-unconsumable")
     if not isinstance(result.get("schema"), str) or result["schema"] not in PRODUCERS:
         raise ConsumptionFailure("source-result-producer-unsupported")
     producer = PRODUCERS[result["schema"]]
@@ -118,6 +172,9 @@ def validate_success(result):
         raise ConsumptionFailure("source-result-authority-invalid")
     if result.get(producer["verdict_field"]) != producer["success"]:
         raise ConsumptionFailure("source-result-analysis-unsuccessful")
+    if producer.get("closed_contract") == "estate-caller-reconciliation":
+        validate_estate_success(result)
+        return producer
     required = {"schema", "scope", "authorized", "findings", producer["verdict_field"]} | producer["required"]
     if not required <= result.keys() or result.keys() - required - producer["optional"]:
         raise ConsumptionFailure("source-result-invalid")
@@ -159,6 +216,13 @@ def validate_success(result):
                     or result["compiled_release"].get("schema") != "release-control-result/v1"):
                 raise ConsumptionFailure("source-result-invalid")
             validate_success(result["compiled_release"])
+        if "caller_reconciliation" in result:
+            caller_result = result["caller_reconciliation"]
+            if (not isinstance(caller_result, dict)
+                    or caller_result.get("schema") != "estate-caller-reconciliation/v1"
+                    or caller_result.get("inventory_digest") != result["inventory_digest"]):
+                raise ConsumptionFailure("source-result-invalid")
+            validate_success(caller_result)
     elif result["schema"] == "source-triage-result/v1":
         counts = result["counts"]
         names = {"sources", "source_findings", "entries", "classified_findings"}

@@ -2145,3 +2145,153 @@ artifact producers, orchestrator/caller adoption, hosted validation and approved
 target qualification remain queued. PostgreSQL Stage 6 stays paused. No real
 local stop condition exists; no external provider mutation, publication, push,
 merge or other-worktree change occurred.
+
+### Budget-stop handoff — implementation stopped
+
+The user reported 39% weekly tokens remaining and requested stopping with a
+summary at 20%. The weekly meter is not available to this agent. Automatic
+approval review rejected a sub-agent's operation-actions test command because
+it interpreted that budget instruction as an immediate stop. All three agents
+were interrupted and told not to retry; implementation and testing stopped.
+This record does not claim that 20% was reached.
+
+Last accepted task checkpoint: `393a8361` (source units 10–12); session bookkeeping:
+`b1966b7a`. Final accepted canonical evidence: 1,455 tests / 38 suites, 51 metadata
+headers, real disposable dependency effects, pinned real signature conformance,
+and structural infrastructure-reference comparison. The last accepted inventory
+has 376 sources and 223 unresolved findings. No AWS/GitHub/DNS/secrets/live Stage 6
+change, publication, push, merge or other-worktree mutation occurred.
+
+Uncommitted next-unit integration in this worktree is incomplete. Eleven frozen
+local-control draft files were copied after exact hash checks: four schemas,
+four helpers and three test modules. The isolated draft had 62 passing tests and
+real ten-case process conformance (seven subprocesses, three killed). Added local
+CLI, closed error schema, dispatch, schema registry and canonical-suite entries
+have not completed combined verification. The public wrapper did successfully
+run actual local process conformance. The new boundary suite ran 20 tests: 19
+passed and one failed with three subtest errors due solely to the test calling
+nonexistent `result_consumption.consume`. Correct it to
+`result_consumption.consume_result(self.result, purpose)` when work resumes,
+then rerun focused verification; do not report this integration accepted yet.
+Documentation, ADR decision, fresh durable receipt, final independent review and
+canonical clean verification remain pending. No unfinished files were committed,
+removed, reset or discarded.
+
+Scratch work is preserved alongside the worktree under
+`iaas-release-control-batch-2026-09-29/`:
+
+- `control-store-draft/`: accepted isolated Unit A source with known hashes;
+  integration files were copied, not blindly overwritten.
+- `estate-caller-draft/`: author reports 66 focused tests passed (26 collector,
+  25 reconciliation, 15 migration). Final independent review, documentation,
+  manifest, compatibility checks, public integration and current inventory
+  acceptance remain incomplete. Keep all declarations pending; do not infer
+  ownership, retirement or semantic coverage from reachability.
+- `finite-recovery-draft/`: partial shared-engine recovery adapter and typed
+  attempt/observation schemas; existing engine regressions passed 63 + 45.
+  The newly authored action-record schema/helper/tests are unverified after
+  the blocked command. Transactional action attachment integration, recovery
+  controller, real interruption conformance and documentation remain open.
+  These files are scratch drafts and must not be copied wholesale.
+
+Resume with durable-store CLI repair and focused tests, then review/integrate
+caller coverage and complete finite-engine interruption reconciliation. Preserve
+immutable scope/fence identities and do not retry a consumed create/start request
+merely because a lookup is empty. Remaining programme work includes package/export
+and command coverage, actual artifact producers/scanner policy, production durable
+stores, AWS adapters and per-task preflight, release decisions/workflow/caller
+adoption, approved target qualification and ongoing recovery/monitoring proof.
+The 28-day observation requirement remains outside the October 3 target. Live
+PostgreSQL Stage 6 stays paused until the required IaaS readiness gates pass.
+
+### Source batch resumed — 2026-09-30
+
+The user explicitly resumed with `go` after the next-step explanation. Resume the
+preserved durable-record integration, caller-coverage draft and finite-engine
+recovery work. The prior stop and rejected test remain historical; this is new
+user authorization to continue local implementation and focused verification.
+No external mutation, publication, live PostgreSQL Stage 6 or new authority is
+approved. All prior unfinished drafts remain unaccepted until reviewed and tested.
+The known consumer-test API typo is repaired first. Independent draft work and
+review proceed in parallel with isolated ownership; heavy verification remains
+serialized. The weekly meter remains unavailable, so no usage percentage is
+inferred. Local acceptance checkpoints and explicit evidence/next-unit records
+retain the existing source-batch rules.
+
+### Resumed delivery batch — implementation and focused verification
+
+Local durable operation-control contracts, journal/lease/fencing/evidence store,
+existing-gate CLI, fixtures, documentation and ADR 0039 are integrated. The known
+test API typo was corrected; 82 tests initially passed. Independent review found
+that conformance did not bind the public wrapper bytes. Seven helper/wrapper
+files are now bound, with one new mutation test: 83 registered focused tests;
+12 conformance and 20 CLI cases passed after the change. Fresh public conformance
+passed ten cases, seven real subprocesses and three deliberate kills with exit 0
+and empty stderr. Safe normalized evidence is retained in the 2026-09-30 control
+store review. Full canonical acceptance remains pending.
+
+The reviewed aggregate-caller draft was integrated only after exact base and
+source hash checks: twelve additions and one compiler modification. It has 66
+focused cases and independent review, plus selected-workflow compatibility. The
+existing public coverage mode now supplies its current root for fresh internal
+reconciliation; all 34 source-coverage compatibility tests passed. Public new-mode
+and result-consumer integration is being completed. Adoption results deliberately
+remain pending proposals and cannot be consumed as authority or approved review.
+Final same-snapshot inventory/reconciliation/adoption evidence is still pending.
+
+Finite-engine recovery remains isolated draft work. Review found a real ordering
+defect: unresolved cleanup could be followed by start using an earlier created
+observation. That must be repaired and independently retested before integration.
+An automatic approval review briefly misclassified the owned scratch directory
+as another worktree. Read-only ownership/Git checks established it is a plain
+same-owner directory; the narrowed reviewed source action was then approved.
+No other worktree was changed. Real Docker interruption proof, exact identity
+reconciliation and bounded cleanup remain required acceptance work.
+
+Next: accept and checkpoint durable controls plus caller coverage after frozen
+canonical verification, then complete and integrate the existing finite-engine
+recovery unit. Provider adapters/stores, actual artifact producer/scanner policy,
+remaining source coverage, orchestration and approved live qualification remain
+open. No current external mutation or policy boundary blocks this local batch.
+
+### Thirteenth and fourteenth source delivery units — accepted batch
+
+Local durable operation controls and aggregate repository caller coverage are
+complete within their declared source-only boundaries. Schemas, implementations,
+positive/negative fixtures and tests, existing-gate public modes, documentation,
+ADR 0039 and dated normalized review evidence are included. Final frozen clean
+verification exited 0: **1,645 tests / 46 suites**, legacy smoke, provider/network
+boundaries and **56 metadata headers** passed. Full log SHA-256:
+`2e90981daf46dbc6edd31b57b1b6362570e0ab6dd13241af96c42ad710bcb986`.
+
+The durable-store unit has 83 focused tests. Fresh public conformance passed ten
+cases, seven subprocesses and three deliberate kills with exit 0/empty stderr.
+Receipt: `sha256:669ca23d3884042cf8a412371cbe7e1c24029e877bee632d1981ab243cb6d080`.
+Intent, scope conflicts across releases, fences, journal/evidence checks, lease
+expiry and cleanup persist across tested process interruption. Seven helper and
+public wrapper files are bound. This local reference does not prove host reboot,
+power loss, distributed operation, independent authenticity or production policy.
+All three common consumer purposes refuse the conformance receipt.
+
+The caller unit has 66 collector/reconciliation/migration tests, 24 public tests,
+45 consumer and 19 consumer-CLI tests, including existing compatibility cases.
+Existing coverage (34 tests) and selected workflow callers (31) also passed.
+Independent review accepted closed output validation and fresh recomputation.
+Final same-source public outputs matched independent recomputation: 403 sources,
+175 roots, 602 nodes, 522 edges and 188 structural observations. Of 240 raw source
+findings, exactly 20 resolve structurally and 220 remain. Another 350 graph boundary
+findings have different scope and are not an additive source-defect count.
+Inventory: `sha256:f02f8c06bf4a6d96a0d0c7bc46585bade9d8dcecd6eb40949c47df57f0e81356`.
+All 403 adoption rows remain pending (130 added, 21 changed, 252 unchanged, zero
+removed). The historical ledger is unchanged. Both actual public modes return 1,
+as required for unresolved coverage and pending adoption; they confer no authority.
+
+The existing finite-engine recovery draft independently passed 70 focused tests,
+108 shared-engine regressions and eight real interruption cases. It remains outside
+the repository and unaccepted until public integration and fresh integrated proof.
+An unresolved reserved create correctly remains unknown without blind retry.
+The explicit next delivery unit is that recovery integration. Remaining package
+and action semantics, production artifact evidence, durable provider stores, AWS
+adapters/preflight, orchestration/adoption and approved target qualification remain
+open. PostgreSQL Stage 6 stays paused. There is no current local stop condition;
+no provider mutation, publication, push, merge or other-worktree change occurred.

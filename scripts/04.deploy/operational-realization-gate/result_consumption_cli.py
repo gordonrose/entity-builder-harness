@@ -40,7 +40,9 @@ def reject_safely(code, purpose):
 def recompute(arguments):
     """Dispatch only known read-only source producers; never inspected commands."""
     options = {value.split("=", 1)[0] for value in arguments if value.startswith("--")}
-    source_modes = options & {"--coverage", "--triage", "--callers", "--operations"}
+    source_modes = options & {"--coverage", "--triage", "--callers", "--operations", "--estate-callers"}
+    if options & {"--adoption-migration", "--previous-adoption-ledger"}:
+        raise release.ReleaseFailure("source-result-proposal-unconsumable")
     if options & {"--consume-result", "--purpose", "--discover", "--ledger-template",
                   "--review-template", "--operation-template", "--expected-result"}:
         raise release.ReleaseFailure("arguments-invalid")
@@ -51,7 +53,10 @@ def recompute(arguments):
             raise release.ReleaseFailure("arguments-invalid")
         if "--callers" in options and "--caller-review" not in options:
             raise release.ReleaseFailure("arguments-invalid")
-        if "--operations" in options:
+        if "--estate-callers" in options:
+            import estate_caller_cli
+            producer = estate_caller_cli.main
+        elif "--operations" in options:
             if "--operation-contracts" not in options or "--caller-review" not in options:
                 raise release.ReleaseFailure("arguments-invalid")
             import operation_contracts_cli
@@ -94,6 +99,10 @@ def main(argv=None):
             decision = consumption.consume_result(None, purpose)
         else:
             result = release.load_document(args.consume_result, "source-result-unreadable")
+            # A proposal never becomes a receipt, even if its pending rows or
+            # mode were changed. Reject it before invoking any producer.
+            if isinstance(result, dict) and result.get("schema") == "source-adoption-migration/v1":
+                raise release.ReleaseFailure("source-result-proposal-unconsumable")
             decision = consumption.consume_result(result, purpose, expected_result=recompute(producer_args))
     except release.ReleaseFailure as error:
         decision = reject_safely(error.code, purpose)

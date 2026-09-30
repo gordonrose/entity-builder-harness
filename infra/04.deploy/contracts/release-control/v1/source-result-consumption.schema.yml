@@ -57,7 +57,8 @@
             "source-coverage-result/v1",
             "source-triage-result/v1",
             "source-caller-result/v1",
-            "source-operation-result/v1"
+            "source-operation-result/v1",
+            "estate-caller-reconciliation/v1"
           ]
         },
         "scope": {
@@ -66,7 +67,8 @@
             "source-coverage",
             "finding-triage",
             "caller-accounting",
-            "operation-contracts"
+            "operation-contracts",
+            "structural-caller-reconciliation"
           ]
         },
         "analysis_verdict": {
@@ -82,11 +84,84 @@
         }
       },
       "oneOf": [
-        {"properties": {"schema": {"const": "release-control-result/v1"}, "scope": {"const": "release-definition"}, "analysis_verdict": {"const": "compiled"}}},
-        {"properties": {"schema": {"const": "source-coverage-result/v1"}, "scope": {"const": "source-coverage"}, "analysis_verdict": {"const": "covered"}}},
-        {"properties": {"schema": {"const": "source-triage-result/v1"}, "scope": {"const": "finding-triage"}, "analysis_verdict": {"const": "complete"}}},
-        {"properties": {"schema": {"const": "source-caller-result/v1"}, "scope": {"const": "caller-accounting"}, "analysis_verdict": {"const": "accounted"}}},
-        {"properties": {"schema": {"const": "source-operation-result/v1"}, "scope": {"const": "operation-contracts"}, "analysis_verdict": {"const": "complete"}}}
+        {
+          "properties": {
+            "schema": {
+              "const": "release-control-result/v1"
+            },
+            "scope": {
+              "const": "release-definition"
+            },
+            "analysis_verdict": {
+              "const": "compiled"
+            }
+          }
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "source-coverage-result/v1"
+            },
+            "scope": {
+              "const": "source-coverage"
+            },
+            "analysis_verdict": {
+              "const": "covered"
+            }
+          }
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "source-triage-result/v1"
+            },
+            "scope": {
+              "const": "finding-triage"
+            },
+            "analysis_verdict": {
+              "const": "complete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "source-caller-result/v1"
+            },
+            "scope": {
+              "const": "caller-accounting"
+            },
+            "analysis_verdict": {
+              "const": "accounted"
+            }
+          }
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "source-operation-result/v1"
+            },
+            "scope": {
+              "const": "operation-contracts"
+            },
+            "analysis_verdict": {
+              "const": "complete"
+            }
+          }
+        },
+        {
+          "properties": {
+            "schema": {
+              "const": "estate-caller-reconciliation/v1"
+            },
+            "scope": {
+              "const": "structural-caller-reconciliation"
+            },
+            "analysis_verdict": {
+              "const": "accounted"
+            }
+          }
+        }
       ],
       "required": [
         "schema",
@@ -127,7 +202,8 @@
               "source-result-snapshot-mismatch",
               "arguments-invalid",
               "source-result-unreadable",
-              "producer-recompute-failed"
+              "producer-recompute-failed",
+              "source-result-proposal-unconsumable"
             ]
           }
         },
