@@ -2535,3 +2535,51 @@ block is resolved by this explicit approval. Session bookkeeping can now finish.
 The user reports 26% weekly allowance remaining; the requested stopping floor
 is still 20%. The current request is this housekeeping action and an updated
 estimate of remaining slices. No new implementation unit has been started.
+
+
+### 2026-09-30 — fixed progress baseline requested
+
+The user challenged the almost unchanged remaining-slice estimate and explicitly
+requested a bounded ledger showing progress between runs. Added B01 in
+`docs/04.deploy/plans/iaas-release-control-progress.md` and linked it from the top
+of the implementation plan. It credits all sixteen accepted units, maps the
+seven delivered since the earlier estimate, and defines stable R1–R8 milestones
+with explicit remaining acceptance checkpoints, dependencies, approval boundaries
+and a per-run delta format. No implementation gate is newly accepted by this
+reporting change and no programme requirement is removed or added.
+
+The 15–20 and 12–17 forecasts lacked a stable decomposition and are superseded
+as progress measures. Existing requirements were underestimated, especially
+whole-estate coverage and the separation between local controls and production
+integration. Future estimates must identify their named work and assumptions;
+routine repairs and receipt refreshes do not become extra delivery slices.
+Source/local acceptance, hosted validation, live authorization and the 28-day
+observation window remain distinct. PostgreSQL readiness retains its existing
+preflight and governed target-qualification conditions.
+
+Next implementation remains R1.2, immutable action material and input/default
+reconciliation; current-output image requalification is explicitly R2.1.
+This requested documentation task does not start another implementation batch.
+No local stop condition exists. The user last reported 26% weekly allowance;
+the 20% stopping instruction remains active and the account meter is unavailable.
+ADR disposition: no new architectural decision; this is a reporting baseline
+for the unchanged plan. Documentation verification and independent traceability
+review are pending before checkpoint.
+
+
+B01 verification completed: independent read-only review covered Phases 2–9,
+accepted-unit credit and PostgreSQL readiness wording. Corrections explicitly
+require SBOM component-completeness evidence, separate candidate runtime and
+per-task no-effect proof, encryption posture, bootstrap dependency order,
+exception closure, terminal receipts before cleanup, worker/resource steady
+state and verified control alerts. No checkpoint IDs or requirements were added.
+Local consistency validation passed: 16 accepted-unit IDs, eight milestone IDs,
+22 unique remaining acceptance checkpoints (not a slice forecast), and 18 local
+links/anchors. No remaining checkpoint is falsely marked complete. The original
+plan text from Section 1 onward is byte-for-byte unchanged; only a progress-index
+section was inserted. Metadata validation passed for both governed documents;
+`git diff --check` passed. Implementation suites were not rerun for this docs-only
+change. Three files changed: the new ledger, plan index and current session log.
+No runtime implementation, provider, hosted setting or other worktree changed.
+Next delivery remains R1.2. No real local stop condition exists; external and
+policy decisions remain attached to their explicit later checkpoints.

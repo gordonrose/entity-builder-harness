@@ -22,6 +22,20 @@ used_by:
 -->
 # IaaS composition and release-control-plane implementation plan
 
+## Current progress and fixed remaining backlog
+
+Use the [progress ledger](../../../../docs/04.deploy/plans/iaas-release-control-progress.md)
+for the current accepted-delivery register, stable R1–R8 milestones, remaining
+acceptance checkpoints, dependencies and changes between implementation runs.
+Baseline B01 records 16 accepted delivery units, including seven since the old
+15–20 estimate. Those units do not close the full AWS release programme.
+
+The earlier 15–20 and later 12–17 slice forecasts lacked a fixed decomposition
+and are superseded as progress measures. Future batches report against ledger
+IDs and named unmet criteria, with explicit scope/estimate changes. Requirements
+and approval boundaries below remain unchanged. The dated delivery entries and
+Section 8 retain historical sequencing; the ledger owns the current next queue.
+
 ## 1. Outcome
 
 Make a release a **reviewed realization of one declared environment**, not a
