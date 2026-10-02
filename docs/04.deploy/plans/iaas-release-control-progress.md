@@ -27,44 +27,37 @@ is marked complete or exempt by deferral. B02 retained 16 accepted deliveries;
 B03 adds three bounded components; B04 accepts the selected store conformance
 component. Their exact boundaries are recorded below.
 
-## Current position — P01–P15 source delivery, 2026-10-01
+## Current position — P16 hosted validation passed; P17 diagnostic repair, 2026-10-02
 
-**Remaining MVP work is fixed in [P16–P33 below](#phase-1--fixed-mvp-closure-ledger).**
-P01–P15 compile the selected graph, bind baseline and candidate separately,
-define the exact selected store/controller, narrow its transport, and put the
-candidate and relational callers behind the shared receipt boundary. Source
-authority remains blocked. They do not prove live evidence or a provider effect.
+P01–P15 are committed on `main` at `89fdd3fd9fd261cb18f590860e1675061ad23d8b`.
+They compile the selected graph, bind baseline and candidate separately, define
+the selected store/controller, narrow its transport, and put candidate and
+relational callers behind the shared receipt boundary. Source authority remains
+blocked; this is not live provider-effect evidence.
 
-**P01–P15 are complete as uncommitted source deliveries.**
-B03 accepted the selected blueprint, exact-image publication handoff and selected
-task/passive preflight (U17–U19). B04 adds U20's versioned selected-operation and
-conditional shared-store source conformance. The latest fresh canonical run
-passed **2,173 tests in 68 suites**, zero skips, and metadata checks for 69 files.
-[U20 acceptance and next integration](release-control-source-adoption/2026-09-30-selected-store-conformance/README.md)
-bind the exact files, tests and scope limits. Independent review found no blocker.
+P16 passed twice at `2715fd725ead82e3a824d8ba99d0308e30a9f1fb`: hosted runs
+`37047515937` and `37047564139` completed with pinned actions and locked
+dependencies. P17 then passed its source, OIDC, ECR-login and qualification-input
+steps, but failed inside local image qualification before ECR publication. No
+image was pushed and no service changed. The workflow repair now emits only that
+qualifier's normalized, redacted JSON result on failure; it is locally verified
+and awaits a fresh P16 run on its revised immutable source binding before P17 is
+retried.
 
-The new component checks ownership and immutable operation/evidence bindings
-using an injected fixture transport. It does not contact AWS, run a controller,
-prove production durability or grant operation authority. The prior actual image
-and database proofs remain historical evidence for their recorded bytes. The
-first passive AWS inspection blocked on stale drift; its approval to refresh
-that evidence remains pending. No AWS mutation or hosted publication occurred.
+P19's renewed passive AWS inspection confirms the selected account and artifact
+stack with current `IN_SYNC` drift evidence. It correctly stops at the known
+foundation-stack drift. That state has not been bypassed and requires the later
+reviewed remediation/change-plan route.
 
-M1, M2, M3 and M4 remain partial; M5 remains open. Next integrate one existing
-candidate start, health observation and controlled stop through durable control:
-authenticated admission, separate start/stop intent, unknown-outcome recovery,
-exact task identity and selected-caller refusal. Actual store/role bootstrap,
-hosted artifact acceptance and the specifically approved staging rehearsal
-remain separate acceptance boundaries. The approved operating policy covers
-source implementation only. The live MVP is not complete within this timed batch.
-That implementation batch ended at a clean checkpoint before 21:10 UTC. The
-user subsequently reported 14 percent allowance remaining; no new runtime batch
-is started by the B05 checklist update.
+M1–M4 remain partial and M5 remains open. The next reachable operation is a
+fresh P16 source-validation run for the P17 repair; no other row is promoted or
+added to scope.
 
 ## Phase 1 — fixed MVP closure ledger
 
-**B05 replacement baseline, source checkpoint `e8909569`: 29 remaining
-checkpoints; 4/33 source-closed in the uncommitted working tree; 0/33 live-proven.** The 20 accepted U01–U20 delivery units are
+**Current closure state: P01–P15 source-closed on `main`; P16 complete for the
+prior reviewed revision and must be rerun for the P17 repair; P19 partially
+observed; 0/33 live-proven.** The 20 accepted U01–U20 delivery units are
 prerequisite credit and are not counted again. This is the only completion
 ledger for the MVP. It ends when the existing PostgreSQL Stage 6 route is safe
 to propose for its own execution approval; it does not execute or complete
@@ -76,25 +69,25 @@ completion credit and must not direct further work.
 
 | ID | Fixed closure check | Depends on | Evidence required to close | Status at B05 | Approval boundary |
 | --- | --- | --- | --- | --- | --- |
-| P01 | Freeze the selected staging release graph: resources, commands, task profiles, owners and recovery routes. | U17 | Compiler rejects an unowned, hidden or changed selected subject. | Complete — source, uncommitted | Source authorized |
-| P02 | Bind current baseline separately from the intended source, image and task revisions. | P01 | Swapped, missing or mutable identity is refused. | Complete — source, uncommitted | Source authorized |
-| P03 | Define the closed qualification-operation input, including authority expiry, cost/attempt limit and cleanup route. | P02 | Extra, unsafe or missing fields fail validation. | Complete — source, uncommitted | Source authorized |
-| P04 | Admit only current, complete 17-gate evidence; refuse source-only, stale or absent authority. | P03 | Positive and tampered admission fixtures pass and fail as expected. | Complete — source refusal, uncommitted | Source authorized |
-| P05 | Record separate start and stop intent before a selected provider effect. | P03, U20 | Adapter fixture cannot issue either effect before its intent exists. | Complete — source, uncommitted | Source authorized |
-| P06 | Bind one request token and validate returned task, cluster, revision and image; emit redacted evidence only. | P05 | Lost-response and wrong-identity fixtures fail without a second request or leaked handle. | Complete — source, uncommitted | Source authorized |
-| P07 | Recover intent after restart, fence an expired writer and reopen scope only after verified closure. | P05–P06 | Restart, expiry and unresolved-outcome fixtures fail closed. | Complete — source, uncommitted | Source authorized |
-| P08 | Add the minimum selected journal/evidence-store infrastructure contract, with exact region, encryption, retention and recovery settings. | U20, approved policy | Template/schema tests reject a broadened resource or changed retention/recovery setting. | Complete — source, uncommitted | Source complete; creation separate |
-| P09 | Add the least-privilege selected IAM contract for the journal and evidence operations. | P08 | Negative policy fixtures reject unrelated resources or broad actions. | Complete — source, uncommitted | Source complete; IAM application separate |
-| P10 | Implement bounded authenticated selected AWS transport and immutable evidence readback. | P08–P09 | Malformed, denied and unknown responses fail closed; mismatched evidence is refused. | Complete — source, uncommitted | Source complete; live transport separate |
-| P11 | Route the existing candidate start/observe/stop wrapper through P04–P10. | P04–P10 | Direct candidate effect without admission/intent is refused in focused tests. | Complete — source, uncommitted | Source complete; live receipts separate |
-| P12 | Route the existing relational bootstrap, migration, relay, worker and restore wrappers through the same boundary. | P04–P10 | Focused caller tests refuse a direct relational effect or replay. | Complete — source, uncommitted | Source complete; live receipts separate |
-| P13 | Refuse every other selected legacy mutation route and document the supported release/recovery command. | P11–P12 | Static caller test finds no permitted selected-path bypass. | Complete — source, uncommitted | Source complete; release remains blocked |
-| P14 | Wire the protected hosted workflow to the supported immutable command and inputs. | P13 | Workflow tests reject mutable refs, unbound image and alternate command. | Complete — source, uncommitted | Source prepared; hosted run separate |
-| P15 | Run the focused source regression and record the release-control evidence for P01–P14. | P01–P14 | Relevant positive and negative tests pass at one recorded source revision. | Complete — source, uncommitted | Source evidence recorded; hosted validation separate |
-| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Open — GitHub | Hosted run approval |
-| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Open — publication | Publication approval |
+| P01 | Freeze the selected staging release graph: resources, commands, task profiles, owners and recovery routes. | U17 | Compiler rejects an unowned, hidden or changed selected subject. | Complete — source on `main` | Source authorized |
+| P02 | Bind current baseline separately from the intended source, image and task revisions. | P01 | Swapped, missing or mutable identity is refused. | Complete — source on `main` | Source authorized |
+| P03 | Define the closed qualification-operation input, including authority expiry, cost/attempt limit and cleanup route. | P02 | Extra, unsafe or missing fields fail validation. | Complete — source on `main` | Source authorized |
+| P04 | Admit only current, complete 17-gate evidence; refuse source-only, stale or absent authority. | P03 | Positive and tampered admission fixtures pass and fail as expected. | Complete — source refusal on `main` | Source authorized |
+| P05 | Record separate start and stop intent before a selected provider effect. | P03, U20 | Adapter fixture cannot issue either effect before its intent exists. | Complete — source on `main` | Source authorized |
+| P06 | Bind one request token and validate returned task, cluster, revision and image; emit redacted evidence only. | P05 | Lost-response and wrong-identity fixtures fail without a second request or leaked handle. | Complete — source on `main` | Source authorized |
+| P07 | Recover intent after restart, fence an expired writer and reopen scope only after verified closure. | P05–P06 | Restart, expiry and unresolved-outcome fixtures fail closed. | Complete — source on `main` | Source authorized |
+| P08 | Add the minimum selected journal/evidence-store infrastructure contract, with exact region, encryption, retention and recovery settings. | U20, approved policy | Template/schema tests reject a broadened resource or changed retention/recovery setting. | Complete — source on `main` | Source complete; creation separate |
+| P09 | Add the least-privilege selected IAM contract for the journal and evidence operations. | P08 | Negative policy fixtures reject unrelated resources or broad actions. | Complete — source on `main` | Source complete; IAM application separate |
+| P10 | Implement bounded authenticated selected AWS transport and immutable evidence readback. | P08–P09 | Malformed, denied and unknown responses fail closed; mismatched evidence is refused. | Complete — source on `main` | Source complete; live transport separate |
+| P11 | Route the existing candidate start/observe/stop wrapper through P04–P10. | P04–P10 | Direct candidate effect without admission/intent is refused in focused tests. | Complete — source on `main` | Source complete; live receipts separate |
+| P12 | Route the existing relational bootstrap, migration, relay, worker and restore wrappers through the same boundary. | P04–P10 | Focused caller tests refuse a direct relational effect or replay. | Complete — source on `main` | Source complete; live receipts separate |
+| P13 | Refuse every other selected legacy mutation route and document the supported release/recovery command. | P11–P12 | Static caller test finds no permitted selected-path bypass. | Complete — source on `main` | Source complete; release remains blocked |
+| P14 | Wire the protected hosted workflow to the supported immutable command and inputs. | P13 | Workflow tests reject mutable refs, unbound image and alternate command. | Complete — source on `main` | Source prepared; hosted run separate |
+| P15 | Run the focused source regression and record the release-control evidence for P01–P14. | P01–P14 | Relevant positive and negative tests pass at one recorded source revision. | Complete — source evidence on `main` | Source evidence recorded; hosted validation separate |
+| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Partial — passed twice at `2715fd72`; rerun required for P17 repair | Hosted run approval |
+| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Blocked — first hosted build failed before publication; safe diagnostic repair ready | Publication approval |
 | P18 | Admit the published image with current SBOM, scan and provenance/signature receipts. | P17 | Missing, stale or mismatched receipt blocks admission. | Open — hosted | Hosted/publication approval |
-| P19 | Refresh passive target reconciliation: selected account, region, identities and drift. | Current AWS access | Fresh read-only report binds the target and rejects stale drift. | Open — read-only AWS | Read-only approval |
+| P19 | Refresh passive target reconciliation: selected account, region, identities and drift. | Current AWS access | Fresh read-only report binds the target and rejects stale drift. | Partial — account/artifact stack observed; known foundation drift blocks verdict | Read-only approval |
 | P20 | Generate and review the immutable selected change/effect, cost, rollback and cleanup plan. | P17–P19 | Unexpected resource, permission, destructive action, cost or scope blocks the plan. | Open — read-only AWS | Change-plan approval |
 | P21 | Provision the approved minimum journal/evidence resources and selected permissions. | P08–P10, P20 | Inspection proves exact account/region, encryption, retention and permissions. | Open — AWS effect | Resource/IAM approval |
 | P22 | Prove competing-writer refusal, restart recovery and evidence readback against the provisioned store. | P21 | Live receipts show one writer only and unresolved outcomes fail closed. | Open — AWS effect | Controlled recovery approval |

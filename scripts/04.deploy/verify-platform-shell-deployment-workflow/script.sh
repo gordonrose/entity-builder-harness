@@ -206,6 +206,7 @@ for required_text, message in {
     "qualified_publication.py": "build must verify source and image handoff before publication",
     "--package-cache": "build must consume verified package cache",
     "GITHUB_SHA": "handoff must bind the current workflow commit",
+    'cat "$RUNNER_TEMP/qualified-image/result.json" >&2': "a failed local qualification must emit only its normalized safe result",
 }.items():
     require(required_text in build_run, message)
 require("--base-image" not in build_run and "--tag" not in build_run,

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: github.workflow.deploy-platform-shell-staging
-#   version: 2
+#   version: 3
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -177,11 +177,14 @@ jobs:
           git diff --cached --quiet
           git ls-files --others --exclude-standard -z | python3 -c 'import sys; raise SystemExit(bool(sys.stdin.buffer.read(1)))'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --qualify-local \
+          if ! bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --qualify-local \
             --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
             --package-cache "$RUNNER_TEMP/qualified-packages" \
             --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \
-            > "$RUNNER_TEMP/qualified-image/result.json"
+            > "$RUNNER_TEMP/qualified-image/result.json"; then
+            cat "$RUNNER_TEMP/qualified-image/result.json" >&2
+            exit 1
+          fi
           python3 -I -B scripts/04.deploy/operational-realization-gate/qualified_publication.py \
             --source-root . --scratch-root "$RUNNER_TEMP/qualified-image" \
             --publication-directory "$RUNNER_TEMP/qualified-image/handoff" \

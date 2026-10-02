@@ -146,3 +146,7 @@ untracked path may exist. NUL-separated path output also rejects unusual filenam
 without printing source names. Ignored caches remain allowed. Disposable Git
 fixtures verify clean/ignored acceptance and staged, unstaged, untracked,
 unusual-name, and wrong-HEAD refusal at both entry boundaries.
+
+If the local qualification fails, the workflow writes only its normalized,
+redacted JSON result to the hosted log before stopping. It neither uploads the
+scratch directory nor exposes raw container, package, or provider output.

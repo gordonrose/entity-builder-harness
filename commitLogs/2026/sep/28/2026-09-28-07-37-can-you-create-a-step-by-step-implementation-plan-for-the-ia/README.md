@@ -4,7 +4,7 @@
 id: 2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia
 task: can you create a step by step implementation plan for the IaaS work we've discussed above?
 branch: chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia
-worktree: /home/owner/projects/entity-builder-harness-001-worktrees/chat_2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia-3394027405
+worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia-3394027405
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-09-28T06:37:23Z
@@ -61,6 +61,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Raised: Independent review confirms six source slices but identifies unproven execution and hosted acceptance
   Resolution: Preserve source-only authority limits. Checkpoint the locally verified foundation; next pin and execute Node, npm and TypeScript with the complete package closure in isolated disposable copies. Publication and hosted acceptance remain pending approval.
 
+
+- Raised: P17 hosted image qualification failed before publication
+  Resolution: Run 37050923795 passed source checks, OIDC, ECR login and qualification-input acquisition, then failed inside local image qualification. No image was pushed and no service changed. The workflow now emits only the qualifier's normalized redacted JSON error on failure; focused checks passed and P16 will be repeated before P17 reruns.
+
 ## Decisions Made
 
 - Consolidate existing deploy checks behind one composition model and controlled
@@ -86,6 +90,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Decision: Keep IaaS release-control implementation primary; PostgreSQL remains a later readiness milestone
   Rationale: The user clarified that PostgreSQL readiness questions were not a scope change, then authorized the reusable finite-job slice. Extend the existing engine and wrapper with fixture conformance; retain independent semantic, artifact, durable-control and AWS gates.
 
+
+- Decision: Keep P17 failure evidence normalized and redacted
+  Rationale: The hosted workflow writes only result.json produced by the existing qualifier to its failure log. It does not upload scratch output or weaken clean-source, image-handoff, source-binding, scan, attestation, or publication gates.
+
 ## Context Hygiene
 
 
@@ -108,6 +116,14 @@ can you create a step by step implementation plan for the IaaS work we've discus
 
 - Summary: Ninth IaaS source unit completed: final clean run passed 1,165 tests in 29 suites; real eleven-case finite conformance and existing product-server compatibility passed. Alternate-root implementation mismatch was repaired and independently rechecked. Product semantics and all release authority remain blocked.
   Durable evidence: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/ holds exact final safe receipts, log hash, counts and limits. Next Phase 3 independent effect/dependency verification and artifact admission; PostgreSQL Stage 6 remains a later readiness milestone.
+
+
+- Summary: P16 passed twice; P17 first attempt failed before publication; P19 is correctly blocked by known foundation drift
+  Durable evidence: Hosted P16 runs 37047515937 and 37047564139 passed at 2715fd72. P17 run 37050923795 and its source repair are recorded in the current progress ledger. The selected readiness diagnostic shows identity and artifact drift evidence pass, while foundation-passive-drift blocks on known foundation-stack-drift. No raw provider output, secrets, image publication or service change is retained as a success claim.
+
+
+- Summary: P17 diagnostic repair reverified in the canonical migrated worktree; seven intended paths staged; no scope change
+  Durable evidence: The user explicitly renewed commit, push, merge and approved P16-P33 programme authority on 2026-10-02. Session worktree metadata now names the canonical /tmp worktree. Independent review found no blocking defect; fresh verification passed 29 qualified-publication tests, 25 selected-blueprint tests, deployment-workflow static validation and both diff checks. Remote main remains 2715fd725ead82e3a824d8ba99d0308e30a9f1fb. P19 foundation drift remains a blocker; Python caches are preserved. Next is the repository commit gate, P17 diagnostic commit and merge, then fresh P16 and P17 on the exact main revision.
 
 ## Activity Log
 
@@ -717,6 +733,41 @@ Summary: Accepted U20 in 22 reviewed paths: versioned selected operation, condit
 
 ADR impact: Implements approved ADR 0040 source policy; no new architecture decision or cloud activation.
 
+
+### 2026-10-02T19:51:12Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a bounded diagnostic and evidence-handling repair within the existing P17 publication workflow; it makes no architectural decision.
+
+
+### 2026-10-02T19:51:12Z - Context hygiene
+
+Summary: P16 passed twice; P17 first attempt failed before publication; P19 is correctly blocked by known foundation drift
+
+Durable evidence: Hosted P16 runs 37047515937 and 37047564139 passed at 2715fd72. P17 run 37050923795 and its source repair are recorded in the current progress ledger. The selected readiness diagnostic shows identity and artifact drift evidence pass, while foundation-passive-drift blocks on known foundation-stack-drift. No raw provider output, secrets, image publication or service change is retained as a success claim.
+
+
+### 2026-10-02T19:51:13Z - Issue
+
+Raised: P17 hosted image qualification failed before publication
+
+Resolution: Run 37050923795 passed source checks, OIDC, ECR login and qualification-input acquisition, then failed inside local image qualification. No image was pushed and no service changed. The workflow now emits only the qualifier's normalized redacted JSON error on failure; focused checks passed and P16 will be repeated before P17 reruns.
+
+
+### 2026-10-02T19:51:15Z - Decision
+
+Decision: Keep P17 failure evidence normalized and redacted
+
+Rationale: The hosted workflow writes only result.json produced by the existing qualifier to its failure log. It does not upload scratch output or weaken clean-source, image-handoff, source-binding, scan, attestation, or publication gates.
+
+
+### 2026-10-02T20:38:00Z - Context hygiene
+
+Summary: P17 diagnostic repair reverified in the canonical migrated worktree; seven intended paths staged; no scope change
+
+Durable evidence: The user explicitly renewed commit, push, merge and approved P16-P33 programme authority on 2026-10-02. Session worktree metadata now names the canonical /tmp worktree. Independent review found no blocking defect; fresh verification passed 29 qualified-publication tests, 25 selected-blueprint tests, deployment-workflow static validation and both diff checks. Remote main remains 2715fd725ead82e3a824d8ba99d0308e30a9f1fb. P19 foundation drift remains a blocker; Python caches are preserved. Next is the repository commit gate, P17 diagnostic commit and merge, then fresh P16 and P17 on the exact main revision.
+
 ## Sub-Agent Activity
 
 
@@ -1186,7 +1237,7 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
 
 ADR needed: no
 ADR path:
-Reason: Implements the existing finite-job profile and Phase 3 self-verification scope under ADR 0038; no new provider architecture or authority model.
+Reason: This is a bounded diagnostic and evidence-handling repair within the existing P17 publication workflow; it makes no architectural decision.
 
 ## Session Metrics
 

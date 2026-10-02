@@ -61,6 +61,10 @@ class QualifiedWorkflowTests(unittest.TestCase):
         changed=self.source.replace('steps.qualified-image.outputs.image_id','steps.unqualified.outputs.image_id')
         self.assertNotEqual(self.check(changed).returncode,0)
 
+    def test_failed_qualification_emits_only_the_normalized_safe_result(self):
+        changed=self.source.replace('cat "$RUNNER_TEMP/qualified-image/result.json" >&2','true')
+        self.assertNotEqual(self.check(changed).returncode,0)
+
     def test_scan_zero_critical_and_high_remain_mandatory(self):
         for severity in ('critical','high'):
             with self.subTest(severity=severity):
@@ -211,7 +215,7 @@ class QualifiedWorkflowTests(unittest.TestCase):
         value=yaml.load(self.source,Loader=yaml.BaseLoader)
         for name in ('Build platform shell image','Push platform shell image'):
             run=next(row['run'] for row in value['jobs']['build-image']['steps'] if row['name']==name)
-            if name=='Build platform shell image':run=run.split('bash scripts/',1)[0]
+            if name=='Build platform shell image':run=run.split('if ! bash scripts/',1)[0]
             else:run=run.split('python3 -I -B scripts/',1)[0]
             result=subprocess.run(['bash','-c',run],cwd=repository,env=dict(os.environ,GITHUB_SHA=revision),capture_output=True,timeout=20)
             with self.subTest(step=name,change=change):
