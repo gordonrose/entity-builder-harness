@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: github.workflow.deploy-platform-shell-staging
-#   version: 3
+#   version: 4
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -91,6 +91,13 @@ jobs:
 
       - name: Install script dependencies
         run: python -m pip install --require-hashes -r scripts/04.deploy/operational-realization-gate/requirements.lock
+
+      - name: Install local qualification sandbox
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends bubblewrap
+          test -x /usr/bin/bwrap
 
       - name: Run platform shell checks
         run: |

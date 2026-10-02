@@ -194,8 +194,11 @@ class Sandbox:
     def __call__(self, argv, cwd, env):
         command = self.command(argv, cwd, env)
         with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
-            child = subprocess.Popen(command, env={"PATH": "/usr/bin:/bin"}, stdin=subprocess.DEVNULL,
-                                     stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=_limits)
+            try:
+                child = subprocess.Popen(command, env={"PATH": "/usr/bin:/bin"}, stdin=subprocess.DEVNULL,
+                                         stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=_limits)
+            except OSError:
+                raise LocalBuildFailure("local-build-isolation-executable-unavailable") from None
             try:
                 child.wait(timeout=POLICY["timeout_seconds"])
             except subprocess.TimeoutExpired:

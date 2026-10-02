@@ -150,3 +150,9 @@ unusual-name, and wrong-HEAD refusal at both entry boundaries.
 If the local qualification fails, the workflow writes only its normalized,
 redacted JSON result to the hosted log before stopping. It neither uploads the
 scratch directory nor exposes raw container, package, or provider output.
+
+The runner installs the documented bubblewrap prerequisite before obtaining AWS
+credentials. The local qualifier still requires its existing namespace probe;
+installation does not permit host execution or a relaxed isolation policy.
+A missing or non-executable sandbox and fixed locked-toolchain failures retain
+safe diagnostic codes. Raw paths, exception messages and tool output stay private.

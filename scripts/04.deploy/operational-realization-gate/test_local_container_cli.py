@@ -35,6 +35,7 @@ sys.path.insert(0, str(DIRECTORY))
 import container_engine
 import local_container
 import local_container_contracts as contracts
+import locked_toolchain
 import release_compiler as release
 import result_consumption
 
@@ -153,6 +154,32 @@ class PublicCliTests(unittest.TestCase):
         status, result, _, _ = self.invoke(error=container_engine.EngineFailure('local-container-source-changed'))
         self.assertEqual(status, 1)
         self.assertEqual(result['findings'], [{'code': 'local-container-source-changed'}])
+
+    def test_locked_toolchain_failures_preserve_fixed_reason_without_authority(self):
+        for reason in ('command-failed', 'execution-failed', 'cache-lock-mismatch'):
+            code = 'locked-toolchain-' + reason
+            with self.subTest(reason=reason):
+                status, result, run, engine = self.invoke(error=locked_toolchain.ToolchainFailure(code))
+                self.assertEqual(status, 1)
+                self.assertEqual(result['findings'], [{'code': code}])
+                self.assertIs(result['authorized'], False)
+                self.assertEqual(result['release_eligibility'], 'blocked')
+                self.assertEqual(result['operation_authorization'], 'blocked')
+                run.assert_called_once()
+                engine.assert_not_called()
+
+    def test_locked_toolchain_unsafe_and_malformed_failures_are_redacted(self):
+        malformed = locked_toolchain.ToolchainFailure(SENTINEL)
+        malformed.code = {'raw': SENTINEL}
+        errors = [locked_toolchain.ToolchainFailure('locked-toolchain-' + SENTINEL),
+                  locked_toolchain.ToolchainFailure('locked-toolchain-command-failed\n' + SENTINEL),
+                  locked_toolchain.ToolchainFailure('locked-toolchain-command-failed /' + SENTINEL),
+                  malformed]
+        for index, error in enumerate(errors):
+            with self.subTest(case=index):
+                status, result, _, _ = self.invoke(error=error)
+                self.assertEqual(status, 1)
+                self.assertEqual(result['findings'], [{'code': 'local-container-verification-failed'}])
 
     def test_malformed_error_code_is_redacted(self):
         error = RuntimeError(SENTINEL)

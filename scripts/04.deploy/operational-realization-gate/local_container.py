@@ -202,7 +202,7 @@ def main(argv=None):
         status = 0
     except Exception as error:
         code = getattr(error, 'code', str(error))
-        if type(code) is not str or not re.fullmatch(r'(?:local-container|local-build|container-payload|container-profile|toolchain)-[a-z-]+', code):
+        if type(code) is not str or not re.fullmatch(r'(?:local-container|local-build|container-payload|container-profile|locked-toolchain|toolchain)-[a-z-]+', code):
             code = 'local-container-verification-failed'
         result = {'schema': 'local-container-error/v1', 'verdict': 'failed', 'authorized': False,
                   'release_eligibility': 'blocked', 'operation_authorization': 'blocked', 'findings': [{'code': code}]}

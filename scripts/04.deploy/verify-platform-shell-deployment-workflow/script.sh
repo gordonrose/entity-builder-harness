@@ -185,6 +185,14 @@ for required_text, message in {
 }.items():
     require(required_text in scan_run, message)
 
+sandbox_index, sandbox_step = step("Install local qualification sandbox")
+sandbox_run = text(sandbox_step.get("run"))
+require(sandbox_run == "set -euo pipefail\nsudo apt-get update\nsudo apt-get install --yes --no-install-recommends bubblewrap\ntest -x /usr/bin/bwrap\n",
+        "qualification must install the required bubblewrap dependency without changing host isolation policy")
+credentials_index, _ = step("Configure AWS credentials")
+require(0 <= sandbox_index < credentials_index,
+        "sandbox dependency installation must precede AWS credentials")
+
 base_image_index, base_image_step = step("Acquire reviewed qualification inputs")
 base_image_run = text(base_image_step.get("run"))
 for required_text, message in {

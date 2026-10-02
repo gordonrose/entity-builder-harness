@@ -125,6 +125,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Summary: P17 diagnostic repair reverified in the canonical migrated worktree; seven intended paths staged; no scope change
   Durable evidence: The user explicitly renewed commit, push, merge and approved P16-P33 programme authority on 2026-10-02. Session worktree metadata now names the canonical /tmp worktree. Independent review found no blocking defect; fresh verification passed 29 qualified-publication tests, 25 selected-blueprint tests, deployment-workflow static validation and both diff checks. Remote main remains 2715fd725ead82e3a824d8ba99d0308e30a9f1fb. P19 foundation drift remains a blocker; Python caches are preserved. Next is the repository commit gate, P17 diagnostic commit and merge, then fresh P16 and P17 on the exact main revision.
 
+
+- Summary: P16 passed at c3e9d523; P17 normalized failure exposed a host prerequisite and diagnostic gap
+  Durable evidence: P16 run 37061953789 passed 2206 tests in 75 suites and metadata checks for 73 files. P17 run 37063262648 then failed before publication with local-container-verification-failed; no image pushed or service changed. The workflow now supplies its documented bubblewrap host prerequisite before AWS credentials, preserves mandatory isolation, and repins its blueprint binding. Follow-up diagnostics normalize an unavailable sandbox executable and retain fixed locked-toolchain codes without raw output. The generic failure does not identify the hidden exception conclusively. Fresh P16/P17 are required after commit; P19 foundation drift remains blocked and the historical egress correction must not be replayed. No new ADR or scope change; this repairs the existing P17 route.
+
 ## Activity Log
 
 ### 2026-09-28T16:45:43Z - First source delivery unit completed
@@ -779,6 +783,22 @@ Summary: Seven reviewed P17 repair paths committed from the canonical /tmp workt
 
 ADR impact: No new ADR: bounded diagnostic repair under the existing release-control plan.
 
+
+### 2026-10-02T21:05:11Z - Context hygiene
+
+Summary: P16 passed at c3e9d523; P17 normalized failure exposed a host prerequisite and diagnostic gap
+
+Durable evidence: P16 run 37061953789 passed 2206 tests in 75 suites and metadata checks for 73 files. P17 run 37063262648 then failed before publication with local-container-verification-failed; no image pushed or service changed. The workflow now supplies its documented bubblewrap host prerequisite before AWS credentials, preserves mandatory isolation, and repins its blueprint binding. Follow-up diagnostics normalize an unavailable sandbox executable and retain fixed locked-toolchain codes without raw output. The generic failure does not identify the hidden exception conclusively. Fresh P16/P17 are required after commit; P19 foundation drift remains blocked and the historical egress correction must not be replayed. No new ADR or scope change; this repairs the existing P17 route.
+
+
+### 2026-10-02T21:05:48Z - Commit summary
+
+Commit: fix(deploy): provision the isolated qualification host dependency
+
+Summary: P17 follow-up verified with 31 publication-workflow tests, 25 selected-blueprint tests, 36 local-build tests and 42 local-container CLI tests (134 total); deployment-workflow static check, four eligible artifact metadata headers and git diff --check passed. Required bubblewrap installation precedes AWS credentials; sandbox failure remains fail-closed with no host fallback. P16 must revalidate the committed revision before P17.
+
+ADR impact: No new ADR: documented host prerequisite and bounded failure normalization within the existing P17 route.
+
 ## Sub-Agent Activity
 
 
@@ -1246,6 +1266,11 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Message: fix(deploy): expose normalized P17 qualification failures
   Summary: Seven reviewed P17 repair paths committed from the canonical /tmp worktree. Passed 29 publication-workflow tests, 25 selected-blueprint tests, deployment-workflow static validation, whitespace checks and the complete repository commit gate. Normalized diagnostics only; publication and all source gates preserved. Next fresh hosted P16 before P17; P19 foundation drift remains blocked.
   ADR impact: No new ADR: bounded diagnostic repair under the existing release-control plan.
+
+
+- Commit: fix(deploy): provision the isolated qualification host dependency
+  Summary: P17 follow-up verified with 31 publication-workflow tests, 25 selected-blueprint tests, 36 local-build tests and 42 local-container CLI tests (134 total); deployment-workflow static check, four eligible artifact metadata headers and git diff --check passed. Required bubblewrap installation precedes AWS credentials; sandbox failure remains fail-closed with no host fallback. P16 must revalidate the committed revision before P17.
+  ADR impact: No new ADR: documented host prerequisite and bounded failure normalization within the existing P17 route.
 
 ## Main Refresh Conflicts
 

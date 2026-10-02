@@ -65,6 +65,23 @@ class QualifiedWorkflowTests(unittest.TestCase):
         changed=self.source.replace('cat "$RUNNER_TEMP/qualified-image/result.json" >&2','true')
         self.assertNotEqual(self.check(changed).returncode,0)
 
+    def test_qualification_sandbox_dependency_and_policy_are_required(self):
+        for before, after in (
+            ('sudo apt-get install --yes --no-install-recommends bubblewrap', 'true'),
+            ('test -x /usr/bin/bwrap', 'sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0'),
+        ):
+            with self.subTest(before=before):
+                self.assertNotEqual(self.check(self.source.replace(before, after)).returncode, 0)
+
+    def test_sandbox_dependency_installation_precedes_credentials(self):
+        value = yaml.load(self.source, Loader=yaml.BaseLoader)
+        steps = value['jobs']['build-image']['steps']
+        sandbox = next(row for row in steps if row['name'] == 'Install local qualification sandbox')
+        steps.remove(sandbox)
+        credentials = next(i for i, row in enumerate(steps) if row['name'] == 'Configure AWS credentials')
+        steps.insert(credentials + 1, sandbox)
+        self.assertNotEqual(self.check(yaml.safe_dump(value, sort_keys=False)).returncode, 0)
+
     def test_scan_zero_critical_and_high_remain_mandatory(self):
         for severity in ('critical','high'):
             with self.subTest(severity=severity):

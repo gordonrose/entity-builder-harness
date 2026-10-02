@@ -203,6 +203,17 @@ class FilesystemTests(unittest.TestCase):
         self.assertIn("--cap-drop", command)
         self.assertNotIn("/home", command)
 
+    def test_unavailable_sandbox_executable_is_redacted_without_host_retry(self):
+        runner = sandbox.Sandbox(self.base, self.base)
+        for failure in (FileNotFoundError, PermissionError):
+            with self.subTest(failure=failure.__name__), \
+                    patch.object(sandbox.subprocess, "Popen", side_effect=failure("SENSITIVE-LOCAL-SENTINEL")) as launch:
+                with self.assertRaisesRegex(sandbox.LocalBuildFailure,
+                                            "^local-build-isolation-executable-unavailable$"):
+                    runner(["/usr/bin/true"], self.root, {})
+                launch.assert_called_once()
+                self.assertEqual(launch.call_args.args[0][0], "/usr/bin/bwrap")
+
     def test_sensitive_environment_rejected(self):
         runner = sandbox.Sandbox(self.base, self.base)
         with self.assertRaises(sandbox.LocalBuildFailure):
