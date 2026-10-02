@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-02T21:33:32Z
-latest_commit_sha: 3a150a8a4239376d0fff03cb7343358435514b12
-chat_duration: 399369s (04:14:56:09)
+latest_commit_at_utc: 2026-10-02T22:02:47Z
+latest_commit_sha: 0ae07a2e42bd79a995d66649bc6fd9aa8b13c5c5
+chat_duration: 401124s (04:15:25:24)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -863,6 +863,17 @@ Summary: P16 passed at 11bf851d; P17 repair batches two proven host defects befo
 
 Durable evidence: P16 main run 37067617564 passed 2212 tests in 75 suites, zero failures and 73 metadata files. Signed Noble index review showed AppArmor package .9 unavailable; .8 package SHA256 4e7d7283... has identical reviewed profile bytes. Prior P17 run 37066022523 used Docker 28.0.4 overlay2 with an isolated qualifier that could not see the selected Buildx plugin; the classic exporter loses distinct manifest identity. Current source adds absent-config-only containerd setup, same-daemon builder, isolated pinned plugin check, fixed qualification failure normalization and exact blueprint repin. Focused verification: 33 workflow tests, 25 selected-blueprint tests, 43 local-container CLI tests, static workflow check and three host-step bash syntax checks; source still requires P16/P17. P19 fresh active classification found only reviewed database parameter-group representation difference with TLS required; passive drift still blocks. P18 needs signed scan and observed-material producer work. No AWS resource or service changed. No ADR: existing selected host and evidence route compatibility repair, not a new architecture.
 
+
+### 2026-10-02T22:02:47Z - Commit recorded
+
+Commit: `0ae07a2e42bd79a995d66649bc6fd9aa8b13c5c5`
+
+Message: fix(deploy): align P17 qualifier host with image handoff
+
+Summary: Ten reviewed paths correct the signed-index package pin and same-daemon image store/plugin selection, preserve fixed failure codes, repin the selected blueprint, and record P19 known parameter-group drift and P18 producer gap. Passed 33 workflow, 25 blueprint and 43 container CLI tests, static workflow, bash syntax, diff and full repository commit gate. Fresh P16/P17 required; no image or service changed.
+
+ADR impact: No ADR: bounded compatibility repair of the existing reviewed P17 host and P19 evidence documentation.
+
 ## Sub-Agent Activity
 
 
@@ -1355,6 +1366,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Seven reviewed paths provision the exact Ubuntu per-binary sandbox namespace profile. 32 workflow tests, 25 blueprint tests, static and metadata checks, non-loading profile syntax verification, whitespace and complete commit checklist passed. Independent review verified official hashes and no broadened compiler/AWS authority. Fresh P16 and P17 required; P19 drift remains blocked.
   ADR impact: No new architecture: supported host setup for the existing mandatory sandbox.
 
+
+- Commit: `0ae07a2e42bd79a995d66649bc6fd9aa8b13c5c5`
+  Time UTC: 2026-10-02T22:02:47Z
+  Message: fix(deploy): align P17 qualifier host with image handoff
+  Summary: Ten reviewed paths correct the signed-index package pin and same-daemon image store/plugin selection, preserve fixed failure codes, repin the selected blueprint, and record P19 known parameter-group drift and P18 producer gap. Passed 33 workflow, 25 blueprint and 43 container CLI tests, static workflow, bash syntax, diff and full repository commit gate. Fresh P16/P17 required; no image or service changed.
+  ADR impact: No ADR: bounded compatibility repair of the existing reviewed P17 host and P19 evidence documentation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1368,9 +1386,9 @@ Reason: This is a bounded diagnostic and evidence-handling repair within the exi
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-10-02T21:33:32Z
-Latest commit SHA: HEAD
-Chat duration: 399369s (04:14:56:09)
+Latest commit at UTC: 2026-10-02T22:02:47Z
+Latest commit SHA: 0ae07a2e42bd79a995d66649bc6fd9aa8b13c5c5
+Chat duration: 401124s (04:15:25:24)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
