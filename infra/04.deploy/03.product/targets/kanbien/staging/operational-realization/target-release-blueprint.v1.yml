@@ -162,7 +162,7 @@ source_bindings:
 - path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
   digest: sha256:d746a1a04fcbcde1532860c619fa3180f1e188cc486537eba9e653eea74d2dab
 - path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
-  digest: sha256:34804dbc948e0fb93c790cfca17dbaad36b776292bd51c1f26b07d7d7a42414a
+  digest: sha256:9ffb0f8921e59a4316df9bc28dd7d9c0307f4dda68ed365b043a48f560d8f042
 - path: scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh
   digest: sha256:f8a0278b608020e452c4f2ca9e509fd286dfb06780dd4a351c204b2ff1886491
 - path: scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh
