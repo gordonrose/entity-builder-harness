@@ -97,6 +97,7 @@ require(isinstance(publish, dict) and publish.get("required") == "true" and publ
 
 jobs = workflow.get("jobs", {})
 job = jobs.get("build-image", {}) if isinstance(jobs, dict) else {}
+require(job.get("runs-on") == "ubuntu-24.04", "qualification must use the reviewed Ubuntu 24.04 host")
 steps = job.get("steps", []) if isinstance(job, dict) else []
 if not isinstance(steps, list):
     failures.append("build-image job must declare an ordered steps list")
@@ -187,8 +188,8 @@ for required_text, message in {
 
 sandbox_index, sandbox_step = step("Install local qualification sandbox")
 sandbox_run = text(sandbox_step.get("run"))
-require(sandbox_run == "set -euo pipefail\nsudo apt-get update\nsudo apt-get install --yes --no-install-recommends bubblewrap\ntest -x /usr/bin/bwrap\n",
-        "qualification must install the required bubblewrap dependency without changing host isolation policy")
+require(sandbox_run == 'set -euo pipefail\nsudo apt-get update\nsudo apt-get install --yes --no-install-recommends bubblewrap\ntest -x /usr/bin/bwrap\nsandbox_policy="$(mktemp -d "$RUNNER_TEMP/qualification-policy.XXXXXX")"\n(\n  cd "$sandbox_policy"\n  apt-get download apparmor-profiles=4.0.1really4.0.1-0ubuntu0.24.04.9\n  printf \'%s  %s\\n\' \'90b02aa006eea7702cd4e851343e469e41365dda42145a3cb035de1d6c773b8c\' \'apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb\' | sha256sum --check --strict --status\n  dpkg-deb --extract apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb package\n  printf \'%s  %s\\n\' \'11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9\' \'package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict\' | sha256sum --check --strict --status\n)\nfor local_policy in /etc/apparmor.d/local/bwrap-userns-restrict /etc/apparmor.d/local/unpriv_bwrap; do\n  test ! -e "$local_policy"\n  test ! -L "$local_policy"\ndone\nsudo /usr/sbin/apparmor_parser --add --skip-cache --base /etc/apparmor.d "$sandbox_policy/package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict"\n',
+        "qualification must install bubblewrap and add only its exact reviewed namespace profile")
 credentials_index, _ = step("Configure AWS credentials")
 require(0 <= sandbox_index < credentials_index,
         "sandbox dependency installation must precede AWS credentials")

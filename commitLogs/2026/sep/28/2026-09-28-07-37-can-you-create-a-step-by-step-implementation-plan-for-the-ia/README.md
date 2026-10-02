@@ -129,6 +129,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Summary: P16 passed at c3e9d523; P17 normalized failure exposed a host prerequisite and diagnostic gap
   Durable evidence: P16 run 37061953789 passed 2206 tests in 75 suites and metadata checks for 73 files. P17 run 37063262648 then failed before publication with local-container-verification-failed; no image pushed or service changed. The workflow now supplies its documented bubblewrap host prerequisite before AWS credentials, preserves mandatory isolation, and repins its blueprint binding. Follow-up diagnostics normalize an unavailable sandbox executable and retain fixed locked-toolchain codes without raw output. The generic failure does not identify the hidden exception conclusively. Fresh P16/P17 are required after commit; P19 foundation drift remains blocked and the historical egress correction must not be replayed. No new ADR or scope change; this repairs the existing P17 route.
 
+
+- Summary: P17 now identifies the failed mandatory namespace probe; only reviewed per-binary host support is being added
+  Durable evidence: P16 run 37064889309 passed 2211 tests in 75 suites and 73 metadata files at 6fcedc4d. P17 run 37066022523 installed bubblewrap but failed local-build-isolation-unavailable before publication. The follow-up pins Ubuntu 24.04, downloads and checksums the exact official AppArmor package and bwrap profile, extracts without installing unrelated policies, and adds only the reviewed profile before credentials. Existing definitions/local overrides are refused; compiler remains unprivileged, capabilities denied, all namespace flags and mandatory probe retained. No global policy disablement, host fallback, AWS change or new P-row. Exact profile syntax validation passed with kernel loading/cache disabled; fresh P16/P17 remain necessary. P19 Foundation drift stays blocked.
+
 ## Activity Log
 
 ### 2026-09-28T16:45:43Z - First source delivery unit completed
@@ -810,6 +814,22 @@ Summary: Eleven reviewed files repair the P17 runner prerequisite and safe diagn
 
 ADR impact: No new architecture: documented host dependency and normalized diagnostic repair.
 
+
+### 2026-10-02T21:31:48Z - Context hygiene
+
+Summary: P17 now identifies the failed mandatory namespace probe; only reviewed per-binary host support is being added
+
+Durable evidence: P16 run 37064889309 passed 2211 tests in 75 suites and 73 metadata files at 6fcedc4d. P17 run 37066022523 installed bubblewrap but failed local-build-isolation-unavailable before publication. The follow-up pins Ubuntu 24.04, downloads and checksums the exact official AppArmor package and bwrap profile, extracts without installing unrelated policies, and adds only the reviewed profile before credentials. Existing definitions/local overrides are refused; compiler remains unprivileged, capabilities denied, all namespace flags and mandatory probe retained. No global policy disablement, host fallback, AWS change or new P-row. Exact profile syntax validation passed with kernel loading/cache disabled; fresh P16/P17 remain necessary. P19 Foundation drift stays blocked.
+
+
+### 2026-10-02T21:32:46Z - Commit summary
+
+Commit: fix(deploy): enable reviewed namespace policy for qualification
+
+Summary: Seven reviewed paths bind Ubuntu 24.04 and the exact official per-binary AppArmor policy without installing unrelated profiles or changing global restrictions. Passed 32 publication-workflow tests, 25 selected-blueprint tests, static workflow validation, four eligible metadata headers, diff checks and non-loading AppArmor profile compilation. Every sandbox flag and mandatory probe is unchanged. Fresh P16/P17 required; P19 remains blocked.
+
+ADR impact: No new architecture: provision existing mandatory sandbox support within the approved ephemeral P17 host route.
+
 ## Sub-Agent Activity
 
 
@@ -1289,6 +1309,11 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Message: fix(deploy): provision the isolated qualification host dependency
   Summary: Eleven reviewed files repair the P17 runner prerequisite and safe diagnostic gaps. 134 focused tests, static workflow check, four eligible metadata headers, diff checks and repository commit checklist passed; independent review found no blocker. Requires fresh P16 then P17. No image publication or service change; P19 remains blocked by Foundation drift.
   ADR impact: No new architecture: documented host dependency and normalized diagnostic repair.
+
+
+- Commit: fix(deploy): enable reviewed namespace policy for qualification
+  Summary: Seven reviewed paths bind Ubuntu 24.04 and the exact official per-binary AppArmor policy without installing unrelated profiles or changing global restrictions. Passed 32 publication-workflow tests, 25 selected-blueprint tests, static workflow validation, four eligible metadata headers, diff checks and non-loading AppArmor profile compilation. Every sandbox flag and mandatory probe is unchanged. Fresh P16/P17 required; P19 remains blocked.
+  ADR impact: No new architecture: provision existing mandatory sandbox support within the approved ephemeral P17 host route.
 
 ## Main Refresh Conflicts
 

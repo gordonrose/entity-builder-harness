@@ -151,8 +151,23 @@ If the local qualification fails, the workflow writes only its normalized,
 redacted JSON result to the hosted log before stopping. It neither uploads the
 scratch directory nor exposes raw container, package, or provider output.
 
-The runner installs the documented bubblewrap prerequisite before obtaining AWS
-credentials. The local qualifier still requires its existing namespace probe;
-installation does not permit host execution or a relaxed isolation policy.
+The Ubuntu 24.04 runner installs the documented bubblewrap prerequisite before
+obtaining AWS credentials. It downloads, without installing, the exact Ubuntu
+`apparmor-profiles` package `4.0.1really4.0.1-0ubuntu0.24.04.9`, verifies the
+package and extracted `bwrap-userns-restrict` profile SHA-256 values, and adds only
+that profile to the disposable runner. Package maintainer scripts and unrelated
+profiles never run. Existing profiles or optional local policy overrides cause
+refusal; no host policy file is overwritten and the parser cannot use caches.
+
+The packaged profile permits `/usr/bin/bwrap` to construct its namespaces and
+stacks a capability-denying profile on executed children. Every existing sandbox
+flag and the mandatory namespace probe remain in force. No global AppArmor/sysctl
+change, privileged compiler execution or host fallback is supported. The runner
+is discarded after the job; this preparation makes no AWS resource change.
 A missing or non-executable sandbox and fixed locked-toolchain failures retain
 safe diagnostic codes. Raw paths, exception messages and tool output stay private.
+
+The policy bytes come from the [official Ubuntu package](https://archive.ubuntu.com/ubuntu/pool/main/a/apparmor/apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb).
+Ubuntu documents [per-application namespace permissions](https://documentation.ubuntu.com/security/security-features/privilege-restriction/apparmor/#apparmor-unprivileged-user-namespace-restrictions).
+This supports the existing local-build isolation requirement; a failed hosted
+probe remains a hard failure regardless of package or policy installation.

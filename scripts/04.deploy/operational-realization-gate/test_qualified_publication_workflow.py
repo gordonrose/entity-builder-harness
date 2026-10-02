@@ -73,6 +73,19 @@ class QualifiedWorkflowTests(unittest.TestCase):
             with self.subTest(before=before):
                 self.assertNotEqual(self.check(self.source.replace(before, after)).returncode, 0)
 
+    def test_sandbox_profile_cannot_be_broadened_or_replaced(self):
+        for before, after in (
+            ('runs-on: ubuntu-24.04', 'runs-on: ubuntu-latest'),
+            ('90b02aa006eea7702cd4e851343e469e41365dda42145a3cb035de1d6c773b8c', '0' * 64),
+            ('11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9', '0' * 64),
+            ('apparmor_parser --add --skip-cache', 'apparmor_parser --replace --skip-cache'),
+            ('dpkg-deb --extract', 'sudo dpkg --install'),
+            ('test ! -e "$local_policy"', 'true'),
+            ('test ! -L "$local_policy"', 'true'),
+        ):
+            with self.subTest(before=before):
+                self.assertNotEqual(self.check(self.source.replace(before, after)).returncode, 0)
+
     def test_sandbox_dependency_installation_precedes_credentials(self):
         value = yaml.load(self.source, Loader=yaml.BaseLoader)
         steps = value['jobs']['build-image']['steps']
