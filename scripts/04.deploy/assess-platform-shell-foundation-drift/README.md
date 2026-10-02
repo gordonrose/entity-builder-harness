@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.script.assess-platform-shell-foundation-drift.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: runtime.operations
@@ -24,8 +24,10 @@ This temporary, administrator-only command refreshes evidence for the fixed
 `kanbien/staging` Foundation stack. It first starts one CloudFormation drift
 assessment and waits for completion. Only if the completed assessment reports
 drift does it read the minimal structural resource-drift shape needed to
-distinguish the reviewed PostgreSQL database-egress correction from unrelated
-drift.
+distinguish only the reviewed database-egress and PostgreSQL parameter-group
+representation signatures from unrelated drift. For the parameter-group
+signature it also verifies the attached RDS parameter still enforces
+`rds.force_ssl=1`.
 
 It never prints a detection identifier, physical identifier, expected value,
 actual value, endpoint, secret, or provider response. Its short-lived `/tmp`
@@ -40,6 +42,12 @@ npm run platform:shell:foundation-active-drift-assessment -- \
   --evidence-file /tmp/new-safe-evidence.json --json
 ```
 
-The output `known-remediation-required` means exactly one reviewed
-`RelationalDatabaseSecurityGroup` egress-property addition was observed. It
-authorizes neither a broader update nor an unrelated drift repair.
+The output `known-remediation-required` means the reported differences
+match only the reviewed structural signatures and include the
+`RelationalDatabaseParameterGroup` representation change. It is a
+classification, not an `IN_SYNC` passive-readiness verdict or permission to
+apply a change. A fresh assessment on 2026-10-02 reported only that
+parameter-group `remove` category while the effective TLS setting was
+verified as required. The historical security-group egress correction is
+already complete. A separate reviewed treatment is needed before passive
+readiness can pass.

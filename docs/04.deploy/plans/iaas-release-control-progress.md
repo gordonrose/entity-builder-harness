@@ -27,49 +27,56 @@ is marked complete or exempt by deferral. B02 retained 16 accepted deliveries;
 B03 adds three bounded components; B04 accepts the selected store conformance
 component. Their exact boundaries are recorded below.
 
-## Current position — P16 passed; P17 namespace-host repair, 2026-10-02
+## Current position — P16 passed; P17 host and image-store repair, 2026-10-02
 
-P01–P15 remain source-closed on `main`. The original seven-file P17 diagnostic
-repair is commit `10a49c72`; its first hosted retry reached the qualifier and
-reported only `local-container-verification-failed`. The subsequent dependency
-and diagnostic repair is commit `4edf8865`; session checkpoint
-`6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f` was pushed and fast-forwarded to main.
+P01–P15 remain source-closed on `main` at their recorded refusal and contract
+boundaries. P16 run `37067617564` passed on exact revision `11bf851d`: 2,212
+tests in 75 suites, zero failures and metadata validation for 73 files. Earlier
+P16 runs `37064889309` and `37061953789` passed on superseded revisions.
 
-P16 run `37064889309` passed on exact revision `6fcedc4d`: 2,211 tests in 75
-suites, zero failures, and metadata validation for 73 files. Run `37061953789`
-previously passed 2,206 tests at `c3e9d523`; earlier P16 runs remain historical.
+P17 run `37066022523` installed bubblewrap and passed source checks, OIDC,
+ECR login and locked input acquisition, then refused the mandatory namespace
+probe with `local-build-isolation-unavailable`. No image was pushed and no
+service changed. A later review found two more deterministic host defects before
+the next attempt: the selected AppArmor package version `.9` is absent from
+Ubuntu's signed stable Noble indexes, and the runner's classic Docker store
+cannot provide the distinct image manifest and configuration digests required
+by the handoff. The private qualifier also could not see the Buildx action's
+per-user plugin or separate builder.
 
-P17 run `37066022523` installed bubblewrap and passed source checks, OIDC, ECR
-login and locked qualification-input acquisition. Its mandatory namespace probe
-then failed with the normalized code `local-build-isolation-unavailable`.
-Publication and all subsequent steps were skipped. No image was pushed and no
-service changed. This is a host qualification failure, not an AWS drift bypass.
+The bounded repair uses signed-index-available AppArmor package `.8`, whose
+extracted profile bytes match the reviewed `.9` profile. The package and
+profile SHA-256 checks and mandatory sandbox probe remain. On the disposable
+runner, the workflow refuses an existing daemon configuration, selects and
+verifies the containerd image store before base acquisition, uses the
+same-daemon Docker builder, and exposes the action-selected Buildx binary to
+the qualifier's otherwise empty Docker configuration. Exact Docker and Buildx
+versions are checked before qualification. Existing source, image, scan and
+attestation gates stay in place. Fresh P16 and P17 must prove this revised
+source; local validation is not hosted evidence. The selected blueprint binding
+is repinned.
 
-The bounded follow-up pins the supported Ubuntu 24.04 runner and obtains its
-exact reviewed bubblewrap AppArmor profile from the official signed package.
-Both package and extracted profile have fixed SHA-256 checks. The package is
-only downloaded/extracted; unrelated profiles and maintainer scripts are not
-installed. Only the reviewed profile is added before credentials, with refusal
-of existing profile names or optional local overrides. It permits sandbox
-namespace setup and denies capabilities to children. Every namespace flag,
-capability drop, nested-userns restriction and the mandatory probe remain intact;
-no global security setting, root compiler, host fallback or AWS change is added.
-Fresh P16 and P17 must prove this revised source; local syntax/review is not
-hosted isolation evidence. The selected blueprint binding is repinned.
+P18 remains open even if P17 publishes: the current publisher does not create
+the signed scan predicate or observed build-material statement required by the
+artifact-admission verifier. No successful P18 admission is claimed from a
+workflow result alone. P19 remains partial: a fresh administrator-only assessment on 2026-10-02
+verified the expected account and Foundation stack, then classified one
+`RelationalDatabaseParameterGroup` `remove` difference as the reviewed
+representation signature with effective TLS still required. The historical
+egress correction is complete. CloudFormation remains drifted, so passive
+readiness still blocks; classification does not clear P19. A reviewed treatment
+and fresh passive reconciliation are required.
 
-P19 remains partial: identity and artifact observations passed previously, but
-known Foundation drift blocks the selected passive readiness gate. Its historical
-egress correction is already complete. Fresh classification and a reviewed plan
-must govern any treatment; classified evidence alone cannot bypass P19.
-
-M1–M4 remain partial and M5 open. Next: commit this P17 host repair, validate its
-exact merged revision through P16, then rerun P17. Scope change: none.
+M1–M4 remain partial and M5 open. Next: verify and commit this P17 repair,
+run P16 on its exact merged revision, then attempt P17 once. P18 producer work
+and P19 drift treatment determine whether P20 can be reviewed. Scope change:
+none; no new P-row or AWS resource change.
 
 ## Phase 1 — fixed MVP closure ledger
 
-**Current closure state: P01–P15 source-closed on `main`; P16 complete for the
-reviewed `6fcedc4d` revision and must be rerun for the follow-up P17 repair; P19 partially
-observed; 0/33 live-proven.** The 20 accepted U01–U20 delivery units are
+**Current closure state: P01–P15 source-closed at their recorded source
+boundaries; P16 passed for `11bf851d` and must be rerun for the current P17
+repair; P19 partially observed; 0/33 live-proven.** The 20 accepted U01–U20 delivery units are
 prerequisite credit and are not counted again. This is the only completion
 ledger for the MVP. It ends when the existing PostgreSQL Stage 6 route is safe
 to propose for its own execution approval; it does not execute or complete
@@ -96,10 +103,10 @@ completion credit and must not direct further work.
 | P13 | Refuse every other selected legacy mutation route and document the supported release/recovery command. | P11–P12 | Static caller test finds no permitted selected-path bypass. | Complete — source on `main` | Source complete; release remains blocked |
 | P14 | Wire the protected hosted workflow to the supported immutable command and inputs. | P13 | Workflow tests reject mutable refs, unbound image and alternate command. | Complete — source on `main` | Source prepared; hosted run separate |
 | P15 | Run the focused source regression and record the release-control evidence for P01–P14. | P01–P14 | Relevant positive and negative tests pass at one recorded source revision. | Complete — source evidence on `main` | Source evidence recorded; hosted validation separate |
-| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Partial — run `37064889309` passed at `6fcedc4d`; rerun required for namespace-host repair | Hosted run approval |
-| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Blocked — run `37066022523` refused unavailable isolation before publication; exact host-profile repair pending qualification | Publication approval |
-| P18 | Admit the published image with current SBOM, scan and provenance/signature receipts. | P17 | Missing, stale or mismatched receipt blocks admission. | Open — hosted | Hosted/publication approval |
-| P19 | Refresh passive target reconciliation: selected account, region, identities and drift. | Current AWS access | Fresh read-only report binds the target and rejects stale drift. | Partial — account/artifact stack observed; known foundation drift blocks verdict | Read-only approval |
+| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Partial — run `37067617564` passed at `11bf851d`; rerun required for current P17 repair | Hosted run approval |
+| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Blocked — run `37066022523` refused unavailable isolation; reviewed host and image-store repair awaits P16/P17 qualification | Publication approval |
+| P18 | Admit the published image with current SBOM, scan and provenance/signature receipts. | P17 | Missing, stale or mismatched receipt blocks admission. | Open — signed scan and observed-material producer integration required | Hosted/publication approval |
+| P19 | Refresh passive target reconciliation: selected account, region, identities and drift. | Current AWS access | Fresh read-only report binds the target and rejects stale drift. | Partial — account/artifact observed; fresh known parameter-group drift classification and TLS check passed, but passive verdict remains blocked | Read-only approval |
 | P20 | Generate and review the immutable selected change/effect, cost, rollback and cleanup plan. | P17–P19 | Unexpected resource, permission, destructive action, cost or scope blocks the plan. | Open — read-only AWS | Change-plan approval |
 | P21 | Provision the approved minimum journal/evidence resources and selected permissions. | P08–P10, P20 | Inspection proves exact account/region, encryption, retention and permissions. | Open — AWS effect | Resource/IAM approval |
 | P22 | Prove competing-writer refusal, restart recovery and evidence readback against the provisioned store. | P21 | Live receipts show one writer only and unresolved outcomes fail closed. | Open — AWS effect | Controlled recovery approval |

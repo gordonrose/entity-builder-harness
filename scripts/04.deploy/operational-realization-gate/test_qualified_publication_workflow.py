@@ -76,12 +76,26 @@ class QualifiedWorkflowTests(unittest.TestCase):
     def test_sandbox_profile_cannot_be_broadened_or_replaced(self):
         for before, after in (
             ('runs-on: ubuntu-24.04', 'runs-on: ubuntu-latest'),
-            ('90b02aa006eea7702cd4e851343e469e41365dda42145a3cb035de1d6c773b8c', '0' * 64),
+            ('4e7d728322f899a7a06e71bedd4f4bd1f20c21f0b3361120f34cf5c0feec849e', '0' * 64),
             ('11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9', '0' * 64),
             ('apparmor_parser --add --skip-cache', 'apparmor_parser --replace --skip-cache'),
             ('dpkg-deb --extract', 'sudo dpkg --install'),
             ('test ! -e "$local_policy"', 'true'),
             ('test ! -L "$local_policy"', 'true'),
+        ):
+            with self.subTest(before=before):
+                self.assertNotEqual(self.check(self.source.replace(before, after)).returncode, 0)
+
+    def test_qualification_requires_same_daemon_manifest_store_and_private_builder(self):
+        for before, after in (
+            ('test -z "$(docker ps -aq)"', 'true'),
+            ('"containerd-snapshotter":true', '"containerd-snapshotter":false'),
+            ('os.O_EXCL', 'os.O_CREAT'),
+            ('sudo systemctl restart docker', 'true'),
+            ('driver: docker', 'driver: docker-container'),
+            ('test ! -e "$system_plugin"', 'true'),
+            ('DOCKER_CONFIG="$qualifier_config"', 'DOCKER_CONFIG="$HOME/.docker"'),
+            ('test "$(/usr/bin/docker --host unix:///var/run/docker.sock version --format', 'test "$(/bin/true --format'),
         ):
             with self.subTest(before=before):
                 self.assertNotEqual(self.check(self.source.replace(before, after)).returncode, 0)
@@ -166,7 +180,7 @@ class QualifiedWorkflowTests(unittest.TestCase):
         self.assertNotEqual(self.check(changed).returncode,0)
 
     def test_mutable_builder_and_sbom_downloads_are_refused(self):
-        for before,after in (('version: v0.37.2','version: latest'),('image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea','image=moby/buildkit:latest'),('releases/download/v1.42.3/','releases/download/latest/'),('sha256sum --check --status','true'),('SYFT_IMAGE: ${{ steps.image.outputs.uri }}','SYFT_IMAGE: mutable:latest')):
+        for before,after in (('version: v0.37.2','version: latest'),('driver: docker','driver: docker-container'),('releases/download/v1.42.3/','releases/download/latest/'),('sha256sum --check --status','true'),('SYFT_IMAGE: ${{ steps.image.outputs.uri }}','SYFT_IMAGE: mutable:latest')):
             with self.subTest(before=before):
                 self.assertIn(before,self.source)
                 self.assertNotEqual(self.check(self.source.replace(before,after)).returncode,0)

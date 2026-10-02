@@ -136,12 +136,33 @@ for selected_action in steps:
         require(selected_action.get("name") in REVIEWED_ACTIONS
                 and selected_action.get("uses") == REVIEWED_ACTIONS.get(selected_action.get("name")),
                 "every action must belong to the reviewed immutable selected set")
-_, buildx_step = step("Set up Docker Buildx")
+store_index, store_step = step("Select local Docker image store")
+store_run = text(store_step.get("run"))
+for required in (
+    'test -z "$(docker ps -aq)"', "os.O_EXCL", '"containerd-snapshotter":true',
+    "sudo systemctl restart docker", "io.containerd.snapshotter.v1",
+    "config.exists() or config.is_symlink()",
+):
+    require(required in store_run, "Docker image store must be selected without replacing existing host configuration")
+buildx_index, buildx_step = step("Set up Docker Buildx")
 require(buildx_step.get("with") == {
     "version": "v0.37.2",
-    "driver": "docker-container",
-    "driver-opts": "image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
-}, "Buildx and its BuildKit image must use the reviewed fixed version and immutable digest")
+    "driver": "docker",
+}, "Buildx must select the fixed same-daemon Docker builder")
+plugin_index, plugin_step = step("Select pinned local Docker builder")
+plugin_run = text(plugin_step.get("run"))
+for required in (
+    '$HOME/.docker/cli-plugins/docker-buildx',
+    '/usr/local/lib/docker/cli-plugins/docker-buildx',
+    'test ! -e "$system_plugin"', 'test ! -L "$system_plugin"',
+    'cmp -s "$selected_plugin" "$system_plugin"',
+    'DOCKER_CONFIG="$qualifier_config"', 'env -i PATH=/usr/bin:/bin',
+    'v0.37.2', '28.0.4', 'io.containerd.snapshotter.v1',
+    'test "$(/usr/bin/docker --host unix:///var/run/docker.sock version --format',
+):
+    require(required in plugin_run, "isolated qualifier must use the reviewed builder and containerd daemon")
+require(0 <= store_index < buildx_index < plugin_index,
+        "Docker store and builder selection must precede qualification")
 
 main_index, main_step = step("Enforce remote-main deploy source")
 require('"$GITHUB_REF" != "refs/heads/main"' in text(main_step.get("run")), "publication source must remain main-only")
@@ -188,13 +209,15 @@ for required_text, message in {
 
 sandbox_index, sandbox_step = step("Install local qualification sandbox")
 sandbox_run = text(sandbox_step.get("run"))
-require(sandbox_run == 'set -euo pipefail\nsudo apt-get update\nsudo apt-get install --yes --no-install-recommends bubblewrap\ntest -x /usr/bin/bwrap\nsandbox_policy="$(mktemp -d "$RUNNER_TEMP/qualification-policy.XXXXXX")"\n(\n  cd "$sandbox_policy"\n  apt-get download apparmor-profiles=4.0.1really4.0.1-0ubuntu0.24.04.9\n  printf \'%s  %s\\n\' \'90b02aa006eea7702cd4e851343e469e41365dda42145a3cb035de1d6c773b8c\' \'apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb\' | sha256sum --check --strict --status\n  dpkg-deb --extract apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb package\n  printf \'%s  %s\\n\' \'11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9\' \'package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict\' | sha256sum --check --strict --status\n)\nfor local_policy in /etc/apparmor.d/local/bwrap-userns-restrict /etc/apparmor.d/local/unpriv_bwrap; do\n  test ! -e "$local_policy"\n  test ! -L "$local_policy"\ndone\nsudo /usr/sbin/apparmor_parser --add --skip-cache --base /etc/apparmor.d "$sandbox_policy/package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict"\n',
+require(sandbox_run == 'set -euo pipefail\nsudo apt-get update\nsudo apt-get install --yes --no-install-recommends bubblewrap\ntest -x /usr/bin/bwrap\nsandbox_policy="$(mktemp -d "$RUNNER_TEMP/qualification-policy.XXXXXX")"\n(\n  cd "$sandbox_policy"\n  apt-get download apparmor-profiles=4.0.1really4.0.1-0ubuntu0.24.04.8\n  printf \'%s  %s\\n\' \'4e7d728322f899a7a06e71bedd4f4bd1f20c21f0b3361120f34cf5c0feec849e\' \'apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.8_all.deb\' | sha256sum --check --strict --status\n  dpkg-deb --extract apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.8_all.deb package\n  printf \'%s  %s\\n\' \'11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9\' \'package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict\' | sha256sum --check --strict --status\n)\nfor local_policy in /etc/apparmor.d/local/bwrap-userns-restrict /etc/apparmor.d/local/unpriv_bwrap; do\n  test ! -e "$local_policy"\n  test ! -L "$local_policy"\ndone\nsudo /usr/sbin/apparmor_parser --add --skip-cache --base /etc/apparmor.d "$sandbox_policy/package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict"\n',
         "qualification must install bubblewrap and add only its exact reviewed namespace profile")
 credentials_index, _ = step("Configure AWS credentials")
 require(0 <= sandbox_index < credentials_index,
         "sandbox dependency installation must precede AWS credentials")
 
 base_image_index, base_image_step = step("Acquire reviewed qualification inputs")
+require(0 <= plugin_index < base_image_index,
+        "the selected Docker builder must be verified before image acquisition")
 base_image_run = text(base_image_step.get("run"))
 for required_text, message in {
     "verify-local-build.sh": "workflow must acquire the hash-locked compiler closure",

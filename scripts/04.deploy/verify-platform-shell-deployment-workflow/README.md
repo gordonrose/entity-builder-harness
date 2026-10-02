@@ -93,12 +93,19 @@ The selected-source review found two executable acquisition defaults that an
 action SHA alone would not fix:
 
 - The [Buildx action download path](https://github.com/docker/setup-buildx-action/blob/8d2750c68a42422c14e847fe6c8ac0403b4cbd6f/src/main.ts)
-  can select `latest`, while its container driver starts a separately acquired
-  BuildKit image. The workflow now selects [Buildx v0.37.2](https://github.com/docker/buildx/releases/tag/v0.37.2)
-  and official [BuildKit v0.33.1](https://github.com/moby/buildkit/releases/tag/v0.33.1)
-  as `moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea`.
-  That digest was independently recomputed over the bytes returned by the
-  [official registry manifest endpoint](https://registry-1.docker.io/v2/moby/buildkit/manifests/v0.33.1).
+  can select `latest`. The workflow selects [Buildx v0.37.2](https://github.com/docker/buildx/releases/tag/v0.37.2)
+  and uses the Docker daemon builder. Before acquiring the base image, it
+  selects the [containerd image store](https://docs.docker.com/engine/storage/containerd/)
+  on the disposable Ubuntu runner only if no Docker daemon configuration
+  exists. It verifies the store after restart. The action-installed plugin is
+  copied only into an absent system plugin path, then checked from an empty
+  private Docker configuration like the local qualifier uses. Docker Server
+  28.0.4 and the selected plugin version must match the reviewed host.
+  This keeps base acquisition, local build, image inspection, health checks
+  and push on one daemon. The previous separate container builder was
+  invisible to the qualifier's private Docker configuration; the runner's
+  classic overlay2 store could not preserve the distinct manifest digest
+  required by its publication handoff.
 - The pinned [SBOM action installer path](https://github.com/anchore/sbom-action/blob/e22c389904149dbc22b58101806040fa8d37a610/src/github/SyftGithubAction.ts)
   downloads and executes `anchore/syft/main/install.sh`. Its fixed
   [default Syft version](https://github.com/anchore/sbom-action/blob/e22c389904149dbc22b58101806040fa8d37a610/src/SyftVersion.ts)
@@ -153,13 +160,15 @@ scratch directory nor exposes raw container, package, or provider output.
 
 The Ubuntu 24.04 runner installs the documented bubblewrap prerequisite before
 obtaining AWS credentials. It downloads, without installing, the exact Ubuntu
-`apparmor-profiles` package `4.0.1really4.0.1-0ubuntu0.24.04.9`, verifies the
+`apparmor-profiles` package `4.0.1really4.0.1-0ubuntu0.24.04.8`, verifies the
 package and extracted `bwrap-userns-restrict` profile SHA-256 values, and adds only
 that profile to the disposable runner. Package maintainer scripts and unrelated
 profiles never run. Existing profiles or optional local policy overrides cause
 refusal; no host policy file is overwritten and the parser cannot use caches.
 
-The packaged profile permits `/usr/bin/bwrap` to construct its namespaces and
+The exact package is present in Ubuntu's signed Noble updates index; its
+profile bytes match the previously reviewed package. The packaged profile
+permits `/usr/bin/bwrap` to construct its namespaces and
 stacks a capability-denying profile on executed children. Every existing sandbox
 flag and the mandatory namespace probe remain in force. No global AppArmor/sysctl
 change, privileged compiler execution or host fallback is supported. The runner
@@ -167,7 +176,7 @@ is discarded after the job; this preparation makes no AWS resource change.
 A missing or non-executable sandbox and fixed locked-toolchain failures retain
 safe diagnostic codes. Raw paths, exception messages and tool output stay private.
 
-The policy bytes come from the [official Ubuntu package](https://archive.ubuntu.com/ubuntu/pool/main/a/apparmor/apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb).
+The policy bytes come from the [official Ubuntu package](https://archive.ubuntu.com/ubuntu/pool/main/a/apparmor/apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.8_all.deb).
 Ubuntu documents [per-application namespace permissions](https://documentation.ubuntu.com/security/security-features/privilege-restriction/apparmor/#apparmor-unprivileged-user-namespace-restrictions).
 This supports the existing local-build isolation requirement; a failed hosted
 probe remains a hard failure regardless of package or policy installation.

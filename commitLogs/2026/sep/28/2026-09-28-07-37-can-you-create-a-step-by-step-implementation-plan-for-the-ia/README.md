@@ -65,6 +65,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Raised: P17 hosted image qualification failed before publication
   Resolution: Run 37050923795 passed source checks, OIDC, ECR login and qualification-input acquisition, then failed inside local image qualification. No image was pushed and no service changed. The workflow now emits only the qualifier's normalized redacted JSON error on failure; focused checks passed and P16 will be repeated before P17 reruns.
 
+
+- Raised: Programme progress overstated by source-only closure
+  Resolution: Read-only audit found P04/P11/P12 refusal controls but no positive authority consumer; P18 publisher lacks signed scan and observed build-material evidence. Existing source credit is retained at its proven boundary; live release and PostgreSQL recovery are not available. The user requested a separate full retrospective, and a read-only prompt was supplied. Do not turn P17 success into a claim of P18-P20 closure.
+
 ## Decisions Made
 
 - Consolidate existing deploy checks behind one composition model and controlled
@@ -132,6 +136,10 @@ can you create a step by step implementation plan for the IaaS work we've discus
 
 - Summary: P17 now identifies the failed mandatory namespace probe; only reviewed per-binary host support is being added
   Durable evidence: P16 run 37064889309 passed 2211 tests in 75 suites and 73 metadata files at 6fcedc4d. P17 run 37066022523 installed bubblewrap but failed local-build-isolation-unavailable before publication. The follow-up pins Ubuntu 24.04, downloads and checksums the exact official AppArmor package and bwrap profile, extracts without installing unrelated policies, and adds only the reviewed profile before credentials. Existing definitions/local overrides are refused; compiler remains unprivileged, capabilities denied, all namespace flags and mandatory probe retained. No global policy disablement, host fallback, AWS change or new P-row. Exact profile syntax validation passed with kernel loading/cache disabled; fresh P16/P17 remain necessary. P19 Foundation drift stays blocked.
+
+
+- Summary: P16 passed at 11bf851d; P17 repair batches two proven host defects before another hosted run
+  Durable evidence: P16 main run 37067617564 passed 2212 tests in 75 suites, zero failures and 73 metadata files. Signed Noble index review showed AppArmor package .9 unavailable; .8 package SHA256 4e7d7283... has identical reviewed profile bytes. Prior P17 run 37066022523 used Docker 28.0.4 overlay2 with an isolated qualifier that could not see the selected Buildx plugin; the classic exporter loses distinct manifest identity. Current source adds absent-config-only containerd setup, same-daemon builder, isolated pinned plugin check, fixed qualification failure normalization and exact blueprint repin. Focused verification: 33 workflow tests, 25 selected-blueprint tests, 43 local-container CLI tests, static workflow check and three host-step bash syntax checks; source still requires P16/P17. P19 fresh active classification found only reviewed database parameter-group representation difference with TLS required; passive drift still blocks. P18 needs signed scan and observed-material producer work. No AWS resource or service changed. No ADR: existing selected host and evidence route compatibility repair, not a new architecture.
 
 ## Activity Log
 
@@ -840,6 +848,20 @@ Message: fix(deploy): enable reviewed namespace policy for qualification
 Summary: Seven reviewed paths provision the exact Ubuntu per-binary sandbox namespace profile. 32 workflow tests, 25 blueprint tests, static and metadata checks, non-loading profile syntax verification, whitespace and complete commit checklist passed. Independent review verified official hashes and no broadened compiler/AWS authority. Fresh P16 and P17 required; P19 drift remains blocked.
 
 ADR impact: No new architecture: supported host setup for the existing mandatory sandbox.
+
+
+### 2026-10-02T21:59:25Z - Issue
+
+Raised: Programme progress overstated by source-only closure
+
+Resolution: Read-only audit found P04/P11/P12 refusal controls but no positive authority consumer; P18 publisher lacks signed scan and observed build-material evidence. Existing source credit is retained at its proven boundary; live release and PostgreSQL recovery are not available. The user requested a separate full retrospective, and a read-only prompt was supplied. Do not turn P17 success into a claim of P18-P20 closure.
+
+
+### 2026-10-02T22:01:12Z - Context hygiene
+
+Summary: P16 passed at 11bf851d; P17 repair batches two proven host defects before another hosted run
+
+Durable evidence: P16 main run 37067617564 passed 2212 tests in 75 suites, zero failures and 73 metadata files. Signed Noble index review showed AppArmor package .9 unavailable; .8 package SHA256 4e7d7283... has identical reviewed profile bytes. Prior P17 run 37066022523 used Docker 28.0.4 overlay2 with an isolated qualifier that could not see the selected Buildx plugin; the classic exporter loses distinct manifest identity. Current source adds absent-config-only containerd setup, same-daemon builder, isolated pinned plugin check, fixed qualification failure normalization and exact blueprint repin. Focused verification: 33 workflow tests, 25 selected-blueprint tests, 43 local-container CLI tests, static workflow check and three host-step bash syntax checks; source still requires P16/P17. P19 fresh active classification found only reviewed database parameter-group representation difference with TLS required; passive drift still blocks. P18 needs signed scan and observed-material producer work. No AWS resource or service changed. No ADR: existing selected host and evidence route compatibility repair, not a new architecture.
 
 ## Sub-Agent Activity
 

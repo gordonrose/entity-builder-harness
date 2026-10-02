@@ -22,7 +22,7 @@ acceptance_policy: infra/04.deploy/03.product/targets/kanbien/staging/operationa
 image_default_operation: server
 source_bindings:
 - path: .github/workflows/deploy-platform-shell-staging.yml
-  digest: sha256:4a9f995433872de9db57a3638282cf738cc90d8ca506039e3e2109a6239cd612
+  digest: sha256:15aedfbe5aac6720a984559a03d2069cfde80b5c052d3d9c7aec91ddf362ce59
 - path: .github/workflows/platform-shell-staging-metric-coverage.yml
   digest: sha256:311cfd235deca7e0052f2961d5f5b3befed937a6fce49c2ca8a515af97d6d903
 - path: .github/workflows/platform-shell-staging-synthetic.yml

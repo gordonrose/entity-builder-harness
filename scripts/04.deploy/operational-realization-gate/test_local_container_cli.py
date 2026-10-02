@@ -168,6 +168,18 @@ class PublicCliTests(unittest.TestCase):
                 run.assert_called_once()
                 engine.assert_not_called()
 
+    def test_publication_failure_preserves_fixed_reason_and_redacts_unsafe_text(self):
+        fixed = release.ReleaseFailure('qualified-publication-image-binding-invalid')
+        status, result, _, _ = self.invoke(error=fixed)
+        self.assertEqual(status, 1)
+        self.assertEqual(result['findings'], [{'code': 'qualified-publication-image-binding-invalid'}])
+        self.assertIs(result['authorized'], False)
+        for unsafe in ('qualified-publication-' + SENTINEL,
+                       'qualified-publication-image-binding-invalid\n' + SENTINEL):
+            with self.subTest(unsafe=unsafe):
+                _, result, _, _ = self.invoke(error=release.ReleaseFailure(unsafe))
+                self.assertEqual(result['findings'], [{'code': 'local-container-verification-failed'}])
+
     def test_locked_toolchain_unsafe_and_malformed_failures_are_redacted(self):
         malformed = locked_toolchain.ToolchainFailure(SENTINEL)
         malformed.code = {'raw': SENTINEL}

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: github.workflow.deploy-platform-shell-staging
-#   version: 5
+#   version: 6
 #   status: active
 #   layer: 04.deploy
 #   domain: infra.ci-cd
@@ -79,12 +79,46 @@ jobs:
         with:
           python-version: "3.14.4"
 
+      - name: Select local Docker image store
+        run: |
+          set -euo pipefail
+          test -z "$(docker ps -aq)"
+          sudo python3 -B - <<'PYTHON'
+          import os
+          from pathlib import Path
+          config = Path('/etc/docker/daemon.json')
+          if config.exists() or config.is_symlink():
+              raise SystemExit('Docker host configuration already exists; qualification refused')
+          fd = os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+          with os.fdopen(fd, 'w', encoding='utf-8') as stream:
+              stream.write('{"features":{"containerd-snapshotter":true}}\n')
+          PYTHON
+          sudo systemctl restart docker
+          docker info --format '{{json .DriverStatus}}' | python3 -B -c 'import json,sys; value=json.load(sys.stdin); raise SystemExit(value != [["driver-type", "io.containerd.snapshotter.v1"]])'
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
         with:
           version: v0.37.2
-          driver: docker-container
-          driver-opts: image=moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+          driver: docker
+
+      - name: Select pinned local Docker builder
+        run: |
+          set -euo pipefail
+          selected_plugin="$HOME/.docker/cli-plugins/docker-buildx"
+          system_plugin=/usr/local/lib/docker/cli-plugins/docker-buildx
+          test -f "$selected_plugin"
+          test -x "$selected_plugin"
+          test ! -e "$system_plugin"
+          test ! -L "$system_plugin"
+          sudo install -d -m 755 /usr/local/lib/docker/cli-plugins
+          sudo install -m 755 "$selected_plugin" "$system_plugin"
+          cmp -s "$selected_plugin" "$system_plugin"
+          qualifier_config="$(mktemp -d "$RUNNER_TEMP/qualification-docker-config.XXXXXX")"
+          printf '{}\n' > "$qualifier_config/config.json"
+          test "$(env -i PATH=/usr/bin:/bin HOME="$qualifier_config" DOCKER_CONFIG="$qualifier_config" LC_ALL=C /usr/bin/docker buildx version | cut -d ' ' -f 2)" = v0.37.2
+          test "$(/usr/bin/docker --host unix:///var/run/docker.sock version --format '{{.Server.Version}}')" = 28.0.4
+          /usr/bin/docker --host unix:///var/run/docker.sock info --format '{{json .DriverStatus}}' | python3 -B -c 'import json,sys; value=json.load(sys.stdin); raise SystemExit(value != [["driver-type", "io.containerd.snapshotter.v1"]])'
 
       - name: Install repository dependencies
         run: npm ci --ignore-scripts
@@ -101,9 +135,9 @@ jobs:
           sandbox_policy="$(mktemp -d "$RUNNER_TEMP/qualification-policy.XXXXXX")"
           (
             cd "$sandbox_policy"
-            apt-get download apparmor-profiles=4.0.1really4.0.1-0ubuntu0.24.04.9
-            printf '%s  %s\n' '90b02aa006eea7702cd4e851343e469e41365dda42145a3cb035de1d6c773b8c' 'apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb' | sha256sum --check --strict --status
-            dpkg-deb --extract apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.9_all.deb package
+            apt-get download apparmor-profiles=4.0.1really4.0.1-0ubuntu0.24.04.8
+            printf '%s  %s\n' '4e7d728322f899a7a06e71bedd4f4bd1f20c21f0b3361120f34cf5c0feec849e' 'apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.8_all.deb' | sha256sum --check --strict --status
+            dpkg-deb --extract apparmor-profiles_4.0.1really4.0.1-0ubuntu0.24.04.8_all.deb package
             printf '%s  %s\n' '11d39094f044f0cda0febb3ad517b830301da6b2ce929664af09ee9e4dd264f9' 'package/usr/share/apparmor/extra-profiles/bwrap-userns-restrict' | sha256sum --check --strict --status
           )
           for local_policy in /etc/apparmor.d/local/bwrap-userns-restrict /etc/apparmor.d/local/unpriv_bwrap; do
