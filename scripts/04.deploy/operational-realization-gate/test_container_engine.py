@@ -263,7 +263,7 @@ class ContainerEngineTests(unittest.TestCase):
         dockerfile = context / "Dockerfile"
         dockerfile.write_text("fixture")
         self.fake.hook = lambda args: subprocess.CompletedProcess(args, 0, b"", b"") if args[0] == "build" else None
-        self.fails("image-id-invalid", lambda: self.runner.build(context, dockerfile, BASE, COMMIT))
+        self.fails("build-metadata-invalid", lambda: self.runner.build(context, dockerfile, BASE, COMMIT))
 
     def test_runtime_executes_default_command_private_health_and_graceful_stop(self):
         receipt = self.runner.run_server(IMAGE)
@@ -449,6 +449,39 @@ class ContainerEngineTests(unittest.TestCase):
         self.assertEqual(build(), IMAGE)
         self.assertFalse(any(call[3:] == ["image", "inspect", BASE_ID] for call in self.fake.calls))
         self.assertFalse(any("--tag" in call for call in self.fake.calls))
+
+    def test_missing_buildx_iid_is_a_distinct_export_failure(self):
+        def hook(args):
+            if args[0] == "build":
+                Path(args[args.index("--metadata-file") + 1]).write_text(json.dumps(self.fake.build_metadata))
+                return subprocess.CompletedProcess(args, 0, b"", b"")
+        self.fake.hook = hook
+        self.fails("image-id-file-missing", self.build_fixture())
+
+    def test_empty_buildx_iid_is_a_distinct_export_failure(self):
+        self.fake.build_iid = ""
+        self.fails("image-id-empty", self.build_fixture())
+
+    def test_buildx_manifest_preference_uses_bound_config_annotation(self):
+        self.fake.build_iid = IMAGE
+        del self.fake.build_metadata["containerimage.config.digest"]
+        self.fake.build_metadata["containerimage.descriptor"]["annotations"] = {"config.digest": BASE_ID}
+        self.assertEqual(self.build_fixture()(), IMAGE)
+        self.assertEqual(self.runner.build_identity(IMAGE)["configuration_digest"], BASE_ID)
+
+    def test_buildx_config_annotation_must_match_reported_config(self):
+        self.fake.build_metadata["containerimage.descriptor"]["annotations"] = {"config.digest": IMAGE}
+        self.fails("build-identity-mismatch", self.build_fixture())
+
+    def test_buildx_manifest_preference_requires_config_annotation(self):
+        self.fake.build_iid = IMAGE
+        del self.fake.build_metadata["containerimage.config.digest"]
+        self.fails("build-configuration-unavailable", self.build_fixture())
+
+    def test_missing_manifest_is_distinct_from_missing_iid(self):
+        del self.fake.build_metadata["containerimage.digest"]
+        self.fake.build_iid = ""
+        self.fails("build-manifest-unavailable", self.build_fixture())
 
     def test_build_manifest_iid_is_also_bound(self):
         self.fake.build_iid = IMAGE

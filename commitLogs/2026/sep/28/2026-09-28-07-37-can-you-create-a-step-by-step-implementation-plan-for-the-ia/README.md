@@ -69,6 +69,9 @@ can you create a step by step implementation plan for the IaaS work we've discus
 - Raised: Programme progress overstated by source-only closure
   Resolution: Read-only audit found P04/P11/P12 refusal controls but no positive authority consumer; P18 publisher lacks signed scan and observed build-material evidence. Existing source credit is retained at its proven boundary; live release and PostgreSQL recovery are not available. The user requested a separate full retrospective, and a read-only prompt was supplied. Do not turn P17 success into a claim of P18-P20 closure.
 
+- Raised: P17 build-export identity unavailable after host repair
+  Resolution: P16 run 37070417080 passed at efbd4c99. P17 run 37071477462 passed the host and input gates then failed local-container-image-id-invalid before publication. The source now classifies missing or empty Buildx image IDs and absent manifest/configuration metadata separately; an absent config field can be recovered only from its bound descriptor annotation. This preserves refusal until the exact image identity is proven. Fresh P16/P17 are required; no image or service changed.
+
 ## Decisions Made
 
 - Consolidate existing deploy checks behind one composition model and controlled
@@ -140,6 +143,9 @@ can you create a step by step implementation plan for the IaaS work we've discus
 
 - Summary: P16 passed at 11bf851d; P17 repair batches two proven host defects before another hosted run
   Durable evidence: P16 main run 37067617564 passed 2212 tests in 75 suites, zero failures and 73 metadata files. Signed Noble index review showed AppArmor package .9 unavailable; .8 package SHA256 4e7d7283... has identical reviewed profile bytes. Prior P17 run 37066022523 used Docker 28.0.4 overlay2 with an isolated qualifier that could not see the selected Buildx plugin; the classic exporter loses distinct manifest identity. Current source adds absent-config-only containerd setup, same-daemon builder, isolated pinned plugin check, fixed qualification failure normalization and exact blueprint repin. Focused verification: 33 workflow tests, 25 selected-blueprint tests, 43 local-container CLI tests, static workflow check and three host-step bash syntax checks; source still requires P16/P17. P19 fresh active classification found only reviewed database parameter-group representation difference with TLS required; passive drift still blocks. P18 needs signed scan and observed-material producer work. No AWS resource or service changed. No ADR: existing selected host and evidence route compatibility repair, not a new architecture.
+
+- Summary: P16 passed at efbd4c99; P17 hosted build-export identity remains unproven
+  Durable evidence: P16 run 37070417080 passed 2,214 tests across 75 suites, zero failures and 73 metadata files. P17 run 37071477462 passed host setup, source and AWS input checks, then failed local-container-image-id-invalid before ECR push. The current source classifies the exact exporter failure and handles Buildx's documented preference for manifest over standalone config digest without accepting an unbound identity. P18 producer evidence and P19 Foundation drift still block P20. No Python cache was removed.
 
 ## Activity Log
 

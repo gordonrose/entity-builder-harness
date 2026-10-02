@@ -348,21 +348,40 @@ class Engine:
                     "--metadata-file", str(metadatafile), "--file", str(dockerfile.resolve()),
                     *build_args, "--build-arg", "RUNTIME_NODE_IMAGE=" + runtime_image,
                     "--build-arg", "SOURCE_COMMIT_SHA=" + source_commit, str(context.resolve())], timeout=900)
-        try:
-            iid = _image(self._build_output(iidfile, 256, "image-id-invalid").decode("ascii").strip())
-        except UnicodeError:
-            _fail("image-id-invalid")
         metadata = _json(self._build_output(metadatafile, 65536, "build-metadata-invalid"))
         if not isinstance(metadata, dict):
             _fail("build-metadata-invalid")
-        manifest_id = _image(metadata.get("containerimage.digest"))
-        config_id = _image(metadata.get("containerimage.config.digest"))
+        if "containerimage.digest" not in metadata:
+            _fail("build-manifest-unavailable")
+        manifest_id = _image(metadata["containerimage.digest"])
+        descriptor = metadata.get("containerimage.descriptor")
+        if descriptor is not None and (not isinstance(descriptor, dict) or descriptor.get("digest") != manifest_id):
+            _fail("build-identity-mismatch")
+        # Buildx removes the standalone configuration digest when the Docker
+        # containerd store prefers the manifest digest. The manifest descriptor
+        # still binds its configuration digest in an exact annotation.
+        config_value = metadata.get("containerimage.config.digest")
+        if config_value is None and isinstance(descriptor, dict):
+            annotations = descriptor.get("annotations")
+            if isinstance(annotations, dict):
+                config_value = annotations.get("config.digest")
+        if config_value is None:
+            _fail("build-configuration-unavailable")
+        config_id = _image(config_value)
+        if (isinstance(descriptor, dict) and isinstance(descriptor.get("annotations"), dict)
+                and "config.digest" in descriptor["annotations"]
+                and descriptor["annotations"]["config.digest"] != config_id):
+            _fail("build-identity-mismatch")
+        try:
+            iid_raw = self._build_output(iidfile, 256, "image-id-file-missing")
+            iid_text = iid_raw.decode("ascii").strip()
+        except UnicodeError:
+            _fail("image-id-invalid")
+        if not iid_text:
+            _fail("image-id-empty")
+        iid = _image(iid_text)
         if iid not in {manifest_id, config_id}:
             _fail("build-identity-mismatch")
-        if "containerimage.descriptor" in metadata:
-            descriptor = metadata["containerimage.descriptor"]
-            if not isinstance(descriptor, dict) or descriptor.get("digest") != manifest_id:
-                _fail("build-identity-mismatch")
         # Buildx iidfiles can contain configuration digests that Docker's containerd
         # store cannot address. Its bound manifest digest selects the exact image.
         try:

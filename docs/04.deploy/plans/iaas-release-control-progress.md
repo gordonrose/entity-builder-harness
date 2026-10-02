@@ -27,7 +27,7 @@ is marked complete or exempt by deferral. B02 retained 16 accepted deliveries;
 B03 adds three bounded components; B04 accepts the selected store conformance
 component. Their exact boundaries are recorded below.
 
-## Current position — P16 passed; P17 host and image-store repair, 2026-10-02
+## Current position — P16 passed; P17 build-export refusal, 2026-10-02
 
 P01–P15 remain source-closed on `main` at their recorded refusal and contract
 boundaries. P16 run `37067617564` passed on exact revision `11bf851d`: 2,212
@@ -56,6 +56,17 @@ attestation gates stay in place. Fresh P16 and P17 must prove this revised
 source; local validation is not hosted evidence. The selected blueprint binding
 is repinned.
 
+The repaired source was merged at `efbd4c99998c8aa7217e28a7c9323df686252703`.
+P16 main run `37070417080` passed on that exact revision: 2,214 tests in
+75 suites, zero failures and 73 metadata files. P17 run `37071477462` passed
+the revised host, source and AWS input steps but refused during the image build
+with `local-container-image-id-invalid`. Buildx reported command success;
+the qualifier then found no valid image ID file. No image was published and no
+service changed. The current follow-up distinguishes a missing/empty image ID
+from absent build manifest/configuration metadata and accepts a configuration
+digest only when bound by the Buildx manifest descriptor annotation. It does
+not treat an unverified ID as successful. Fresh P16 and P17 are required.
+
 P18 remains open even if P17 publishes: the current publisher does not create
 the signed scan predicate or observed build-material statement required by the
 artifact-admission verifier. No successful P18 admission is claimed from a
@@ -67,15 +78,15 @@ egress correction is complete. CloudFormation remains drifted, so passive
 readiness still blocks; classification does not clear P19. A reviewed treatment
 and fresh passive reconciliation are required.
 
-M1–M4 remain partial and M5 open. Next: verify and commit this P17 repair,
-run P16 on its exact merged revision, then attempt P17 once. P18 producer work
+M1–M4 remain partial and M5 open. Next: verify and commit the build-export
+classification repair, run P16 on its exact merged revision, then attempt P17 once. P18 producer work
 and P19 drift treatment determine whether P20 can be reviewed. Scope change:
 none; no new P-row or AWS resource change.
 
 ## Phase 1 — fixed MVP closure ledger
 
 **Current closure state: P01–P15 source-closed at their recorded source
-boundaries; P16 passed for `11bf851d` and must be rerun for the current P17
+boundaries; P16 passed for `efbd4c99` and must be rerun for the current P17
 repair; P19 partially observed; 0/33 live-proven.** The 20 accepted U01–U20 delivery units are
 prerequisite credit and are not counted again. This is the only completion
 ledger for the MVP. It ends when the existing PostgreSQL Stage 6 route is safe
@@ -103,8 +114,8 @@ completion credit and must not direct further work.
 | P13 | Refuse every other selected legacy mutation route and document the supported release/recovery command. | P11–P12 | Static caller test finds no permitted selected-path bypass. | Complete — source on `main` | Source complete; release remains blocked |
 | P14 | Wire the protected hosted workflow to the supported immutable command and inputs. | P13 | Workflow tests reject mutable refs, unbound image and alternate command. | Complete — source on `main` | Source prepared; hosted run separate |
 | P15 | Run the focused source regression and record the release-control evidence for P01–P14. | P01–P14 | Relevant positive and negative tests pass at one recorded source revision. | Complete — source evidence on `main` | Source evidence recorded; hosted validation separate |
-| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Partial — run `37067617564` passed at `11bf851d`; rerun required for current P17 repair | Hosted run approval |
-| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Blocked — run `37066022523` refused unavailable isolation; reviewed host and image-store repair awaits P16/P17 qualification | Publication approval |
+| P16 | Run the prepared hosted source-validation workflow once on the reviewed revision. | P14–P15 | Hosted check passes with pinned actions, locked dependencies and timeout. | Partial — run `37070417080` passed at `efbd4c99`; rerun required for current P17 repair | Hosted run approval |
+| P17 | Publish the exact reviewed image without a substitute rebuild. | P16 | Registry digest, source revision and build receipt agree. | Blocked — run `37071477462` refused invalid build-export image ID before publication; classification repair awaits P16/P17 qualification | Publication approval |
 | P18 | Admit the published image with current SBOM, scan and provenance/signature receipts. | P17 | Missing, stale or mismatched receipt blocks admission. | Open — signed scan and observed-material producer integration required | Hosted/publication approval |
 | P19 | Refresh passive target reconciliation: selected account, region, identities and drift. | Current AWS access | Fresh read-only report binds the target and rejects stale drift. | Partial — account/artifact observed; fresh known parameter-group drift classification and TLS check passed, but passive verdict remains blocked | Read-only approval |
 | P20 | Generate and review the immutable selected change/effect, cost, rollback and cleanup plan. | P17–P19 | Unexpected resource, permission, destructive action, cost or scope blocks the plan. | Open — read-only AWS | Change-plan approval |
