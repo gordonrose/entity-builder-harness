@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-02T21:06:55Z
-latest_commit_sha: 4edf8865
-chat_duration: 397772s (04:14:29:32)
+latest_commit_at_utc: 2026-10-02T21:33:32Z
+latest_commit_sha: HEAD
+chat_duration: 399369s (04:14:56:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -830,6 +830,17 @@ Summary: Seven reviewed paths bind Ubuntu 24.04 and the exact official per-binar
 
 ADR impact: No new architecture: provision existing mandatory sandbox support within the approved ephemeral P17 host route.
 
+
+### 2026-10-02T21:33:32Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): enable reviewed namespace policy for qualification
+
+Summary: Seven reviewed paths provision the exact Ubuntu per-binary sandbox namespace profile. 32 workflow tests, 25 blueprint tests, static and metadata checks, non-loading profile syntax verification, whitespace and complete commit checklist passed. Independent review verified official hashes and no broadened compiler/AWS authority. Fresh P16 and P17 required; P19 drift remains blocked.
+
+ADR impact: No new architecture: supported host setup for the existing mandatory sandbox.
+
 ## Sub-Agent Activity
 
 
@@ -1315,6 +1326,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Seven reviewed paths bind Ubuntu 24.04 and the exact official per-binary AppArmor policy without installing unrelated profiles or changing global restrictions. Passed 32 publication-workflow tests, 25 selected-blueprint tests, static workflow validation, four eligible metadata headers, diff checks and non-loading AppArmor profile compilation. Every sandbox flag and mandatory probe is unchanged. Fresh P16/P17 required; P19 remains blocked.
   ADR impact: No new architecture: provision existing mandatory sandbox support within the approved ephemeral P17 host route.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-02T21:33:32Z
+  Message: fix(deploy): enable reviewed namespace policy for qualification
+  Summary: Seven reviewed paths provision the exact Ubuntu per-binary sandbox namespace profile. 32 workflow tests, 25 blueprint tests, static and metadata checks, non-loading profile syntax verification, whitespace and complete commit checklist passed. Independent review verified official hashes and no broadened compiler/AWS authority. Fresh P16 and P17 required; P19 drift remains blocked.
+  ADR impact: No new architecture: supported host setup for the existing mandatory sandbox.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1328,9 +1346,9 @@ Reason: This is a bounded diagnostic and evidence-handling repair within the exi
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-10-02T21:06:55Z
-Latest commit SHA: 4edf8865
-Chat duration: 397772s (04:14:29:32)
+Latest commit at UTC: 2026-10-02T21:33:32Z
+Latest commit SHA: HEAD
+Chat duration: 399369s (04:14:56:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
