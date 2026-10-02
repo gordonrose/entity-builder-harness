@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-09-30T20:47:26Z
-latest_commit_sha: e8909569
-chat_duration: 223803s (02:14:10:03)
+latest_commit_at_utc: 2026-10-02T20:38:49Z
+latest_commit_sha: 10a49c72
+chat_duration: 396086s (04:14:01:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -768,6 +768,17 @@ Summary: P17 diagnostic repair reverified in the canonical migrated worktree; se
 
 Durable evidence: The user explicitly renewed commit, push, merge and approved P16-P33 programme authority on 2026-10-02. Session worktree metadata now names the canonical /tmp worktree. Independent review found no blocking defect; fresh verification passed 29 qualified-publication tests, 25 selected-blueprint tests, deployment-workflow static validation and both diff checks. Remote main remains 2715fd725ead82e3a824d8ba99d0308e30a9f1fb. P19 foundation drift remains a blocker; Python caches are preserved. Next is the repository commit gate, P17 diagnostic commit and merge, then fresh P16 and P17 on the exact main revision.
 
+
+### 2026-10-02T20:38:49Z - Commit recorded
+
+Commit: `10a49c72`
+
+Message: fix(deploy): expose normalized P17 qualification failures
+
+Summary: Seven reviewed P17 repair paths committed from the canonical /tmp worktree. Passed 29 publication-workflow tests, 25 selected-blueprint tests, deployment-workflow static validation, whitespace checks and the complete repository commit gate. Normalized diagnostics only; publication and all source gates preserved. Next fresh hosted P16 before P17; P19 foundation drift remains blocked.
+
+ADR impact: No new ADR: bounded diagnostic repair under the existing release-control plan.
+
 ## Sub-Agent Activity
 
 
@@ -1229,6 +1240,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: Accepted U20 in 22 reviewed paths: versioned selected operation, conditional shared snapshots/events and exact evidence readback, with no live transport or execution authority. Final clean verification passed 2173 tests in 68 suites, zero skips; metadata and all commit-readiness checks passed. Independent source and documentation review passed. The accepted register is now 20 components; M1-M4 remain partial and M5 open. Next is the existing candidate lifecycle through durable control and selected-caller integration. No external mutation, push or merge.
   ADR impact: Implements approved ADR 0040 source policy; no new architecture decision or cloud activation.
 
+
+- Commit: `10a49c72`
+  Time UTC: 2026-10-02T20:38:49Z
+  Message: fix(deploy): expose normalized P17 qualification failures
+  Summary: Seven reviewed P17 repair paths committed from the canonical /tmp worktree. Passed 29 publication-workflow tests, 25 selected-blueprint tests, deployment-workflow static validation, whitespace checks and the complete repository commit gate. Normalized diagnostics only; publication and all source gates preserved. Next fresh hosted P16 before P17; P19 foundation drift remains blocked.
+  ADR impact: No new ADR: bounded diagnostic repair under the existing release-control plan.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1242,9 +1260,9 @@ Reason: This is a bounded diagnostic and evidence-handling repair within the exi
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-09-30T20:47:26Z
-Latest commit SHA: e8909569
-Chat duration: 223803s (02:14:10:03)
+Latest commit at UTC: 2026-10-02T20:38:49Z
+Latest commit SHA: 10a49c72
+Chat duration: 396086s (04:14:01:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
