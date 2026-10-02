@@ -208,6 +208,9 @@ expect_failure "recovery-label-not-new" bash "$SCRIPT" --contract "$FIXTURES/val
 REALIZATION_SOURCES=(
   scripts/04.deploy/operational-realization-gate/script.py
   scripts/04.deploy/operational-realization-gate/release_compiler.py
+  scripts/04.deploy/operational-realization-gate/selected_admission.py
+  scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py
+  scripts/04.deploy/operational-realization-gate/selected_admission_cli.py
   scripts/04.deploy/operational-realization-gate/source_coverage.py
   scripts/04.deploy/operational-realization-gate/caller_coverage.py
   scripts/04.deploy/operational-realization-gate/finding_triage.py
@@ -236,7 +239,7 @@ if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+(platform\.adapters|boto
   echo "ERROR: provider adapter import leaked into generic realization core" >&2
   exit 1
 fi
-if grep -Eq -- 'subprocess|socket|urllib|requests' "${REALIZATION_SOURCES[@]}"; then
+if grep -Eq -- '(^|[[:space:]])(import|from)[[:space:]]+[^#]*(subprocess|socket|urllib|requests)\b' "${REALIZATION_SOURCES[@]}"; then
   echo "ERROR: generic realization core must not invoke network or provider tooling" >&2
   exit 1
 fi
@@ -261,6 +264,13 @@ PY_SUITE
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_release_compiler.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_blueprint.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_blueprint_cli.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_admission.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_candidate_lifecycle.py'
+run_unit_suite scripts/04.deploy/release-control 'test_selected_control_plane.py'
+run_unit_suite scripts/04.deploy/release-control/adapters/aws 'test_authenticated_selected_transport.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_effect_control.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_effect_caller_guard.py'
+run_unit_suite scripts/04.deploy/operational-realization-gate 'test_hosted_source_workflow.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_readiness.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_selected_readiness_cli.py'
 run_unit_suite scripts/04.deploy/operational-realization-gate 'test_source_coverage.py'

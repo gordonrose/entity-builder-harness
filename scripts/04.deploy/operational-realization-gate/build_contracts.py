@@ -31,7 +31,7 @@ NAMES = {"qualified-image-handoff", "source-build-inventory", "source-build-arti
          "control-store-conformance", "control-store-error", "estate-caller-inventory",
          "estate-caller-reconciliation", "estate-caller-error", "finite-recovery-attempt",
          "finite-recovery-observation", "finite-recovery-result", "finite-recovery-conformance",
-         "finite-recovery-error", "finite-recovery-image-lock", "operation-action-record"}
+         "finite-recovery-error", "finite-recovery-image-lock", "candidate-lifecycle-attempt", "candidate-lifecycle-observation", "operation-action-record"}
 
 
 def validate_schema(name, document):

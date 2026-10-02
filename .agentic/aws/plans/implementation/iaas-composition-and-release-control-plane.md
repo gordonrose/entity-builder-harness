@@ -52,6 +52,11 @@ IDs and named unmet criteria, with explicit scope/estimate changes. Requirements
 and approval boundaries below remain unchanged. The dated delivery entries and
 Section 8 retain historical sequencing; the ledger owns the current next queue.
 
+B05 replaces the withdrawn L01–L49 draft with the [fixed P01–P33 Phase 1 MVP
+closure ledger](../../../../docs/04.deploy/plans/iaas-release-control-progress.md#phase-1--fixed-mvp-closure-ledger).
+It separately records the complete R1–R8 programme as Phase 2. This is a
+reporting correction only: it creates no runtime capability or completion credit.
+
 ## 1. Outcome
 
 Make a release a **reviewed realization of one declared environment**, not a

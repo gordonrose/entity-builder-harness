@@ -1,0 +1,197 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.release-control
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: infra.ci-cd
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Define the approved minimum selected release-control stores and isolated controller role without applying them.
+#   portability: {class: internal, targets: [kanbien/staging]}
+#   used_by:
+#   - id: deploy.script.selected-control-plane
+#     path: scripts/04.deploy/release-control/selected_control_plane.py
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Minimum private Kanbien staging release-control stores and source-only controller role.
+
+Resources:
+  ReleaseControlJournalTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: kanbien-staging-platform-shell-release-control
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: release-control-journal
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: safe-operational-metadata-only
+        - Key: managed-by
+          Value: cloudformation
+
+  ReleaseControlEvidenceBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: kanbien-staging-platform-shell-release-evidence-337159794548
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: service
+          Value: platform-shell
+        - Key: component
+          Value: release-control-evidence
+        - Key: environment
+          Value: staging
+        - Key: data-classification
+          Value: safe-operational-evidence-only
+        - Key: managed-by
+          Value: cloudformation
+
+  ReleaseControlEvidenceBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: ReleaseControlEvidenceBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - Fn::GetAtt: [ReleaseControlEvidenceBucket, Arn]
+              - Fn::Sub: "${ReleaseControlEvidenceBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+          - Sid: DenyEvidenceOverwriteWithoutConditionalCreate
+            Effect: Deny
+            Principal: "*"
+            Action: s3:PutObject
+            Resource:
+              Fn::Sub: "${ReleaseControlEvidenceBucket.Arn}/kanbien/staging/operations/*"
+            Condition:
+              "Null":
+                s3:if-none-match: "true"
+          - Sid: PermitOnlyControllerEvidenceObjects
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::GetAtt: [ReleaseControlControllerRole, Arn]
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:PutObject
+            Resource:
+              Fn::Sub: "${ReleaseControlEvidenceBucket.Arn}/kanbien/staging/operations/*"
+          - Sid: PermitOnlyControllerEvidenceList
+            Effect: Allow
+            Principal:
+              AWS:
+                Fn::GetAtt: [ReleaseControlControllerRole, Arn]
+            Action: s3:ListBucket
+            Resource:
+              Fn::GetAtt: [ReleaseControlEvidenceBucket, Arn]
+            Condition:
+              StringLike:
+                s3:prefix: kanbien/staging/operations/*
+
+  ReleaseControlControllerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-staging-platform-shell-release-control-controller
+      MaxSessionDuration: 7200
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Sid: TrustedProtectedStagingWorkflow
+            Principal:
+              Federated: arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:repository: gordonrose/entity-builder-harness
+                token.actions.githubusercontent.com:ref: refs/heads/main
+              StringLike:
+                token.actions.githubusercontent.com:sub: repo:gordonrose/entity-builder-harness:environment:staging
+      Policies:
+        - PolicyName: selected-release-control-store-only
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: VerifyControllerIdentity
+                Effect: Allow
+                Action: sts:GetCallerIdentity
+                Resource: "*"
+              - Sid: OperateOnlySelectedJournal
+                Effect: Allow
+                Action:
+                  - dynamodb:TransactGetItems
+                  - dynamodb:TransactWriteItems
+                Resource:
+                  Fn::GetAtt: [ReleaseControlJournalTable, Arn]
+              - Sid: OperateOnlySelectedEvidenceObjects
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource:
+                  Fn::Sub: "${ReleaseControlEvidenceBucket.Arn}/kanbien/staging/operations/*"
+              - Sid: ListOnlySelectedEvidencePrefix
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource:
+                  Fn::GetAtt: [ReleaseControlEvidenceBucket, Arn]
+                Condition:
+                  StringLike:
+                    s3:prefix: kanbien/staging/operations/*
+
+Outputs:
+  ReleaseControlJournalTableName:
+    Value:
+      Ref: ReleaseControlJournalTable
+  ReleaseControlEvidenceBucketName:
+    Value:
+      Ref: ReleaseControlEvidenceBucket
+  ReleaseControlControllerRoleArn:
+    Value:
+      Fn::GetAtt: [ReleaseControlControllerRole, Arn]

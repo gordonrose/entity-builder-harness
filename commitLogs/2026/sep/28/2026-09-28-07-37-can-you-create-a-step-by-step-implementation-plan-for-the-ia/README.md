@@ -2982,3 +2982,144 @@ push or merge occurred. No source corruption or ownership conflict was found.
 Durable carry-forward is the dated acceptance summary, exact file fingerprints,
 fixed progress ledger and next integration map; raw tool output stays in private
 batch scratch. No routine source stop or unresolved approval-tool rejection.
+
+
+### 2026-09-30 — B05 finite MVP completion checklist
+
+The user asked for a finite list of work needed to finish the MVP and raised
+continuing scope growth. The five milestone definitions lacked a concise task
+completion queue. Added stable T1–T8 acceptance tasks to the existing progress
+ledger and linked them from the MVP and main implementation plan. This is a
+documentation/decomposition correction: 20 accepted components remain credited;
+no new implementation unit, milestone, provider effect or estimate was added.
+
+Independent read-only review checked the eight tasks against M1–M5 and the
+original Stage 6 pause. Existing requirements now explicit include actual service
+promotion/recovery, store recovery qualification, alert receipt, stale-input
+refusal, safe scope reuse and final relational cleanup. Prerequisite preparation
+for missing database identities or isolated restore stays inside T6 and requires
+its own reviewed approval; the source-approved control-store policy grants no
+database effects. The complete all-task preflight gate remains intact. T8 may
+supply Stage 6 qualification evidence once its readiness and specific approval
+are satisfied; that evidence is credited once, not turned into unrelated product
+feature work or a circular completion prerequisite.
+
+Each task records current credit, close criteria and approval boundary. New
+requirements stay deferred unless the existing necessary-now rule applies; any
+promotion must show evidence, affected task, smallest fix and scope/effort delta.
+Repairs remain under existing IDs. Next implementation remains T1/T2 with T3/T4
+integration; no implementation was resumed during this reporting task. Latest
+user-reported allowance is 14 percent; no account token count is observable.
+The prior timed implementation batch has ended. No external action is authorized
+by this documentation request. Existing ADR 0040 and the MVP scope cover this
+clarification; no new architecture or policy decision requires an ADR.
+
+B05 verification: exactly eight task IDs T1–T8, accepted component count still
+20, three new local links/anchors resolve, metadata passed for all three eligible
+planning documents, and git diff --check passed. Independent review accepted
+scope/criteria and clarified that T6/T7 readiness/candidate proof may interleave;
+T8 still requires the complete readiness set and specific approval. No runtime
+tests were rerun because no executable source changed. The source implementation
+and its existing 2,173-test acceptance remain unchanged. Durable carry-forward
+is the fixed checklist, explicit finish line, approval boundaries and next T IDs.
+
+
+### 2026-09-30 — B05 MVP ledger correction
+
+The earlier uncommitted L01–L49 action ledger is withdrawn. It incorrectly made
+future general control-plane work a prerequisite for the bounded staging MVP.
+The active queue is now P01–P33: fixed atomic closure checks with a dependency,
+evidence test, current status and explicit approval boundary. P01–P33 end when
+the existing PostgreSQL Stage 6 route is safe to propose for its separately
+approved execution; they do not claim PostgreSQL Stage 6 itself is complete.
+
+The complete original R1–R8 programme is retained as Phase 2. It is explicitly
+separate from Phase 1 and cannot silently expand the MVP. A new finding remains
+within an existing P-row only when it prevents that row from closing; otherwise
+it is Phase 2 backlog. Promotion requires demonstrated blocker or unsafe-effect
+or drift evidence, the smallest remedy and a user-approved dated ledger revision.
+
+This is a documentation and reporting correction only. The accepted delivery
+count remains 20, all P01–P33 are open at source checkpoint `e8909569`, and no
+source implementation, AWS, GitHub, DNS, secrets, provider resource, push,
+merge or deployment action occurred. Verification: `git diff --check` passed;
+the ledger contains exactly 33 P rows; its linked MVP and full-plan references
+resolve to the same Phase 1 anchor. No executable tests were rerun because no
+executable source changed. The next reachable implementation work is P01–P15;
+P16–P33 remain separately approval-gated hosted or AWS qualification.
+
+
+### 2026-09-30T23:01:58Z — P01–P04 selected-admission source delivery
+
+Completed the bounded P01–P04 source-only unit through the existing Operational
+Realization Gate. It reuses the selected 17-stage blueprint compiler, binds a
+saved baseline and fresh candidate separately, and generates one closed request
+per selected operation with owner, profile, identity, command, recovery, cleanup,
+artifact, cost, attempt and expiry bindings.
+
+The new result has no route to an effect. It always reports blocked evidence,
+release eligibility, operation authorization and qualification; the shared result
+consumer rejects it for source analysis and both authority purposes. Mutable or
+same-ID rebound releases, malformed source results, unsafe fields, shortened or
+reordered gates and changed request bindings fail closed with safe codes.
+
+Focused verification passed: 9 selected-admission tests, 13 blueprint-CLI tests,
+27 selected-operation tests and 45 result-consumption tests. The release compiler
+regression suite also passed. The established full Operational Realization Gate
+local check completed successfully after its boundary scan was narrowed to
+prohibited imported network tooling, avoiding a false match on `operation_requests`.
+
+No AWS, GitHub, registry, deployment, credential or provider action occurred.
+
+### 2026-10-01T06:38:26Z — P05–P07 candidate lifecycle source delivery
+
+Completed the bounded P05–P07 source-only unit through the existing durable
+OperationActionStore. The new selected-candidate attachment is derived only
+from a valid P04 admission result and fixes one candidate image, cluster digest
+and task-revision digest. It records separate durable start and stop
+reservations before an adapter could issue either effect. Each reservation event
+digest is the one request token and must be current immediately before dispatch.
+
+Only digest-bound task, cluster, revision and image observations can be stored.
+Wrong identity, a raw task handle, a stale writer, an expired lease, a lost start
+response or an unresolved scope all fail closed. Restart preserves the spent
+start reservation; verified cleanup and closure are required before the scope
+can be claimed again. The profile always retains blocked release eligibility and
+operation authorization, and has no provider transport or execution route.
+
+Focused verification passed: five candidate-lifecycle tests; the 26-operation
+action-store regression had already passed after profile registration. No AWS,
+GitHub, registry, deployment, credential or provider action occurred.
+
+Next delivery unit: P08, source definition of the minimum selected journal and
+evidence-store infrastructure contract. Resource creation remains separately
+approval-gated.
+
+### 2026-10-01T11:00:00Z — P08–P15 selected control-path source delivery
+
+Completed P08–P15 as uncommitted, source-only delivery units. P08–P09 define
+the exact four-resource selected journal/evidence control plane and its narrow
+GitHub OIDC role. P10 validates the dedicated role identity before it permits
+only fixed journal/evidence requests; malformed and uncertain outcomes fail
+closed, and immutable evidence must pass version-specific readback.
+
+P11–P12 put the existing candidate and PostgreSQL relational wrappers behind a
+shared receipt boundary. Their validation modes still work locally. Every
+candidate execution, relational execution, recovery continuation, bootstrap
+recovery and diagnostic mode stops before a provider call until the later live
+receipts exist. P13 documents the one source route and statically checks those
+legacy paths for a bypass. P14 tests the pinned, read-only hosted workflow
+source. P15 records the focused local regression in
+docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md.
+
+Focused verification passed: 118 tests across release compilation, selected
+admission, lifecycle/action journal, control-plane/IAM, authenticated transport,
+selected-store evidence readback, caller guards and hosted-workflow source.
+The candidate and relational validation commands also passed with no AWS call;
+diff and cached-diff checks passed.
+
+No AWS, GitHub, registry, DNS, secrets, deployment, provider read, provider
+mutation, merge, push or commit occurred. Next delivery unit: P16, one approved
+hosted source-validation run on a reviewed revision. P17–P20 remain prepared
+only: their required artifact/admission/target/change-plan receipts cannot be
+created locally.

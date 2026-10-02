@@ -71,6 +71,28 @@ def arguments() -> argparse.Namespace:
     return result
 
 
+def require_selected_effect_control(parsed: argparse.Namespace) -> None:
+    """Refuse every relational provider mode until one live control receipt exists."""
+
+    if parsed.execute:
+        mode = "execute"
+    elif parsed.execute_bootstrap_recovery:
+        mode = "execute-bootstrap-recovery"
+    elif parsed.execute_recovery_continuation:
+        mode = "execute-recovery-continuation"
+    elif parsed.diagnose_bootstrap_recovery:
+        mode = "diagnose-bootstrap-recovery"
+    else:
+        raise RelationalSmokeError("the relational release-control mode is unavailable")
+    directory = Path(__file__).resolve().parents[1] / "operational-realization-gate"
+    sys.path.insert(0, str(directory))
+    try:
+        import selected_effect_control
+        selected_effect_control.require_effect_authority("postgresql-relational-smoke", mode)
+    except Exception as exception:
+        raise RelationalSmokeError("the relational release-control authority is unavailable") from exception
+    finally:
+        sys.path.remove(str(directory))
 def mapping(value: Any, label: str) -> dict[str, Any]:
     """Reject an absent policy section rather than choosing an operation default."""
 
@@ -717,6 +739,7 @@ def main() -> int:
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
             return 0
+        require_selected_effect_control(parsed)
         if parsed.execute_bootstrap_recovery:
             execute_bootstrap_recovery(policy)
             print('{"postgresql_relational_bootstrap_recovery":"passed"}')

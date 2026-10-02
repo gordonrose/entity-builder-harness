@@ -1,0 +1,55 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.release-control.control-plane
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: infrastructure-dependency-contract
+#   purpose: Bind the approved selected release-control policy to exact source identifiers and limits.
+#   portability: {class: internal, targets: [kanbien/staging]}
+#   used_by:
+#   - id: deploy.script.selected-control-plane
+#     path: scripts/04.deploy/release-control/selected_control_plane.py
+schema: selected-control-plane/v1
+target: kanbien/staging
+account_id: "337159794548"
+region: eu-west-1
+executor:
+  role_name: kanbien-staging-platform-shell-release-control-controller
+  github_repository: gordonrose/entity-builder-harness
+  github_ref: refs/heads/main
+  github_environment: staging
+  max_session_seconds: 7200
+journal:
+  table_name: kanbien-staging-platform-shell-release-control
+  partition_key: pk
+  sort_key: sk
+  encryption: aws-owned
+  ttl_enabled: false
+evidence:
+  bucket_name: kanbien-staging-platform-shell-release-evidence-337159794548
+  prefix: kanbien/staging/operations/
+  versioning: true
+  encryption: AES256
+  public_access: blocked
+  minimum_retention_days: 90
+recovery:
+  point_in_time_recovery_days: 35
+  recovery_point_minutes: 5
+  recovery_time_hours: 4
+authority:
+  window_minutes: 120
+  execution_minutes: 90
+  recovery_minutes: 30
+  max_effect_attempts: 1
+lease:
+  seconds: 60
+  renew_every_seconds: 20
+  minimum_effect_seconds: 35
+  clock_uncertainty_seconds: 5
+cost:
+  monthly_ceiling_usd: 5
+  initial_qualification_ceiling_usd: 2
+  existing_service_budget_usd: 25

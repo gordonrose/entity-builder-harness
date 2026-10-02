@@ -554,6 +554,17 @@ def emit(contract_id: str, verdict: str, codes: list[str], scope: str) -> None:
 
 
 def main() -> int:
+    if any(argument.split("=", 1)[0] == "--selected-admission" for argument in sys.argv[1:]):
+        sys.dont_write_bytecode = True
+        try:
+            import selected_admission_cli
+        except Exception:
+            print(json.dumps({"schema": "selected-admission-error/v1", "scope": "selected-staging-admission",
+                              "verdict": "failed", "authorized": False, "release_eligibility": "blocked",
+                              "operation_authorization": "blocked", "qualification_verdict": "blocked",
+                              "findings": [{"code": "admission-dependency-unavailable"}]}, sort_keys=True))
+            return 1
+        return selected_admission_cli.main(sys.argv[1:])
     if any(argument.split("=", 1)[0] in {"--selected-readiness", "--inspect-target"} for argument in sys.argv[1:]):
         sys.dont_write_bytecode = True
         try:

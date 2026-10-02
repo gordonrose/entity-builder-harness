@@ -1,0 +1,92 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.candidate-lifecycle-attempt
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract
+#   purpose: Bind one selected candidate start and stop lifecycle to an immutable source-only admission result.
+#   portability: {class: internal, targets: [kanbien-staging]}
+#   used_by:
+#   - id: deploy.script.candidate-lifecycle
+#     path: scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:candidate-lifecycle-attempt:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "operation_id", "admission_digest", "request", "profile", "expected_identity", "limits", "authorized", "release_eligibility", "operation_authorization"],
+  "properties": {
+    "schema": {"const": "candidate-lifecycle-attempt/v1"},
+    "operation_id": {"const": "candidate-server"},
+    "admission_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "owner", "operation_profile", "acting_identity", "command_ref", "recovery_route", "cleanup_route", "artifact_digest", "candidate_release_digest", "baseline_release_digest", "source_revision", "target_composition_revision", "cost_ceiling_usd", "max_effect_attempts", "authority_window_ms", "authority_status"],
+      "properties": {
+        "operation_id": {"const": "candidate-server"},
+        "owner": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "operation_profile": {"const": "service-rollout"},
+        "acting_identity": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "command_ref": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "recovery_route": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "cleanup_route": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "artifact_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "candidate_release_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "baseline_release_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "target_composition_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "cost_ceiling_usd": {"const": 25},
+        "max_effect_attempts": {"const": 1},
+        "authority_window_ms": {"const": 7200000},
+        "authority_status": {"const": "not-granted"}
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "operation_profile", "acting_identity", "command_ref"],
+      "properties": {
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["image_id"],
+          "properties": {"image_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+        },
+        "operation_profile": {"const": "service-rollout"},
+        "acting_identity": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+        "command_ref": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"}
+      }
+    },
+    "expected_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cluster_digest", "task_revision_digest", "image_digest"],
+      "properties": {
+        "cluster_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "task_revision_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "image_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recovery_timeout_ms", "action_limits"],
+      "properties": {
+        "recovery_timeout_ms": {"const": 30000},
+        "action_limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "stop"],
+          "properties": {"start": {"const": 1}, "stop": {"const": 1}}
+        }
+      }
+    },
+    "authorized": {"const": false},
+    "release_eligibility": {"const": "blocked"},
+    "operation_authorization": {"const": "blocked"}
+  },
+}

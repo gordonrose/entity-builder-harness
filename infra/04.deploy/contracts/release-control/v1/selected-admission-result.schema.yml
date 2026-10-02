@@ -1,0 +1,89 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.contract.selected-admission-result.v1
+#   version: 1
+#   status: active
+#   layer: 04.deploy
+#   domain: deployment.realization
+#   disciplines: [architecture, security, sre]
+#   kind: contract-schema
+#   purpose: Bind a selected baseline and candidate release into closed source-only admission requests.
+#   portability: {class: internal, targets: [kanbien-staging]}
+#   used_by:
+#   - id: deploy.script.selected-admission
+#     path: scripts/04.deploy/operational-realization-gate/selected_admission.py
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:release-control:selected-admission-result:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scope", "verdict", "authorized", "release_eligibility", "operation_authorization", "qualification_verdict", "baseline", "candidate", "acceptance", "operation_requests", "policy_digest", "findings", "result_digest"],
+  "properties": {
+    "schema": {"const": "selected-admission-result/v1"},
+    "scope": {"const": "selected-staging-admission"},
+    "verdict": {"const": "compiled"},
+    "authorized": {"const": false},
+    "release_eligibility": {"const": "blocked"},
+    "operation_authorization": {"const": "blocked"},
+    "qualification_verdict": {"const": "blocked"},
+    "baseline": {"$ref": "#/$defs/release_binding"},
+    "candidate": {"$ref": "#/$defs/release_binding"},
+    "acceptance": {"type": "array", "minItems": 17, "maxItems": 17, "items": {"$ref": "#/$defs/gate"}},
+    "operation_requests": {"type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true, "items": {"$ref": "#/$defs/request"}},
+    "policy_digest": {"$ref": "#/$defs/digest"},
+    "findings": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/finding"}},
+    "result_digest": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 3, "maxLength": 127, "pattern": "^[a-z][a-z0-9-]{2,126}$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "revision": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+    "release_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["release_id", "release_digest", "source_revision", "target_composition_revision", "artifact_bindings_digest"],
+      "properties": {
+        "release_id": {"$ref": "#/$defs/id"},
+        "release_digest": {"$ref": "#/$defs/digest"},
+        "source_revision": {"$ref": "#/$defs/revision"},
+        "target_composition_revision": {"$ref": "#/$defs/digest"},
+        "artifact_bindings_digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stage", "gate", "binding_digest", "operation_count"],
+      "properties": {
+        "stage": {"type": "integer", "minimum": 1, "maximum": 17},
+        "gate": {"$ref": "#/$defs/id"},
+        "binding_digest": {"$ref": "#/$defs/digest"},
+        "operation_count": {"type": "integer", "minimum": 1, "maximum": 128}
+      }
+    },
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation_id", "owner", "operation_profile", "acting_identity", "command_ref", "recovery_route", "cleanup_route", "artifact_digest", "candidate_release_digest", "baseline_release_digest", "source_revision", "target_composition_revision", "cost_ceiling_usd", "max_effect_attempts", "authority_window_ms", "authority_status"],
+      "properties": {
+        "operation_id": {"$ref": "#/$defs/id"},
+        "owner": {"$ref": "#/$defs/id"},
+        "operation_profile": {"enum": ["static-artifact", "inspection", "service-rollout", "finite-job", "queue-consumer", "infrastructure-change", "migration", "restore", "scheduled-control"]},
+        "acting_identity": {"$ref": "#/$defs/id"},
+        "command_ref": {"$ref": "#/$defs/id"},
+        "recovery_route": {"$ref": "#/$defs/id"},
+        "cleanup_route": {"$ref": "#/$defs/id"},
+        "artifact_digest": {"$ref": "#/$defs/digest"},
+        "candidate_release_digest": {"$ref": "#/$defs/digest"},
+        "baseline_release_digest": {"$ref": "#/$defs/digest"},
+        "source_revision": {"$ref": "#/$defs/revision"},
+        "target_composition_revision": {"$ref": "#/$defs/digest"},
+        "cost_ceiling_usd": {"const": 25},
+        "max_effect_attempts": {"const": 1},
+        "authority_window_ms": {"const": 7200000},
+        "authority_status": {"const": "not-granted"}
+      }
+    },
+    "finding": {
+      "type": "object", "additionalProperties": false, "required": ["code"],
+      "properties": {"code": {"enum": ["admission-evidence-unavailable", "admission-authority-unavailable"]}}
+    }
+  }
+}

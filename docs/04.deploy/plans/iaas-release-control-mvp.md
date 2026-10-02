@@ -42,6 +42,15 @@ Unrelated RAG releases, legacy targets and repository-wide migration are deferre
 shared resources and callers capable of affecting this same target are not
 unrelated and must remain within the safety review.
 
+## Fixed remaining tasks
+
+The [Phase 1 closure ledger](iaas-release-control-progress.md#phase-1--fixed-mvp-closure-ledger)
+contains the fixed, granular remaining acceptance queue for this MVP. Its 33
+rows each name one closure check, evidence, dependency and approval boundary.
+It ends when PostgreSQL Stage 6 is safe to propose for its own execution; it
+does not claim Stage 6 is complete. The five milestones below remain outcome
+groupings only. New requirements go to Phase 2 by default and can enter Phase 1
+only through the ledger’s documented user-approved change control.
 ## Five fixed delivery milestones
 
 These are outcomes, not a claim of five equal coding sessions. Each has source
@@ -73,10 +82,10 @@ for source implementation. Next integrate one existing candidate start, health
 observation and controlled stop through durable shared execution, authenticated
 admission, unknown-outcome/cleanup reconciliation and selected-caller refusal.
 Specifically approved store bootstrap, hosted/target acceptance and M5 rehearsal
-remain ahead. No extra milestone is added; the live MVP is not complete tonight
-within this batch's timebox.
-The current batch ends by 21:10 UTC under the user's three-hour maximum; this
-supersedes the earlier weekly-allowance stop for this batch.
+remain ahead. The fixed Phase 1 ledger, rather than an estimate, owns closure.
+The timed implementation batch ended before its 21:10 UTC limit. The subsequent
+B05 checklist update is documentation only; no new runtime batch or external
+operation is authorized by it.
 
 ## Safety floor and honest qualification
 

@@ -27,6 +27,8 @@
 | --- | --- |
 | `script.py` | Generic compiler for graph completeness, proof levels, gate order, lifecycle safety, strict normalized evidence, and provider leakage. Its compiler modes use no provider tooling; explicit selected-target inspection dispatches through a separate adapter. |
 | `release_compiler.py` | Schema-backed immutable release definition and 17-stage acceptance-matrix compilation, reusing the realization contract validator. |
+| `selected_admission.py`, `selected_admission_cli.py` | Compile a closed selected baseline/candidate admission request with immutable release bindings, while preserving blocked release and operation authority. |
+| `candidate_lifecycle.py` | Attach the selected candidate request to durable local start/stop reservations and digest-only task identity observations, without provider authority. |
 | `source_coverage.py` | Reconciles fresh independent inventory, reviewed adoption and composition; generates scoped source obligations. |
 | `finding_triage.py` | Checks that every discovery finding has a current, policy-consistent open work assignment. |
 | `caller_coverage.py` | Reconciles every discovered caller subject and edge with a reviewed source profile; keeps qualification blocked. |
@@ -1084,6 +1086,17 @@ See [selected blueprint compilation](selected-release-blueprint.README.md) for
 the exact command, source invalidation, nine task groups and thirteen container
 obligations. This compiles all seventeen acceptance rows; it grants no operation
 authority and does not mark the proposed target policy approved.
+
+[Selected admission compilation](selected-admission.README.md) binds a saved
+baseline and fresh candidate blueprint result into closed per-operation requests.
+It rejects mutable release bindings and incomplete gates, but keeps evidence,
+release eligibility and operation authority blocked until later receipt and
+controller work supplies independently verified evidence.
+
+[Selected candidate lifecycle](candidate-lifecycle.README.md) binds the
+candidate-server request to one durable local start and stop reservation,
+one request token per reservation and digest-only task/cluster/revision/image
+observations. It proves local restart and fencing behavior only.
 
 [Qualified image publication](qualified-publication.README.md) connects the
 existing final-image verifier to the existing staging publisher on the same

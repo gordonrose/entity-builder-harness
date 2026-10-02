@@ -53,7 +53,8 @@
     },
     "attachment_type": {
       "enum": [
-        "finite-recovery-attempt/v1"
+        "finite-recovery-attempt/v1",
+        "candidate-lifecycle-attempt/v1"
       ]
     },
     "attachment_digest": {

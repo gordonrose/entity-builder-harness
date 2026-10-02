@@ -26,9 +26,10 @@ import operation_journal as contract
 from operation_journal import fail
 from local_control_store import LocalControlStore, CAPABILITIES
 import finite_recovery_contracts as finite
+import candidate_lifecycle as candidate
 
 # Code registration only. There is no user-supplied validator/schema/command path.
-REGISTERED={'finite-recovery-attempt/v1':finite}
+REGISTERED={'finite-recovery-attempt/v1':finite,'candidate-lifecycle-attempt/v1':candidate}
 MAX_ACTION_EVENTS=128
 SCHEMA='operation-action-record'
 AUTHORITY={'authorized':False,'release_eligibility':'blocked','operation_authorization':'blocked'}
@@ -96,7 +97,7 @@ def binding_sources():
 def _bindings():
     files=binding_sources()
     values={path.name:'sha256:'+hashlib.sha256(contract.read_source(path,262144)).hexdigest() for path in files}
-    for name in (SCHEMA,*finite.SCHEMAS,'finite-job-profile','finite-job-result','operation-control','operation-journal','operation-evidence'):
+    for name in (SCHEMA,*finite.SCHEMAS,*candidate.SCHEMAS,'finite-job-profile','finite-job-result','operation-control','operation-journal','operation-evidence'):
         values[name]='sha256:'+hashlib.sha256(contract.read_source(contract.SCHEMA_DIR/(name+'.schema.yml'))).hexdigest()
     return contract.digest(values)
 

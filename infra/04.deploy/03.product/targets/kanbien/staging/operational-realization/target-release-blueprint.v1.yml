@@ -150,13 +150,13 @@ source_bindings:
 - path: scripts/04.deploy/render-platform-shell-foundation-template/script.sh
   digest: sha256:75ca1a2d6f8ab8cdc628579b9339095c5f6b9a17eab97f9003aaf6d1ddca5d17
 - path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py
-  digest: sha256:b72ed0e793edfae02446836cbbd1839140c0061c12826dd2db874e71d6eb6170
+  digest: sha256:803201160d55a8aa9ede957fc071a9e250f8ea704729a77eefe7bb255bb0809b
 - path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
   digest: sha256:a1f63f9787be577bf4ac85966087e458e577605c6395ff0b11bf7afd313155e7
 - path: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh
   digest: sha256:06a37f89d66f540592465ae71d393be29f852091709a88799e6fb2a4b61b4695
 - path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py
-  digest: sha256:b27b83c891f65a7e0ea9d5e6b4103d17aa7d205c26aabc9f96437a8b66a28d91
+  digest: sha256:2e6de8fb2ea891873cc54652d447052b3245d44046316ee432f3a9c0d391bbf5
 - path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
   digest: sha256:9ed24b7ec1b9e91950194f19ba6d13e990c156acb7a3ff2b271fc28bb1037239
 - path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
