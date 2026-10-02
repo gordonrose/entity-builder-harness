@@ -2504,7 +2504,7 @@ dockerfile = Path("infra/04.deploy/03.product/image/Dockerfile").read_text(encod
 for required_text, message in {
     "ARG RUNTIME_NODE_IMAGE=gcr.io/distroless/nodejs22-debian12:nonroot": "platform-shell Dockerfile must declare the reviewed minimal runtime image",
     "FROM ${RUNTIME_NODE_IMAGE}": "platform-shell Dockerfile must use the separate runtime image stage",
-    "COPY --chown=nonroot:nonroot --from=build": "platform-shell runtime payload must be owned by nonroot",
+    "COPY --chown=nonroot:nonroot --from=payload": "platform-shell runtime payload must pass through the reviewed payload stage and be owned by nonroot",
     "USER nonroot": "platform-shell Dockerfile must run as nonroot",
     'CMD ["/nodejs/bin/node", "-e"': "platform-shell Dockerfile health check must use Node exec form without a shell",
     'CMD [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.js"]': "platform-shell Dockerfile must pass only the application path to the Distroless Node entrypoint",

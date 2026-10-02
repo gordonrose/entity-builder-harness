@@ -112,6 +112,21 @@ grep -q "missing sibling README" "$TMP_ROOT/missing.json" \
 grep -q "missing an effective ignore file" "$TMP_ROOT/missing.json" \
   || fail "missing report did not mention effective ignore file"
 
+mkdir -p "$TMP_ROOT/inert-fixture/scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs"
+cat > "$TMP_ROOT/inert-fixture/scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile" <<'EOF'
+FROM gcr.io/distroless/nodejs22-debian12:nonroot
+EOF
+
+bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/inert-fixture" --json \
+  > "$TMP_ROOT/inert-fixture.json"
+python3 - "$TMP_ROOT/inert-fixture.json" <<'PY'
+import json
+import sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+assert data["ok"] is True
+assert data["counts"]["dockerfiles"] == 0
+PY
+
 if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/absent" --json \
   > "$TMP_ROOT/absent.json"; then
   fail "validator accepted missing root"
