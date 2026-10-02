@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-02T20:38:49Z
-latest_commit_sha: 10a49c72
-chat_duration: 396086s (04:14:01:26)
+latest_commit_at_utc: 2026-10-02T21:06:55Z
+latest_commit_sha: 4edf8865
+chat_duration: 397772s (04:14:29:32)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -799,6 +799,17 @@ Summary: P17 follow-up verified with 31 publication-workflow tests, 25 selected-
 
 ADR impact: No new ADR: documented host prerequisite and bounded failure normalization within the existing P17 route.
 
+
+### 2026-10-02T21:06:55Z - Commit recorded
+
+Commit: `4edf8865`
+
+Message: fix(deploy): provision the isolated qualification host dependency
+
+Summary: Eleven reviewed files repair the P17 runner prerequisite and safe diagnostic gaps. 134 focused tests, static workflow check, four eligible metadata headers, diff checks and repository commit checklist passed; independent review found no blocker. Requires fresh P16 then P17. No image publication or service change; P19 remains blocked by Foundation drift.
+
+ADR impact: No new architecture: documented host dependency and normalized diagnostic repair.
+
 ## Sub-Agent Activity
 
 
@@ -1272,6 +1283,13 @@ Summary: Implemented safe bounded configuration origins, workspace exports, alia
   Summary: P17 follow-up verified with 31 publication-workflow tests, 25 selected-blueprint tests, 36 local-build tests and 42 local-container CLI tests (134 total); deployment-workflow static check, four eligible artifact metadata headers and git diff --check passed. Required bubblewrap installation precedes AWS credentials; sandbox failure remains fail-closed with no host fallback. P16 must revalidate the committed revision before P17.
   ADR impact: No new ADR: documented host prerequisite and bounded failure normalization within the existing P17 route.
 
+
+- Commit: `4edf8865`
+  Time UTC: 2026-10-02T21:06:55Z
+  Message: fix(deploy): provision the isolated qualification host dependency
+  Summary: Eleven reviewed files repair the P17 runner prerequisite and safe diagnostic gaps. 134 focused tests, static workflow check, four eligible metadata headers, diff checks and repository commit checklist passed; independent review found no blocker. Requires fresh P16 then P17. No image publication or service change; P19 remains blocked by Foundation drift.
+  ADR impact: No new architecture: documented host dependency and normalized diagnostic repair.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1285,9 +1303,9 @@ Reason: This is a bounded diagnostic and evidence-handling repair within the exi
 ## Session Metrics
 
 Raised at UTC: 2026-09-28T06:37:23Z
-Latest commit at UTC: 2026-10-02T20:38:49Z
-Latest commit SHA: 10a49c72
-Chat duration: 396086s (04:14:01:26)
+Latest commit at UTC: 2026-10-02T21:06:55Z
+Latest commit SHA: 4edf8865
+Chat duration: 397772s (04:14:29:32)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
