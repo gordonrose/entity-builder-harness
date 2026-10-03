@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: platform-foundation
@@ -29,8 +29,8 @@ used_by:
 
 ## Restart preparation — 3 October 2026
 
-Local source reconciliation uses recovery merge `2309e676`, now checked out on
-the restart session branch and local `main`. The source positions below replace
+Local source reconciliation uses recovery merge `2309e676`; local `main` remains
+there while the restart session adds review checkpoints. The source positions below replace
 the earlier pre-integration snapshot; they are not fresh remote or AWS evidence.
 The [restart session record](../../../commitLogs/2026/oct/03/2026-10-03-14-13-platform-restart-preparation/README.md)
 records preserved work, the scheduler/date-time investigation, and review limits.
@@ -41,6 +41,12 @@ gates remain in force; the [replacement proposal](controlled-recovery-replacemen
 remains unimplemented. Deployment remains paused.
 Where source is already preserved, review and reuse that work before proposing
 implementation of the corresponding phase below.
+
+The owner's next review is the [bounded PostgreSQL Stage 6 proposal](../../../.agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md),
+including its unapplied instruction patch and required source corrections.
+This selects PostgreSQL completion for preparation; it does not approve the
+convergence programme or activate an exception to its gates. HTTP health is a
+shared-image prerequisite within that proposal, not its completion milestone.
 
 ## Objective
 
@@ -76,8 +82,8 @@ one role with every permission, or continuing after a failed prerequisite.
    observability without turning any consumer into a policy store.
 4. Finish the bounded PostgreSQL relational-reference delivery/recovery proof
    through the realization gate.
-5. Locate and preserve the scheduler/time draft before proposing its source
-   review or integration; a later target plan would select its staging trigger.
+5. Review the isolated recovered scheduler/time draft before proposing its
+   integration; a later target plan would select its staging trigger.
 6. Implement the provider-neutral storage source, AWS S3 adapter source, and a
    harmless service-controlled S3 reference only after its prerequisites pass.
 7. Add the required target observability, cost, rollback, and evidence path for
@@ -99,16 +105,17 @@ one role with every permission, or continuing after a failed prerequisite.
 ## Current Starting Position
 
 The following are local source observations at restart preparation, not proof
-that a target remains unchanged. Preserved branches and dirty files remain in
-the original repository; they have not been imported into the restart clone.
+that a target remains unchanged. Original branches and dirty files remain intact.
+The scheduler reconstruction is isolated in a new recovery branch; no preserved
+platform slice has been integrated into the restart session or local `main`.
 
 | Area | Known source position | Required treatment |
 | --- | --- | --- |
 | Operational-realization gate | Gate source is present in the restored baseline. The old `99dc7470` candidate is not a pending integration requirement. | Review the current source and remaining proof gaps before proposing any change; do not promote the old candidate blindly. |
-| Data governance / storage | Plans are on the restored baseline. Original branch `agent/data-governance-storage-foundation` preserves one unintegrated commit, `542ca170`, affecting 77 paths. | Review the preserved combined source slice and consumer dependencies before selecting an integration scope. S3 adapter and target work remain deferred. |
-| PostgreSQL | Recovery commit `d8270e34` is already in the restored baseline. Stage 6 / recovery-4 remains unfinished in recorded evidence. | Credit existing source; do not replay earlier labels or start a new attempt without current facts, required gates and separate approval. |
-| Scheduler/time | The 27 September review recorded 78 uncommitted paths. The original branch remains at base `8052929c`; its worktree is absent. Substantial plan/patch evidence survives in the original transcript, but the final source has not been reconstructed or verified. | Preserve the evidence and establish a verified draft through separately governed recovery before review/rebase. Do not infer source from the branch name or reconstruct it under restart preparation. |
-| Tenant execution authority | Original branch `agent/tenant-access-control-operationalization` preserves one unintegrated commit, `e8810937`, affecting 38 paths. | Review opt-in worker/contracts changes and collisions separately; provider/target proof remains deferred. |
+| Data governance / storage | Original branch `agent/data-governance-storage-foundation` preserves unintegrated commit `542ca170`, affecting 77 paths. Source review found hold/scan transition bypass, stale delivery authorization, telemetry leakage and unvalidated profile references. | Resolve the recorded findings before integration; source and consumer review remain necessary. S3 adapter and target work remain deferred. |
+| PostgreSQL | Recovery commit `d8270e34` is already in the baseline. The profile says recovery-4 was not started; the later reliability plan records a reported failure before application telemetry. | Treat initial/recovery-1–4 labels as consumed or unavailable pending reconciliation. Review the bounded proposal; do not execute the current recovery-4 route. |
+| Scheduler/time | The original worktree is absent and branch remains at `8052929c`. Its 78-path draft was reconstructed from successful transcript patches plus the lockfile diff and checkpointed at `657cef8c` on isolated branch `chat/2026-10-03-scheduler-draft-recovery`; relevant local checks pass. | Review recovered source and integration separately. Preserve fidelity limits and documented metadata-only repairs; no live activation or current-baseline compatibility is established. |
+| Tenant execution authority | Original branch `agent/tenant-access-control-operationalization` preserves unintegrated commit `e8810937`, affecting 38 paths. Review found message-disposition loss on thrown/invalid authorization results with the default queue. | Resolve the recorded finding and review collisions before integration; provider/target proof remains deferred. |
 | Feature/platform consumption | The original root retains 13 uncommitted planning/governance files matching the recovery archive. | Preserve originals and review the complete draft before any integration; it introduces governing requirements. |
 | Observability | Provider-neutral profiles and parts of the staging evidence path exist. | Every new stage must declare safe signals, alert owner, delivery path, retention/access boundary, and truthful SLO-confidence state. |
 

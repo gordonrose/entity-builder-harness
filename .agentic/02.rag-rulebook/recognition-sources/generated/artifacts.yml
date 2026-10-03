@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 963
-  term_count: 1939
+  indexed_artifacts: 964
+  term_count: 1941
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8195,6 +8195,18 @@ terms:
   match_type: exact
   canonical_id: deploy.plan.local-to-proven-deployment-reliability
   evidence_path: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+  confidence_weight: 1
+- term: aws.plan.postgresql-stage6-restart-2026-10-03
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.postgresql-stage6-restart-2026-10-03
+  evidence_path: .agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md
+  confidence_weight: 1
+- term: .agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.postgresql-stage6-restart-2026-10-03
+  evidence_path: .agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md
   confidence_weight: 1
 - term: deploy.migration.controlled-source-recovery-2026-10-03
   category: artifact-id

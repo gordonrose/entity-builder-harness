@@ -1,0 +1,320 @@
+diff --git a/.agentic/01.harness/standards/operational-realization-gate.md b/.agentic/01.harness/standards/operational-realization-gate.md
+--- a/.agentic/01.harness/standards/operational-realization-gate.md
++++ b/.agentic/01.harness/standards/operational-realization-gate.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: harness.standard.operational-realization-gate
+-  version: 1
++  version: 2
+   status: active
+   layer: 01.harness
+   domain: deployment.realization
+@@ -36,6 +36,38 @@
+ and queue products are represented only by separately maintained adapters that
+ produce normalized facts. They never appear in the generic contract or core
+ verifier.
++
++## Bounded PostgreSQL Stage 6 Applicability
++
++The [Kanbien/staging PostgreSQL restart plan](../../aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
++provides an operation-scoped alternative only after the user explicitly adopts
++this applicability change and approves its concrete execution plan. Saving a
++draft or applying this instruction change alone grants no execution authority.
++Until both approvals exist, the normal requirements below remain effective.
++
++For that approved slice only, its reviewed operation/evidence matrix replaces
++whole-route generic contract/compiler migration and full-estate programme
++completion as prerequisites. It must cover every actual dependency of the
++selected PostgreSQL operation: reviewed source, immutable image and entrypoint,
++adapter/target compatibility, identity, safe configuration shapes, TLS/network,
++database semantics, queue completion, observability, cost and bounded recovery.
++Evidence from a healthy HTTP process does not qualify a relational task.
++
++Existing executable gates remain binding, including applicable realization,
++reconciliation, change-shape and candidate/task preflights. A required gate
++failure stops execution; this clause neither bypasses scripts nor manufactures
++a pass. Any necessary controller, label or target change needs separate source
++review and passing checks before execution. No replacement programme or other
++platform workstream becomes part of this exception.
++
++Preserve consumed labels, terminal outcomes, uncertain-outcome reconciliation,
++rollback/restore and verified cleanup. Reuse unchanged artifact evidence only
++with unchanged relevant bindings and valid freshness; a failed attempt remains
++terminal. A new attempt need not imply a new image, but must use an explicitly
++reviewed, supported identity and recovery route within approved limits. Escalate
++new effects, broader permissions, persistent-data/destructive changes or exhausted
++limits. Keep evidence safe and append-only. Other capabilities use the normal
++contract/compiler route; generic schemas and compiler guarantees are unchanged.
+
+ ## Required Realization Contract
+
+diff --git a/.agentic/01.harness/workflows/operational-realization-gate.md b/.agentic/01.harness/workflows/operational-realization-gate.md
+--- a/.agentic/01.harness/workflows/operational-realization-gate.md
++++ b/.agentic/01.harness/workflows/operational-realization-gate.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: harness.workflow.operational-realization-gate
+-  version: 1
++  version: 2
+   status: active
+   layer: 01.harness
+   domain: deployment.realization
+@@ -27,6 +27,18 @@
+ new execution path, migration, queue consumer, or recovery path is introduced,
+ and whenever its artifact, identity, configuration shape, connection, engine
+ semantics, or mutation shape changes.
++
++## Bounded PostgreSQL Route
++
++For the explicitly adopted and execution-approved Kanbien/staging PostgreSQL
++slice, use the [standard's bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability).
++Its concrete operation/evidence matrix supplies the scoped inputs, ordered
++preflights, stop conditions and safe outputs in place of requiring new generic
++contract/compiler migration for the whole route. Record both approvals, the
++exact operation scope and applicable existing executable checks before acting.
++A failed required check still blocks execution; this route cannot override a
++controller or target guard. Keep terminal/non-replay recovery and separate
++provider authority. Without both approvals, follow the normal procedure below.
+
+ ## Inputs
+
+diff --git a/.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md b/.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+--- a/.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
++++ b/.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+ schema: agentic-artifact/v2
+ id: product.plan.postgresql-relational-persistence-reference-v1
+-version: 10
++version: 11
+ status: draft
+ layer: 03.product
+ domain: persistence
+@@ -586,25 +586,28 @@
+ **Objective:** prove the full relational route and its recovery path at the
+ same bounded scope, then state its exact operational limits.
+
+-#### Operational Realization Gate prerequisite — added 2026-09-26
+-
+-Stage 6 is now paused at its source/deployment boundary, not eligible for a
+-direct target-specific recovery or retry. Before any new Stage 6 target action,
+-the full route must migrate into the provider-neutral [Operational Realization
+-Gate](../../../01.harness/standards/operational-realization-gate.md): a
+-versioned realization contract must describe its immutable artifact,
+-entrypoints, task identities, safe configuration shapes, connections/TLS,
+-database semantics, queue delivery/acknowledgement, lifecycle state machine,
+-safe observability, expected change shape, rollback/recovery and all
+-assumptions.
+-
+-Target collectors must be made an adapter that produces only normalized facts
+-and change summaries. The generic compiler must pass the source, artifact,
+-semantic-integration, live-read, change-set, and execution-preflight gates
+-before the Stage 6 controller is even proposed again. This replaces no target
+-security check and grants no target authority; it prevents a live task from
+-being used as the first test of an undeclared integration edge. Existing
+-evidence may be cited only at the proof level it actually establishes.
++#### Stage 6 restart prerequisite
++
++Stage 6 remains paused until current source/target facts and the concrete
++operation plan are reviewed and separately approved. The [bounded PostgreSQL
++restart plan](../../../aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
++may govern this slice only after explicit adoption of the [bounded applicability
++clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++and approval of that execution plan. Otherwise the original full-route
++realization contract, normalized-adapter and compiler prerequisites remain.
++
++For the adopted route, qualify the actual bootstrap, migration, relay, worker
++and restore entrypoints and their dependencies through the reviewed operation
++matrix. Preserve required image/adapter/target compatibility, real database
++semantics, candidate/task preflight, terminal predecessor, queue/outbox and
++restore proof. Existing controller and target guards remain binding. No
++required failed check may be ignored, and healthy HTTP alone is insufficient.
++
++Historical next-label descriptions below are not permission to replay a label.
++Reconcile consumed labels, including the reported recovery-4 failure, before
++selecting and source-reviewing a supported new recovery route. Preserve safe
++evidence, cleanup, rollback and escalation; this instruction change does not
++implement a controller or authorize AWS execution.
+
+ #### Stage 6 source composition (implemented; deployment and proof pending)
+
+diff --git a/.agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md b/.agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+--- a/.agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
++++ b/.agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+ schema: agentic-artifact/v2
+ id: deploy.plan.local-to-proven-deployment-reliability
+-version: 2
++version: 3
+ status: draft
+ layer: 04.deploy
+ domain: deployment.realization
+@@ -29,6 +29,13 @@
+ 08:00 deadline with completing and proving the structural fix.
+
+ ## Confirmed decisions and completion boundary
++
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++This programme's whole-estate adoption and replacement prerequisites do not
++apply to the named slice once that route is effective; the programme remains
++incomplete and unchanged for other work.
+
+ The user confirmed all six decisions on 2026-09-28:
+
+diff --git a/.agentic/aws/README.md b/.agentic/aws/README.md
+--- a/.agentic/aws/README.md
++++ b/.agentic/aws/README.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: aws.readme
+-  version: 1
++  version: 2
+   status: active
+   layer: 04.deploy
+   domain: infra.ci-cd
+@@ -54,6 +54,12 @@
+
+ ## Implementation Plans
+
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++That conditional route governs the named slice instead of the replacement
++qualification prerequisite below; it does not resume other feature work.
++
+ - [Engineering and deployment completeness](plans/implementation/local-to-proven-deployment-reliability.md)
+   defines the systemic harness and code refactor: independent executable
+   discovery, provider-neutral completion rules, exact-artifact qualification,
+diff --git a/docs/04.deploy/README.md b/docs/04.deploy/README.md
+--- a/docs/04.deploy/README.md
++++ b/docs/04.deploy/README.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+ schema: agentic-artifact/v2
+ id: deploy.corpus.readme
+-version: 2
++version: 3
+ status: active
+ layer: 04.deploy
+ domain: infra.ci-cd
+@@ -23,6 +23,12 @@
+   path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
+ -->
+ # 04.deploy Corpus
++
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++Use its operation evidence for that slice; all other target-provider work
++retains the normal realization prerequisite described below.
+
+ This directory is the RAG-readable deploy corpus package for `corpus.04.deploy`.
+
+diff --git a/docs/04.deploy/plans/README.md b/docs/04.deploy/plans/README.md
+--- a/docs/04.deploy/plans/README.md
++++ b/docs/04.deploy/plans/README.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+ schema: agentic-artifact/v2
+ id: deploy.plans.readme
+-version: 3
++version: 4
+ status: active
+ layer: 04.deploy
+ domain: infra.ci-cd
+@@ -21,6 +21,12 @@
+ -->
+ # Deployment Implementation Plans
+
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++The generic programme prerequisites below remain the default for other work.
++No plan index entry grants provider execution authority.
++
+ This folder holds deploy-owned programmes that turn an architectural decision
+ into controlled, staged work. A plan states what can be implemented in source,
+ what needs a separate AWS approval, the expected cost and permissions, rollback,
+diff --git a/docs/04.deploy/plans/operational-realization-gate-programme.md b/docs/04.deploy/plans/operational-realization-gate-programme.md
+--- a/docs/04.deploy/plans/operational-realization-gate-programme.md
++++ b/docs/04.deploy/plans/operational-realization-gate-programme.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: deploy.plan.operational-realization-gate-programme
+-  version: 1
++  version: 2
+   status: active
+   layer: 04.deploy
+   domain: deployment.realization
+@@ -45,6 +45,12 @@
+
+ ## PostgreSQL relational-reference migration
+
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++Once effective, that route replaces the mandatory Stage 4 migration below
++for the named slice only; required executable gates still apply.
++
+ The current Kanbien staging relational-reference Stage 6 must not resume from a
+ direct target-specific retry. It first migrates into Stage 4 of this programme:
+ its source describes the full route in a realization contract, target
+diff --git a/docs/04.deploy/plans/operational-realization-v2-programme.md b/docs/04.deploy/plans/operational-realization-v2-programme.md
+--- a/docs/04.deploy/plans/operational-realization-v2-programme.md
++++ b/docs/04.deploy/plans/operational-realization-v2-programme.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+ schema: agentic-artifact/v2
+ id: deploy.plan.operational-realization-v2-programme
+-version: 2
++version: 3
+ status: active
+ layer: 04.deploy
+ domain: deployment.realization
+@@ -22,6 +22,13 @@
+ # Operational Realization v2 Programme
+
+ ## Objective
++
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++Once effective, it qualifies this programme's full-graph-first and blanket
++new-digest-after-failure requirements for that slice. Existing candidate/task
++guards and consumed-label protection still apply; other work is unchanged.
+
+ Source, infrastructure, IAM, and tests can each be valid while their combined
+ runtime cannot execute. This programme makes the complete execution graph a
+diff --git a/.agentic/01.harness/templates/operational-realization-contract.v1.guide.md b/.agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+--- a/.agentic/01.harness/templates/operational-realization-contract.v1.guide.md
++++ b/.agentic/01.harness/templates/operational-realization-contract.v1.guide.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: harness.guide.operational-realization-contract.v1
+-  version: 2
++  version: 3
+   status: active
+   layer: 01.harness
+   domain: deployment.realization
+@@ -81,6 +81,13 @@
+
+ ## How to use it
+
++For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
++is effective only after explicit adoption and approval of its concrete
++execution plan. Until then the current requirements remain effective.
++Once effective, its operation matrix replaces mandatory creation of a new
++whole-route contract before proposing that slice. This guide remains binding
++whenever the normal generic contract/compiler route is used.
++
+ 1. Copy the template and replace every placeholder with stable,
+    provider-neutral identifiers.
+    A unit that does not produce or consume asynchronous work must declare

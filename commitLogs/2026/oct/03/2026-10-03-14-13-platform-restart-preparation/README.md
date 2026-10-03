@@ -36,7 +36,10 @@ Platform restart preparation
 
 ## Questions Asked
 
-- None recorded yet.
+
+
+- Asked: Should the next restart review target an HTTP-only route?
+  Response: The owner requests minimum instruction changes and an execution plan to complete the PostgreSQL slice; HTTP health is a prerequisite within that scope.
 
 ## Issues Raised
 
@@ -57,12 +60,20 @@ Platform restart preparation
 - Decision: Govern isolated scheduler reconstruction and durable session preservation.
   Rationale: The new recover-transcript-draft workflow supplies the previously missing recovery procedure; chat-commit adds durable preservation before handoff. Reserve auxiliary branch chat/2026-10-03-scheduler-draft-recovery at exact base 8052929cb947ef3a0199a338a997f8cc8ede3aac in the restart repository, with AGENTIC_CHAT_WORKTREE_ROOT=/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/worktrees. Private evidence/bundles go in the same new durable root. Original repository/refs/worktree registration and all prior backups remain untouched. Recovery restores the historical draft, not integration or deployment authority.
 
+
+- Decision: Prepare PostgreSQL completion for review, retaining current deployment authority.
+  Rationale: Create a draft operation plan and an unapplied scoped instruction patch. Preserve existing executable gates and require separate adoption, source review and target approval. No runtime implementation or AWS execution is authorized.
+
 ## Context Hygiene
 
 
 
 - Summary: Preserved-work reconciliation is complete; scheduler working files are missing but substantial transcript evidence exists.
   Durable evidence: The Restart reconciliation section records branch hashes, 13-file archive equality, transcript path/hash and recovery limits. The convergence plan is the accepted factual correction. Local main remains 2309e676 and all gates are retained. Future transcript reconstruction requires an isolated governed procedure; no deployment is authorized.
+
+
+- Summary: Scheduler recovery is checkpointed separately; PostgreSQL completion is the next review scope.
+  Durable evidence: Recovery source 657cef8c and auxiliary HEAD f43461c7 are preserved in the private durable recovery root. This log records replay, tests, fidelity limits and source-review findings. The PostgreSQL proposal and unapplied ten-file patch retain active gates and identify recovery-4 reconciliation plus narrow source prerequisites.
 
 ## Activity Log
 
@@ -199,6 +210,79 @@ Summary: Add narrow isolated historical draft recovery and durable session-end p
 
 ADR impact: No new runtime or deployment architecture.
 
+
+### 2026-10-03T14:37:16Z - Question
+
+Asked: Should the next restart review target an HTTP-only route?
+
+Response: The owner requests minimum instruction changes and an execution plan to complete the PostgreSQL slice; HTTP health is a prerequisite within that scope.
+
+
+### 2026-10-03T14:37:16Z - Decision
+
+Decision: Prepare PostgreSQL completion for review, retaining current deployment authority.
+
+Rationale: Create a draft operation plan and an unapplied scoped instruction patch. Preserve existing executable gates and require separate adoption, source review and target approval. No runtime implementation or AWS execution is authorized.
+
+
+### 2026-10-03T14:37:16Z - Context hygiene
+
+Summary: Scheduler recovery is checkpointed separately; PostgreSQL completion is the next review scope.
+
+Durable evidence: Recovery source 657cef8c and auxiliary HEAD f43461c7 are preserved in the private durable recovery root. This log records replay, tests, fidelity limits and source-review findings. The PostgreSQL proposal and unapplied ten-file patch retain active gates and identify recovery-4 reconciliation plus narrow source prerequisites.
+
+
+### 2026-10-03T14:37:51Z - Sub-agent activity recorded
+
+Agent: trace_scheduler_draft
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Transcript recovery extraction and verification
+
+
+### 2026-10-03T14:37:51Z - Sub-agent activity recorded
+
+Agent: reconcile_platform
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: PostgreSQL completion proposal
+
+
+### 2026-10-03T14:37:51Z - Sub-agent activity recorded
+
+Agent: review_restart_scope
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Unapplied PostgreSQL instruction amendments
+
+
+### 2026-10-03T14:37:52Z - Sub-agent activity recorded
+
+Agent: trace_scheduler_draft
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Independent final PostgreSQL review
+
 ## Sub-Agent Activity
 
 
@@ -271,6 +355,62 @@ Git actions: none
 Blockers: none
 Next step: none
 Summary: Block integration as-is: storage state/permission/telemetry/profile-reference gaps and default worker authorizer failure loses queue disposition.
+
+
+### 2026-10-03T14:37:51Z - trace_scheduler_draft
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Transcript recovery extraction and verification
+Files touched: Private recovery helper/evidence outside Git; no direct source integration.
+Checks run: Parent validation and independent review recorded in session.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Reviewed recovery helper, successful/failed patch ledger, lockfile and plan evidence; replayed draft validated by parent and checkpointed separately.
+
+
+### 2026-10-03T14:37:51Z - reconcile_platform
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: PostgreSQL completion proposal
+Files touched: New PostgreSQL draft plan only; no runtime edits or AWS operations.
+Checks run: Parent validation and independent review recorded in session.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Prepared bounded Stage 6 plan with recovery-4 reconciliation, existing-route source prerequisites, restore/cleanup proof and limits.
+
+
+### 2026-10-03T14:37:51Z - review_restart_scope
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Unapplied PostgreSQL instruction amendments
+Files touched: Session proposals directory; active canonical instructions unchanged.
+Checks run: Parent validation and independent review recorded in session.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Prepared three substantive amendments and seven conditional pointers with exact source/proposed hash inventory.
+
+
+### 2026-10-03T14:37:52Z - trace_scheduler_draft
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Independent final PostgreSQL review
+Files touched: Read-only review plus isolated scratch copies; no active instruction edits.
+Checks run: Parent validation and independent review recorded in session.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Verified local-code claims, interfaces, timeouts and promotion shape; scratch patch application and all source/proposed hashes; 50 links and anchors. No blocking issues found.
 
 ## Commits
 
@@ -531,3 +671,135 @@ gates or authorize runtime repairs or cloud operations. The minimum deployment
 instruction change still needs review against the exact clauses listed in the
 replacement proposal before any route is executed. PostgreSQL follows HTTP;
 scheduler/storage integration remains separate and subject to source review.
+
+## Recovered draft and PostgreSQL review preparation
+
+The owner's answer to the route question was: “prepare the minimum instruction
+changes and execution plan needed to complete the PostgreSQL slice.” This
+supersedes the preceding HTTP-first recommendation for the next review. It
+authorizes preparation, not implementation or any AWS operation. Earlier
+investigation-only statements above are historical phase records.
+
+### Scheduler recovery result
+
+The governed recovery workflow was checkpointed in `b103f1d6` before replay.
+Successful reconstruction is isolated on
+`chat/2026-10-03-scheduler-draft-recovery`, based exactly on `8052929c`.
+Source commit: `657cef8ca4af87053df3a32049a61de1f65fbee8`.
+Session-bookkeeping HEAD: `f43461c724431bb2e7c7e396d8bd1df082c870b1`.
+Its durable worktree is:
+
+```text
+/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/worktrees/chat_2026-10-03-scheduler-draft-recovery-232774473
+```
+
+The auxiliary session's `commitLogs/2026/oct/03/2026-10-03-scheduler-draft-recovery/README.md`
+records exact ownership, replay, checks and limitations. Neither this session
+branch nor local `main` incorporates the recovered implementation.
+
+Reconstruction applied 43 successful patch calls in transcript order, with
+66 add-file and 72 update operations. Four failed calls were retained as
+evidence and reconciled with later successful replacements, not applied.
+The captured lockfile diff accounts for the package-manager change outside
+patch operations. The result is 78 source paths: 66 added, 12 modified and
+zero deleted. A transient contracts configuration change returns to its base.
+Captured final package/export diff endpoints also match. No historical shell
+commands, dependency symlinks or destructive importer were replayed.
+
+The missing scheduler implementation plan was recovered as private transcript
+evidence, not introduced as an active governing plan: its complete captured
+content was not one of the 78 original dirty paths. Its use in future integration
+needs explicit review. The reconstruction is supported by available transcript
+evidence; it cannot establish unseen edits or exact equality to the lost tree.
+The cause of the original worktree's disappearance remains unknown.
+
+Local checks used an isolated offline install with lifecycle scripts disabled
+and a private copy of the existing package cache. All passed:
+
+- `core:check` and the Core TypeScript declaration build;
+- `platform:contracts:check` and `platform:time:check`;
+- `platform:scheduler:check`;
+- `platform:adapter:aws:scheduler:eventbridge:check`.
+
+These tests use local/recording clients; they establish no live AWS readiness.
+Runtime-source hashes remained unchanged through testing and checkpointing.
+The normal commit gate initially rejected recovered documentation metadata and
+a stale historical recognition catalogue. The checkpoint includes only the
+necessary plan status/consumer metadata, trailing-blank-line correction and
+regenerated catalogue beyond the recovered source. The exact pre-repair tree
+and adjustment diff remain preserved. Required metadata, recognition, whitespace
+and normal commit gates then passed; no checks were bypassed.
+
+The declaration build emitted 51 new untracked source-directory outputs.
+Workflow version 2 explicitly governs their relocation: each regular file was
+proved absent from the pre-test archive/status, copied to private evidence and
+hash-verified before removal from the recovered source tree. The path ledger is
+`validation/generated-output-relocation.json`. No tracked or pre-existing file
+was removed. The recovered worktree is clean.
+
+### Durable recovery evidence
+
+All paths below are relative to the private directory
+`/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03`:
+
+| Preserved artifact | Verification |
+| --- | --- |
+| `evidence/`, `replay-evidence/`, `tools/` | Original transcript hash matches the investigation record; successful/failed patch ledger, captured plan, lockfile diff, recovery helper and command receipts retained. |
+| `bundles/recovered-source-before-tests.zip` | Archive CRC/readability and all 79 replay-input hashes verified; SHA-256 `e3ebd3792f2173a9248257226a88fe4474aec4482df7e989da2b264e25f9ee5a`. |
+| `bundles/scheduler-draft-f43461c7.bundle` | Complete-history bundle verified; SHA-256 `955deaa079fbb149efb8a9b087a2fe8d57a3e416b488eea960dd25c465f7742b`. |
+| `validation/`, `generated-declaration-outputs/` | Local test receipts, final metadata-adjustment diff/hash inventory, and all 51 generated outputs retained. |
+| `snapshots/scheduler-checkpoint.json` | Records source commit, bookkeeping HEAD, verified bundle and clean auxiliary worktree. |
+
+The final parent review checkpoint is also exported and bundled under unique
+names in this durable directory, with verification receipts in `snapshots/`.
+This is local preservation, not an off-machine backup. Raw transcripts stay
+outside Git and public documentation.
+
+### PostgreSQL review package
+
+The [PostgreSQL Stage 6 restart proposal](../../../../../.agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
+defines the operation sequence and completion evidence through restore and
+cleanup. The [unapplied instruction patch](proposals/postgresql-instructions.patch)
+contains three substantive scoped amendments plus seven conditional routing
+pointers; its [inventory](proposals/postgresql-instructions-sources.json) binds
+each canonical source and proposed result by hash. Saving the patch changes no
+deployment instruction. The current broad gates remain effective.
+
+The proposal preserves substantive identity, TLS, role, image, queue, recovery,
+observability, cost and cleanup requirements. It identifies narrowly owned
+source prerequisites: actual immutable-image execution, least-privilege adapter
+proof, exact task-revision binding, accepted/unknown-operation reconciliation,
+timeout cleanup, restore coverage and stronger restored-state verification.
+None of those runtime/controller changes is implemented here.
+
+Recovery-4 is a specific blocking contradiction: restored profile/evidence
+describe it as unstarted while the later reliability plan records a reported
+failure before application telemetry. Initial/recovery-1 through recovery-4
+are unavailable pending current reconciliation. Existing hardcoded recovery-4
+execution variants must not be run unchanged. A fresh supported attempt requires
+reviewed source/profile amendments, passing checks and separate concrete target
+approval, including cost and cleanup bounds.
+
+No deployment, AWS inspection/mutation, image publication, replacement-programme
+implementation, main integration, push, branch deletion or historical rewrite
+occurred. PostgreSQL execution remains pending; completing this review package
+does not complete the PostgreSQL slice itself.
+
+### Final review checks
+
+- Independent review found no blocking issue in the PostgreSQL proposal/patch.
+  The patch was applied only to new scratch copies: all ten resulting hashes
+  match the inventory, all ten active canonical files remain unchanged, and
+  the reviewed 50 proposal/patch links and anchors resolve.
+- Parent checks pass: metadata for 971 files; current generated recognition
+  sources; seven valid sources / 2,225 terms; 36 relative links across changed
+  Markdown; patch applicability; whitespace. Programme G0–G6 are unchanged.
+- The original repository's complete refs, registered worktrees, dirty status
+  and all 13 dirty-file hashes match its preserved snapshot. Restart integration
+  `main` remains `2309e676` and its checkout is clean. Only the current session
+  branch and newly created auxiliary recovery branch account for ref changes.
+  Receipt: `snapshots/review-preservation-before-final-checkpoint.json` in the
+  private durable root. No fresh GitHub or AWS verification is claimed.
+- This parent change is documentation, an unapplied proposal and recovery
+  governance. No additional runtime test run is needed here; the isolated
+  recovered draft's tests and normal commit gate results are recorded above.

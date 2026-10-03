@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: chat.workflows.recover-transcript-draft
-version: 1
+version: 2
 status: active
 layer: 00.chat
 domain: recovery
@@ -54,7 +54,8 @@ Read-only discovery may establish these inputs before recovery is authorized.
    plus an archive of uncommitted recovered files when needed. Use
    `git bundle create <new-path> <named-ref>...` and `git bundle verify <path>`;
    inspect archive contents/readability and record hashes in both session logs.
-   Never delete branches, remove worktrees, clean files or change original refs.
+   Never delete branches, remove worktrees, clean pre-existing files or change
+   original refs.
 
 ## Reconstruction
 
@@ -84,6 +85,11 @@ Read-only discovery may establish these inputs before recovery is authorized.
    in the isolated worktree and a private copy of an available package cache.
    Do not change the lockfile or original dependency tree. An unavailable cached
    dependency leaves tests pending; it does not authorize network installation.
+   If checks emit untracked build outputs into source directories, relocate only
+   those new outputs to a new private evidence directory after proving their
+   absence in the pre-test archive/status and verifying copied hashes. Require
+   regular, untracked files and record every path; preserve tracked or pre-existing
+   files in place. This keeps generated output out of the source checkpoint.
 9. Follow [chat commit](chat-commit.md) and the existing before-commit checklist
    for explicitly authorized recovery commits. A recovered draft may be labelled
    pending proof with failed or unrun local tests recorded, but every mandatory

@@ -1,0 +1,73 @@
+{
+  "schema": "review-only-instruction-patch/v1",
+  "status": "proposed-not-applied",
+  "source_revision": "9ec382f25f47fb74f6e8b0d1d7d0fb42517bb310",
+  "patch": "postgresql-instructions.patch",
+  "patch_sha256": "c461b691f66c3eae7e5faac594457dda47a095f646fa58fc8a4e43c5555a97ba",
+  "scope": "Kanbien/staging PostgreSQL Stage 6 only; explicit adoption and concrete execution-plan approval required",
+  "canonical_execution_plan": ".agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md",
+  "canonical_files_modified": false,
+  "files": [
+    {
+      "path": ".agentic/01.harness/standards/operational-realization-gate.md",
+      "source_sha256": "42fe576d434256536cf0af9e1412736a81d2487ac8766becfcb2200431b8df5e",
+      "source_git_blob": "e1d87c9897c5e2c32da048069b8f31246a09c208",
+      "proposed_sha256": "757b294c403a60358249714acb2998e2d5b1bb0974c1f8b766f4f66fc9147d07"
+    },
+    {
+      "path": ".agentic/01.harness/workflows/operational-realization-gate.md",
+      "source_sha256": "534b4db874024fe2271d7ecd000917fe133b1363d8731c02dcc5a9e443c430e0",
+      "source_git_blob": "90ef7682911b50fc5338e80559e167f30996290a",
+      "proposed_sha256": "2963233d57be6071c86215137e5f2150d5bc98f561725b7066bc9c4db4fae7fe"
+    },
+    {
+      "path": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
+      "source_sha256": "0828edd5ffd7a46c6c26e9b28b88099972709ffe85c788f0b32b308da63a15e3",
+      "source_git_blob": "a4674b6c6ccc058ad15f12bef7701130ba850044",
+      "proposed_sha256": "5a84c8e94222652518738a4348a292c33562560a2ce428e9b42e1fcfaf7a30b4"
+    },
+    {
+      "path": ".agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md",
+      "source_sha256": "8a18a7a4db450c35f80af32d931356b17c0a0c692746419a63f0a9d2bc7c5622",
+      "source_git_blob": "d675af4673542936ba1215f0fed529b128bd07d5",
+      "proposed_sha256": "6ec6d077b1099b3e768e495cab14306114ab1b7fc4bcf6cacde19a68cf50a73a"
+    },
+    {
+      "path": ".agentic/aws/README.md",
+      "source_sha256": "0a5d0e2a8fb855c1fd630e14f848b7e04c0cc91164672b3ff9af35d8366e96d4",
+      "source_git_blob": "7113b66d22efc9c83be098e2465a7c962666b790",
+      "proposed_sha256": "619360f4cbe012e297b5e8e4bc323a15380b50121424dbf86ae5a7fc6a30c67c"
+    },
+    {
+      "path": "docs/04.deploy/README.md",
+      "source_sha256": "d68993db50db9da66da29fd4ed1f4b2125049ce7d4f889dddb7441cbf0658174",
+      "source_git_blob": "2796b110d058db22ddfcd3378591791ddedb3fa9",
+      "proposed_sha256": "eef6534ca538cac3a4c413d57dd80b042f019b7555c36cdfe0f33898d5676416"
+    },
+    {
+      "path": "docs/04.deploy/plans/README.md",
+      "source_sha256": "fb6dea26f6c9f82ae536c9f7b404a553903e1cf4c774234fdf20f91a60c14f47",
+      "source_git_blob": "9941190bc9870e50402ef3ea6856bfb195960693",
+      "proposed_sha256": "012419d2f4c593049bd585ce643280a796bbb115112eaee3df0ac16f84a1bbd1"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-gate-programme.md",
+      "source_sha256": "934a3105e3fbdd5f124d83a0a32d74b53993a4711c4168a01daa77ab3c67f320",
+      "source_git_blob": "c10f63d609d7abb5d1f313052eec86856bf04362",
+      "proposed_sha256": "45dd227e337c0d06f59c940e39be4a801395a2fb7f2de179c1726e83b87323c2"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-v2-programme.md",
+      "source_sha256": "b3b00368228b804c62a447dfa0ac90e172983e5e41f176c734a7de1005538a24",
+      "source_git_blob": "65c753cb7f49dc14f83b2b9f252c551602e6270f",
+      "proposed_sha256": "3af947fec3afba6aaec13cdf87f1debb1c42aca1e523b6ac59dd5e1967836717"
+    },
+    {
+      "path": ".agentic/01.harness/templates/operational-realization-contract.v1.guide.md",
+      "source_sha256": "678705088208b779968d245671e04abee80e8eb545638d5fb30472bae6c33952",
+      "source_git_blob": "da12d0bea1c02976f5df6405e49d05d6508070ab",
+      "proposed_sha256": "88bbdbea69a54cfbfafb621994e421cd01f7fd555117814fa33ff254ec4f0a1a"
+    }
+  ],
+  "patch_format_note": "Blank context lines omit the optional space prefix; standard git apply --check accepts the patch without storing trailing whitespace."
+}
