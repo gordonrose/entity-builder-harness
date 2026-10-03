@@ -64,6 +64,10 @@ Platform restart preparation
 - Decision: Prepare PostgreSQL completion for review, retaining current deployment authority.
   Rationale: Create a draft operation plan and an unapplied scoped instruction patch. Preserve existing executable gates and require separate adoption, source review and target approval. No runtime implementation or AWS execution is authorized.
 
+
+- Decision: Amend the PostgreSQL proposal to permit bounded repair and resume through completion.
+  Rationale: The owner requests continued diagnosis, necessary cleanup, relevant source/configuration repair, verification, changed-image qualification and bounded reattempts within a concrete future allowance. Amend the plan and unapplied patch; preserve current cloud restrictions. Do not request execution approval until effective instruction adoption and actual controller support are demonstrated. Scheduler/storage/tenant work stays deferred.
+
 ## Context Hygiene
 
 
@@ -78,6 +82,10 @@ Platform restart preparation
 
 - Summary: Final review source a43329e8 is preserved with recovered scheduler HEAD f43461c7.
   Durable evidence: Verified private copies under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: restart-review-a43329e8-with-scheduler.bundle SHA-256 f27a76142d558c4e3e35d73acd3f0357caabf525f8077a2b3f749a1282c74015; restart-review-a43329e8-worktree.zip SHA-256 a3601731de1519348e535a1e55009f93cc7216f95d81958792179ce04a9d9fc0. Bundle complete-history verification passed; archive CRC and all 1,578 tracked-file bytes match. Receipt: snapshots/restart-review-a43329e8-preservation.json. Initial archive verifier prefix assumption was corrected without modifying the archive. No task paths remain uncommitted; only this session recording awaits its narrow bookkeeping checkpoint.
+
+
+- Summary: Ordinary PostgreSQL failures must enter the bounded repair/resume cycle; current controllers still lack required behavior.
+  Durable evidence: Plan version 2 proposes source repair, image and attempt allowances, phase-specific time and USD100 incremental ceiling with USD25 recovery reserve. Patch revision2 has four substantive amendments plus seven conditional pointers, including the AWS workflow cleanup exception. Existing local controller checks pass; synthetic probes confirm late-stage resume restarts migration and task timeout has no owned stop. Required behavioral source repairs and instruction adoption remain approval prerequisites.
 
 ## Activity Log
 
@@ -304,6 +312,20 @@ ADR impact: No deployment architecture is adopted; PostgreSQL applicability rema
 Summary: Final review source a43329e8 is preserved with recovered scheduler HEAD f43461c7.
 
 Durable evidence: Verified private copies under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: restart-review-a43329e8-with-scheduler.bundle SHA-256 f27a76142d558c4e3e35d73acd3f0357caabf525f8077a2b3f749a1282c74015; restart-review-a43329e8-worktree.zip SHA-256 a3601731de1519348e535a1e55009f93cc7216f95d81958792179ce04a9d9fc0. Bundle complete-history verification passed; archive CRC and all 1,578 tracked-file bytes match. Receipt: snapshots/restart-review-a43329e8-preservation.json. Initial archive verifier prefix assumption was corrected without modifying the archive. No task paths remain uncommitted; only this session recording awaits its narrow bookkeeping checkpoint.
+
+
+### 2026-10-03T15:55:07Z - Decision
+
+Decision: Amend the PostgreSQL proposal to permit bounded repair and resume through completion.
+
+Rationale: The owner requests continued diagnosis, necessary cleanup, relevant source/configuration repair, verification, changed-image qualification and bounded reattempts within a concrete future allowance. Amend the plan and unapplied patch; preserve current cloud restrictions. Do not request execution approval until effective instruction adoption and actual controller support are demonstrated. Scheduler/storage/tenant work stays deferred.
+
+
+### 2026-10-03T15:55:07Z - Context hygiene
+
+Summary: Ordinary PostgreSQL failures must enter the bounded repair/resume cycle; current controllers still lack required behavior.
+
+Durable evidence: Plan version 2 proposes source repair, image and attempt allowances, phase-specific time and USD100 incremental ceiling with USD25 recovery reserve. Patch revision2 has four substantive amendments plus seven conditional pointers, including the AWS workflow cleanup exception. Existing local controller checks pass; synthetic probes confirm late-stage resume restarts migration and task timeout has no owned stop. Required behavioral source repairs and instruction adoption remain approval prerequisites.
 
 ## Sub-Agent Activity
 
@@ -832,3 +854,107 @@ does not complete the PostgreSQL slice itself.
 - This parent change is documentation, an unapplied proposal and recovery
   governance. No additional runtime test run is needed here; the isolated
   recovered draft's tests and normal commit gate results are recorded above.
+
+## Bounded PostgreSQL repair/resume amendment
+
+The owner's latest instruction requests continued diagnosis, repair, verification
+and bounded reattempts until PostgreSQL acceptance passes. This revision prepares
+that process for approval; it does not authorize runtime implementation, image
+publication or AWS execution. Current source ownership, preservation and deferred
+workstream boundaries continue to apply.
+
+The proposal now includes two prerequisite source batches plus six material-failure
+repair cycles; four image publications; six candidate attempts/bindings; four
+shared-image promotions and at most one rollback each; four attempts per relational
+stage; and three sequential disposable restores, one existing at a time. Time is
+eight active prerequisite hours under separate source authority plus sixteen active
+execution/repair hours, and 48 elapsed hours after execution approval. Four execution
+active hours and four elapsed hours are reserved for recovery. Incremental spend is
+capped at USD100 including USD25 reserved for cleanup/reconciliation/rollback.
+These are proposed allowances, not current authority or fresh target estimates.
+
+The repair sequence pauses only affected operations/dependants, establishes the
+accepted/terminal/unknown outcome, reconciles effects and cleanup, diagnoses the
+cause and escaped check, repairs the relevant owner, verifies correction/prevention,
+qualifies changed images, refreshes affected bindings and resumes the first incomplete
+checkpoint. Ordinary safe in-scope repair does not require new execution approval.
+Attempts/time/spend survive process/session/image changes. Escalation is bounded by
+exhaustion, new effects or broader permissions, unsafe unresolved outcomes/recovery,
+and repeated same-cause failure despite two verified corrections.
+
+Patch revision 2 remains unapplied. It contains four substantive amendments and
+seven conditional pointers; the additional owner is the existing AWS execution
+workflow, clarifying positively owned disposable-restore cleanup explicitly included
+in approval. Other destructive actions remain outside the allowance. The manifest
+preserves source/proposed hashes and the prior patch hash; earlier patch revisions
+are recoverable from `a43329e8`. All active canonical deployment instructions stay
+unchanged. Source repair/controller implementation remains future authorized work.
+
+### Current controller proof and missing support
+
+All existing local checks passed on the unchanged controller source:
+
+- `platform:shell:postgresql-relational-smoke:check`;
+- `platform:shell:candidate-execution-preflight:check`;
+- `platform:shell:deployment-reconciliation:check`.
+
+Additional in-memory probes ran the existing Python functions with provider calls
+replaced and no AWS access. After an injected relay failure, calling the existing
+continuation twice selected `migration, relay, migration`: a successful consumed
+migration is attempted again instead of resuming relay. A forced timeout branch
+in `run_and_wait` issued only its synthetic `run-task`, with no stop/terminal-cleanup
+command. Candidate attempt labels remain identical for the same immutable digest.
+These are local behavior/coverage findings, not actual target failures. Existing
+checks passing cannot establish the missing resume/cleanup/budget behaviors.
+
+The plan's approval-readiness matrix binds required source changes to existing
+controller/test/preflight owners: supported finite attempt identities and durable
+receipts, checkpoint-aware continuation and effect validation, same-image candidate
+reattempt, lost-response/interruption/timeout cleanup, actual-image/task-binding
+proof, safe diagnostics and cumulative limits. Before requesting execution approval,
+adopt/check effective instructions and demonstrate these behaviors with affected
+existing checks. No execution approval is requested while those requirements remain
+unimplemented. This preparation does not claim PostgreSQL completion.
+
+### Material failure/prevention records carried forward
+
+These records use the existing session; later safe target acceptance summaries
+belong in the existing Stage 6 evidence record. Retain original failures and append
+corrections/results; unknown causes or pending fixes must not be called complete.
+
+| Reference / field | Recorded position |
+| --- | --- |
+| PG-REC4 / failure and evidence | Historical user report in the reliability plan says recovery-4 bootstrap failed before application telemetry; restored target-profile status says unstarted. No fresh cloud observation. |
+| PG-REC4 / cause and missed-check gap | Cause unknown; historical success/readiness labels and bootstrap-only checks do not resolve the conflicting outcome. Reconciliation of actual accepted operations and existing safe diagnosis is required. |
+| PG-REC4 / correction and verification | Proposed plan blocks consumed/unavailable labels pending reconciliation. Controller/profile amendments and current outcome proof remain pending. |
+| PG-REC4 / prevention and proof | Durable consumed/unknown receipts and finite attempt identity with restart/expired-identity tests are required. They are not implemented or proven by this documentation revision. |
+| PG-REC4 / outcome or blocker | No resumed execution. Recovery-4 outcome/ownership reconciliation and verified new-route support remain blockers; coordinator must establish them before execution approval. |
+| PG-QUAL-RESUME / failure and evidence | Local injected relay failure reveals continuation reinvocation selects migration again. Observed sequence: `migration, relay, migration`; no provider call. |
+| PG-QUAL-RESUME / cause and missed-check gap | The continuation unconditionally starts migration after bootstrap. Existing checks validate guards and bootstrap predecessor, not resume after partial success. |
+| PG-QUAL-RESUME / correction and verification | Plan now requires checkpoint/effect-aware continuation; all three unchanged existing checks pass. Runtime correction remains pending, so those passes are not correction proof. |
+| PG-QUAL-RESUME / prevention and proof | Extend the existing smoke-test with failures after each stage, process restart and no duplicated completed stage/logical delivery. Behavioral prevention proof remains pending. |
+| PG-QUAL-RESUME / outcome or blocker | No target reattempt. The existing controller cannot yet support the proposed late-stage resume. Implementation and affected verification are required. |
+| PG-QUAL-TIMEOUT / failure and evidence | Local forced timeout in actual `run_and_wait` issues synthetic launch and raises without a stop or terminal-verification command. No provider call. |
+| PG-QUAL-TIMEOUT / cause and missed-check gap | Timeout is an exception-only path. Existing relational checks examine accepted-restore cleanup and guards, not task-timeout ownership. |
+| PG-QUAL-TIMEOUT / correction and verification | Plan requires owned stop/reconciliation and `120s` terminal verification within reserve. Runtime correction and relevant identity proof remain pending. |
+| PG-QUAL-TIMEOUT / prevention and proof | Extend existing behavioral cases for timeout/interruption/lost response and verify terminal cleanup or a precise owned blocker, including exhausted normal budget. Prevention proof remains pending. |
+| PG-QUAL-TIMEOUT / outcome or blocker | No target execution. Current timeout behavior is insufficient for approval; source repair and behavioral verification are required. |
+
+At eventual closeout supply PostgreSQL acceptance evidence plus every material
+failure's evidence, established cause/escaped-check gap, correction/verification,
+proportionate prevention proof and resumed outcome or precise blocker. Include
+allowance consumption and unresolved ownership. No successful closeout can hide
+these still-pending failure/prevention records.
+
+### Amendment verification
+
+Artifact metadata passes for 971 files; both generated recognition sources remain
+current, with seven sources / 2,225 terms valid. Whitespace passes. Patch revision 2
+applies to fresh scratch copies and all eleven source/proposed hashes match;
+active canonical files are unchanged. All 60 checked relative Markdown links
+resolve. The manifest also binds the exact proposed execution-plan bytes.
+
+Official ECS idempotency documentation was checked for the bounded client-token
+window; official RDS/Fargate pricing pages support the proposed estimate inputs.
+No current regional target quote, account billing or cloud readiness is inferred
+from those pages. No AWS command, publication or deployment occurred.

@@ -10,11 +10,10 @@ diff --git a/.agentic/01.harness/standards/operational-realization-gate.md b/.ag
    status: active
    layer: 01.harness
    domain: deployment.realization
-@@ -36,6 +36,38 @@
- and queue products are represented only by separately maintained adapters that
+@@ -37,6 +37,58 @@
  produce normalized facts. They never appear in the generic contract or core
  verifier.
-+
+
 +## Bounded PostgreSQL Stage 6 Applicability
 +
 +The [Kanbien/staging PostgreSQL restart plan](../../aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
@@ -32,23 +31,44 @@ diff --git a/.agentic/01.harness/standards/operational-realization-gate.md b/.ag
 +Evidence from a healthy HTTP process does not qualify a relational task.
 +
 +Existing executable gates remain binding, including applicable realization,
-+reconciliation, change-shape and candidate/task preflights. A required gate
-+failure stops execution; this clause neither bypasses scripts nor manufactures
-+a pass. Any necessary controller, label or target change needs separate source
-+review and passing checks before execution. No replacement programme or other
-+platform workstream becomes part of this exception.
++reconciliation, change-shape and candidate/task preflights. A required failure
++pauses the affected operation and its dependants while its outcome is reconciled
++and relevant code/configuration is repaired within the approved allowance.
++Rerun affected checks, prove proportionate prevention, qualify a changed image
++and resume from the first incomplete checkpoint. Do not close out merely to
++report an ordinary failure that can be safely repaired within that authority.
++No failed check is bypassed or manufactured into a pass.
++
++The concrete approval must include the plan's source/configuration repair,
++image-publication, reattempt, time, cost and owned-recovery allowances. Passing
++source review and renewed operation bindings within them do not require a new
++human execution approval per repair. Existing controllers must enforce the
++supported identities, checkpoint semantics and cumulative limits before this
++route is executable; instruction prose alone is insufficient. Scheduler,
++storage, tenant authority and the replacement programme remain deferred.
 +
 +Preserve consumed labels, terminal outcomes, uncertain-outcome reconciliation,
 +rollback/restore and verified cleanup. Reuse unchanged artifact evidence only
 +with unchanged relevant bindings and valid freshness; a failed attempt remains
 +terminal. A new attempt need not imply a new image, but must use an explicitly
-+reviewed, supported identity and recovery route within approved limits. Escalate
-+new effects, broader permissions, persistent-data/destructive changes or exhausted
-+limits. Keep evidence safe and append-only. Other capabilities use the normal
++reviewed, supported identity and recovery route within approved limits. Count
++all failed or possibly accepted submissions across new labels/images/chats.
++Escalate exhausted limits, new effects, broader permissions, persistent-data
++repair outside the approved manifest, or inability to reconcile and recover
++safely. Expressly approved cleanup of positively owned disposable restores and
++reviewed rollback use their recovery allowance without redundant reapproval;
++other destructive actions need separate authority.
++
++For every material failure record evidence, cause and earlier-check gap,
++correction/verification, proportionate prevention with proof, and resumed
++outcome or precise blocker in existing Stage 6/session records. At closeout
++provide both PostgreSQL acceptance evidence and those completed records.
++Keep evidence safe and append-only. Other capabilities use the normal
 +contract/compiler route; generic schemas and compiler guarantees are unchanged.
-
++
  ## Required Realization Contract
 
+ Every capability that can mutate a live target, perform a migration, execute a
 diff --git a/.agentic/01.harness/workflows/operational-realization-gate.md b/.agentic/01.harness/workflows/operational-realization-gate.md
 --- a/.agentic/01.harness/workflows/operational-realization-gate.md
 +++ b/.agentic/01.harness/workflows/operational-realization-gate.md
@@ -61,7 +81,7 @@ diff --git a/.agentic/01.harness/workflows/operational-realization-gate.md b/.ag
    status: active
    layer: 01.harness
    domain: deployment.realization
-@@ -27,6 +27,18 @@
+@@ -27,6 +27,27 @@
  new execution path, migration, queue consumer, or recovery path is introduced,
  and whenever its artifact, identity, configuration shape, connection, engine
  semantics, or mutation shape changes.
@@ -74,9 +94,18 @@ diff --git a/.agentic/01.harness/workflows/operational-realization-gate.md b/.ag
 +preflights, stop conditions and safe outputs in place of requiring new generic
 +contract/compiler migration for the whole route. Record both approvals, the
 +exact operation scope and applicable existing executable checks before acting.
-+A failed required check still blocks execution; this route cannot override a
-+controller or target guard. Keep terminal/non-replay recovery and separate
-+provider authority. Without both approvals, follow the normal procedure below.
++A failed required check pauses the affected operation, not authorized diagnosis
++or repair. Reconcile outcome and cleanup, diagnose, repair the relevant owner,
++rerun affected checks, prove prevention, qualify any changed image and resume
++the first incomplete stage within cumulative limits. Record each material
++failure and its resumed outcome using existing Stage 6/session records.
++Escalate only the plan's exhausted-boundary/new-effect/unsafe-recovery conditions;
++ordinary in-scope repairs require no repeated execution approval. This route
++cannot override a controller or target guard: demonstrate actual checkpoint,
++attempt, cleanup and budget behavior before requesting execution approval.
++Keep terminal/non-replay recovery and separate provider authority. Closeout
++includes acceptance evidence and completed failure/prevention records.
++Without both approvals, follow the normal procedure below.
 
  ## Inputs
 
@@ -92,7 +121,7 @@ diff --git a/.agentic/03.product/plans/implementation/postgresql-relational-pers
  status: draft
  layer: 03.product
  domain: persistence
-@@ -586,25 +586,28 @@
+@@ -586,25 +586,36 @@
  **Objective:** prove the full relational route and its recovery path at the
  same bounded scope, then state its exact operational limits.
 
@@ -131,6 +160,14 @@ diff --git a/.agentic/03.product/plans/implementation/postgresql-relational-pers
 +semantics, candidate/task preflight, terminal predecessor, queue/outbox and
 +restore proof. Existing controller and target guards remain binding. No
 +required failed check may be ignored, and healthy HTTP alone is insufficient.
++Within the approved repair allowance, pause affected operations, reconcile and
++clean up, diagnose and repair the relevant code/configuration, verify prevention,
++qualify a changed image and resume the first incomplete checkpoint. Continue
++until PostgreSQL acceptance passes or the plan's escalation boundary is met;
++ordinary failures do not require session closeout or a new execution approval.
++The existing controllers must demonstrably support this process before any
++execution approval request. Closeout includes acceptance and completed material
++failure/prevention records. Scheduler, storage and tenant authority remain deferred.
 +
 +Historical next-label descriptions below are not permission to replay a label.
 +Reconcile consumed labels, including the reported recovery-4 failure, before
@@ -152,7 +189,7 @@ diff --git a/.agentic/aws/plans/implementation/local-to-proven-deployment-reliab
  status: draft
  layer: 04.deploy
  domain: deployment.realization
-@@ -29,6 +29,13 @@
+@@ -29,6 +29,15 @@
  08:00 deadline with completing and proving the structural fix.
 
  ## Confirmed decisions and completion boundary
@@ -162,7 +199,9 @@ diff --git a/.agentic/aws/plans/implementation/local-to-proven-deployment-reliab
 +execution plan. Until then the current requirements remain effective.
 +This programme's whole-estate adoption and replacement prerequisites do not
 +apply to the named slice once that route is effective; the programme remains
-+incomplete and unchanged for other work.
++incomplete and unchanged for other work. The adopted slice uses its bounded
++repair/resume and escalation policy for ordinary failures; it does not require
++full-programme adoption or a new human approval for every in-scope correction.
 
  The user confirmed all six decisions on 2026-09-28:
 
@@ -318,3 +357,48 @@ diff --git a/.agentic/01.harness/templates/operational-realization-contract.v1.g
  1. Copy the template and replace every placeholder with stable,
     provider-neutral identifiers.
     A unit that does not produce or consume asynchronous work must declare
+diff --git a/.agentic/aws/workflows/execute-approved-aws-change.md b/.agentic/aws/workflows/execute-approved-aws-change.md
+--- a/.agentic/aws/workflows/execute-approved-aws-change.md
++++ b/.agentic/aws/workflows/execute-approved-aws-change.md
+@@ -1,7 +1,7 @@
+ <!-- agentic-artifact:
+   schema: agentic-artifact/v2
+   id: aws.workflows.execute-approved-aws-change
+-  version: 1
++  version: 2
+   status: active
+   layer: 04.deploy
+   domain: infra.ci-cd
+@@ -42,10 +42,30 @@
+ - Do not print or store secret values.
+ - Stop and ask again before destructive actions such as deleting resources,
+   replacing persistent storage, revoking access broadly, or changing DNS in a
+-  way that could interrupt service.
++  way that could interrupt service. For an explicitly adopted and approved
++  [bounded PostgreSQL Stage 6 route](../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability),
++  positively owned disposable-restore cleanup expressly included in that
++  approval uses its recovery allowance without asking again. Deleting the
++  source database, backups or unrelated resources remains outside that scope.
+ - Capture the result and verification evidence after execution.
++
++## Bounded PostgreSQL Repair and Resume
++
++For that adopted and approved route only, the concrete plan's allowance covers
++reconciliation, safe diagnosis, relevant source/configuration repair, affected
++checks, changed-image qualification/publication and bounded reattempts.
++An ordinary failure pauses its operation and dependants while this work proceeds;
++continue from the correct checkpoint once verified. Do not stop merely to report
++an error that can be safely fixed within the existing authority. Enforce all
++cumulative attempt/time/cost/recovery limits and existing preflights. Escalate
++new effects, broader permissions, exhausted limits or unsafe unresolved outcomes.
++Before requesting execution approval, demonstrate both effective instruction
++coverage and actual support in the existing controllers; prose is not proof.
+
+ ## Output
+
+ Report what changed, which profile/region/environment was targeted, whether
+-verification passed, and any follow-up needed.
++verification passed, and any follow-up needed. PostgreSQL closeout also includes
++acceptance evidence and completed material-failure/prevention records: failure
++and evidence; cause and missed-check gap; correction and verification; prevention
++with proof; and resumed outcome or precise remaining blocker.

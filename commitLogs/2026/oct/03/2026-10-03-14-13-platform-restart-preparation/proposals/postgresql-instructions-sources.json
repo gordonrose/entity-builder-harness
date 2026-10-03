@@ -1,10 +1,10 @@
 {
   "schema": "review-only-instruction-patch/v1",
   "status": "proposed-not-applied",
-  "source_revision": "9ec382f25f47fb74f6e8b0d1d7d0fb42517bb310",
+  "source_revision": "ba46f4e1916014795ed287048095524524ad44b1",
   "patch": "postgresql-instructions.patch",
-  "patch_sha256": "c461b691f66c3eae7e5faac594457dda47a095f646fa58fc8a4e43c5555a97ba",
-  "scope": "Kanbien/staging PostgreSQL Stage 6 only; explicit adoption and concrete execution-plan approval required",
+  "patch_sha256": "fbf011f6d2451e60d642b0d3e43f197c0312fcb68a08b25d123c84d48bcea752",
+  "scope": "Kanbien/staging PostgreSQL Stage 6 completion with bounded diagnosis/repair/verification/resume; explicit adoption and concrete execution allowance approval required",
   "canonical_execution_plan": ".agentic/aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md",
   "canonical_files_modified": false,
   "files": [
@@ -12,25 +12,25 @@
       "path": ".agentic/01.harness/standards/operational-realization-gate.md",
       "source_sha256": "42fe576d434256536cf0af9e1412736a81d2487ac8766becfcb2200431b8df5e",
       "source_git_blob": "e1d87c9897c5e2c32da048069b8f31246a09c208",
-      "proposed_sha256": "757b294c403a60358249714acb2998e2d5b1bb0974c1f8b766f4f66fc9147d07"
+      "proposed_sha256": "e64bdb6b45be19d11ea884fc4804d4ad0e673abccdd00e1375b03d0aee2272a7"
     },
     {
       "path": ".agentic/01.harness/workflows/operational-realization-gate.md",
       "source_sha256": "534b4db874024fe2271d7ecd000917fe133b1363d8731c02dcc5a9e443c430e0",
       "source_git_blob": "90ef7682911b50fc5338e80559e167f30996290a",
-      "proposed_sha256": "2963233d57be6071c86215137e5f2150d5bc98f561725b7066bc9c4db4fae7fe"
+      "proposed_sha256": "ae52b8526629838b7d7218bbaea19d1d1bb56e6ff198ecc3aa6005cec6f2e439"
     },
     {
       "path": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
       "source_sha256": "0828edd5ffd7a46c6c26e9b28b88099972709ffe85c788f0b32b308da63a15e3",
       "source_git_blob": "a4674b6c6ccc058ad15f12bef7701130ba850044",
-      "proposed_sha256": "5a84c8e94222652518738a4348a292c33562560a2ce428e9b42e1fcfaf7a30b4"
+      "proposed_sha256": "a82fa4a59a152bdce1eca203ca78f187e0661bf47e48adef6cfa3071dc6c01a5"
     },
     {
       "path": ".agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md",
       "source_sha256": "8a18a7a4db450c35f80af32d931356b17c0a0c692746419a63f0a9d2bc7c5622",
       "source_git_blob": "d675af4673542936ba1215f0fed529b128bd07d5",
-      "proposed_sha256": "6ec6d077b1099b3e768e495cab14306114ab1b7fc4bcf6cacde19a68cf50a73a"
+      "proposed_sha256": "aabe96f3596145cbaf769cdcb4df5cbcd34385c56a56c5ea12b9fbdbd0761fe1"
     },
     {
       "path": ".agentic/aws/README.md",
@@ -67,7 +67,33 @@
       "source_sha256": "678705088208b779968d245671e04abee80e8eb545638d5fb30472bae6c33952",
       "source_git_blob": "da12d0bea1c02976f5df6405e49d05d6508070ab",
       "proposed_sha256": "88bbdbea69a54cfbfafb621994e421cd01f7fd555117814fa33ff254ec4f0a1a"
+    },
+    {
+      "path": ".agentic/aws/workflows/execute-approved-aws-change.md",
+      "source_sha256": "8dda22de078a8987e43c9c456d65d031f2c925727625e8fecfc4d73d7bac3ac6",
+      "source_git_blob": "0062d5c1422179a8257d58b88e7bab5e60eaaf93",
+      "proposed_sha256": "d4c986cc0678375d3e7fee86e69aeb53afefa0c8e0c50e89b2bda106c144d2ba"
     }
   ],
-  "patch_format_note": "Blank context lines omit the optional space prefix; standard git apply --check accepts the patch without storing trailing whitespace."
+  "patch_format_note": "Blank context lines omit the optional space prefix; standard git apply --check accepts the patch without storing trailing whitespace.",
+  "revision": 2,
+  "supersedes_patch_sha256": "c461b691f66c3eae7e5faac594457dda47a095f646fa58fc8a4e43c5555a97ba",
+  "substantive_files": [
+    ".agentic/01.harness/standards/operational-realization-gate.md",
+    ".agentic/01.harness/workflows/operational-realization-gate.md",
+    ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
+    ".agentic/aws/workflows/execute-approved-aws-change.md"
+  ],
+  "conditional_pointer_files": [
+    ".agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md",
+    ".agentic/aws/README.md",
+    "docs/04.deploy/README.md",
+    "docs/04.deploy/plans/README.md",
+    "docs/04.deploy/plans/operational-realization-gate-programme.md",
+    "docs/04.deploy/plans/operational-realization-v2-programme.md",
+    ".agentic/01.harness/templates/operational-realization-contract.v1.guide.md"
+  ],
+  "controller_support": "not-yet-demonstrated; approval readiness requires prerequisite implementation and behavioral checks in existing owners",
+  "allowance_plan_version": 2,
+  "execution_plan_sha256": "fb46781123fc7805b3cbb8baf7089d7886cac149e8b1abceeec98b162aa954fe"
 }
