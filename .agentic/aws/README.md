@@ -66,14 +66,6 @@ they are needed for repeatable operations.
 Add scripts, gates, templates, or runbooks only after repeated need or a clear
 safety reason. Prefer deterministic scripts for repeatable AWS checks.
 
-## Implementation Programmes
-
-- [`plans/implementation/iaas-composition-and-release-control-plane.md`](plans/implementation/iaas-composition-and-release-control-plane.md)
-  defines the staged replacement for fragmented, target-specific deployment
-  checks: one target composition, one per-release definition, observed-state
-  records, bound evidence, and provider adapters. It is source planning only;
-  it does not authorise cloud mutations.
-
 ## Output Locations
 
 - `docs/04.deploy/` stores RAG-readable deploy corpus source material and

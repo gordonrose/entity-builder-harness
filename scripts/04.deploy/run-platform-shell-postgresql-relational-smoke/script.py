@@ -22,19 +22,6 @@ SERVER_SERVICE = "kanbien-staging-platform-shell"
 WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
 CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
-PRODUCT_IMAGE = re.compile(r"337159794548\.dkr\.ecr\.eu-west-1\.amazonaws\.com/platform-shell@sha256:[0-9a-f]{64}\Z")
-TASK_OUTPUTS = {
-    "bootstrap": "RelationalBootstrapTaskDefinitionArn",
-    "migration": "RelationalMigrationTaskDefinitionArn",
-    "relay": "RelationalRelayTaskDefinitionArn",
-    "worker": "RelationalWorkerTaskDefinitionArn",
-    "restore_verification": "RelationalRestoreVerificationTaskDefinitionArn",
-}
-TASK_COMMANDS = {
-    stage: [".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-"
-            + ("restore-verify" if stage == "restore_verification" else stage) + ".main.js"]
-    for stage in TASK_OUTPUTS
-}
 
 
 class RelationalSmokeError(Exception):
@@ -71,28 +58,6 @@ def arguments() -> argparse.Namespace:
     return result
 
 
-def require_selected_effect_control(parsed: argparse.Namespace) -> None:
-    """Refuse every relational provider mode until one live control receipt exists."""
-
-    if parsed.execute:
-        mode = "execute"
-    elif parsed.execute_bootstrap_recovery:
-        mode = "execute-bootstrap-recovery"
-    elif parsed.execute_recovery_continuation:
-        mode = "execute-recovery-continuation"
-    elif parsed.diagnose_bootstrap_recovery:
-        mode = "diagnose-bootstrap-recovery"
-    else:
-        raise RelationalSmokeError("the relational release-control mode is unavailable")
-    directory = Path(__file__).resolve().parents[1] / "operational-realization-gate"
-    sys.path.insert(0, str(directory))
-    try:
-        import selected_effect_control
-        selected_effect_control.require_effect_authority("postgresql-relational-smoke", mode)
-    except Exception as exception:
-        raise RelationalSmokeError("the relational release-control authority is unavailable") from exception
-    finally:
-        sys.path.remove(str(directory))
 def mapping(value: Any, label: str) -> dict[str, Any]:
     """Reject an absent policy section rather than choosing an operation default."""
 
@@ -355,76 +320,14 @@ def worker_network(policy: dict[str, Any]) -> str:
     return "awsvpcConfiguration={subnets=[" + ",".join(subnets) + "],securityGroups=[" + ",".join(groups) + "],assignPublicIp=ENABLED}"
 
 
-def unique_stack_values(rows: Any, key: str, value: str) -> dict[str, str]:
-    """Reject missing, duplicate or malformed provider bindings without exposing values."""
+def assert_task_definition(stage: str, policy: dict[str, Any]) -> None:
+    """Ensure a stage can use only its exact target-defined task family/container."""
 
-    if not isinstance(rows, list) or not rows or len(rows) > 200:
-        raise RelationalSmokeError("the relational service stack binding is incomplete")
-    result = {}
-    for row in rows:
-        if (not isinstance(row, dict) or not isinstance(row.get(key), str) or not row[key]
-                or not isinstance(row.get(value), str) or not row[value] or row[key] in result):
-            raise RelationalSmokeError("the relational service stack binding is ambiguous")
-        result[row[key]] = row[value]
-    return result
-
-
-def assert_task_definition(stage: str, policy: dict[str, Any]) -> str:
-    """Resolve and validate one immutable revision deployed by the exact stable stack."""
-
-    if stage not in TASK_OUTPUTS:
-        raise RelationalSmokeError("the relational stage is outside the fixed task sequence")
-    stack_name = policy["service_stack"]
-    response = aws(["cloudformation", "describe-stacks", "--stack-name", stack_name], policy)
-    stacks = response.get("Stacks")
-    stack = stacks[0] if isinstance(stacks, list) and len(stacks) == 1 and isinstance(stacks[0], dict) else None
-    stack_id = stack.get("StackId") if isinstance(stack, dict) else None
-    expected_stack = (r"arn:aws:cloudformation:" + REGION + ":" + ACCOUNT + ":stack/"
-                      + re.escape(stack_name) + r"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-    if (not isinstance(stack, dict) or stack.get("StackStatus") != "UPDATE_COMPLETE"
-            or stack.get("StackName") != stack_name or not isinstance(stack_id, str)
-            or re.fullmatch(expected_stack, stack_id) is None):
-        raise RelationalSmokeError("the relational service stack identity is not the stable reviewed stack")
-    outputs = unique_stack_values(stack.get("Outputs"), "OutputKey", "OutputValue")
-    parameters = unique_stack_values(stack.get("Parameters"), "ParameterKey", "ParameterValue")
-    task_definition = outputs.get(TASK_OUTPUTS[stage])
-    expected_family = policy["families"][stage]
-    expected_arn = (r"arn:aws:ecs:" + REGION + ":" + ACCOUNT + ":task-definition/"
-                    + re.escape(expected_family) + r":([1-9][0-9]{0,9})")
-    matched = re.fullmatch(expected_arn, task_definition) if isinstance(task_definition, str) else None
-    image = parameters.get("ImageUri")
-    if matched is None or not isinstance(image, str) or PRODUCT_IMAGE.fullmatch(image) is None:
-        raise RelationalSmokeError("the relational service stack lacks an exact task and immutable product image binding")
-    response = aws(["ecs", "describe-task-definition", "--task-definition", task_definition], policy)
+    response = aws(["ecs", "describe-task-definition", "--task-definition", policy["families"][stage]], policy)
     definition = response.get("taskDefinition")
     containers = definition.get("containerDefinitions") if isinstance(definition, dict) else None
-    container = containers[0] if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
-    if (not isinstance(definition, dict) or definition.get("taskDefinitionArn") != task_definition
-            or definition.get("family") != expected_family or type(definition.get("revision")) is not int
-            or definition["revision"] != int(matched.group(1)) or definition.get("status") != "ACTIVE"
-            or definition.get("networkMode") != "awsvpc" or definition.get("requiresCompatibilities") != ["FARGATE"]
-            or not isinstance(container, dict) or container.get("name") != policy["containers"][stage]
-            or container.get("portMappings") or container.get("entryPoint") or container.get("essential") is not True
-            or container.get("command") != TASK_COMMANDS[stage] or container.get("image") != image):
-        raise RelationalSmokeError("a relational stage task definition differs from the exact reviewed revision and shape")
-    return task_definition
-
-
-def assert_started_task(task: Any, stage: str, policy: dict[str, Any], definition: str,
-                        expected_task: str | None = None) -> str:
-    """Keep launch and polling observations bound to the same task and definition."""
-
-    task_arn = task.get("taskArn") if isinstance(task, dict) else None
-    cluster_name = policy["cluster"].rsplit("/", 1)[-1]
-    expected_arn = (r"arn:aws:ecs:" + REGION + ":" + ACCOUNT + ":task/"
-                    + re.escape(cluster_name) + r"/[0-9a-f]{32}")
-    if (not isinstance(task, dict) or not isinstance(task_arn, str)
-            or re.fullmatch(expected_arn, task_arn) is None
-            or (expected_task is not None and task_arn != expected_task)
-            or task.get("taskDefinitionArn") != definition or task.get("clusterArn") != policy["cluster"]
-            or task.get("startedBy") != policy["labels"][stage] or task.get("launchType") != "FARGATE"):
-        raise RelationalSmokeError("a relational stage task does not match the bound execution identity")
-    return task_arn
+    if not isinstance(definition, dict) or definition.get("family") != policy["families"][stage] or not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != policy["containers"][stage] or containers[0].get("portMappings"):
+        raise RelationalSmokeError("a relational stage task definition differs from the reviewed isolated shape")
 
 
 def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
@@ -456,29 +359,24 @@ def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
 def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None) -> None:
     """Start one labelled Fargate task, wait for it privately, and require exit zero."""
 
-    task_definition = assert_task_definition(stage, policy)
+    assert_task_definition(stage, policy)
     no_prior_label(stage, policy)
-    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--started-by", policy["labels"][stage], "--network-configuration", network]
+    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", policy["labels"][stage], "--network-configuration", network]
     if environment is not None:
         command.extend(["--overrides", json.dumps({"containerOverrides": [{"name": policy["containers"][stage], "environment": environment}]}, separators=(",", ":"))])
     response = aws(command, policy)
     tasks, failures = response.get("tasks"), response.get("failures")
     if failures not in (None, []) or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
         raise RelationalSmokeError("a fixed relational stage task did not start uniquely")
-    task_arn = assert_started_task(tasks[0], stage, policy, task_definition)
+    task_arn = tasks[0]["taskArn"]
     deadline = time.monotonic() + policy["task_wait_seconds"]
     while time.monotonic() < deadline:
         observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
         current = observed.get("tasks")
-        if (observed.get("failures") not in (None, []) or not isinstance(current, list)
-                or len(current) != 1 or not isinstance(current[0], dict)):
-            raise RelationalSmokeError("a relational stage task observation is not unique")
-        assert_started_task(current[0], stage, policy, task_definition, task_arn)
-        if current[0].get("lastStatus") == "STOPPED":
+        if isinstance(current, list) and len(current) == 1 and isinstance(current[0], dict) and current[0].get("lastStatus") == "STOPPED":
             containers = current[0].get("containers")
-            container = containers[0] if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
-            if (isinstance(container, dict) and container.get("name") == policy["containers"][stage]
-                    and type(container.get("exitCode")) is int and container["exitCode"] == 0):
+            container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"][stage]), None) if isinstance(containers, list) else None
+            if isinstance(container, dict) and container.get("exitCode") == 0:
                 return
             raise RelationalSmokeError("a fixed relational stage task did not complete successfully")
         time.sleep(10)
@@ -739,7 +637,6 @@ def main() -> int:
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
             return 0
-        require_selected_effect_control(parsed)
         if parsed.execute_bootstrap_recovery:
             execute_bootstrap_recovery(policy)
             print('{"postgresql_relational_bootstrap_recovery":"passed"}')

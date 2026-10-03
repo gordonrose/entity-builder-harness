@@ -132,9 +132,6 @@ ignored_dirs = {
     ".cache",
     "__pycache__",
 }
-inert_fixture_dockerfiles = {
-    "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile",
-}
 
 
 def rel(path: Path) -> str:
@@ -151,8 +148,6 @@ dockerignores: list[Path] = []
 
 for path in root.rglob("*"):
     if should_skip(path):
-        continue
-    if path.is_file() and rel(path) in inert_fixture_dockerfiles:
         continue
     if path.is_file() and path.name == "Dockerfile":
         dockerfiles.append(path)

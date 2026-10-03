@@ -15,12 +15,12 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-03T10:21:19Z
+latest_commit_sha: b12556b7
+chat_duration: 772s (00:00:12:52)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -55,9 +55,31 @@ Prepare source recovery.
 - Baseline checkout is clean at 0da085b5 with tree c43e0d28a6ec7726f8511194747d57efba4e246f. Four preservation refs are new; no original ref changed.
 - AWS/GitHub investigation is complete within the documented scope: no identified cloud resource rollback; preserve rotation, backups and uncertain historical assessment attribution.
 
+
+- Summary: Exact local source restoration applied and runtime checks passed
+  Durable evidence: The 423-path inverse applied cleanly after the committed plan b12556b7. Every inverse path matches baseline mode/blob or absence; historical programme log unchanged. Six deployment local suites including nested candidate/relational/reference fixtures passed without external calls. Server/product type, build, runtime and boundary checks passed. Image-runtime payload check initially hit EXDEV moving to /tmp; rerun with supported TMPDIR inside the worktree passed, without source changes. Derived routing is baseline-identical; artifacts catalogue differs only for the new recovery migration plan. Final migration-reference batch is running; source commit will wait for completion. Detailed test summaries are in this session recovery-evidence, raw logs in durable evidence/local-validation. No deployment, image publication, DB action or live restoration proof.
+
 ## Activity Log
 
 - Preparation workspace and pre-application plan created under the approved one-off exception.
+
+
+### 2026-10-03T10:21:19Z - Commit recorded
+
+Commit: `b12556b7`
+
+Message: docs(recovery): record controlled source reversal scope
+
+Summary: Committed migration scope before any source removal; 177 planner cases pass, exact file manifest and durable preservation recorded. Metadata, current recognition, generation and commit readiness gates passed. No external effects.
+
+ADR impact: No new architecture; restore existing baseline only.
+
+
+### 2026-10-03T10:29:31Z - Context hygiene
+
+Summary: Exact local source restoration applied and runtime checks passed
+
+Durable evidence: The 423-path inverse applied cleanly after the committed plan b12556b7. Every inverse path matches baseline mode/blob or absence; historical programme log unchanged. Six deployment local suites including nested candidate/relational/reference fixtures passed without external calls. Server/product type, build, runtime and boundary checks passed. Image-runtime payload check initially hit EXDEV moving to /tmp; rerun with supported TMPDIR inside the worktree passed, without source changes. Derived routing is baseline-identical; artifacts catalogue differs only for the new recovery migration plan. Final migration-reference batch is running; source commit will wait for completion. Detailed test summaries are in this session recovery-evidence, raw logs in durable evidence/local-validation. No deployment, image publication, DB action or live restoration proof.
 
 ## Sub-Agent Activity
 
@@ -65,7 +87,13 @@ Prepare source recovery.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b12556b7`
+  Time UTC: 2026-10-03T10:21:19Z
+  Message: docs(recovery): record controlled source reversal scope
+  Summary: Committed migration scope before any source removal; 177 planner cases pass, exact file manifest and durable preservation recorded. Metadata, current recognition, generation and commit readiness gates passed. No external effects.
+  ADR impact: No new architecture; restore existing baseline only.
 
 ## Main Refresh Conflicts
 
@@ -80,12 +108,12 @@ Reason: Restoring an existing source baseline and preserving evidence; replaceme
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T10:08:27Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-03T10:21:19Z
+Latest commit SHA: b12556b7
+Chat duration: 772s (00:00:12:52)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 

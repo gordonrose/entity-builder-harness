@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 122
-  workflow_files: 39
+  term_count: 120
+  workflow_files: 38
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -421,12 +421,6 @@ terms:
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
-- term: .agentic/01.harness/workflows/sustained-implementation.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 01.harness.workflow.sustained-implementation
-  evidence_path: .agentic/01.harness/workflows/sustained-implementation.md
-  confidence_weight: 1
 - term: .agentic/02.rag-rulebook/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -774,12 +768,6 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
-  confidence_weight: 1
-- term: sustained-implementation.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 01.harness.workflow.sustained-implementation
-  evidence_path: .agentic/01.harness/workflows/sustained-implementation.md
   confidence_weight: 1
 - term: untrusted-input-and-bounded-agent-safety.md
   category: workflow-name

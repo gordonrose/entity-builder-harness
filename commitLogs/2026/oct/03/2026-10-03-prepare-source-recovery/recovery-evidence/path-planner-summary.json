@@ -1,0 +1,43 @@
+{
+  "created_at": "2026-10-03T10:18:31.754399+00:00",
+  "worktree": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+  "audited_head": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+  "baseline": "0da085b50aac2b13dfb15aaac9351efea860926e",
+  "inverse_removed_files": 387,
+  "distinct_retirement_surfaces": 177,
+  "surface_coverage": "Every removed file belongs to exactly one named surface; directories used only where all tracked/nonignored descendants are removed. The mixed operational-realization-gate directory is never selected wholesale.",
+  "planner": {
+    "script": "scripts/01.harness/plan-artifact-path-migration.sh",
+    "new_path_marker": "retired",
+    "calls": 177,
+    "succeeded": 177,
+    "failed": 0,
+    "elapsed_seconds": 521.26,
+    "old_reference_occurrences": 1766,
+    "new_path_explanation": "retired is a no-replacement disposition marker, not a destination being created; broad matches for this generic marker in planner output are not proposed reference rewrites."
+  },
+  "literal_reference_lines": 1721,
+  "reference_line_disposition_counts": {
+    "removed": 828,
+    "restored-to-baseline": 68,
+    "preserved-history": 825
+  },
+  "active_reference_lines_outside_inverse": 0,
+  "old_path_references_after_restoring_36_modified_files": 0,
+  "old_path_references_in_current_recovery_documents": 0,
+  "worktree_status_after_audit": [
+    "?? .agentic/aws/plans/migration/",
+    "?? commitLogs/2026/oct/"
+  ],
+  "repo_mutations_performed": false,
+  "external_calls_performed": false,
+  "limits": [
+    "Literal full-path scan, matching the governed planner. Relative imports and semantic callers need the exact baseline tree comparison and relevant local tests.",
+    "Reference inventory covers candidate snapshot before new migration plan and recognition regeneration. Rerun governed checker after inverse/documents/regeneration, using --plan for the migration artifact.",
+    "Historical session references are preserved, not rewritten."
+  ],
+  "required_next_checks": [
+    "Run check-artifact-path-migration.sh --plan <committed-plan> <old-path> retired for every retirement surface after inverse and derived-index regeneration.",
+    "Run named baseline equality verification, scoped runtime/deployment local checks, recognition generation/check and mandatory commit checks."
+  ]
+}

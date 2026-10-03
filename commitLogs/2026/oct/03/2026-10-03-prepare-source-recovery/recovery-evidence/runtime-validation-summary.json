@@ -1,0 +1,43 @@
+{
+  "scope": "Existing local runtime and compiled payload validation on the baseline-restored recovery branch; no container publication/deployment or database execution.",
+  "commands": [
+    {
+      "command": "npm run platform:server:check",
+      "returncode": 0,
+      "checks": [
+        "TypeScript typecheck",
+        "TypeScript build",
+        "runtime tests",
+        "source boundary checks"
+      ],
+      "output": "\n> platform:server:typecheck\n> tsc -p platform/server/tsconfig.check.json\n\n\n> platform:server:build\n> tsc -p platform/server/tsconfig.json\n\n\n> platform:server:test\n> tsc -p platform/server/tsconfig.runtime-test.json && node platform/server/tests/run-runtime-tests.mjs\n\n{\"level\":\"info\",\"message\":\"platform.server.started\",\"fields\":{\"port\":39557,\"host\":\"127.0.0.1\"}}\nplatform/server runtime test passed.\n\n> platform:server:boundary\n> node platform/server/tests/platform-server-boundaries.test.mjs\n\nplatform/server boundary check passed for 3 source file(s).\n"
+    },
+    {
+      "command": "npm run product:kanbien-platform:check",
+      "returncode": 0,
+      "checks": [
+        "TypeScript typecheck",
+        "TypeScript build",
+        "runtime tests",
+        "source boundary checks"
+      ],
+      "output": "\n> product:kanbien-platform:typecheck\n> tsc -p products/kanbien-platform/tsconfig.check.json\n\n\n> product:kanbien-platform:build\n> tsc -p products/kanbien-platform/tsconfig.json\n\n\n> product:kanbien-platform:test\n> tsc -p products/kanbien-platform/tsconfig.runtime-test.json && node products/kanbien-platform/tests/run-runtime-tests.mjs\n\nproducts/kanbien-platform runtime test passed.\n\n> product:kanbien-platform:boundary\n> node products/kanbien-platform/tests/kanbien-platform-boundaries.test.mjs\n\nproducts/kanbien-platform boundary check passed for 2 source file(s).\n"
+    },
+    {
+      "command": "npm run platform:server:image-runtime-check",
+      "returncode": 1,
+      "reason": "EXDEV while moving node_modules/@kanbien from the durable worktree to /tmp; verifier requires same-filesystem temporary storage. No source change."
+    },
+    {
+      "command": "TMPDIR=<prepared-worktree>/.cache/recovery-test-tmp npm run platform:server:image-runtime-check",
+      "returncode": 0,
+      "output": "Prepared platform shell image runtime; compiled server and worker startup; Platform shell compiled runtime payload check passed."
+    }
+  ],
+  "final_result": "pass",
+  "dependencies": "npm ci --ignore-scripts --no-audit --no-fund, using unchanged lockfile; installed81packages in12s.",
+  "limits": [
+    "Compiled payload verification is not proof of the final registry image, live candidate, authenticated deployed behavior or database recovery.",
+    "Runtime command durations were not separately measured."
+  ]
+}
