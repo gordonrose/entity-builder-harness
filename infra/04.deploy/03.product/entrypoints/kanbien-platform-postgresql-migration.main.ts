@@ -8,9 +8,6 @@ import {
 import { kanbienPlatformSmokePostgreSqlMigration } from "./kanbien-platform-postgresql-persistence";
 import {
   closePool,
-  relationalTaskMode,
-  verifyRelationalTaskPreflight,
-  writePreflightOutcome,
   configurationFromEnvironment,
   connectionConfiguration,
   connectionPool,
@@ -20,17 +17,10 @@ import {
 
 async function main(): Promise<void> {
   let pool;
-  let preflight = process.argv.slice(2).includes("--preflight");
   try {
-    preflight = relationalTaskMode() === "preflight";
     const configuration = configurationFromEnvironment();
     const migration = secretFromEnvironment("RELATIONAL_MIGRATION_SECRET_JSON");
     pool = connectionPool(migration, configuration.migrationSecretArn, configuration.schema);
-    if (preflight) {
-      await verifyRelationalTaskPreflight(pool, "migration", migration.username);
-      writePreflightOutcome("migration", "passed");
-      return;
-    }
     const adapterConfiguration = connectionConfiguration(migration, configuration.migrationSecretArn, configuration.schema);
     // PostgreSQL default privileges belong to the role that will create later
     // tables. The bootstrap identity deliberately does not impersonate this
@@ -43,8 +33,7 @@ async function main(): Promise<void> {
     if (!result.ok || result.value.length !== 2) throw new Error("RELATIONAL_TASK_MIGRATION_FAILED");
     writeOutcome("migration_completed", "succeeded");
   } catch {
-    if (preflight) writePreflightOutcome("migration", "failed");
-    else writeOutcome("migration_completed", "failed");
+    writeOutcome("migration_completed", "failed");
     process.exitCode = 1;
   } finally {
     await closePool(pool);

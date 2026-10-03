@@ -20,11 +20,10 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
-#   - writes-files
 #   used_by:
 #   - id: package.script.deployment-realization-validate
 #     path: package.json
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-exec python3 -B scripts/04.deploy/operational-realization-gate/script.py "$@"
+exec python3 scripts/04.deploy/operational-realization-gate/script.py "$@"

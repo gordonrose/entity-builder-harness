@@ -1,0 +1,113 @@
+{
+  "recorded_utc": "2026-10-03T10:24:42.552411+00:00",
+  "all_passed": true,
+  "commands": [
+    {
+      "id": "realization",
+      "command": [
+        "bash",
+        "scripts/04.deploy/operational-realization-gate/smoke-test.sh"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.164501+00:00",
+      "duration_seconds": 4.175,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/realization.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    },
+    {
+      "id": "deployment-workflow",
+      "command": [
+        "bash",
+        "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.194018+00:00",
+      "duration_seconds": 0.391,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/deployment-workflow.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    },
+    {
+      "id": "infrastructure",
+      "command": [
+        "bash",
+        "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.182554+00:00",
+      "duration_seconds": 15.709,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/infrastructure.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    },
+    {
+      "id": "reconciliation",
+      "command": [
+        "bash",
+        "scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.189171+00:00",
+      "duration_seconds": 1.118,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/reconciliation.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    },
+    {
+      "id": "container-boundaries",
+      "command": [
+        "bash",
+        "scripts/04.deploy/validate-container-boundaries/script.sh",
+        "--json"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.175215+00:00",
+      "duration_seconds": 0.978,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/container-boundaries.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    },
+    {
+      "id": "container-boundary-fixtures",
+      "command": [
+        "bash",
+        "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+      ],
+      "cwd": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+      "started_utc": "2026-10-03T10:23:48.181693+00:00",
+      "duration_seconds": 0.734,
+      "returncode": 0,
+      "log": "/tmp/controlled-recovery-validation/container-boundary-fixtures.log",
+      "scope": "local-only; real external tools and Python network disabled"
+    }
+  ],
+  "blocked_attempt_counts": {
+    "blocked-external.log": 0,
+    "blocked-network.log": 0
+  },
+  "nested_infrastructure_success_lines": [
+    "Platform-shell synthetic scheduler policy check passed.",
+    "Platform-shell metric-coverage static policy check passed.",
+    "Platform-shell deployment-artifact store static policy check passed.",
+    "PostgreSQL relational-reference static policy check passed.",
+    "Platform-shell deployment reconciliation static policy check passed.",
+    "Platform-shell drift-detection boundary check passed.",
+    "Negative authorization test-client local validation passed.",
+    "Negative authorization smoke local validation passed.",
+    "Persistence-write client local validation passed.",
+    "Persistence smoke local validation passed.",
+    "Persistence admission-probe local validation passed.",
+    "Persistence delivery-proof local validation passed.",
+    "Platform-shell rate-limit smoke local validation passed.",
+    "Platform-shell ingress smoke local validation passed.",
+    "Platform-shell worker smoke local validation passed.",
+    "PostgreSQL relational smoke local validation passed.",
+    "Candidate execution preflight local validation passed.",
+    "Platform-shell infrastructure static policy check passed."
+  ],
+  "limitations": [
+    "Local source/static/fixture checks only. No packaged image run, real AWS health check, deployment, candidate, database connection, restore, or rollback proof."
+  ],
+  "repository_changes_by_this_agent": false
+}

@@ -45,11 +45,6 @@ Ignore files must cover git internals, caches, `commitLogs`, env files,
 credentials/secrets, logs, temporary output, dependency folders, and generated
 runtime caches. The validator fails weak or empty ignore files.
 
-The one exact inert Dockerfile fixture at
-`scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile`
-is excluded from deploy-image discovery. It is a release-control test input,
-not a deployable repository image definition.
-
 The command is read-only. It does not build images, run containers, call AWS,
 call GitHub, publish to ECR, or mutate files.
 

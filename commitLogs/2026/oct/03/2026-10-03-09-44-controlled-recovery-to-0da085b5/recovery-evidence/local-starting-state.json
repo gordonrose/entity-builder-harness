@@ -1,0 +1,829 @@
+{
+  "captured_utc": "2026-10-03T08:51:03.735613+00:00",
+  "root": "/home/owner/projects/entity-builder-harness-001",
+  "head": "8052929cb947ef3a0199a338a997f8cc8ede3aac",
+  "status": " M .agentic/03.product/README.md\n M .agentic/03.product/plans/implementation/product-harness-foundation.md\n M .agentic/03.product/workflows/README.md\n M .agentic/03.product/workflows/platform-runtime-implementation.md\n M package.json\n?? .agentic/03.product/standards/feature-platform-consumption-decision-record.v1.md\n?? .agentic/03.product/standards/platform-feature-consumption-matrix.v1.md\n?? .agentic/03.product/templates/README.md\n?? .agentic/03.product/templates/feature-platform-consumption-decision-record.v1.template.md\n?? .agentic/03.product/workflows/feature-platform-consumption-decision-record.md\n?? scripts/03.product/README.md\n?? scripts/03.product/verify-platform-consumption-matrix/README.md\n?? scripts/03.product/verify-platform-consumption-matrix/script.sh\n",
+  "file_hashes": {
+    ".agentic/03.product/README.md": "515ebcb257d760c668ffb970f9c85c21820d33644e46eb2f2838954a83484e13",
+    ".agentic/03.product/plans/implementation/product-harness-foundation.md": "8c06b2fb771ab1bb5e8dcc797fed57c38db559e385e75bf443d2c3f24a608965",
+    ".agentic/03.product/standards/feature-platform-consumption-decision-record.v1.md": "72a15f49279804660caade43f16a7ce8742e7dcc23dae3fd80699ade87f9b6e5",
+    ".agentic/03.product/standards/platform-feature-consumption-matrix.v1.md": "118278817fade141d75c61cecf375286c8f0cb5c8b707717428c72d282e52d45",
+    ".agentic/03.product/templates/README.md": "7b5de8da634e8b3eea5bde58a5b08d2bc4fad88d29578e142643479740579347",
+    ".agentic/03.product/templates/feature-platform-consumption-decision-record.v1.template.md": "bd87a030f02cd4e50013e3bc3e0b38c0119626310fbfd595a7dc6f2c80818d38",
+    ".agentic/03.product/workflows/README.md": "05541389a55799cc837a47b620832046b9aac0dde397eed8db0ad6090fd9b8c4",
+    ".agentic/03.product/workflows/feature-platform-consumption-decision-record.md": "0e6c69b515fc35dfcfcb46d95b929aed48221c11c54d65ee97604a31f6021360",
+    ".agentic/03.product/workflows/platform-runtime-implementation.md": "873d880aca84ee9fa89bf505889b570897a1837bda1d291b9dee2ab25853422d",
+    "package.json": "ac4fcbce7939a3a775e4422ebb6e4c9994d62dcc4be1442ae950431428cc113d",
+    "scripts/03.product/README.md": "411c7439692788de47683724915f600a6b8286fcba2dcb35fa5aa5437b0a60f6",
+    "scripts/03.product/verify-platform-consumption-matrix/README.md": "3886e8f22335ffcb8225ee6b531ee4267f67933c06b545433eb9839e6e1d608f",
+    "scripts/03.product/verify-platform-consumption-matrix/script.sh": "e702173ffa827db6d96ad541a7bebb9c7c623b3776c214c5ad4a90076d78883e"
+  },
+  "refs": "refs/heads/agent/data-governance-storage-foundation 542ca1700563dbba8a00fbf1ed911a4f55370c10 \nrefs/heads/agent/postgresql-recovery d8270e340f4e5b45b237a7e2ca7b8b7aedf0e24b \nrefs/heads/agent/scheduler-time-platform 8052929cb947ef3a0199a338a997f8cc8ede3aac \nrefs/heads/agent/tenant-access-control-operationalization e8810937b944efd8c821a08660d10ea195a2d362 refs/remotes/origin/main\nrefs/heads/agentic/accepted-main/reliability-plan-20260927T2217 b7a066d5fb77422db41458e28d9894ebf359ce47 refs/remotes/origin/main\nrefs/heads/agentic/preflight/chat-2026-06-16-22-23-task-explore-and-design-a-governed-main-refresh-recovery-pro-/20260617135211 889ad176e58d6f178c7e76a8ea1f795cb9bdc18e \nrefs/heads/agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623172119 e87f1db0bb04d4b43f7aba37e44d886cafdf0a5a \nrefs/heads/agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623175327 86d732539097b6d991302a36b2b4db28e4d48d82 \nrefs/heads/agentic/preflight/chat-2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker/20260623192900 0e50d7ecb61c5e6cab5a6fde3ba470119f9ea5f5 \nrefs/heads/agentic/preflight/chat-2026-07-01-17-32-i-m-getting-prompted-tfor-85e5d0287349/20260702095546 eceba1f839c15398c1f08832120df55d6d453570 \nrefs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-56d0b34b4a57/20260710210856 9fa5c132125bd9f5cf8b88a5b5a32630fb159720 \nrefs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-83640c1ec169/20260710173759 12fce6d432ea8529365a0e2f558fbc08becb28d3 \nrefs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-8418f83cd210/20260710170217 5a32327e6f7fb9f2da34de2aa28ff63d85f1ba11 \nrefs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-86f2b05abcec/20260710171949 8cac1de7b2123885d6083bd21d3835366ed2a116 \nrefs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-c0120e894437/20260710203444 e747c5b17d374ac53c437b83ecb9c60eb8a5925f \nrefs/heads/agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710/20260901222515 72242f27271003fe037ec263ddca7ac84fa89d05 \nrefs/heads/agentic/remote-main d8270e340f4e5b45b237a7e2ca7b8b7aedf0e24b \nrefs/heads/chat/2026-06-15-22-45-i-d-like-to-add-a-gate-to-our-commit-process-so-that-if-ther 66f39d4f47b7fcd76b9929c922573c24c1df8d26 \nrefs/heads/chat/2026-06-22-23-37-create-01-harness-architecture-rulebook-operating-pack 67ba65f27624c1e9ee52286aa236138897f62772 \nrefs/heads/chat/2026-06-23-00-02-start-architecture-rulebook-harvest-coverage-tracker 7a6c287aa0a8ab3db224f2d6d4f2ba0f8ae5af50 \nrefs/heads/chat/2026-06-27-08-51-i-d-like-to-add-some-source-material-markdown-to-the-repo-i- 756a1a123046613ff1b945d5f44ab58c6f856d23 \nrefs/heads/chat/2026-07-03-07-15-can-you-explain-the-architecture-of-my-rag-api-as-it-current 61752e34bb08eb7026c15153057c92e14824eb2f \nrefs/heads/chat/2026-07-03-08-31-implement-deterministic-block-so-open-new-window-uses-the-ac ea9c3275b8fa7f19f0beb7455aed96f81a60b668 \nrefs/heads/chat/2026-07-06-19-52-we-have-built-out-llm-workbench-it-s-on-this-repo-gordonrose 860732b8349bb3a42aae2d75396e9c605c3f8651 \nrefs/heads/chat/2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests 1aa6ccea3613ab7938536821784a9722856edc17 \nrefs/heads/chat/2026-07-06-23-41-ok-can-we-make-that-change cf5991a7d555a02f60686bb82845b967d35638df \nrefs/heads/chat/2026-07-06-23-48-can-you-explain-the-methodologies-we-use-to-ensure-our-harne 860732b8349bb3a42aae2d75396e9c605c3f8651 \nrefs/heads/chat/2026-07-07-00-13-plan-rag-hardening-gaps-aws-service-selector-fixtures-corpus a34b47e247f11ca9f0d957102758a2bc923c2791 \nrefs/heads/chat/2026-07-07-01-22-adopt-llm-workbench-in-entity-builder-as-consumer 1f1be55c37252f29b843ad22249390e93173f3b4 \nrefs/heads/chat/2026-07-07-20-18-are-the-issues-we-are-deferring-being-noted-in-our-platform- 860732b8349bb3a42aae2d75396e9c605c3f8651 \nrefs/heads/chat/2026-07-08-00-19-update-repo-documentation-and-rag-service-to-codify-platform 2989bd095ef6a0b4b2627aa1996e5030f348ffec \nrefs/heads/chat/2026-07-08-18-22-can-you-describe-packages-core-to-me-please d1e9b4aa4d05e5240e40f86fbdd90f014017cdb2 \nrefs/heads/chat/2026-07-08-19-58-i-would-like-to-update-my-llm-workbench-project-so-that-when 807834e5ef18c440c654765e15d7f4fd5393c3d6 \nrefs/heads/chat/2026-07-08-20-51-manual-test-make-a-tiny-docs-change-and-record-sub-agent-act 807834e5ef18c440c654765e15d7f4fd5393c3d6 \nrefs/heads/chat/2026-07-08-21-01-starting-a-chat-to-test-new-agentic-implementation-with-suba 807834e5ef18c440c654765e15d7f4fd5393c3d6 \nrefs/heads/chat/2026-07-09-10-38-is-it-safe-to-try-these-commands-in-entity-builder-harness-0 f24e16dc55d586dc35d416d743ed8ab031e9610f \nrefs/heads/chat/2026-07-09-11-17-ok-let-s-do-1-and-2-then-run-3-for-aws-deploy-readiness-then b95c39fa07fc0f176db854aa1e013ac46c243437 \nrefs/heads/chat/2026-07-09-13-42-i-m-ready-to-start-building-my-runtime-layer-for-platform-wh b95c39fa07fc0f176db854aa1e013ac46c243437 \nrefs/heads/chat/2026-07-09-14-42-is-there-content-in-my-agents-md-that-is-redundant-i-feel-be b95c39fa07fc0f176db854aa1e013ac46c243437 \nrefs/heads/chat/2026-07-09-16-04-can-you-walk-me-through-how-headers-are-added-and-maintained b95c39fa07fc0f176db854aa1e013ac46c243437 \nrefs/heads/chat/2026-07-09-17-04-can-you-explain-the-checks-that-are-run-as-part-of-my-commit b95c39fa07fc0f176db854aa1e013ac46c243437 \nrefs/heads/chat/2026-07-10-11-50-restore-lost-rag-example-context-deprioritization-work-after b1f26dcb4f09ad8e4df0629abf06566d4c8609b7 \nrefs/heads/chat/2026-07-10-13-20-ok-this-is-probably-a-gap-in-our-process-then-when-we-commit fd246a1bf21b7ae33f6c2668fc02bd937260782c \nrefs/heads/chat/2026-07-10-13-31-we-are-in-home-owner-projects-entity-builder-harness-001-on- 59860783db80a39576d4867dcf03a900544166c3 \nrefs/heads/chat/2026-07-10-13-34-review-possibly-stale-agents-md-source-of-truth-section 59860783db80a39576d4867dcf03a900544166c3 \nrefs/heads/chat/2026-07-10-13-49-let-s-lock-the-platform-app-integration-module-decision-in 84761b8cd332bee50a313fec53e6735d965b10dd \nrefs/heads/chat/2026-07-10-14-17-how-do-i-fix-this-git-worktrees-index-lock-it-keeps-happenni fd246a1bf21b7ae33f6c2668fc02bd937260782c \nrefs/heads/chat/2026-07-10-16-19-can-you-run-an-audit-of-our-commitlogs-and-check-them-agains fd246a1bf21b7ae33f6c2668fc02bd937260782c \nrefs/heads/chat/2026-07-11-22-58-continue-platform-runtime-work-from-main-inspect-first-slice bcd2b5d51004f2ca36397908f2534a2dc3fe5378 \nrefs/heads/chat/2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre eaf89e342a65cc962a3fe4120d145fe78e736795 \nrefs/heads/chat/2026-07-12-16-45-what-repositories-do-we-already-have-on-aws 800f7131df2b12f9e0fa62687a4f6bc0a488ae9d \nrefs/heads/chat/2026-07-12-17-52-create-reusable-platform-shell-target-profile-before-first-a 5c2065f18ef8a39f5fb1e8077c824493f3799864 \nrefs/heads/chat/2026-07-13-17-07-continue-platform-shell-first-deploy-blockers-from-pushed-ma 9a3ab847ffd9b53b0c2060da2d8b7f8705aebd31 \nrefs/heads/chat/2026-07-14-12-35-work-through-platform-shell-remaining-deploy-blockers 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc \nrefs/heads/chat/2026-08-30-00-29-can-you-summarize-what-the-chat-folder-does-how-would-you-ex 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc \nrefs/heads/chat/2026-08-30-14-17-do-we-have-a-standard-glossary-for-terminology-used-in-this- 898dd2cdba57757acea6622c5d0d6e7e3315c003 \nrefs/heads/chat/2026-08-30-14-47-can-you-walk-me-through-agentic-aws 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc \nrefs/heads/chat/2026-08-30-14-55-can-you-walk-me-through-home-owner-projects-entity-builder-h 96eae703cab87482236afad5534e560042c8f3ae \nrefs/heads/chat/2026-08-30-21-52-read-only-platform-layer-orientation-platform-contracts-plat 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101 \nrefs/heads/chat/2026-08-30-22-23-can-you-check-why-kanbien-com-is-down-please ad83da4e2782c60318d5ec010a3fd5409cc3488e \nrefs/heads/chat/2026-08-30-23-53-is-this-folder-home-owner-projects-entity-builder-harness-00 f760e1eb1110d6a5cf30672e20ec92edfefb52d1 \nrefs/heads/chat/2026-08-30-23-55-walk-through-packages-core-folders-read-only 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101 \nrefs/heads/chat/2026-08-31-00-52-we-are-in-home-owner-projects-entity-builder-harness-001-ple 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101 \nrefs/heads/chat/2026-08-31-00-53-please-start-a-new-read-only-planning-thread-for-real-resour 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101 \nrefs/heads/chat/2026-08-31-00-57-implement-platform-auth-boundary-correction-move-cognito-spe 929cf8d040506db8d6a21b89e72de7a7e49c4087 \nrefs/heads/chat/2026-08-31-00-59-implement-the-missing-authenticated-principal-bridge-so-auth 853b5bcfbf597efd87e57c19b8a6ad8ce085ba6a \nrefs/heads/chat/2026-08-31-01-11-teach-the-architecture-list-in-the-supplied-attachment-in-sm e68abc3d2c799be97c0c1c4fa9d549869f2d8acd \nrefs/heads/chat/2026-08-31-22-11-we-currently-don-t-have-applications-or-dbs-that-need-tenant bb42dfde8346d575f22ded96a81fab17efeaed0b \nrefs/heads/chat/2026-09-02-19-57-i-m-trying-to-understand-the-difference-between-ontology-sem 3bfc7980d94565cb22484003e7c1fffbf1d5c309 \nrefs/heads/chat/2026-09-02-19-59-i-m-trying-to-understand-the-vocabulary-for-agentic-harnesse 3bfc7980d94565cb22484003e7c1fffbf1d5c309 \nrefs/heads/chat/2026-09-04-16-50-let-s-say-i-have-a-collection-of-agents-with-an-orchestrator 3bfc7980d94565cb22484003e7c1fffbf1d5c309 \nrefs/heads/chat/2026-09-06-12-03-diagnose-and-safely-restore-the-existing-kanbien-brochure-si 3bfc7980d94565cb22484003e7c1fffbf1d5c309 \nrefs/heads/chat/2026-09-06-18-57-refactor-the-kanbien-staging-platform-shell-foundation-infra 1019f55d4fe167e07fb1543f3d8a43e2c36b390c \nrefs/heads/chat/2026-09-06-23-13-explain-the-kanbien-staging-platform-shell-unhealthy-targets 5cb08234ee61615ed255598d3dff3945ffe52d67 \nrefs/heads/chat/2026-09-07-21-38-ok-let-s-make-those-changes bfa5b9c4b566ffcbea3bf7b5c5fcdd26def6eb20 \nrefs/heads/chat/2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs 74795b3cb90a289e18e23aadf3277401d4a9c7b3 \nrefs/heads/chat/2026-09-08-23-46-proceed 60ec7f9caab3b9d06c7953ac506511c7c65d3f44 \nrefs/heads/chat/2026-09-09-20-04-record-the-bounded-dynamodb-production-reference-decision-fo 71d421457059e858979c8f964d44440cca0d3f4f \nrefs/heads/chat/2026-09-19-01-27-it-s-been-a-while-since-i-worked-on-this-can-you-catch-me-up 661818d5c29302f61a39a2ffdcb2e25eaddd85f2 \nrefs/heads/chat/2026-09-22-00-21-let-s-go 75bf76fd3a730e6e32245c56591156fa7d422294 \nrefs/heads/chat/2026-09-22-10-41-approve-synthetic-scheduler-activation-bundle df531f4c315b4f22981bb547218b4648d50baed9 \nrefs/heads/chat/2026-09-23-09-50-let-s-go 40ac54a1e9e4ecbbef1c99484b92840f0307e1be \nrefs/heads/chat/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder c6de3132268baffa8a8274586a24aa32c0cd2e33 \nrefs/heads/chat/2026-09-23-15-58-let-s-go a408a1d7d52ebd9a6e74f3b954722261a3fe64a9 \nrefs/heads/chat/2026-09-23-18-13-go c25ecdd1f30ec869ba0bbcb24bbce675cdaf1560 \nrefs/heads/chat/2026-09-24-00-15-let-s-go 719fec42e248ba7af401b417bee5174d70ac977a \nrefs/heads/chat/2026-09-25-09-46-go dd18cacbcc7167d1fb7a706067db83251d77150e \nrefs/heads/chat/2026-09-26-00-45-approve-the-full-postgresql-relational-reference-programme-f 45bee6b6b52a4b4b63c64082b1e4262e69deb198 \nrefs/heads/chat/2026-09-26-10-30-go 7e1e2a921d29d3dd96198c868849513ac21d6428 \nrefs/heads/chat/2026-09-26-14-17-remove-rag-from-commit-cycle cdd8f508c92bff79a84c967a0be10003d748d6f5 \nrefs/heads/chat/2026-09-26-16-52-approved 8052929cb947ef3a0199a338a997f8cc8ede3aac \nrefs/heads/chat/2026-09-26-18-35-go f6fcf7d8b56b1efd08e4678f25476d0399c898e5 \nrefs/heads/chat/2026-09-26-22-12-let-s-do-that ca9cab512338ecb33fffcfced675192b4634f5d5 \nrefs/heads/chat/2026-09-27-15-32-1-please-resolve ed3f0be9b3f04bbb4427113d7f8cd4495dbbde4d \nrefs/heads/chat/2026-09-27-21-30-let-s-do-1 10c9c90fad1aafb1e2b9c03e819bdd2164281269 \nrefs/heads/chat/2026-09-27-23-15-publish-deployment-reliability-plan 0da085b50aac2b13dfb15aaac9351efea860926e \nrefs/heads/chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e \nrefs/heads/chat/2026-10-03-09-44-controlled-recovery-to-0da085b5 8052929cb947ef3a0199a338a997f8cc8ede3aac \nrefs/heads/chore/operational-realization-gate d5e0ceb6e22c172937c2ecb4576b28a9417efa25 refs/remotes/origin/main\nrefs/heads/main 8052929cb947ef3a0199a338a997f8cc8ede3aac refs/remotes/origin/main\nrefs/remotes/origin/HEAD 81cf11c867422f5a2b26e04332e4705a1a628462 \nrefs/remotes/origin/main 81cf11c867422f5a2b26e04332e4705a1a628462 \n",
+  "worktrees": [
+    {
+      "path": "/home/owner/projects/entity-builder-harness-001",
+      "exists": true,
+      "records": [
+        "HEAD 8052929cb947ef3a0199a338a997f8cc8ede3aac",
+        "branch refs/heads/main"
+      ],
+      "status": " M .agentic/03.product/README.md\n M .agentic/03.product/plans/implementation/product-harness-foundation.md\n M .agentic/03.product/workflows/README.md\n M .agentic/03.product/workflows/platform-runtime-implementation.md\n M package.json\n?? .agentic/03.product/standards/feature-platform-consumption-decision-record.v1.md\n?? .agentic/03.product/standards/platform-feature-consumption-matrix.v1.md\n?? .agentic/03.product/templates/README.md\n?? .agentic/03.product/templates/feature-platform-consumption-decision-record.v1.template.md\n?? .agentic/03.product/workflows/feature-platform-consumption-decision-record.md\n?? scripts/03.product/README.md\n?? scripts/03.product/verify-platform-consumption-matrix/README.md\n?? scripts/03.product/verify-platform-consumption-matrix/script.sh\n"
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/chat_2026-08-31-01-11-teach-the-architecture-list-in-the-supplied-attachment-in-sm-1609907486-2365496175/chat_2026-09-06-12-03-diagnose-and-safely-restore-the-existing-kanbien-brochure-si-674022606",
+      "exists": false,
+      "records": [
+        "HEAD 3bfc7980d94565cb22484003e7c1fffbf1d5c309",
+        "branch refs/heads/chat/2026-09-06-12-03-diagnose-and-safely-restore-the-existing-kanbien-brochure-si",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/chat_2026-08-31-01-11-teach-the-architecture-list-in-the-supplied-attachment-in-sm-1609907486-2365496175/chat_2026-09-06-23-13-explain-the-kanbien-staging-platform-shell-unhealthy-targets-2666070117",
+      "exists": false,
+      "records": [
+        "HEAD 5cb08234ee61615ed255598d3dff3945ffe52d67",
+        "branch refs/heads/chat/2026-09-06-23-13-explain-the-kanbien-staging-platform-shell-unhealthy-targets",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-03-07-15-can-you-explain-the-architecture-of-my-rag-api-as-it-current-3800178136",
+      "exists": false,
+      "records": [
+        "HEAD 61752e34bb08eb7026c15153057c92e14824eb2f",
+        "branch refs/heads/chat/2026-07-03-07-15-can-you-explain-the-architecture-of-my-rag-api-as-it-current",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-03-08-31-implement-deterministic-block-so-open-new-window-uses-the-ac-4292630431",
+      "exists": false,
+      "records": [
+        "HEAD ea9c3275b8fa7f19f0beb7455aed96f81a60b668",
+        "branch refs/heads/chat/2026-07-03-08-31-implement-deterministic-block-so-open-new-window-uses-the-ac",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-06-19-52-we-have-built-out-llm-workbench-it-s-on-this-repo-gordonrose-1452831383",
+      "exists": false,
+      "records": [
+        "HEAD 860732b8349bb3a42aae2d75396e9c605c3f8651",
+        "branch refs/heads/chat/2026-07-06-19-52-we-have-built-out-llm-workbench-it-s-on-this-repo-gordonrose",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests-4044235903",
+      "exists": false,
+      "records": [
+        "HEAD 1aa6ccea3613ab7938536821784a9722856edc17",
+        "branch refs/heads/chat/2026-07-06-22-27-continue-packages-core-shared-slice-helpers-and-tests",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-06-23-41-ok-can-we-make-that-change-3220034258",
+      "exists": false,
+      "records": [
+        "HEAD cf5991a7d555a02f60686bb82845b967d35638df",
+        "branch refs/heads/chat/2026-07-06-23-41-ok-can-we-make-that-change",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-06-23-48-can-you-explain-the-methodologies-we-use-to-ensure-our-harne-934392677",
+      "exists": false,
+      "records": [
+        "HEAD 860732b8349bb3a42aae2d75396e9c605c3f8651",
+        "branch refs/heads/chat/2026-07-06-23-48-can-you-explain-the-methodologies-we-use-to-ensure-our-harne",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-07-00-13-plan-rag-hardening-gaps-aws-service-selector-fixtures-corpus-1727961372",
+      "exists": false,
+      "records": [
+        "HEAD a34b47e247f11ca9f0d957102758a2bc923c2791",
+        "branch refs/heads/chat/2026-07-07-00-13-plan-rag-hardening-gaps-aws-service-selector-fixtures-corpus",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-07-01-22-adopt-llm-workbench-in-entity-builder-as-consumer-460561245",
+      "exists": false,
+      "records": [
+        "HEAD 1f1be55c37252f29b843ad22249390e93173f3b4",
+        "branch refs/heads/chat/2026-07-07-01-22-adopt-llm-workbench-in-entity-builder-as-consumer",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-07-20-18-are-the-issues-we-are-deferring-being-noted-in-our-platform--4006042793",
+      "exists": false,
+      "records": [
+        "HEAD 860732b8349bb3a42aae2d75396e9c605c3f8651",
+        "branch refs/heads/chat/2026-07-07-20-18-are-the-issues-we-are-deferring-being-noted-in-our-platform-",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-08-00-19-update-repo-documentation-and-rag-service-to-codify-platform-147088539",
+      "exists": false,
+      "records": [
+        "HEAD 2989bd095ef6a0b4b2627aa1996e5030f348ffec",
+        "branch refs/heads/chat/2026-07-08-00-19-update-repo-documentation-and-rag-service-to-codify-platform",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-08-18-22-can-you-describe-packages-core-to-me-please-207146756",
+      "exists": false,
+      "records": [
+        "HEAD d1e9b4aa4d05e5240e40f86fbdd90f014017cdb2",
+        "branch refs/heads/chat/2026-07-08-18-22-can-you-describe-packages-core-to-me-please",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-08-19-58-i-would-like-to-update-my-llm-workbench-project-so-that-when-2224047773",
+      "exists": false,
+      "records": [
+        "HEAD 807834e5ef18c440c654765e15d7f4fd5393c3d6",
+        "branch refs/heads/chat/2026-07-08-19-58-i-would-like-to-update-my-llm-workbench-project-so-that-when",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-08-20-51-manual-test-make-a-tiny-docs-change-and-record-sub-agent-act-985378193",
+      "exists": false,
+      "records": [
+        "HEAD 807834e5ef18c440c654765e15d7f4fd5393c3d6",
+        "branch refs/heads/chat/2026-07-08-20-51-manual-test-make-a-tiny-docs-change-and-record-sub-agent-act",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-08-21-01-starting-a-chat-to-test-new-agentic-implementation-with-suba-709614134",
+      "exists": false,
+      "records": [
+        "HEAD 807834e5ef18c440c654765e15d7f4fd5393c3d6",
+        "branch refs/heads/chat/2026-07-08-21-01-starting-a-chat-to-test-new-agentic-implementation-with-suba",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-10-38-is-it-safe-to-try-these-commands-in-entity-builder-harness-0-4143115588",
+      "exists": false,
+      "records": [
+        "HEAD f24e16dc55d586dc35d416d743ed8ab031e9610f",
+        "branch refs/heads/chat/2026-07-09-10-38-is-it-safe-to-try-these-commands-in-entity-builder-harness-0",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-11-17-ok-let-s-do-1-and-2-then-run-3-for-aws-deploy-readiness-then-2091927036",
+      "exists": false,
+      "records": [
+        "HEAD b95c39fa07fc0f176db854aa1e013ac46c243437",
+        "branch refs/heads/chat/2026-07-09-11-17-ok-let-s-do-1-and-2-then-run-3-for-aws-deploy-readiness-then",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-13-42-i-m-ready-to-start-building-my-runtime-layer-for-platform-wh-3533243678",
+      "exists": false,
+      "records": [
+        "HEAD b95c39fa07fc0f176db854aa1e013ac46c243437",
+        "branch refs/heads/chat/2026-07-09-13-42-i-m-ready-to-start-building-my-runtime-layer-for-platform-wh",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-14-42-is-there-content-in-my-agents-md-that-is-redundant-i-feel-be-2600883800",
+      "exists": false,
+      "records": [
+        "HEAD b95c39fa07fc0f176db854aa1e013ac46c243437",
+        "branch refs/heads/chat/2026-07-09-14-42-is-there-content-in-my-agents-md-that-is-redundant-i-feel-be",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-16-04-can-you-walk-me-through-how-headers-are-added-and-maintained-4194855926",
+      "exists": false,
+      "records": [
+        "HEAD b95c39fa07fc0f176db854aa1e013ac46c243437",
+        "branch refs/heads/chat/2026-07-09-16-04-can-you-walk-me-through-how-headers-are-added-and-maintained",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-09-17-04-can-you-explain-the-checks-that-are-run-as-part-of-my-commit-1328937818",
+      "exists": false,
+      "records": [
+        "HEAD b95c39fa07fc0f176db854aa1e013ac46c243437",
+        "branch refs/heads/chat/2026-07-09-17-04-can-you-explain-the-checks-that-are-run-as-part-of-my-commit",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-11-50-restore-lost-rag-example-context-deprioritization-work-after-531603960",
+      "exists": false,
+      "records": [
+        "HEAD b1f26dcb4f09ad8e4df0629abf06566d4c8609b7",
+        "branch refs/heads/chat/2026-07-10-11-50-restore-lost-rag-example-context-deprioritization-work-after",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-13-20-ok-this-is-probably-a-gap-in-our-process-then-when-we-commit-1789334204",
+      "exists": false,
+      "records": [
+        "HEAD fd246a1bf21b7ae33f6c2668fc02bd937260782c",
+        "branch refs/heads/chat/2026-07-10-13-20-ok-this-is-probably-a-gap-in-our-process-then-when-we-commit",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-13-31-we-are-in-home-owner-projects-entity-builder-harness-001-on--3932568356",
+      "exists": false,
+      "records": [
+        "HEAD 59860783db80a39576d4867dcf03a900544166c3",
+        "branch refs/heads/chat/2026-07-10-13-31-we-are-in-home-owner-projects-entity-builder-harness-001-on-",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-13-34-review-possibly-stale-agents-md-source-of-truth-section-1752943741",
+      "exists": false,
+      "records": [
+        "HEAD 59860783db80a39576d4867dcf03a900544166c3",
+        "branch refs/heads/chat/2026-07-10-13-34-review-possibly-stale-agents-md-source-of-truth-section",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-13-49-let-s-lock-the-platform-app-integration-module-decision-in-1498838428",
+      "exists": false,
+      "records": [
+        "HEAD 84761b8cd332bee50a313fec53e6735d965b10dd",
+        "branch refs/heads/chat/2026-07-10-13-49-let-s-lock-the-platform-app-integration-module-decision-in",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-14-17-how-do-i-fix-this-git-worktrees-index-lock-it-keeps-happenni-544242357",
+      "exists": false,
+      "records": [
+        "HEAD fd246a1bf21b7ae33f6c2668fc02bd937260782c",
+        "branch refs/heads/chat/2026-07-10-14-17-how-do-i-fix-this-git-worktrees-index-lock-it-keeps-happenni",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-10-16-19-can-you-run-an-audit-of-our-commitlogs-and-check-them-agains-602072011",
+      "exists": false,
+      "records": [
+        "HEAD fd246a1bf21b7ae33f6c2668fc02bd937260782c",
+        "branch refs/heads/chat/2026-07-10-16-19-can-you-run-an-audit-of-our-commitlogs-and-check-them-agains",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-11-22-58-continue-platform-runtime-work-from-main-inspect-first-slice-2611430517",
+      "exists": false,
+      "records": [
+        "HEAD bcd2b5d51004f2ca36397908f2534a2dc3fe5378",
+        "branch refs/heads/chat/2026-07-11-22-58-continue-platform-runtime-work-from-main-inspect-first-slice",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre-3311665103",
+      "exists": false,
+      "records": [
+        "HEAD eaf89e342a65cc962a3fe4120d145fe78e736795",
+        "branch refs/heads/chat/2026-07-12-13-52-update-platform-runtime-plan-so-the-initial-shell-target-cre",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-12-16-45-what-repositories-do-we-already-have-on-aws-2778004660",
+      "exists": false,
+      "records": [
+        "HEAD 800f7131df2b12f9e0fa62687a4f6bc0a488ae9d",
+        "branch refs/heads/chat/2026-07-12-16-45-what-repositories-do-we-already-have-on-aws",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-12-17-52-create-reusable-platform-shell-target-profile-before-first-a-2476334825",
+      "exists": false,
+      "records": [
+        "HEAD 5c2065f18ef8a39f5fb1e8077c824493f3799864",
+        "branch refs/heads/chat/2026-07-12-17-52-create-reusable-platform-shell-target-profile-before-first-a",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-13-17-07-continue-platform-shell-first-deploy-blockers-from-pushed-ma-2925720926",
+      "exists": false,
+      "records": [
+        "HEAD 9a3ab847ffd9b53b0c2060da2d8b7f8705aebd31",
+        "branch refs/heads/chat/2026-07-13-17-07-continue-platform-shell-first-deploy-blockers-from-pushed-ma",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-07-14-12-35-work-through-platform-shell-remaining-deploy-blockers-1760548633",
+      "exists": false,
+      "records": [
+        "HEAD 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc",
+        "branch refs/heads/chat/2026-07-14-12-35-work-through-platform-shell-remaining-deploy-blockers",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-00-29-can-you-summarize-what-the-chat-folder-does-how-would-you-ex-1860005554",
+      "exists": false,
+      "records": [
+        "HEAD 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc",
+        "branch refs/heads/chat/2026-08-30-00-29-can-you-summarize-what-the-chat-folder-does-how-would-you-ex",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-14-17-do-we-have-a-standard-glossary-for-terminology-used-in-this--1970345759",
+      "exists": false,
+      "records": [
+        "HEAD 898dd2cdba57757acea6622c5d0d6e7e3315c003",
+        "branch refs/heads/chat/2026-08-30-14-17-do-we-have-a-standard-glossary-for-terminology-used-in-this-",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-14-47-can-you-walk-me-through-agentic-aws-587836325",
+      "exists": false,
+      "records": [
+        "HEAD 1cfbef9fc242c70f88f3af0ae9acb9fb275583dc",
+        "branch refs/heads/chat/2026-08-30-14-47-can-you-walk-me-through-agentic-aws",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-14-55-can-you-walk-me-through-home-owner-projects-entity-builder-h-4088901854",
+      "exists": false,
+      "records": [
+        "HEAD 96eae703cab87482236afad5534e560042c8f3ae",
+        "branch refs/heads/chat/2026-08-30-14-55-can-you-walk-me-through-home-owner-projects-entity-builder-h",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-21-52-read-only-platform-layer-orientation-platform-contracts-plat-3150926426",
+      "exists": false,
+      "records": [
+        "HEAD 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101",
+        "branch refs/heads/chat/2026-08-30-21-52-read-only-platform-layer-orientation-platform-contracts-plat",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-22-23-can-you-check-why-kanbien-com-is-down-please-927139588",
+      "exists": false,
+      "records": [
+        "HEAD ad83da4e2782c60318d5ec010a3fd5409cc3488e",
+        "branch refs/heads/chat/2026-08-30-22-23-can-you-check-why-kanbien-com-is-down-please",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-23-53-is-this-folder-home-owner-projects-entity-builder-harness-00-3903744130",
+      "exists": false,
+      "records": [
+        "HEAD f760e1eb1110d6a5cf30672e20ec92edfefb52d1",
+        "branch refs/heads/chat/2026-08-30-23-53-is-this-folder-home-owner-projects-entity-builder-harness-00",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-30-23-55-walk-through-packages-core-folders-read-only-2348818931",
+      "exists": false,
+      "records": [
+        "HEAD 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101",
+        "branch refs/heads/chat/2026-08-30-23-55-walk-through-packages-core-folders-read-only",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-00-52-we-are-in-home-owner-projects-entity-builder-harness-001-ple-1312539536",
+      "exists": false,
+      "records": [
+        "HEAD 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101",
+        "branch refs/heads/chat/2026-08-31-00-52-we-are-in-home-owner-projects-entity-builder-harness-001-ple",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-00-53-please-start-a-new-read-only-planning-thread-for-real-resour-1709316123",
+      "exists": false,
+      "records": [
+        "HEAD 4d25d963f4fee45e4b45abad6a6f7e0cf37f1101",
+        "branch refs/heads/chat/2026-08-31-00-53-please-start-a-new-read-only-planning-thread-for-real-resour",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-00-57-implement-platform-auth-boundary-correction-move-cognito-spe-1621690900",
+      "exists": false,
+      "records": [
+        "HEAD 929cf8d040506db8d6a21b89e72de7a7e49c4087",
+        "branch refs/heads/chat/2026-08-31-00-57-implement-platform-auth-boundary-correction-move-cognito-spe",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-00-59-implement-the-missing-authenticated-principal-bridge-so-auth-3848449369",
+      "exists": false,
+      "records": [
+        "HEAD 853b5bcfbf597efd87e57c19b8a6ad8ce085ba6a",
+        "branch refs/heads/chat/2026-08-31-00-59-implement-the-missing-authenticated-principal-bridge-so-auth",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-01-11-teach-the-architecture-list-in-the-supplied-attachment-in-sm-1609907486",
+      "exists": false,
+      "records": [
+        "HEAD e68abc3d2c799be97c0c1c4fa9d549869f2d8acd",
+        "branch refs/heads/chat/2026-08-31-01-11-teach-the-architecture-list-in-the-supplied-attachment-in-sm",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-08-31-22-11-we-currently-don-t-have-applications-or-dbs-that-need-tenant-4156568576",
+      "exists": false,
+      "records": [
+        "HEAD bb42dfde8346d575f22ded96a81fab17efeaed0b",
+        "branch refs/heads/chat/2026-08-31-22-11-we-currently-don-t-have-applications-or-dbs-that-need-tenant",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-02-19-57-i-m-trying-to-understand-the-difference-between-ontology-sem-2039944734",
+      "exists": false,
+      "records": [
+        "HEAD 3bfc7980d94565cb22484003e7c1fffbf1d5c309",
+        "branch refs/heads/chat/2026-09-02-19-57-i-m-trying-to-understand-the-difference-between-ontology-sem",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-02-19-59-i-m-trying-to-understand-the-vocabulary-for-agentic-harnesse-949925993",
+      "exists": false,
+      "records": [
+        "HEAD 3bfc7980d94565cb22484003e7c1fffbf1d5c309",
+        "branch refs/heads/chat/2026-09-02-19-59-i-m-trying-to-understand-the-vocabulary-for-agentic-harnesse",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-04-16-50-let-s-say-i-have-a-collection-of-agents-with-an-orchestrator-3570075035",
+      "exists": false,
+      "records": [
+        "HEAD 3bfc7980d94565cb22484003e7c1fffbf1d5c309",
+        "branch refs/heads/chat/2026-09-04-16-50-let-s-say-i-have-a-collection-of-agents-with-an-orchestrator",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-06-18-57-refactor-the-kanbien-staging-platform-shell-foundation-infra-2423831041",
+      "exists": false,
+      "records": [
+        "HEAD 1019f55d4fe167e07fb1543f3d8a43e2c36b390c",
+        "branch refs/heads/chat/2026-09-06-18-57-refactor-the-kanbien-staging-platform-shell-foundation-infra",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-07-21-38-ok-let-s-make-those-changes-2675017680",
+      "exists": false,
+      "records": [
+        "HEAD bfa5b9c4b566ffcbea3bf7b5c5fcdd26def6eb20",
+        "branch refs/heads/chat/2026-09-07-21-38-ok-let-s-make-those-changes",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs-1812168110",
+      "exists": false,
+      "records": [
+        "HEAD 74795b3cb90a289e18e23aadf3277401d4a9c7b3",
+        "branch refs/heads/chat/2026-09-07-22-32-let-s-update-our-plan-accordingly-then-continue-with-the-obs",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-08-23-46-proceed-3653528020",
+      "exists": false,
+      "records": [
+        "HEAD 60ec7f9caab3b9d06c7953ac506511c7c65d3f44",
+        "branch refs/heads/chat/2026-09-08-23-46-proceed",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-09-20-04-record-the-bounded-dynamodb-production-reference-decision-fo-865966666",
+      "exists": false,
+      "records": [
+        "HEAD 71d421457059e858979c8f964d44440cca0d3f4f",
+        "branch refs/heads/chat/2026-09-09-20-04-record-the-bounded-dynamodb-production-reference-decision-fo",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-19-01-27-it-s-been-a-while-since-i-worked-on-this-can-you-catch-me-up-3744436689",
+      "exists": false,
+      "records": [
+        "HEAD 661818d5c29302f61a39a2ffdcb2e25eaddd85f2",
+        "branch refs/heads/chat/2026-09-19-01-27-it-s-been-a-while-since-i-worked-on-this-can-you-catch-me-up",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-22-00-21-let-s-go-2264981461",
+      "exists": false,
+      "records": [
+        "HEAD 75bf76fd3a730e6e32245c56591156fa7d422294",
+        "branch refs/heads/chat/2026-09-22-00-21-let-s-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-22-10-41-approve-synthetic-scheduler-activation-bundle-2155694272",
+      "exists": false,
+      "records": [
+        "HEAD df531f4c315b4f22981bb547218b4648d50baed9",
+        "branch refs/heads/chat/2026-09-22-10-41-approve-synthetic-scheduler-activation-bundle",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-23-09-50-let-s-go-259277779",
+      "exists": false,
+      "records": [
+        "HEAD 40ac54a1e9e4ecbbef1c99484b92840f0307e1be",
+        "branch refs/heads/chat/2026-09-23-09-50-let-s-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder-652951197",
+      "exists": false,
+      "records": [
+        "HEAD c6de3132268baffa8a8274586a24aa32c0cd2e33",
+        "branch refs/heads/chat/2026-09-23-14-51-let-s-expand-the-smoke-target-and-work-through-the-remainder",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-23-15-58-let-s-go-746235393",
+      "exists": false,
+      "records": [
+        "HEAD a408a1d7d52ebd9a6e74f3b954722261a3fe64a9",
+        "branch refs/heads/chat/2026-09-23-15-58-let-s-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-23-18-13-go-2003262206",
+      "exists": false,
+      "records": [
+        "HEAD c25ecdd1f30ec869ba0bbcb24bbce675cdaf1560",
+        "branch refs/heads/chat/2026-09-23-18-13-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-24-00-15-let-s-go-335570032",
+      "exists": false,
+      "records": [
+        "HEAD 719fec42e248ba7af401b417bee5174d70ac977a",
+        "branch refs/heads/chat/2026-09-24-00-15-let-s-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-25-09-46-go-3705592782",
+      "exists": false,
+      "records": [
+        "HEAD dd18cacbcc7167d1fb7a706067db83251d77150e",
+        "branch refs/heads/chat/2026-09-25-09-46-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-00-45-approve-the-full-postgresql-relational-reference-programme-f-98559203",
+      "exists": false,
+      "records": [
+        "HEAD 45bee6b6b52a4b4b63c64082b1e4262e69deb198",
+        "branch refs/heads/chat/2026-09-26-00-45-approve-the-full-postgresql-relational-reference-programme-f",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-10-30-go-1559333672",
+      "exists": false,
+      "records": [
+        "HEAD 7e1e2a921d29d3dd96198c868849513ac21d6428",
+        "branch refs/heads/chat/2026-09-26-10-30-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-14-17-remove-rag-from-commit-cycle-1298898466",
+      "exists": false,
+      "records": [
+        "HEAD cdd8f508c92bff79a84c967a0be10003d748d6f5",
+        "branch refs/heads/chat/2026-09-26-14-17-remove-rag-from-commit-cycle",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-16-52-approved-3439147699",
+      "exists": false,
+      "records": [
+        "HEAD 8052929cb947ef3a0199a338a997f8cc8ede3aac",
+        "branch refs/heads/chat/2026-09-26-16-52-approved",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-18-35-go-3783569944",
+      "exists": false,
+      "records": [
+        "HEAD f6fcf7d8b56b1efd08e4678f25476d0399c898e5",
+        "branch refs/heads/chat/2026-09-26-18-35-go",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-26-22-12-let-s-do-that-3888633572",
+      "exists": false,
+      "records": [
+        "HEAD ca9cab512338ecb33fffcfced675192b4634f5d5",
+        "branch refs/heads/chat/2026-09-26-22-12-let-s-do-that",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-27-15-32-1-please-resolve-3325193157",
+      "exists": false,
+      "records": [
+        "HEAD ed3f0be9b3f04bbb4427113d7f8cd4495dbbde4d",
+        "branch refs/heads/chat/2026-09-27-15-32-1-please-resolve",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-27-21-30-let-s-do-1-2646609566",
+      "exists": false,
+      "records": [
+        "HEAD 10c9c90fad1aafb1e2b9c03e819bdd2164281269",
+        "branch refs/heads/chat/2026-09-27-21-30-let-s-do-1",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-27-23-15-publish-deployment-reliability-plan-1998251414",
+      "exists": false,
+      "records": [
+        "HEAD 0da085b50aac2b13dfb15aaac9351efea860926e",
+        "branch refs/heads/chat/2026-09-27-23-15-publish-deployment-reliability-plan",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia-3394027405",
+      "exists": false,
+      "records": [
+        "HEAD ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+        "branch refs/heads/chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-chat-worktrees/entity-builder-harness-001-1672151846/chat_2026-10-03-09-44-controlled-recovery-to-0da085b5-3205112758",
+      "exists": true,
+      "records": [
+        "HEAD 8052929cb947ef3a0199a338a997f8cc8ede3aac",
+        "branch refs/heads/chat/2026-10-03-09-44-controlled-recovery-to-0da085b5"
+      ],
+      "status": "A  commitLogs/2026/oct/03/2026-10-03-09-44-controlled-recovery-to-0da085b5/README.md\n"
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-56d0b34b4a57-20260710210856",
+      "exists": false,
+      "records": [
+        "HEAD 9fa5c132125bd9f5cf8b88a5b5a32630fb159720",
+        "branch refs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-56d0b34b4a57/20260710210856",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-83640c1ec169-20260710173759",
+      "exists": false,
+      "records": [
+        "HEAD 12fce6d432ea8529365a0e2f558fbc08becb28d3",
+        "branch refs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-83640c1ec169/20260710173759",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-8418f83cd210-20260710170217",
+      "exists": false,
+      "records": [
+        "HEAD 5a32327e6f7fb9f2da34de2aa28ff63d85f1ba11",
+        "branch refs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-8418f83cd210/20260710170217",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-86f2b05abcec-20260710171949",
+      "exists": false,
+      "records": [
+        "HEAD 8cac1de7b2123885d6083bd21d3835366ed2a116",
+        "branch refs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-86f2b05abcec/20260710171949",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-c0120e894437-20260710203444",
+      "exists": false,
+      "records": [
+        "HEAD e747c5b17d374ac53c437b83ecb9c60eb8a5925f",
+        "branch refs/heads/agentic/preflight/chat-2026-07-10-11-50-restore-lost-rag-example-c-c0120e894437/20260710203444",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/agentic-main-refresh-preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710-20260901222515",
+      "exists": false,
+      "records": [
+        "HEAD 72242f27271003fe037ec263ddca7ac84fa89d05",
+        "branch refs/heads/agentic/preflight/chat-2026-08-31-01-11-teach-the-architecture-lis-72242f272710/20260901222515",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/entity-builder-data-governance-storage-foundation",
+      "exists": false,
+      "records": [
+        "HEAD 542ca1700563dbba8a00fbf1ed911a4f55370c10",
+        "branch refs/heads/agent/data-governance-storage-foundation",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/entity-builder-operational-realization-gate",
+      "exists": false,
+      "records": [
+        "HEAD d5e0ceb6e22c172937c2ecb4576b28a9417efa25",
+        "branch refs/heads/chore/operational-realization-gate",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/entity-builder-postgresql-recovery",
+      "exists": false,
+      "records": [
+        "HEAD d8270e340f4e5b45b237a7e2ca7b8b7aedf0e24b",
+        "branch refs/heads/agent/postgresql-recovery",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/entity-builder-scheduler-time-platform",
+      "exists": false,
+      "records": [
+        "HEAD 8052929cb947ef3a0199a338a997f8cc8ede3aac",
+        "branch refs/heads/agent/scheduler-time-platform",
+        "prunable gitdir file points to non-existent location"
+      ]
+    },
+    {
+      "path": "/tmp/entity-builder-tenant-access-control-operationalization",
+      "exists": false,
+      "records": [
+        "HEAD e8810937b944efd8c821a08660d10ea195a2d362",
+        "branch refs/heads/agent/tenant-access-control-operationalization",
+        "prunable gitdir file points to non-existent location"
+      ]
+    }
+  ],
+  "live_remote_heads_verified": {
+    "main": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+    "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e"
+  }
+}

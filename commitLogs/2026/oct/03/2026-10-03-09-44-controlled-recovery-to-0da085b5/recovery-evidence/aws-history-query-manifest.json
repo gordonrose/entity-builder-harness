@@ -1,0 +1,167 @@
+{
+  "profile": "kanbien-dev",
+  "start": "2026-09-27T23:45:26Z",
+  "end": "2026-10-03T09:20:19Z",
+  "all_regions": [
+    {
+      "region": "ap-south-2",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ap-south-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "eu-south-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "eu-south-2",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "me-central-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "il-central-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ca-central-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-east-2",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "mx-central-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "eu-central-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "eu-central-2",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "us-west-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "us-west-2",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "af-south-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "eu-north-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "eu-west-3",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "eu-west-2",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "eu-west-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-northeast-3",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-northeast-2",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "me-south-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ap-northeast-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "sa-east-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-east-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ca-west-1",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ap-southeast-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-southeast-2",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-southeast-3",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ap-southeast-4",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "us-east-1",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-southeast-5",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "ap-southeast-6",
+      "opt_in_status": "not-opted-in"
+    },
+    {
+      "region": "us-east-2",
+      "opt_in_status": "opt-in-not-required"
+    },
+    {
+      "region": "ap-southeast-7",
+      "opt_in_status": "not-opted-in"
+    }
+  ],
+  "enabled_regions": [
+    "ap-northeast-1",
+    "ap-northeast-2",
+    "ap-northeast-3",
+    "ap-south-1",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "ca-central-1",
+    "eu-central-1",
+    "eu-north-1",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-west-3",
+    "sa-east-1",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2"
+  ],
+  "notes": [
+    "ReadOnly=false management writes fully paginated across seventeen enabled regions. eu-west-1 uses AWS CLI automatic pagination with no max-items; other sixteen regions each completed one empty page.",
+    "eu-west-1 GitHub AssumeRoleWithWebIdentity events fully paginated; ECR auth sampled at latest programme run22:43-22:48Z October2. General internal STS and ECR pull reads in eu-west-1 are not exhaustively collected.",
+    "Only sanitized CloudTrail event metadata and selected nonsecret scalar parameters retained; see SUMMARY.json for precise findings and limits."
+  ]
+}

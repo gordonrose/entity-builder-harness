@@ -1,0 +1,242 @@
+{
+  "observed_at_utc": "2026-10-03T09:25:32.548919+00:00",
+  "account_id": "337159794548",
+  "profile": "kanbien-dev",
+  "regions": [
+    "ap-south-1",
+    "eu-north-1",
+    "eu-west-3",
+    "eu-west-2",
+    "eu-west-1",
+    "ap-northeast-3",
+    "ap-northeast-2",
+    "ap-northeast-1",
+    "ca-central-1",
+    "sa-east-1",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "eu-central-1",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2"
+  ],
+  "account_coverage": {
+    "organization_accounts": [
+      {
+        "Id": "337159794548",
+        "Name": "Re.Boot Ltd",
+        "Status": "ACTIVE",
+        "JoinedTimestamp": "2026-05-15T12:56:20.279000+00:00"
+      }
+    ],
+    "sso_sessions": [
+      {
+        "session": "kanbien",
+        "region": "eu-west-1",
+        "ok": true,
+        "accounts": [
+          {
+            "accountId": "337159794548",
+            "accountName": "Re.Boot Ltd"
+          }
+        ],
+        "roles": [
+          {
+            "accountId": "337159794548",
+            "roleName": "AdministratorAccess"
+          }
+        ]
+      },
+      {
+        "session": "gordon-kanbien",
+        "region": "eu-west-1",
+        "ok": true,
+        "accounts": [
+          {
+            "accountId": "337159794548",
+            "accountName": "Re.Boot Ltd"
+          }
+        ],
+        "roles": [
+          {
+            "accountId": "337159794548",
+            "roleName": "AdministratorAccess"
+          }
+        ]
+      }
+    ],
+    "limitations": "Scope covers the configured profiles, their Identity Center assignments and the visible AWS organization; unrelated unconfigured accounts cannot be inferred."
+  },
+  "regional_metadata": [
+    {
+      "region": "ap-south-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "eu-north-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "eu-west-3",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "eu-west-2",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "eu-west-1",
+      "secrets_ok": true,
+      "secrets_count": 9,
+      "parameters_ok": true,
+      "parameters_count": 2
+    },
+    {
+      "region": "ap-northeast-3",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "ap-northeast-2",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "ap-northeast-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "ca-central-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "sa-east-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "ap-southeast-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "ap-southeast-2",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "eu-central-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "us-east-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "us-east-2",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "us-west-1",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    },
+    {
+      "region": "us-west-2",
+      "secrets_ok": true,
+      "secrets_count": 0,
+      "parameters_ok": true,
+      "parameters_count": 0
+    }
+  ],
+  "iam": {
+    "programme_controller": "NoSuchEntity",
+    "role_count": 38,
+    "roles_created_after_baseline": 0,
+    "customer_managed_policy_count": 15,
+    "customer_managed_policies_updated_after_baseline": 0,
+    "publisher_inline_policy_matches": {
+      "0da085b5": true,
+      "ec4744fc": true
+    },
+    "publisher_trust_matches": {
+      "0da085b5": true,
+      "ec4744fc": true
+    },
+    "publisher_managed_attachments": [],
+    "oidc_create_date": "2026-07-01T09:22:41.902000+00:00",
+    "limitation": "Current creation/update metadata is not a complete history of deleted resources or every inline-policy change."
+  },
+  "s3": {
+    "bucket_count": 5,
+    "programme_evidence_bucket_present": false,
+    "artifact_bucket": "kanbien-staging-platform-shell-cfn-artifacts-337159794548",
+    "artifact_region": "eu-west-1",
+    "object_count": 4,
+    "version_entry_count": 4,
+    "delete_marker_count": 0,
+    "post_baseline_objects_or_versions": 0,
+    "versioning": "not-enabled",
+    "baseline_protections_match": [
+      "AES256 default encryption",
+      "all four public-access blocks",
+      "BucketOwnerEnforced ownership",
+      "deny insecure transport bucket policy",
+      "30-day change-sets expiry and 1-day incomplete multipart cleanup"
+    ],
+    "limitations": "Metadata does not establish content equality or absence of transient overwritten/deleted objects; no object bodies read. Retain this pre-existing bucket."
+  },
+  "secret_rotation": {
+    "Name": "rds!db-5e1605c1-7d49-4228-a952-254d476042a9",
+    "CreatedDate": "2026-09-26T16:10:24.239000+00:00",
+    "LastChangedDate": "2026-10-03T05:09:22.837000+00:00",
+    "LastRotatedDate": "2026-10-03T05:09:22.826000+00:00",
+    "NextRotationDate": "2026-10-10T23:59:59+00:00",
+    "RotationEnabled": true,
+    "RotationRules": {
+      "AutomaticallyAfterDays": 7
+    },
+    "OwningService": "rds"
+  },
+  "conclusion": "No current programme-owned IAM role, S3 bucket, Secrets Manager secret or SSM parameter identified. Preserve all observed existing resources and the RDS-managed rotated credential. Combine with CloudTrail and target-resource audits before deciding external rollback."
+}

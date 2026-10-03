@@ -1,0 +1,482 @@
+{
+  "repo": "gordonrose/entity-builder-harness",
+  "baseline": "2026-09-27T23:45:26Z",
+  "image_runs": [
+    {
+      "id": 37074022425,
+      "head_sha": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+      "head_branch": "main",
+      "created_at": "2026-10-02T22:43:44Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37074022425",
+      "failed_steps": [
+        "Build platform shell image"
+      ],
+      "aws_credentials": [
+        "success"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 37071477462,
+      "head_sha": "efbd4c99998c8aa7217e28a7c9323df686252703",
+      "head_branch": "main",
+      "created_at": "2026-10-02T22:15:15Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37071477462",
+      "failed_steps": [
+        "Build platform shell image"
+      ],
+      "aws_credentials": [
+        "success"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 37066022523,
+      "head_sha": "6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f",
+      "head_branch": "main",
+      "created_at": "2026-10-02T21:18:17Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37066022523",
+      "failed_steps": [
+        "Build platform shell image"
+      ],
+      "aws_credentials": [
+        "success"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 37063262648,
+      "head_sha": "c3e9d5237e0f4ee6d575401d0834f111ecd4bd4e",
+      "head_branch": "main",
+      "created_at": "2026-10-02T20:51:40Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37063262648",
+      "failed_steps": [
+        "Build platform shell image"
+      ],
+      "aws_credentials": [
+        "success"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 37050923795,
+      "head_sha": "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+      "head_branch": "main",
+      "created_at": "2026-10-02T18:57:30Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37050923795",
+      "failed_steps": [
+        "Build platform shell image"
+      ],
+      "aws_credentials": [
+        "success"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "id": 36982838978,
+      "head_sha": "89fdd3fd9fd261cb18f590860e1675061ad23d8b",
+      "head_branch": "main",
+      "created_at": "2026-10-02T08:13:34Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/36982838978",
+      "failed_steps": [
+        "Run platform shell checks"
+      ],
+      "aws_credentials": [
+        "skipped"
+      ],
+      "publication_steps": [
+        {
+          "name": "Retain normalized qualification receipts",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Push platform shell image",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Retain normalized publication receipt",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image provenance",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attest image SBOM",
+          "conclusion": "skipped"
+        }
+      ]
+    }
+  ],
+  "source_validation_runs": [
+    {
+      "id": 37073109894,
+      "head_sha": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+      "head_branch": "main",
+      "created_at": "2026-10-02T22:33:19Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37073109894"
+    },
+    {
+      "id": 37073109619,
+      "head_sha": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T22:33:19Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37073109619"
+    },
+    {
+      "id": 37070417080,
+      "head_sha": "efbd4c99998c8aa7217e28a7c9323df686252703",
+      "head_branch": "main",
+      "created_at": "2026-10-02T22:03:43Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37070417080"
+    },
+    {
+      "id": 37070416952,
+      "head_sha": "efbd4c99998c8aa7217e28a7c9323df686252703",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T22:03:43Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37070416952"
+    },
+    {
+      "id": 37067617682,
+      "head_sha": "11bf851d3a2841ef12db72971d0def9f82bc2d9d",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T21:34:16Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37067617682"
+    },
+    {
+      "id": 37067617564,
+      "head_sha": "11bf851d3a2841ef12db72971d0def9f82bc2d9d",
+      "head_branch": "main",
+      "created_at": "2026-10-02T21:34:16Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37067617564"
+    },
+    {
+      "id": 37067581600,
+      "head_sha": "412686346d006041843b95a6b994b9eaa84432b7",
+      "head_branch": "main",
+      "created_at": "2026-10-02T21:33:55Z",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37067581600"
+    },
+    {
+      "id": 37067581265,
+      "head_sha": "412686346d006041843b95a6b994b9eaa84432b7",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T21:33:55Z",
+      "conclusion": "cancelled",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37067581265"
+    },
+    {
+      "id": 37064890261,
+      "head_sha": "6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T21:07:11Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37064890261"
+    },
+    {
+      "id": 37064889309,
+      "head_sha": "6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f",
+      "head_branch": "main",
+      "created_at": "2026-10-02T21:07:10Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37064889309"
+    },
+    {
+      "id": 37061953789,
+      "head_sha": "c3e9d5237e0f4ee6d575401d0834f111ecd4bd4e",
+      "head_branch": "main",
+      "created_at": "2026-10-02T20:39:10Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37061953789"
+    },
+    {
+      "id": 37061953753,
+      "head_sha": "c3e9d5237e0f4ee6d575401d0834f111ecd4bd4e",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T20:39:10Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37061953753"
+    },
+    {
+      "id": 37047564139,
+      "head_sha": "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+      "head_branch": "main",
+      "created_at": "2026-10-02T18:27:33Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37047564139"
+    },
+    {
+      "id": 37047515937,
+      "head_sha": "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+      "head_branch": "main",
+      "created_at": "2026-10-02T18:27:08Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37047515937"
+    },
+    {
+      "id": 37047492565,
+      "head_sha": "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T18:26:56Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37047492565"
+    },
+    {
+      "id": 37046301500,
+      "head_sha": "81cf11c867422f5a2b26e04332e4705a1a628462",
+      "head_branch": "main",
+      "created_at": "2026-10-02T18:16:19Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37046301500"
+    },
+    {
+      "id": 37046251689,
+      "head_sha": "81cf11c867422f5a2b26e04332e4705a1a628462",
+      "head_branch": "main",
+      "created_at": "2026-10-02T18:15:53Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37046251689"
+    },
+    {
+      "id": 37046242741,
+      "head_sha": "81cf11c867422f5a2b26e04332e4705a1a628462",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T18:15:48Z",
+      "conclusion": "failure",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/37046242741"
+    },
+    {
+      "id": 36982699114,
+      "head_sha": "89fdd3fd9fd261cb18f590860e1675061ad23d8b",
+      "head_branch": "main",
+      "created_at": "2026-10-02T08:12:05Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/36982699114"
+    },
+    {
+      "id": 36980389162,
+      "head_sha": "89fdd3fd9fd261cb18f590860e1675061ad23d8b",
+      "head_branch": "chat/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia",
+      "created_at": "2026-10-02T07:46:59Z",
+      "conclusion": "success",
+      "html_url": "https://github.com/gordonrose/entity-builder-harness/actions/runs/36980389162"
+    }
+  ],
+  "source_validation_counts": {
+    "success": 15,
+    "cancelled": 2,
+    "failure": 3
+  },
+  "artifacts": [],
+  "caches": [
+    {
+      "id": 8406414532,
+      "ref": "refs/heads/main",
+      "key": "buildx-dl-bin-0.37.2-linux-x64",
+      "version": "930d897e96b9ed73a59906935c2d4d000c55aa3f1595644b5c457b5fbcbf723b",
+      "last_accessed_at": "2026-10-02T22:44:02.229538Z",
+      "created_at": "2026-10-02T08:16:22.076107Z",
+      "size_in_bytes": 21816868
+    }
+  ],
+  "postbaseline_deployments": [
+    {
+      "id": 6819802630,
+      "sha": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+      "created_at": "2026-10-02T22:43:45Z",
+      "latest_status": "failure"
+    },
+    {
+      "id": 6819407204,
+      "sha": "efbd4c99998c8aa7217e28a7c9323df686252703",
+      "created_at": "2026-10-02T22:15:17Z",
+      "latest_status": "failure"
+    },
+    {
+      "id": 6818526487,
+      "sha": "6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f",
+      "created_at": "2026-10-02T21:18:20Z",
+      "latest_status": "failure"
+    },
+    {
+      "id": 6818017388,
+      "sha": "c3e9d5237e0f4ee6d575401d0834f111ecd4bd4e",
+      "created_at": "2026-10-02T20:51:42Z",
+      "latest_status": "failure"
+    },
+    {
+      "id": 6815936486,
+      "sha": "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+      "created_at": "2026-10-02T18:57:32Z",
+      "latest_status": "failure"
+    },
+    {
+      "id": 6804221191,
+      "sha": "89fdd3fd9fd261cb18f590860e1675061ad23d8b",
+      "created_at": "2026-10-02T08:13:36Z",
+      "latest_status": "failure"
+    }
+  ],
+  "settings": {
+    "actions": {
+      "enabled": true,
+      "allowed_actions": "all",
+      "sha_pinning_required": false
+    },
+    "token": {
+      "default_workflow_permissions": "read",
+      "can_approve_pull_request_reviews": false
+    },
+    "staging_branch_policy": {
+      "total_count": 1,
+      "branch_policies": [
+        {
+          "id": 53495514,
+          "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k1MzQ5NTUxNA==",
+          "name": "main",
+          "type": "branch"
+        }
+      ]
+    }
+  },
+  "collaborators": [
+    {
+      "login": "gordonrose",
+      "role_name": "admin",
+      "permissions": {
+        "admin": true,
+        "maintain": true,
+        "push": true,
+        "triage": true,
+        "pull": true
+      }
+    }
+  ],
+  "hooks": [],
+  "deploy_keys": [],
+  "releases": [],
+  "limitations": [
+    "Current settings APIs do not establish prior settings. Personal-owner security-log API probe returned 404; owner security-log UI/export not inspected.",
+    "No existing Actions artifacts does not prove none were previously deleted. All six programme image runs explicitly skipped receipt upload, ECR push and both attestation steps.",
+    "Same gordonrose actor does not distinguish concurrent agents or terminals."
+  ]
+}

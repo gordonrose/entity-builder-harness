@@ -269,13 +269,6 @@ if 'readFileSync("/app/assets/rds-eu-west-1-bundle.crt", "utf8")' not in task_he
 if 'const dbname = stringField(candidate, "dbname")' in task_helper or 'database: "platformsmoke"' not in task_helper:
     fail("relational task helper must use the reviewed configuration database name rather than require an optional secret dbname field")
 
-# Local CA binding is source qualification only; no selected target descriptor
-# may activate it. Its fixed path cannot become an arbitrary file reader.
-for descriptor in Path("infra/04.deploy/03.product/targets/kanbien/staging").rglob("*"):
-    if descriptor.is_file() and descriptor.suffix in {".yml", ".yaml", ".json"}:
-        if any(field in descriptor.read_text() for field in ("RELATIONAL_TLS_CA_MODE", "RELATIONAL_LOCAL_QUALIFICATION_ID", "/run/release-control/ca.crt")):
-            fail("local qualification TLS inputs must never appear in staging target descriptors")
-
 bootstrap_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts").read_text(encoding="utf-8")
 migration_entrypoint = Path("infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts").read_text(encoding="utf-8")
 if 'ALTER DEFAULT PRIVILEGES FOR ROLE' in bootstrap_entrypoint or 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' not in migration_entrypoint:

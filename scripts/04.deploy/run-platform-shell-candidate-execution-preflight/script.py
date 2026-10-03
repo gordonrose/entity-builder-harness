@@ -131,18 +131,6 @@ def load_policy() -> dict[str, Any]:
     }
 
 
-def require_selected_effect_control() -> None:
-    """No direct candidate effect can bypass the selected live-control receipt."""
-
-    directory = Path(__file__).resolve().parents[1] / "operational-realization-gate"
-    sys.path.insert(0, str(directory))
-    try:
-        import selected_effect_control
-        selected_effect_control.require_effect_authority("candidate-execution-preflight", "execute")
-    except Exception as exception:
-        raise CandidatePreflightError("candidate-release-control-authority-unavailable") from exception
-    finally:
-        sys.path.remove(str(directory))
 def aws(arguments: list[str], policy: dict[str, Any], failure_code: str) -> dict[str, Any]:
     """Call exactly one AWS operation while retaining raw provider data only in memory."""
 
@@ -495,7 +483,6 @@ def main() -> int:
         if arguments.validate:
             print(safe_result("validated"))
             return 0
-        require_selected_effect_control()
         return execute(policy)
     except CandidatePreflightError as exception:
         print(safe_result("failed", str(exception)))

@@ -25,25 +25,6 @@ set -euo pipefail
 #   - id: deploy.script.smoke-test-platform-shell-image
 #     path: scripts/04.deploy/smoke-test-platform-shell-image/script.sh
 
-# A qualification request never falls back into the legacy parser.
-for QUALIFICATION_ARGUMENT in "$@"; do
-  case "$QUALIFICATION_ARGUMENT" in
-    --qualify-local|--qualify-local=*)
-      if [ "${1:-}" != "--qualify-local" ]; then
-        printf '%s\n' '{"schema":"local-container-error/v1","verdict":"failed","authorized":false,"release_eligibility":"blocked","operation_authorization":"blocked","findings":[{"code":"local-container-arguments-invalid"}]}'
-        exit 1
-      fi
-      ;;
-  esac
-done
-
-# Qualification uses the same image recipe and the existing release-control capability.
-if [ "${1:-}" = "--qualify-local" ]; then
-  shift
-  QUALIFICATION_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../operational-realization-gate" && pwd)"
-  exec python3 -I -B "$QUALIFICATION_DIRECTORY/local_container.py" "$@"
-fi
-
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
@@ -65,7 +46,6 @@ CONTEXT="$ROOT"
 usage() {
   cat <<'EOF'
 Usage:
-  build-platform-shell-image/script.sh --qualify-local --source-root <root> --scratch-root <persistent-directory> [--acquire-base | --package-cache <verified-cache>]
   build-platform-shell-image/script.sh [--tag <tag>] [--base-image <image>] [--runtime-image <image>] [--require-digest-base] [--no-cache]
 
 Builds the local platform shell image from:

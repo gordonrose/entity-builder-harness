@@ -38,5 +38,3 @@ rules stay under the matching `docs/04.deploy/` corpus subdirectories.
 
 The old prototype ADR pointers have been retired. Use this owner-aligned ADR
 root directly for deploy-owned decision history.
-
-- [0040: Selected shared-control store and executor](0040-selected-release-control-store-and-executor.md) — accepted source policy; AWS activation requires separate approval.

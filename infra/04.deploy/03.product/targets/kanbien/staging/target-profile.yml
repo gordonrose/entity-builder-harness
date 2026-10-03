@@ -520,7 +520,7 @@ artifacts:
     tag_format: "staging-<YYYYMMDD>-<short-sha>-run<github-run-id>"
     deploy_reference: digest
     deploy_uri_shape: "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:<image-digest>"
-    build_image_policy: locked-toolchain-verified-payload
+    build_image_policy: pin-by-digest-for-official-build
     runtime_image_policy: pin-by-digest-for-official-build
     runtime_image_class: minimal-nonroot-distroless-nodejs22-debian12
     runtime_platform: linux/amd64

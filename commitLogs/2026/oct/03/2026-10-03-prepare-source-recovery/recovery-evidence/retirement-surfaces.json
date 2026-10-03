@@ -1,0 +1,1458 @@
+{
+  "baseline": "0da085b50aac2b13dfb15aaac9351efea860926e",
+  "live_main": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+  "removed_count": 387,
+  "surface_count": 177,
+  "new_path_marker": "retired",
+  "surfaces": [
+    {
+      "old_path": ".agentic/01.harness/standards/autonomous-delivery-envelope.v1.md",
+      "disposition": "retired",
+      "covered_paths": [
+        ".agentic/01.harness/standards/autonomous-delivery-envelope.v1.md"
+      ]
+    },
+    {
+      "old_path": ".agentic/01.harness/workflows/sustained-implementation.md",
+      "disposition": "retired",
+      "covered_paths": [
+        ".agentic/01.harness/workflows/sustained-implementation.md"
+      ]
+    },
+    {
+      "old_path": ".agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md",
+      "disposition": "retired",
+      "covered_paths": [
+        ".agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md"
+      ]
+    },
+    {
+      "old_path": ".github/workflows/release-control-source-validation.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        ".github/workflows/release-control-source-validation.yml"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/adrs/0039-local-operation-control-conformance.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/adrs/0039-local-operation-control-conformance.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/plans/iaas-release-control-mvp.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/plans/iaas-release-control-mvp.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/plans/iaas-release-control-progress.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/plans/iaas-release-control-progress.md"
+      ]
+    },
+    {
+      "old_path": "docs/04.deploy/plans/release-control-source-adoption",
+      "disposition": "retired",
+      "covered_paths": [
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/conformance-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/build-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/effect-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/finite-job-conformance-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/server-compatibility-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/baseline-collector-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/current-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/local-container-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/local-build-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-contracts.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-graph.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-review.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-graph.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-review.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/baseline-triage.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/current-triage.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-graph.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-review.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/synthetic-artifact-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/conformance-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-candidate.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-migration-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/caller-graph.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/reconciliation-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/source-inventory.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/conformance-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-effect-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-preflight-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/local-container-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/passive-readiness-stale-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/publication-check.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/qualified-image-handoff.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/receipt-files.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/sbom-validation.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/selected-blueprint-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/current-source-review.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/local-build-result.json",
+        "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/verification-summary.json",
+        "docs/04.deploy/plans/release-control-source-adoption/README.md",
+        "docs/04.deploy/plans/release-control-source-adoption/ledger.json"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/release-control.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/release-control.yml"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-acceptance-policy.v1.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-acceptance-policy.v1.yml"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-realization.v1.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-realization.v1.yml"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-release-blueprint.v1.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-release-blueprint.v1.yml"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/03.product/targets/kanbien/staging/release-control",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/03.product/targets/kanbien/staging/release-control/control-plane.v1.yml"
+      ]
+    },
+    {
+      "old_path": "infra/04.deploy/contracts",
+      "disposition": "retired",
+      "covered_paths": [
+        "infra/04.deploy/contracts/release-control/v1/README.md",
+        "infra/04.deploy/contracts/release-control/v1/acceptance-matrix.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-admission-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-admission-policy.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-admission-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-scan-predicate.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-verifier-conformance.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/artifact-verifier-lock.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/caller-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-attempt.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/control-store-conformance.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/control-store-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/dependency-effect-profile.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/dependency-effect-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/dependency-preflight-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/estate-caller-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/estate-caller-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/estate-caller-reconciliation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-job-profile.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-job-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-attempt.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-conformance.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-image-lock.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/finite-recovery-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-build-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-build-toolchain.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-container-lock.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-container-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-package-export-reconciliation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-runtime-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-typescript-emission-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-typescript-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-workspace-export-projection.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/local-workspace-runtime-observation.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/operation-action-record.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/operation-control.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/operation-evidence.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/operation-journal.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/package-export-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/qualified-image-handoff.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/relational-task-preflight.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/release-definition.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-admission-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-control-plane.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-effect-route.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-readiness-error.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-readiness-result.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/selected-release-blueprint.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-adoption-ledger.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-adoption-migration.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-build-artifact.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-build-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-caller-review.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-composition.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-finding-triage.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-operation-contracts.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-operation-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-package-export-inventory.schema.yml",
+        "infra/04.deploy/contracts/release-control/v1/source-result-consumption.schema.yml",
+        "infra/04.deploy/contracts/release-control/v2/selected-operation-evidence.schema.yml",
+        "infra/04.deploy/contracts/release-control/v2/selected-operation-record.schema.yml",
+        "infra/04.deploy/contracts/release-control/v2/selected-store-event.schema.yml"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/adoption_migration.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/adoption_migration.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/artifact-verifier.lock.json",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/artifact-verifier.lock.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/artifact_admission.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/artifact_admission.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/artifact_admission_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/artifact_admission_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/artifact_verifier.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/artifact_verifier.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/artifact_verifier_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/artifact_verifier_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/blueprint_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/blueprint_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/build_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/build_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/build_contracts_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/build_contracts_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/caller_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/caller_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/clean_environment.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/clean_environment.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/container-image.lock.json",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/container-image.lock.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/container_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/container_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/container_payload.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/container_payload.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/container_profiles.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/container_profiles.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/control_store_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/control_store_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/control_store_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/control_store_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/control_store_fixtures.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/control_store_fixtures.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency-image.lock.json",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency-image.lock.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency_effect_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency_effect_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency_effect_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency_effect_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency_effects.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency_effects.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/estate_caller_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/estate_caller_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/estate_caller_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/estate_caller_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finding_triage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finding_triage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite-recovery-image.lock.json",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite-recovery-image.lock.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite-recovery.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite-recovery.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_job_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_job_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_job_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_job_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_recovery_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_recovery_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_recovery_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_recovery_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_recovery_controller.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_recovery_controller.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/finite_recovery_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/finite_recovery_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/LICENSE.cli",
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/sources.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/trusted-root.jsonl",
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-artifact.whl",
+        "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-provenance.bundle.jsonl"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/control-store",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/expectations.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/sources.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile",
+        "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/jobs/task.cjs"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/src/index.ts",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/tsconfig.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/package.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/index.ts",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/math.ts",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/tsconfig.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/local-containers",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/pending-profiles.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/valid-result.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/invalid-authority.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/valid-record.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package-lock.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/src/index.ts",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/tsconfig.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/infra/04.deploy/tasks.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/package.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/package.json",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs",
+        "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_build.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_build.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_build_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_build_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_build_sandbox.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_build_sandbox.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_container.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_container.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_container_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_container_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_control_store.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_control_store.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/local_runtime.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/local_runtime.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/locked_toolchain.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/locked_toolchain.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/node-toolchain.lock.json",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/node-toolchain.lock.json"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/operation_actions.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/operation_actions.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/operation_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/operation_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/operation_contracts_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/operation_contracts_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/operation_journal.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/operation_journal.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/package-exports-README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/package-exports-README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/package_exports.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/package_exports.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/package_exports_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/package_exports_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/qualified-publication.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/qualified-publication.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/qualified_publication.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/qualified_publication.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/release_compiler.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/release_compiler.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/requirements.lock",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/requirements.lock"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/requirements.txt",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/requirements.txt"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/result_consumption.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/result_consumption.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/result_consumption_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/result_consumption_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected-admission.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected-admission.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected-operation.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected-operation.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_admission.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_admission.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_admission_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_admission_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_effect_control.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_effect_control.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_effect_control_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_effect_control_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_operation.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_operation.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_readiness_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_readiness_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/selected_store_evidence.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/selected_store_evidence.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/source_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/source_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_adoption_migration.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_adoption_migration.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_artifact_admission.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_artifact_admission.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_artifact_admission_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_artifact_admission_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_artifact_verifier.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_artifact_verifier.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_blueprint_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_blueprint_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_build_contracts_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_build_contracts_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_caller_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_caller_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_candidate_lifecycle.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_candidate_lifecycle.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_clean_environment.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_clean_environment.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_cloudformation_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_cloudformation_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_container_emission_compatibility.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_container_emission_compatibility.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_container_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_container_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_container_payload.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_container_payload.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_container_profiles.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_container_profiles.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_control_store_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_control_store_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_control_store_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_control_store_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_dependency_effect_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_dependency_effect_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_dependency_effect_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_dependency_effect_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_dependency_effects.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_dependency_effects.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_dependency_preflights.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_dependency_preflights.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_dependency_target_boundary.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_dependency_target_boundary.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_estate_caller_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_estate_caller_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_estate_caller_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_estate_caller_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finding_triage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finding_triage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_job_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_job_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_job_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_job_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_job_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_job_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_recovery_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_conformance.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_recovery_conformance.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_controller.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_recovery_controller.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_engine.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_finite_recovery_engine.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_hosted_source_workflow.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_hosted_source_workflow.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_build.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_build.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_build_bindings.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_build_bindings.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_container_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_container_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_container_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_container_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_control_store.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_control_store.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_local_runtime.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_local_runtime.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_locked_toolchain.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_locked_toolchain.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_operation_actions.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_operation_actions.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_operation_contracts.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_operation_contracts.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_operation_contracts_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_operation_contracts_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_operation_journal.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_operation_journal.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_package_exports.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_package_exports.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_package_exports_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_package_exports_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_package_exports_direct.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_package_exports_direct.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_qualified_publication.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication_workflow.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_qualified_publication_workflow.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_release_compiler.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_release_compiler.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_result_consumption.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_result_consumption.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_result_consumption_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_result_consumption_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_admission.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_admission.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_blueprint.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_blueprint.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_effect_caller_guard.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_effect_caller_guard.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_effect_control.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_effect_control.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_operation.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_operation.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_readiness.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness_cli.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_readiness_cli.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_selected_store.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_selected_store.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_source_coverage.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_source_coverage.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_typescript_emissions.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_typescript_emissions.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_typescript_observer.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_typescript_observer.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_validation_workflow.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_validation_workflow.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_workspace_export_authority.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_workspace_export_authority.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/test_workspace_runtime.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/test_workspace_runtime.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/typescript_observer.mjs",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/typescript_observer.mjs"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/operational-realization-gate/verify-local-build.sh",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/operational-realization-gate/verify-local-build.sh"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/release-control",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/release-control/README.md",
+        "scripts/04.deploy/release-control/adapters/aws/README.md",
+        "scripts/04.deploy/release-control/adapters/aws/authenticated_selected_transport.py",
+        "scripts/04.deploy/release-control/adapters/aws/selected-store.README.md",
+        "scripts/04.deploy/release-control/adapters/aws/selected_readiness.py",
+        "scripts/04.deploy/release-control/adapters/aws/selected_store.py",
+        "scripts/04.deploy/release-control/adapters/aws/test_authenticated_selected_transport.py",
+        "scripts/04.deploy/release-control/compiler.py",
+        "scripts/04.deploy/release-control/discovery/README.md",
+        "scripts/04.deploy/release-control/discovery/action_observations.py",
+        "scripts/04.deploy/release-control/discovery/build_artifacts.py",
+        "scripts/04.deploy/release-control/discovery/build_inventory.py",
+        "scripts/04.deploy/release-control/discovery/caller_inventory.py",
+        "scripts/04.deploy/release-control/discovery/cloudformation_inventory.py",
+        "scripts/04.deploy/release-control/discovery/estate-callers.README.md",
+        "scripts/04.deploy/release-control/discovery/estate_caller_inventory.py",
+        "scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md",
+        "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-image.txt",
+        "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-product.txt",
+        "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-server.txt",
+        "scripts/04.deploy/release-control/discovery/operation_inventory.py",
+        "scripts/04.deploy/release-control/discovery/package_export_inventory.py",
+        "scripts/04.deploy/release-control/discovery/source_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_action_observations.py",
+        "scripts/04.deploy/release-control/discovery/test_build_artifacts.py",
+        "scripts/04.deploy/release-control/discovery/test_build_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_caller_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_cloudformation_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_estate_caller_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_operation_inventory.py",
+        "scripts/04.deploy/release-control/discovery/test_source_inventory.py",
+        "scripts/04.deploy/release-control/selected-control-plane.README.md",
+        "scripts/04.deploy/release-control/selected_blueprint.py",
+        "scripts/04.deploy/release-control/selected_control_plane.py",
+        "scripts/04.deploy/release-control/test_selected_control_plane.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_contract.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_contract.py"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs"
+      ]
+    },
+    {
+      "old_path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_task_revision_binding.py",
+      "disposition": "retired",
+      "covered_paths": [
+        "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_task_revision_binding.py"
+      ]
+    }
+  ]
+}
