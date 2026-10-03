@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T13:53:10Z
-latest_commit_sha: 4001c18e
-chat_duration: 2392s (00:00:39:52)
+latest_commit_at_utc: 2026-10-03T14:05:04Z
+latest_commit_sha: b103f1d6
+chat_duration: 3106s (00:00:51:46)
 estimated_chat_tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -188,6 +188,17 @@ Fallback used: no
 
 Scope: Preserved storage and tenant-authority source review
 
+
+### 2026-10-03T14:05:04Z - Commit recorded
+
+Commit: `b103f1d6`
+
+Message: feat(chat): preserve session work and govern transcript draft recovery
+
+Summary: Add narrow isolated historical draft recovery and durable session-end preservation using existing gates; record source-review blockers without integration or deployment.
+
+ADR impact: No new runtime or deployment architecture.
+
 ## Sub-Agent Activity
 
 
@@ -271,6 +282,13 @@ Summary: Block integration as-is: storage state/permission/telemetry/profile-ref
   Summary: Preserve accepted convergence-plan corrections and the detailed scheduler transcript investigation on the local session branch; no source integration or deployment.
   ADR impact: No architecture or gate change.
 
+
+- Commit: `b103f1d6`
+  Time UTC: 2026-10-03T14:05:04Z
+  Message: feat(chat): preserve session work and govern transcript draft recovery
+  Summary: Add narrow isolated historical draft recovery and durable session-end preservation using existing gates; record source-review blockers without integration or deployment.
+  ADR impact: No new runtime or deployment architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -284,9 +302,9 @@ Reason: This extends existing commit/export primitives with a narrow missing-dra
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T13:13:18Z
-Latest commit at UTC: 2026-10-03T13:53:10Z
-Latest commit SHA: 4001c18e
-Chat duration: 2392s (00:00:39:52)
+Latest commit at UTC: 2026-10-03T14:05:04Z
+Latest commit SHA: b103f1d6
+Chat duration: 3106s (00:00:51:46)
 Estimated chat tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
