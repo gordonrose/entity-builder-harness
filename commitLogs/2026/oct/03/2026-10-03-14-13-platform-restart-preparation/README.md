@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-restart-3842312794/
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-03T13:13:18Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: codex
+transcript_path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl
+transcript_bytes: 577333
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-03T13:53:10Z
+latest_commit_sha: 4001c18e
+chat_duration: 2392s (00:00:39:52)
+estimated_chat_tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -133,6 +133,17 @@ Summary: Preserved-work reconciliation is complete; scheduler working files are 
 
 Durable evidence: The Restart reconciliation section records branch hashes, 13-file archive equality, transcript path/hash and recovery limits. The convergence plan is the accepted factual correction. Local main remains 2309e676 and all gates are retained. Future transcript reconstruction requires an isolated governed procedure; no deployment is authorized.
 
+
+### 2026-10-03T13:53:10Z - Commit recorded
+
+Commit: `4001c18e`
+
+Message: docs(platform): checkpoint restart reconciliation and missing draft evidence
+
+Summary: Preserve accepted convergence-plan corrections and the detailed scheduler transcript investigation on the local session branch; no source integration or deployment.
+
+ADR impact: No architecture or gate change.
+
 ## Sub-Agent Activity
 
 
@@ -180,7 +191,13 @@ Summary: Recommended narrow convergence-plan factual corrections and session evi
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `4001c18e`
+  Time UTC: 2026-10-03T13:53:10Z
+  Message: docs(platform): checkpoint restart reconciliation and missing draft evidence
+  Summary: Preserve accepted convergence-plan corrections and the detailed scheduler transcript investigation on the local session branch; no source integration or deployment.
+  ADR impact: No architecture or gate change.
 
 ## Main Refresh Conflicts
 
@@ -195,12 +212,12 @@ Reason: Factual reconciliation and review-scope corrections only; no durable arc
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T13:13:18Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-03T13:53:10Z
+Latest commit SHA: 4001c18e
+Chat duration: 2392s (00:00:39:52)
+Estimated chat tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
