@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T16:01:54Z
-latest_commit_sha: 1fece96f4653cde03ea9e91d4c5d05a72d227db2
-chat_duration: 10116s (00:02:48:36)
+latest_commit_at_utc: 2026-10-03T16:42:51Z
+latest_commit_sha: 1c992a2a4d2f33118320b7b3b4cf76dea530917f
+chat_duration: 12573s (00:03:29:33)
 estimated_chat_tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -360,6 +360,17 @@ Decision: Promote reviewed restart preparation to main.
 
 Rationale: The user explicitly authorized merging and pushing. The verified clean promotion worktree at 8a4c2034 passed metadata, recognition, whitespace, PostgreSQL relational-controller, candidate-preflight and deployment-reconciliation checks. origin/main fast-forwarded from 2309e676 to 8a4c2034 and local main was fast-forwarded to the same commit. The separate scheduler recovery branch remains unmerged pending its independent integration review.
 
+
+### 2026-10-03T16:42:51Z - Commit recorded
+
+Commit: `1c992a2a4d2f33118320b7b3b4cf76dea530917f`
+
+Message: chore(session): record main promotion
+
+Summary: Record that the verified review branch was fast-forwarded to origin/main and local main, while scheduler recovery remains a separate unmerged branch.
+
+ADR impact: No architecture or deployment change.
+
 ## Sub-Agent Activity
 
 
@@ -520,6 +531,13 @@ Summary: Verified local-code claims, interfaces, timeouts and promotion shape; s
   Summary: Amend plan version2 and unapplied patch revision2 for bounded diagnosis, repair, verification, image qualification and checkpoint-aware resume through PostgreSQL acceptance. Record concrete limits, effective-instruction/controller prerequisites and open failure/prevention records. Existing checks and normal commit gate pass; no runtime or AWS change.
   ADR impact: No deployment architecture or applicability exception adopted; review proposal only.
 
+
+- Commit: `1c992a2a4d2f33118320b7b3b4cf76dea530917f`
+  Time UTC: 2026-10-03T16:42:51Z
+  Message: chore(session): record main promotion
+  Summary: Record that the verified review branch was fast-forwarded to origin/main and local main, while scheduler recovery remains a separate unmerged branch.
+  ADR impact: No architecture or deployment change.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -533,9 +551,9 @@ Reason: This extends existing commit/export primitives with a narrow missing-dra
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T13:13:18Z
-Latest commit at UTC: 2026-10-03T16:01:54Z
-Latest commit SHA: 1fece96f4653cde03ea9e91d4c5d05a72d227db2
-Chat duration: 10116s (00:02:48:36)
+Latest commit at UTC: 2026-10-03T16:42:51Z
+Latest commit SHA: 1c992a2a4d2f33118320b7b3b4cf76dea530917f
+Chat duration: 12573s (00:03:29:33)
 Estimated chat tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
