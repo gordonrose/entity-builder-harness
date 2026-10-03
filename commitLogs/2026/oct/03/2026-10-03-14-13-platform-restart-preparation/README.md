@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T14:43:02Z
-latest_commit_sha: a43329e8b42ad837111da6e3a8942f548eddf947
-chat_duration: 5384s (00:01:29:44)
+latest_commit_at_utc: 2026-10-03T16:01:54Z
+latest_commit_sha: 1fece96f4653cde03ea9e91d4c5d05a72d227db2
+chat_duration: 10116s (00:02:48:36)
 estimated_chat_tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -86,6 +86,10 @@ Platform restart preparation
 
 - Summary: Ordinary PostgreSQL failures must enter the bounded repair/resume cycle; current controllers still lack required behavior.
   Durable evidence: Plan version 2 proposes source repair, image and attempt allowances, phase-specific time and USD100 incremental ceiling with USD25 recovery reserve. Patch revision2 has four substantive amendments plus seven conditional pointers, including the AWS workflow cleanup exception. Existing local controller checks pass; synthetic probes confirm late-stage resume restarts migration and task timeout has no owned stop. Required behavioral source repairs and instruction adoption remain approval prerequisites.
+
+
+- Summary: The bounded repair-cycle proposal is checkpointed at 1fece96f; source/controller prerequisites remain explicit.
+  Durable evidence: Verified private preservation under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: postgresql-repair-review-1fece96f-with-scheduler.bundle SHA256 178ca873214d222b0550faa7e06eea45ea14053bf31d3181e3ae7e004cf0f883; postgresql-repair-review-1fece96f-worktree.zip SHA256 7573cfb37b391d341022c8590f9f846f32ab77b9a0ac452a98a5e72b5b8360ce. Complete-history verification, archive CRC and all1578 tracked bytes pass; receipt snapshots/postgresql-repair-review-1fece96f-preservation.json. Original refs/worktrees/13 dirty files, main2309e676 and schedulerHEADf43461c7 remain unchanged. No execution approval requested; adopted instructions and behavioral controller proof are still required.
 
 ## Activity Log
 
@@ -327,6 +331,24 @@ Summary: Ordinary PostgreSQL failures must enter the bounded repair/resume cycle
 
 Durable evidence: Plan version 2 proposes source repair, image and attempt allowances, phase-specific time and USD100 incremental ceiling with USD25 recovery reserve. Patch revision2 has four substantive amendments plus seven conditional pointers, including the AWS workflow cleanup exception. Existing local controller checks pass; synthetic probes confirm late-stage resume restarts migration and task timeout has no owned stop. Required behavioral source repairs and instruction adoption remain approval prerequisites.
 
+
+### 2026-10-03T16:01:54Z - Commit recorded
+
+Commit: `1fece96f4653cde03ea9e91d4c5d05a72d227db2`
+
+Message: docs(postgresql): bound repair and resume through restart completion
+
+Summary: Amend plan version2 and unapplied patch revision2 for bounded diagnosis, repair, verification, image qualification and checkpoint-aware resume through PostgreSQL acceptance. Record concrete limits, effective-instruction/controller prerequisites and open failure/prevention records. Existing checks and normal commit gate pass; no runtime or AWS change.
+
+ADR impact: No deployment architecture or applicability exception adopted; review proposal only.
+
+
+### 2026-10-03T16:01:54Z - Context hygiene
+
+Summary: The bounded repair-cycle proposal is checkpointed at 1fece96f; source/controller prerequisites remain explicit.
+
+Durable evidence: Verified private preservation under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: postgresql-repair-review-1fece96f-with-scheduler.bundle SHA256 178ca873214d222b0550faa7e06eea45ea14053bf31d3181e3ae7e004cf0f883; postgresql-repair-review-1fece96f-worktree.zip SHA256 7573cfb37b391d341022c8590f9f846f32ab77b9a0ac452a98a5e72b5b8360ce. Complete-history verification, archive CRC and all1578 tracked bytes pass; receipt snapshots/postgresql-repair-review-1fece96f-preservation.json. Original refs/worktrees/13 dirty files, main2309e676 and schedulerHEADf43461c7 remain unchanged. No execution approval requested; adopted instructions and behavioral controller proof are still required.
+
 ## Sub-Agent Activity
 
 
@@ -480,6 +502,13 @@ Summary: Verified local-code claims, interfaces, timeouts and promotion shape; s
   Summary: Checkpoint the PostgreSQL completion proposal and unapplied instruction patch, scheduler recovery results, preservation procedure and corrected convergence snapshot. Normal commit gate passed; active deployment instructions and main remain unchanged.
   ADR impact: No deployment architecture is adopted; PostgreSQL applicability remains an unapplied proposal.
 
+
+- Commit: `1fece96f4653cde03ea9e91d4c5d05a72d227db2`
+  Time UTC: 2026-10-03T16:01:54Z
+  Message: docs(postgresql): bound repair and resume through restart completion
+  Summary: Amend plan version2 and unapplied patch revision2 for bounded diagnosis, repair, verification, image qualification and checkpoint-aware resume through PostgreSQL acceptance. Record concrete limits, effective-instruction/controller prerequisites and open failure/prevention records. Existing checks and normal commit gate pass; no runtime or AWS change.
+  ADR impact: No deployment architecture or applicability exception adopted; review proposal only.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -493,9 +522,9 @@ Reason: This extends existing commit/export primitives with a narrow missing-dra
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T13:13:18Z
-Latest commit at UTC: 2026-10-03T14:43:02Z
-Latest commit SHA: a43329e8b42ad837111da6e3a8942f548eddf947
-Chat duration: 5384s (00:01:29:44)
+Latest commit at UTC: 2026-10-03T16:01:54Z
+Latest commit SHA: 1fece96f4653cde03ea9e91d4c5d05a72d227db2
+Chat duration: 10116s (00:02:48:36)
 Estimated chat tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
