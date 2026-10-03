@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 960
-  term_count: 1933
+  indexed_artifacts: 962
+  term_count: 1937
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8435,6 +8435,30 @@ terms:
   match_type: exact
   canonical_id: deploy.plans.readme
   evidence_path: docs/04.deploy/plans/README.md
+  confidence_weight: 1
+- term: deploy.plan.controlled-recovery-replacement-2026-10-03
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.controlled-recovery-replacement-2026-10-03
+  evidence_path: docs/04.deploy/plans/controlled-recovery-replacement-proposal-2026-10-03.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/controlled-recovery-replacement-proposal-2026-10-03.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.controlled-recovery-replacement-2026-10-03
+  evidence_path: docs/04.deploy/plans/controlled-recovery-replacement-proposal-2026-10-03.md
+  confidence_weight: 1
+- term: deploy.plans.controlled-recovery-report-2026-10-03
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plans.controlled-recovery-report-2026-10-03
+  evidence_path: docs/04.deploy/plans/controlled-recovery-report-2026-10-03.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/controlled-recovery-report-2026-10-03.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plans.controlled-recovery-report-2026-10-03
+  evidence_path: docs/04.deploy/plans/controlled-recovery-report-2026-10-03.md
   confidence_weight: 1
 - term: deploy.plan.kanbien-staging-aws-change-reliability-programme
   category: artifact-id

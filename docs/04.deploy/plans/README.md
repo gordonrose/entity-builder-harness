@@ -36,3 +36,5 @@ workflow remains `.agentic/aws/workflows/execute-approved-aws-change.md`.
 | [`operational-realization-v2-programme.md`](operational-realization-v2-programme.md) | Define the complete runtime graph and target-adapter proof required before a candidate can reach a live service. |
 | [`kanbien-staging-image-execution-preflight-v1.md`](kanbien-staging-image-execution-preflight-v1.md) | Superseded symptom-focused draft retained only as a trace of the first rejected approach. |
 | [`operational-realization-gate-programme.md`](operational-realization-gate-programme.md) | Require a complete provider-neutral execution graph and evidence sequence before any live capability operation. |
+| [Controlled recovery report](controlled-recovery-report-2026-10-03.md) | Verified evidence, completed local source restoration, preservation boundaries and the exact proposed shared merge. |
+| [Replacement deployment proposal](controlled-recovery-replacement-proposal-2026-10-03.md) | Proposed bounded delivery and parallel learning after recovery; no implementation or deployment approval. |

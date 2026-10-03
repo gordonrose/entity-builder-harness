@@ -1,0 +1,453 @@
+{
+  "scope": {
+    "profile": "kanbien-dev",
+    "account": "337159794548",
+    "region": "eu-west-1",
+    "baseline_commit": "0da085b50aac2b13dfb15aaac9351efea860926e",
+    "baseline_utc": "2026-09-27T23:45:26+00:00",
+    "comparison_remote_main": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+    "mutations_performed": false,
+    "secret_values_retrieved": false,
+    "workload_http_sql_tests_performed": false
+  },
+  "conclusion": "No programme-owned live target resource or retained post-baseline image was found. No AWS resource deletion or restoration is supported by this target audit. Preserve baseline resources, data, natural rotations/backups and audit history.",
+  "proposed_resources": {
+    "dynamodb_release_control": "ResourceNotFoundException",
+    "s3_release_evidence": "HeadBucket404 and absent from global five-bucket list",
+    "iam_controller": "NoSuchEntity verified by identity agent; see sibling identity-audit/programme-controller-role.json"
+  },
+  "stacks": [
+    {
+      "name": "kanbien-staging-platform-shell-foundation",
+      "resource_count": 64,
+      "stored_template_matches_baseline": true,
+      "canonical_sha256": "a7ee04d69a849705db7a36d6030e61d1928afcf5db3e0e24ac7b0ea8251c66d2",
+      "stack_events_after_baseline": 0,
+      "latest_stack_event": "2026-09-26T18:47:36.356000+00:00",
+      "evidence": "kanbien-staging-platform-shell-foundation-template-comparison.json"
+    },
+    {
+      "name": "kanbien-staging-platform-shell-service",
+      "resource_count": 14,
+      "stored_template_matches_baseline": true,
+      "canonical_sha256": "2ad1c17ac455943f9c40f0199583b4b9f31991a0c6a6f43af782622a527236cd",
+      "stack_events_after_baseline": 0,
+      "latest_stack_event": "2026-09-27T23:18:42.583000+00:00",
+      "evidence": "kanbien-staging-platform-shell-service-template-comparison.json"
+    },
+    {
+      "name": "kanbien-staging-platform-shell-deployment-artifacts",
+      "resource_count": 2,
+      "stored_template_matches_baseline": true,
+      "canonical_sha256": "958a5e6a91a03d78f297ffb9b667c35b7ee0379b639b0a7989135bda176b6c83",
+      "stack_events_after_baseline": 0,
+      "latest_stack_event": "2026-09-26T11:19:26.535000+00:00",
+      "evidence": "kanbien-staging-platform-shell-deployment-artifacts-template-comparison.json"
+    }
+  ],
+  "ecr": {
+    "platform-shell": {
+      "retained_image_count": 55,
+      "pushed_after_baseline": 0,
+      "latest_pushed_at": "2026-09-27T23:07:57.508000+00:00"
+    },
+    "rag": {
+      "retained_image_count": 3,
+      "pushed_after_baseline": 0,
+      "latest_pushed_at": "2026-07-09T10:32:59.751000+00:00"
+    },
+    "service-platform": {
+      "retained_image_count": 36,
+      "pushed_after_baseline": 0,
+      "latest_pushed_at": "2026-05-29T14:17:44.945000+00:00"
+    }
+  },
+  "current_task_definitions": [
+    {
+      "family": "kanbien-staging-platform-relational-bootstrap",
+      "revision": 7,
+      "registered": "2026-09-27T23:15:51.850000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-relational-migration",
+      "revision": 7,
+      "registered": "2026-09-27T23:15:51.659000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-relational-relay",
+      "revision": 7,
+      "registered": "2026-09-27T23:15:51.741000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-relational-restore-verify",
+      "revision": 7,
+      "registered": "2026-09-27T23:15:52.913000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-relational-worker",
+      "revision": 7,
+      "registered": "2026-09-27T23:15:51.739000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-shell",
+      "revision": 20,
+      "registered": "2026-09-27T23:15:51.876000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-shell-candidate-preflight",
+      "revision": 4,
+      "registered": "2026-09-27T23:09:46.359000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-shell-relay",
+      "revision": 13,
+      "registered": "2026-09-27T23:15:51.857000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-platform-shell-worker",
+      "revision": 14,
+      "registered": "2026-09-27T23:15:51.852000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "kanbien-staging-service-platform",
+      "revision": 12,
+      "registered": "2026-05-29T14:23:45.610000+00:00",
+      "after_baseline": false
+    },
+    {
+      "family": "rag-rulebook-staging",
+      "revision": 3,
+      "registered": "2026-07-09T10:33:11.700000+00:00",
+      "after_baseline": false
+    }
+  ],
+  "existing_server": {
+    "Arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-staging/e3439e3aceb442bcb70fbd4ae23f4502",
+    "TaskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell:20",
+    "Group": "service:kanbien-staging-platform-shell",
+    "Created": "2026-09-27T23:16:12.925000+00:00",
+    "Started": "2026-09-27T23:16:38.527000+00:00",
+    "Last": "RUNNING",
+    "Desired": "RUNNING",
+    "Health": "HEALTHY",
+    "Containers": [
+      {
+        "Name": "otel-collector",
+        "Image": "public.ecr.aws/aws-observability/aws-otel-collector@sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625",
+        "ImageDigest": "sha256:198e84d58236b3885919e721040b90dce29dec557783ff0fa0956f7ccc78f625",
+        "Last": "RUNNING",
+        "Health": "UNKNOWN"
+      },
+      {
+        "Name": "platform-shell",
+        "Image": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/platform-shell@sha256:165ccb724989cfeb7a60bcdb4bfaf20f752a8e8dfc1c12efe9220c27488aed7c",
+        "ImageDigest": "sha256:165ccb724989cfeb7a60bcdb4bfaf20f752a8e8dfc1c12efe9220c27488aed7c",
+        "Last": "RUNNING",
+        "Health": "HEALTHY"
+      }
+    ]
+  },
+  "server_target_health": [
+    {
+      "Health": "healthy",
+      "Reason": null,
+      "Port": 3000
+    }
+  ],
+  "worker_desired_running": [
+    {
+      "name": "kanbien-staging-platform-shell-worker",
+      "desired": 0,
+      "running": 0
+    }
+  ],
+  "image_source_crosscheck": {
+    "ecr_tag": "staging-20260927-10c9c90fad1a-run36357521306",
+    "tag_source_commit": "10c9c90fad1aafb1e2b9c03e819bdd2164281269",
+    "tag_source_is_baseline_ancestor": true,
+    "verification_command": "git merge-base --is-ancestor 10c9c90fad1a 0da085b5",
+    "service_image_parameters_equal_running_digest": true
+  },
+  "relational_database": {
+    "Id": "kanbien-staging-platform-relational",
+    "Arn": "arn:aws:rds:eu-west-1:337159794548:db:kanbien-staging-platform-relational",
+    "Created": "2026-09-26T16:14:22.940000+00:00",
+    "Status": "available",
+    "Engine": "postgres",
+    "Version": "17.11",
+    "Class": "db.t4g.micro",
+    "Encrypted": true,
+    "Public": false,
+    "DeletionProtection": true,
+    "Retention": 7,
+    "LatestRestorable": "2026-10-03T09:14:33+00:00",
+    "MultiAZ": false,
+    "Storage": 20,
+    "Vpc": "vpc-0063b6c3d2d781f3c",
+    "SubnetGroup": "kanbien-staging-platform-relational-private",
+    "SecurityGroups": [
+      {
+        "VpcSecurityGroupId": "sg-06939393051d3c41f",
+        "Status": "active"
+      }
+    ],
+    "ParameterGroups": [
+      {
+        "DBParameterGroupName": "kanbien-staging-platform-shell-foundation-relationaldatabaseparametergroup-exnohd1c3dha",
+        "ParameterApplyStatus": "in-sync"
+      }
+    ],
+    "Tags": [
+      {
+        "Key": "aws:cloudformation:stack-name",
+        "Value": "kanbien-staging-platform-shell-foundation"
+      },
+      {
+        "Key": "component",
+        "Value": "relational-persistence"
+      },
+      {
+        "Key": "environment",
+        "Value": "staging"
+      },
+      {
+        "Key": "aws:cloudformation:stack-id",
+        "Value": "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/4c2ddd80-aa17-11f1-b793-0a36e38ef7d9"
+      },
+      {
+        "Key": "managed-by",
+        "Value": "cloudformation"
+      },
+      {
+        "Key": "service",
+        "Value": "platform-shell"
+      },
+      {
+        "Key": "data-classification",
+        "Value": "operational-safe-identifiers"
+      },
+      {
+        "Key": "aws:cloudformation:logical-id",
+        "Value": "RelationalDatabase"
+      }
+    ],
+    "Pending": {}
+  },
+  "relational_force_ssl_metadata": [
+    {
+      "Name": "rds.force_ssl",
+      "Value": "1",
+      "Source": "system",
+      "ApplyType": "dynamic",
+      "ApplyMethod": "pending-reboot",
+      "Modifiable": true
+    }
+  ],
+  "relational_security_group": [
+    {
+      "Id": "sg-06939393051d3c41f",
+      "Name": "kanbien-staging-platform-relational-database",
+      "Vpc": "vpc-0063b6c3d2d781f3c",
+      "Owner": "337159794548",
+      "Ingress": [
+        {
+          "IpProtocol": "tcp",
+          "FromPort": 5432,
+          "ToPort": 5432,
+          "UserIdGroupPairs": [
+            {
+              "Description": "PostgreSQL only from the platform-shell server security group.",
+              "UserId": "337159794548",
+              "GroupId": "sg-0e38bedffb1c3f67a"
+            },
+            {
+              "Description": "PostgreSQL only from the platform-shell relay security group.",
+              "UserId": "337159794548",
+              "GroupId": "sg-0c5af1888d8de6036"
+            },
+            {
+              "Description": "PostgreSQL only from the platform-shell worker security group.",
+              "UserId": "337159794548",
+              "GroupId": "sg-0b8a76379b41f4f63"
+            }
+          ],
+          "IpRanges": [],
+          "Ipv6Ranges": [],
+          "PrefixListIds": []
+        }
+      ],
+      "Egress": [
+        {
+          "IpProtocol": "-1",
+          "UserIdGroupPairs": [],
+          "IpRanges": [
+            {
+              "Description": "Loopback-only rule that prevents default external database egress.",
+              "CidrIp": "127.0.0.1/32"
+            }
+          ],
+          "Ipv6Ranges": [],
+          "PrefixListIds": []
+        }
+      ],
+      "Tags": [
+        {
+          "Key": "aws:cloudformation:logical-id",
+          "Value": "RelationalDatabaseSecurityGroup"
+        },
+        {
+          "Key": "environment",
+          "Value": "staging"
+        },
+        {
+          "Key": "aws:cloudformation:stack-id",
+          "Value": "arn:aws:cloudformation:eu-west-1:337159794548:stack/kanbien-staging-platform-shell-foundation/4c2ddd80-aa17-11f1-b793-0a36e38ef7d9"
+        },
+        {
+          "Key": "service",
+          "Value": "platform-shell"
+        },
+        {
+          "Key": "Name",
+          "Value": "kanbien-staging-platform-relational-database"
+        },
+        {
+          "Key": "managed-by",
+          "Value": "cloudformation"
+        },
+        {
+          "Key": "component",
+          "Value": "relational-persistence"
+        },
+        {
+          "Key": "aws:cloudformation:stack-name",
+          "Value": "kanbien-staging-platform-shell-foundation"
+        }
+      ]
+    }
+  ],
+  "recorded_foundation_drift": [
+    {
+      "LogicalId": "RelationalDatabaseParameterGroup",
+      "PhysicalId": "kanbien-staging-platform-shell-foundation-relationaldatabaseparametergroup-exnohd1c3dha",
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Status": "MODIFIED",
+      "Observed": "2026-10-02T21:58:20.965000+00:00",
+      "Differences": [
+        {
+          "Path": "/Parameters",
+          "Kind": "REMOVE"
+        }
+      ]
+    }
+  ],
+  "no_new_drift_assessment": true,
+  "dynamodb_persistence": {
+    "Name": "kanbien-staging-platform-shell-persistence",
+    "Arn": "arn:aws:dynamodb:eu-west-1:337159794548:table/kanbien-staging-platform-shell-persistence",
+    "Created": "2026-09-24T19:47:56.838000+00:00",
+    "Status": "ACTIVE",
+    "Count": 4,
+    "Size": 1743,
+    "Protection": true,
+    "Encryption": {
+      "Status": "ENABLED",
+      "SSEType": "KMS",
+      "KMSMasterKeyArn": "arn:aws:kms:eu-west-1:337159794548:key/09c75435-e74f-4693-adec-b1cf653b1eb0"
+    }
+  },
+  "dynamodb_pitr": {
+    "ContinuousBackupsDescription": {
+      "ContinuousBackupsStatus": "ENABLED",
+      "PointInTimeRecoveryDescription": {
+        "PointInTimeRecoveryStatus": "ENABLED",
+        "RecoveryPeriodInDays": 35,
+        "EarliestRestorableDateTime": "2026-09-24T19:48:17+00:00",
+        "LatestRestorableDateTime": "2026-10-03T09:14:47.257000+00:00"
+      }
+    }
+  },
+  "relational_automated_backups": [
+    {
+      "Db": "kanbien-staging-platform-relational",
+      "Arn": "arn:aws:rds:eu-west-1:337159794548:auto-backup:ab-nabxcd3hcpo2sf4xuz6m4q2qozvxe7tiothhjobgskkht3dii33iaijtyis43skt",
+      "Status": "active",
+      "Created": "2026-09-26T16:14:22+00:00",
+      "Retention": 7,
+      "RestoreWindow": {
+        "EarliestTime": "2026-09-26T16:16:23.805000+00:00",
+        "LatestTime": "2026-10-03T09:14:33+00:00"
+      },
+      "Encrypted": true
+    }
+  ],
+  "relational_snapshot_count": 8,
+  "queues": [
+    {
+      "name": "kanbien-staging-platform-relational-smoke",
+      "created_utc": "2026-09-26T18:45:37+00:00",
+      "modified_utc": "2026-09-26T18:46:40+00:00",
+      "approx_visible": 0,
+      "approx_delayed": 0,
+      "approx_inflight": 0,
+      "encrypted": "true"
+    },
+    {
+      "name": "kanbien-staging-platform-relational-smoke-dlq",
+      "created_utc": "2026-09-26T18:45:35+00:00",
+      "modified_utc": "2026-09-26T18:46:38+00:00",
+      "approx_visible": 0,
+      "approx_delayed": 0,
+      "approx_inflight": 0,
+      "encrypted": "true"
+    },
+    {
+      "name": "kanbien-staging-platform-shell-worker",
+      "created_utc": "2026-09-23T14:57:33+00:00",
+      "modified_utc": "2026-09-24T19:47:55+00:00",
+      "approx_visible": 0,
+      "approx_delayed": 0,
+      "approx_inflight": 0,
+      "encrypted": "true"
+    },
+    {
+      "name": "kanbien-staging-platform-shell-worker-dlq",
+      "created_utc": "2026-09-23T14:56:30+00:00",
+      "modified_utc": "2026-09-23T14:57:33+00:00",
+      "approx_visible": 0,
+      "approx_delayed": 0,
+      "approx_inflight": 0,
+      "encrypted": "true"
+    }
+  ],
+  "shared_preservation": {
+    "ecs_cluster_users": [
+      "kanbien-staging-platform-shell",
+      "kanbien-staging-platform-shell-worker",
+      "rag-rulebook-staging",
+      "service-platform"
+    ],
+    "shared_alb": "kanbien-staging-alb",
+    "preexisting_legacy_service_platform": "desired1/running0, empty target group; last deployment May29",
+    "preexisting_database_1": "inaccessible-encryption-credentials; createdApril28",
+    "preexisting_database_1_recovery_20260906": "available;createdSep6",
+    "foundation_export_consumers": "platform-shell-service imports persistence table name, three relational secret ARNs and relational config ARN"
+  },
+  "limits": [
+    "CloudFormation stored-template equality is distinct from live resource equivalence; existing Oct2 drift observation is retained and has not been refreshed today.",
+    "rds.force_ssl inspection is metadata only; source=system, dynamic, ApplyMethod=pending-reboot; DBParameterGroup is in-sync and instance PendingModifiedValues is empty. No database session or TLS handshake tested.",
+    "No data values/rows/messages were read; DynamoDB counts and queue counts are approximate metadata.",
+    "New candidate qualification and unfinished PostgreSQL Stage6 remain unproved and paused. Existing healthy server does not prove them.",
+    "Cross-account/cross-region event history, IAM/secret/SSM/S3 artifact details are separate agent audits.",
+    "Retained ECR inventory alone cannot exclude historical deleted images; use CloudTrail/hosted-job evidence for historical publication."
+  ]
+}

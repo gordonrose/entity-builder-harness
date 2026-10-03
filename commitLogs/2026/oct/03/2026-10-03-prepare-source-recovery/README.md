@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T10:21:19Z
-latest_commit_sha: b12556b7
-chat_duration: 772s (00:00:12:52)
+latest_commit_at_utc: 2026-10-03T10:31:26Z
+latest_commit_sha: 57563af1
+chat_duration: 1379s (00:00:22:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -81,6 +81,17 @@ Summary: Exact local source restoration applied and runtime checks passed
 
 Durable evidence: The 423-path inverse applied cleanly after the committed plan b12556b7. Every inverse path matches baseline mode/blob or absence; historical programme log unchanged. Six deployment local suites including nested candidate/relational/reference fixtures passed without external calls. Server/product type, build, runtime and boundary checks passed. Image-runtime payload check initially hit EXDEV moving to /tmp; rerun with supported TMPDIR inside the worktree passed, without source changes. Derived routing is baseline-identical; artifacts catalogue differs only for the new recovery migration plan. Final migration-reference batch is running; source commit will wait for completion. Detailed test summaries are in this session recovery-evidence, raw logs in durable evidence/local-validation. No deployment, image publication, DB action or live restoration proof.
 
+
+### 2026-10-03T10:31:26Z - Commit recorded
+
+Commit: `57563af1`
+
+Message: revert: restore deployment source to 0da085b5
+
+Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
+
+ADR impact: No replacement architecture implemented.
+
 ## Sub-Agent Activity
 
 - Parent conversation agents review actual deployment/rollback mechanisms, explicit gate supersession and migration/reference validation. Detailed final activity is recorded after results.
@@ -95,6 +106,13 @@ Durable evidence: The 423-path inverse applied cleanly after the committed plan 
   Summary: Committed migration scope before any source removal; 177 planner cases pass, exact file manifest and durable preservation recorded. Metadata, current recognition, generation and commit readiness gates passed. No external effects.
   ADR impact: No new architecture; restore existing baseline only.
 
+
+- Commit: `57563af1`
+  Time UTC: 2026-10-03T10:31:26Z
+  Message: revert: restore deployment source to 0da085b5
+  Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
+  ADR impact: No replacement architecture implemented.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -108,9 +126,9 @@ Reason: Restoring an existing source baseline and preserving evidence; replaceme
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T10:08:27Z
-Latest commit at UTC: 2026-10-03T10:21:19Z
-Latest commit SHA: b12556b7
-Chat duration: 772s (00:00:12:52)
+Latest commit at UTC: 2026-10-03T10:31:26Z
+Latest commit SHA: 57563af1
+Chat duration: 1379s (00:00:22:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

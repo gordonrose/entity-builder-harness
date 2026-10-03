@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-10-03T10:29:44.814289+00:00",
+  "worktree": "/home/owner/projects/entity-builder-recovery-2026-10-03/worktrees/chat_2026-10-03-prepare-source-recovery-1708067929",
+  "head_before_and_after": "b12556b7a7e6c5da7365ce83c4ef85cf5a09a531",
+  "baseline": "0da085b50aac2b13dfb15aaac9351efea860926e",
+  "plan": ".agentic/aws/plans/migration/controlled-source-recovery-2026-10-03.md",
+  "plan_sha256": "717a71ec36a2667dccce90dbf83cdcfe7b8addf061b6ad3ac469caeb63b1e948",
+  "checker": "scripts/01.harness/check-artifact-path-migration.sh",
+  "checker_sha256": "1bd2fa1495ac6a14681f7f6708e6a785d3d5888882ba080b064f26cf8f2ae794",
+  "calls": 177,
+  "succeeded": 177,
+  "failed": 0,
+  "active_old_reference_results": "none in every case",
+  "override_flags_used": false,
+  "removed_files_confirmed_absent": 387,
+  "retired_marker_exists": false,
+  "elapsed_seconds": 164.35,
+  "stderr_files_all_empty": true,
+  "plan_and_HEAD_unchanged_during_batch": true,
+  "repository_mutations_by_auditor": false,
+  "external_calls": false,
+  "scope": "Prepared inverse plus regenerated recognition indexes and committed migration/session records. Final report and replacement proposal were not yet added; scan those later additions against all 177 retirement paths before committing them.",
+  "limits": [
+    "The governed checker uses literal old-path matching and excludes historical commit logs, governed retirement records, and the explicitly supplied migration plan.",
+    "Relative imports and runtime semantics require the separate baseline blob/mode comparison and targeted local test results. This is no claim of deployment or live operational validation."
+  ]
+}

@@ -1,0 +1,1249 @@
+{
+  "account": "337159794548",
+  "profile": "kanbien-dev",
+  "start_utc": "2026-09-27T23:45:26Z",
+  "end_utc": "2026-10-03T09:20:19Z",
+  "collection_finished_utc": "2026-10-03T09:37:09.052783+00:00",
+  "enabled_regions_queried": [
+    "ap-northeast-1",
+    "ap-northeast-2",
+    "ap-northeast-3",
+    "ap-south-1",
+    "ap-southeast-1",
+    "ap-southeast-2",
+    "ca-central-1",
+    "eu-central-1",
+    "eu-north-1",
+    "eu-west-1",
+    "eu-west-2",
+    "eu-west-3",
+    "sa-east-1",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2"
+  ],
+  "currently_disabled_regions_not_queried": [
+    "ap-south-2",
+    "eu-south-1",
+    "eu-south-2",
+    "me-central-1",
+    "il-central-1",
+    "ap-east-2",
+    "mx-central-1",
+    "eu-central-2",
+    "af-south-1",
+    "me-south-1",
+    "ap-east-1",
+    "ca-west-1",
+    "ap-southeast-3",
+    "ap-southeast-4",
+    "ap-southeast-5",
+    "ap-southeast-6",
+    "ap-southeast-7"
+  ],
+  "all_enabled_regions_management_write_queries_complete": true,
+  "regional_coverage": [
+    {
+      "region": "ap-northeast-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ap-northeast-2",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ap-northeast-3",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ap-south-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ap-southeast-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ap-southeast-2",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "ca-central-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "eu-central-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "eu-north-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "eu-west-1",
+      "management_write_events": 2173,
+      "write_query_complete": true,
+      "write_pagination": "AWS CLI automatic pagination to exhaustion; no max-items",
+      "query_errors": [],
+      "home_trails": 1,
+      "lake_stores": 0
+    },
+    {
+      "region": "eu-west-2",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "eu-west-3",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "sa-east-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "us-east-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "us-east-2",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "us-west-1",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    },
+    {
+      "region": "us-west-2",
+      "management_write_events": 0,
+      "write_query_complete": true,
+      "write_pagination": {
+        "manual_pages": 1
+      },
+      "query_errors": [],
+      "home_trails": 0,
+      "lake_stores": 0
+    }
+  ],
+  "total_management_write_events": 2173,
+  "successful_management_write_events": 2172,
+  "failed_management_write_events": 1,
+  "event_name_counts": {
+    "sso.amazonaws.com CreateToken": 4,
+    "sso.amazonaws.com Authenticate": 4,
+    "signin.amazonaws.com UserAuthentication": 4,
+    "signin.amazonaws.com CredentialVerification": 4,
+    "signin.amazonaws.com CredentialChallenge": 4,
+    "logs.amazonaws.com CreateLogStream": 1180,
+    "ec2.amazonaws.com DeleteNetworkInterface": 234,
+    "ec2.amazonaws.com CreateNetworkInterface": 233,
+    "ecs.amazonaws.com TaskCreated": 231,
+    "elasticloadbalancing.amazonaws.com DeregisterTargets": 230,
+    "cognito-idp.amazonaws.com Token_POST": 32,
+    "secretsmanager.amazonaws.com UpdateSecretVersionStage": 1,
+    "secretsmanager.amazonaws.com RotationSucceeded": 1,
+    "secretsmanager.amazonaws.com CompleteRotation": 1,
+    "secretsmanager.amazonaws.com PutSecretValue": 1,
+    "secretsmanager.amazonaws.com RotationStarted": 1,
+    "cloudformation.amazonaws.com DetectStackDrift": 4,
+    "ec2.amazonaws.com AllocateAddress": 2,
+    "ec2.amazonaws.com AssociateAddress": 2
+  },
+  "classification_counts": {
+    "preexisting_ecs_runtime_lifecycle": 2103,
+    "preexisting_elasticloadbalancing_managed_network_lifecycle": 9,
+    "cognito_token_issuance_consistent_with_preexisting_synthetic_runs": 32,
+    "identity_center_authentication_sessions": 20,
+    "automatic_rds_managed_master_secret_rotation": 5,
+    "administrator_stack_drift_assessment_metadata": 4,
+    "unclassified": 0
+  },
+  "unclassified_write_events": [],
+  "failed_events": [
+    {
+      "event_id": "6e35e246-f038-44f2-b354-4a8815b10fe7",
+      "event_time": "2026-09-30T17:16:15Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "DeleteNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:16:15Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-05953482f058d96db"
+        }
+      ],
+      "error_code": "Client.InvalidParameterValue",
+      "selected_parameters": {},
+      "parameter_keys": [
+        "networkInterfaceId"
+      ]
+    }
+  ],
+  "drift_assessments": [
+    {
+      "event_id": "8f8a47cf-f6fb-47fa-bea4-4001623922bc",
+      "event_time": "2026-10-02T18:33:29Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "cloudformation.amazonaws.com",
+      "event_name": "DetectStackDrift",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien",
+        "account_id": "337159794548",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "issuer_name": "AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "session_created": "2026-10-02T18:32:35Z"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {
+        "stackName": "kanbien-staging-platform-shell-deployment-artifacts"
+      },
+      "parameter_keys": [
+        "stackName"
+      ]
+    },
+    {
+      "event_id": "023bc302-eb09-4ab2-9c01-7ed492442051",
+      "event_time": "2026-10-02T18:35:42Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "cloudformation.amazonaws.com",
+      "event_name": "DetectStackDrift",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien",
+        "account_id": "337159794548",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "issuer_name": "AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "session_created": "2026-10-02T18:32:35Z"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {
+        "stackName": "kanbien-staging-platform-shell-foundation"
+      },
+      "parameter_keys": [
+        "stackName"
+      ]
+    },
+    {
+      "event_id": "38cea98a-45fb-4f4c-859d-01d8a3835731",
+      "event_time": "2026-10-02T19:01:52Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "cloudformation.amazonaws.com",
+      "event_name": "DetectStackDrift",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien",
+        "account_id": "337159794548",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "issuer_name": "AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "session_created": "2026-10-02T18:32:35Z"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {
+        "stackName": "kanbien-staging-platform-shell-deployment-artifacts"
+      },
+      "parameter_keys": [
+        "stackName"
+      ]
+    },
+    {
+      "event_id": "dfc5c2c6-fcb6-477c-ba9b-b13be3259f21",
+      "event_time": "2026-10-02T21:58:14Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "cloudformation.amazonaws.com",
+      "event_name": "DetectStackDrift",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien",
+        "account_id": "337159794548",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-reserved/sso.amazonaws.com/eu-west-1/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "issuer_name": "AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d",
+        "session_created": "2026-10-02T21:56:29Z"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {
+        "stackName": "kanbien-staging-platform-shell-foundation"
+      },
+      "parameter_keys": [
+        "stackName"
+      ]
+    }
+  ],
+  "elastic_load_balancing_managed_events": [
+    {
+      "event_id": "a20b63dc-4def-4205-b9c5-39be6df2fa0b",
+      "event_time": "2026-09-30T15:36:05Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "CreateNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T15:36:05Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::VPC",
+          "name": "vpc-0063b6c3d2d781f3c"
+        },
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-0e288596708d13697"
+        },
+        {
+          "type": "AWS::EC2::SecurityGroup",
+          "name": "sg-08d590b0aee6e2e60"
+        },
+        {
+          "type": "AWS::EC2::SecurityGroup",
+          "name": "kanbien-staging-alb-sg"
+        },
+        {
+          "type": "AWS::EC2::Subnet",
+          "name": "subnet-0397df802e31ff6fe"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "clientToken",
+        "description",
+        "groupSet",
+        "ipv6AddressCount",
+        "privateIpAddressesSet",
+        "subnetId"
+      ]
+    },
+    {
+      "event_id": "318ba338-7792-4ec8-b179-6bdbdcb2d682",
+      "event_time": "2026-09-30T15:36:11Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "AssociateAddress",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T15:36:10Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "eipalloc-016ac5a2f2d46823c"
+        },
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-0e288596708d13697"
+        },
+        {
+          "type": "AWS::EC2::EIPAssociation",
+          "name": "eipassoc-03d4e3ac31bf26685"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "allocationId",
+        "allowReassociation",
+        "networkInterfaceId"
+      ]
+    },
+    {
+      "event_id": "e85cdacb-2e57-4cba-80fa-800a03c6d7ef",
+      "event_time": "2026-09-30T15:36:11Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "AllocateAddress",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T15:36:10Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "54.229.169.87"
+        },
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "eipalloc-016ac5a2f2d46823c"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "autoRelease",
+        "networkInterfaceId",
+        "serviceManaged"
+      ]
+    },
+    {
+      "event_id": "4350f40d-04f9-4a16-af76-ab7b0682539d",
+      "event_time": "2026-09-30T15:51:35Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "DeleteNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T15:51:35Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-0be38b7ea70b8e51d"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "networkInterfaceId"
+      ]
+    },
+    {
+      "event_id": "ae805c3e-7fe2-42bd-b32c-9050c614d372",
+      "event_time": "2026-09-30T17:05:41Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "CreateNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:05:41Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::VPC",
+          "name": "vpc-0063b6c3d2d781f3c"
+        },
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-08e6b695c41ba4e20"
+        },
+        {
+          "type": "AWS::EC2::SecurityGroup",
+          "name": "sg-08d590b0aee6e2e60"
+        },
+        {
+          "type": "AWS::EC2::SecurityGroup",
+          "name": "kanbien-staging-alb-sg"
+        },
+        {
+          "type": "AWS::EC2::Subnet",
+          "name": "subnet-05d385e4d57b18032"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "clientToken",
+        "description",
+        "groupSet",
+        "ipv6AddressCount",
+        "privateIpAddressesSet",
+        "subnetId"
+      ]
+    },
+    {
+      "event_id": "b0f9e9a7-d6a6-4879-9692-a1ad03e3bd6b",
+      "event_time": "2026-09-30T17:05:44Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "AllocateAddress",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:05:43Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "46.51.147.75"
+        },
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "eipalloc-0046c93df1cde6041"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "autoRelease",
+        "networkInterfaceId",
+        "serviceManaged"
+      ]
+    },
+    {
+      "event_id": "dde01f27-fa4a-438e-a3ee-6a66ae2e7c2c",
+      "event_time": "2026-09-30T17:05:44Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "AssociateAddress",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:05:43Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::EIP",
+          "name": "eipalloc-0046c93df1cde6041"
+        },
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-08e6b695c41ba4e20"
+        },
+        {
+          "type": "AWS::EC2::EIPAssociation",
+          "name": "eipassoc-011b145526a85f074"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "allocationId",
+        "allowReassociation",
+        "networkInterfaceId"
+      ]
+    },
+    {
+      "event_id": "6e35e246-f038-44f2-b354-4a8815b10fe7",
+      "event_time": "2026-09-30T17:16:15Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "DeleteNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:16:15Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-05953482f058d96db"
+        }
+      ],
+      "error_code": "Client.InvalidParameterValue",
+      "selected_parameters": {},
+      "parameter_keys": [
+        "networkInterfaceId"
+      ]
+    },
+    {
+      "event_id": "9199b8e5-1879-46ae-b1fd-7e0f91f7c8a0",
+      "event_time": "2026-09-30T17:16:25Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "ec2.amazonaws.com",
+      "event_name": "DeleteNetworkInterface",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForElasticLoadBalancing/ElasticLoadBalancing",
+        "account_id": "337159794548",
+        "invoked_by": "elasticloadbalancing.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+        "issuer_name": "AWSServiceRoleForElasticLoadBalancing",
+        "session_created": "2026-09-30T17:16:25Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::EC2::NetworkInterface",
+          "name": "eni-05953482f058d96db"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": [
+        "networkInterfaceId"
+      ]
+    }
+  ],
+  "rotation_events": [
+    {
+      "event_id": "7203f85f-fd1a-47a6-8d11-0c9c7376c788",
+      "event_time": "2026-10-03T05:09:22Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "secretsmanager.amazonaws.com",
+      "event_name": "UpdateSecretVersionStage",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForRDS/SLRSession",
+        "account_id": "337159794548",
+        "invoked_by": "rds.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+        "issuer_name": "AWSServiceRoleForRDS",
+        "session_created": "2026-10-03T05:09:22Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::SecretsManager::Secret",
+          "name": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rds!db-5e1605c1-7d49-4228-a952-254d476042a9-jawiqP"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {
+        "secretId": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rds!db-5e1605c1-7d49-4228-a952-254d476042a9-jawiqP"
+      },
+      "parameter_keys": [
+        "moveToVersionId",
+        "removeFromVersionId",
+        "requestPayer",
+        "secretId",
+        "versionStage"
+      ]
+    },
+    {
+      "event_id": "93914bf0-b3b8-4402-83b5-1ce940b61e07",
+      "event_time": "2026-10-03T05:09:22Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "secretsmanager.amazonaws.com",
+      "event_name": "RotationSucceeded",
+      "event_type": "AwsServiceEvent",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "account_id": "337159794548",
+        "invoked_by": "secretsmanager.amazonaws.com"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": []
+    },
+    {
+      "event_id": "a083e337-6638-3b26-88bb-837dcfd5322a",
+      "event_time": "2026-10-03T05:09:22Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "secretsmanager.amazonaws.com",
+      "event_name": "CompleteRotation",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AWSService",
+        "invoked_by": "rds.amazonaws.com"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {
+        "secretId": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rds!db-5e1605c1-7d49-4228-a952-254d476042a9-jawiqP",
+        "versionId": "ce3f8092-2eae-4cc2-a82e-048cf7b3a8a3"
+      },
+      "parameter_keys": [
+        "secretId",
+        "status",
+        "statusMessage",
+        "versionId"
+      ]
+    },
+    {
+      "event_id": "db068aaf-583f-4c49-8b2a-c0aadd064670",
+      "event_time": "2026-10-03T05:08:22Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "secretsmanager.amazonaws.com",
+      "event_name": "PutSecretValue",
+      "event_type": "AwsApiCall",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "type": "AssumedRole",
+        "arn": "arn:aws:sts::337159794548:assumed-role/AWSServiceRoleForRDS/SLRSession",
+        "account_id": "337159794548",
+        "invoked_by": "rds.amazonaws.com",
+        "issuer_arn": "arn:aws:iam::337159794548:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+        "issuer_name": "AWSServiceRoleForRDS",
+        "session_created": "2026-10-03T05:08:22Z"
+      },
+      "resources": [
+        {
+          "type": "AWS::SecretsManager::Secret",
+          "name": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rds!db-5e1605c1-7d49-4228-a952-254d476042a9-jawiqP"
+        }
+      ],
+      "error_code": null,
+      "selected_parameters": {
+        "secretId": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rds!db-5e1605c1-7d49-4228-a952-254d476042a9-jawiqP"
+      },
+      "parameter_keys": [
+        "clientRequestToken",
+        "secretId",
+        "versionStages"
+      ]
+    },
+    {
+      "event_id": "4ae2618a-7794-49bb-bd30-e06109325a10",
+      "event_time": "2026-10-03T05:08:14Z",
+      "lookup_region": "eu-west-1",
+      "aws_region": "eu-west-1",
+      "event_source": "secretsmanager.amazonaws.com",
+      "event_name": "RotationStarted",
+      "event_type": "AwsServiceEvent",
+      "event_category": "Management",
+      "management_event": true,
+      "read_only": false,
+      "identity": {
+        "account_id": "337159794548",
+        "invoked_by": "secretsmanager.amazonaws.com"
+      },
+      "resources": [],
+      "error_code": null,
+      "selected_parameters": {},
+      "parameter_keys": []
+    }
+  ],
+  "github_web_identity_auth": {
+    "complete_for_window": true,
+    "event_count": 54,
+    "role_counts": {
+      "arn:aws:iam::337159794548:role/github-platform-shell-staging-metric-coverage": 16,
+      "arn:aws:iam::337159794548:role/github-platform-shell-staging-synthetic": 16,
+      "arn:aws:iam::337159794548:role/github-platform-shell-staging-reconciliation": 17,
+      "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy": 5
+    },
+    "all_successful": true,
+    "publisher_events": [
+      {
+        "event_id": "5b75a1fe-fa4d-4057-977a-5cdd1a52fbc2",
+        "event_time": "2026-10-02T22:46:29Z",
+        "lookup_region": "eu-west-1",
+        "aws_region": "eu-west-1",
+        "event_source": "sts.amazonaws.com",
+        "event_name": "AssumeRoleWithWebIdentity",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "WebIdentityUser"
+        },
+        "resources": [
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "AROAU5ACKF52JBJQK2ABA:GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions"
+          },
+          {
+            "type": "AWS::IAM::Role",
+            "name": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy"
+          }
+        ],
+        "error_code": null,
+        "selected_parameters": {
+          "roleArn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "roleSessionName": "GitHubActions",
+          "durationSeconds": 3600
+        },
+        "parameter_keys": [
+          "durationSeconds",
+          "roleArn",
+          "roleSessionName"
+        ]
+      },
+      {
+        "event_id": "2ed58d34-d5c1-4bdc-bb21-03463c01c4e0",
+        "event_time": "2026-10-02T22:18:51Z",
+        "lookup_region": "eu-west-1",
+        "aws_region": "eu-west-1",
+        "event_source": "sts.amazonaws.com",
+        "event_name": "AssumeRoleWithWebIdentity",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "WebIdentityUser"
+        },
+        "resources": [
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "AROAU5ACKF52JBJQK2ABA:GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions"
+          },
+          {
+            "type": "AWS::IAM::Role",
+            "name": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy"
+          }
+        ],
+        "error_code": null,
+        "selected_parameters": {
+          "roleArn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "roleSessionName": "GitHubActions",
+          "durationSeconds": 3600
+        },
+        "parameter_keys": [
+          "durationSeconds",
+          "roleArn",
+          "roleSessionName"
+        ]
+      },
+      {
+        "event_id": "c53bc489-e03f-48e2-9b4d-0412ac7cc9e5",
+        "event_time": "2026-10-02T21:21:58Z",
+        "lookup_region": "eu-west-1",
+        "aws_region": "eu-west-1",
+        "event_source": "sts.amazonaws.com",
+        "event_name": "AssumeRoleWithWebIdentity",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "WebIdentityUser"
+        },
+        "resources": [
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "AROAU5ACKF52JBJQK2ABA:GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions"
+          },
+          {
+            "type": "AWS::IAM::Role",
+            "name": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy"
+          }
+        ],
+        "error_code": null,
+        "selected_parameters": {
+          "roleArn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "roleSessionName": "GitHubActions",
+          "durationSeconds": 3600
+        },
+        "parameter_keys": [
+          "durationSeconds",
+          "roleArn",
+          "roleSessionName"
+        ]
+      },
+      {
+        "event_id": "e4c9c402-84f8-482e-9875-0ce652100387",
+        "event_time": "2026-10-02T20:54:57Z",
+        "lookup_region": "eu-west-1",
+        "aws_region": "eu-west-1",
+        "event_source": "sts.amazonaws.com",
+        "event_name": "AssumeRoleWithWebIdentity",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "WebIdentityUser"
+        },
+        "resources": [
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "AROAU5ACKF52JBJQK2ABA:GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions"
+          },
+          {
+            "type": "AWS::IAM::Role",
+            "name": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy"
+          }
+        ],
+        "error_code": null,
+        "selected_parameters": {
+          "roleArn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "roleSessionName": "GitHubActions",
+          "durationSeconds": 3600
+        },
+        "parameter_keys": [
+          "durationSeconds",
+          "roleArn",
+          "roleSessionName"
+        ]
+      },
+      {
+        "event_id": "aa6ef48a-e5d5-43d3-b09d-22ec1266a96e",
+        "event_time": "2026-10-02T19:00:58Z",
+        "lookup_region": "eu-west-1",
+        "aws_region": "eu-west-1",
+        "event_source": "sts.amazonaws.com",
+        "event_name": "AssumeRoleWithWebIdentity",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "WebIdentityUser"
+        },
+        "resources": [
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "AROAU5ACKF52JBJQK2ABA:GitHubActions"
+          },
+          {
+            "type": "AWS::STS::AssumedRole",
+            "name": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions"
+          },
+          {
+            "type": "AWS::IAM::Role",
+            "name": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy"
+          }
+        ],
+        "error_code": null,
+        "selected_parameters": {
+          "roleArn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "roleSessionName": "GitHubActions",
+          "durationSeconds": 3600
+        },
+        "parameter_keys": [
+          "durationSeconds",
+          "roleArn",
+          "roleSessionName"
+        ]
+      }
+    ]
+  },
+  "ecr_auth_sample": {
+    "start": "2026-10-02T22:43:00Z",
+    "end": "2026-10-02T22:48:00Z",
+    "filter": {
+      "EventName": "GetAuthorizationToken"
+    },
+    "pagination": "automatic, no max-items",
+    "complete_within_sample_window": true,
+    "events": [
+      {
+        "event_id": "eca01708-ac45-4456-80cc-c993159936e5",
+        "event_time": "2026-10-02T22:46:30Z",
+        "lookup_region": null,
+        "aws_region": "eu-west-1",
+        "event_source": "ecr.amazonaws.com",
+        "event_name": "GetAuthorizationToken",
+        "event_type": "AwsApiCall",
+        "event_category": "Management",
+        "management_event": true,
+        "read_only": true,
+        "identity": {
+          "type": "AssumedRole",
+          "arn": "arn:aws:sts::337159794548:assumed-role/github-platform-shell-staging-deploy/GitHubActions",
+          "account_id": "337159794548",
+          "issuer_arn": "arn:aws:iam::337159794548:role/github-platform-shell-staging-deploy",
+          "issuer_name": "github-platform-shell-staging-deploy",
+          "session_created": "2026-10-02T22:46:29Z"
+        },
+        "resources": [],
+        "error_code": null,
+        "selected_parameters": {},
+        "parameter_keys": []
+      }
+    ]
+  },
+  "trail_coverage": {
+    "trails": [
+      {
+        "Name": "kanbien-staging-management-events",
+        "S3BucketName": "kanbien-cloudtrail-337159794548-eu-west-1",
+        "IncludeGlobalServiceEvents": true,
+        "IsMultiRegionTrail": true,
+        "HomeRegion": "eu-west-1",
+        "TrailARN": "arn:aws:cloudtrail:eu-west-1:337159794548:trail/kanbien-staging-management-events",
+        "LogFileValidationEnabled": true,
+        "HasCustomEventSelectors": false,
+        "HasInsightSelectors": false,
+        "IsOrganizationTrail": false,
+        "RecursiveLogging": true,
+        "status": {
+          "IsLogging": true,
+          "LatestDeliveryTime": "2026-10-03T09:30:32.130000+00:00",
+          "StartLoggingTime": "2026-05-15T14:13:35.395000+00:00",
+          "LatestDigestDeliveryTime": "2026-10-03T08:37:23.072000+00:00",
+          "LatestDeliveryAttemptTime": "2026-10-03T09:30:32Z",
+          "LatestNotificationAttemptTime": "",
+          "LatestNotificationAttemptSucceeded": "",
+          "LatestDeliveryAttemptSucceeded": "2026-10-03T09:30:32Z",
+          "TimeLoggingStarted": "2026-05-15T14:13:35Z",
+          "TimeLoggingStopped": ""
+        },
+        "selectors": {
+          "TrailARN": "arn:aws:cloudtrail:eu-west-1:337159794548:trail/kanbien-staging-management-events",
+          "EventSelectors": [
+            {
+              "ReadWriteType": "All",
+              "IncludeManagementEvents": true,
+              "DataResources": [],
+              "ExcludeManagementEventSources": []
+            }
+          ]
+        }
+      }
+    ],
+    "event_data_stores": []
+  },
+  "attribution_notes": [
+    "2103 ECS lifecycle events use AWSServiceRoleForECS, ecs.amazonaws.com, or kanbien-staging-ecs-task-execution-role. Log groups are pre-existing /ecs/kanbien-staging-service-platform (231 streams) and /aws/ecs/containerinsights/kanbien-staging/performance (949 streams); ENIs/target removal reference old kanbien-staging-app-sg and kanbien-staging-app-tg.",
+    "Nine ELB-managed network events use AWSServiceRoleForElasticLoadBalancing invoked by elasticloadbalancing.amazonaws.com. Four AllocateAddress/AssociateAddress events and their ENI/EIP resources are retained below. No CreateLoadBalancer/ModifyLoadBalancer or user network-provisioning event appears in the complete management-write set. Specific ALB ARN linkage is not exposed in sanitized records and has not been independently queried; keep these service-managed resources.",
+    "32 Cognito Token_POST events are consistent with two token requests per sixteen pre-existing scheduled synthetic runs. Their recorded identity is Unknown; this is timing/count correlation, not cryptographic actor attribution.",
+    "Twenty Identity Center/signin events represent four authentication sequences, including the user-renewed current session at October3 09:12-09:13Z; no secret/token values are retained.",
+    "Five Secrets Manager writes record automatic RDS-managed rotation on October3 05:08-05:09Z, corroborated by rds.amazonaws.com assumption of AWSServiceRoleForRDS in us-east-1. Preserve the new secret version; do not restore an old password.",
+    "Four successful DetectStackDrift events change stored assessment metadata. All use the same administrator SSO role/session name gordon-kanbien; that alone does not identify a conversation or prove programme ownership. Source session history inspected records earlier drift approval as pending. These operations are known effects with unproven task attribution, not unidentified infrastructure configuration writes. Preserve their historical assessment records; their occurrence cannot be undone.",
+    "Five successful GitHub publisher OIDC assumptions align with the five image runs that reached AWS credentials; initial sixth run failed before credentials. The complete management-write result has no ECR publish/delete/configuration events and no ECS deployment, task-definition registration, CloudFormation create/update/delete/change-set, IAM policy, S3 bucket configuration, DynamoDB table, or RDS configuration changes."
+  ],
+  "limits": [
+    "This is complete ReadOnly=false management-event history for the stated fixed time window and seventeen currently enabled regions in one account. It is not an assertion that all historic data or operational timestamps equal baseline.",
+    "CloudTrail Event history covers management events for90 days and omits data events. The existing multi-region trail includes all management events and global services, but its DataResources list is empty; no CloudTrail Lake store was found. S3 object content/deletion, DynamoDB item changes, application/PostgreSQL data and other unlogged data-plane actions cannot be excluded by this history.",
+    "Management-write lookups were paginated to exhaustion: manual one-page queries in sixteen empty regions and one auto-paginated CLI query with no max-items for eu-west-1. GitHub WebIdentity is complete for eu-west-1. General internal STS and ECR pull-read history in eu-west-1 was deliberately not exhaustively traversed; ECR authentication is corroborated only in the explicit latest image-run sample window. Outside eu-west-1, STS/ECR source queries completed.",
+    "CloudTrail delivery/ingestion lag, events after2026-10-03T09:20:19Z, currently disabled regions and actions outside account337159794548 are outside the write-history claim. Parent account audit found this is the sole active Organizations account; that separate evidence is not duplicated here.",
+    "No query permission errors occurred. Same named user/role does not establish which concurrent agent or terminal initiated an event. No secret values or raw request/response payloads were written; temporary access-key identifiers were removed from resources."
+  ],
+  "recommended_disposition": "No programme infrastructure/resource rollback candidate is established by this complete management-write history. Preserve runtime resources, network churn, credentials, monitoring and audit history. Record the four administrator drift assessments as a retained historical difference of uncertain task attribution."
+}
