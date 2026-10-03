@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.local-to-proven-deployment-reliability
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: deployment.realization
@@ -29,6 +29,15 @@ completion boundary. The user terminated PostgreSQL Stage 6 and replaced the
 08:00 deadline with completing and proving the structural fix.
 
 ## Confirmed decisions and completion boundary
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+This programme's whole-estate adoption and replacement prerequisites do not
+apply to the named slice once that route is effective; the programme remains
+incomplete and unchanged for other work. The adopted slice uses its bounded
+repair/resume and escalation policy for ordinary failures; it does not require
+full-programme adoption or a new human approval for every in-scope correction.
 
 The user confirmed all six decisions on 2026-09-28:
 

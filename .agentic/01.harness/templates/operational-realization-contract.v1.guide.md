@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.guide.operational-realization-contract.v1
-  version: 2
+  version: 3
   status: active
   layer: 01.harness
   domain: deployment.realization
@@ -80,6 +80,13 @@ from a specific published candidate to its private execution proof without
 turning the generic contract into a provider-resource document.
 
 ## How to use it
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+Once effective, its operation matrix replaces mandatory creation of a new
+whole-route contract before proposing that slice. This guide remains binding
+whenever the normal generic contract/compiler route is used.
 
 1. Copy the template and replace every placeholder with stable,
    provider-neutral identifiers.

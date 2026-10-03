@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.corpus.readme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -23,6 +23,12 @@ used_by:
   path: .agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml
 -->
 # 04.deploy Corpus
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+Use its operation evidence for that slice; all other target-provider work
+retains the normal realization prerequisite described below.
 
 This directory is the RAG-readable deploy corpus package for `corpus.04.deploy`.
 

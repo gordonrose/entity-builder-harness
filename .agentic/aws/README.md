@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: aws.readme
-  version: 1
+  version: 2
   status: active
   layer: 04.deploy
   domain: infra.ci-cd
@@ -53,6 +53,12 @@ they are needed for repeatable operations.
   of the RAG/rulebook MCP service after readiness proof and explicit approval.
 
 ## Implementation Plans
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+That conditional route governs the named slice instead of the replacement
+qualification prerequisite below; it does not resume other feature work.
 
 - [Engineering and deployment completeness](plans/implementation/local-to-proven-deployment-reliability.md)
   defines the systemic harness and code refactor: independent executable
