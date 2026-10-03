@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T10:31:26Z
-latest_commit_sha: 57563af1
-chat_duration: 1379s (00:00:22:59)
+latest_commit_at_utc: 2026-10-03T10:42:05Z
+latest_commit_sha: c78f527d
+chat_duration: 2018s (00:00:33:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -59,6 +59,10 @@ Prepare source recovery.
 - Summary: Exact local source restoration applied and runtime checks passed
   Durable evidence: The 423-path inverse applied cleanly after the committed plan b12556b7. Every inverse path matches baseline mode/blob or absence; historical programme log unchanged. Six deployment local suites including nested candidate/relational/reference fixtures passed without external calls. Server/product type, build, runtime and boundary checks passed. Image-runtime payload check initially hit EXDEV moving to /tmp; rerun with supported TMPDIR inside the worktree passed, without source changes. Derived routing is baseline-identical; artifacts catalogue differs only for the new recovery migration plan. Final migration-reference batch is running; source commit will wait for completion. Detailed test summaries are in this session recovery-evidence, raw logs in durable evidence/local-validation. No deployment, image publication, DB action or live restoration proof.
 
+
+- Summary: Local recovery complete; exact shared-merge approval pending
+  Durable evidence: Source commit 57563af1 follows scope plan b12556b7; final documentation commit c78f527d contains amended report/proposal and source-equality.json naming all 25 permitted baseline differences. All 423 inverse paths match baseline; all 387 removals / 36 restorations verified, 177 planners and 177 post-checks passed. Six local deployment suites, server/product runtime and compiled payload check passed; EXDEV resolved with same-filesystem TMPDIR, no code change. Final 969 metadata artifacts and 7 recognition sources / 2,219 terms pass. All 13 original files and 102 original refs preserved; baseline checkout clean. Remote main rechecked ec4744fc; normal merge permitted and automatic branch deletion false. Durable merge-proposal.json will bind the final checkpoint head/diff; no push/PR/merge yet. Future shared approval must preserve branches/history, allow source CI / existing monitoring, and exclude deployment, AWS resource mutation and replacement implementation. Essential evidence/backups live outside /tmp under /home/owner/projects/entity-builder-recovery-2026-10-03.
+
 ## Activity Log
 
 - Preparation workspace and pre-application plan created under the approved one-off exception.
@@ -88,13 +92,58 @@ Commit: `57563af1`
 
 Message: revert: restore deployment source to 0da085b5
 
-Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
+Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all 177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
 
 ADR impact: No replacement architecture implemented.
+
+
+### 2026-10-03T10:42:05Z - Commit recorded
+
+Commit: `c78f527d`
+
+Message: docs(recovery): record tested rollback and amended replacement proposal
+
+Summary: Committed amended report/proposal, immutable source-reversal reference, exact25path baseline exception evidence and preserved investigation records. Final969artifact metadata, recognition7sources2219terms, links, whitespace and normal commit gates passed. No replacement implementation or external effects.
+
+ADR impact: Draft replacement only; baseline source restored locally.
+
+
+### 2026-10-03T10:42:05Z - Context hygiene
+
+Summary: Local recovery complete; exact shared-merge approval pending
+
+Durable evidence: Source commit 57563af1 follows scope plan b12556b7; final documentation commit c78f527d contains amended report/proposal and source-equality.json naming all 25 permitted baseline differences. All 423 inverse paths match baseline; all 387 removals / 36 restorations verified, 177 planners and 177 post-checks passed. Six local deployment suites, server/product runtime and compiled payload check passed; EXDEV resolved with same-filesystem TMPDIR, no code change. Final 969 metadata artifacts and 7 recognition sources / 2,219 terms pass. All 13 original files and 102 original refs preserved; baseline checkout clean. Remote main rechecked ec4744fc; normal merge permitted and automatic branch deletion false. Durable merge-proposal.json will bind the final checkpoint head/diff; no push/PR/merge yet. Future shared approval must preserve branches/history, allow source CI / existing monitoring, and exclude deployment, AWS resource mutation and replacement implementation. Essential evidence/backups live outside /tmp under /home/owner/projects/entity-builder-recovery-2026-10-03.
+
+
+### 2026-10-03T10:44:13Z - Sub-agent activity recorded
+
+Agent: history_audit
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Independent final source and merge-scope review
 
 ## Sub-Agent Activity
 
 - Parent conversation agents review actual deployment/rollback mechanisms, explicit gate supersession and migration/reference validation. Detailed final activity is recorded after results.
+
+
+### 2026-10-03T10:44:13Z - history_audit
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Independent final source and merge-scope review
+Files touched: none
+Checks run: Independent Git tree, manifest, catalogue and document review
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Independently verified source commit 57563af1 and documentation commit c78f527d: all 423 reversed paths match baseline exactly; historical programme log is unchanged; precisely the 25 named baseline exceptions and no others. Catalogue adds only three recovery artifacts and the plans index adds two links. Report and plan have accurate completion and approval boundaries. No review blockers. Final checkpoint head and diff will be bound in durable merge-proposal.json.
 
 ## Commits
 
@@ -110,8 +159,15 @@ ADR impact: No replacement architecture implemented.
 - Commit: `57563af1`
   Time UTC: 2026-10-03T10:31:26Z
   Message: revert: restore deployment source to 0da085b5
-  Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
+  Summary: Applied exact 423-path inverse; retained programme history and unfinished baseline deployment. Six deployment suites, server/product runtime and compiled packaging checks passed; all 177 final path-reference checks passed without overrides. Recognition and normal commit gates passed. No external mutation.
   ADR impact: No replacement architecture implemented.
+
+
+- Commit: `c78f527d`
+  Time UTC: 2026-10-03T10:42:05Z
+  Message: docs(recovery): record tested rollback and amended replacement proposal
+  Summary: Committed amended report/proposal, immutable source-reversal reference, exact25path baseline exception evidence and preserved investigation records. Final969artifact metadata, recognition7sources2219terms, links, whitespace and normal commit gates passed. No replacement implementation or external effects.
+  ADR impact: Draft replacement only; baseline source restored locally.
 
 ## Main Refresh Conflicts
 
@@ -126,9 +182,9 @@ Reason: Restoring an existing source baseline and preserving evidence; replaceme
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T10:08:27Z
-Latest commit at UTC: 2026-10-03T10:31:26Z
-Latest commit SHA: 57563af1
-Chat duration: 1379s (00:00:22:59)
+Latest commit at UTC: 2026-10-03T10:42:05Z
+Latest commit SHA: c78f527d
+Chat duration: 2018s (00:00:33:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
