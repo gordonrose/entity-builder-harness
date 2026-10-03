@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T14:05:04Z
-latest_commit_sha: b103f1d6
-chat_duration: 3106s (00:00:51:46)
+latest_commit_at_utc: 2026-10-03T14:43:02Z
+latest_commit_sha: a43329e8b42ad837111da6e3a8942f548eddf947
+chat_duration: 5384s (00:01:29:44)
 estimated_chat_tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -74,6 +74,10 @@ Platform restart preparation
 
 - Summary: Scheduler recovery is checkpointed separately; PostgreSQL completion is the next review scope.
   Durable evidence: Recovery source 657cef8c and auxiliary HEAD f43461c7 are preserved in the private durable recovery root. This log records replay, tests, fidelity limits and source-review findings. The PostgreSQL proposal and unapplied ten-file patch retain active gates and identify recovery-4 reconciliation plus narrow source prerequisites.
+
+
+- Summary: Final review source a43329e8 is preserved with recovered scheduler HEAD f43461c7.
+  Durable evidence: Verified private copies under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: restart-review-a43329e8-with-scheduler.bundle SHA-256 f27a76142d558c4e3e35d73acd3f0357caabf525f8077a2b3f749a1282c74015; restart-review-a43329e8-worktree.zip SHA-256 a3601731de1519348e535a1e55009f93cc7216f95d81958792179ce04a9d9fc0. Bundle complete-history verification passed; archive CRC and all 1,578 tracked-file bytes match. Receipt: snapshots/restart-review-a43329e8-preservation.json. Initial archive verifier prefix assumption was corrected without modifying the archive. No task paths remain uncommitted; only this session recording awaits its narrow bookkeeping checkpoint.
 
 ## Activity Log
 
@@ -283,6 +287,24 @@ Fallback used: no
 
 Scope: Independent final PostgreSQL review
 
+
+### 2026-10-03T14:43:02Z - Commit recorded
+
+Commit: `a43329e8b42ad837111da6e3a8942f548eddf947`
+
+Message: docs(postgresql): prepare bounded restart review and record scheduler recovery
+
+Summary: Checkpoint the PostgreSQL completion proposal and unapplied instruction patch, scheduler recovery results, preservation procedure and corrected convergence snapshot. Normal commit gate passed; active deployment instructions and main remain unchanged.
+
+ADR impact: No deployment architecture is adopted; PostgreSQL applicability remains an unapplied proposal.
+
+
+### 2026-10-03T14:43:02Z - Context hygiene
+
+Summary: Final review source a43329e8 is preserved with recovered scheduler HEAD f43461c7.
+
+Durable evidence: Verified private copies under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: restart-review-a43329e8-with-scheduler.bundle SHA-256 f27a76142d558c4e3e35d73acd3f0357caabf525f8077a2b3f749a1282c74015; restart-review-a43329e8-worktree.zip SHA-256 a3601731de1519348e535a1e55009f93cc7216f95d81958792179ce04a9d9fc0. Bundle complete-history verification passed; archive CRC and all 1,578 tracked-file bytes match. Receipt: snapshots/restart-review-a43329e8-preservation.json. Initial archive verifier prefix assumption was corrected without modifying the archive. No task paths remain uncommitted; only this session recording awaits its narrow bookkeeping checkpoint.
+
 ## Sub-Agent Activity
 
 
@@ -429,6 +451,13 @@ Summary: Verified local-code claims, interfaces, timeouts and promotion shape; s
   Summary: Add narrow isolated historical draft recovery and durable session-end preservation using existing gates; record source-review blockers without integration or deployment.
   ADR impact: No new runtime or deployment architecture.
 
+
+- Commit: `a43329e8b42ad837111da6e3a8942f548eddf947`
+  Time UTC: 2026-10-03T14:43:02Z
+  Message: docs(postgresql): prepare bounded restart review and record scheduler recovery
+  Summary: Checkpoint the PostgreSQL completion proposal and unapplied instruction patch, scheduler recovery results, preservation procedure and corrected convergence snapshot. Normal commit gate passed; active deployment instructions and main remain unchanged.
+  ADR impact: No deployment architecture is adopted; PostgreSQL applicability remains an unapplied proposal.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -442,9 +471,9 @@ Reason: This extends existing commit/export primitives with a narrow missing-dra
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T13:13:18Z
-Latest commit at UTC: 2026-10-03T14:05:04Z
-Latest commit SHA: b103f1d6
-Chat duration: 3106s (00:00:51:46)
+Latest commit at UTC: 2026-10-03T14:43:02Z
+Latest commit SHA: a43329e8b42ad837111da6e3a8942f548eddf947
+Chat duration: 5384s (00:01:29:44)
 Estimated chat tokens: 144334 estimated from chat transcript bytes (577333 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T14-17-23-01a101e9-8669-7583-884f-752384e25131.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
