@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: platform-foundation
@@ -26,6 +26,21 @@ used_by:
   path: .agentic/03.product/plans/implementation/storage-platform-v1.md
 -->
 # Kanbien/Staging Platform Foundation Convergence v1
+
+## Restart preparation — 3 October 2026
+
+Local source reconciliation uses recovery merge `2309e676`, now checked out on
+the restart session branch and local `main`. The source positions below replace
+the earlier pre-integration snapshot; they are not fresh remote or AWS evidence.
+The [restart session record](../../../commitLogs/2026/oct/03/2026-10-03-14-13-platform-restart-preparation/README.md)
+records preserved work, the scheduler/date-time investigation, and review limits.
+
+This change prepares source review only. The programme phases and delivery trains
+below remain proposals requiring separately bounded scope and approval. Existing
+gates remain in force; the [replacement proposal](controlled-recovery-replacement-proposal-2026-10-03.md)
+remains unimplemented. Deployment remains paused.
+Where source is already preserved, review and reuse that work before proposing
+implementation of the corresponding phase below.
 
 ## Objective
 
@@ -55,14 +70,14 @@ one role with every permission, or continuing after a failed prerequisite.
 
 ### Included
 
-1. Review and integrate the provider-neutral operational-realization gate.
+1. Review the preserved provider-neutral operational-realization gate source.
 2. Implement and prove the source stages of Data Governance Foundation v1.
 3. Integrate data-governance consumer seams into persistence, storage, and
    observability without turning any consumer into a policy store.
 4. Finish the bounded PostgreSQL relational-reference delivery/recovery proof
    through the realization gate.
-5. Review, integrate, and prove the already-created scheduler/time source
-   slice, then select and prove its narrow staging trigger path.
+5. Locate and preserve the scheduler/time draft before proposing its source
+   review or integration; a later target plan would select its staging trigger.
 6. Implement the provider-neutral storage source, AWS S3 adapter source, and a
    harmless service-controlled S3 reference only after its prerequisites pass.
 7. Add the required target observability, cost, rollback, and evidence path for
@@ -83,16 +98,18 @@ one role with every permission, or continuing after a failed prerequisite.
 
 ## Current Starting Position
 
-This programme begins with a fresh read-only reconciliation; the following are
-planning inputs, not proof that a target remains unchanged:
+The following are local source observations at restart preparation, not proof
+that a target remains unchanged. Preserved branches and dirty files remain in
+the original repository; they have not been imported into the restart clone.
 
 | Area | Known source position | Required treatment |
 | --- | --- | --- |
-| Operational-realization gate | A candidate source branch exists, currently headed by `99dc7470`; it is not on `main`. | Review its exact diff, tests, dependency graph semantics, and branch ancestry; integrate selected changes onto fresh `main` without blindly merging chat history. |
-| Data governance | Foundation plan is drafted in this chat worktree. | Implement only its source stages first; it has no direct AWS resource. |
-| PostgreSQL | Source, local relational proof, target reference, and earlier controlled deployment work exist; the final live delivery/recovery path must be freshly assessed. | Do not retry a task label or modify source/live state until the realization gate compiles current facts and the approved operation graph. |
-| Scheduler/time | A source-only candidate branch exists; it has no merged platform contract or selected live adapter proof on `main`. | Review/rebase/test the exact source slice independently, then create a narrow target plan. |
-| Storage | Core has a minimal file contract; Storage Platform v1 is drafted in this chat worktree. | Build provider-neutral source and test boundaries before any S3 design or resource change. |
+| Operational-realization gate | Gate source is present in the restored baseline. The old `99dc7470` candidate is not a pending integration requirement. | Review the current source and remaining proof gaps before proposing any change; do not promote the old candidate blindly. |
+| Data governance / storage | Plans are on the restored baseline. Original branch `agent/data-governance-storage-foundation` preserves one unintegrated commit, `542ca170`, affecting 77 paths. | Review the preserved combined source slice and consumer dependencies before selecting an integration scope. S3 adapter and target work remain deferred. |
+| PostgreSQL | Recovery commit `d8270e34` is already in the restored baseline. Stage 6 / recovery-4 remains unfinished in recorded evidence. | Credit existing source; do not replay earlier labels or start a new attempt without current facts, required gates and separate approval. |
+| Scheduler/time | The 27 September review recorded 78 uncommitted paths. The original branch remains at base `8052929c`; its worktree is absent. Substantial plan/patch evidence survives in the original transcript, but the final source has not been reconstructed or verified. | Preserve the evidence and establish a verified draft through separately governed recovery before review/rebase. Do not infer source from the branch name or reconstruct it under restart preparation. |
+| Tenant execution authority | Original branch `agent/tenant-access-control-operationalization` preserves one unintegrated commit, `e8810937`, affecting 38 paths. | Review opt-in worker/contracts changes and collisions separately; provider/target proof remains deferred. |
+| Feature/platform consumption | The original root retains 13 uncommitted planning/governance files matching the recovery archive. | Preserve originals and review the complete draft before any integration; it introduces governing requirements. |
 | Observability | Provider-neutral profiles and parts of the staging evidence path exist. | Every new stage must declare safe signals, alert owner, delivery path, retention/access boundary, and truthful SLO-confidence state. |
 
 ## The Programme Gates
@@ -115,11 +132,11 @@ a broad retry, permission expansion, source patch, or destructive cleanup.
 
 ### Phase A — establish the execution guardrail
 
-1. Independently review candidate `99dc7470`, including source boundaries,
-   fixtures, failure behaviour, package commands, and the two PostgreSQL-plan
-   references it changes.
-2. Promote only its reviewed content onto fresh `main`; do not use a broad
-   branch merge that may carry stale chat logs or unrelated history.
+1. Review gate source already present in the restored baseline, including source
+   boundaries, fixtures, failure behaviour, package commands and PostgreSQL-plan
+   references; distinguish implemented source from remaining operational proof.
+2. Propose only any demonstrated remaining source delta against the reviewed
+   baseline; the historical `99dc7470` candidate is not an instruction to merge.
 3. Run its focused tests and the existing deployment-reconciliation checks.
 4. Add a programme-level realization contract template that can name all
    source-to-target edges for this convergence programme.
@@ -160,9 +177,10 @@ local permissive default.
 
 1. Reconcile the PostgreSQL source against fresh `main`; retain only the
    reviewed recovery categorisation and no-residual-task safeguards.
-2. Review/rebase the scheduler/time source candidate onto fresh `main`; run all
-   core/contracts/platform/adapter tests and preserve the deliberate
-   no-automatic-missed-run limit until durable terminal state exists.
+2. First locate and preserve the exact scheduler/time draft. Only a separately
+   scoped source review may then rebase/test it against the selected baseline.
+   Preserve the recorded no-automatic-missed-run limit until durable terminal
+   state exists; an unavailable draft is not permission to reconstruct it.
 3. Implement Storage Platform v1 source Stages 1–4: split Core files
    compatibly, create `platform/storage`, add S3 adapter source with recording
    client tests, and do not provision a bucket.
