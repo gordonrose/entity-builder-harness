@@ -68,6 +68,10 @@ Platform restart preparation
 - Decision: Amend the PostgreSQL proposal to permit bounded repair and resume through completion.
   Rationale: The owner requests continued diagnosis, necessary cleanup, relevant source/configuration repair, verification, changed-image qualification and bounded reattempts within a concrete future allowance. Amend the plan and unapplied patch; preserve current cloud restrictions. Do not request execution approval until effective instruction adoption and actual controller support are demonstrated. Scheduler/storage/tenant work stays deferred.
 
+
+- Decision: Promote reviewed restart preparation to main.
+  Rationale: The user explicitly authorized merging and pushing. The verified clean promotion worktree at 8a4c2034 passed metadata, recognition, whitespace, PostgreSQL relational-controller, candidate-preflight and deployment-reconciliation checks. origin/main fast-forwarded from 2309e676 to 8a4c2034 and local main was fast-forwarded to the same commit. The separate scheduler recovery branch remains unmerged pending its independent integration review.
+
 ## Context Hygiene
 
 
@@ -348,6 +352,13 @@ ADR impact: No deployment architecture or applicability exception adopted; revie
 Summary: The bounded repair-cycle proposal is checkpointed at 1fece96f; source/controller prerequisites remain explicit.
 
 Durable evidence: Verified private preservation under /home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/: postgresql-repair-review-1fece96f-with-scheduler.bundle SHA256 178ca873214d222b0550faa7e06eea45ea14053bf31d3181e3ae7e004cf0f883; postgresql-repair-review-1fece96f-worktree.zip SHA256 7573cfb37b391d341022c8590f9f846f32ab77b9a0ac452a98a5e72b5b8360ce. Complete-history verification, archive CRC and all1578 tracked bytes pass; receipt snapshots/postgresql-repair-review-1fece96f-preservation.json. Original refs/worktrees/13 dirty files, main2309e676 and schedulerHEADf43461c7 remain unchanged. No execution approval requested; adopted instructions and behavioral controller proof are still required.
+
+
+### 2026-10-03T16:41:54Z - Decision
+
+Decision: Promote reviewed restart preparation to main.
+
+Rationale: The user explicitly authorized merging and pushing. The verified clean promotion worktree at 8a4c2034 passed metadata, recognition, whitespace, PostgreSQL relational-controller, candidate-preflight and deployment-reconciliation checks. origin/main fast-forwarded from 2309e676 to 8a4c2034 and local main was fast-forwarded to the same commit. The separate scheduler recovery branch remains unmerged pending its independent integration review.
 
 ## Sub-Agent Activity
 
