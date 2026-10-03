@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-10-03T16:58:49Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 1486645
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-03T17:12:36Z
+latest_commit_sha: d4d0fcfc7cba9721b0094dc4149956682c45c92d
+chat_duration: 827s (00:00:13:47)
+estimated_chat_tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -61,13 +61,30 @@ ok can you remind me where we are with the PostgreSQL work?
 
 Initial intent: ok can you remind me where we are with the PostgreSQL work?
 
+
+### 2026-10-03T17:12:36Z - Commit recorded
+
+Commit: `d4d0fcfc7cba9721b0094dc4149956682c45c92d`
+
+Message: docs(postgresql): adopt scoped Stage 6 applicability
+
+Summary: Adopted the reviewed bounded PostgreSQL Stage 6 instruction amendments. The amendment authorizes prerequisite implementation and local/read-only verification, while retaining final execution approval for image publication, AWS mutation, deployment, and live tasks.
+
+ADR impact: No new ADR; the existing PostgreSQL reference and restart plan remain the architecture record.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `d4d0fcfc7cba9721b0094dc4149956682c45c92d`
+  Time UTC: 2026-10-03T17:12:36Z
+  Message: docs(postgresql): adopt scoped Stage 6 applicability
+  Summary: Adopted the reviewed bounded PostgreSQL Stage 6 instruction amendments. The amendment authorizes prerequisite implementation and local/read-only verification, while retaining final execution approval for image publication, AWS mutation, deployment, and live tasks.
+  ADR impact: No new ADR; the existing PostgreSQL reference and restart plan remain the architecture record.
 
 ## Main Refresh Conflicts
 
@@ -83,12 +100,12 @@ reviewed scoped applicability amendment.
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T16:58:49Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-03T17:12:36Z
+Latest commit SHA: d4d0fcfc7cba9721b0094dc4149956682c45c92d
+Chat duration: 827s (00:00:13:47)
+Estimated chat tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
