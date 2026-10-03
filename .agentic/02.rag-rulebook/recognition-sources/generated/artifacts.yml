@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 962
-  term_count: 1937
+  indexed_artifacts: 963
+  term_count: 1939
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -269,6 +269,18 @@ terms:
   match_type: exact
   canonical_id: chat.workflows.chat-upstream-reusable-lesson
   evidence_path: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
+  confidence_weight: 1
+- term: chat.workflows.recover-transcript-draft
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.workflows.recover-transcript-draft
+  evidence_path: .agentic/00.chat/workflows/recover-transcript-draft.md
+  confidence_weight: 1
+- term: .agentic/00.chat/workflows/recover-transcript-draft.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.workflows.recover-transcript-draft
+  evidence_path: .agentic/00.chat/workflows/recover-transcript-draft.md
   confidence_weight: 1
 - term: chat.docs.readme
   category: artifact-id

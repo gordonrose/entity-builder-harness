@@ -53,6 +53,10 @@ Platform restart preparation
 - Decision: Accept documentation corrections and checkpoint local preservation work.
   Rationale: The user requests durable preservation of review edits and scheduler evidence, isolated checkpointed scheduler recovery, and a routine preventing uncommitted temporary-worktree loss. This authorizes local staging/checkpoint commits for those scopes. Preserve original files and refs. No convergence-programme execution, AWS change, deployment, push, merge to main or destructive cleanup is authorized. Establish the missing governed recovery procedure before replaying transcript operations.
 
+
+- Decision: Govern isolated scheduler reconstruction and durable session preservation.
+  Rationale: The new recover-transcript-draft workflow supplies the previously missing recovery procedure; chat-commit adds durable preservation before handoff. Reserve auxiliary branch chat/2026-10-03-scheduler-draft-recovery at exact base 8052929cb947ef3a0199a338a997f8cc8ede3aac in the restart repository, with AGENTIC_CHAT_WORKTREE_ROOT=/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/worktrees. Private evidence/bundles go in the same new durable root. Original repository/refs/worktree registration and all prior backups remain untouched. Recovery restores the historical draft, not integration or deployment authority.
+
 ## Context Hygiene
 
 
@@ -144,6 +148,46 @@ Summary: Preserve accepted convergence-plan corrections and the detailed schedul
 
 ADR impact: No architecture or gate change.
 
+
+### 2026-10-03T14:01:50Z - Decision
+
+Decision: Govern isolated scheduler reconstruction and durable session preservation.
+
+Rationale: The new recover-transcript-draft workflow supplies the previously missing recovery procedure; chat-commit adds durable preservation before handoff. Reserve auxiliary branch chat/2026-10-03-scheduler-draft-recovery at exact base 8052929cb947ef3a0199a338a997f8cc8ede3aac in the restart repository, with AGENTIC_CHAT_WORKTREE_ROOT=/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/worktrees. Private evidence/bundles go in the same new durable root. Original repository/refs/worktree registration and all prior backups remain untouched. Recovery restores the historical draft, not integration or deployment authority.
+
+
+### 2026-10-03T14:03:53Z - ADR disposition
+
+ADR needed: no
+
+Reason: This extends existing commit/export primitives with a narrow missing-draft recovery procedure and session-end preservation; it adopts no new runtime, deployment or storage architecture.
+
+
+### 2026-10-03T14:04:26Z - Sub-agent activity recorded
+
+Agent: review_restart_scope
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Preservation and transcript-recovery governance
+
+
+### 2026-10-03T14:04:26Z - Sub-agent activity recorded
+
+Agent: reconcile_platform
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Preserved storage and tenant-authority source review
+
 ## Sub-Agent Activity
 
 
@@ -189,6 +233,34 @@ Blockers: none
 Next step: none
 Summary: Recommended narrow convergence-plan factual corrections and session evidence; retained all gates and excluded programme implementation.
 
+
+### 2026-10-03T14:04:26Z - review_restart_scope
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Preservation and transcript-recovery governance
+Files touched: .agentic/00.chat/workflows/{recover-transcript-draft.md,chat-commit.md,README.md}
+Checks run: Scoped metadata, deterministic-process drift, relative links and whitespace passed; root reviewed procedure and added isolated offline dependency setup.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Added the narrow recovery workflow, workflow index entry and durable preservation routine under current user authorization.
+
+
+### 2026-10-03T14:04:26Z - reconcile_platform
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Preserved storage and tenant-authority source review
+Files touched: none
+Checks run: Read-only exact-commit source and path-overlap review; parent independently inspected storage and worker paths; historical tests not rerun.
+Git actions: none
+Blockers: none
+Next step: none
+Summary: Block integration as-is: storage state/permission/telemetry/profile-reference gaps and default worker authorizer failure loses queue disposition.
+
 ## Commits
 
 
@@ -207,7 +279,7 @@ Summary: Recommended narrow convergence-plan factual corrections and session evi
 
 ADR needed: no
 ADR path:
-Reason: Factual reconciliation and review-scope corrections only; no durable architecture, gate or deployment policy is adopted.
+Reason: This extends existing commit/export primitives with a narrow missing-draft recovery procedure and session-end preservation; it adopts no new runtime, deployment or storage architecture.
 
 ## Session Metrics
 
@@ -387,3 +459,57 @@ source-check claims remain historical. No task commit was created; the original
 staged bootstrap README is retained, and preparation edits remain unstaged for
 review. The review candidate is complete; source recovery, integration and any
 deployment remain future work requiring their own scope.
+
+## Preservation and recovery continuation
+
+The owner's follow-up accepts the factual corrections and requests durable
+checkpointing, isolated scheduler reconstruction and review of preserved source.
+It does not approve execution of the convergence programme. Earlier statements
+that no commit/reconstruction was authorized describe the investigation phase.
+
+Accepted documentation is committed as `4001c18e`, with session bookkeeping at
+`dcb5fa9c`. A private complete-history Git bundle was created and verified at
+`/home/owner/projects/entity-builder-scheduler-recovery-2026-10-03/bundles/restart-review-dcb5fa9c.bundle`.
+SHA-256: `9ad2b06f95f27907b576e43f63ffd852129ed2ef92f0531d84417ed91dc65d38`.
+The parent directory is private and outside `/tmp`; original/ref/dirty-file
+snapshots are in its `snapshots/` directory. This is local durability, not an
+off-machine backup. No original files, refs or backups were overwritten.
+
+The new `recover-transcript-draft.md` workflow supplies the missing recovery
+procedure, and `chat-commit.md` now requires verified durable preservation before
+handoff. These reuse existing commit gates, export and bundle mechanisms; no new
+deployment control or background service is introduced. The root cause of the
+old worktree disappearance remains unknown. Checkpoints protect committed source
+even if its worktree disappears; explicit evidence copies protect untracked inputs.
+
+### Preserved-source review
+
+Read-only review of original commits `542ca170` and `e8810937` recommends **no
+integration as-is**. Historical tests were not rerun and no implementation was
+imported or repaired. Parent inspection corroborated the storage boundary and
+worker-disposition findings; this is source review, not live-exposure evidence.
+
+| Priority / commit | Source location in preserved commit | Finding and required treatment before integration |
+| --- | --- | --- |
+| P1 / `542ca170` | `platform/storage/src/transfer.ts:10`, `index.ts:5` | Public raw state transitions bypass the legal-hold wrapper and accept quarantine approval without scan evidence. Enforce prerequisites at the shared transition boundary; test attempts to bypass hold/scan decisions. |
+| P1 / `542ca170` | `platform/storage/src/access.ts:5` | Delivery grants ignore current handling permission and compare grant expiry with upload expiry. Require fresh authorization/current time and bounded delivery lifetime. |
+| P1 / `542ca170` | `platform/storage/src/observability.ts:3` | Object spread forwards arbitrary extra properties into telemetry. Construct and validate an explicit safe-field allowlist; test content/URL/identity extras. |
+| P2 / `e8810937` | `platform/workers/src/worker.ts:103,137`, `queue.ts:29` | The default queue removes a message before authorization; thrown/invalid authorizer results return without retry or dead-letter disposition. Preserve a recoverable disposition and test provider failure/malformed results. |
+| P2 / `542ca170` | `platform/data-governance/src/resolution.ts:19` | Unknown profile references are copied into allowed policy; the unknown-reference denial only handles invalid current time. Validate the reference binding or keep that claimed stage incomplete. |
+
+Storage's changed paths overlap subsequent baseline changes at `package.json`,
+its historical session README and the architecture handbook. Tenant authority
+overlaps the platform runtime plan and handbook. The two preserved branches
+overlap at `package-lock.json` and the handbook. These are path comparisons, not
+a performed merge test. Do not replace whole manifests/lockfiles from old branches.
+
+### Restart approach disposition
+
+Recommend a separately reviewed operation-specific HTTP restart scope, preserving
+identity, actual-image, target configuration, rollback and outcome proof. The
+replacement proposal remains a proposal. This continuation changes only chat
+preservation/recovery instructions; it does not supersede the broad deployment
+gates or authorize runtime repairs or cloud operations. The minimum deployment
+instruction change still needs review against the exact clauses listed in the
+replacement proposal before any route is executed. PostgreSQL follows HTTP;
+scheduler/storage integration remains separate and subject to source review.

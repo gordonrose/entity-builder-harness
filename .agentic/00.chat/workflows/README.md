@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: chat.workflows.readme
-  version: 1
+  version: 2
   status: active
   layer: 00.chat
   domain: chat
@@ -29,6 +29,8 @@ process locations.
 - `chat-start.md` - chat startup and active session discovery.
 - `chat-refresh-from-main.md` - refresh chat branches from `main`.
 - `chat-commit.md` - task commits, commit recording, and session checkpoints.
+- `recover-transcript-draft.md` - isolated recovery of missing draft source
+  from preserved transcript evidence, with durable preservation and proof limits.
 - `chat-promote-to-main.md` - local convergence from chat branch to `main`.
 - `chat-promote-to-remote-main.md` - fast-forward promotion through an
   isolated integration worktree when the local integration console has
