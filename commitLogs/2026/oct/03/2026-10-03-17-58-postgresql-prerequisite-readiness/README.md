@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-03T17:12:36Z
-latest_commit_sha: d4d0fcfc7cba9721b0094dc4149956682c45c92d
-chat_duration: 827s (00:00:13:47)
+latest_commit_at_utc: 2026-10-03T17:37:01Z
+latest_commit_sha: ae3cb5b022419b8c58b4b5e5e23273f1b82c534a
+chat_duration: 2292s (00:00:38:12)
 estimated_chat_tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -77,6 +77,17 @@ Summary: Adopted the reviewed bounded PostgreSQL Stage 6 instruction amendments.
 
 ADR impact: No new ADR; the existing PostgreSQL reference and restart plan remain the architecture record.
 
+
+### 2026-10-03T17:37:01Z - Commit recorded
+
+Commit: `ae3cb5b022419b8c58b4b5e5e23273f1b82c534a`
+
+Message: feat(postgresql): prepare resumable Stage 6 execution
+
+Summary: Implemented and locally verified the PostgreSQL Stage 6 prerequisites: durable finite stage and same-image candidate attempt receipts, checkpoint-aware resume, timeout and unknown-outcome blocking, cumulative limits, role/TLS-adapter proof, expanded restore proof, and immutable-image qualification. Current AWS target reconciliation remains unavailable because the configured identity could not authenticate.
+
+ADR impact: No new ADR; the existing relational-reference ADR and Stage 6 restart plan govern this bounded preparation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -90,6 +101,13 @@ ADR impact: No new ADR; the existing PostgreSQL reference and restart plan remai
   Message: docs(postgresql): adopt scoped Stage 6 applicability
   Summary: Adopted the reviewed bounded PostgreSQL Stage 6 instruction amendments. The amendment authorizes prerequisite implementation and local/read-only verification, while retaining final execution approval for image publication, AWS mutation, deployment, and live tasks.
   ADR impact: No new ADR; the existing PostgreSQL reference and restart plan remain the architecture record.
+
+
+- Commit: `ae3cb5b022419b8c58b4b5e5e23273f1b82c534a`
+  Time UTC: 2026-10-03T17:37:01Z
+  Message: feat(postgresql): prepare resumable Stage 6 execution
+  Summary: Implemented and locally verified the PostgreSQL Stage 6 prerequisites: durable finite stage and same-image candidate attempt receipts, checkpoint-aware resume, timeout and unknown-outcome blocking, cumulative limits, role/TLS-adapter proof, expanded restore proof, and immutable-image qualification. Current AWS target reconciliation remains unavailable because the configured identity could not authenticate.
+  ADR impact: No new ADR; the existing relational-reference ADR and Stage 6 restart plan govern this bounded preparation.
 
 ## Main Refresh Conflicts
 
@@ -105,9 +123,9 @@ reviewed scoped applicability amendment.
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T16:58:49Z
-Latest commit at UTC: 2026-10-03T17:12:36Z
-Latest commit SHA: d4d0fcfc7cba9721b0094dc4149956682c45c92d
-Chat duration: 827s (00:00:13:47)
+Latest commit at UTC: 2026-10-03T17:37:01Z
+Latest commit SHA: ae3cb5b022419b8c58b4b5e5e23273f1b82c534a
+Chat duration: 2292s (00:00:38:12)
 Estimated chat tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
