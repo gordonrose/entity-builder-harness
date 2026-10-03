@@ -40,7 +40,9 @@ ok can you remind me where we are with the PostgreSQL work?
 
 ## Issues Raised
 
-- None recorded yet.
+- Read-only PostgreSQL live-boundary reconciliation could validate the committed
+  source policy but could not authenticate the configured `kanbien-dev` AWS
+  identity. No current target fact or AWS mutation was obtained.
 
 ## Decisions Made
 
@@ -48,6 +50,9 @@ ok can you remind me where we are with the PostgreSQL work?
   implementation, local verification, and read-only target reconciliation.
   They do not authorize image publication, deployment, AWS mutation, or a
   live Stage 6 execution.
+- Keep recovery-4 unavailable until fresh reconciliation establishes its actual
+  outcome and ownership. Use source-qualified finite recovery-5 attempts only
+  after final execution approval.
 
 ## Context Hygiene
 
@@ -111,3 +116,11 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 
 - PostgreSQL prerequisites and their current target facts remain separate from
   final execution approval.
+- Local source preparation added durable controller receipts for resume,
+  timeout cleanup, unknown submissions and cumulative limits; a same-image
+  candidate retry identity; real-engine role checks; stronger restore proof;
+  and immutable-image entrypoint qualification.
+- Local checks passed: relational smoke, candidate preflight, reconciliation,
+  PostgreSQL adapter and disposable integration, compiled image payload, and
+  infrastructure static validation. The direct Docker image smoke skipped
+  safely because no Docker daemon was reachable.

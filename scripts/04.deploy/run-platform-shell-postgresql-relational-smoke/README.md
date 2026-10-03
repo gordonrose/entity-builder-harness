@@ -36,11 +36,16 @@ Foundation/service readiness, public server `1/1`, dormant worker `0/0`, and
 empty isolated queues. It then runs one bootstrap task, one migration task,
 one fixed-record relay task, one worker task, and one isolated restore check.
 
-Each stage label is single-use across both running **and stopped** ECS tasks.
-The initial bootstrap label was consumed by a non-zero exit without retaining a
-task log, task identifier, or provider payload. The current reviewed recovery
-uses a distinct, fixed `recovery-1` label set only after the corrected immutable
-image is deployed. It never replays the consumed label. Bootstrap creates the
+Each finite stage attempt is single-use across both running **and stopped** ECS
+tasks. Safe source-owned receipts retain the stage, bounded attempt number,
+state, and conservative cost allowance across a controller restart; they never
+retain a task identifier or provider response. An accepted-or-unknown submission,
+or a timeout whose stop cannot be verified, blocks another attempt until
+reconciliation. The initial bootstrap label was consumed by a non-zero exit
+without retaining a task log, task identifier, or provider payload. The current
+reviewed recovery uses finite `recovery-5` labels only after fresh target
+reconciliation, image qualification, and final execution approval. It never
+replays a consumed label. Bootstrap creates the
 two PostgreSQL identities and their connection/schema grants; the migration
 identity, which creates future tables, owns its own default-table privileges.
 
@@ -58,7 +63,7 @@ reviewed recovery step.
 
 If that fixed bootstrap ends non-successfully, do not inspect or paste the
 task's raw metadata or logs. The one read-only diagnostic is limited to the
-consumed `recovery-1` label and returns an allowlisted category only:
+consumed bootstrap label and returns an allowlisted category only:
 
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --diagnose-bootstrap-recovery --approve-relational-bootstrap-recovery-diagnostic

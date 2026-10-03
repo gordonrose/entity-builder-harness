@@ -55,6 +55,7 @@ fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path
+import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"))
 image_a = "example.invalid/repository@sha256:" + "a" * 64
@@ -86,6 +87,11 @@ else:
 assert module["attempt_label"](image_a) == module["attempt_label"](image_a)
 assert module["attempt_label"](image_a) != module["attempt_label"](image_b)
 assert len(module["attempt_label"](image_a)) <= 36
+ledger = Path(tempfile.mkdtemp()) / "candidate-receipts.json"
+assert module["reserve_candidate_attempt"](image_a, ledger).endswith("-a1")
+module["record_candidate_state"](module["attempt_label"](image_a, 1), "failed", ledger)
+assert module["reserve_candidate_attempt"](image_a, ledger).endswith("-a2")
+assert len(module["load_candidate_ledger"](ledger)["attempts"]) == 2
 assert module["terminal_category"]({"containers": [{"reason": "CannotPullContainerError"}]}) == "candidate-image-distribution-failure"
 assert module["terminal_category"]({"containers": [{"reason": "ResourceInitializationError"}]}) == "candidate-runtime-initialization-failure"
 assert module["terminal_category"]({"stopCode": "TaskFailedToStart", "containers": []}) == "candidate-task-startup-failure"

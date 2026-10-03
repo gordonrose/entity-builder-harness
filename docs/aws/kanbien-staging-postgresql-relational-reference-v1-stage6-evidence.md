@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.evidence.kanbien-staging-postgresql-relational-reference-v1-stage6
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -64,6 +64,24 @@ expired fact but cannot refresh it; the administrator-only artifact assessor
 can detect and poll the one fixed stack and records only an in-sync verdict.
 No refreshed evidence is claimed here until that assessment and the following
 reconciliation have both passed.
+
+## Pre-execution source preparation — 2026-10-03
+
+The scoped Stage 6 applicability amendment has been adopted for source
+preparation only. The relational and candidate controllers now retain safe,
+finite attempt receipts across a local process restart; unknown submissions and
+timeout cleanup obligations block retries, and a completed checkpoint is not
+replayed during continuation. Local controller, adapter, real-engine,
+compiled-image, and infrastructure checks passed. The restore verifier now
+requires migration checksum, work-item, published-outbox, and completed-worker
+state together.
+
+A fresh read-only boundary check could validate the source policy but could not
+use the configured AWS identity. It did not obtain current account, database,
+network, health, drift, cost, or recovery-4 facts. No AWS mutation, image
+publication, deployment, or Stage 6 task ran. Recovery-4 remains unreconciled;
+recovery-5 is source-qualified only and requires final execution approval after
+fresh target reconciliation.
 
 ## Required live evidence fields
 

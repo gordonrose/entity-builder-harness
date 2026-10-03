@@ -1109,7 +1109,7 @@ if target_persistence.get("smoke_transactional_outbox") != expected_persistence_
     fail("target profile must retain the reviewed deployed-foundation and pending-service acceptance boundary")
 
 expected_relational_reference = {
-    "status": "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready",
+    "status": "stage-5-live-boundary-proven-stage-6-recovery-5-prerequisites-ready",
     "source_plan": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
     "deployment_plan": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md",
     "threat_model": "docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md",
@@ -1233,7 +1233,7 @@ expected_relational_reference = {
         "next_gate": "stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set",
     },
     "stage_6_relational_smoke_composition": {
-        "status": "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
+        "status": "candidate-preflight-dormant-definition-deployed-finite-same-image-attempts-require-durable-reconciliation",
         "isolated_resources": [
             "relational-bootstrap-task-definition",
             "relational-migration-task-definition",
@@ -1265,17 +1265,17 @@ expected_relational_reference = {
             "correction": {
                 "default_privileges": "migration-identity-owns-default-privileges-for-its-own-created-tables",
                 "consumed_stage_detection": "running-and-stopped-task-label-reads-before-any-stage-start",
-                "recovery_label": "one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label",
+                "recovery_label": "finite-recovery-5-attempt-identities-with-durable-receipts-no-replay-of-consumed-labels",
                 "service_update_scope": "existing-task-definition-revisions-and-in-place-service-references-only",
-                "next_execution": "one-fixed-bootstrap-recovery-4-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight",
-                "continuation": "one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result",
+                "next_execution": "reconcile-then-qualify-one-immutable-image-and-select-a-finite-recovery-5-bootstrap-attempt-after-final-execution-approval",
+                "continuation": "checkpoint-aware-continuation-only-after-the-recovery-bootstrap-has-one-durable-successful-terminal-receipt",
             },
             "recovery_1_execution": {
                 "bootstrap": "one-fixed-task-exited-nonzero",
                 "diagnostic": "bootstrap-workload-failure-unclassified",
                 "later_stages": "not-started",
                 "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
-                "next_gate": "reviewed-safe-bootstrap-failure-classification-and-new-recovery-4-label-before-any-new-task",
+                "next_gate": "reconcile-reported-recovery-4-outcome-and-qualify-finite-recovery-5-attempts-before-any-new-task",
             },
             "recovery_2_execution": {
                 "bootstrap": "one-fixed-task-exited-nonzero",
@@ -1290,13 +1290,13 @@ expected_relational_reference = {
                 "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
             },
             "recovery_4_execution": {
-                "bootstrap": "not-started",
+                "bootstrap": "reported-failed-before-application-telemetry-reconciliation-required",
                 "observability": "fixed-safe-bootstrap-phase-category-only",
                 "later_stages": "unavailable-until-one-successful-bootstrap",
                 "preserved_boundary": "server-one-worker-zero-isolated-queues-empty",
             },
         },
-        "next_gate": "publish-prove-and-promote-one-immutable-image-then-run-one-fixed-bootstrap-recovery-4",
+        "next_gate": "reconcile-current-target-and-qualify-reviewed-recovery-5-source-before-final-execution-approval",
         "control": {
             "command": "npm-run-platform-shell-postgresql-relational-smoke",
             "execution_guard": "execute-and-approve-relational-stage6",
@@ -1355,11 +1355,11 @@ expected_relational_reference = {
                 "restore_verification": "relational-restore-verify",
             },
             "started_by": {
-                "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260928-recovery-4",
-                "migration": "kanbien-postgresql-stage6-migration-20260928-recovery-4",
-                "worker": "kanbien-postgresql-stage6-worker-20260928-recovery-4",
-                "relay": "kanbien-postgresql-stage6-relay-20260928-recovery-4",
-                "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260928-recovery-4",
+                "bootstrap": "kb-pg6-bootstrap-r5",
+                "migration": "kb-pg6-migration-r5",
+                "worker": "kb-pg6-worker-r5",
+                "relay": "kb-pg6-relay-r5",
+                "restore_verification": "kb-pg6-restore-r5",
             },
             "task_wait_seconds": 900,
             "restore_wait_seconds": 1800,

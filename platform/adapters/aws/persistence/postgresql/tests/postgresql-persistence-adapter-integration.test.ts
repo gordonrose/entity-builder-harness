@@ -87,6 +87,36 @@ async function main(): Promise<void> {
     }
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_migration_history"`), 2);
 
+    console.log("PostgreSQL disposable assertion phase: least-privilege migration and runtime roles.");
+    await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokemigrate LOGIN PASSWORD 'fixture-migration-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokeruntime LOGIN PASSWORD 'fixture-runtime-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await rawPool.query({ text: `ALTER SCHEMA "${schema}" OWNER TO psmokemigrate` });
+    await rawPool.query({ text: `GRANT CONNECT ON DATABASE postgres TO psmokeruntime; GRANT USAGE ON SCHEMA "${schema}" TO psmokeruntime; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "${schema}" TO psmokeruntime` });
+    await rawPool.query({ text: `SET ROLE psmokemigrate; ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema}" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime; RESET ROLE` });
+    const runtimePool = new Pool({
+      host: environment.host,
+      port: environment.port,
+      database: environment.database,
+      user: "psmokeruntime",
+      password: "fixture-runtime-password",
+      max: 1,
+      connectionTimeoutMillis: 5_000,
+      ssl: false,
+    });
+    try {
+      await runtimePool.query({ text: `INSERT INTO "${schema}"."platform_smoke_work_item" (id, state, revision, accepted_at) VALUES ($1, 'accepted', 1, CURRENT_TIMESTAMP)`, values: ["runtime-dml-proof"] });
+      await runtimePool.query({ text: `DELETE FROM "${schema}"."platform_smoke_work_item" WHERE id = $1`, values: ["runtime-dml-proof"] });
+      let ddlRejected = false;
+      try {
+        await runtimePool.query({ text: `CREATE TABLE "${schema}"."runtime_ddl_must_fail" (id text)` });
+      } catch {
+        ddlRejected = true;
+      }
+      equal(ddlRejected, true, "The runtime role must retain DML access while being unable to create schema objects.");
+    } finally {
+      await runtimePool.end();
+    }
+
     const smokePersistence = createKanbienPlatformPostgreSqlSmokePersistence({
       configuration,
       pool,

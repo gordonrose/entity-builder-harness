@@ -97,8 +97,25 @@ fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path
+import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"))
+temporary = Path(tempfile.mkdtemp())
+ledger_policy = {
+    "ledger_path": temporary / "receipts.json",
+    "labels": {stage: f"reviewed-{stage}" for stage in ("bootstrap", "migration", "relay", "worker", "restore_verification")},
+    "attempt_limit_per_stage": 4,
+    "attempt_limit_total": 20,
+    "maximum_elapsed_seconds": 60,
+    "maximum_cost_usd": 100,
+    "cleanup_reserve_usd": 25,
+    "estimated_stage_cost_usd": {stage: 1 for stage in ("bootstrap", "migration", "relay", "worker", "restore_verification")},
+}
+_, attempt, label = module["reserve_stage"]("bootstrap", ledger_policy)
+assert attempt == 1 and label == "reviewed-bootstrap-a1"
+module["record_stage_state"]("bootstrap", "succeeded", ledger_policy)
+assert module["stage_succeeded"]("bootstrap", ledger_policy)
+
 observed = []
 
 def empty_task_list(arguments, _policy, allow_not_found=False):
@@ -106,7 +123,7 @@ def empty_task_list(arguments, _policy, allow_not_found=False):
     return {"taskArns": []}
 
 module["no_prior_label"].__globals__["aws"] = empty_task_list
-module["no_prior_label"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}})
+module["no_prior_label"]("reviewed-fixed-label-a1", {"cluster": "reviewed-cluster"})
 assert [arguments[-1] for arguments in observed] == ["RUNNING", "STOPPED"]
 
 observed = []
@@ -117,8 +134,49 @@ def successful_predecessor(arguments, _policy, allow_not_found=False):
     return {"tasks": [{"containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
 
 module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
-module["prior_label_succeeded"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}, "containers": {"bootstrap": "reviewed-container"}})
+predecessor_policy = {
+    **ledger_policy,
+    "cluster": "reviewed-cluster",
+    "containers": {"bootstrap": "reviewed-container"},
+}
+module["prior_label_succeeded"]("bootstrap", predecessor_policy)
 assert observed[0][-1] == "STOPPED"
+
+# A later-stage failure resumes only the first incomplete checkpoint after a restart.
+for stage in ("migration",):
+    module["reserve_stage"](stage, ledger_policy)
+    module["record_stage_state"](stage, "succeeded", ledger_policy)
+module["reserve_stage"]("relay", ledger_policy)
+module["record_stage_state"]("relay", "failed", ledger_policy)
+assert module["stage_succeeded"]("migration", ledger_policy)
+assert not module["stage_succeeded"]("relay", ledger_policy)
+
+# A timeout retains cleanup ownership in the durable receipt, even after process loss.
+module["reserve_stage"]("worker", ledger_policy)
+timeout_policy = {**ledger_policy, "cluster": "reviewed-cluster", "task_stop_seconds": 0}
+module["stop_and_verify"].__globals__["aws"] = lambda *_args, **_kwargs: {"tasks": [{"lastStatus": "RUNNING"}]}
+try:
+    module["stop_and_verify"]("worker", "reviewed-task", timeout_policy)
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "a timed-out relational stage has an unresolved cleanup obligation"
+else:
+    raise AssertionError("timeout cleanup was accepted without terminal proof")
+assert module["load_ledger"](ledger_policy)["stages"]["worker"]["state"] == "timeout-cleanup-pending"
+
+# A lost submission response is recorded as unknown and blocks another attempt.
+module["reserve_stage"]("restore_verification", ledger_policy)
+module["reconcile_unacknowledged_submission"].__globals__["aws"] = lambda *_args, **_kwargs: (_ for _ in ()).throw(module["RelationalSmokeError"]("provider-unavailable"))
+try:
+    module["reconcile_unacknowledged_submission"]("restore_verification", "reviewed-restore-verification-a1", {**ledger_policy, "cluster": "reviewed-cluster"})
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "a relational stage submission outcome is uncertain and blocks retry"
+else:
+    raise AssertionError("uncertain acceptance was not blocked")
+assert module["load_ledger"](ledger_policy)["stages"]["restore_verification"]["state"] == "unknown"
+
+# Reloading the ledger preserves consumed limits; restart cannot reset the allowance.
+reloaded = module["load_ledger"](ledger_policy)
+assert len(reloaded["attempts"]) == 5
 
 diagnostic_policy = {"bootstrap_diagnostic_categories": {
     "bootstrap-image-retrieval-failure",
