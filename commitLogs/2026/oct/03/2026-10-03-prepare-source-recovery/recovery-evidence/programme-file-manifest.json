@@ -1,0 +1,2172 @@
+{
+  "baseline": "0da085b50aac2b13dfb15aaac9351efea860926e",
+  "live_main": "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+  "all_changes": [
+    {
+      "status": "A",
+      "path": ".agentic/01.harness/standards/autonomous-delivery-envelope.v1.md"
+    },
+    {
+      "status": "A",
+      "path": ".agentic/01.harness/workflows/sustained-implementation.md"
+    },
+    {
+      "status": "M",
+      "path": ".agentic/aws/README.md"
+    },
+    {
+      "status": "A",
+      "path": ".agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md"
+    },
+    {
+      "status": "M",
+      "path": ".github/workflows/deploy-platform-shell-staging.yml"
+    },
+    {
+      "status": "A",
+      "path": ".github/workflows/release-control-source-validation.yml"
+    },
+    {
+      "status": "A",
+      "path": "commitLogs/2026/sep/28/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/adrs/0039-local-operation-control-conformance.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/04.deploy/adrs/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/iaas-release-control-mvp.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/iaas-release-control-progress.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/conformance-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/build-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/effect-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/finite-job-conformance-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/server-compatibility-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/baseline-collector-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/current-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/local-container-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/local-build-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-contracts.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-graph.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-review.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-graph.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-review.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/baseline-triage.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/current-triage.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-graph.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-review.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/synthetic-artifact-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/conformance-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-candidate.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-migration-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/caller-graph.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/reconciliation-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/source-inventory.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/conformance-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-effect-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-preflight-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/local-container-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/passive-readiness-stale-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/publication-check.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/qualified-image-handoff.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/receipt-files.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/sbom-validation.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/selected-blueprint-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/current-source-review.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/local-build-result.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/verification-summary.json"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/README.md"
+    },
+    {
+      "status": "A",
+      "path": "docs/04.deploy/plans/release-control-source-adoption/ledger.json"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/image/Dockerfile"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/image/README.md"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/release-control.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-acceptance-policy.v1.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-realization.v1.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-release-blueprint.v1.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/release-control/control-plane.v1.yml"
+    },
+    {
+      "status": "M",
+      "path": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/README.md"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/acceptance-matrix.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-admission-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-admission-policy.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-admission-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-scan-predicate.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-verifier-conformance.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/artifact-verifier-lock.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/caller-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-attempt.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/control-store-conformance.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/control-store-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/dependency-effect-profile.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/dependency-effect-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/dependency-preflight-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/estate-caller-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/estate-caller-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/estate-caller-reconciliation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-job-profile.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-job-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-attempt.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-conformance.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-image-lock.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/finite-recovery-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-build-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-build-toolchain.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-container-lock.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-container-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-package-export-reconciliation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-runtime-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-typescript-emission-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-typescript-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-workspace-export-projection.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/local-workspace-runtime-observation.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/operation-action-record.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/operation-control.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/operation-evidence.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/operation-journal.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/package-export-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/qualified-image-handoff.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/relational-task-preflight.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/release-definition.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-admission-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-control-plane.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-effect-route.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-readiness-error.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-readiness-result.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/selected-release-blueprint.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-adoption-ledger.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-adoption-migration.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-build-artifact.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-build-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-caller-review.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-composition.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-finding-triage.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-operation-contracts.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-operation-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-package-export-inventory.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v1/source-result-consumption.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-operation-evidence.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-operation-record.schema.yml"
+    },
+    {
+      "status": "A",
+      "path": "infra/04.deploy/contracts/release-control/v2/selected-store-event.schema.yml"
+    },
+    {
+      "status": "M",
+      "path": "package.json"
+    },
+    {
+      "status": "M",
+      "path": "platform/server/tests/run-runtime-tests.mjs"
+    },
+    {
+      "status": "M",
+      "path": "products/kanbien-platform/tests/run-runtime-tests.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/assess-platform-shell-foundation-drift/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/build-platform-shell-image/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/build-platform-shell-image/script.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/operational-realization-gate/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/adoption_migration.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/artifact-verifier.lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/artifact_admission.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/artifact_admission_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/artifact_verifier.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/artifact_verifier_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/blueprint_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/build_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/build_contracts_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/caller_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/clean_environment.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/container-image.lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/container_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/container_payload.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/container_profiles.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/control_store_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/control_store_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/control_store_fixtures.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency-image.lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_effect_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_effect_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_effects.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/estate_caller_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/estate_caller_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finding_triage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite-recovery-image.lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite-recovery.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_job_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_job_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_recovery_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_recovery_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_recovery_controller.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/finite_recovery_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/LICENSE.cli"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/sources.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/trusted-root.jsonl"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-artifact.whl"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-provenance.bundle.jsonl"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/expectations.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/sources.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/jobs/task.cjs"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/src/index.ts"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/tsconfig.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/package.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/index.ts"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/math.ts"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/tsconfig.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/pending-profiles.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/valid-result.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/invalid-authority.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/valid-record.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package-lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/src/index.ts"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/tsconfig.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/infra/04.deploy/tasks.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/package.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/package.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_build.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_build_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_build_sandbox.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_container.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_container_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_control_store.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/local_runtime.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/locked_toolchain.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/node-toolchain.lock.json"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/operation_actions.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/operation_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/operation_contracts_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/operation_journal.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/package-exports-README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/package_exports.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/package_exports_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/qualified-publication.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/qualified_publication.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/release_compiler.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/requirements.lock"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/requirements.txt"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/result_consumption.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/result_consumption_cli.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/operational-realization-gate/script.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/operational-realization-gate/script.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected-admission.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected-operation.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_admission.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_admission_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_effect_control.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_effect_control_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_operation.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_readiness_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/selected_store_evidence.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/operational-realization-gate/smoke-test.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/source_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_adoption_migration.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_artifact_admission.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_artifact_admission_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_artifact_verifier.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_blueprint_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_build_contracts_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_caller_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_candidate_lifecycle.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_clean_environment.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_cloudformation_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_container_emission_compatibility.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_container_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_container_payload.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_container_profiles.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_control_store_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_control_store_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_effect_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_effect_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_effects.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_preflights.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_dependency_target_boundary.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_estate_caller_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_estate_caller_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finding_triage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_job_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_job_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_job_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_conformance.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_controller.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_finite_recovery_engine.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_hosted_source_workflow.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_build.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_build_bindings.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_container_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_container_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_control_store.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_local_runtime.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_locked_toolchain.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_operation_actions.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_operation_contracts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_operation_contracts_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_operation_journal.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_package_exports.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_package_exports_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_package_exports_direct.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_qualified_publication_workflow.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_release_compiler.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_result_consumption.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_result_consumption_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_admission.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_blueprint.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_effect_caller_guard.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_effect_control.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_operation.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_readiness_cli.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_selected_store.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_source_coverage.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_typescript_emissions.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_typescript_observer.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_validation_workflow.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_workspace_export_authority.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/test_workspace_runtime.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/typescript_observer.mjs"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/operational-realization-gate/verify-local-build.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/authenticated_selected_transport.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected-store.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected_readiness.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/selected_store.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/adapters/aws/test_authenticated_selected_transport.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/compiler.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/action_observations.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/build_artifacts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/build_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/caller_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/cloudformation_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/estate-callers.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/estate_caller_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-image.txt"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-product.txt"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-server.txt"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/operation_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/package_export_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/source_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_action_observations.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_build_artifacts.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_build_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_caller_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_cloudformation_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_estate_caller_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_operation_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/discovery/test_source_inventory.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/selected-control-plane.README.md"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/selected_blueprint.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/selected_control_plane.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/release-control/test_selected_control_plane.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_contract.py"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs"
+    },
+    {
+      "status": "A",
+      "path": "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_task_revision_binding.py"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/smoke-test-platform-shell-image/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/smoke-test-platform-shell-image/script.sh"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/validate-container-boundaries/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/validate-container-boundaries/script.sh"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh"
+    },
+    {
+      "status": "M",
+      "path": "scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh"
+    }
+  ],
+  "preserved_historical_logs": [
+    "commitLogs/2026/sep/28/2026-09-28-07-37-can-you-create-a-step-by-step-implementation-plan-for-the-ia/README.md"
+  ],
+  "reversed_paths": [
+    ".agentic/01.harness/standards/autonomous-delivery-envelope.v1.md",
+    ".agentic/01.harness/workflows/sustained-implementation.md",
+    ".agentic/aws/README.md",
+    ".agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md",
+    ".github/workflows/deploy-platform-shell-staging.yml",
+    ".github/workflows/release-control-source-validation.yml",
+    "docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md",
+    "docs/04.deploy/adrs/0039-local-operation-control-conformance.md",
+    "docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md",
+    "docs/04.deploy/adrs/README.md",
+    "docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md",
+    "docs/04.deploy/plans/iaas-release-control-mvp.md",
+    "docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md",
+    "docs/04.deploy/plans/iaas-release-control-progress.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/conformance-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/build-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/effect-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/finite-job-conformance-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/server-compatibility-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/baseline-collector-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/current-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/local-container-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/local-build-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/current-triage.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-contracts.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/operation-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-graph.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/staging-caller-review.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/current-triage.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-graph.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/staging-caller-review.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/baseline-triage.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/current-triage.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-graph.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/staging-caller-review.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/build-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/current-triage.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/synthetic-artifact-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/conformance-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-candidate.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/adoption-migration-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/caller-graph.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/reconciliation-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/source-inventory.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/conformance-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-effect-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/dependency-preflight-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/local-container-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/passive-readiness-stale-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/publication-check.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/qualified-image-handoff.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/receipt-files.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/sbom-validation.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/selected-blueprint-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/current-source-review.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/local-build-result.json",
+    "docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/verification-summary.json",
+    "docs/04.deploy/plans/release-control-source-adoption/README.md",
+    "docs/04.deploy/plans/release-control-source-adoption/ledger.json",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-task.ts",
+    "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts",
+    "infra/04.deploy/03.product/image/Dockerfile",
+    "infra/04.deploy/03.product/image/README.md",
+    "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/release-control.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-acceptance-policy.v1.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-realization.v1.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/target-release-blueprint.v1.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/release-control/control-plane.v1.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+    "infra/04.deploy/contracts/release-control/v1/README.md",
+    "infra/04.deploy/contracts/release-control/v1/acceptance-matrix.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-admission-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-admission-policy.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-admission-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-scan-predicate.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-verifier-conformance.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/artifact-verifier-lock.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/caller-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-attempt.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/candidate-lifecycle-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/control-store-conformance.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/control-store-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/dependency-effect-profile.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/dependency-effect-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/dependency-preflight-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/estate-caller-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/estate-caller-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/estate-caller-reconciliation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-job-profile.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-job-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-attempt.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-conformance.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-image-lock.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/finite-recovery-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-build-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-build-toolchain.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-container-lock.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-container-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-package-export-reconciliation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-runtime-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-typescript-emission-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-typescript-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-workspace-export-projection.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/local-workspace-runtime-observation.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/operation-action-record.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/operation-control.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/operation-evidence.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/operation-journal.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/package-export-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/qualified-image-handoff.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/relational-task-preflight.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/release-definition.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-admission-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-control-plane.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-effect-route.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-readiness-error.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-readiness-result.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/selected-release-blueprint.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-adoption-ledger.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-adoption-migration.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-build-artifact.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-build-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-caller-review.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-composition.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-finding-triage.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-operation-contracts.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-operation-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-package-export-inventory.schema.yml",
+    "infra/04.deploy/contracts/release-control/v1/source-result-consumption.schema.yml",
+    "infra/04.deploy/contracts/release-control/v2/selected-operation-evidence.schema.yml",
+    "infra/04.deploy/contracts/release-control/v2/selected-operation-record.schema.yml",
+    "infra/04.deploy/contracts/release-control/v2/selected-store-event.schema.yml",
+    "package.json",
+    "platform/server/tests/run-runtime-tests.mjs",
+    "products/kanbien-platform/tests/run-runtime-tests.mjs",
+    "scripts/04.deploy/assess-platform-shell-foundation-drift/README.md",
+    "scripts/04.deploy/build-platform-shell-image/README.md",
+    "scripts/04.deploy/build-platform-shell-image/prepare-runtime.mjs",
+    "scripts/04.deploy/build-platform-shell-image/script.sh",
+    "scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs",
+    "scripts/04.deploy/operational-realization-gate/README.md",
+    "scripts/04.deploy/operational-realization-gate/adoption_migration.py",
+    "scripts/04.deploy/operational-realization-gate/artifact-verifier.lock.json",
+    "scripts/04.deploy/operational-realization-gate/artifact_admission.py",
+    "scripts/04.deploy/operational-realization-gate/artifact_admission_cli.py",
+    "scripts/04.deploy/operational-realization-gate/artifact_verifier.py",
+    "scripts/04.deploy/operational-realization-gate/artifact_verifier_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/blueprint_cli.py",
+    "scripts/04.deploy/operational-realization-gate/build_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/build_contracts_cli.py",
+    "scripts/04.deploy/operational-realization-gate/caller_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md",
+    "scripts/04.deploy/operational-realization-gate/candidate_lifecycle.py",
+    "scripts/04.deploy/operational-realization-gate/clean_environment.py",
+    "scripts/04.deploy/operational-realization-gate/container-image.lock.json",
+    "scripts/04.deploy/operational-realization-gate/container_engine.py",
+    "scripts/04.deploy/operational-realization-gate/container_payload.py",
+    "scripts/04.deploy/operational-realization-gate/container_profiles.py",
+    "scripts/04.deploy/operational-realization-gate/control_store_cli.py",
+    "scripts/04.deploy/operational-realization-gate/control_store_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/control_store_fixtures.py",
+    "scripts/04.deploy/operational-realization-gate/dependency-image.lock.json",
+    "scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md",
+    "scripts/04.deploy/operational-realization-gate/dependency_effect_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/dependency_effect_engine.py",
+    "scripts/04.deploy/operational-realization-gate/dependency_effects.py",
+    "scripts/04.deploy/operational-realization-gate/dependency_preflight_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/estate_caller_cli.py",
+    "scripts/04.deploy/operational-realization-gate/estate_caller_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/finding_triage.py",
+    "scripts/04.deploy/operational-realization-gate/finite-recovery-image.lock.json",
+    "scripts/04.deploy/operational-realization-gate/finite-recovery.README.md",
+    "scripts/04.deploy/operational-realization-gate/finite_job_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/finite_job_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/finite_recovery_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/finite_recovery_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/finite_recovery_controller.py",
+    "scripts/04.deploy/operational-realization-gate/finite_recovery_engine.py",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/LICENSE.cli",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/sources.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/trusted-root.jsonl",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-artifact.whl",
+    "scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/upstream-provenance.bundle.jsonl",
+    "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/expectations.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/sources.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/Dockerfile",
+    "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/jobs/task.cjs",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/src/index.ts",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/negative/tsconfig.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/package.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/index.ts",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/src/math.ts",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/positive/tsconfig.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/pending-profiles.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/local-containers/valid-result.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/invalid-authority.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/selected-operation/valid-record.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package-lock.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/package.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/src/index.ts",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/platform/server/tsconfig.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/infra/04.deploy/tasks.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/package.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/package.json",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs",
+    "scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs",
+    "scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml",
+    "scripts/04.deploy/operational-realization-gate/local_build.py",
+    "scripts/04.deploy/operational-realization-gate/local_build_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/local_build_sandbox.py",
+    "scripts/04.deploy/operational-realization-gate/local_container.py",
+    "scripts/04.deploy/operational-realization-gate/local_container_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/local_control_store.py",
+    "scripts/04.deploy/operational-realization-gate/local_runtime.py",
+    "scripts/04.deploy/operational-realization-gate/locked_toolchain.py",
+    "scripts/04.deploy/operational-realization-gate/node-toolchain.lock.json",
+    "scripts/04.deploy/operational-realization-gate/operation_actions.py",
+    "scripts/04.deploy/operational-realization-gate/operation_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/operation_contracts_cli.py",
+    "scripts/04.deploy/operational-realization-gate/operation_journal.py",
+    "scripts/04.deploy/operational-realization-gate/package-exports-README.md",
+    "scripts/04.deploy/operational-realization-gate/package_exports.py",
+    "scripts/04.deploy/operational-realization-gate/package_exports_cli.py",
+    "scripts/04.deploy/operational-realization-gate/qualified-publication.README.md",
+    "scripts/04.deploy/operational-realization-gate/qualified_publication.py",
+    "scripts/04.deploy/operational-realization-gate/release_compiler.py",
+    "scripts/04.deploy/operational-realization-gate/requirements.lock",
+    "scripts/04.deploy/operational-realization-gate/requirements.txt",
+    "scripts/04.deploy/operational-realization-gate/result_consumption.py",
+    "scripts/04.deploy/operational-realization-gate/result_consumption_cli.py",
+    "scripts/04.deploy/operational-realization-gate/script.py",
+    "scripts/04.deploy/operational-realization-gate/script.sh",
+    "scripts/04.deploy/operational-realization-gate/selected-admission.README.md",
+    "scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md",
+    "scripts/04.deploy/operational-realization-gate/selected-operation.README.md",
+    "scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md",
+    "scripts/04.deploy/operational-realization-gate/selected_admission.py",
+    "scripts/04.deploy/operational-realization-gate/selected_admission_cli.py",
+    "scripts/04.deploy/operational-realization-gate/selected_effect_control.py",
+    "scripts/04.deploy/operational-realization-gate/selected_effect_control_cli.py",
+    "scripts/04.deploy/operational-realization-gate/selected_operation.py",
+    "scripts/04.deploy/operational-realization-gate/selected_readiness_cli.py",
+    "scripts/04.deploy/operational-realization-gate/selected_store_evidence.py",
+    "scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+    "scripts/04.deploy/operational-realization-gate/source_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/test_adoption_migration.py",
+    "scripts/04.deploy/operational-realization-gate/test_artifact_admission.py",
+    "scripts/04.deploy/operational-realization-gate/test_artifact_admission_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_artifact_verifier.py",
+    "scripts/04.deploy/operational-realization-gate/test_blueprint_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_build_contracts_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_caller_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/test_candidate_lifecycle.py",
+    "scripts/04.deploy/operational-realization-gate/test_clean_environment.py",
+    "scripts/04.deploy/operational-realization-gate/test_cloudformation_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/test_container_emission_compatibility.py",
+    "scripts/04.deploy/operational-realization-gate/test_container_engine.py",
+    "scripts/04.deploy/operational-realization-gate/test_container_payload.py",
+    "scripts/04.deploy/operational-realization-gate/test_container_profiles.py",
+    "scripts/04.deploy/operational-realization-gate/test_control_store_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_control_store_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/test_dependency_effect_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/test_dependency_effect_engine.py",
+    "scripts/04.deploy/operational-realization-gate/test_dependency_effects.py",
+    "scripts/04.deploy/operational-realization-gate/test_dependency_preflights.py",
+    "scripts/04.deploy/operational-realization-gate/test_dependency_target_boundary.py",
+    "scripts/04.deploy/operational-realization-gate/test_estate_caller_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_estate_caller_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/test_finding_triage.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_job_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_job_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_job_engine.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_recovery_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_recovery_conformance.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_recovery_controller.py",
+    "scripts/04.deploy/operational-realization-gate/test_finite_recovery_engine.py",
+    "scripts/04.deploy/operational-realization-gate/test_hosted_source_workflow.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_build.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_build_bindings.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_container_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_container_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_control_store.py",
+    "scripts/04.deploy/operational-realization-gate/test_local_runtime.py",
+    "scripts/04.deploy/operational-realization-gate/test_locked_toolchain.py",
+    "scripts/04.deploy/operational-realization-gate/test_operation_actions.py",
+    "scripts/04.deploy/operational-realization-gate/test_operation_contracts.py",
+    "scripts/04.deploy/operational-realization-gate/test_operation_contracts_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_operation_journal.py",
+    "scripts/04.deploy/operational-realization-gate/test_package_exports.py",
+    "scripts/04.deploy/operational-realization-gate/test_package_exports_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_package_exports_direct.py",
+    "scripts/04.deploy/operational-realization-gate/test_qualified_publication.py",
+    "scripts/04.deploy/operational-realization-gate/test_qualified_publication_workflow.py",
+    "scripts/04.deploy/operational-realization-gate/test_release_compiler.py",
+    "scripts/04.deploy/operational-realization-gate/test_result_consumption.py",
+    "scripts/04.deploy/operational-realization-gate/test_result_consumption_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_admission.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_blueprint.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_effect_caller_guard.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_effect_control.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_operation.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_readiness.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_readiness_cli.py",
+    "scripts/04.deploy/operational-realization-gate/test_selected_store.py",
+    "scripts/04.deploy/operational-realization-gate/test_source_coverage.py",
+    "scripts/04.deploy/operational-realization-gate/test_typescript_emissions.py",
+    "scripts/04.deploy/operational-realization-gate/test_typescript_observer.py",
+    "scripts/04.deploy/operational-realization-gate/test_validation_workflow.py",
+    "scripts/04.deploy/operational-realization-gate/test_workspace_export_authority.py",
+    "scripts/04.deploy/operational-realization-gate/test_workspace_runtime.py",
+    "scripts/04.deploy/operational-realization-gate/typescript_observer.mjs",
+    "scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh",
+    "scripts/04.deploy/operational-realization-gate/verify-local-build.sh",
+    "scripts/04.deploy/release-control/README.md",
+    "scripts/04.deploy/release-control/adapters/aws/README.md",
+    "scripts/04.deploy/release-control/adapters/aws/authenticated_selected_transport.py",
+    "scripts/04.deploy/release-control/adapters/aws/selected-store.README.md",
+    "scripts/04.deploy/release-control/adapters/aws/selected_readiness.py",
+    "scripts/04.deploy/release-control/adapters/aws/selected_store.py",
+    "scripts/04.deploy/release-control/adapters/aws/test_authenticated_selected_transport.py",
+    "scripts/04.deploy/release-control/compiler.py",
+    "scripts/04.deploy/release-control/discovery/README.md",
+    "scripts/04.deploy/release-control/discovery/action_observations.py",
+    "scripts/04.deploy/release-control/discovery/build_artifacts.py",
+    "scripts/04.deploy/release-control/discovery/build_inventory.py",
+    "scripts/04.deploy/release-control/discovery/caller_inventory.py",
+    "scripts/04.deploy/release-control/discovery/cloudformation_inventory.py",
+    "scripts/04.deploy/release-control/discovery/estate-callers.README.md",
+    "scripts/04.deploy/release-control/discovery/estate_caller_inventory.py",
+    "scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md",
+    "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-image.txt",
+    "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-product.txt",
+    "scripts/04.deploy/release-control/discovery/fixtures/package-exports/legacy-server.txt",
+    "scripts/04.deploy/release-control/discovery/operation_inventory.py",
+    "scripts/04.deploy/release-control/discovery/package_export_inventory.py",
+    "scripts/04.deploy/release-control/discovery/source_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_action_observations.py",
+    "scripts/04.deploy/release-control/discovery/test_build_artifacts.py",
+    "scripts/04.deploy/release-control/discovery/test_build_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_caller_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_cloudformation_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_estate_caller_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_operation_inventory.py",
+    "scripts/04.deploy/release-control/discovery/test_source_inventory.py",
+    "scripts/04.deploy/release-control/selected-control-plane.README.md",
+    "scripts/04.deploy/release-control/selected_blueprint.py",
+    "scripts/04.deploy/release-control/selected_control_plane.py",
+    "scripts/04.deploy/release-control/test_selected_control_plane.py",
+    "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/README.md",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_contract.py",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_task_revision_binding.py",
+    "scripts/04.deploy/smoke-test-platform-shell-image/README.md",
+    "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+    "scripts/04.deploy/validate-container-boundaries/README.md",
+    "scripts/04.deploy/validate-container-boundaries/script.sh",
+    "scripts/04.deploy/validate-container-boundaries/smoke-test.sh",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/README.md",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
+    "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+    "scripts/04.deploy/verify-platform-shell-postgresql-reference/script.sh"
+  ],
+  "commit_list_newest_first": [
+    "ec4744fcb2481365eeb54fb0ecd383b8b63c6e1e",
+    "eed32318ffde399a5f643d7e38d56bf27a7a8fe5",
+    "efbd4c99998c8aa7217e28a7c9323df686252703",
+    "0ae07a2e42bd79a995d66649bc6fd9aa8b13c5c5",
+    "11bf851d3a2841ef12db72971d0def9f82bc2d9d",
+    "412686346d006041843b95a6b994b9eaa84432b7",
+    "3a150a8a4239376d0fff03cb7343358435514b12",
+    "6fcedc4d731c8fbcbfca2820b9f42cdde23a1b0f",
+    "4edf8865ec90119fa43b668c61aa1b63274ab193",
+    "c3e9d5237e0f4ee6d575401d0834f111ecd4bd4e",
+    "10a49c72bdb747e157e6d9f4d1b3079f860f1a6c",
+    "2715fd725ead82e3a824d8ba99d0308e30a9f1fb",
+    "81cf11c867422f5a2b26e04332e4705a1a628462",
+    "89fdd3fd9fd261cb18f590860e1675061ad23d8b",
+    "5c437a3c14971e03a1ba63941d5aa14f109cbbc6",
+    "e890956961b66bdb8299452ab980c11ab20e8b5b",
+    "ab6889c83b127f1ce9c2ca2535c5aa7ea655475e",
+    "4d02ba4686f2f32adb7b26997c747478f08500f8",
+    "2fe812edaa49d3a0352cd8d87db3ecde55517381",
+    "21f038820950d3ccb842e181a1bf9966f9121bd5",
+    "7876bc4780f5e2da1e1bc2735eb87170ec5e2f65",
+    "e21f41dc342eeddbd40be7dd54a2525eae043664",
+    "b4c51338971d05cfd313db99375f2404fe3a1098",
+    "2b940bd4a2df364b3348151abc2c938f28b859cd",
+    "a8a28fc9103870ed0053e16e9965be57c2740f0e",
+    "2eebde430b40728aca7ce149c16e4acefe572df9",
+    "15f1dd6c3bb4da628b9214034d5478719d887f3e",
+    "f87b584ed42ab74ae58ca8a6a8ec26aa3b62f0cf",
+    "b1966b7a5ce7efdc5429bdf7b1f8c79200365e57",
+    "393a836148625ce06032fcee259ac23c242e6a4d",
+    "50b625d8989fef7a8135cc78b49173e09b8a54e2",
+    "17398c069f812e0728593b18b7f989e449a5c3f0",
+    "2245d4f0ac82300e4a1366b40c4892c0a030e5a3",
+    "441f334bd364521fbece48ce4d7d8853f70da0dd",
+    "90ade59806afc1bd8ccd040c48887c1536566910",
+    "134a4bc489a9142556595776f62c14df4bfd3b2f",
+    "27d815294cac84eff2f5cc0f5d97d709e2520804",
+    "094d6418f443fd48df91b7789a25332811d7d8de",
+    "8c866aecf8f4f4d944c5bc111379f0daefbe45ae",
+    "b995221b8c8b8daa14361c644b226b07d3816540"
+  ]
+}

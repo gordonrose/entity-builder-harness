@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 959
-  term_count: 1931
+  indexed_artifacts: 1028
+  term_count: 2069
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2778,6 +2778,18 @@ terms:
   canonical_id: harness.standards.artifact-path-migrations
   evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
   confidence_weight: 1
+- term: harness.standard.autonomous-delivery-envelope.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standard.autonomous-delivery-envelope.v1
+  evidence_path: .agentic/01.harness/standards/autonomous-delivery-envelope.v1.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/autonomous-delivery-envelope.v1.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standard.autonomous-delivery-envelope.v1
+  evidence_path: .agentic/01.harness/standards/autonomous-delivery-envelope.v1.md
+  confidence_weight: 1
 - term: harness.standards.document-artifact-placement
   category: artifact-id
   match_type: exact
@@ -3173,6 +3185,18 @@ terms:
   match_type: exact
   canonical_id: harness.workflows.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
+  confidence_weight: 1
+- term: harness.workflow.sustained-implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.workflow.sustained-implementation
+  evidence_path: .agentic/01.harness/workflows/sustained-implementation.md
+  confidence_weight: 1
+- term: .agentic/01.harness/workflows/sustained-implementation.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.workflow.sustained-implementation
+  evidence_path: .agentic/01.harness/workflows/sustained-implementation.md
   confidence_weight: 1
 - term: harness.corpus.readme
   category: artifact-id
@@ -8172,6 +8196,18 @@ terms:
   canonical_id: aws.readme
   evidence_path: .agentic/aws/README.md
   confidence_weight: 1
+- term: deploy.plan.iaas-composition-and-release-control-plane
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.iaas-composition-and-release-control-plane
+  evidence_path: .agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md
+  confidence_weight: 1
+- term: .agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.iaas-composition-and-release-control-plane
+  evidence_path: .agentic/aws/plans/implementation/iaas-composition-and-release-control-plane.md
+  confidence_weight: 1
 - term: deploy.plan.local-to-proven-deployment-reliability
   category: artifact-id
   match_type: exact
@@ -8183,6 +8219,18 @@ terms:
   match_type: exact
   canonical_id: deploy.plan.local-to-proven-deployment-reliability
   evidence_path: .agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md
+  confidence_weight: 1
+- term: deploy.migration.controlled-source-recovery-2026-10-03
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.migration.controlled-source-recovery-2026-10-03
+  evidence_path: .agentic/aws/plans/migration/controlled-source-recovery-2026-10-03.md
+  confidence_weight: 1
+- term: .agentic/aws/plans/migration/controlled-source-recovery-2026-10-03.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.migration.controlled-source-recovery-2026-10-03
+  evidence_path: .agentic/aws/plans/migration/controlled-source-recovery-2026-10-03.md
   confidence_weight: 1
 - term: aws.workflows.readme
   category: artifact-id
@@ -8304,6 +8352,18 @@ terms:
   canonical_id: github.workflow.reconcile-platform-shell-staging
   evidence_path: .github/workflows/reconcile-platform-shell-staging.yml
   confidence_weight: 1
+- term: github.workflow.release-control-source-validation
+  category: artifact-id
+  match_type: exact
+  canonical_id: github.workflow.release-control-source-validation
+  evidence_path: .github/workflows/release-control-source-validation.yml
+  confidence_weight: 1
+- term: .github/workflows/release-control-source-validation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: github.workflow.release-control-source-validation
+  evidence_path: .github/workflows/release-control-source-validation.yml
+  confidence_weight: 1
 - term: deploy.corpus.readme
   category: artifact-id
   match_type: exact
@@ -8400,6 +8460,42 @@ terms:
   canonical_id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
   evidence_path: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
   confidence_weight: 1
+- term: deploy.architecture.adr.0038-consolidate-release-control-source-foundation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0038-consolidate-release-control-source-foundation
+  evidence_path: docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0038-consolidate-release-control-source-foundation
+  evidence_path: docs/04.deploy/adrs/0038-consolidate-release-control-source-foundation.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0039-local-operation-control-conformance
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0039-local-operation-control-conformance
+  evidence_path: docs/04.deploy/adrs/0039-local-operation-control-conformance.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0039-local-operation-control-conformance.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0039-local-operation-control-conformance
+  evidence_path: docs/04.deploy/adrs/0039-local-operation-control-conformance.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0040-selected-release-control-store-and-executor
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0040-selected-release-control-store-and-executor
+  evidence_path: docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0040-selected-release-control-store-and-executor
+  evidence_path: docs/04.deploy/adrs/0040-selected-release-control-store-and-executor.md
+  confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
   match_type: exact
@@ -8423,6 +8519,54 @@ terms:
   match_type: exact
   canonical_id: deploy.plans.readme
   evidence_path: docs/04.deploy/plans/README.md
+  confidence_weight: 1
+- term: deploy.plan.iaas-release-control-mvp-control-policy-proposal
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-mvp-control-policy-proposal
+  evidence_path: docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-mvp-control-policy-proposal
+  evidence_path: docs/04.deploy/plans/iaas-release-control-mvp-control-policy-proposal.md
+  confidence_weight: 1
+- term: deploy.plan.iaas-release-control-mvp
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-mvp
+  evidence_path: docs/04.deploy/plans/iaas-release-control-mvp.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/iaas-release-control-mvp.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-mvp
+  evidence_path: docs/04.deploy/plans/iaas-release-control-mvp.md
+  confidence_weight: 1
+- term: deploy.plan.iaas-release-control.p15-source-regression
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control.p15-source-regression
+  evidence_path: docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control.p15-source-regression
+  evidence_path: docs/04.deploy/plans/iaas-release-control-p15-source-regression-2026-10-01.md
+  confidence_weight: 1
+- term: deploy.plan.iaas-release-control-progress
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-progress
+  evidence_path: docs/04.deploy/plans/iaas-release-control-progress.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/iaas-release-control-progress.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.iaas-release-control-progress
+  evidence_path: docs/04.deploy/plans/iaas-release-control-progress.md
   confidence_weight: 1
 - term: deploy.plan.kanbien-staging-aws-change-reliability-programme
   category: artifact-id
@@ -8483,6 +8627,210 @@ terms:
   match_type: exact
   canonical_id: deploy.plan.operational-realization-v2-programme
   evidence_path: docs/04.deploy/plans/operational-realization-v2-programme.md
+  confidence_weight: 1
+- term: deploy.review.release-control.artifact-admission.2026-09-29
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.release-control.artifact-admission.2026-09-29
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.release-control.artifact-admission.2026-09-29
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-artifact-admission/README.md
+  confidence_weight: 1
+- term: deploy.review.release-control.dependency-effects.2026-09-29
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.release-control.dependency-effects.2026-09-29
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.release-control.dependency-effects.2026-09-29
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-dependency-effects/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-finite-job-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-finite-job-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-finite-job-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-finite-jobs/README.md
+  confidence_weight: 1
+- term: deploy.review.infrastructure-reference-source-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.infrastructure-reference-source-coverage
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.infrastructure-reference-source-coverage
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-infrastructure-references/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-local-container-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-local-container-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-local-container-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-local-containers/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-locked-build-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-locked-build-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-locked-build-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-locked-builds/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-operation-contract-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-operation-contract-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-operation-contract-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-operation-contracts/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-source-validation-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-source-validation-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-source-validation-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-source-validation/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-staging-caller-triage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-staging-caller-triage
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-staging-caller-triage
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-triage-and-callers/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-workspace-build-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-workspace-build-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-workspace-build-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-29-workspace-builds/README.md
+  confidence_weight: 1
+- term: deploy.review.release-control.control-store.2026-09-30
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.release-control.control-store.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.release-control.control-store.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-control-store/README.md
+  confidence_weight: 1
+- term: deploy.review.release-control.estate-callers.2026-09-30
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.release-control.estate-callers.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.release-control.estate-callers.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-estate-callers/README.md
+  confidence_weight: 1
+- term: deploy.review.release-control.finite-recovery.2026-09-30
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.review.release-control.finite-recovery.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.review.release-control.finite-recovery.2026-09-30
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-finite-recovery/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-mvp-selected-path-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-mvp-selected-path-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-mvp-selected-path-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-mvp-selected-path/README.md
+  confidence_weight: 1
+- term: deploy.plan.selected-store-conformance-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.selected-store-conformance-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.selected-store-conformance-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-selected-store-conformance/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-workspace-export-review
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-workspace-export-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-workspace-export-review
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/2026-09-30-workspace-exports/README.md
+  confidence_weight: 1
+- term: deploy.plan.release-control-source-adoption
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.release-control-source-adoption
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/README.md
+  confidence_weight: 1
+- term: docs/04.deploy/plans/release-control-source-adoption/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.release-control-source-adoption
+  evidence_path: docs/04.deploy/plans/release-control-source-adoption/README.md
   confidence_weight: 1
 - term: deploy.rules.02-rag-rulebook.readme
   category: artifact-id
@@ -9132,6 +9480,18 @@ terms:
   canonical_id: infra.04-deploy.readme
   evidence_path: infra/04.deploy/README.md
   confidence_weight: 1
+- term: deploy.readme.release-control-contracts.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.release-control-contracts.v1
+  evidence_path: infra/04.deploy/contracts/release-control/v1/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/contracts/release-control/v1/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.release-control-contracts.v1
+  evidence_path: infra/04.deploy/contracts/release-control/v1/README.md
+  confidence_weight: 1
 - term: infra.readme
   category: artifact-id
   match_type: exact
@@ -9312,6 +9672,18 @@ terms:
   canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
   evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
   confidence_weight: 1
+- term: deploy.script.workspace-runtime-projection
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.workspace-runtime-projection
+  evidence_path: scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.workspace-runtime-projection
+  evidence_path: scripts/04.deploy/build-platform-shell-image/workspace-runtime.mjs
+  confidence_weight: 1
 - term: deploy.script.operational-realization-gate.readme
   category: artifact-id
   match_type: exact
@@ -9324,6 +9696,150 @@ terms:
   canonical_id: deploy.script.operational-realization-gate.readme
   evidence_path: scripts/04.deploy/operational-realization-gate/README.md
   confidence_weight: 1
+- term: deploy.readme.candidate-lifecycle
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.candidate-lifecycle
+  evidence_path: scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.candidate-lifecycle
+  evidence_path: scripts/04.deploy/operational-realization-gate/candidate-lifecycle.README.md
+  confidence_weight: 1
+- term: deploy.readme.dependency-preflights
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.dependency-preflights
+  evidence_path: scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.dependency-preflights
+  evidence_path: scripts/04.deploy/operational-realization-gate/dependency-preflights.README.md
+  confidence_weight: 1
+- term: deploy.readme.finite-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.finite-recovery
+  evidence_path: scripts/04.deploy/operational-realization-gate/finite-recovery.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/finite-recovery.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.finite-recovery
+  evidence_path: scripts/04.deploy/operational-realization-gate/finite-recovery.README.md
+  confidence_weight: 1
+- term: deploy.fixtures.artifact-admission.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixtures.artifact-admission.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixtures.artifact-admission.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/artifact-admission/README.md
+  confidence_weight: 1
+- term: deploy.fixture.cloudformation-references.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.cloudformation-references.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.cloudformation-references.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/README.md
+  confidence_weight: 1
+- term: deploy.fixture.cloudformation-references.template
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.cloudformation-references.template
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.cloudformation-references.template
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/cloudformation-references/template.yml
+  confidence_weight: 1
+- term: deploy.fixture.control-store
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.control-store
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.control-store
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/control-store/README.md
+  confidence_weight: 1
+- term: deploy.fixture.dependency-effects
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.dependency-effects
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.dependency-effects
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/dependency-effects/README.md
+  confidence_weight: 1
+- term: deploy.fixture.estate-callers.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.estate-callers.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.estate-callers.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/estate-callers/README.md
+  confidence_weight: 1
+- term: deploy.fixture.finite-job-conformance
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.finite-job-conformance
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.finite-job-conformance
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/finite-jobs/README.md
+  confidence_weight: 1
+- term: deploy.fixture.local-typescript-observer
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.local-typescript-observer
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.local-typescript-observer
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/local-builds/compiler/README.md
+  confidence_weight: 1
+- term: deploy.fixture.local-container-evidence
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.local-container-evidence
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.local-container-evidence
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/local-containers/README.md
+  confidence_weight: 1
 - term: deploy.fixture.operational-realization-preflight-normalized-facts
   category: artifact-id
   match_type: exact
@@ -9335,6 +9851,102 @@ terms:
   match_type: exact
   canonical_id: deploy.fixture.operational-realization-preflight-normalized-facts
   evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/preflight-normalized-facts.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-release-negative-cases
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-release-negative-cases
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-release-negative-cases
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/release-negative-cases.yml
+  confidence_weight: 1
+- term: deploy.fixture.build-artifact
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.build-artifact
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.build-artifact
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/artifact/index.js
+  confidence_weight: 1
+- term: deploy.fixture.build-source-workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.build-source-workflow
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.build-source-workflow
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-builds/source/.github/workflows/check.yml
+  confidence_weight: 1
+- term: deploy.fixture.operational-realization-source-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-source-coverage
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.operational-realization-source-coverage
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-coverage/README.md
+  confidence_weight: 1
+- term: deploy.fixture.source-operations.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/README.md
+  confidence_weight: 1
+- term: deploy.fixture.source-operations.workflow
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.workflow
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.workflow
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/.github/workflows/check.yml
+  confidence_weight: 1
+- term: deploy.fixture.source-operations.dependency
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.dependency
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.dependency
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/dependency.mjs
+  confidence_weight: 1
+- term: deploy.fixture.source-operations.task
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.task
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.source-operations.task
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/source-operations/cli-source/scripts/04.deploy/task.mjs
   confidence_weight: 1
 - term: deploy.fixture.operational-realization-unknown-assumption
   category: artifact-id
@@ -9384,6 +9996,42 @@ terms:
   canonical_id: deploy.fixture.operational-realization-valid-normalized-facts
   evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-facts.yml
   confidence_weight: 1
+- term: deploy.fixture.release-control-valid-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.release-control-valid-release
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.release-control-valid-release
+  evidence_path: scripts/04.deploy/operational-realization-gate/fixtures/valid-release.yml
+  confidence_weight: 1
+- term: deploy.readme.operational-realization-package-exports
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.operational-realization-package-exports
+  evidence_path: scripts/04.deploy/operational-realization-gate/package-exports-README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/package-exports-README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.operational-realization-package-exports
+  evidence_path: scripts/04.deploy/operational-realization-gate/package-exports-README.md
+  confidence_weight: 1
+- term: deploy.readme.qualified-image-publication
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.qualified-image-publication
+  evidence_path: scripts/04.deploy/operational-realization-gate/qualified-publication.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/qualified-publication.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.qualified-image-publication
+  evidence_path: scripts/04.deploy/operational-realization-gate/qualified-publication.README.md
+  confidence_weight: 1
 - term: deploy.command.operational-realization-gate
   category: artifact-id
   match_type: exact
@@ -9396,6 +10044,54 @@ terms:
   canonical_id: deploy.command.operational-realization-gate
   evidence_path: scripts/04.deploy/operational-realization-gate/script.sh
   confidence_weight: 1
+- term: deploy.readme.selected-admission
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.selected-admission
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-admission.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/selected-admission.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.selected-admission
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-admission.README.md
+  confidence_weight: 1
+- term: deploy.script.selected-effect-control.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.selected-effect-control.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.selected-effect-control.readme
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-effect-control.README.md
+  confidence_weight: 1
+- term: deploy.guide.selected-operation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.guide.selected-operation
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-operation.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/selected-operation.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.guide.selected-operation
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-operation.README.md
+  confidence_weight: 1
+- term: deploy.readme.selected-release-blueprint
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.selected-release-blueprint
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.selected-release-blueprint
+  evidence_path: scripts/04.deploy/operational-realization-gate/selected-release-blueprint.README.md
+  confidence_weight: 1
 - term: deploy.test.operational-realization-gate
   category: artifact-id
   match_type: exact
@@ -9407,6 +10103,42 @@ terms:
   match_type: exact
   canonical_id: deploy.test.operational-realization-gate
   evidence_path: scripts/04.deploy/operational-realization-gate/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.operational-realization-typescript-observer
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.operational-realization-typescript-observer
+  evidence_path: scripts/04.deploy/operational-realization-gate/typescript_observer.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/typescript_observer.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.operational-realization-typescript-observer
+  evidence_path: scripts/04.deploy/operational-realization-gate/typescript_observer.mjs
+  confidence_weight: 1
+- term: deploy.command.operational-realization-clean-environment
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.operational-realization-clean-environment
+  evidence_path: scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.operational-realization-clean-environment
+  evidence_path: scripts/04.deploy/operational-realization-gate/verify-clean-environment.sh
+  confidence_weight: 1
+- term: deploy.command.verify-local-build
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.verify-local-build
+  evidence_path: scripts/04.deploy/operational-realization-gate/verify-local-build.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/operational-realization-gate/verify-local-build.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.verify-local-build
+  evidence_path: scripts/04.deploy/operational-realization-gate/verify-local-build.sh
   confidence_weight: 1
 - term: deploy.script.provision-platform-shell-negative-authz-client.readme
   category: artifact-id
@@ -9515,6 +10247,90 @@ terms:
   match_type: exact
   canonical_id: deploy.script.reconcile-platform-shell-staging.smoke-test
   evidence_path: scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.readme.release-control-compatibility
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.release-control-compatibility
+  evidence_path: scripts/04.deploy/release-control/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.release-control-compatibility
+  evidence_path: scripts/04.deploy/release-control/README.md
+  confidence_weight: 1
+- term: deploy.guide.aws-selected-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.guide.aws-selected-readiness
+  evidence_path: scripts/04.deploy/release-control/adapters/aws/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/adapters/aws/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.guide.aws-selected-readiness
+  evidence_path: scripts/04.deploy/release-control/adapters/aws/README.md
+  confidence_weight: 1
+- term: deploy.guide.aws-selected-store
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.guide.aws-selected-store
+  evidence_path: scripts/04.deploy/release-control/adapters/aws/selected-store.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/adapters/aws/selected-store.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.guide.aws-selected-store
+  evidence_path: scripts/04.deploy/release-control/adapters/aws/selected-store.README.md
+  confidence_weight: 1
+- term: deploy.readme.release-control-source-discovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.readme.release-control-source-discovery
+  evidence_path: scripts/04.deploy/release-control/discovery/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/discovery/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.readme.release-control-source-discovery
+  evidence_path: scripts/04.deploy/release-control/discovery/README.md
+  confidence_weight: 1
+- term: deploy.reference.estate-caller-reconciliation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.reference.estate-caller-reconciliation
+  evidence_path: scripts/04.deploy/release-control/discovery/estate-callers.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/discovery/estate-callers.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.reference.estate-caller-reconciliation
+  evidence_path: scripts/04.deploy/release-control/discovery/estate-callers.README.md
+  confidence_weight: 1
+- term: deploy.fixture.package-export-legacy-generators
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.package-export-legacy-generators
+  evidence_path: scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.package-export-legacy-generators
+  evidence_path: scripts/04.deploy/release-control/discovery/fixtures/package-exports/README.md
+  confidence_weight: 1
+- term: deploy.script.selected-control-plane.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.selected-control-plane.readme
+  evidence_path: scripts/04.deploy/release-control/selected-control-plane.README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/release-control/selected-control-plane.README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.selected-control-plane.readme
+  evidence_path: scripts/04.deploy/release-control/selected-control-plane.README.md
   confidence_weight: 1
 - term: deploy.script.render-platform-shell-foundation-template.readme
   category: artifact-id
@@ -9863,6 +10679,18 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.test.relational-task-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.relational-task-preflight
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.relational-task-preflight
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test_preflight_runtime.mjs
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-rate-limit-smoke.readme
   category: artifact-id
