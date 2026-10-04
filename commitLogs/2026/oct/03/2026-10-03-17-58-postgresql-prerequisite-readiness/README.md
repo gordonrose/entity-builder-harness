@@ -116,7 +116,8 @@ detection IDs, and resource values. Its local smoke test now uses a fake AWS
 executable to require the `nonzero-exit` result.
 
 Verification: Foundation assessor local regression, deployment-reconciliation
-contract check, and drift-detection boundary check passed. Current active
+contract check, deployment-reconciliation static policy check, and
+drift-detection boundary check passed. Current active
 Foundation drift evidence could not be refreshed in this command runner:
 the verifier emitted neither a safe result nor evidence before the runner
 ended the process. This is an execution-host limit, not a pass or a target
@@ -210,3 +211,6 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
   PostgreSQL adapter and disposable integration, compiled image payload, and
   infrastructure static validation. The direct Docker image smoke skipped
   safely because no Docker daemon was reachable.
+- The actual container-image execution test remains outstanding. It is not
+  treated as passed until Docker is reachable and that test completes
+  successfully.
