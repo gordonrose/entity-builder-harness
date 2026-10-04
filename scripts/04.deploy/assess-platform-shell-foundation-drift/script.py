@@ -62,11 +62,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--evidence-file", help="New /tmp path for a safe, short-lived assessment evidence record.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE)
     parser.add_argument("--aws-cli", default="aws")
-    parser.add_argument("--timeout-seconds", type=int, default=20)
+    parser.add_argument("--timeout-seconds", type=int, default=60)
     parser.add_argument("--json", action="store_true", help="Emit only safe check identifiers, verdicts, and approved structural classification facts.")
     arguments = parser.parse_args()
-    if not 1 <= arguments.timeout_seconds <= 30:
-        parser.error("--timeout-seconds must be between 1 and 30")
+    if not 1 <= arguments.timeout_seconds <= 120:
+        parser.error("--timeout-seconds must be between 1 and 120")
     if not arguments.validate and not arguments.execute_approved_active_foundation_drift_assessment:
         parser.error("--execute-approved-active-foundation-drift-assessment is required for an AWS assessment")
     if arguments.validate and (arguments.execute_approved_active_foundation_drift_assessment or arguments.evidence_file):
