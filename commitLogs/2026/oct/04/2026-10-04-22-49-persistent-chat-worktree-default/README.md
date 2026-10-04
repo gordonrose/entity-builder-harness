@@ -8,19 +8,19 @@ worktree: /tmp/agentic-chat-worktrees/entity-builder-harness-restart-3842312794/
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-04T21:49:30Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-04T23:31:22Z
+latest_commit_sha: 517c2d2b
+chat_duration: 6112s (00:01:41:52)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -105,6 +105,17 @@ Summary: Adds persistent per-repository defaults, env.local configuration, regis
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-04T23:31:22Z - Commit recorded
+
+Commit: `517c2d2b`
+
+Message: fix(chat): persist new worktrees outside tmp
+
+Summary: Persistent per-repository defaults now apply to new chats while registered legacy worktrees remain valid.
+
+ADR impact: Updated ADR 0009 default-path wording; no new ADR required.
+
 ## Sub-Agent Activity
 
 
@@ -130,6 +141,13 @@ Summary: Implemented persistent defaults, consistent configuration resolution, l
   Summary: Adds persistent per-repository defaults, env.local configuration, registered legacy-worktree reuse, and focused regression coverage.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `517c2d2b`
+  Time UTC: 2026-10-04T23:31:22Z
+  Message: fix(chat): persist new worktrees outside tmp
+  Summary: Persistent per-repository defaults now apply to new chats while registered legacy worktrees remain valid.
+  ADR impact: Updated ADR 0009 default-path wording; no new ADR required.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -143,12 +161,12 @@ Reason: This is a focused correction to an existing worktree-location policy; AD
 ## Session Metrics
 
 Raised at UTC: 2026-10-04T21:49:30Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-04T23:31:22Z
+Latest commit SHA: 517c2d2b
+Chat duration: 6112s (00:01:41:52)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
