@@ -33,6 +33,7 @@ const workerEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "
 const relayEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-relay.main.js");
 const persistenceCompositionEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-persistence.js");
 const relationalBootstrapEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-postgresql-bootstrap.main.js");
+const relationalRestoreVerificationEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-postgresql-restore-verify.main.js");
 const workspacePackageScope = join(repositoryRoot, "node_modules", "@kanbien");
 const hiddenWorkspaceRoot = mkdtempSync(join(tmpdir(), "platform-shell-runtime-payload-"));
 const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
@@ -43,6 +44,7 @@ const requiredPayloadFiles = [
   relayEntrypoint,
   persistenceCompositionEntrypoint,
   relationalBootstrapEntrypoint,
+  relationalRestoreVerificationEntrypoint,
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-auth-cognito", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-observability-cloudwatch", "index.js"),
   join(runtimeRoot, "node_modules", "@kanbien", "platform-adapter-aws-persistence-dynamodb", "index.js"),
@@ -67,6 +69,7 @@ renameSync(workspacePackageScope, hiddenWorkspaceScope);
 try {
   await verifyCompiledPersistenceComposition();
   verifyCompiledRelationalBootstrap();
+  verifyCompiledRelationalRestoreVerification();
 
   const serverResult = spawnSync(process.execPath, [serverEntrypoint], {
     cwd: repositoryRoot,
@@ -291,5 +294,17 @@ function verifyCompiledRelationalBootstrap() {
   const expected = JSON.stringify({ level: "error", message: "kanbien-platform.relational-smoke.bootstrap_completed", fields: { outcome: "failed", failure_category: "bootstrap-certificate-authority-unavailable" } });
   if (result.status !== 1 || result.stdout.trim() !== expected) {
     throw new Error("Compiled relational bootstrap payload must load its PostgreSQL adapter and emit only the reviewed safe failure event.");
+  }
+}
+
+function verifyCompiledRelationalRestoreVerification() {
+  const result = spawnSync(process.execPath, [relationalRestoreVerificationEntrypoint], {
+    cwd: repositoryRoot,
+    env: { ...process.env },
+    encoding: "utf8",
+  });
+  const expected = JSON.stringify({ level: "error", message: "kanbien-platform.relational-smoke.restore_verified", fields: { outcome: "failed" } });
+  if (result.status !== 1 || result.stdout.trim() !== expected) {
+    throw new Error("Compiled relational restore verification payload must load and retain its reviewed safe failure outcome.");
   }
 }

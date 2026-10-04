@@ -34,6 +34,10 @@ classification, and—when applicable—the approved logical resource, type, and
 change category. It creates no role, policy, workload, resource, change set,
 or stack update; GitHub remains unable to start active detection.
 
+If a provider subprocess cannot complete, the JSON result includes only one
+safe `failure_class`: `timeout`, `nonzero-exit`, `invalid-json`, or
+`process-start-failure`. It never includes provider stderr or response data.
+
 ```bash
 npm run platform:shell:foundation-active-drift-assessment -- \
   --execute-approved-active-foundation-drift-assessment \

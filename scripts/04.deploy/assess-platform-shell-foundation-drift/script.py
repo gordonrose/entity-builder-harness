@@ -42,6 +42,10 @@ POLL_INTERVAL_SECONDS = 5
 class AssessmentError(Exception):
     """Represent one stable, safe assessment failure without provider detail."""
 
+    def __init__(self, code: str, failure_class: str | None = None):
+        super().__init__(code)
+        self.failure_class = failure_class
+
 
 class UnexpectedDrift(AssessmentError):
     """Carry only the approved structural facts needed to distinguish unknown drift."""
@@ -127,7 +131,7 @@ def policy(profile: dict[str, Any]) -> dict[str, str]:
             "rds:DescribeDBParameters",
         ],
         "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
-        "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
     }
     if active != expected_active or drift_evidence.get("administrator_active_assessment_contract") != ACTIVE_CONTRACT:
         raise AssessmentError("active-drift-assessment-policy-not-reviewed")
@@ -145,7 +149,7 @@ def verify_contract(contract: dict[str, Any], current_policy: dict[str, str]) ->
         "stack_scope": "foundation-stack-only",
         "execution_gate": "explicit-current-chat-approval-and-stable-stack-preflight",
         "assessment_sequence": "detect-then-wait-for-completion-then-read-structural-resource-drift-only-if-drifted",
-        "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+        "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
     }
     if any(contract.get(key) != value for key, value in expected.items()):
         raise AssessmentError("active-drift-assessment-contract-invalid")
@@ -202,8 +206,14 @@ def run_aws(arguments: argparse.Namespace, current_policy: dict[str, str], comma
     try:
         completed = subprocess.run(invocation, check=True, capture_output=True, text=True, timeout=arguments.timeout_seconds)
         return json.loads(completed.stdout)
-    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exception:
-        raise AssessmentError(failure) from exception
+    except subprocess.TimeoutExpired as exception:
+        raise AssessmentError(failure, "timeout") from exception
+    except subprocess.CalledProcessError as exception:
+        raise AssessmentError(failure, "nonzero-exit") from exception
+    except json.JSONDecodeError as exception:
+        raise AssessmentError(failure, "invalid-json") from exception
+    except OSError as exception:
+        raise AssessmentError(failure, "process-start-failure") from exception
 
 
 def require(condition: bool, code: str) -> None:
@@ -371,7 +381,10 @@ def main() -> int:
         print(json.dumps({"schema": SAFE_SCHEMA, "target": "kanbien/staging", "verdict": "failed", "classification": "unexpected", "checks": checks, "unexpected_changes": exception.changes}, sort_keys=True))
         return 1
     except AssessmentError as exception:
-        checks.append({"id": str(exception), "verdict": "failed"})
+        check = {"id": str(exception), "verdict": "failed"}
+        if exception.failure_class is not None:
+            check["failure_class"] = exception.failure_class
+        checks.append(check)
         print(json.dumps({"schema": SAFE_SCHEMA, "target": "kanbien/staging", "verdict": "failed", "checks": checks}, sort_keys=True))
         return 1
 

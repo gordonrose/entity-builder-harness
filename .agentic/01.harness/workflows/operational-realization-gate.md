@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: harness.workflow.operational-realization-gate
-  version: 1
+  version: 2
   status: active
   layer: 01.harness
   domain: deployment.realization
@@ -27,6 +27,27 @@ Use this workflow before a capability first reaches a live target, before a
 new execution path, migration, queue consumer, or recovery path is introduced,
 and whenever its artifact, identity, configuration shape, connection, engine
 semantics, or mutation shape changes.
+
+## Bounded PostgreSQL Route
+
+For the explicitly adopted and execution-approved Kanbien/staging PostgreSQL
+slice, use the [standard's bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability).
+Its concrete operation/evidence matrix supplies the scoped inputs, ordered
+preflights, stop conditions and safe outputs in place of requiring new generic
+contract/compiler migration for the whole route. Record both approvals, the
+exact operation scope and applicable existing executable checks before acting.
+A failed required check pauses the affected operation, not authorized diagnosis
+or repair. Reconcile outcome and cleanup, diagnose, repair the relevant owner,
+rerun affected checks, prove prevention, qualify any changed image and resume
+the first incomplete stage within cumulative limits. Record each material
+failure and its resumed outcome using existing Stage 6/session records.
+Escalate only the plan's exhausted-boundary/new-effect/unsafe-recovery conditions;
+ordinary in-scope repairs require no repeated execution approval. This route
+cannot override a controller or target guard: demonstrate actual checkpoint,
+attempt, cleanup and budget behavior before requesting execution approval.
+Keep terminal/non-replay recovery and separate provider authority. Closeout
+includes acceptance evidence and completed failure/prevention records.
+Without both approvals, follow the normal procedure below.
 
 ## Inputs
 

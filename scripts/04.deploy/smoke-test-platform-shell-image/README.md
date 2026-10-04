@@ -23,6 +23,8 @@ used_by:
 
 - `GET /livez`
 - `GET /readyz`
+- that all five relational Stage 6 entrypoints load and fail only through their
+  reviewed safe outcome path when isolated from their target configuration.
 
 The command runs locally only. It does not publish, deploy, call AWS, or mutate
 GitHub.
@@ -35,6 +37,13 @@ sandboxed local shells.
 
 ```bash
 bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh
+```
+
+To qualify an already published immutable image without rebuilding it locally:
+
+```bash
+bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh \
+  --image registry.example/platform-shell@sha256:<digest>
 ```
 
 For environments without a running Docker engine:

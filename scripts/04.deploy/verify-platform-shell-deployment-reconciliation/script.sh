@@ -91,7 +91,7 @@ expected_config = {
             "scope": "foundation-stack-only-structural-drift-classification-no-resource-policy-role-or-workload-change",
             "allowed_operations": ["cloudformation:DetectStackDrift", "cloudformation:DescribeStackDriftDetectionStatus", "cloudformation:DescribeStackResourceDrifts", "cloudformation:DescribeStacks", "rds:DescribeDBInstances", "rds:DescribeDBParameters"],
             "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
-            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+            "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
         "artifact_active_assessment": {
             "status": "approved-administrator-only-artifact-drift-assessment",
@@ -319,7 +319,7 @@ expected_active_contract = {
     "stack_scope": "foundation-stack-only",
     "execution_gate": "explicit-current-chat-approval-and-stable-stack-preflight",
     "assessment_sequence": "detect-then-wait-for-completion-then-read-structural-resource-drift-only-if-drifted",
-    "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+    "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
 }
 for key, expected in expected_active_contract.items():
     require(active_drift_contract.get(key) == expected, f"administrator active-drift contract {key} must retain the reviewed value")

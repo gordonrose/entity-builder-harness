@@ -123,7 +123,7 @@ deployment:
           - rds:DescribeDBInstances
           - rds:DescribeDBParameters
         success_condition: detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required
-        output_policy: safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values
+        output_policy: safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values
       artifact_active_assessment:
         status: approved-administrator-only-artifact-drift-assessment
         command: npm run platform:shell:artifact-active-drift-assessment -- --execute-approved-active-artifact-drift-assessment --evidence-file /tmp/new-safe-evidence.json --json
@@ -392,7 +392,7 @@ deployment:
           resource_type: AWS::ECS::TaskDefinition
           replacement: true
   candidate_execution_preflight:
-    status: dormant-task-boundary-deployed-current-image-attempt-terminal-new-immutable-candidate-required
+    status: dormant-task-boundary-deployed-finite-same-image-attempts-require-durable-reconciliation
     command: npm-run-platform-shell-candidate-execution-preflight
     execution_guard: execute-and-approve-candidate-execution-preflight
     realization_contract: infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
@@ -402,7 +402,7 @@ deployment:
     candidate_task_family: kanbien-staging-platform-shell-candidate-preflight
     application_container: platform-shell
     runtime_network: exact-active-server-awsvpc-configuration-without-service-listener-or-load-balancer-attachment
-    candidate_label: derived-from-immutable-image-digest-and-not-caller-selectable
+    candidate_label: derived-from-immutable-image-digest-and-finite-durable-attempt-number-not-caller-selectable
     maximum_start_seconds: 300
     maximum_stop_seconds: 120
     successful_task_state: running-and-healthy-before-controlled-stop
@@ -1050,16 +1050,16 @@ persistence:
         correction:
           default_privileges: migration-identity-owns-default-privileges-for-its-own-created-tables
           consumed_stage_detection: running-and-stopped-task-label-reads-before-any-stage-start
-          recovery_label: one-new-fixed-recovery-1-label-per-stage-no-replay-of-initial-label
+          recovery_label: finite-recovery-5-attempt-identities-with-durable-receipts-no-replay-of-consumed-labels
           service_update_scope: existing-task-definition-revisions-and-in-place-service-references-only
-          next_execution: one-fixed-bootstrap-recovery-4-label-only-after-exact-active-image-has-one-healthy-stopped-candidate-preflight
-          continuation: one-fixed-post-bootstrap-continuation-only-after-the-recovery-bootstrap-has-one-successful-terminal-result
+          next_execution: reconcile-then-qualify-one-immutable-image-and-select-a-finite-recovery-5-bootstrap-attempt-after-final-execution-approval
+          continuation: checkpoint-aware-continuation-only-after-the-recovery-bootstrap-has-one-durable-successful-terminal-receipt
         recovery_1_execution:
           bootstrap: one-fixed-task-exited-nonzero
           diagnostic: bootstrap-workload-failure-unclassified
           later_stages: not-started
           preserved_boundary: server-one-worker-zero-isolated-queues-empty
-          next_gate: reviewed-safe-bootstrap-failure-classification-and-new-recovery-4-label-before-any-new-task
+          next_gate: reconcile-reported-recovery-4-outcome-and-qualify-finite-recovery-5-attempts-before-any-new-task
         recovery_2_execution:
           bootstrap: one-fixed-task-exited-nonzero
           diagnostic: bootstrap-workload-failure-unclassified
@@ -1071,11 +1071,11 @@ persistence:
           later_stages: unavailable-until-one-successful-bootstrap
           preserved_boundary: server-one-worker-zero-isolated-queues-empty
         recovery_4_execution:
-          bootstrap: not-started
+          bootstrap: reported-failed-before-application-telemetry-reconciliation-required
           observability: fixed-safe-bootstrap-phase-category-only
           later_stages: unavailable-until-one-successful-bootstrap
           preserved_boundary: server-one-worker-zero-isolated-queues-empty
-      next_gate: publish-prove-and-promote-one-immutable-image-then-run-one-fixed-bootstrap-recovery-4
+      next_gate: reconcile-current-target-and-qualify-reviewed-recovery-5-source-before-final-execution-approval
       control:
         command: npm-run-platform-shell-postgresql-relational-smoke
         execution_guard: execute-and-approve-relational-stage6

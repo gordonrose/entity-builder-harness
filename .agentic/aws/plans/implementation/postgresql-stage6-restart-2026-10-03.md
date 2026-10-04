@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: aws.plan.postgresql-stage6-restart-2026-10-03
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: persistence.operations
@@ -334,6 +334,55 @@ modes and affected adapter/image/product checks. Current guard/shape test passes
 are useful baseline evidence; they do not prove missing resume or recovery behavior.
 Extend their current test files with focused behavioral cases rather than building
 a separate test/preflight/controller framework. No required failing gate is bypassed.
+
+## Prerequisite implementation checkpoint — 2026-10-03
+
+The scoped applicability amendment is now adopted. It permits the following
+source preparation and local verification immediately; it does **not** grant
+image publication, AWS mutation, deployment, or relational task execution.
+Those remain subject to the final concrete execution approval.
+
+The existing relational controller now uses a source-owned atomic receipt ledger
+with finite recovery-5 stage labels. It records submission, accepted, succeeded,
+failed, unknown, and timeout-cleanup-pending states without task identifiers or
+provider payloads. Its local behavioral proof covers late-stage resume without
+restarting a completed migration, timeout cleanup ownership, an uncertain
+submission blocking retry, and receipt/attempt/cost limits persisting after a
+process restart. The candidate controller now assigns up to four durable,
+same-image candidate identities rather than requiring an image change after a
+terminal attempt.
+
+The restore entrypoint now proves both immutable migration IDs/checksums, the
+fixed work item, a published terminal outbox row, and a completed processing
+record. The disposable real-engine suite proves the migration/runtime role
+boundary: the runtime role can use required DML and cannot create schema
+objects. Configuration still requires injected CA material and verify-full TLS.
+The image smoke wrapper can qualify a supplied immutable digest without a
+rebuild and invokes every relational entrypoint through its safe isolated
+failure path; the compiled payload check also loads the restore verifier.
+
+Local verification passed: relational smoke controller, candidate preflight,
+deployment reconciliation, PostgreSQL adapter check, disposable real-engine
+integration, compiled image payload, and infrastructure/reference static
+checks. The direct Docker image smoke safely skipped because a Docker daemon
+was unavailable; the independent disposable integration engine completed and
+cleaned up normally.
+
+Read-only target reconciliation was attempted through the PostgreSQL live
+boundary verifier. Its source-policy check passed, but the current
+`kanbien-dev` AWS identity was unavailable, so no current account or target
+facts were obtained. This is an execution-approval prerequisite, not a reason
+to claim target readiness. Recovery-4 remains unreconciled and unavailable;
+the reviewed recovery-5 route cannot be selected for live use until a fresh
+read-only reconciliation establishes operation ownership, current resource
+health, identity, drift and cost facts.
+
+The proposed execution allowance remains: up to four attempts per relational
+stage, 16 active hours and 48 elapsed hours, USD100 total with USD25 reserved
+for cleanup/reconciliation/rollback, and at most three sequential disposable
+restores. The source ledger enforces its finite attempts, elapsed window and
+conservative cost reserve before a new task; final approval must bind the
+remaining active-time, restore and price facts to the reconciled target.
 
 ## Material failure and prevention records
 
