@@ -37,15 +37,16 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
     parser.add_argument("--execute-recovery-continuation", action="store_true", help="Continue only after the fixed recovery bootstrap succeeded.")
     parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
+    parser.add_argument("--reconcile-current-state", action="store_true", help="Read only the fixed relational aggregate state without starting a task.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
-    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
+    if (result.validate or result.reconcile_current_state) and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("an execution approval guard is unavailable in validation mode")
     if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
@@ -405,6 +406,28 @@ def restore_absent(policy: dict[str, Any]) -> bool:
     return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allowed_not_found_code="DBInstanceNotFound") is None
 
 
+def reconcile_current_state(policy: dict[str, Any]) -> dict[str, Any]:
+    """Read the fixed aggregate prerequisites without receiving data or starting work."""
+
+    verify_account(policy)
+    update_complete(policy["foundation_stack"], policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    server = service_counts(SERVER_SERVICE, policy)
+    worker = service_counts(WORKER_SERVICE, policy)
+    source_queue = queue_total(outputs["RelationalSmokeQueueUrl"], policy)
+    dead_letter_queue = queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy)
+    source_database(policy)
+    return {
+        "source_database": "available-reviewed-posture",
+        "restore_target": "absent" if restore_absent(policy) else "present",
+        "server": {"desired": server[0], "running": server[1]},
+        "worker": {"desired": worker[0], "running": worker[1]},
+        "source_queue_total": source_queue,
+        "dead_letter_queue_total": dead_letter_queue,
+    }
+
+
 def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
     """Restore one private disposable instance, prove the fixed state, then remove it."""
 
@@ -632,7 +655,7 @@ def main() -> int:
 
     parsed = arguments()
     try:
-        mode = "diagnostic" if parsed.diagnose_bootstrap_recovery else "validate" if parsed.validate else "execution"
+        mode = "diagnostic" if (parsed.diagnose_bootstrap_recovery or parsed.reconcile_current_state) else "validate" if parsed.validate else "execution"
         policy = load_policy(mode)
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
@@ -648,6 +671,9 @@ def main() -> int:
         if parsed.diagnose_bootstrap_recovery:
             category = diagnose_bootstrap_recovery(policy)
             print(json.dumps({"postgresql_relational_bootstrap_recovery_diagnostic": category}, sort_keys=True))
+            return 0
+        if parsed.reconcile_current_state:
+            print(json.dumps({"postgresql_relational_current_state": reconcile_current_state(policy)}, sort_keys=True))
             return 0
         execute(policy)
         print('{"postgresql_relational_smoke":"passed"}')

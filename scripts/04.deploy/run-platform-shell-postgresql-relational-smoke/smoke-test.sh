@@ -46,6 +46,10 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: bootstrap failure diagnosis must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-current-state --approve-relational-stage6 >/dev/null 2>&1; then
+  echo "ERROR: aggregate-state reconciliation must not accept an execution approval guard" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --execute --execute-bootstrap-recovery --approve-relational-stage6 --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
   echo "ERROR: bootstrap recovery must be mutually exclusive with the full proof" >&2
   exit 1
@@ -148,6 +152,18 @@ assert module["derived_bootstrap_log_stream"](
     {"taskArn": "not-a-reviewed-task-arn"},
     {"bootstrap_diagnostic_log_stream_prefix": "relational-bootstrap/relational-bootstrap/"},
 ) is None
+
+# Aggregate reconciliation exposes only fixed counts and posture verdicts.
+reconciliation_globals = module["reconcile_current_state"].__globals__
+reconciliation_globals["verify_account"] = lambda _policy: None
+reconciliation_globals["update_complete"] = lambda _stack, _policy: None
+reconciliation_globals["stack_outputs"] = lambda _policy: {"RelationalSmokeQueueUrl": "source", "RelationalSmokeDeadLetterQueueUrl": "dlq"}
+reconciliation_globals["service_counts"] = lambda name, _policy: (1, 1) if name == module["SERVER_SERVICE"] else (0, 0)
+reconciliation_globals["queue_total"] = lambda _url, _policy: 0
+reconciliation_globals["source_database"] = lambda _policy: {"subnet_group": "reviewed"}
+reconciliation_globals["restore_absent"] = lambda _policy: True
+state = module["reconcile_current_state"]({"foundation_stack": "foundation", "service_stack": "service"})
+assert state == {"source_database": "available-reviewed-posture", "restore_target": "absent", "server": {"desired": 1, "running": 1}, "worker": {"desired": 0, "running": 0}, "source_queue_total": 0, "dead_letter_queue_total": 0}
 PY
 if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts || grep -q 'ALTER DEFAULT PRIVILEGES FOR ROLE' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: migration must own default privileges for its own future tables" >&2
