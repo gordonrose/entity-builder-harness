@@ -210,6 +210,43 @@ changed.
 ADR impact: No new ADR; this preserves the established administrator-only
 Foundation drift-assessment boundary while making in-scope failures diagnosable.
 
+### 2026-10-04T19:55Z - WSL-loss recovery and persisted Stage 6 receipts
+
+The temporary `/tmp` worktree, ignored `.cache` ledgers, and `tmux` sessions
+were removed by the WSL connection loss. Committed source and this session
+record survived. The rebuilt safe receipts were reconciled before any new
+operation:
+
+- prior image candidate `kb-candidate-b8347fdb9e44e966-a1` is retained as a
+  succeeded receipt from the durable Stage 6 session record;
+- current image candidate `kb-candidate-13d95fcfed3b70d1-a1` was reconciled
+  against ECS as one `HEALTHY`, terminal task with the controller's
+  `controlled-candidate-preflight-complete` stop reason and zero running
+  tasks;
+- Recovery-5 bootstrap `kb-pg6-bootstrap-r5-a1` is retained as failed from
+  its terminal durable receipt, with the original run start
+  `2026-10-04T18:59:25Z` and its $3 estimated increment;
+- post-promotion current-state reconciliation passed: source database in
+  reviewed posture, server `1/1`, worker `0/0`, source and DLQ counts `0`,
+  and restore target absent;
+- bootstrap `kb-pg6-bootstrap-r5-a2` is terminal failed. Its $3 increment is
+  consumed, so the cumulative Stage 6 estimate is $6.
+
+The original 48-hour execution deadline is preserved as
+`2026-10-06T18:59:25Z`; it was not reset after the disconnect. Remaining
+bounded allowance is two bootstrap labels (`a3`, `a4`), 18 of 20 total stage
+attempts, and $69 of the $75 non-cleanup effect allowance, with the $25
+cleanup reserve intact.
+
+Incident: the local durable-ledger implementation stored its otherwise
+atomic receipt under the chat worktree's ignored `.cache` directory. The
+worktree itself was under `/tmp`, so a WSL reset discarded the ledger.
+Prevention: checkpoint the safe receipt summary, original deadline, consumed
+limits, and recovery basis in this committed session record after each
+terminal stage; retain the local ledger only as the controller's immediate
+restart guard. The next source repair will make the controller's durable
+ledger location independent of a temporary worktree.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

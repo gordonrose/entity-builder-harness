@@ -24,12 +24,34 @@ WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
 CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
 STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verification")
-DEFAULT_LEDGER_PATH = Path(".cache/04.deploy/postgresql-stage6-attempt-ledger.json")
-DEFAULT_CANDIDATE_LEDGER_PATH = Path(".cache/04.deploy/postgresql-candidate-attempt-ledger.json")
 
 
 class RelationalSmokeError(Exception):
     """Represent a safe outcome without exposing AWS data or task output."""
+
+
+def durable_ledger_path(filename: str) -> Path:
+    """Keep restart receipts in the repository common directory, never a /tmp worktree."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=Path.cwd(),
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise RelationalSmokeError("the relational durable ledger location is unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise RelationalSmokeError("the relational durable ledger location is unavailable")
+    return common / "postgresql-stage6-receipts" / filename
+
+
+DEFAULT_LEDGER_PATH = durable_ledger_path("stage-attempts.json")
+DEFAULT_CANDIDATE_LEDGER_PATH = durable_ledger_path("candidate-attempts.json")
 
 
 def arguments() -> argparse.Namespace:
