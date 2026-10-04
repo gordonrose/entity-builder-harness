@@ -80,6 +80,44 @@ totals, source-database posture, and whether the fixed disposable restore target
 is absent. It does not receive queue messages, query application rows, start a
 task, create a restore, or modify AWS configuration.
 
+## Bootstrap-effect reconciliation before promotion
+
+Aggregate infrastructure health cannot establish that failed bootstrap attempts
+left no PostgreSQL roles, grants, or schema effects. The prepared reconciliation
+uses the existing `kanbien-staging-platform-relational-bootstrap` task family,
+its `relational-bootstrap` container, task role, injected target-owned master,
+migration, and runtime secrets, dormant-worker network configuration, and the
+already-bound immutable image. It connects as the existing bootstrap master to
+`platformsmoke` through the migration endpoint with `verify-full` TLS.
+
+Its only possible invocation is:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --reconcile-bootstrap-effects --approve-relational-bootstrap-effects-reconciliation
+```
+
+The controller supplies a fixed Node command override. That command accepts no
+arguments, begins a read-only transaction, performs one fixed PostgreSQL catalog
+`SELECT`, rolls back, and emits only these booleans: expected migration/runtime
+roles, bootstrap-to-migration membership, migration/runtime database grants,
+schema existence and ownership, runtime schema usage/no-create restriction, and
+runtime DML coverage for existing schema relations. It never receives rows,
+application data, SQL input, a selected database, or a caller-defined command.
+The controller persists the attempted task before launch in the durable Stage 6
+ledger, allows one attempt only, waits at most 300 seconds, classifies an
+uncertain or timed-out task as owned cleanup work, and accepts a successful exit
+only when the one allowlisted log event has exactly those fields.
+
+This is deliberately independent of service promotion: it runs the existing
+one-shot task definition and does not update a service, task-definition
+reference, image, CloudFormation stack, IAM role, network, TLS setting, or
+database configuration. It therefore preserves the qualified candidate evidence
+and the final remaining image-publication allowance. It is nevertheless one new
+ECS task execution effect, so it remains prepared rather than executable until
+that narrow effect is explicitly included in the live scope. A successful
+durable reconciliation receipt is required before bootstrap a3 or the full
+relational route can start.
+
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
 task, and deletes that recovery instance without a final snapshot. It retains

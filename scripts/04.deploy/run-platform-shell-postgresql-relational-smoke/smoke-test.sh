@@ -46,6 +46,14 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: bootstrap failure diagnosis must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-bootstrap-effects >/dev/null 2>&1; then
+  echo "ERROR: bootstrap-effect reconciliation must require its explicit fixed approval guard" >&2
+  exit 1
+fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-bootstrap-effects --approve-relational-bootstrap-effects-reconciliation --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
+  echo "ERROR: bootstrap-effect reconciliation must reject every unrelated execution guard" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-current-state --approve-relational-stage6 >/dev/null 2>&1; then
   echo "ERROR: aggregate-state reconciliation must not accept an execution approval guard" >&2
   exit 1
@@ -106,14 +114,27 @@ if ! grep -Eq -- 'credentialsFromEnvironment\("RELATIONAL_MASTER_SECRET_JSON"\)'
   echo "ERROR: bootstrap must support a credentials-only RDS-managed master secret through the target-owned migration connection endpoint" >&2
   exit 1
 fi
+if ! grep -Eq -- 'BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- "BEGIN TRANSACTION READ ONLY" scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'bootstrap_effects_reconciled' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap-effect reconciliation must retain its fixed read-only program and safe result." >&2
+  exit 1
+fi
+if grep -Eq -- 'BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM.*(CREATE ROLE|CREATE SCHEMA|ALTER ROLE|GRANT |INSERT INTO|UPDATE [A-Za-z_]+ SET|DELETE FROM|DROP )' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap-effect reconciliation must not contain a database-writing SQL command." >&2
+  exit 1
+fi
 python3 - <<'PY'
 import runpy
-import tempfile
 from pathlib import Path
+import subprocess
+import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"))
 assert "/tmp/" not in str(module["DEFAULT_LEDGER_PATH"])
 assert module["DEFAULT_LEDGER_PATH"].parent.name == "postgresql-stage6-receipts"
+program = module["BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM"]
+program_result = subprocess.run(["node", "-e", program], capture_output=True, check=False, text=True)
+assert program_result.returncode == 1
+assert program_result.stdout.strip() == '{"level":"error","message":"kanbien-platform.relational-smoke.bootstrap_effects_reconciled","fields":{"outcome":"failed"}}'
 temporary = Path(tempfile.mkdtemp())
 ledger_policy = {
     "ledger_path": temporary / "receipts.json",
@@ -137,7 +158,7 @@ def empty_task_list(arguments, _policy, allow_not_found=False):
     return {"taskArns": []}
 
 module["no_prior_label"].__globals__["aws"] = empty_task_list
-module["no_prior_label"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}})
+module["no_prior_label"]("reviewed-fixed-label-a1", {"cluster": "reviewed-cluster"})
 assert [arguments[-1] for arguments in observed] == ["RUNNING", "STOPPED"]
 
 # The relational controller must consume the exact successful candidate receipt,
@@ -166,6 +187,41 @@ module["reserve_stage"]("bootstrap", diagnostic_policy)
 module["record_stage_state"]("bootstrap", "failed", diagnostic_policy)
 assert module["failed_bootstrap_receipt_label"](diagnostic_policy) == "kb-pg6-bootstrap-r5-a1"
 
+# The fixed reconciliation consumes a single durable diagnostic receipt, uses
+# the bootstrap task family, and returns only its allowlisted boolean facts.
+effects_policy = {
+    **ledger_policy,
+    "ledger_path": temporary / "effects-receipts.json",
+    "labels": {**ledger_policy["labels"], module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]: "reviewed-effects"},
+    "estimated_stage_cost_usd": {**ledger_policy["estimated_stage_cost_usd"], module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]: 1},
+}
+_, attempt, label = module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], effects_policy)
+assert attempt == 1 and label == "reviewed-effects-a1"
+module["record_stage_state"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], "succeeded", effects_policy)
+try:
+    module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], effects_policy)
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("a consumed bootstrap-effect reconciliation was reusable")
+
+facts = {key: True for key in module["BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS"]}
+effect_globals = module["bootstrap_effects_facts"].__globals__
+effect_globals["stack_outputs"] = lambda _policy: {"RelayLogGroupName": "reviewed-log-group"}
+effect_globals["aws"] = lambda arguments, _policy, allowed_not_found_code=None: {"events": [{"message": module["json"].dumps({"level": "info", "message": "kanbien-platform.relational-smoke.bootstrap_effects_reconciled", "fields": {"outcome": "succeeded", **facts}})}]}
+assert module["bootstrap_effects_facts"]({"containers": [{"name": "reviewed-bootstrap", "logStreamName": "reviewed-stream"}]}, {"containers": {"bootstrap": "reviewed-bootstrap"}}) == facts
+
+gate_policy = {**effects_policy, "ledger_path": temporary / "gate-receipts.json"}
+try:
+    module["require_bootstrap_effects_reconciliation"](gate_policy)
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "bootstrap recovery requires a successful durable bootstrap-effect reconciliation"
+else:
+    raise AssertionError("bootstrap was not gated on effect reconciliation")
+module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], gate_policy)
+module["record_stage_state"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], "succeeded", gate_policy)
+module["require_bootstrap_effects_reconciliation"](gate_policy)
+
 observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)
@@ -174,8 +230,49 @@ def successful_predecessor(arguments, _policy, allow_not_found=False):
     return {"tasks": [{"containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
 
 module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
-module["prior_label_succeeded"]("bootstrap", {"cluster": "reviewed-cluster", "labels": {"bootstrap": "reviewed-fixed-label"}, "containers": {"bootstrap": "reviewed-container"}})
+predecessor_policy = {
+    **ledger_policy,
+    "cluster": "reviewed-cluster",
+    "containers": {"bootstrap": "reviewed-container"},
+}
+module["prior_label_succeeded"]("bootstrap", predecessor_policy)
 assert observed[0][-1] == "STOPPED"
+
+# A later-stage failure resumes only the first incomplete checkpoint after a restart.
+for stage in ("migration",):
+    module["reserve_stage"](stage, ledger_policy)
+    module["record_stage_state"](stage, "succeeded", ledger_policy)
+module["reserve_stage"]("relay", ledger_policy)
+module["record_stage_state"]("relay", "failed", ledger_policy)
+assert module["stage_succeeded"]("migration", ledger_policy)
+assert not module["stage_succeeded"]("relay", ledger_policy)
+
+# A timeout retains cleanup ownership in the durable receipt, even after process loss.
+module["reserve_stage"]("worker", ledger_policy)
+timeout_policy = {**ledger_policy, "cluster": "reviewed-cluster", "task_stop_seconds": 0}
+module["stop_and_verify"].__globals__["aws"] = lambda *_args, **_kwargs: {"tasks": [{"lastStatus": "RUNNING"}]}
+try:
+    module["stop_and_verify"]("worker", "reviewed-task", timeout_policy)
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "a timed-out relational stage has an unresolved cleanup obligation"
+else:
+    raise AssertionError("timeout cleanup was accepted without terminal proof")
+assert module["load_ledger"](ledger_policy)["stages"]["worker"]["state"] == "timeout-cleanup-pending"
+
+# A lost submission response is recorded as unknown and blocks another attempt.
+module["reserve_stage"]("restore_verification", ledger_policy)
+module["reconcile_unacknowledged_submission"].__globals__["aws"] = lambda *_args, **_kwargs: (_ for _ in ()).throw(module["RelationalSmokeError"]("provider-unavailable"))
+try:
+    module["reconcile_unacknowledged_submission"]("restore_verification", "reviewed-restore-verification-a1", {**ledger_policy, "cluster": "reviewed-cluster"})
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "a relational stage submission outcome is uncertain and blocks retry"
+else:
+    raise AssertionError("uncertain acceptance was not blocked")
+assert module["load_ledger"](ledger_policy)["stages"]["restore_verification"]["state"] == "unknown"
+
+# Reloading the ledger preserves consumed limits; restart cannot reset the allowance.
+reloaded = module["load_ledger"](ledger_policy)
+assert len(reloaded["attempts"]) == 5
 
 diagnostic_policy = {"bootstrap_diagnostic_categories": {
     "bootstrap-image-retrieval-failure",

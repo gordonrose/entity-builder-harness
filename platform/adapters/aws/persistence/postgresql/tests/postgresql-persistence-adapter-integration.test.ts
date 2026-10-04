@@ -89,6 +89,39 @@ async function main(): Promise<void> {
     }
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_migration_history"`), 2);
 
+    console.log("PostgreSQL disposable assertion phase: least-privilege migration and runtime roles.");
+    await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokemigrate LOGIN PASSWORD 'fixture-migration-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokeruntime LOGIN PASSWORD 'fixture-runtime-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await rawPool.query({ text: `ALTER SCHEMA "${schema}" OWNER TO psmokemigrate` });
+    await rawPool.query({ text: `GRANT CONNECT ON DATABASE postgres TO psmokeruntime; GRANT USAGE ON SCHEMA "${schema}" TO psmokeruntime; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "${schema}" TO psmokeruntime` });
+    await rawPool.query({ text: `SET ROLE psmokemigrate; ALTER DEFAULT PRIVILEGES IN SCHEMA "${schema}" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO psmokeruntime; RESET ROLE` });
+    const runtimePool = new Pool({
+      host: environment.host,
+      port: environment.port,
+      database: environment.database,
+      user: "psmokeruntime",
+      password: "fixture-runtime-password",
+      max: 1,
+      connectionTimeoutMillis: 5_000,
+      ssl: false,
+    });
+    try {
+      await runtimePool.query({ text: `INSERT INTO "${schema}"."platform_smoke_work_item" (id, state, revision, accepted_at) VALUES ($1, 'accepted', 1, CURRENT_TIMESTAMP)`, values: ["runtime-dml-proof"] });
+      await runtimePool.query({ text: `DELETE FROM "${schema}"."platform_smoke_work_item" WHERE id = $1`, values: ["runtime-dml-proof"] });
+      let ddlRejected = false;
+      try {
+        await runtimePool.query({ text: `CREATE TABLE "${schema}"."runtime_ddl_must_fail" (id text)` });
+      } catch {
+        ddlRejected = true;
+      }
+      equal(ddlRejected, true, "The runtime role must retain DML access while being unable to create schema objects.");
+    } finally {
+      await runtimePool.end();
+    }
+
+    console.log("PostgreSQL disposable assertion phase: bootstrap-effect read-only reconciliation.");
+    await bootstrapEffectsReadOnlyReconciliation(environment, rawPool);
+
     const smokePersistence = createKanbienPlatformPostgreSqlSmokePersistence({
       configuration,
       pool,
@@ -243,6 +276,40 @@ async function bootstrapOwnershipRepeat(environment: ReturnType<typeof localFixt
     try { await runtimePool.query({ text: `CREATE TABLE ${bootstrapSchema}.runtime_must_not_create (id text)` }); } catch { rejected = true; }
     equal(rejected, true, "Runtime must not receive schema CREATE through bootstrap.");
   } finally { await runtimePool.end(); }
+}
+
+async function bootstrapEffectsReadOnlyReconciliation(environment: ReturnType<typeof localFixtureEnvironment>, rawPool: Pool): Promise<void> {
+  await rawPool.query({ text: "CREATE DATABASE platformsmoke" });
+  const targetPool = new Pool({ host: environment.host, port: environment.port, database: "platformsmoke", user: "postgres", password: environment.password, max: 1, connectionTimeoutMillis: 5_000, ssl: false });
+  try {
+    await targetPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokemigrate LOGIN PASSWORD 'fixture-migration-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await targetPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokeruntime LOGIN PASSWORD 'fixture-runtime-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
+    await targetPool.query({ text: "GRANT CONNECT, CREATE, TEMPORARY ON DATABASE platformsmoke TO psmokemigrate" });
+    await targetPool.query({ text: "GRANT CONNECT ON DATABASE platformsmoke TO psmokeruntime" });
+    await targetPool.query({ text: "GRANT psmokemigrate TO CURRENT_USER" });
+    await targetPool.query({ text: "CREATE SCHEMA platform_smoke AUTHORIZATION psmokemigrate" });
+    await targetPool.query({ text: "SET ROLE psmokemigrate" });
+    await targetPool.query({ text: "CREATE TABLE platform_smoke.bootstrap_effects_probe (id text)" });
+    await targetPool.query({ text: "RESET ROLE" });
+    await targetPool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });
+    await targetPool.query({ text: "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA platform_smoke TO psmokeruntime" });
+    await targetPool.query({ text: "BEGIN TRANSACTION READ ONLY" });
+    let writeRejected = false;
+    try {
+      await targetPool.query({ text: "CREATE TABLE platform_smoke.read_only_must_reject (id text)" });
+    } catch {
+      writeRejected = true;
+    }
+    equal(writeRejected, true, "The reconciliation transaction must reject a database write.");
+    const result = await targetPool.query<Record<string, boolean>>({
+      text: "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'psmokemigrate') AS migration_role_exists, EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'psmokeruntime') AS runtime_role_exists, pg_has_role(current_user, 'psmokemigrate', 'MEMBER') AS bootstrap_has_migration_membership, has_database_privilege('psmokemigrate', 'platformsmoke', 'CONNECT') AS migration_database_connect, has_database_privilege('psmokemigrate', 'platformsmoke', 'CREATE') AS migration_database_create, has_database_privilege('psmokemigrate', 'platformsmoke', 'TEMPORARY') AS migration_database_temporary, has_database_privilege('psmokeruntime', 'platformsmoke', 'CONNECT') AS runtime_database_connect, EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'platform_smoke') AS schema_exists, EXISTS (SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid = n.nspowner WHERE n.nspname = 'platform_smoke' AND r.rolname = 'psmokemigrate') AS schema_owned_by_migration, has_schema_privilege('psmokeruntime', 'platform_smoke', 'USAGE') AS runtime_schema_usage, NOT has_schema_privilege('psmokeruntime', 'platform_smoke', 'CREATE') AS runtime_schema_create_restricted, COALESCE((SELECT bool_and(has_table_privilege('psmokeruntime', c.oid, 'SELECT, INSERT, UPDATE, DELETE')) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'platform_smoke' AND c.relkind IN ('r','p','v','m','f')), true) AS runtime_existing_table_dml",
+    });
+    await targetPool.query({ text: "ROLLBACK" });
+    equal(result.rows.length, 1, "The fixed reconciliation query must return exactly one allowlisted fact set.");
+    equal(Object.values(result.rows[0] ?? {}).every((value) => value === true), true, "The provisioned roles, grants, ownership, and restrictions must be recognized.");
+  } finally {
+    await targetPool.end();
+  }
 }
 
 function localFixtureEnvironment(): { readonly host: string; readonly port: number; readonly database: string; readonly password: string } {
