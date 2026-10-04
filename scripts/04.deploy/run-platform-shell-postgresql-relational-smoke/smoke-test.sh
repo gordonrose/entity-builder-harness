@@ -46,6 +46,14 @@ if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.
   echo "ERROR: bootstrap failure diagnosis must require its explicit fixed approval guard" >&2
   exit 1
 fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-bootstrap-effects >/dev/null 2>&1; then
+  echo "ERROR: bootstrap-effect reconciliation must require its explicit fixed approval guard" >&2
+  exit 1
+fi
+if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-bootstrap-effects --approve-relational-bootstrap-effects-reconciliation --approve-relational-bootstrap-recovery >/dev/null 2>&1; then
+  echo "ERROR: bootstrap-effect reconciliation must reject every unrelated execution guard" >&2
+  exit 1
+fi
 if bash scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh --reconcile-current-state --approve-relational-stage6 >/dev/null 2>&1; then
   echo "ERROR: aggregate-state reconciliation must not accept an execution approval guard" >&2
   exit 1
@@ -106,14 +114,27 @@ if ! grep -Eq -- 'credentialsFromEnvironment\("RELATIONAL_MASTER_SECRET_JSON"\)'
   echo "ERROR: bootstrap must support a credentials-only RDS-managed master secret through the target-owned migration connection endpoint" >&2
   exit 1
 fi
+if ! grep -Eq -- 'BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- "BEGIN TRANSACTION READ ONLY" scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py || ! grep -Eq -- 'bootstrap_effects_reconciled' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap-effect reconciliation must retain its fixed read-only program and safe result." >&2
+  exit 1
+fi
+if grep -Eq -- 'BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM.*(CREATE ROLE|CREATE SCHEMA|ALTER ROLE|GRANT |INSERT INTO|UPDATE [A-Za-z_]+ SET|DELETE FROM|DROP )' scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py; then
+  echo "ERROR: bootstrap-effect reconciliation must not contain a database-writing SQL command." >&2
+  exit 1
+fi
 python3 - <<'PY'
 import runpy
 from pathlib import Path
+import subprocess
 import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"))
 assert "/tmp/" not in str(module["DEFAULT_LEDGER_PATH"])
 assert module["DEFAULT_LEDGER_PATH"].parent.name == "postgresql-stage6-receipts"
+program = module["BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM"]
+program_result = subprocess.run(["node", "-e", program], capture_output=True, check=False, text=True)
+assert program_result.returncode == 1
+assert not program_result.stdout.strip() or program_result.stdout.strip() == '{"level":"error","message":"kanbien-platform.relational-smoke.bootstrap_effects_reconciled","fields":{"outcome":"failed"}}'
 temporary = Path(tempfile.mkdtemp())
 ledger_policy = {
     "ledger_path": temporary / "receipts.json",
@@ -165,6 +186,88 @@ diagnostic_policy = {
 module["reserve_stage"]("bootstrap", diagnostic_policy)
 module["record_stage_state"]("bootstrap", "failed", diagnostic_policy)
 assert module["failed_bootstrap_receipt_label"](diagnostic_policy) == "kb-pg6-bootstrap-r5-a1"
+
+# The fixed reconciliation consumes a single durable diagnostic receipt, uses
+# the bootstrap task family, and returns only its allowlisted boolean facts.
+effects_policy = {
+    **ledger_policy,
+    "ledger_path": temporary / "effects-receipts.json",
+    "labels": {**ledger_policy["labels"], module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]: "reviewed-effects"},
+    "estimated_stage_cost_usd": {**ledger_policy["estimated_stage_cost_usd"], module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]: 1},
+}
+_, attempt, label = module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], effects_policy)
+assert attempt == 1 and label == "reviewed-effects-a1"
+module["record_stage_state"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], "succeeded", effects_policy)
+try:
+    module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], effects_policy)
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("a consumed bootstrap-effect reconciliation was reusable")
+
+facts = {key: True for key in module["BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS"]}
+effect_globals = module["bootstrap_effects_facts"].__globals__
+effect_globals["stack_outputs"] = lambda _policy: {"RelayLogGroupName": "reviewed-log-group"}
+effect_globals["aws"] = lambda arguments, _policy, allowed_not_found_code=None: {"events": [{"message": module["json"].dumps({"level": "info", "message": "kanbien-platform.relational-smoke.bootstrap_effects_reconciled", "fields": {"outcome": "succeeded", **facts}})}]}
+assert module["bootstrap_effects_facts"]({"containers": [{"name": "reviewed-bootstrap", "logStreamName": "reviewed-stream"}]}, {"containers": {"bootstrap": "reviewed-bootstrap"}}) == facts
+
+gate_policy = {**effects_policy, "ledger_path": temporary / "gate-receipts.json", "source_database": "reviewed-source"}
+try:
+    module["require_bootstrap_effects_reconciliation"](gate_policy)
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "bootstrap recovery requires a validated bootstrap-effect assessment"
+else:
+    raise AssertionError("bootstrap was not gated on an assessment")
+
+fact_image = "registry.example/platform-shell@sha256:" + "c" * 64
+fact_receipts = {
+    stage: {"stage": stage, "label": label, "state": "succeeded", "submitted_at": index + 1,
+            "task_definition_revision": 9, "image": fact_image,
+            "diagnostic_code_sha256": module["hashlib"].sha256(stage.encode()).hexdigest()}
+    for index, (stage, label) in enumerate(module["BOOTSTRAP_EFFECTS_FACT_LABELS"].items())
+}
+ledger = module["empty_ledger"]()
+ledger["stages"] = {"bootstrap_effects_reconciliation": {"state": "failed", "label": "kb-pg6-bootstrap-effects-r5-a1"}, **fact_receipts}
+module["save_ledger"](gate_policy, ledger)
+(gate_policy["ledger_path"].parent / "bootstrap-effects-facts-fixture.stdout").write_text(module["json"].dumps({"postgresql_relational_bootstrap_effect_facts": module["RECOVERABLE_INTERRUPTED_SCHEMA_SETUP"]}), encoding="utf-8")
+assessment_globals = module["assess_bootstrap_effects"].__globals__
+assessment_globals["source_database"] = lambda _policy: None
+assert module["assess_bootstrap_effects"](gate_policy) == "recoverable-interrupted-schema-setup"
+module["require_bootstrap_effects_reconciliation"](gate_policy)
+
+# Evidence without both exact completed receipts remains blocked.
+bad_policy = {**gate_policy, "ledger_path": temporary / "bad-gate.json"}
+module["save_ledger"](bad_policy, {"schema": "postgresql-stage6-attempt-ledger/v1", "started_at": 1, "stages": {"bootstrap_effects_facts_one": fact_receipts["bootstrap_effects_facts_one"]}, "attempts": [], "estimated_cost_usd": 0})
+try:
+    module["assess_bootstrap_effects"](bad_policy)
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("assessment accepted missing fact evidence")
+
+# A valid-looking pair with an unexplained fact pattern remains blocked.
+unexplained_policy = {**gate_policy, "ledger_path": temporary / "unexplained-gate.json"}
+module["save_ledger"](unexplained_policy, {"schema": "postgresql-stage6-attempt-ledger/v1", "started_at": 1, "stages": fact_receipts, "attempts": [], "estimated_cost_usd": 0})
+(unexplained_policy["ledger_path"].parent / "bootstrap-effects-facts-fixture.stdout").write_text(module["json"].dumps({"postgresql_relational_bootstrap_effect_facts": {**module["RECOVERABLE_INTERRUPTED_SCHEMA_SETUP"], "schema_exists": True}}), encoding="utf-8")
+try:
+    module["assess_bootstrap_effects"](unexplained_policy)
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("assessment accepted unexplained partial facts")
+
+# The receipt is persisted before launch with the exact immutable task binding
+# and fixed diagnostic code hash, never a task identifier or provider payload.
+definition_image = "registry.example/platform-shell@sha256:" + "b" * 64
+definition_globals = module["assert_task_definition"].__globals__
+definition_globals["aws"] = lambda *_args, **_kwargs: {"taskDefinition": {"family": "reviewed-bootstrap-family", "revision": 9, "containerDefinitions": [{"name": "reviewed-bootstrap", "image": definition_image}]}}
+binding = module["assert_task_definition"]("bootstrap", {"families": {"bootstrap": "reviewed-bootstrap-family"}, "containers": {"bootstrap": "reviewed-bootstrap"}})
+assert binding == {"task_definition_revision": 9, "image": definition_image}
+bound_policy = {**effects_policy, "ledger_path": temporary / "bound-effects-receipts.json"}
+code_hash = module["hashlib"].sha256(module["BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM"].encode("utf-8")).hexdigest()
+module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], bound_policy, {**binding, "diagnostic_code_sha256": code_hash})
+bound_receipt = module["load_ledger"](bound_policy)["stages"][module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]]
+assert {key: bound_receipt[key] for key in ("task_definition_revision", "image", "diagnostic_code_sha256")} == {**binding, "diagnostic_code_sha256": code_hash}
 
 observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):

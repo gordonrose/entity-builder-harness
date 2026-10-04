@@ -36,16 +36,11 @@ Foundation/service readiness, public server `1/1`, dormant worker `0/0`, and
 empty isolated queues. It then runs one bootstrap task, one migration task,
 one fixed-record relay task, one worker task, and one isolated restore check.
 
-Each finite stage attempt is single-use across both running **and stopped** ECS
-tasks. Safe source-owned receipts retain the stage, bounded attempt number,
-state, and conservative cost allowance across a controller restart; they never
-retain a task identifier or provider response. An accepted-or-unknown submission,
-or a timeout whose stop cannot be verified, blocks another attempt until
-reconciliation. The initial bootstrap label was consumed by a non-zero exit
-without retaining a task log, task identifier, or provider payload. The current
-reviewed recovery uses finite `recovery-5` labels only after fresh target
-reconciliation, image qualification, and final execution approval. It never
-replays a consumed label. Bootstrap creates the
+Each stage label is single-use across both running **and stopped** ECS tasks.
+The initial bootstrap label was consumed by a non-zero exit without retaining a
+task log, task identifier, or provider payload. The current reviewed recovery
+uses a distinct, fixed `recovery-1` label set only after the corrected immutable
+image is deployed. It never replays the consumed label. Bootstrap creates the
 two PostgreSQL identities and their connection/schema grants; the migration
 identity, which creates future tables, owns its own default-table privileges.
 
@@ -63,7 +58,7 @@ reviewed recovery step.
 
 If that fixed bootstrap ends non-successfully, do not inspect or paste the
 task's raw metadata or logs. The one read-only diagnostic is limited to the
-consumed bootstrap label and returns an allowlisted category only:
+consumed `recovery-1` label and returns an allowlisted category only:
 
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --diagnose-bootstrap-recovery --approve-relational-bootstrap-recovery-diagnostic
@@ -84,6 +79,51 @@ This reports only server/worker desired and running counts, isolated queue
 totals, source-database posture, and whether the fixed disposable restore target
 is absent. It does not receive queue messages, query application rows, start a
 task, create a restore, or modify AWS configuration.
+
+## Bootstrap-effect reconciliation before promotion
+
+Aggregate infrastructure health cannot establish that failed bootstrap attempts
+left no PostgreSQL roles, grants, or schema effects. The prepared reconciliation
+uses the existing `kanbien-staging-platform-relational-bootstrap` task family,
+its `relational-bootstrap` container, task role, injected target-owned master,
+migration, and runtime secrets, dormant-worker network configuration, and the
+already-bound immutable image. It connects as the existing bootstrap master to
+`platformsmoke` through the migration endpoint with `verify-full` TLS.
+
+Its only possible live invocation is:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --reconcile-bootstrap-effects --approve-relational-bootstrap-effects-reconciliation
+```
+
+Before that invocation, exercise the exact fixed override in the exact immutable
+image bound to the live task definition against disposable TLS PostgreSQL 17:
+
+```bash
+node scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test-immutable-bootstrap-effects-override.mjs <image@sha256:...>
+```
+
+The controller supplies a fixed Node command override. That command accepts no
+arguments, begins a read-only transaction, performs one fixed PostgreSQL catalog
+`SELECT`, rolls back, and emits only these booleans: expected migration/runtime
+roles, bootstrap-to-migration membership, migration/runtime database grants,
+schema existence and ownership, runtime schema usage/no-create restriction, and
+runtime DML coverage for existing schema relations. It never receives rows,
+application data, SQL input, a selected database, or a caller-defined command.
+The controller persists the attempted task before launch in the durable Stage 6
+ledger, allows one attempt only, waits at most 300 seconds, classifies an
+uncertain or timed-out task as owned cleanup work, and accepts a successful exit
+only when the one allowlisted log event has exactly those fields.
+
+This is deliberately independent of service promotion: it runs the existing
+one-shot task definition and does not update a service, task-definition
+reference, image, CloudFormation stack, IAM role, network, TLS setting, or
+database configuration. It therefore preserves the qualified candidate evidence
+and the final remaining image-publication allowance. It is nevertheless one new
+ECS task execution effect, so it remains prepared rather than executable until
+that narrow effect is explicitly included in the live scope. A successful
+durable reconciliation receipt is required before bootstrap a3 or the full
+relational route can start.
 
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
