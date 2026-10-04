@@ -42,6 +42,7 @@ SAFE_SCHEMA = "deploy/platform-shell-reconciliation-result/v1"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 AWS_MAX_ATTEMPTS = 3
 AWS_RETRY_BACKOFF_SECONDS = (1, 2)
+BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
 
 
 class ReconciliationError(Exception):
@@ -496,6 +497,44 @@ def run_check(check_id: str, check: Callable[[], None]) -> None:
         raise
 
 
+def bootstrap_effects_receipt_path() -> Path:
+    """Locate the shared durable Stage 6 receipt without accepting a caller path."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=REPOSITORY_ROOT,
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable")
+    return common / "postgresql-stage6-receipts" / "stage-attempts.json"
+
+
+def check_bootstrap_effects_reconciliation_receipt(receipt_path: Path | None = None) -> None:
+    """Require the one successful pre-promotion no-write reconciliation receipt."""
+
+    path = bootstrap_effects_receipt_path() if receipt_path is None else receipt_path
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
+    stages = ledger.get("stages") if isinstance(ledger, dict) else None
+    receipt = stages.get(BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE) if isinstance(stages, dict) else None
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("state") != "succeeded"
+        or receipt.get("label") != "kb-pg6-bootstrap-effects-r5-a1"
+    ):
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+
+
 def check_identity(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     """Verify that credentials are for the one declared AWS account."""
 
@@ -795,6 +834,8 @@ def main() -> int:
                     *artifact_bucket_checks(arguments, policy),
                     ("platform-shell-budget", lambda: check_budget(arguments, policy)),
                 ]
+                if arguments.mode == "pre-relational-stage6-bootstrap-recovery-service-change-set":
+                    core_checks.insert(6, ("bootstrap-effect-reconciliation-receipt", check_bootstrap_effects_reconciliation_receipt))
             elif arguments.mode in {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
                 core_checks = [
                     ("aws-account", lambda: check_identity(arguments, policy)),

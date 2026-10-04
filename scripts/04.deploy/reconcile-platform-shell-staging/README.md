@@ -121,6 +121,10 @@ npm run platform:shell:deployment-reconciliation -- \
   the two in-place ECS service references. The same fresh Foundation
   classification and in-sync Service assessment are required. Any IAM,
   queue, database, listener, routing, or other resource change fails closed.
+  It also requires the durable successful fixed bootstrap-effect reconciliation
+  receipt before it will accept the promotion change set. This prevents service
+  promotion from bypassing the pre-promotion read-only reconciliation of
+  partially completed bootstrap roles, grants, and schema effects.
 
 ```bash
 npm run platform:shell:deployment-reconciliation -- --mode pre-relational-stage6-bootstrap-recovery-service-change-set --service-change-set reviewed-name --known-foundation-drift-evidence /tmp/fresh-foundation-evidence.json --service-drift-evidence /tmp/fresh-service-evidence.json
