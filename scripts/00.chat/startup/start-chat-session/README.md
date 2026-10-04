@@ -60,6 +60,9 @@ chat startup metadata.
 - Task summary: the human description of the work. It can be passed as command
   arguments, or entered interactively when the script prompts for it.
 - `.agentic/env.local`: optional local environment values for this checkout.
+  Set `AGENTIC_CHAT_WORKTREE_ROOT` there to use an absolute repository-specific
+  override. Without one, new worktrees live under
+  `$HOME/projects/.chat-worktrees/<repo-name>-<repo-id>`.
 - `CHAT_COPY_PROMPT`: controls terminal first-prompt handoff. The default is
   `copy`, which tries the clipboard first and prints the prompt as a fallback.
   Use `skip` to print only.
@@ -125,8 +128,10 @@ to present or pass the session packet in their own way.
 
    The branch starts from `main` when available. If `main` does not exist, the
    script falls back to the current branch so the harness can still bootstrap in
-   a new or unusual repo. The sibling worktree is where the chat should edit
-   files.
+   a new or unusual repo. It creates the worktree below the persistent default
+   root (or the configured override) and fails if that location is unusable; it
+   never falls back to a temporary directory. The sibling worktree is where the
+   chat should edit files.
 
 6. Write the session log.
 

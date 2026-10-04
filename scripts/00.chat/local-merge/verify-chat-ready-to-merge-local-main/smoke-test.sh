@@ -76,7 +76,8 @@ canonical_worktree_path() {
     cd "$repo"
     # shellcheck source=../worktree/paths/lib.sh
     source scripts/00.chat/worktree/paths/lib.sh
-    chat_worktree_path_for_branch "$repo" "$branch"
+    AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees/$(printf '%s' "$repo" | cksum | awk '{print $1}')" \
+      chat_worktree_path_for_branch "$repo" "$branch"
   )
 }
 

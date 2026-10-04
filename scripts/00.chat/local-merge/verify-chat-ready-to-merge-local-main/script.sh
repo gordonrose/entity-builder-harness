@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: chat.script.local-merge.verify-chat-ready-to-merge-local-main
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 00.chat
 #   domain: local-merge
@@ -91,6 +91,7 @@ source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
 
 PRIMARY_PATH="$(chat_worktree_primary_path)"
 PRIMARY_PATH="$(cd "$PRIMARY_PATH" && pwd -P)"
+chat_worktree_load_config "$PRIMARY_PATH"
 
 if [ -n "$REMOTE_NAME" ]; then
   REPO_ROOT="$PRIMARY_PATH"
@@ -262,7 +263,17 @@ if [ "$metadata_branch" != "$TARGET_BRANCH" ]; then
     "Fix the session log metadata before convergence."
 fi
 
-WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$TARGET_BRANCH")"
+set +e
+WORKTREE_PATH="$(chat_worktree_registered_path_for_branch "$REPO_ROOT" "$TARGET_BRANCH")"
+registered_status=$?
+set -e
+
+if [ "$registered_status" -eq 1 ]; then
+  WORKTREE_PATH="$metadata_worktree"
+elif [ "$registered_status" -ne 0 ]; then
+  exit "$registered_status"
+fi
+
 if [ "$metadata_worktree" != "$WORKTREE_PATH" ]; then
   block "blocked-invalid-metadata" \
     "session log worktree metadata is '$metadata_worktree', expected '$WORKTREE_PATH'" \
