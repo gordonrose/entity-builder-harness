@@ -609,13 +609,30 @@ def derived_bootstrap_log_stream(task: dict[str, Any], policy: dict[str, Any]) -
     return policy["bootstrap_diagnostic_log_stream_prefix"] + task_id
 
 
+def failed_bootstrap_receipt_label(policy: dict[str, Any]) -> str:
+    """Select only the durable terminal bootstrap receipt being diagnosed."""
+
+    ledger = load_ledger(policy)
+    receipt = ledger["stages"].get("bootstrap")
+    label = receipt.get("label") if isinstance(receipt, dict) else None
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("state") != "failed"
+        or not isinstance(label, str)
+        or not re.fullmatch(r"kb-pg6-bootstrap-r5-a[1-4]", label)
+    ):
+        raise RelationalSmokeError("the bootstrap diagnostic has no durable terminal failed receipt")
+    return label
+
+
 def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
-    """Classify one consumed recovery-1 task without emitting task or log details."""
+    """Classify one durable failed bootstrap without emitting task or log details."""
 
     verify_account(policy)
     update_complete(policy["service_stack"], policy)
     outputs = stack_outputs(policy)
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"]["bootstrap"], "--desired-status", "STOPPED"], policy)
+    label = failed_bootstrap_receipt_label(policy)
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
     task_arns = listed.get("taskArns")
     if not isinstance(task_arns, list) or len(task_arns) != 1 or not isinstance(task_arns[0], str):
         raise RelationalSmokeError("the fixed bootstrap diagnostic cannot identify one consumed terminal task")
