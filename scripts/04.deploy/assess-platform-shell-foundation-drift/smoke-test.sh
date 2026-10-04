@@ -31,6 +31,21 @@ if [[ "$result" != *'"id": "source-policy"'* || "$result" != *'"verdict": "passe
   echo "ERROR: Foundation drift-classifier source validation did not emit the expected safe result" >&2
   exit 1
 fi
+fake_aws="$(mktemp)"
+trap 'rm -f "$fake_aws"' EXIT
+cat >"$fake_aws" <<'EOF'
+#!/usr/bin/env bash
+exit 9
+EOF
+chmod 700 "$fake_aws"
+if result="$(bash scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh --execute-approved-active-foundation-drift-assessment --aws-cli "$fake_aws" --evidence-file /tmp/foundation-drift-smoke-evidence.json --json 2>&1)"; then
+  echo "ERROR: Foundation drift classifier unexpectedly accepted a failing AWS subprocess" >&2
+  exit 1
+fi
+if [[ "$result" != *'"id": "aws-account-verification-unavailable"'* || "$result" != *'"failure_class": "nonzero-exit"'* ]]; then
+  echo "ERROR: Foundation drift classifier did not emit the safe AWS subprocess failure class" >&2
+  exit 1
+fi
 if grep -Eq -- 'expectedvalue|actualvalue|create-change-set|execute-change-set|get-secret-value|put-role-policy' scripts/04.deploy/assess-platform-shell-foundation-drift/script.py; then
   echo "ERROR: Foundation drift classifier must not expose values, read secrets, or mutate configuration" >&2
   exit 1
