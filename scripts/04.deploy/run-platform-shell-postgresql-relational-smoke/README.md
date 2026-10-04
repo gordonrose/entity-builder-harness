@@ -73,6 +73,18 @@ It reads terminal metadata and, only when needed, the fixed task log stream in
 memory. It never prints task IDs, stopped reasons, log lines, stack traces,
 credentials, or provider responses.
 
+To prepare a recovery decision without starting work, read the fixed aggregate
+state instead:
+
+```bash
+npm run platform:shell:postgresql-relational-smoke -- --reconcile-current-state
+```
+
+This reports only server/worker desired and running counts, isolated queue
+totals, source-database posture, and whether the fixed disposable restore target
+is absent. It does not receive queue messages, query application rows, start a
+task, create a restore, or modify AWS configuration.
+
 The restore is private and disposable. The controller waits for the restored
 instance, checks the fixed smoke state through a dedicated `verify-full` TLS
 task, and deletes that recovery instance without a final snapshot. It retains
