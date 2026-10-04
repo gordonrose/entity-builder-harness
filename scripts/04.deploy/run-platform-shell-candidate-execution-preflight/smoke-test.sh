@@ -58,6 +58,8 @@ from pathlib import Path
 import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"))
+assert "/tmp/" not in str(module["DEFAULT_CANDIDATE_LEDGER_PATH"])
+assert module["DEFAULT_CANDIDATE_LEDGER_PATH"].parent.name == "postgresql-stage6-receipts"
 image_a = "example.invalid/repository@sha256:" + "a" * 64
 image_b = "example.invalid/repository@sha256:" + "b" * 64
 base = {

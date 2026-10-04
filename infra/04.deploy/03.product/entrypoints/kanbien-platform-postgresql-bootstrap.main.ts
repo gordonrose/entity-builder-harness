@@ -31,6 +31,10 @@ async function main(): Promise<void> {
     await pool.query({ text: "GRANT CONNECT, CREATE, TEMPORARY ON DATABASE platformsmoke TO psmokemigrate" });
     await pool.query({ text: "GRANT CONNECT ON DATABASE platformsmoke TO psmokeruntime" });
     phase = "bootstrap-schema-provisioning-failure";
+    // PostgreSQL requires the creator to be able to SET ROLE to assign schema
+    // ownership. The managed RDS master created this role, but is not a
+    // superuser; grant the exact owned role to the current bootstrap identity.
+    await pool.query({ text: "GRANT psmokemigrate TO CURRENT_USER" });
     await pool.query({ text: "CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate" });
     phase = "bootstrap-schema-grant-failure";
     await pool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });

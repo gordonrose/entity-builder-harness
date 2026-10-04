@@ -98,6 +98,10 @@ if ! grep -Eq -- 'code === "42501"' infra/04.deploy/03.product/entrypoints/kanbi
   echo "ERROR: bootstrap authorization failures must retain their reviewed operation phase." >&2
   exit 1
 fi
+if ! grep -Eq -- 'GRANT psmokemigrate TO CURRENT_USER' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts || ! grep -Eq -- 'CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
+  echo "ERROR: bootstrap must establish the reviewed SET ROLE membership before assigning schema ownership." >&2
+  exit 1
+fi
 if ! grep -Eq -- 'credentialsFromEnvironment\("RELATIONAL_MASTER_SECRET_JSON"\)' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts || ! grep -Eq -- 'host: migration\.host, port: migration\.port' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: bootstrap must support a credentials-only RDS-managed master secret through the target-owned migration connection endpoint" >&2
   exit 1
@@ -108,6 +112,8 @@ from pathlib import Path
 import tempfile
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"))
+assert "/tmp/" not in str(module["DEFAULT_LEDGER_PATH"])
+assert module["DEFAULT_LEDGER_PATH"].parent.name == "postgresql-stage6-receipts"
 temporary = Path(tempfile.mkdtemp())
 ledger_policy = {
     "ledger_path": temporary / "receipts.json",
