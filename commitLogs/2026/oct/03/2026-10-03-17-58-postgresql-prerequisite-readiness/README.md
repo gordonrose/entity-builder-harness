@@ -173,6 +173,13 @@ test remains outstanding. Required owner action: enable Docker Desktop Settings
 `docker info`, then run `bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh`.
 Expected success text: `Platform shell image smoke test passed.`
 
+### 2026-10-04 - Actual container-image smoke confirmed
+
+The user confirmed that the actual `smoke-test-platform-shell-image` execution
+succeeded after Docker was made available. This closes the previously explicit
+image-runtime prerequisite; it does not publish an image, deploy a revision,
+or authorize a Stage 6 task.
+
 
 ### 2026-10-04T14:10:37Z - Commit recorded
 
