@@ -40,7 +40,10 @@ Resume and complete PostgreSQL Stage 6 now.
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: The old promotion and bootstrap gates accepted only the failed single diagnostic label despite two successful fact tasks.
+  Resolution: A source-bound durable assessment now binds both successful fact receipts, their immutable task bindings, and the twelve facts; unexplained or mismatched evidence remains blocked.
 
 ## Decisions Made
 
@@ -48,6 +51,10 @@ Resume and complete PostgreSQL Stage 6 now.
 
 - Decision: Carry forward the established Stage 6 receipts and repair the demonstrated reconciliation gates.
   Rationale: The user authorized completion without resetting RDS or discarding data.
+
+
+- Decision: Treat the exact roles-and-grants-without-schema pattern as a recoverable interrupted setup.
+  Rationale: The PostgreSQL 17 restricted-admin regression proves the corrected bootstrap completes and repeats safely; no RDS reset is needed.
 
 ## Context Hygiene
 
@@ -82,6 +89,20 @@ Durable evidence: .git/postgresql-stage6-receipts/stage-attempts.json
 ADR needed: no
 
 Reason: The controller correction is a bounded PostgreSQL execution repair.
+
+
+### 2026-10-04T23:11:32Z - Issue
+
+Raised: The old promotion and bootstrap gates accepted only the failed single diagnostic label despite two successful fact tasks.
+
+Resolution: A source-bound durable assessment now binds both successful fact receipts, their immutable task bindings, and the twelve facts; unexplained or mismatched evidence remains blocked.
+
+
+### 2026-10-04T23:11:32Z - Decision
+
+Decision: Treat the exact roles-and-grants-without-schema pattern as a recoverable interrupted setup.
+
+Rationale: The PostgreSQL 17 restricted-admin regression proves the corrected bootstrap completes and repeats safely; no RDS reset is needed.
 
 ## Sub-Agent Activity
 

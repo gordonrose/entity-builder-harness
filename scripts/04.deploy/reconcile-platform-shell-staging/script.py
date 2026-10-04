@@ -29,6 +29,7 @@ import argparse
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -43,6 +44,17 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 AWS_MAX_ATTEMPTS = 3
 AWS_RETRY_BACKOFF_SECONDS = (1, 2)
 BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
+BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE = "bootstrap_effects_assessment"
+BOOTSTRAP_EFFECTS_FACT_LABELS = {
+    "bootstrap_effects_facts_one": "kb-pg6-be-f1-r5-a1",
+    "bootstrap_effects_facts_two": "kb-pg6-be-f2-r5-a1",
+}
+RECOVERABLE_INTERRUPTED_SCHEMA_SETUP = {
+    "migration_role_exists": True, "runtime_role_exists": True, "bootstrap_has_migration_membership": False,
+    "migration_database_connect": True, "migration_database_create": True, "migration_database_temporary": True,
+    "runtime_database_connect": True, "schema_exists": False, "schema_owned_by_migration": False,
+    "runtime_schema_usage": False, "runtime_schema_create_restricted": False, "runtime_existing_table_dml": False,
+}
 
 
 class ReconciliationError(Exception):
@@ -526,12 +538,24 @@ def check_bootstrap_effects_reconciliation_receipt(receipt_path: Path | None = N
     except (OSError, json.JSONDecodeError) as exception:
         raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
     stages = ledger.get("stages") if isinstance(ledger, dict) else None
-    receipt = stages.get(BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE) if isinstance(stages, dict) else None
-    if (
-        not isinstance(receipt, dict)
-        or receipt.get("state") != "succeeded"
-        or receipt.get("label") != "kb-pg6-bootstrap-effects-r5-a1"
-    ):
+    receipt = stages.get(BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE) if isinstance(stages, dict) else None
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("assessment_state") not in {"pristine", "fully-ready", "recoverable-interrupted-schema-setup"}:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    facts = receipt.get("facts")
+    fact_receipts = receipt.get("fact_receipts")
+    if not isinstance(facts, dict) or not isinstance(fact_receipts, list) or len(fact_receipts) != 2:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    observed = {item.get("stage"): item.get("label") for item in fact_receipts if isinstance(item, dict)}
+    if observed != BOOTSTRAP_EFFECTS_FACT_LABELS:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    images = set()
+    for item in fact_receipts:
+        if not isinstance(item, dict) or not isinstance(item.get("task_definition_revision"), int) or item["task_definition_revision"] < 1 or not isinstance(item.get("image"), str) or "@sha256:" not in item["image"] or not isinstance(item.get("diagnostic_code_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", item["diagnostic_code_sha256"]):
+            raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+        images.add(item["image"])
+    if len(images) != 1:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    if receipt.get("assessment_state") == "recoverable-interrupted-schema-setup" and facts != RECOVERABLE_INTERRUPTED_SCHEMA_SETUP:
         raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
 
 

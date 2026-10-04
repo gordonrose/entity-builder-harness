@@ -90,8 +90,20 @@ except module["ReconciliationError"] as exception:
     assert str(exception) == "bootstrap-effect-reconciliation-receipt-missing"
 else:
     raise AssertionError("promotion accepted a missing bootstrap-effect reconciliation receipt")
-receipt_path.write_text(json.dumps({"schema": "postgresql-stage6-attempt-ledger/v1", "stages": {"bootstrap_effects_reconciliation": {"label": "kb-pg6-bootstrap-effects-r5-a1", "state": "succeeded"}}}), encoding="utf-8")
+facts = {"migration_role_exists": True, "runtime_role_exists": True, "bootstrap_has_migration_membership": False, "migration_database_connect": True, "migration_database_create": True, "migration_database_temporary": True, "runtime_database_connect": True, "schema_exists": False, "schema_owned_by_migration": False, "runtime_schema_usage": False, "runtime_schema_create_restricted": False, "runtime_existing_table_dml": False}
+image = "registry.example/platform@sha256:" + "a" * 64
+fact_receipts = [{"stage": stage, "label": label, "task_definition_revision": 9, "image": image, "diagnostic_code_sha256": "b" * 64} for stage, label in module["BOOTSTRAP_EFFECTS_FACT_LABELS"].items()]
+receipt_path.write_text(json.dumps({"schema": "postgresql-stage6-attempt-ledger/v1", "stages": {"bootstrap_effects_reconciliation": {"label": "kb-pg6-bootstrap-effects-r5-a1", "state": "failed"}, "bootstrap_effects_assessment": {"state": "succeeded", "assessment_state": "recoverable-interrupted-schema-setup", "facts": facts, "fact_receipts": fact_receipts}}}), encoding="utf-8")
 module["check_bootstrap_effects_reconciliation_receipt"](receipt_path)
+# A mismatched fact binding must not promote a candidate.
+fact_receipts[1]["image"] = "registry.example/platform@sha256:" + "c" * 64
+receipt_path.write_text(json.dumps({"schema": "postgresql-stage6-attempt-ledger/v1", "stages": {"bootstrap_effects_assessment": {"state": "succeeded", "assessment_state": "recoverable-interrupted-schema-setup", "facts": facts, "fact_receipts": fact_receipts}}}), encoding="utf-8")
+try:
+    module["check_bootstrap_effects_reconciliation_receipt"](receipt_path)
+except module["ReconciliationError"]:
+    pass
+else:
+    raise AssertionError("promotion accepted mismatched fact bindings")
 
 try:
     module["run_check"](

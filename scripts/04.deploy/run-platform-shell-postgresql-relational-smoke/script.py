@@ -25,6 +25,26 @@ CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
 STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verification")
 BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
+BOOTSTRAP_EFFECTS_FACT_STAGES = ("bootstrap_effects_facts_one", "bootstrap_effects_facts_two")
+BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE = "bootstrap_effects_assessment"
+BOOTSTRAP_EFFECTS_FACT_LABELS = {
+    "bootstrap_effects_facts_one": "kb-pg6-be-f1-r5-a1",
+    "bootstrap_effects_facts_two": "kb-pg6-be-f2-r5-a1",
+}
+RECOVERABLE_INTERRUPTED_SCHEMA_SETUP = {
+    "migration_role_exists": True,
+    "runtime_role_exists": True,
+    "bootstrap_has_migration_membership": False,
+    "migration_database_connect": True,
+    "migration_database_create": True,
+    "migration_database_temporary": True,
+    "runtime_database_connect": True,
+    "schema_exists": False,
+    "schema_owned_by_migration": False,
+    "runtime_schema_usage": False,
+    "runtime_schema_create_restricted": False,
+    "runtime_existing_table_dml": False,
+}
 
 # This command has no interpolation and accepts no caller input.  ECS supplies
 # it only as the reviewed bootstrap container's command override, retaining the
@@ -87,17 +107,18 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
     parser.add_argument("--reconcile-current-state", action="store_true", help="Read only the fixed relational aggregate state without starting a task.")
     parser.add_argument("--reconcile-bootstrap-effects", action="store_true", help="Run one fixed read-only bootstrap-effect reconciliation task.")
+    parser.add_argument("--assess-bootstrap-effects", action="store_true", help="Persist a validated assessment from completed fixed fact receipts.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     parser.add_argument("--approve-relational-bootstrap-effects-reconciliation", action="store_true", help="Acknowledge only the fixed read-only bootstrap-effect reconciliation task.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state, result.reconcile_bootstrap_effects))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state, result.reconcile_bootstrap_effects, result.assess_bootstrap_effects))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
     approvals = (result.approve_relational_stage6, result.approve_relational_bootstrap_recovery, result.approve_relational_recovery_continuation, result.approve_relational_bootstrap_recovery_diagnostic, result.approve_relational_bootstrap_effects_reconciliation)
-    if (result.validate or result.reconcile_current_state) and any(approvals):
+    if (result.validate or result.reconcile_current_state or result.assess_bootstrap_effects) and any(approvals):
         parser.error("an execution approval guard is unavailable in validation mode")
     if result.execute and (not result.approve_relational_stage6 or any(approvals[1:])):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
@@ -740,11 +761,68 @@ def execute_bootstrap_effects_reconciliation(policy: dict[str, Any]) -> dict[str
     return facts
 
 
-def require_bootstrap_effects_reconciliation(policy: dict[str, Any]) -> None:
-    """Gate a fresh bootstrap attempt on the durable no-write effect reconciliation receipt."""
+def recognized_bootstrap_effects_state(facts: dict[str, bool]) -> str:
+    """Accept only pristine, ready, or the reviewed interrupted schema-setup point."""
 
-    if not stage_succeeded(BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE, policy):
-        raise RelationalSmokeError("bootstrap recovery requires a successful durable bootstrap-effect reconciliation")
+    if set(facts) != set(BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS) or any(not isinstance(value, bool) for value in facts.values()):
+        raise RelationalSmokeError("bootstrap-effect facts are incomplete")
+    if facts == RECOVERABLE_INTERRUPTED_SCHEMA_SETUP:
+        return "recoverable-interrupted-schema-setup"
+    if all(facts.values()):
+        return "fully-ready"
+    if not any(facts.values()):
+        return "pristine"
+    raise RelationalSmokeError("bootstrap-effect facts describe an unexplained partial database state")
+
+
+def assess_bootstrap_effects(policy: dict[str, Any]) -> str:
+    """Bind two completed fact receipts and their durable result to this target."""
+
+    source_database(policy)
+    ledger = load_ledger(policy)
+    stages = ledger["stages"]
+    receipt_details: list[dict[str, Any]] = []
+    for stage in BOOTSTRAP_EFFECTS_FACT_STAGES:
+        receipt = stages.get(stage)
+        if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("label") != BOOTSTRAP_EFFECTS_FACT_LABELS[stage]:
+            raise RelationalSmokeError("bootstrap-effect assessment lacks a completed required fact receipt")
+        binding = {key: receipt.get(key) for key in ("task_definition_revision", "image", "diagnostic_code_sha256")}
+        if not isinstance(binding["task_definition_revision"], int) or binding["task_definition_revision"] < 1 or not isinstance(binding["image"], str) or IMMUTABLE_IMAGE.fullmatch(binding["image"]) is None or not isinstance(binding["diagnostic_code_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", binding["diagnostic_code_sha256"]) is None:
+            raise RelationalSmokeError("bootstrap-effect assessment receipt binding is invalid")
+        if not isinstance(receipt.get("submitted_at"), (int, float)):
+            raise RelationalSmokeError("bootstrap-effect assessment receipt timing is invalid")
+        receipt_details.append({"stage": stage, "label": receipt["label"], **binding, "submitted_at": receipt["submitted_at"]})
+    if receipt_details[0]["image"] != receipt_details[1]["image"] or receipt_details[0]["task_definition_revision"] != receipt_details[1]["task_definition_revision"]:
+        raise RelationalSmokeError("bootstrap-effect assessment fact receipts do not share one task binding")
+    facts_files = sorted(ledger_path(policy).parent.glob("bootstrap-effects-facts-*.stdout"))
+    if len(facts_files) != 1:
+        raise RelationalSmokeError("bootstrap-effect assessment durable facts evidence is unavailable")
+    try:
+        evidence = json.loads(facts_files[0].read_text(encoding="utf-8"))
+        facts = evidence["postgresql_relational_bootstrap_effect_facts"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exception:
+        raise RelationalSmokeError("bootstrap-effect assessment durable facts evidence is invalid") from exception
+    state = recognized_bootstrap_effects_state(facts)
+    latest_fact = max(float(item["submitted_at"]) for item in receipt_details if isinstance(item.get("submitted_at"), (int, float)))
+    for stage in STAGE_ORDER:
+        previous = stages.get(stage)
+        if isinstance(previous, dict) and isinstance(previous.get("submitted_at"), (int, float)) and previous["submitted_at"] > latest_fact:
+            raise RelationalSmokeError("bootstrap-effect assessment is superseded by a later database stage")
+    stages[BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE] = {
+        "stage": BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE, "state": "succeeded", "assessment_state": state,
+        "facts": facts, "source_database": policy["source_database"], "account": ACCOUNT, "region": REGION,
+        "fact_receipts": receipt_details, "assessed_at": time.time(),
+    }
+    save_ledger(policy, ledger)
+    return state
+
+
+def require_bootstrap_effects_reconciliation(policy: dict[str, Any]) -> None:
+    """Gate recovery on a validated assessment, never the failed original diagnostic."""
+
+    receipt = load_ledger(policy)["stages"].get(BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE)
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("assessment_state") not in {"pristine", "fully-ready", "recoverable-interrupted-schema-setup"}:
+        raise RelationalSmokeError("bootstrap recovery requires a validated bootstrap-effect assessment")
 
 
 def source_database(policy: dict[str, Any]) -> dict[str, Any]:
@@ -841,6 +919,34 @@ def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
                 raise RelationalSmokeError("the disposable recovery database did not finish cleanup within its reviewed wait limit")
 
 
+def reconcile_continuation_queue_checkpoint(outputs: dict[str, str], policy: dict[str, Any]) -> str:
+    """Resume from the durable relay/worker checkpoint without replaying delivery."""
+
+    queue = queue_total(outputs["RelationalSmokeQueueUrl"], policy)
+    dead = queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy)
+    if stage_succeeded("worker", policy):
+        if queue != 0 or dead != 0:
+            raise RelationalSmokeError("the completed worker checkpoint does not have terminal empty queues")
+        return "worker-complete"
+    if stage_succeeded("relay", policy):
+        if queue != 1 or dead != 0:
+            raise RelationalSmokeError("the completed relay checkpoint lacks its one expected worker message")
+        return "relay-complete"
+    if queue != 0 or dead != 0:
+        raise RelationalSmokeError("the pre-relay checkpoint does not have empty isolated queues")
+    return "before-relay"
+
+
+def wait_for_queue_total(outputs: dict[str, str], expected: int, policy: dict[str, Any]) -> None:
+    """Wait only for the next incomplete checkpoint's reviewed queue count."""
+
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != expected:
+        time.sleep(5)
+    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != expected:
+        raise RelationalSmokeError("the relational continuation did not reach its reviewed queue checkpoint")
+
+
 def execute(policy: dict[str, Any]) -> None:
     """Run every stage only after its immediately preceding safe condition passes."""
 
@@ -849,8 +955,9 @@ def execute(policy: dict[str, Any]) -> None:
     candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
-    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0):
         raise RelationalSmokeError("the relational proof preconditions are not the reviewed dormant aggregate state")
+    queue_checkpoint = reconcile_continuation_queue_checkpoint(outputs, policy)
     source_database(policy)
     require_bootstrap_effects_reconciliation(policy)
     if not stage_succeeded("bootstrap", policy):
@@ -859,16 +966,12 @@ def execute(policy: dict[str, Any]) -> None:
         run_and_wait("migration", network, policy)
     if not stage_succeeded("relay", policy):
         run_and_wait("relay", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        time.sleep(5)
-    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
+        wait_for_queue_total(outputs, 1, policy)
+    elif queue_checkpoint != "worker-complete":
+        wait_for_queue_total(outputs, 1, policy)
     if not stage_succeeded("worker", policy):
         run_and_wait("worker", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
-        time.sleep(5)
+        wait_for_queue_total(outputs, 0, policy)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
     if not stage_succeeded("restore_verification", policy):
@@ -902,24 +1005,21 @@ def execute_recovery_continuation(policy: dict[str, Any]) -> None:
     candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
-    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0):
         raise RelationalSmokeError("the recovery continuation preconditions are not the reviewed dormant aggregate state")
+    queue_checkpoint = reconcile_continuation_queue_checkpoint(outputs, policy)
     source_database(policy)
     prior_label_succeeded("bootstrap", policy)
     if not stage_succeeded("migration", policy):
         run_and_wait("migration", network, policy)
     if not stage_succeeded("relay", policy):
         run_and_wait("relay", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        time.sleep(5)
-    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
+        wait_for_queue_total(outputs, 1, policy)
+    elif queue_checkpoint != "worker-complete":
+        wait_for_queue_total(outputs, 1, policy)
     if not stage_succeeded("worker", policy):
         run_and_wait("worker", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
-        time.sleep(5)
+        wait_for_queue_total(outputs, 0, policy)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
     if not stage_succeeded("restore_verification", policy):
@@ -1066,6 +1166,9 @@ def main() -> int:
         if parsed.reconcile_bootstrap_effects:
             facts = execute_bootstrap_effects_reconciliation(policy)
             print(json.dumps({"postgresql_relational_bootstrap_effects_reconciliation": facts}, sort_keys=True))
+            return 0
+        if parsed.assess_bootstrap_effects:
+            print(json.dumps({"postgresql_relational_bootstrap_effect_assessment": assess_bootstrap_effects(policy)}, sort_keys=True))
             return 0
         if parsed.reconcile_current_state:
             print(json.dumps({"postgresql_relational_current_state": reconcile_current_state(policy)}, sort_keys=True))

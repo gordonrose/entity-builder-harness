@@ -916,7 +916,7 @@ rate_limiting:
     edge_protection: required
 persistence:
   relational_reference:
-    status: stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready
+    status: stage-5-live-boundary-proven-stage-6-recovery-5-prerequisites-ready
     source_plan: .agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md
     deployment_plan: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
     threat_model: docs/aws/kanbien-staging-postgresql-relational-reference-v1-threat-model.md
@@ -1022,7 +1022,7 @@ persistence:
       live_boundary_verifier: passed
       next_gate: stage-6-deploy-isolated-relational-smoke-composition-after-reviewed-change-set
     stage_6_relational_smoke_composition:
-      status: candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required
+      status: candidate-preflight-dormant-definition-deployed-finite-same-image-attempts-require-durable-reconciliation
       isolated_resources:
         - relational-bootstrap-task-definition
         - relational-migration-task-definition
@@ -1138,11 +1138,11 @@ persistence:
           worker: relational-worker
           restore_verification: relational-restore-verify
         started_by:
-          bootstrap: kanbien-postgresql-stage6-bootstrap-20260928-recovery-4
-          migration: kanbien-postgresql-stage6-migration-20260928-recovery-4
-          relay: kanbien-postgresql-stage6-relay-20260928-recovery-4
-          worker: kanbien-postgresql-stage6-worker-20260928-recovery-4
-          restore_verification: kanbien-postgresql-stage6-restore-verify-20260928-recovery-4
+          bootstrap: kb-pg6-bootstrap-r5
+          migration: kb-pg6-migration-r5
+          relay: kb-pg6-relay-r5
+          worker: kb-pg6-worker-r5
+          restore_verification: kb-pg6-restore-r5
         task_wait_seconds: 900
         restore_wait_seconds: 1800
         required_queue_counts:
