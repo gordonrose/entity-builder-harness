@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: chat.script.startup.start-chat-session
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 00.chat
 #   domain: startup
@@ -26,7 +26,6 @@ set -euo pipefail
 #   - worktrees
 #   - writes-files
 #   - stages-files
-AGENTIC_ENV_FILE=".agentic/env.local"
 
 # shellcheck source=../../session-log/paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"
@@ -40,12 +39,8 @@ if [ "${CHAT_CLEANUP_EMPTY_BRANCHES+x}" = "x" ]; then
   CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET="yes"
 fi
 
-if [ -f "$AGENTIC_ENV_FILE" ]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$AGENTIC_ENV_FILE"
-  set +a
-fi
+REPO_ROOT="$(chat_worktree_repo_root)"
+chat_worktree_load_config "$REPO_ROOT"
 
 if [ "$CHAT_CLEANUP_EMPTY_BRANCHES_WAS_SET" = "yes" ]; then
   CHAT_CLEANUP_EMPTY_BRANCHES="$CHAT_CLEANUP_EMPTY_BRANCHES_SHELL_VALUE"
@@ -84,7 +79,6 @@ SLUG="$(echo "$QUESTION" \
 BRANCH="chat/${STAMP}-${SLUG}"
 LOG_DIR="$(chat_log_grouped_dir_for_session "${STAMP}-${SLUG}")"
 LOG_FILE="${LOG_DIR}/README.md"
-REPO_ROOT="$(chat_worktree_repo_root)"
 WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
 BASE_BRANCH="main"
 CHAT_LIFECYCLE_WORKFLOW=".agentic/00.chat/workflows/chat-start.md"
@@ -108,8 +102,22 @@ if [ "$OUTPUT_FORMAT" = "text" ]; then
   git status --short
 fi
 
+if [ -e "$WORKTREE_PATH" ]; then
+  echo "ERROR: new chat worktree destination already exists: $WORKTREE_PATH" >&2
+  exit 1
+fi
+
+if ! mkdir -p "${WORKTREE_PATH%/*}"; then
+  echo "ERROR: cannot create persistent chat worktree root: ${WORKTREE_PATH%/*}" >&2
+  exit 1
+fi
+
+if [ ! -w "${WORKTREE_PATH%/*}" ]; then
+  echo "ERROR: persistent chat worktree root is not writable: ${WORKTREE_PATH%/*}" >&2
+  exit 1
+fi
+
 git branch "$BRANCH" "$BASE_BRANCH"
-mkdir -p "${WORKTREE_PATH%/*}"
 git worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
 
 mkdir -p "$WORKTREE_PATH/$LOG_DIR"

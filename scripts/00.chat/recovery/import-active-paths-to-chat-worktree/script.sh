@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: chat.script.recovery.import-active-paths-to-chat-worktree
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 00.chat
 #   domain: recovery
@@ -105,6 +105,9 @@ REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
 source "$REPO_ROOT/scripts/00.chat/worktree/paths/lib.sh"
 # shellcheck source=../../session-log/paths/lib.sh
 source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+
+REPO_ROOT="$(chat_worktree_repo_root "$REPO_ROOT")"
+chat_worktree_load_config "$REPO_ROOT"
 
 if [ -z "${SOURCE_WORKTREE// }" ]; then
   SOURCE_WORKTREE="$REPO_ROOT"

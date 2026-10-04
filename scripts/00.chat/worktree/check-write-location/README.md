@@ -30,10 +30,10 @@ worktree created for that chat branch.
 
 ## Mental Model
 
-Each chat branch has one canonical worktree path. If an agent edits from the
-root integration worktree, it can mix task work with local integration state. If
-an agent edits a chat branch from an unexpected worktree, the harness can no
-longer rely on its branch-to-directory ownership model.
+Each chat branch has one registered chat worktree path. If an agent edits from
+the root integration worktree, it can mix task work with local integration
+state. If an agent edits a chat branch from an unexpected worktree, the harness
+can no longer rely on its branch-to-directory ownership model.
 
 This gate protects that invariant before write-heavy or commit-boundary work.
 
@@ -44,7 +44,11 @@ The script verifies:
 - the current repository path is not the primary/root worktree, unless explicit
   root maintenance is allowed
 - the current branch is a `chat/*` branch
-- the current path matches the canonical chat worktree path for that branch
+- the current path matches the unique Git-registered worktree for that branch
+- the session log records the same branch and worktree
+
+The gate accepts a registered legacy worktree whose path differs from the
+current default. It rejects multiple branch worktrees as ambiguous.
 
 On success it prints:
 

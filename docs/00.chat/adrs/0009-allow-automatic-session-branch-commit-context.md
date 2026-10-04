@@ -71,7 +71,7 @@ bash scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh \
 The retired helper read the branch from the session log, validated that it was a local
 `chat/*` branch, and runs the requested command inside a deterministic isolated
 worktree for that branch. The default worktree root is under
-`${AGENTIC_CHAT_WORKTREE_ROOT:-/tmp/agentic-chat-worktrees/...}`. The same repo
+`${AGENTIC_CHAT_WORKTREE_ROOT:-$HOME/projects/.chat-worktrees/...}`. The same repo
 path and branch resolve to the same reusable worktree path.
 
 The retired helper did not switch, stage, clean, discard, or otherwise mutate the

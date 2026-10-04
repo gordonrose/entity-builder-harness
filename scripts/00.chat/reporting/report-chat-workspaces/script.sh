@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: chat.script.reporting.report-chat-workspaces
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 00.chat
 #   domain: reporting
@@ -26,13 +26,16 @@ set -euo pipefail
 
 BASE_BRANCH="${1:-main}"
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
+CALLER_ROOT="$(git rev-parse --show-toplevel)"
+CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
 
 # shellcheck source=../../worktree/paths/lib.sh
-source "$REPO_ROOT/scripts/00.chat/worktree/paths/lib.sh"
+source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
 # shellcheck source=../../session-log/paths/lib.sh
-source "$REPO_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+source "$CALLER_ROOT/scripts/00.chat/session-log/paths/lib.sh"
+
+REPO_ROOT="$(chat_worktree_repo_root "$CALLER_ROOT")"
+chat_worktree_load_config "$REPO_ROOT"
 
 if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BASE_BRANCH}"; then
   echo "ERROR: base branch does not exist: $BASE_BRANCH" >&2
@@ -67,7 +70,7 @@ git -C "$REPO_ROOT" branch --format='%(refname:short)' | while IFS= read -r bran
 
   ahead="$(git -C "$REPO_ROOT" rev-list --count "${BASE_BRANCH}..${branch}")"
   behind="$(git -C "$REPO_ROOT" rev-list --count "${branch}..${BASE_BRANCH}")"
-  worktree_path="$(chat_worktree_path_for_branch "$REPO_ROOT" "$branch")"
+  worktree_path="$(chat_worktree_path_for_existing_or_new_branch "$REPO_ROOT" "$branch")"
   status="absent"
 
   if [ -d "$worktree_path/.git" ] || git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then

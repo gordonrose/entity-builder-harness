@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: chat.script.worktree.ensure-chat-worktree
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 00.chat
 #   domain: worktree
@@ -39,20 +39,34 @@ if [ $# -ne 1 ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 2
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_ROOT="$(cd "$REPO_ROOT" && pwd -P)"
+CALLER_ROOT="$(git rev-parse --show-toplevel)"
+CALLER_ROOT="$(cd "$CALLER_ROOT" && pwd -P)"
 
 # shellcheck source=../paths/lib.sh
-source "$REPO_ROOT/scripts/00.chat/worktree/paths/lib.sh"
+source "$CALLER_ROOT/scripts/00.chat/worktree/paths/lib.sh"
+
+REPO_ROOT="$(chat_worktree_repo_root "$CALLER_ROOT")"
+chat_worktree_load_config "$REPO_ROOT"
 
 SESSION_LOG="$1"
 case "$SESSION_LOG" in
   /*) ;;
-  *) SESSION_LOG="$REPO_ROOT/$SESSION_LOG" ;;
+  *) SESSION_LOG="$CALLER_ROOT/$SESSION_LOG" ;;
 esac
 
 if [ ! -f "$SESSION_LOG" ]; then
   echo "ERROR: missing chat session log: $SESSION_LOG" >&2
+  exit 1
+fi
+
+SESSION_ROOT="$(git -C "$(dirname "$SESSION_LOG")" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "${SESSION_ROOT// }" ]; then
+  echo "ERROR: session log is outside a Git worktree: $SESSION_LOG" >&2
+  exit 1
+fi
+SESSION_PRIMARY="$(chat_worktree_repo_root "$SESSION_ROOT")"
+if [ "$SESSION_PRIMARY" != "$REPO_ROOT" ]; then
+  echo "ERROR: session log belongs to a different repository: $SESSION_LOG" >&2
   exit 1
 fi
 
@@ -75,58 +89,69 @@ if ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${BRANCH}"; then
   exit 1
 fi
 
-WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
-WORKTREE_ROOT="${WORKTREE_PATH%/*}"
-PRIMARY_PATH="$(chat_worktree_primary_path)"
-PRIMARY_PATH="$(cd "$PRIMARY_PATH" && pwd -P)"
-
-branch_worktrees="$(
-  git -C "$REPO_ROOT" worktree list --porcelain \
-    | awk -v branch="refs/heads/${BRANCH}" '
-      /^worktree / { path = substr($0, 10) }
-      /^branch / && substr($0, 8) == branch { print path }
-    '
-)"
-
-while IFS= read -r branch_worktree; do
-  if [ -z "${branch_worktree// }" ]; then
-    continue
-  fi
-
-  branch_worktree="$(cd "$branch_worktree" && pwd -P)"
-
-  if [ "$branch_worktree" = "$WORKTREE_PATH" ]; then
-    continue
-  fi
-
-  if [ "$branch_worktree" = "$PRIMARY_PATH" ]; then
-    echo "ERROR: session branch is checked out in the root integration worktree:" >&2
-    echo "$branch_worktree" >&2
-    echo "Switch the root worktree away from the chat branch before creating the chat-owned worktree." >&2
-    exit 1
-  fi
-
-  echo "ERROR: session branch is already checked out in another worktree:" >&2
-  echo "$branch_worktree" >&2
-  echo "Expected chat-owned worktree:" >&2
-  echo "$WORKTREE_PATH" >&2
+RECORDED_WORKTREE="$(chat_worktree_metadata_value "$SESSION_LOG" "worktree")"
+if [ -z "${RECORDED_WORKTREE// }" ]; then
+  echo "ERROR: session log is missing worktree metadata: $SESSION_LOG" >&2
   exit 1
-done <<< "$branch_worktrees"
+fi
+case "$RECORDED_WORKTREE" in
+  /*) ;;
+  *) RECORDED_WORKTREE="$(dirname "$SESSION_LOG")/$RECORDED_WORKTREE" ;;
+esac
 
-if [ -e "$WORKTREE_PATH" ]; then
-  if ! git -C "$WORKTREE_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "ERROR: chat worktree path exists but is not a git worktree: $WORKTREE_PATH" >&2
+registered_status=0
+set +e
+WORKTREE_PATH="$(chat_worktree_registered_path_for_branch "$REPO_ROOT" "$BRANCH")"
+registered_status=$?
+set -e
+
+if [ "$registered_status" -eq 0 ]; then
+  if [ "$WORKTREE_PATH" = "$REPO_ROOT" ]; then
+    echo "ERROR: session branch is checked out in the root integration worktree: $WORKTREE_PATH" >&2
     exit 1
   fi
-
-  current_branch="$(git -C "$WORKTREE_PATH" branch --show-current)"
-  if [ "$current_branch" != "$BRANCH" ]; then
-    echo "ERROR: chat worktree is on '$current_branch', expected '$BRANCH': $WORKTREE_PATH" >&2
+  if ! RECORDED_CANONICAL="$(cd "$RECORDED_WORKTREE" 2>/dev/null && pwd -P)"; then
+    echo "ERROR: session log records an unavailable worktree: $RECORDED_WORKTREE" >&2
     exit 1
   fi
-else
-  mkdir -p "$WORKTREE_ROOT"
+  if [ "$RECORDED_CANONICAL" != "$WORKTREE_PATH" ]; then
+    echo "ERROR: registered worktree does not match session metadata." >&2
+    echo "Registered: $WORKTREE_PATH" >&2
+    echo "Recorded:   $RECORDED_CANONICAL" >&2
+    exit 1
+  fi
+elif [ "$registered_status" -eq 1 ]; then
+  WORKTREE_PATH="$(chat_worktree_path_for_branch "$REPO_ROOT" "$BRANCH")"
+  if [ "$RECORDED_WORKTREE" != "$WORKTREE_PATH" ]; then
+    echo "ERROR: session log records '$RECORDED_WORKTREE', but no matching worktree is registered." >&2
+    echo "Refusing to create a different worktree for this existing session." >&2
+    exit 1
+  fi
+  if [ -e "$WORKTREE_PATH" ]; then
+    echo "ERROR: chat worktree destination exists but is not registered: $WORKTREE_PATH" >&2
+    exit 1
+  fi
+  if ! mkdir -p "${WORKTREE_PATH%/*}"; then
+    echo "ERROR: cannot create persistent chat worktree root: ${WORKTREE_PATH%/*}" >&2
+    exit 1
+  fi
+  if [ ! -w "${WORKTREE_PATH%/*}" ]; then
+    echo "ERROR: persistent chat worktree root is not writable: ${WORKTREE_PATH%/*}" >&2
+    exit 1
+  fi
   git -C "$REPO_ROOT" worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
+else
+  exit "$registered_status"
+fi
+
+if ! git -C "$WORKTREE_PATH" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "ERROR: registered chat worktree is not a Git worktree: $WORKTREE_PATH" >&2
+  exit 1
+fi
+current_branch="$(git -C "$WORKTREE_PATH" branch --show-current)"
+if [ "$current_branch" != "$BRANCH" ]; then
+  echo "ERROR: chat worktree is on '$current_branch', expected '$BRANCH': $WORKTREE_PATH" >&2
+  exit 1
 fi
 
 printf '%s\n' "$WORKTREE_PATH"
