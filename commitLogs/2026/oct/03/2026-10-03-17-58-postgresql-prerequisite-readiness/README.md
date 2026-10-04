@@ -15,8 +15,8 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-04T13:47:26Z
-latest_commit_sha: 41a96b56ba94a17e8827a9d6c69c8c87875079ee
+latest_commit_at_utc: 2026-10-04T14:10:37Z
+latest_commit_sha: 0ccd012e45c0f6b11b64f697f168be7841218d3a
 chat_duration: 2292s (00:00:38:12)
 estimated_chat_tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
@@ -135,6 +135,59 @@ the historically consumed Recovery-4 labels were unused, so the recorded
 ownership/outcome contradiction remains blocked.
 
 
+### 2026-10-04T14:10:37Z - Durable reconciliation and Recovery-4 decision
+
+Runner evidence: a bounded local continuation probe wrote heartbeats at 16 and
+31 seconds, never wrote its 45-second completion marker, and had no remaining
+process. The current command runner therefore terminates long work rather than
+returning control for continuation. A detached `tmux` session is available and
+was used as the supported durable local shell.
+
+Foundation result: the durable administrator-only assessment completed with a
+passed verdict. It classified only the reviewed `RelationalDatabaseParameterGroup`
+`REMOVE` normalization and confirmed effective TLS remains required. Drift
+assessment metadata changed; no infrastructure configuration or application
+data changed. The ordinary continuous reconciler remains correctly blocked:
+its passive `IN_SYNC` predicate cannot pass while the active assessment records
+the approved known-remediation-required classification.
+
+Current-state evidence: the new fixed read-only diagnostic passed with source
+database available in reviewed posture, public server `1/1`, dormant worker
+`0/0`, source queue total `0`, DLQ total `0`, and the fixed disposable restore
+target absent. The five Recovery-4 labels have zero retained stopped tasks;
+the corresponding historical task records remain absent and cannot be treated
+as proof the old attempt did not happen.
+
+Decision: Recovery-4 remains permanently consumed with incomplete historical
+outcome. It must never be replayed or relabelled as unused. Subject to final
+execution approval, the next candidate is a fresh finite Recovery-5 attempt
+only after the actual immutable-image smoke succeeds and the reviewed
+Foundation remediation/change-set path supplies the required current evidence.
+Any discovered prior effect is preserved and reconciled; no queue clearing,
+data rollback, or whole-route replay is authorized by this decision.
+
+Container-image boundary: this WSL distro exposes a Docker Desktop client path
+but has no Docker engine because WSL integration is disabled. The actual image
+test remains outstanding. Required owner action: enable Docker Desktop Settings
+→ Resources → WSL Integration for this distro, restart Docker Desktop, confirm
+`docker info`, then run `bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh`.
+Expected success text: `Platform shell image smoke test passed.`
+
+
+### 2026-10-04T14:10:37Z - Commit recorded
+
+Commit: `0ccd012e45c0f6b11b64f697f168be7841218d3a`
+
+Message: feat(postgresql): reconcile Stage 6 current state
+
+Summary: Added and locally tested the fixed read-only relational current-state
+diagnostic used for Recovery-4 reconciliation. It returns only aggregate
+service/queue counts and database/restore posture and starts no task.
+
+ADR impact: No new ADR; the existing Stage 6 restart plan remains the governing
+recovery decision record.
+
+
 ### 2026-10-04T13:47:26Z - Commit recorded
 
 Commit: `41a96b56ba94a17e8827a9d6c69c8c87875079ee`
@@ -178,6 +231,13 @@ Foundation drift-assessment boundary while making in-scope failures diagnosable.
   Summary: Added a safe, reviewed subprocess failure class to the Foundation active-drift verifier and a fake-AWS regression check. Updated the matching target, contract, readiness, reconciliation, and boundary policy records.
   ADR impact: No new ADR; this preserves the established administrator-only Foundation drift-assessment boundary while making in-scope failures diagnosable.
 
+
+- Commit: `0ccd012e45c0f6b11b64f697f168be7841218d3a`
+  Time UTC: 2026-10-04T14:10:37Z
+  Message: feat(postgresql): reconcile Stage 6 current state
+  Summary: Added and locally tested the fixed read-only relational current-state diagnostic used for Recovery-4 reconciliation.
+  ADR impact: No new ADR; the existing Stage 6 restart plan remains the governing recovery decision record.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -192,8 +252,8 @@ reviewed scoped applicability amendment.
 ## Session Metrics
 
 Raised at UTC: 2026-10-03T16:58:49Z
-Latest commit at UTC: 2026-10-04T13:47:26Z
-Latest commit SHA: 41a96b56ba94a17e8827a9d6c69c8c87875079ee
+Latest commit at UTC: 2026-10-04T14:10:37Z
+Latest commit SHA: 0ccd012e45c0f6b11b64f697f168be7841218d3a
 Chat duration: 2292s (00:00:38:12)
 Estimated chat tokens: 371662 estimated from chat transcript bytes (1486645 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/03/rollout-2026-10-03T17-58-15-01a102b3-ba85-78e0-9fff-35ea7e4e95ac.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
