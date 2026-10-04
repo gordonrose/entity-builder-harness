@@ -98,15 +98,38 @@ if ! grep -Eq -- 'code === "42501"' infra/04.deploy/03.product/entrypoints/kanbi
   echo "ERROR: bootstrap authorization failures must retain their reviewed operation phase." >&2
   exit 1
 fi
+if ! grep -Eq -- 'GRANT psmokemigrate TO CURRENT_USER' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts || ! grep -Eq -- 'CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
+  echo "ERROR: bootstrap must establish the reviewed SET ROLE membership before assigning schema ownership." >&2
+  exit 1
+fi
 if ! grep -Eq -- 'credentialsFromEnvironment\("RELATIONAL_MASTER_SECRET_JSON"\)' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts || ! grep -Eq -- 'host: migration\.host, port: migration\.port' infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts; then
   echo "ERROR: bootstrap must support a credentials-only RDS-managed master secret through the target-owned migration connection endpoint" >&2
   exit 1
 fi
 python3 - <<'PY'
 import runpy
+import tempfile
 from pathlib import Path
 
 module = runpy.run_path(Path("scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py"))
+assert "/tmp/" not in str(module["DEFAULT_LEDGER_PATH"])
+assert module["DEFAULT_LEDGER_PATH"].parent.name == "postgresql-stage6-receipts"
+temporary = Path(tempfile.mkdtemp())
+ledger_policy = {
+    "ledger_path": temporary / "receipts.json",
+    "labels": {stage: f"reviewed-{stage}" for stage in ("bootstrap", "migration", "relay", "worker", "restore_verification")},
+    "attempt_limit_per_stage": 4,
+    "attempt_limit_total": 20,
+    "maximum_elapsed_seconds": 60,
+    "maximum_cost_usd": 100,
+    "cleanup_reserve_usd": 25,
+    "estimated_stage_cost_usd": {stage: 1 for stage in ("bootstrap", "migration", "relay", "worker", "restore_verification")},
+}
+_, attempt, label = module["reserve_stage"]("bootstrap", ledger_policy)
+assert attempt == 1 and label == "reviewed-bootstrap-a1"
+module["record_stage_state"]("bootstrap", "succeeded", ledger_policy)
+assert module["stage_succeeded"]("bootstrap", ledger_policy)
+
 observed = []
 
 def empty_task_list(arguments, _policy, allow_not_found=False):

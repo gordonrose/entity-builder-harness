@@ -52,6 +52,29 @@ class CandidatePreflightError(Exception):
     """Represent one allowlisted safe result without retaining provider output."""
 
 
+def durable_ledger_path(filename: str) -> Path:
+    """Keep restart receipts in the repository common directory, never a /tmp worktree."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=Path.cwd(),
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise CandidatePreflightError("candidate-durable-ledger-location-unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise CandidatePreflightError("candidate-durable-ledger-location-unavailable")
+    return common / "postgresql-stage6-receipts" / filename
+
+
+DEFAULT_CANDIDATE_LEDGER_PATH = durable_ledger_path("candidate-attempts.json")
+
+
 def parse_arguments() -> argparse.Namespace:
     """Accept no caller-selected target, image, network, task, label, or timing input."""
 
