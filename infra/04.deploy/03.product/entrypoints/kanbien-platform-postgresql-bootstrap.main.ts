@@ -31,6 +31,10 @@ async function main(): Promise<void> {
     await pool.query({ text: "GRANT CONNECT, CREATE, TEMPORARY ON DATABASE platformsmoke TO psmokemigrate" });
     await pool.query({ text: "GRANT CONNECT ON DATABASE platformsmoke TO psmokeruntime" });
     phase = "bootstrap-schema-provisioning-failure";
+    // PostgreSQL requires the creator to be able to SET ROLE to assign schema
+    // ownership. The managed RDS master created this role, but is not a
+    // superuser; grant the exact owned role to the current bootstrap identity.
+    await pool.query({ text: "GRANT psmokemigrate TO CURRENT_USER" });
     await pool.query({ text: "CREATE SCHEMA IF NOT EXISTS platform_smoke AUTHORIZATION psmokemigrate" });
     phase = "bootstrap-schema-grant-failure";
     await pool.query({ text: "GRANT USAGE ON SCHEMA platform_smoke TO psmokeruntime" });
@@ -49,7 +53,9 @@ function bootstrapFailureCategory(error: unknown, phase: BootstrapFailureCategor
   const message = errorProperty(error, "message");
   if (message === "RELATIONAL_TASK_CERTIFICATE_AUTHORITY_UNAVAILABLE") return "bootstrap-certificate-authority-unavailable";
   if (code === "28P01" || code === "28000") return "bootstrap-database-authentication-failure";
-  if (code === "42501") return "bootstrap-database-authorization-failure";
+  if (code === "42501") {
+    return phase === "bootstrap-input-validation-failure" ? "bootstrap-database-authorization-failure" : phase;
+  }
   if (["ECONNREFUSED", "ECONNRESET", "ENETUNREACH", "ENOTFOUND", "ETIMEDOUT"].includes(code ?? "")) return "bootstrap-database-connectivity-failure";
   if (["CERT_HAS_EXPIRED", "ERR_TLS_CERT_ALTNAME_INVALID", "SELF_SIGNED_CERT_IN_CHAIN", "UNABLE_TO_VERIFY_LEAF_SIGNATURE"].includes(code ?? "")) return "bootstrap-database-tls-failure";
   return phase;

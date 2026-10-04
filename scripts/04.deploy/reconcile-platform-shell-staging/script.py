@@ -29,6 +29,7 @@ import argparse
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -42,6 +43,18 @@ SAFE_SCHEMA = "deploy/platform-shell-reconciliation-result/v1"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 AWS_MAX_ATTEMPTS = 3
 AWS_RETRY_BACKOFF_SECONDS = (1, 2)
+BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
+BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE = "bootstrap_effects_assessment"
+BOOTSTRAP_EFFECTS_FACT_LABELS = {
+    "bootstrap_effects_facts_one": "kb-pg6-be-f1-r5-a1",
+    "bootstrap_effects_facts_two": "kb-pg6-be-f2-r5-a1",
+}
+RECOVERABLE_INTERRUPTED_SCHEMA_SETUP = {
+    "migration_role_exists": True, "runtime_role_exists": True, "bootstrap_has_migration_membership": False,
+    "migration_database_connect": True, "migration_database_create": True, "migration_database_temporary": True,
+    "runtime_database_connect": True, "schema_exists": False, "schema_owned_by_migration": False,
+    "runtime_schema_usage": False, "runtime_schema_create_restricted": False, "runtime_existing_table_dml": False,
+}
 
 
 class ReconciliationError(Exception):
@@ -186,7 +199,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
                 "rds:DescribeDBParameters",
             ],
             "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
-            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+            "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
         "artifact_active_assessment": {
             "status": "approved-administrator-only-artifact-drift-assessment",
@@ -496,6 +509,56 @@ def run_check(check_id: str, check: Callable[[], None]) -> None:
         raise
 
 
+def bootstrap_effects_receipt_path() -> Path:
+    """Locate the shared durable Stage 6 receipt without accepting a caller path."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=REPOSITORY_ROOT,
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable")
+    return common / "postgresql-stage6-receipts" / "stage-attempts.json"
+
+
+def check_bootstrap_effects_reconciliation_receipt(receipt_path: Path | None = None) -> None:
+    """Require the one successful pre-promotion no-write reconciliation receipt."""
+
+    path = bootstrap_effects_receipt_path() if receipt_path is None else receipt_path
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-unavailable") from exception
+    stages = ledger.get("stages") if isinstance(ledger, dict) else None
+    receipt = stages.get(BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE) if isinstance(stages, dict) else None
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("assessment_state") not in {"pristine", "fully-ready", "recoverable-interrupted-schema-setup"}:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    facts = receipt.get("facts")
+    fact_receipts = receipt.get("fact_receipts")
+    if not isinstance(facts, dict) or not isinstance(fact_receipts, list) or len(fact_receipts) != 2:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    observed = {item.get("stage"): item.get("label") for item in fact_receipts if isinstance(item, dict)}
+    if observed != BOOTSTRAP_EFFECTS_FACT_LABELS:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    images = set()
+    for item in fact_receipts:
+        if not isinstance(item, dict) or not isinstance(item.get("task_definition_revision"), int) or item["task_definition_revision"] < 1 or not isinstance(item.get("image"), str) or "@sha256:" not in item["image"] or not isinstance(item.get("diagnostic_code_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", item["diagnostic_code_sha256"]):
+            raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+        images.add(item["image"])
+    if len(images) != 1:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+    if receipt.get("assessment_state") == "recoverable-interrupted-schema-setup" and facts != RECOVERABLE_INTERRUPTED_SCHEMA_SETUP:
+        raise ReconciliationError("bootstrap-effect-reconciliation-receipt-missing")
+
+
 def check_identity(arguments: argparse.Namespace, policy: dict[str, Any]) -> None:
     """Verify that credentials are for the one declared AWS account."""
 
@@ -795,6 +858,8 @@ def main() -> int:
                     *artifact_bucket_checks(arguments, policy),
                     ("platform-shell-budget", lambda: check_budget(arguments, policy)),
                 ]
+                if arguments.mode == "pre-relational-stage6-bootstrap-recovery-service-change-set":
+                    core_checks.insert(6, ("bootstrap-effect-reconciliation-receipt", check_bootstrap_effects_reconciliation_receipt))
             elif arguments.mode in {"pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set"}:
                 core_checks = [
                     ("aws-account", lambda: check_identity(arguments, policy)),

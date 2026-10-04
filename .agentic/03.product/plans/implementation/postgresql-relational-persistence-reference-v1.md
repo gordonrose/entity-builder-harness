@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: product.plan.postgresql-relational-persistence-reference-v1
-version: 10
+version: 11
 status: draft
 layer: 03.product
 domain: persistence
@@ -586,25 +586,36 @@ migration, alarm, and cost checks pass with no sensitive values in evidence.
 **Objective:** prove the full relational route and its recovery path at the
 same bounded scope, then state its exact operational limits.
 
-#### Operational Realization Gate prerequisite — added 2026-09-26
+#### Stage 6 restart prerequisite
 
-Stage 6 is now paused at its source/deployment boundary, not eligible for a
-direct target-specific recovery or retry. Before any new Stage 6 target action,
-the full route must migrate into the provider-neutral [Operational Realization
-Gate](../../../01.harness/standards/operational-realization-gate.md): a
-versioned realization contract must describe its immutable artifact,
-entrypoints, task identities, safe configuration shapes, connections/TLS,
-database semantics, queue delivery/acknowledgement, lifecycle state machine,
-safe observability, expected change shape, rollback/recovery and all
-assumptions.
+Stage 6 remains paused until current source/target facts and the concrete
+operation plan are reviewed and separately approved. The [bounded PostgreSQL
+restart plan](../../../aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
+may govern this slice only after explicit adoption of the [bounded applicability
+clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+and approval of that execution plan. Otherwise the original full-route
+realization contract, normalized-adapter and compiler prerequisites remain.
 
-Target collectors must be made an adapter that produces only normalized facts
-and change summaries. The generic compiler must pass the source, artifact,
-semantic-integration, live-read, change-set, and execution-preflight gates
-before the Stage 6 controller is even proposed again. This replaces no target
-security check and grants no target authority; it prevents a live task from
-being used as the first test of an undeclared integration edge. Existing
-evidence may be cited only at the proof level it actually establishes.
+For the adopted route, qualify the actual bootstrap, migration, relay, worker
+and restore entrypoints and their dependencies through the reviewed operation
+matrix. Preserve required image/adapter/target compatibility, real database
+semantics, candidate/task preflight, terminal predecessor, queue/outbox and
+restore proof. Existing controller and target guards remain binding. No
+required failed check may be ignored, and healthy HTTP alone is insufficient.
+Within the approved repair allowance, pause affected operations, reconcile and
+clean up, diagnose and repair the relevant code/configuration, verify prevention,
+qualify a changed image and resume the first incomplete checkpoint. Continue
+until PostgreSQL acceptance passes or the plan's escalation boundary is met;
+ordinary failures do not require session closeout or a new execution approval.
+The existing controllers must demonstrably support this process before any
+execution approval request. Closeout includes acceptance and completed material
+failure/prevention records. Scheduler, storage and tenant authority remain deferred.
+
+Historical next-label descriptions below are not permission to replay a label.
+Reconcile consumed labels, including the reported recovery-4 failure, before
+selecting and source-reviewing a supported new recovery route. Preserve safe
+evidence, cleanup, rollback and escalation; this instruction change does not
+implement a controller or authorize AWS execution.
 
 #### Stage 6 source composition (implemented; deployment and proof pending)
 

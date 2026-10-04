@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
 
@@ -22,10 +23,77 @@ SERVER_SERVICE = "kanbien-staging-platform-shell"
 WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
 CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
+STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verification")
+BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
+BOOTSTRAP_EFFECTS_FACT_STAGES = ("bootstrap_effects_facts_one", "bootstrap_effects_facts_two")
+BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE = "bootstrap_effects_assessment"
+BOOTSTRAP_EFFECTS_FACT_LABELS = {
+    "bootstrap_effects_facts_one": "kb-pg6-be-f1-r5-a1",
+    "bootstrap_effects_facts_two": "kb-pg6-be-f2-r5-a1",
+}
+RECOVERABLE_INTERRUPTED_SCHEMA_SETUP = {
+    "migration_role_exists": True,
+    "runtime_role_exists": True,
+    "bootstrap_has_migration_membership": False,
+    "migration_database_connect": True,
+    "migration_database_create": True,
+    "migration_database_temporary": True,
+    "runtime_database_connect": True,
+    "schema_exists": False,
+    "schema_owned_by_migration": False,
+    "runtime_schema_usage": False,
+    "runtime_schema_create_restricted": False,
+    "runtime_existing_table_dml": False,
+}
+
+# This command has no interpolation and accepts no caller input.  ECS supplies
+# it only as the reviewed bootstrap container's command override, retaining the
+# already-bound task role, secrets, network and image.  It deliberately opens a
+# read-only transaction before its one fixed catalogue query; it cannot repair
+# or normalise any partially completed bootstrap effect.
+BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM = r"""const fs=require('node:fs');const {Client}=require('pg');const fail=()=>{console.log(JSON.stringify({level:'error',message:'kanbien-platform.relational-smoke.bootstrap_effects_reconciled',fields:{outcome:'failed'}}));process.exitCode=1;};(async()=>{let client;try{const master=JSON.parse(process.env.RELATIONAL_MASTER_SECRET_JSON||'');const migration=JSON.parse(process.env.RELATIONAL_MIGRATION_SECRET_JSON||'');if(!master||typeof master.username!=='string'||typeof master.password!=='string'||!migration||typeof migration.host!=='string'||!Number.isInteger(migration.port))throw new Error('invalid-input');client=new Client({host:migration.host,port:migration.port,database:'platformsmoke',user:master.username,password:master.password,ssl:{ca:fs.readFileSync('/app/assets/rds-eu-west-1-bundle.crt','utf8'),rejectUnauthorized:true},connectionTimeoutMillis:10000,statement_timeout:15000,application_name:'kanbien-stage6-bootstrap-effects-reconciliation'});await client.connect();await client.query('BEGIN TRANSACTION READ ONLY');const result=await client.query(`SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'psmokemigrate') AS migration_role_exists, EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'psmokeruntime') AS runtime_role_exists, pg_has_role(current_user, 'psmokemigrate', 'MEMBER') AS bootstrap_has_migration_membership, has_database_privilege('psmokemigrate', 'platformsmoke', 'CONNECT') AS migration_database_connect, has_database_privilege('psmokemigrate', 'platformsmoke', 'CREATE') AS migration_database_create, has_database_privilege('psmokemigrate', 'platformsmoke', 'TEMPORARY') AS migration_database_temporary, has_database_privilege('psmokeruntime', 'platformsmoke', 'CONNECT') AS runtime_database_connect, EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'platform_smoke') AS schema_exists, EXISTS (SELECT 1 FROM pg_namespace n JOIN pg_roles r ON r.oid = n.nspowner WHERE n.nspname = 'platform_smoke' AND r.rolname = 'psmokemigrate') AS schema_owned_by_migration, has_schema_privilege('psmokeruntime', 'platform_smoke', 'USAGE') AS runtime_schema_usage, NOT has_schema_privilege('psmokeruntime', 'platform_smoke', 'CREATE') AS runtime_schema_create_restricted, COALESCE((SELECT bool_and(has_table_privilege('psmokeruntime', c.oid, 'SELECT, INSERT, UPDATE, DELETE')) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'platform_smoke' AND c.relkind IN ('r','p','v','m','f')), true) AS runtime_existing_table_dml`);await client.query('ROLLBACK');const facts=result.rows[0];const keys=['migration_role_exists','runtime_role_exists','bootstrap_has_migration_membership','migration_database_connect','migration_database_create','migration_database_temporary','runtime_database_connect','schema_exists','schema_owned_by_migration','runtime_schema_usage','runtime_schema_create_restricted','runtime_existing_table_dml'];if(!facts||Object.keys(facts).length!==keys.length||keys.some(key=>typeof facts[key]!=='boolean'))throw new Error('invalid-facts');console.log(JSON.stringify({level:'info',message:'kanbien-platform.relational-smoke.bootstrap_effects_reconciled',fields:{outcome:'succeeded',...facts}}));}catch{fail();}finally{if(client){try{await client.query('ROLLBACK');}catch{}try{await client.end();}catch{}}}})();"""
+BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS = (
+    "migration_role_exists",
+    "runtime_role_exists",
+    "bootstrap_has_migration_membership",
+    "migration_database_connect",
+    "migration_database_create",
+    "migration_database_temporary",
+    "runtime_database_connect",
+    "schema_exists",
+    "schema_owned_by_migration",
+    "runtime_schema_usage",
+    "runtime_schema_create_restricted",
+    "runtime_existing_table_dml",
+)
 
 
 class RelationalSmokeError(Exception):
     """Represent a safe outcome without exposing AWS data or task output."""
+
+
+def durable_ledger_path(filename: str) -> Path:
+    """Keep restart receipts in the repository common directory, never a /tmp worktree."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=Path.cwd(),
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise RelationalSmokeError("the relational durable ledger location is unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise RelationalSmokeError("the relational durable ledger location is unavailable")
+    return common / "postgresql-stage6-receipts" / filename
+
+
+DEFAULT_LEDGER_PATH = durable_ledger_path("stage-attempts.json")
+DEFAULT_CANDIDATE_LEDGER_PATH = durable_ledger_path("candidate-attempts.json")
 
 
 def arguments() -> argparse.Namespace:
@@ -37,24 +105,31 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
     parser.add_argument("--execute-recovery-continuation", action="store_true", help="Continue only after the fixed recovery bootstrap succeeded.")
     parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
+    parser.add_argument("--reconcile-current-state", action="store_true", help="Read only the fixed relational aggregate state without starting a task.")
+    parser.add_argument("--reconcile-bootstrap-effects", action="store_true", help="Run one fixed read-only bootstrap-effect reconciliation task.")
+    parser.add_argument("--assess-bootstrap-effects", action="store_true", help="Persist a validated assessment from completed fixed fact receipts.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
+    parser.add_argument("--approve-relational-bootstrap-effects-reconciliation", action="store_true", help="Acknowledge only the fixed read-only bootstrap-effect reconciliation task.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state, result.reconcile_bootstrap_effects, result.assess_bootstrap_effects))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
-    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
+    approvals = (result.approve_relational_stage6, result.approve_relational_bootstrap_recovery, result.approve_relational_recovery_continuation, result.approve_relational_bootstrap_recovery_diagnostic, result.approve_relational_bootstrap_effects_reconciliation)
+    if (result.validate or result.reconcile_current_state or result.assess_bootstrap_effects) and any(approvals):
         parser.error("an execution approval guard is unavailable in validation mode")
-    if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.execute and (not result.approve_relational_stage6 or any(approvals[1:])):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
-    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6 or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.execute_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery or result.approve_relational_stage6 or any(approvals[2:])):
         parser.error("the fixed bootstrap recovery requires --approve-relational-bootstrap-recovery")
-    if result.execute_recovery_continuation and (not result.approve_relational_recovery_continuation or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_bootstrap_recovery_diagnostic):
+    if result.execute_recovery_continuation and (not result.approve_relational_recovery_continuation or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or any(approvals[3:])):
         parser.error("the fixed recovery continuation requires --approve-relational-recovery-continuation")
-    if result.diagnose_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery_diagnostic or result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation):
+    if result.diagnose_bootstrap_recovery and (not result.approve_relational_bootstrap_recovery_diagnostic or any(approvals[:3]) or result.approve_relational_bootstrap_effects_reconciliation):
         parser.error("the fixed bootstrap recovery diagnostic requires --approve-relational-bootstrap-recovery-diagnostic")
+    if result.reconcile_bootstrap_effects and (not result.approve_relational_bootstrap_effects_reconciliation or any(approvals[:4])):
+        parser.error("the fixed bootstrap-effect reconciliation requires --approve-relational-bootstrap-effects-reconciliation")
     return result
 
 
@@ -74,6 +149,127 @@ def text(value: Any, label: str) -> str:
     return value
 
 
+def ledger_path(policy: dict[str, Any]) -> Path:
+    """Use the fixed source-owned receipt path; callers cannot select it."""
+
+    candidate = policy.get("ledger_path", DEFAULT_LEDGER_PATH)
+    if not isinstance(candidate, Path):
+        raise RelationalSmokeError("the relational attempt ledger path is not source-owned")
+    return candidate
+
+
+def empty_ledger() -> dict[str, Any]:
+    """Create a safe, durable state machine with no provider identifiers."""
+
+    return {"schema": "postgresql-stage6-attempt-ledger/v1", "started_at": time.time(), "stages": {}, "attempts": [], "estimated_cost_usd": 0}
+
+
+def load_ledger(policy: dict[str, Any]) -> dict[str, Any]:
+    """Reload state for every operation so limits and receipts survive a restart."""
+
+    path = ledger_path(policy)
+    if not path.exists():
+        return empty_ledger()
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise RelationalSmokeError("the relational attempt ledger is unreadable") from exception
+    if (
+        not isinstance(ledger, dict)
+        or ledger.get("schema") != "postgresql-stage6-attempt-ledger/v1"
+        or not isinstance(ledger.get("started_at"), (int, float))
+        or not isinstance(ledger.get("stages"), dict)
+        or not isinstance(ledger.get("attempts"), list)
+        or not isinstance(ledger.get("estimated_cost_usd"), (int, float))
+    ):
+        raise RelationalSmokeError("the relational attempt ledger has an invalid safe shape")
+    return ledger
+
+
+def save_ledger(policy: dict[str, Any], ledger: dict[str, Any]) -> None:
+    """Atomically persist safe receipts before an operation can be repeated."""
+
+    path = ledger_path(policy)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".postgresql-stage6-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump(ledger, output, sort_keys=True, separators=(",", ":"))
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary_name, path)
+    except OSError as exception:
+        try:
+            os.unlink(temporary_name)
+        except OSError:
+            pass
+        raise RelationalSmokeError("the relational attempt ledger could not be persisted") from exception
+
+
+def stage_label(stage: str, attempt: int, policy: dict[str, Any]) -> str:
+    """Bind a finite attempt identity to a stage without caller-selected labels."""
+
+    base = text(policy["labels"].get(stage), f"started-by.{stage}")
+    if not 1 <= attempt <= policy["attempt_limit_per_stage"]:
+        raise RelationalSmokeError("the relational stage attempt exceeds its reviewed limit")
+    value = f"{base}-a{attempt}"
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,36}", value):
+        raise RelationalSmokeError("the relational stage attempt identity is not a reviewed bounded label")
+    return value
+
+
+def reserve_stage(stage: str, policy: dict[str, Any], receipt_binding: dict[str, Any] | None = None) -> tuple[dict[str, Any], int, str]:
+    """Consume a bounded attempt before submission and block unresolved outcomes."""
+
+    ledger = load_ledger(policy)
+    if time.time() - ledger["started_at"] > policy["maximum_elapsed_seconds"]:
+        raise RelationalSmokeError("the relational proof elapsed-time allowance is exhausted")
+    stages = ledger["stages"]
+    previous = stages.get(stage)
+    if isinstance(previous, dict) and previous.get("state") in {"submitting", "accepted", "unknown", "timeout-cleanup-pending"}:
+        raise RelationalSmokeError("the relational stage has an unresolved outcome or cleanup obligation")
+    attempts = [item for item in ledger["attempts"] if isinstance(item, dict)]
+    stage_attempts = sum(1 for item in attempts if item.get("stage") == stage)
+    stage_limit = 1 if stage == BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE else policy["attempt_limit_per_stage"]
+    if stage_attempts >= stage_limit or len(attempts) >= policy["attempt_limit_total"]:
+        raise RelationalSmokeError("the relational proof attempt allowance is exhausted")
+    cost = ledger["estimated_cost_usd"] + policy["estimated_stage_cost_usd"][stage]
+    if cost > policy["maximum_cost_usd"] - policy["cleanup_reserve_usd"]:
+        raise RelationalSmokeError("the relational proof cost allowance reserves cleanup and blocks another effect")
+    attempt = stage_attempts + 1
+    label = stage_label(stage, attempt, policy)
+    receipt = {"stage": stage, "attempt": attempt, "label": label, "state": "submitting", "submitted_at": time.time()}
+    if receipt_binding is not None:
+        if set(receipt_binding) != {"task_definition_revision", "image", "diagnostic_code_sha256"} or not isinstance(receipt_binding["task_definition_revision"], int) or not isinstance(receipt_binding["image"], str) or IMMUTABLE_IMAGE.fullmatch(receipt_binding["image"]) is None or not isinstance(receipt_binding["diagnostic_code_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", receipt_binding["diagnostic_code_sha256"]) is None:
+            raise RelationalSmokeError("the bootstrap-effect reconciliation receipt binding is invalid")
+        receipt.update(receipt_binding)
+    attempts.append(receipt)
+    ledger["attempts"] = attempts
+    ledger["estimated_cost_usd"] = cost
+    stages[stage] = receipt
+    save_ledger(policy, ledger)
+    return ledger, attempt, label
+
+
+def record_stage_state(stage: str, state: str, policy: dict[str, Any]) -> None:
+    """Persist accepted, terminal, and uncertain outcomes before any resume."""
+
+    ledger = load_ledger(policy)
+    current = ledger["stages"].get(stage)
+    if not isinstance(current, dict):
+        raise RelationalSmokeError("the relational stage has no durable attempt receipt")
+    current["state"] = state
+    current["updated_at"] = time.time()
+    save_ledger(policy, ledger)
+
+
+def stage_succeeded(stage: str, policy: dict[str, Any]) -> bool:
+    """Read a safe success receipt from a prior process without trusting memory."""
+
+    current = load_ledger(policy)["stages"].get(stage)
+    return isinstance(current, dict) and current.get("state") == "succeeded"
+
+
 def load_policy(mode: str) -> dict[str, Any]:
     """Read the non-selectable committed staging target and resolve its exact control."""
 
@@ -89,8 +285,8 @@ def load_policy(mode: str) -> dict[str, Any]:
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready",
-        "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
+        "stage-5-live-boundary-proven-stage-6-recovery-5-prerequisites-ready",
+        "candidate-preflight-dormant-definition-deployed-finite-same-image-attempts-require-durable-reconciliation",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
@@ -99,6 +295,7 @@ def load_policy(mode: str) -> dict[str, Any]:
     task_containers = mapping(control.get("task_containers"), "control.task_containers")
     started_by = mapping(control.get("started_by"), "control.started_by")
     bootstrap_diagnostic = mapping(control.get("bootstrap_recovery_diagnostic"), "control.bootstrap_recovery_diagnostic")
+    bootstrap_effects_reconciliation = mapping(control.get("bootstrap_effects_reconciliation"), "control.bootstrap_effects_reconciliation")
     expected_families = {
         "bootstrap": "kanbien-staging-platform-relational-bootstrap",
         "migration": "kanbien-staging-platform-relational-migration",
@@ -114,11 +311,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260928-recovery-4",
-        "migration": "kanbien-postgresql-stage6-migration-20260928-recovery-4",
-        "relay": "kanbien-postgresql-stage6-relay-20260928-recovery-4",
-        "worker": "kanbien-postgresql-stage6-worker-20260928-recovery-4",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260928-recovery-4",
+        "bootstrap": "kb-pg6-bootstrap-r5",
+        "migration": "kb-pg6-migration-r5",
+        "relay": "kb-pg6-relay-r5",
+        "worker": "kb-pg6-worker-r5",
+        "restore_verification": "kb-pg6-restore-r5",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
@@ -126,6 +323,7 @@ def load_policy(mode: str) -> dict[str, Any]:
         "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
         "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
         "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
+        "bootstrap_effects_reconciliation_guard": "reconcile-bootstrap-effects-and-approve-relational-bootstrap-effects-reconciliation",
         "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
         "foundation_stack": "kanbien-staging-platform-shell-foundation",
         "service_stack": "kanbien-staging-platform-shell-service",
@@ -170,6 +368,16 @@ def load_policy(mode: str) -> dict[str, Any]:
     }
     if bootstrap_diagnostic != expected_diagnostic:
         raise RelationalSmokeError("the relational bootstrap diagnostic control differs from the reviewed fixed shape")
+    expected_effect_reconciliation = {
+        "task_family": "bootstrap",
+        "started_by": "kb-pg6-bootstrap-effects-r5",
+        "task_wait_seconds": 300,
+        "output_policy": "safe-allowlisted-boolean-role-membership-database-grant-schema-ownership-and-privilege-facts-only-no-identifiers-endpoints-records-secrets-headers-bodies-messages-or-provider-payloads",
+        "database_identity": "existing-bootstrap-task-master-identity-through-existing-migration-endpoint-and-verify-full-tls",
+        "transaction_policy": "one-fixed-begin-read-only-catalog-select-rollback-no-database-writes",
+    }
+    if bootstrap_effects_reconciliation != expected_effect_reconciliation:
+        raise RelationalSmokeError("the relational bootstrap-effect reconciliation control differs from the reviewed fixed shape")
     if control.get("task_wait_seconds") != 900 or control.get("restore_wait_seconds") != 1800 or control.get("required_queue_counts") != {"before": 0, "after_relay": 1, "terminal": 0}:
         raise RelationalSmokeError("the relational proof duration or queue bounds differ from the reviewed values")
     return {
@@ -181,9 +389,25 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_database": required["restore_database_identifier"],
         "families": expected_families,
         "containers": expected_containers,
-        "labels": expected_labels,
+        "labels": {**expected_labels, BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE: expected_effect_reconciliation["started_by"]},
         "task_wait_seconds": 900,
         "restore_wait_seconds": 1800,
+        "task_stop_seconds": 120,
+        "ledger_path": DEFAULT_LEDGER_PATH,
+        "attempt_limit_per_stage": 4,
+        "attempt_limit_total": 20,
+        "maximum_elapsed_seconds": 48 * 60 * 60,
+        "maximum_cost_usd": 100,
+        "cleanup_reserve_usd": 25,
+        "estimated_stage_cost_usd": {
+            "bootstrap": 3,
+            "migration": 3,
+            "relay": 3,
+            "worker": 3,
+            "restore_verification": 8,
+            BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE: 1,
+        },
+        "bootstrap_effects_reconciliation_wait_seconds": expected_effect_reconciliation["task_wait_seconds"],
         "bootstrap_diagnostic_categories": set(expected_diagnostic["categories"]),
         "bootstrap_diagnostic_log_stream_prefix": expected_diagnostic["derived_log_stream_prefix"],
     }
@@ -265,13 +489,31 @@ def service_counts(name: str, policy: dict[str, Any]) -> tuple[int, int]:
         raise RelationalSmokeError("a reviewed service returned invalid aggregate counts") from exception
 
 
-def candidate_preflight_label(image: str) -> str:
-    """Derive the exact candidate label from the active immutable server image."""
+def candidate_preflight_label(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> str:
+    """Require the successful durable candidate receipt for the active image."""
 
     match = IMMUTABLE_IMAGE.fullmatch(image)
     if match is None:
         raise RelationalSmokeError("the active service image is not an immutable candidate digest")
-    return f"kb-candidate-{hashlib.sha256(match.group(1).encode('ascii')).hexdigest()[:20]}"
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise RelationalSmokeError("the active service candidate receipt is unavailable") from exception
+    if ledger.get("schema") != "postgresql-candidate-attempt-ledger/v1" or not isinstance(ledger.get("attempts"), list):
+        raise RelationalSmokeError("the active service candidate receipt is invalid")
+    image_hash = hashlib.sha256(match.group(1).encode("ascii")).hexdigest()[:16]
+    successful = [
+        receipt.get("label")
+        for receipt in ledger["attempts"]
+        if isinstance(receipt, dict)
+        and receipt.get("image_hash") == image_hash
+        and receipt.get("state") == "succeeded"
+        and isinstance(receipt.get("label"), str)
+        and re.fullmatch(r"kb-candidate-[a-f0-9]{16}-a[1-4]", receipt["label"])
+    ]
+    if len(successful) != 1:
+        raise RelationalSmokeError("the active image lacks one durable successful candidate receipt")
+    return successful[0]
 
 
 def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
@@ -320,21 +562,24 @@ def worker_network(policy: dict[str, Any]) -> str:
     return "awsvpcConfiguration={subnets=[" + ",".join(subnets) + "],securityGroups=[" + ",".join(groups) + "],assignPublicIp=ENABLED}"
 
 
-def assert_task_definition(stage: str, policy: dict[str, Any]) -> None:
+def assert_task_definition(stage: str, policy: dict[str, Any]) -> dict[str, Any]:
     """Ensure a stage can use only its exact target-defined task family/container."""
 
     response = aws(["ecs", "describe-task-definition", "--task-definition", policy["families"][stage]], policy)
     definition = response.get("taskDefinition")
     containers = definition.get("containerDefinitions") if isinstance(definition, dict) else None
-    if not isinstance(definition, dict) or definition.get("family") != policy["families"][stage] or not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != policy["containers"][stage] or containers[0].get("portMappings"):
+    image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
+    revision = definition.get("revision") if isinstance(definition, dict) else None
+    if not isinstance(definition, dict) or definition.get("family") != policy["families"][stage] or not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != policy["containers"][stage] or containers[0].get("portMappings") or not isinstance(revision, int) or not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
         raise RelationalSmokeError("a relational stage task definition differs from the reviewed isolated shape")
+    return {"task_definition_revision": revision, "image": image}
 
 
-def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
-    """Make each fixed stage single-use, including after a task failure."""
+def no_prior_label(label: str, policy: dict[str, Any]) -> None:
+    """Make each finite attempt identity single-use, including after failure."""
 
     for desired_status in ("RUNNING", "STOPPED"):
-        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", desired_status], policy)
+        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", desired_status], policy)
         tasks = response.get("taskArns")
         if not isinstance(tasks, list) or tasks:
             raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
@@ -343,7 +588,11 @@ def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
 def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
     """Require one consumed, successful terminal stage before a continuation."""
 
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", "STOPPED"], policy)
+    ledger = load_ledger(policy)
+    receipt = ledger["stages"].get(stage)
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or not isinstance(receipt.get("label"), str):
+        raise RelationalSmokeError("the fixed relational continuation predecessor has no durable successful receipt")
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "STOPPED"], policy)
     tasks = listed.get("taskArns")
     if not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], str):
         raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
@@ -356,31 +605,224 @@ def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the fixed relational continuation predecessor did not succeed")
 
 
-def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None) -> None:
-    """Start one labelled Fargate task, wait for it privately, and require exit zero."""
+def stop_and_verify(stage: str, task_arn: str, policy: dict[str, Any]) -> None:
+    """Own a timed-out task until its terminal state is observed or marked unknown."""
 
-    assert_task_definition(stage, policy)
-    no_prior_label(stage, policy)
-    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", policy["labels"][stage], "--network-configuration", network]
-    if environment is not None:
-        command.extend(["--overrides", json.dumps({"containerOverrides": [{"name": policy["containers"][stage], "environment": environment}]}, separators=(",", ":"))])
-    response = aws(command, policy)
+    try:
+        aws(["ecs", "stop-task", "--cluster", policy["cluster"], "--task", task_arn, "--reason", "controlled-relational-timeout-cleanup"], policy)
+        deadline = time.monotonic() + policy["task_stop_seconds"]
+        while time.monotonic() < deadline:
+            observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
+            current = observed.get("tasks")
+            if isinstance(current, list) and len(current) == 1 and isinstance(current[0], dict) and current[0].get("lastStatus") == "STOPPED":
+                record_stage_state(stage, "failed", policy)
+                return
+            time.sleep(5)
+    except RelationalSmokeError:
+        pass
+    record_stage_state(stage, "timeout-cleanup-pending", policy)
+    raise RelationalSmokeError("a timed-out relational stage has an unresolved cleanup obligation")
+
+
+def reconcile_unacknowledged_submission(stage: str, label: str, policy: dict[str, Any]) -> None:
+    """Never repeat a request when its acceptance cannot be established safely."""
+
+    try:
+        observed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy)
+        stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
+        running = observed.get("taskArns")
+        terminal = stopped.get("taskArns")
+        if isinstance(running, list) and isinstance(terminal, list) and len(running) + len(terminal) == 0:
+            record_stage_state(stage, "failed", policy)
+            raise RelationalSmokeError("a relational stage submission was rejected before acceptance")
+    except RelationalSmokeError as exception:
+        if str(exception) == "a relational stage submission was rejected before acceptance":
+            raise
+        record_stage_state(stage, "unknown", policy)
+        raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry") from exception
+    record_stage_state(stage, "unknown", policy)
+    raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry")
+
+
+def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None, command_override: list[str] | None = None, task_stage: str | None = None, output_verifier: Any = None) -> Any:
+    """Start one durable finite attempt and own its timeout/uncertain outcomes."""
+
+    definition_stage = stage if task_stage is None else task_stage
+    binding = assert_task_definition(definition_stage, policy)
+    receipt_binding = None
+    if stage == BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE:
+        if definition_stage != "bootstrap" or environment is not None or command_override != ["-e", BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM]:
+            raise RelationalSmokeError("the bootstrap-effect reconciliation override differs from the reviewed fixed command")
+        receipt_binding = {**binding, "diagnostic_code_sha256": hashlib.sha256(BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM.encode("utf-8")).hexdigest()}
+    _, _attempt, label = reserve_stage(stage, policy, receipt_binding)
+    no_prior_label(label, policy)
+    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][definition_stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", label, "--network-configuration", network]
+    if environment is not None or command_override is not None:
+        override: dict[str, Any] = {"name": policy["containers"][definition_stage]}
+        if environment is not None:
+            override["environment"] = environment
+        if command_override is not None:
+            override["command"] = command_override
+        command.extend(["--overrides", json.dumps({"containerOverrides": [override]}, separators=(",", ":"))])
+    try:
+        response = aws(command, policy)
+    except RelationalSmokeError:
+        reconcile_unacknowledged_submission(stage, label, policy)
+        raise
     tasks, failures = response.get("tasks"), response.get("failures")
     if failures not in (None, []) or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
+        record_stage_state(stage, "failed", policy)
         raise RelationalSmokeError("a fixed relational stage task did not start uniquely")
     task_arn = tasks[0]["taskArn"]
+    record_stage_state(stage, "accepted", policy)
     deadline = time.monotonic() + policy["task_wait_seconds"]
     while time.monotonic() < deadline:
         observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
         current = observed.get("tasks")
         if isinstance(current, list) and len(current) == 1 and isinstance(current[0], dict) and current[0].get("lastStatus") == "STOPPED":
             containers = current[0].get("containers")
-            container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"][stage]), None) if isinstance(containers, list) else None
+            container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"][definition_stage]), None) if isinstance(containers, list) else None
             if isinstance(container, dict) and container.get("exitCode") == 0:
-                return
+                try:
+                    result = output_verifier(current[0], policy) if output_verifier is not None else None
+                except RelationalSmokeError:
+                    record_stage_state(stage, "failed", policy)
+                    raise
+                record_stage_state(stage, "succeeded", policy)
+                return result
+            record_stage_state(stage, "failed", policy)
             raise RelationalSmokeError("a fixed relational stage task did not complete successfully")
         time.sleep(10)
+    stop_and_verify(stage, task_arn, policy)
     raise RelationalSmokeError("a fixed relational stage task exceeded its reviewed wait limit")
+
+
+def bootstrap_effects_facts(task: dict[str, Any], policy: dict[str, Any]) -> dict[str, bool]:
+    """Read only the fixed safe event emitted by the read-only bootstrap override."""
+
+    containers = task.get("containers")
+    container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"]["bootstrap"]), None) if isinstance(containers, list) else None
+    stream = container.get("logStreamName") if isinstance(container, dict) else None
+    if not isinstance(stream, str) or not stream:
+        stream = derived_bootstrap_log_stream(task, policy)
+    if stream is None:
+        raise RelationalSmokeError("the bootstrap-effect reconciliation did not retain a reviewed log stream")
+    outputs = stack_outputs(policy)
+    logged = aws(["logs", "get-log-events", "--log-group-name", outputs["RelayLogGroupName"], "--log-stream-name", stream, "--start-from-head", "--limit", "20"], policy, allowed_not_found_code="ResourceNotFoundException")
+    events = logged.get("events") if isinstance(logged, dict) else None
+    if not isinstance(events, list):
+        raise RelationalSmokeError("the bootstrap-effect reconciliation result is unavailable")
+    for event in events:
+        message = event.get("message") if isinstance(event, dict) else None
+        if not isinstance(message, str):
+            continue
+        try:
+            candidate = json.loads(message)
+        except json.JSONDecodeError:
+            continue
+        fields = candidate.get("fields") if isinstance(candidate, dict) else None
+        if not isinstance(fields, dict) or candidate.get("level") != "info" or candidate.get("message") != "kanbien-platform.relational-smoke.bootstrap_effects_reconciled" or fields.get("outcome") != "succeeded":
+            continue
+        facts = {key: fields.get(key) for key in BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS}
+        if set(fields) != {"outcome", *BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS} or any(not isinstance(value, bool) for value in facts.values()):
+            raise RelationalSmokeError("the bootstrap-effect reconciliation emitted an unsafe or incomplete result")
+        return facts
+    raise RelationalSmokeError("the bootstrap-effect reconciliation did not emit its fixed result")
+
+
+def bootstrap_effects_reconciliation_preconditions(policy: dict[str, Any]) -> str:
+    """Require the same untouched aggregate boundary as bootstrap, before its read-only precursor."""
+
+    verify_account(policy)
+    update_complete(policy["foundation_stack"], policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    network = worker_network(policy)
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+        raise RelationalSmokeError("the bootstrap-effect reconciliation preconditions are not the reviewed dormant aggregate state")
+    source_database(policy)
+    return network
+
+
+def execute_bootstrap_effects_reconciliation(policy: dict[str, Any]) -> dict[str, bool]:
+    """Launch exactly one no-write effect reconciliation before promotion or bootstrap retry."""
+
+    network = bootstrap_effects_reconciliation_preconditions(policy)
+    facts = run_and_wait(
+        BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE,
+        network,
+        policy,
+        command_override=["-e", BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM],
+        task_stage="bootstrap",
+        output_verifier=bootstrap_effects_facts,
+    )
+    if not isinstance(facts, dict) or set(facts) != set(BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS):
+        raise RelationalSmokeError("the bootstrap-effect reconciliation did not produce its reviewed facts")
+    return facts
+
+
+def recognized_bootstrap_effects_state(facts: dict[str, bool]) -> str:
+    """Accept only pristine, ready, or the reviewed interrupted schema-setup point."""
+
+    if set(facts) != set(BOOTSTRAP_EFFECTS_RECONCILIATION_FACTS) or any(not isinstance(value, bool) for value in facts.values()):
+        raise RelationalSmokeError("bootstrap-effect facts are incomplete")
+    if facts == RECOVERABLE_INTERRUPTED_SCHEMA_SETUP:
+        return "recoverable-interrupted-schema-setup"
+    if all(facts.values()):
+        return "fully-ready"
+    if not any(facts.values()):
+        return "pristine"
+    raise RelationalSmokeError("bootstrap-effect facts describe an unexplained partial database state")
+
+
+def assess_bootstrap_effects(policy: dict[str, Any]) -> str:
+    """Bind two completed fact receipts and their durable result to this target."""
+
+    source_database(policy)
+    ledger = load_ledger(policy)
+    stages = ledger["stages"]
+    receipt_details: list[dict[str, Any]] = []
+    for stage in BOOTSTRAP_EFFECTS_FACT_STAGES:
+        receipt = stages.get(stage)
+        if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("label") != BOOTSTRAP_EFFECTS_FACT_LABELS[stage]:
+            raise RelationalSmokeError("bootstrap-effect assessment lacks a completed required fact receipt")
+        binding = {key: receipt.get(key) for key in ("task_definition_revision", "image", "diagnostic_code_sha256")}
+        if not isinstance(binding["task_definition_revision"], int) or binding["task_definition_revision"] < 1 or not isinstance(binding["image"], str) or IMMUTABLE_IMAGE.fullmatch(binding["image"]) is None or not isinstance(binding["diagnostic_code_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", binding["diagnostic_code_sha256"]) is None:
+            raise RelationalSmokeError("bootstrap-effect assessment receipt binding is invalid")
+        if not isinstance(receipt.get("submitted_at"), (int, float)):
+            raise RelationalSmokeError("bootstrap-effect assessment receipt timing is invalid")
+        receipt_details.append({"stage": stage, "label": receipt["label"], **binding, "submitted_at": receipt["submitted_at"]})
+    if receipt_details[0]["image"] != receipt_details[1]["image"] or receipt_details[0]["task_definition_revision"] != receipt_details[1]["task_definition_revision"]:
+        raise RelationalSmokeError("bootstrap-effect assessment fact receipts do not share one task binding")
+    facts_files = sorted(ledger_path(policy).parent.glob("bootstrap-effects-facts-*.stdout"))
+    if len(facts_files) != 1:
+        raise RelationalSmokeError("bootstrap-effect assessment durable facts evidence is unavailable")
+    try:
+        evidence = json.loads(facts_files[0].read_text(encoding="utf-8"))
+        facts = evidence["postgresql_relational_bootstrap_effect_facts"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exception:
+        raise RelationalSmokeError("bootstrap-effect assessment durable facts evidence is invalid") from exception
+    state = recognized_bootstrap_effects_state(facts)
+    latest_fact = max(float(item["submitted_at"]) for item in receipt_details if isinstance(item.get("submitted_at"), (int, float)))
+    for stage in STAGE_ORDER:
+        previous = stages.get(stage)
+        if isinstance(previous, dict) and isinstance(previous.get("submitted_at"), (int, float)) and previous["submitted_at"] > latest_fact:
+            raise RelationalSmokeError("bootstrap-effect assessment is superseded by a later database stage")
+    stages[BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE] = {
+        "stage": BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE, "state": "succeeded", "assessment_state": state,
+        "facts": facts, "source_database": policy["source_database"], "account": ACCOUNT, "region": REGION,
+        "fact_receipts": receipt_details, "assessed_at": time.time(),
+    }
+    save_ledger(policy, ledger)
+    return state
+
+
+def require_bootstrap_effects_reconciliation(policy: dict[str, Any]) -> None:
+    """Gate recovery on a validated assessment, never the failed original diagnostic."""
+
+    receipt = load_ledger(policy)["stages"].get(BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE)
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or receipt.get("assessment_state") not in {"pristine", "fully-ready", "recoverable-interrupted-schema-setup"}:
+        raise RelationalSmokeError("bootstrap recovery requires a validated bootstrap-effect assessment")
 
 
 def source_database(policy: dict[str, Any]) -> dict[str, Any]:
@@ -403,6 +845,28 @@ def restore_absent(policy: dict[str, Any]) -> bool:
     """Require the fixed disposable recovery identifier to be unused before restore."""
 
     return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allowed_not_found_code="DBInstanceNotFound") is None
+
+
+def reconcile_current_state(policy: dict[str, Any]) -> dict[str, Any]:
+    """Read the fixed aggregate prerequisites without receiving data or starting work."""
+
+    verify_account(policy)
+    update_complete(policy["foundation_stack"], policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    server = service_counts(SERVER_SERVICE, policy)
+    worker = service_counts(WORKER_SERVICE, policy)
+    source_queue = queue_total(outputs["RelationalSmokeQueueUrl"], policy)
+    dead_letter_queue = queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy)
+    source_database(policy)
+    return {
+        "source_database": "available-reviewed-posture",
+        "restore_target": "absent" if restore_absent(policy) else "present",
+        "server": {"desired": server[0], "running": server[1]},
+        "worker": {"desired": worker[0], "running": worker[1]},
+        "source_queue_total": source_queue,
+        "dead_letter_queue_total": dead_letter_queue,
+    }
 
 
 def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
@@ -455,6 +919,34 @@ def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
                 raise RelationalSmokeError("the disposable recovery database did not finish cleanup within its reviewed wait limit")
 
 
+def reconcile_continuation_queue_checkpoint(outputs: dict[str, str], policy: dict[str, Any]) -> str:
+    """Resume from the durable relay/worker checkpoint without replaying delivery."""
+
+    queue = queue_total(outputs["RelationalSmokeQueueUrl"], policy)
+    dead = queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy)
+    if stage_succeeded("worker", policy):
+        if queue != 0 or dead != 0:
+            raise RelationalSmokeError("the completed worker checkpoint does not have terminal empty queues")
+        return "worker-complete"
+    if stage_succeeded("relay", policy):
+        if queue != 1 or dead != 0:
+            raise RelationalSmokeError("the completed relay checkpoint lacks its one expected worker message")
+        return "relay-complete"
+    if queue != 0 or dead != 0:
+        raise RelationalSmokeError("the pre-relay checkpoint does not have empty isolated queues")
+    return "before-relay"
+
+
+def wait_for_queue_total(outputs: dict[str, str], expected: int, policy: dict[str, Any]) -> None:
+    """Wait only for the next incomplete checkpoint's reviewed queue count."""
+
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != expected:
+        time.sleep(5)
+    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != expected:
+        raise RelationalSmokeError("the relational continuation did not reach its reviewed queue checkpoint")
+
+
 def execute(policy: dict[str, Any]) -> None:
     """Run every stage only after its immediately preceding safe condition passes."""
 
@@ -463,24 +955,27 @@ def execute(policy: dict[str, Any]) -> None:
     candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
-    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0):
         raise RelationalSmokeError("the relational proof preconditions are not the reviewed dormant aggregate state")
+    queue_checkpoint = reconcile_continuation_queue_checkpoint(outputs, policy)
     source_database(policy)
-    run_and_wait("bootstrap", network, policy)
-    run_and_wait("migration", network, policy)
-    run_and_wait("relay", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        time.sleep(5)
-    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
-    run_and_wait("worker", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
-        time.sleep(5)
+    require_bootstrap_effects_reconciliation(policy)
+    if not stage_succeeded("bootstrap", policy):
+        run_and_wait("bootstrap", network, policy)
+    if not stage_succeeded("migration", policy):
+        run_and_wait("migration", network, policy)
+    if not stage_succeeded("relay", policy):
+        run_and_wait("relay", network, policy)
+        wait_for_queue_total(outputs, 1, policy)
+    elif queue_checkpoint != "worker-complete":
+        wait_for_queue_total(outputs, 1, policy)
+    if not stage_succeeded("worker", policy):
+        run_and_wait("worker", network, policy)
+        wait_for_queue_total(outputs, 0, policy)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
-    restore_and_verify(network, policy)
+    if not stage_succeeded("restore_verification", policy):
+        restore_and_verify(network, policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the relational proof did not preserve the reviewed terminal aggregate state")
 
@@ -496,6 +991,7 @@ def execute_bootstrap_recovery(policy: dict[str, Any]) -> None:
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the bootstrap recovery preconditions are not the reviewed dormant aggregate state")
     source_database(policy)
+    require_bootstrap_effects_reconciliation(policy)
     run_and_wait("bootstrap", network, policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the bootstrap recovery did not preserve the reviewed terminal aggregate state")
@@ -509,24 +1005,25 @@ def execute_recovery_continuation(policy: dict[str, Any]) -> None:
     candidate_execution_preflight_succeeded(policy)
     outputs = stack_outputs(policy)
     network = worker_network(policy)
-    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
+    if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0):
         raise RelationalSmokeError("the recovery continuation preconditions are not the reviewed dormant aggregate state")
+    queue_checkpoint = reconcile_continuation_queue_checkpoint(outputs, policy)
     source_database(policy)
     prior_label_succeeded("bootstrap", policy)
-    run_and_wait("migration", network, policy)
-    run_and_wait("relay", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        time.sleep(5)
-    if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
-        raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
-    run_and_wait("worker", network, policy)
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
-        time.sleep(5)
+    if not stage_succeeded("migration", policy):
+        run_and_wait("migration", network, policy)
+    if not stage_succeeded("relay", policy):
+        run_and_wait("relay", network, policy)
+        wait_for_queue_total(outputs, 1, policy)
+    elif queue_checkpoint != "worker-complete":
+        wait_for_queue_total(outputs, 1, policy)
+    if not stage_succeeded("worker", policy):
+        run_and_wait("worker", network, policy)
+        wait_for_queue_total(outputs, 0, policy)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
-    restore_and_verify(network, policy)
+    if not stage_succeeded("restore_verification", policy):
+        restore_and_verify(network, policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the recovery continuation did not preserve the reviewed terminal aggregate state")
 
@@ -568,13 +1065,30 @@ def derived_bootstrap_log_stream(task: dict[str, Any], policy: dict[str, Any]) -
     return policy["bootstrap_diagnostic_log_stream_prefix"] + task_id
 
 
+def failed_bootstrap_receipt_label(policy: dict[str, Any]) -> str:
+    """Select only the durable terminal bootstrap receipt being diagnosed."""
+
+    ledger = load_ledger(policy)
+    receipt = ledger["stages"].get("bootstrap")
+    label = receipt.get("label") if isinstance(receipt, dict) else None
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("state") != "failed"
+        or not isinstance(label, str)
+        or not re.fullmatch(r"kb-pg6-bootstrap-r5-a[1-4]", label)
+    ):
+        raise RelationalSmokeError("the bootstrap diagnostic has no durable terminal failed receipt")
+    return label
+
+
 def diagnose_bootstrap_recovery(policy: dict[str, Any]) -> str:
-    """Classify one consumed recovery-1 task without emitting task or log details."""
+    """Classify one durable failed bootstrap without emitting task or log details."""
 
     verify_account(policy)
     update_complete(policy["service_stack"], policy)
     outputs = stack_outputs(policy)
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"]["bootstrap"], "--desired-status", "STOPPED"], policy)
+    label = failed_bootstrap_receipt_label(policy)
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
     task_arns = listed.get("taskArns")
     if not isinstance(task_arns, list) or len(task_arns) != 1 or not isinstance(task_arns[0], str):
         raise RelationalSmokeError("the fixed bootstrap diagnostic cannot identify one consumed terminal task")
@@ -632,7 +1146,7 @@ def main() -> int:
 
     parsed = arguments()
     try:
-        mode = "diagnostic" if parsed.diagnose_bootstrap_recovery else "validate" if parsed.validate else "execution"
+        mode = "diagnostic" if (parsed.diagnose_bootstrap_recovery or parsed.reconcile_current_state) else "validate" if parsed.validate else "execution"
         policy = load_policy(mode)
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
@@ -649,6 +1163,16 @@ def main() -> int:
             category = diagnose_bootstrap_recovery(policy)
             print(json.dumps({"postgresql_relational_bootstrap_recovery_diagnostic": category}, sort_keys=True))
             return 0
+        if parsed.reconcile_bootstrap_effects:
+            facts = execute_bootstrap_effects_reconciliation(policy)
+            print(json.dumps({"postgresql_relational_bootstrap_effects_reconciliation": facts}, sort_keys=True))
+            return 0
+        if parsed.assess_bootstrap_effects:
+            print(json.dumps({"postgresql_relational_bootstrap_effect_assessment": assess_bootstrap_effects(policy)}, sort_keys=True))
+            return 0
+        if parsed.reconcile_current_state:
+            print(json.dumps({"postgresql_relational_current_state": reconcile_current_state(policy)}, sort_keys=True))
+            return 0
         execute(policy)
         print('{"postgresql_relational_smoke":"passed"}')
         return 0
@@ -659,6 +1183,8 @@ def main() -> int:
             print('{"postgresql_relational_recovery_continuation":"failed"}')
         elif parsed.diagnose_bootstrap_recovery:
             print('{"postgresql_relational_bootstrap_recovery_diagnostic":"diagnostic-unavailable"}')
+        elif parsed.reconcile_bootstrap_effects:
+            print('{"postgresql_relational_bootstrap_effects_reconciliation":"failed"}')
         else:
             print('{"postgresql_relational_smoke":"failed"}')
         return 1

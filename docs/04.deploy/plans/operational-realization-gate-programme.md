@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: deploy.plan.operational-realization-gate-programme
-  version: 1
+  version: 2
   status: active
   layer: 04.deploy
   domain: deployment.realization
@@ -44,6 +44,12 @@ role, or replace target-specific deployment authority.
 | 5 | One controlled capability proof passes all gate stages, including labelled recovery. | Append-only safe evidence and target readiness update. |
 
 ## PostgreSQL relational-reference migration
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+Once effective, that route replaces the mandatory Stage 4 migration below
+for the named slice only; required executable gates still apply.
 
 The current Kanbien staging relational-reference Stage 6 must not resume from a
 direct target-specific retry. It first migrates into Stage 4 of this programme:

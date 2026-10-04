@@ -34,6 +34,7 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
 
@@ -50,6 +51,29 @@ ACTIVE_CANDIDATE: tuple[str, dict[str, Any]] | None = None
 
 class CandidatePreflightError(Exception):
     """Represent one allowlisted safe result without retaining provider output."""
+
+
+def durable_ledger_path(filename: str) -> Path:
+    """Keep restart receipts in the repository common directory, never a /tmp worktree."""
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True,
+            check=True,
+            cwd=Path.cwd(),
+            text=True,
+            timeout=5,
+        )
+        common = Path(result.stdout.strip())
+    except (OSError, subprocess.SubprocessError) as exception:
+        raise CandidatePreflightError("candidate-durable-ledger-location-unavailable") from exception
+    if not common.is_absolute() or common.name != ".git":
+        raise CandidatePreflightError("candidate-durable-ledger-location-unavailable")
+    return common / "postgresql-stage6-receipts" / filename
+
+
+DEFAULT_CANDIDATE_LEDGER_PATH = durable_ledger_path("candidate-attempts.json")
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -100,7 +124,7 @@ def load_policy() -> dict[str, Any]:
     if cloud.get("account_id") != ACCOUNT or cloud.get("region") != REGION or text(cloud.get("profile"), "candidate-preflight-profile-missing") != "kanbien-dev":
         raise CandidatePreflightError("candidate-preflight-target-not-reviewed")
     expected = {
-        "status": "dormant-task-boundary-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
+        "status": "dormant-task-boundary-deployed-finite-same-image-attempts-require-durable-reconciliation",
         "command": "npm-run-platform-shell-candidate-execution-preflight",
         "execution_guard": "execute-and-approve-candidate-execution-preflight",
         "realization_contract": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
@@ -110,7 +134,7 @@ def load_policy() -> dict[str, Any]:
         "candidate_task_family": "kanbien-staging-platform-shell-candidate-preflight",
         "application_container": "platform-shell",
         "runtime_network": "exact-active-server-awsvpc-configuration-without-service-listener-or-load-balancer-attachment",
-        "candidate_label": "derived-from-immutable-image-digest-and-not-caller-selectable",
+        "candidate_label": "derived-from-immutable-image-digest-and-finite-durable-attempt-number-not-caller-selectable",
         "maximum_start_seconds": 300,
         "maximum_stop_seconds": 120,
         "successful_task_state": "running-and-healthy-before-controlled-stop",
@@ -312,13 +336,75 @@ def verify_candidate_shape(candidate: dict[str, Any], server: dict[str, Any], po
     return candidate_image(candidate, policy["application_container"])
 
 
-def attempt_label(image: str) -> str:
-    """Derive an unselectable, bounded ECS started-by value from one image digest."""
+def attempt_label(image: str, attempt: int = 1) -> str:
+    """Bind a finite attempt identity to an immutable image without requiring a new image."""
+
+    digest = IMMUTABLE_IMAGE.fullmatch(image)
+    if digest is None or not 1 <= attempt <= 4:
+        raise CandidatePreflightError("candidate-image-not-immutable")
+    return f"kb-candidate-{hashlib.sha256(digest.group(1).encode('ascii')).hexdigest()[:16]}-a{attempt}"
+
+
+def load_candidate_ledger(path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> dict[str, Any]:
+    """Reload safe candidate receipts so a process restart cannot reset attempts."""
+
+    if not path.exists():
+        return {"schema": "postgresql-candidate-attempt-ledger/v1", "attempts": []}
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise CandidatePreflightError("candidate-attempt-ledger-unreadable") from exception
+    if ledger.get("schema") != "postgresql-candidate-attempt-ledger/v1" or not isinstance(ledger.get("attempts"), list):
+        raise CandidatePreflightError("candidate-attempt-ledger-invalid")
+    return ledger
+
+
+def save_candidate_ledger(ledger: dict[str, Any], path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> None:
+    """Atomically retain safe attempt receipts without task identifiers."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".postgresql-candidate-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump(ledger, output, sort_keys=True, separators=(",", ":"))
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary_name, path)
+    except OSError as exception:
+        try:
+            os.unlink(temporary_name)
+        except OSError:
+            pass
+        raise CandidatePreflightError("candidate-attempt-ledger-write-failed") from exception
+
+
+def reserve_candidate_attempt(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> str:
+    """Reserve at most four same-image candidate attempts across restarts."""
 
     digest = IMMUTABLE_IMAGE.fullmatch(image)
     if digest is None:
         raise CandidatePreflightError("candidate-image-not-immutable")
-    return f"kb-candidate-{hashlib.sha256(digest.group(1).encode('ascii')).hexdigest()[:20]}"
+    ledger = load_candidate_ledger(path)
+    image_hash = hashlib.sha256(digest.group(1).encode("ascii")).hexdigest()[:16]
+    attempts = [item for item in ledger["attempts"] if isinstance(item, dict) and item.get("image_hash") == image_hash]
+    if len(attempts) >= 4:
+        raise CandidatePreflightError("candidate-attempt-limit-exhausted")
+    label = attempt_label(image, len(attempts) + 1)
+    ledger["attempts"].append({"image_hash": image_hash, "label": label, "state": "reserved", "reserved_at": time.time()})
+    save_candidate_ledger(ledger, path)
+    return label
+
+
+def record_candidate_state(label: str, state: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> None:
+    """Record a safe terminal or uncertain result before another same-image attempt."""
+
+    ledger = load_candidate_ledger(path)
+    receipt = next((item for item in ledger["attempts"] if isinstance(item, dict) and item.get("label") == label), None)
+    if not isinstance(receipt, dict):
+        raise CandidatePreflightError("candidate-attempt-receipt-missing")
+    receipt["state"] = state
+    receipt["updated_at"] = time.time()
+    save_candidate_ledger(ledger, path)
 
 
 def labelled_tasks(label: str, desired_state: str, policy: dict[str, Any]) -> list[str]:
@@ -448,8 +534,13 @@ def execute(policy: dict[str, Any]) -> int:
         candidate = task_definition(candidate_reference, policy, "candidate-task-definition-inspection-unavailable")
         server = task_definition(server_reference, policy, "candidate-source-task-definition-inspection-unavailable")
         image = verify_candidate_shape(candidate, server, policy)
-        label = attempt_label(image)
+        current_attempts = [
+            item for item in load_candidate_ledger()["attempts"]
+            if isinstance(item, dict) and item.get("image_hash") == hashlib.sha256(IMMUTABLE_IMAGE.fullmatch(image).group(1).encode("ascii")).hexdigest()[:16]
+        ]
+        label = attempt_label(image, len(current_attempts) + 1)
         assert_fresh_attempt(label, policy)
+        label = reserve_candidate_attempt(image)
         accepted_task = run_candidate(candidate_reference, label, network, policy)
         ACTIVE_CANDIDATE = (accepted_task, policy)
         wait_for_healthy(accepted_task, policy)
@@ -457,13 +548,20 @@ def execute(policy: dict[str, Any]) -> int:
         ACTIVE_CANDIDATE = None
         if labelled_tasks(label, "RUNNING", policy):
             raise CandidatePreflightError("candidate-cleanup-incomplete")
+        record_candidate_state(label, "succeeded")
         print(safe_result("passed"))
         return 0
     except CandidatePreflightError as exception:
         category = str(exception)
+        if accepted_task is None and "label" in locals():
+            try:
+                record_candidate_state(label, "rejected")
+            except CandidatePreflightError:
+                category = "candidate-attempt-receipt-failure"
         if accepted_task is not None:
             try:
                 cleanup_active_candidate()
+                record_candidate_state(label, "failed")
             except CandidatePreflightError:
                 category = "candidate-cleanup-failure"
         print(safe_result("failed", category))

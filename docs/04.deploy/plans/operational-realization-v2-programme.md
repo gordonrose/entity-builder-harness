@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.operational-realization-v2-programme
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: deployment.realization
@@ -22,6 +22,13 @@ used_by:
 # Operational Realization v2 Programme
 
 ## Objective
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+Once effective, it qualifies this programme's full-graph-first and blanket
+new-digest-after-failure requirements for that slice. Existing candidate/task
+guards and consumed-label protection still apply; other work is unchanged.
 
 Source, infrastructure, IAM, and tests can each be valid while their combined
 runtime cannot execute. This programme makes the complete execution graph a

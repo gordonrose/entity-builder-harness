@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plans.readme
-version: 3
+version: 4
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -20,6 +20,12 @@ used_by:
   path: docs/04.deploy/README.md
 -->
 # Deployment Implementation Plans
+
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+is effective only after explicit adoption and approval of its concrete
+execution plan. Until then the current requirements remain effective.
+The generic programme prerequisites below remain the default for other work.
+No plan index entry grants provider execution authority.
 
 This folder holds deploy-owned programmes that turn an architectural decision
 into controlled, staged work. A plan states what can be implemented in source,
