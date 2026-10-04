@@ -2,13 +2,16 @@ import { randomBytes, randomInt } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const docker = process.platform === "win32" ? "docker.exe" : "docker";
 const containerName = `kanbien-postgresql-stage3-${randomBytes(8).toString("hex")}`;
 const password = randomBytes(24).toString("base64url");
 const fixtureDirectory = mkdtempSync(join(tmpdir(), "kanbien-postgresql-stage3-"));
 const fixtureEnvironment = join(fixtureDirectory, "fixture.env");
+const repositoryDockerConfig = resolve(".cache/04.deploy/docker-config");
+mkdirSync(repositoryDockerConfig, { recursive: true, mode: 0o700 });
+process.env.DOCKER_CONFIG ??= repositoryDockerConfig;
 
 class FixtureError extends Error {
   constructor(category) {

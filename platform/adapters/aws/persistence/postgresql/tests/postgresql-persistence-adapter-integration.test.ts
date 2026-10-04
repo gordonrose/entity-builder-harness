@@ -55,6 +55,8 @@ async function main(): Promise<void> {
   });
 
   try {
+    console.log("PostgreSQL disposable assertion phase: bootstrap ownership repeat.");
+    await bootstrapOwnershipRepeat(environment, rawPool);
     const pool = nodePoolAdapter(rawPool);
     const configuration = required(postgreSqlPersistenceConfiguration({
       host: environment.host,
@@ -212,6 +214,35 @@ async function main(): Promise<void> {
   } finally {
     await rawPool.end();
   }
+}
+
+async function bootstrapOwnershipRepeat(environment: ReturnType<typeof localFixtureEnvironment>, rawPool: Pool): Promise<void> {
+  const administrator = "rdsbootstrapadmin";
+  const migration = "psmoke_bootstrap_migrate";
+  const runtime = "psmoke_bootstrap_runtime";
+  const bootstrapSchema = "bootstrap_repeat_proof";
+  await rawPool.query({ text: `CREATE ROLE ${administrator} LOGIN CREATEROLE PASSWORD 'fixture-admin-password'` });
+  await rawPool.query({ text: `GRANT CONNECT, CREATE, TEMPORARY ON DATABASE postgres TO ${administrator}` });
+  const adminPool = new Pool({ host: environment.host, port: environment.port, database: environment.database, user: administrator, password: "fixture-admin-password", max: 1, connectionTimeoutMillis: 5_000, ssl: false });
+  try {
+    for (let pass = 0; pass < 2; pass += 1) {
+      await adminPool.query({ text: `DO $$ BEGIN CREATE ROLE ${migration} LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$` });
+      await adminPool.query({ text: `DO $$ BEGIN CREATE ROLE ${runtime} LOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $$` });
+      await adminPool.query({ text: `GRANT CONNECT, CREATE, TEMPORARY ON DATABASE postgres TO ${migration}` });
+      await adminPool.query({ text: `GRANT CONNECT ON DATABASE postgres TO ${runtime}` });
+      await adminPool.query({ text: `GRANT ${migration} TO CURRENT_USER` });
+      await adminPool.query({ text: `CREATE SCHEMA IF NOT EXISTS ${bootstrapSchema} AUTHORIZATION ${migration}` });
+      await adminPool.query({ text: `GRANT USAGE ON SCHEMA ${bootstrapSchema} TO ${runtime}` });
+    }
+  } finally { await adminPool.end(); }
+  const ownership = await rawPool.query<{ owner: string }>({ text: `SELECT n.nspowner::regrole::text AS owner FROM pg_namespace n WHERE n.nspname = '${bootstrapSchema}'` });
+  equal(ownership.rows[0]?.owner, migration, "Bootstrap must retain migration-schema ownership after a repeat.");
+  const runtimePool = new Pool({ host: environment.host, port: environment.port, database: environment.database, user: runtime, password: "fixture-runtime-password", max: 1, connectionTimeoutMillis: 5_000, ssl: false });
+  try {
+    let rejected = false;
+    try { await runtimePool.query({ text: `CREATE TABLE ${bootstrapSchema}.runtime_must_not_create (id text)` }); } catch { rejected = true; }
+    equal(rejected, true, "Runtime must not receive schema CREATE through bootstrap.");
+  } finally { await runtimePool.end(); }
 }
 
 function localFixtureEnvironment(): { readonly host: string; readonly port: number; readonly database: string; readonly password: string } {
