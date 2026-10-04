@@ -36,14 +36,15 @@ mkdir -p "$DOCKER_CONFIG"
 PORT="${PLATFORM_SHELL_IMAGE_SMOKE_PORT:-39453}"
 ALLOW_SKIP=false
 TAG="entity-builder-harness/03.product/platform-shell:smoke"
+IMAGE_REFERENCE=""
 CONTAINER_NAME="platform-shell-smoke-$$"
 
 usage() {
   cat <<'EOF'
 Usage:
-  smoke-test-platform-shell-image/script.sh [--port <port>] [--allow-skip-without-engine]
+  smoke-test-platform-shell-image/script.sh [--port <port>] [--image <immutable-image>] [--allow-skip-without-engine]
 
-Builds and runs the platform shell image locally, then verifies:
+Builds and runs a local image, or qualifies a supplied immutable image, then verifies:
   GET /livez
   GET /readyz
 EOF
@@ -75,6 +76,11 @@ while [ "$#" -gt 0 ]; do
       ALLOW_SKIP=true
       shift
       ;;
+    --image)
+      require_value "$1" "${2:-}"
+      IMAGE_REFERENCE="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -88,6 +94,10 @@ while [ "$#" -gt 0 ]; do
 done
 
 validate_port
+if [[ -n "$IMAGE_REFERENCE" ]] && [[ ! "$IMAGE_REFERENCE" =~ ^.+@sha256:[a-f0-9]{64}$ ]]; then
+  echo "ERROR: --image must be an immutable sha256 image reference." >&2
+  exit 2
+fi
 
 find_engine() {
   if command -v docker >/dev/null 2>&1; then
@@ -120,8 +130,34 @@ cleanup() {
 }
 trap cleanup EXIT
 
-bash scripts/04.deploy/build-platform-shell-image/script.sh \
-  --tag "$TAG" >/dev/null
+if [[ -n "$IMAGE_REFERENCE" ]]; then
+  TAG="$IMAGE_REFERENCE"
+else
+  bash scripts/04.deploy/build-platform-shell-image/script.sh \
+    --tag "$TAG" >/dev/null
+fi
+
+qualify_relational_entrypoint() {
+  local entrypoint="$1"
+  local output
+  set +e
+  output="$("$ENGINE" run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "$TAG" ".cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/$entrypoint" 2>&1)"
+  local status=$?
+  set -e
+  if [[ "$status" -ne 1 ]] || [[ "$output" != *'"outcome":"failed"'* ]]; then
+    echo "ERROR: immutable image did not safely load relational entrypoint $entrypoint." >&2
+    exit 1
+  fi
+}
+
+for relational_entrypoint in \
+  kanbien-platform-postgresql-bootstrap.main.js \
+  kanbien-platform-postgresql-migration.main.js \
+  kanbien-platform-postgresql-relay.main.js \
+  kanbien-platform-postgresql-worker.main.js \
+  kanbien-platform-postgresql-restore-verify.main.js; do
+  qualify_relational_entrypoint "$relational_entrypoint"
+done
 
 "$ENGINE" run \
   --detach \

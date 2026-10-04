@@ -186,7 +186,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, Any]:
                 "rds:DescribeDBParameters",
             ],
             "success_condition": "detection-complete-and-in-sync-or-only-known-relational-database-egress-property-addition-plus-declared-tls-normalization-and-effective-tls-required",
-            "output_policy": "safe-check-identifiers-verdicts-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
+            "output_policy": "safe-check-identifiers-verdicts-and-safe-subprocess-failure-class-and-only-logical-resource-type-and-change-category-no-detection-id-provider-response-physical-id-or-property-values",
         },
         "artifact_active_assessment": {
             "status": "approved-administrator-only-artifact-drift-assessment",

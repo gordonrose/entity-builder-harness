@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
 
@@ -22,6 +23,8 @@ SERVER_SERVICE = "kanbien-staging-platform-shell"
 WORKER_SERVICE = "kanbien-staging-platform-shell-worker"
 CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
+STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verification")
+DEFAULT_LEDGER_PATH = Path(".cache/04.deploy/postgresql-stage6-attempt-ledger.json")
 
 
 class RelationalSmokeError(Exception):
@@ -37,15 +40,16 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--execute-bootstrap-recovery", action="store_true", help="Run only the fixed recovery bootstrap stage.")
     parser.add_argument("--execute-recovery-continuation", action="store_true", help="Continue only after the fixed recovery bootstrap succeeded.")
     parser.add_argument("--diagnose-bootstrap-recovery", action="store_true", help="Classify only the consumed fixed bootstrap recovery failure.")
+    parser.add_argument("--reconcile-current-state", action="store_true", help="Read only the fixed relational aggregate state without starting a task.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
-    if result.validate and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
+    if (result.validate or result.reconcile_current_state) and (result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("an execution approval guard is unavailable in validation mode")
     if result.execute and (not result.approve_relational_stage6 or result.approve_relational_bootstrap_recovery or result.approve_relational_recovery_continuation or result.approve_relational_bootstrap_recovery_diagnostic):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
@@ -74,6 +78,122 @@ def text(value: Any, label: str) -> str:
     return value
 
 
+def ledger_path(policy: dict[str, Any]) -> Path:
+    """Use the fixed source-owned receipt path; callers cannot select it."""
+
+    candidate = policy.get("ledger_path", DEFAULT_LEDGER_PATH)
+    if not isinstance(candidate, Path):
+        raise RelationalSmokeError("the relational attempt ledger path is not source-owned")
+    return candidate
+
+
+def empty_ledger() -> dict[str, Any]:
+    """Create a safe, durable state machine with no provider identifiers."""
+
+    return {"schema": "postgresql-stage6-attempt-ledger/v1", "started_at": time.time(), "stages": {}, "attempts": [], "estimated_cost_usd": 0}
+
+
+def load_ledger(policy: dict[str, Any]) -> dict[str, Any]:
+    """Reload state for every operation so limits and receipts survive a restart."""
+
+    path = ledger_path(policy)
+    if not path.exists():
+        return empty_ledger()
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise RelationalSmokeError("the relational attempt ledger is unreadable") from exception
+    if (
+        not isinstance(ledger, dict)
+        or ledger.get("schema") != "postgresql-stage6-attempt-ledger/v1"
+        or not isinstance(ledger.get("started_at"), (int, float))
+        or not isinstance(ledger.get("stages"), dict)
+        or not isinstance(ledger.get("attempts"), list)
+        or not isinstance(ledger.get("estimated_cost_usd"), (int, float))
+    ):
+        raise RelationalSmokeError("the relational attempt ledger has an invalid safe shape")
+    return ledger
+
+
+def save_ledger(policy: dict[str, Any], ledger: dict[str, Any]) -> None:
+    """Atomically persist safe receipts before an operation can be repeated."""
+
+    path = ledger_path(policy)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".postgresql-stage6-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump(ledger, output, sort_keys=True, separators=(",", ":"))
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary_name, path)
+    except OSError as exception:
+        try:
+            os.unlink(temporary_name)
+        except OSError:
+            pass
+        raise RelationalSmokeError("the relational attempt ledger could not be persisted") from exception
+
+
+def stage_label(stage: str, attempt: int, policy: dict[str, Any]) -> str:
+    """Bind a finite attempt identity to a stage without caller-selected labels."""
+
+    base = text(policy["labels"].get(stage), f"started-by.{stage}")
+    if not 1 <= attempt <= policy["attempt_limit_per_stage"]:
+        raise RelationalSmokeError("the relational stage attempt exceeds its reviewed limit")
+    value = f"{base}-a{attempt}"
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,36}", value):
+        raise RelationalSmokeError("the relational stage attempt identity is not a reviewed bounded label")
+    return value
+
+
+def reserve_stage(stage: str, policy: dict[str, Any]) -> tuple[dict[str, Any], int, str]:
+    """Consume a bounded attempt before submission and block unresolved outcomes."""
+
+    ledger = load_ledger(policy)
+    if time.time() - ledger["started_at"] > policy["maximum_elapsed_seconds"]:
+        raise RelationalSmokeError("the relational proof elapsed-time allowance is exhausted")
+    stages = ledger["stages"]
+    previous = stages.get(stage)
+    if isinstance(previous, dict) and previous.get("state") in {"submitting", "accepted", "unknown", "timeout-cleanup-pending"}:
+        raise RelationalSmokeError("the relational stage has an unresolved outcome or cleanup obligation")
+    attempts = [item for item in ledger["attempts"] if isinstance(item, dict)]
+    stage_attempts = sum(1 for item in attempts if item.get("stage") == stage)
+    if stage_attempts >= policy["attempt_limit_per_stage"] or len(attempts) >= policy["attempt_limit_total"]:
+        raise RelationalSmokeError("the relational proof attempt allowance is exhausted")
+    cost = ledger["estimated_cost_usd"] + policy["estimated_stage_cost_usd"][stage]
+    if cost > policy["maximum_cost_usd"] - policy["cleanup_reserve_usd"]:
+        raise RelationalSmokeError("the relational proof cost allowance reserves cleanup and blocks another effect")
+    attempt = stage_attempts + 1
+    label = stage_label(stage, attempt, policy)
+    receipt = {"stage": stage, "attempt": attempt, "label": label, "state": "submitting", "submitted_at": time.time()}
+    attempts.append(receipt)
+    ledger["attempts"] = attempts
+    ledger["estimated_cost_usd"] = cost
+    stages[stage] = receipt
+    save_ledger(policy, ledger)
+    return ledger, attempt, label
+
+
+def record_stage_state(stage: str, state: str, policy: dict[str, Any]) -> None:
+    """Persist accepted, terminal, and uncertain outcomes before any resume."""
+
+    ledger = load_ledger(policy)
+    current = ledger["stages"].get(stage)
+    if not isinstance(current, dict):
+        raise RelationalSmokeError("the relational stage has no durable attempt receipt")
+    current["state"] = state
+    current["updated_at"] = time.time()
+    save_ledger(policy, ledger)
+
+
+def stage_succeeded(stage: str, policy: dict[str, Any]) -> bool:
+    """Read a safe success receipt from a prior process without trusting memory."""
+
+    current = load_ledger(policy)["stages"].get(stage)
+    return isinstance(current, dict) and current.get("state") == "succeeded"
+
+
 def load_policy(mode: str) -> dict[str, Any]:
     """Read the non-selectable committed staging target and resolve its exact control."""
 
@@ -89,8 +209,8 @@ def load_policy(mode: str) -> dict[str, Any]:
     reference = mapping(mapping(root.get("persistence"), "persistence").get("relational_reference"), "relational_reference")
     stage = mapping(reference.get("stage_6_relational_smoke_composition"), "stage_6_relational_smoke_composition")
     expected_lifecycle = (
-        "stage-5-live-boundary-proven-stage-6-bootstrap-recovery-4-source-ready",
-        "candidate-preflight-dormant-definition-deployed-current-image-attempt-terminal-new-immutable-candidate-required",
+        "stage-5-live-boundary-proven-stage-6-recovery-5-prerequisites-ready",
+        "candidate-preflight-dormant-definition-deployed-finite-same-image-attempts-require-durable-reconciliation",
     )
     if (reference.get("status"), stage.get("status")) != expected_lifecycle:
         raise RelationalSmokeError("the relational lifecycle does not permit the Stage 6 proof")
@@ -114,11 +234,11 @@ def load_policy(mode: str) -> dict[str, Any]:
         "restore_verification": "relational-restore-verify",
     }
     expected_labels = {
-        "bootstrap": "kanbien-postgresql-stage6-bootstrap-20260928-recovery-4",
-        "migration": "kanbien-postgresql-stage6-migration-20260928-recovery-4",
-        "relay": "kanbien-postgresql-stage6-relay-20260928-recovery-4",
-        "worker": "kanbien-postgresql-stage6-worker-20260928-recovery-4",
-        "restore_verification": "kanbien-postgresql-stage6-restore-verify-20260928-recovery-4",
+        "bootstrap": "kb-pg6-bootstrap-r5",
+        "migration": "kb-pg6-migration-r5",
+        "relay": "kb-pg6-relay-r5",
+        "worker": "kb-pg6-worker-r5",
+        "restore_verification": "kb-pg6-restore-r5",
     }
     required = {
         "command": "npm-run-platform-shell-postgresql-relational-smoke",
@@ -184,6 +304,20 @@ def load_policy(mode: str) -> dict[str, Any]:
         "labels": expected_labels,
         "task_wait_seconds": 900,
         "restore_wait_seconds": 1800,
+        "task_stop_seconds": 120,
+        "ledger_path": DEFAULT_LEDGER_PATH,
+        "attempt_limit_per_stage": 4,
+        "attempt_limit_total": 20,
+        "maximum_elapsed_seconds": 48 * 60 * 60,
+        "maximum_cost_usd": 100,
+        "cleanup_reserve_usd": 25,
+        "estimated_stage_cost_usd": {
+            "bootstrap": 3,
+            "migration": 3,
+            "relay": 3,
+            "worker": 3,
+            "restore_verification": 8,
+        },
         "bootstrap_diagnostic_categories": set(expected_diagnostic["categories"]),
         "bootstrap_diagnostic_log_stream_prefix": expected_diagnostic["derived_log_stream_prefix"],
     }
@@ -330,11 +464,11 @@ def assert_task_definition(stage: str, policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("a relational stage task definition differs from the reviewed isolated shape")
 
 
-def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
-    """Make each fixed stage single-use, including after a task failure."""
+def no_prior_label(label: str, policy: dict[str, Any]) -> None:
+    """Make each finite attempt identity single-use, including after failure."""
 
     for desired_status in ("RUNNING", "STOPPED"):
-        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", desired_status], policy)
+        response = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", desired_status], policy)
         tasks = response.get("taskArns")
         if not isinstance(tasks, list) or tasks:
             raise RelationalSmokeError("a fixed relational proof stage has already been consumed")
@@ -343,7 +477,11 @@ def no_prior_label(stage: str, policy: dict[str, Any]) -> None:
 def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
     """Require one consumed, successful terminal stage before a continuation."""
 
-    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", policy["labels"][stage], "--desired-status", "STOPPED"], policy)
+    ledger = load_ledger(policy)
+    receipt = ledger["stages"].get(stage)
+    if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or not isinstance(receipt.get("label"), str):
+        raise RelationalSmokeError("the fixed relational continuation predecessor has no durable successful receipt")
+    listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "STOPPED"], policy)
     tasks = listed.get("taskArns")
     if not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], str):
         raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
@@ -356,19 +494,65 @@ def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the fixed relational continuation predecessor did not succeed")
 
 
+def stop_and_verify(stage: str, task_arn: str, policy: dict[str, Any]) -> None:
+    """Own a timed-out task until its terminal state is observed or marked unknown."""
+
+    try:
+        aws(["ecs", "stop-task", "--cluster", policy["cluster"], "--task", task_arn, "--reason", "controlled-relational-timeout-cleanup"], policy)
+        deadline = time.monotonic() + policy["task_stop_seconds"]
+        while time.monotonic() < deadline:
+            observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
+            current = observed.get("tasks")
+            if isinstance(current, list) and len(current) == 1 and isinstance(current[0], dict) and current[0].get("lastStatus") == "STOPPED":
+                record_stage_state(stage, "failed", policy)
+                return
+            time.sleep(5)
+    except RelationalSmokeError:
+        pass
+    record_stage_state(stage, "timeout-cleanup-pending", policy)
+    raise RelationalSmokeError("a timed-out relational stage has an unresolved cleanup obligation")
+
+
+def reconcile_unacknowledged_submission(stage: str, label: str, policy: dict[str, Any]) -> None:
+    """Never repeat a request when its acceptance cannot be established safely."""
+
+    try:
+        observed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy)
+        stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy)
+        running = observed.get("taskArns")
+        terminal = stopped.get("taskArns")
+        if isinstance(running, list) and isinstance(terminal, list) and len(running) + len(terminal) == 0:
+            record_stage_state(stage, "failed", policy)
+            raise RelationalSmokeError("a relational stage submission was rejected before acceptance")
+    except RelationalSmokeError as exception:
+        if str(exception) == "a relational stage submission was rejected before acceptance":
+            raise
+        record_stage_state(stage, "unknown", policy)
+        raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry") from exception
+    record_stage_state(stage, "unknown", policy)
+    raise RelationalSmokeError("a relational stage submission outcome is uncertain and blocks retry")
+
+
 def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: list[dict[str, str]] | None = None) -> None:
-    """Start one labelled Fargate task, wait for it privately, and require exit zero."""
+    """Start one durable finite attempt and own its timeout/uncertain outcomes."""
 
     assert_task_definition(stage, policy)
-    no_prior_label(stage, policy)
-    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", policy["labels"][stage], "--network-configuration", network]
+    _, _attempt, label = reserve_stage(stage, policy)
+    no_prior_label(label, policy)
+    command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", label, "--network-configuration", network]
     if environment is not None:
         command.extend(["--overrides", json.dumps({"containerOverrides": [{"name": policy["containers"][stage], "environment": environment}]}, separators=(",", ":"))])
-    response = aws(command, policy)
+    try:
+        response = aws(command, policy)
+    except RelationalSmokeError:
+        reconcile_unacknowledged_submission(stage, label, policy)
+        raise
     tasks, failures = response.get("tasks"), response.get("failures")
     if failures not in (None, []) or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
+        record_stage_state(stage, "failed", policy)
         raise RelationalSmokeError("a fixed relational stage task did not start uniquely")
     task_arn = tasks[0]["taskArn"]
+    record_stage_state(stage, "accepted", policy)
     deadline = time.monotonic() + policy["task_wait_seconds"]
     while time.monotonic() < deadline:
         observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", task_arn], policy)
@@ -377,9 +561,12 @@ def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: 
             containers = current[0].get("containers")
             container = next((item for item in containers if isinstance(item, dict) and item.get("name") == policy["containers"][stage]), None) if isinstance(containers, list) else None
             if isinstance(container, dict) and container.get("exitCode") == 0:
+                record_stage_state(stage, "succeeded", policy)
                 return
+            record_stage_state(stage, "failed", policy)
             raise RelationalSmokeError("a fixed relational stage task did not complete successfully")
         time.sleep(10)
+    stop_and_verify(stage, task_arn, policy)
     raise RelationalSmokeError("a fixed relational stage task exceeded its reviewed wait limit")
 
 
@@ -403,6 +590,28 @@ def restore_absent(policy: dict[str, Any]) -> bool:
     """Require the fixed disposable recovery identifier to be unused before restore."""
 
     return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allowed_not_found_code="DBInstanceNotFound") is None
+
+
+def reconcile_current_state(policy: dict[str, Any]) -> dict[str, Any]:
+    """Read the fixed aggregate prerequisites without receiving data or starting work."""
+
+    verify_account(policy)
+    update_complete(policy["foundation_stack"], policy)
+    update_complete(policy["service_stack"], policy)
+    outputs = stack_outputs(policy)
+    server = service_counts(SERVER_SERVICE, policy)
+    worker = service_counts(WORKER_SERVICE, policy)
+    source_queue = queue_total(outputs["RelationalSmokeQueueUrl"], policy)
+    dead_letter_queue = queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy)
+    source_database(policy)
+    return {
+        "source_database": "available-reviewed-posture",
+        "restore_target": "absent" if restore_absent(policy) else "present",
+        "server": {"desired": server[0], "running": server[1]},
+        "worker": {"desired": worker[0], "running": worker[1]},
+        "source_queue_total": source_queue,
+        "dead_letter_queue_total": dead_letter_queue,
+    }
 
 
 def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
@@ -466,21 +675,26 @@ def execute(policy: dict[str, Any]) -> None:
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the relational proof preconditions are not the reviewed dormant aggregate state")
     source_database(policy)
-    run_and_wait("bootstrap", network, policy)
-    run_and_wait("migration", network, policy)
-    run_and_wait("relay", network, policy)
+    if not stage_succeeded("bootstrap", policy):
+        run_and_wait("bootstrap", network, policy)
+    if not stage_succeeded("migration", policy):
+        run_and_wait("migration", network, policy)
+    if not stage_succeeded("relay", policy):
+        run_and_wait("relay", network, policy)
     deadline = time.monotonic() + 90
     while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
         time.sleep(5)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
         raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
-    run_and_wait("worker", network, policy)
+    if not stage_succeeded("worker", policy):
+        run_and_wait("worker", network, policy)
     deadline = time.monotonic() + 90
     while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
         time.sleep(5)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
-    restore_and_verify(network, policy)
+    if not stage_succeeded("restore_verification", policy):
+        restore_and_verify(network, policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the relational proof did not preserve the reviewed terminal aggregate state")
 
@@ -513,20 +727,24 @@ def execute_recovery_continuation(policy: dict[str, Any]) -> None:
         raise RelationalSmokeError("the recovery continuation preconditions are not the reviewed dormant aggregate state")
     source_database(policy)
     prior_label_succeeded("bootstrap", policy)
-    run_and_wait("migration", network, policy)
-    run_and_wait("relay", network, policy)
+    if not stage_succeeded("migration", policy):
+        run_and_wait("migration", network, policy)
+    if not stage_succeeded("relay", policy):
+        run_and_wait("relay", network, policy)
     deadline = time.monotonic() + 90
     while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
         time.sleep(5)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 1:
         raise RelationalSmokeError("the fixed relational relay did not produce exactly one aggregate delivery")
-    run_and_wait("worker", network, policy)
+    if not stage_succeeded("worker", policy):
+        run_and_wait("worker", network, policy)
     deadline = time.monotonic() + 90
     while time.monotonic() < deadline and queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0:
         time.sleep(5)
     if queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the isolated relational queues did not return to their empty terminal state")
-    restore_and_verify(network, policy)
+    if not stage_succeeded("restore_verification", policy):
+        restore_and_verify(network, policy)
     if service_counts(SERVER_SERVICE, policy) != (1, 1) or service_counts(WORKER_SERVICE, policy) != (0, 0) or queue_total(outputs["RelationalSmokeQueueUrl"], policy) != 0 or queue_total(outputs["RelationalSmokeDeadLetterQueueUrl"], policy) != 0:
         raise RelationalSmokeError("the recovery continuation did not preserve the reviewed terminal aggregate state")
 
@@ -632,7 +850,7 @@ def main() -> int:
 
     parsed = arguments()
     try:
-        mode = "diagnostic" if parsed.diagnose_bootstrap_recovery else "validate" if parsed.validate else "execution"
+        mode = "diagnostic" if (parsed.diagnose_bootstrap_recovery or parsed.reconcile_current_state) else "validate" if parsed.validate else "execution"
         policy = load_policy(mode)
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
@@ -648,6 +866,9 @@ def main() -> int:
         if parsed.diagnose_bootstrap_recovery:
             category = diagnose_bootstrap_recovery(policy)
             print(json.dumps({"postgresql_relational_bootstrap_recovery_diagnostic": category}, sort_keys=True))
+            return 0
+        if parsed.reconcile_current_state:
+            print(json.dumps({"postgresql_relational_current_state": reconcile_current_state(policy)}, sort_keys=True))
             return 0
         execute(policy)
         print('{"postgresql_relational_smoke":"passed"}')
