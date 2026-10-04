@@ -534,7 +534,14 @@ def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
     label = candidate_preflight_label(image)
     running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy).get("taskArns")
     stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy).get("taskArns")
-    if not isinstance(running, list) or running or not isinstance(stopped, list) or len(stopped) != 1 or not isinstance(stopped[0], str):
+    if not isinstance(running, list) or running or not isinstance(stopped, list):
+        raise RelationalSmokeError("the active image lacks one terminal candidate execution preflight")
+    # ECS expires stopped-task metadata.  A successful durable receipt is the
+    # qualification record; absence after retention is not evidence that the
+    # already-qualified immutable image was never healthy and controlled-stop.
+    if not stopped:
+        return
+    if len(stopped) != 1 or not isinstance(stopped[0], str):
         raise RelationalSmokeError("the active image lacks one terminal candidate execution preflight")
     observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", stopped[0]], policy).get("tasks")
     task = observed[0] if isinstance(observed, list) and len(observed) == 1 and isinstance(observed[0], dict) else None
