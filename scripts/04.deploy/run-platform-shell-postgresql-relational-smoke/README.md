@@ -90,10 +90,17 @@ migration, and runtime secrets, dormant-worker network configuration, and the
 already-bound immutable image. It connects as the existing bootstrap master to
 `platformsmoke` through the migration endpoint with `verify-full` TLS.
 
-Its only possible invocation is:
+Its only possible live invocation is:
 
 ```bash
 npm run platform:shell:postgresql-relational-smoke -- --reconcile-bootstrap-effects --approve-relational-bootstrap-effects-reconciliation
+```
+
+Before that invocation, exercise the exact fixed override in the exact immutable
+image bound to the live task definition against disposable TLS PostgreSQL 17:
+
+```bash
+node scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test-immutable-bootstrap-effects-override.mjs <image@sha256:...>
 ```
 
 The controller supplies a fixed Node command override. That command accepts no

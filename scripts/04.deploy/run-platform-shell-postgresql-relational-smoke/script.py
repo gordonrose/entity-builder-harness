@@ -197,7 +197,7 @@ def stage_label(stage: str, attempt: int, policy: dict[str, Any]) -> str:
     return value
 
 
-def reserve_stage(stage: str, policy: dict[str, Any]) -> tuple[dict[str, Any], int, str]:
+def reserve_stage(stage: str, policy: dict[str, Any], receipt_binding: dict[str, Any] | None = None) -> tuple[dict[str, Any], int, str]:
     """Consume a bounded attempt before submission and block unresolved outcomes."""
 
     ledger = load_ledger(policy)
@@ -218,6 +218,10 @@ def reserve_stage(stage: str, policy: dict[str, Any]) -> tuple[dict[str, Any], i
     attempt = stage_attempts + 1
     label = stage_label(stage, attempt, policy)
     receipt = {"stage": stage, "attempt": attempt, "label": label, "state": "submitting", "submitted_at": time.time()}
+    if receipt_binding is not None:
+        if set(receipt_binding) != {"task_definition_revision", "image", "diagnostic_code_sha256"} or not isinstance(receipt_binding["task_definition_revision"], int) or not isinstance(receipt_binding["image"], str) or IMMUTABLE_IMAGE.fullmatch(receipt_binding["image"]) is None or not isinstance(receipt_binding["diagnostic_code_sha256"], str) or re.fullmatch(r"[0-9a-f]{64}", receipt_binding["diagnostic_code_sha256"]) is None:
+            raise RelationalSmokeError("the bootstrap-effect reconciliation receipt binding is invalid")
+        receipt.update(receipt_binding)
     attempts.append(receipt)
     ledger["attempts"] = attempts
     ledger["estimated_cost_usd"] = cost
@@ -537,14 +541,17 @@ def worker_network(policy: dict[str, Any]) -> str:
     return "awsvpcConfiguration={subnets=[" + ",".join(subnets) + "],securityGroups=[" + ",".join(groups) + "],assignPublicIp=ENABLED}"
 
 
-def assert_task_definition(stage: str, policy: dict[str, Any]) -> None:
+def assert_task_definition(stage: str, policy: dict[str, Any]) -> dict[str, Any]:
     """Ensure a stage can use only its exact target-defined task family/container."""
 
     response = aws(["ecs", "describe-task-definition", "--task-definition", policy["families"][stage]], policy)
     definition = response.get("taskDefinition")
     containers = definition.get("containerDefinitions") if isinstance(definition, dict) else None
-    if not isinstance(definition, dict) or definition.get("family") != policy["families"][stage] or not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != policy["containers"][stage] or containers[0].get("portMappings"):
+    image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
+    revision = definition.get("revision") if isinstance(definition, dict) else None
+    if not isinstance(definition, dict) or definition.get("family") != policy["families"][stage] or not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or containers[0].get("name") != policy["containers"][stage] or containers[0].get("portMappings") or not isinstance(revision, int) or not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
         raise RelationalSmokeError("a relational stage task definition differs from the reviewed isolated shape")
+    return {"task_definition_revision": revision, "image": image}
 
 
 def no_prior_label(label: str, policy: dict[str, Any]) -> None:
@@ -620,8 +627,13 @@ def run_and_wait(stage: str, network: str, policy: dict[str, Any], environment: 
     """Start one durable finite attempt and own its timeout/uncertain outcomes."""
 
     definition_stage = stage if task_stage is None else task_stage
-    assert_task_definition(definition_stage, policy)
-    _, _attempt, label = reserve_stage(stage, policy)
+    binding = assert_task_definition(definition_stage, policy)
+    receipt_binding = None
+    if stage == BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE:
+        if definition_stage != "bootstrap" or environment is not None or command_override != ["-e", BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM]:
+            raise RelationalSmokeError("the bootstrap-effect reconciliation override differs from the reviewed fixed command")
+        receipt_binding = {**binding, "diagnostic_code_sha256": hashlib.sha256(BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM.encode("utf-8")).hexdigest()}
+    _, _attempt, label = reserve_stage(stage, policy, receipt_binding)
     no_prior_label(label, policy)
     command = ["ecs", "run-task", "--cluster", policy["cluster"], "--task-definition", policy["families"][definition_stage], "--launch-type", "FARGATE", "--count", "1", "--started-by", label, "--network-configuration", network]
     if environment is not None or command_override is not None:

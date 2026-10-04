@@ -222,6 +222,19 @@ module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], gate_p
 module["record_stage_state"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], "succeeded", gate_policy)
 module["require_bootstrap_effects_reconciliation"](gate_policy)
 
+# The receipt is persisted before launch with the exact immutable task binding
+# and fixed diagnostic code hash, never a task identifier or provider payload.
+definition_image = "registry.example/platform-shell@sha256:" + "b" * 64
+definition_globals = module["assert_task_definition"].__globals__
+definition_globals["aws"] = lambda *_args, **_kwargs: {"taskDefinition": {"family": "reviewed-bootstrap-family", "revision": 9, "containerDefinitions": [{"name": "reviewed-bootstrap", "image": definition_image}]}}
+binding = module["assert_task_definition"]("bootstrap", {"families": {"bootstrap": "reviewed-bootstrap-family"}, "containers": {"bootstrap": "reviewed-bootstrap"}})
+assert binding == {"task_definition_revision": 9, "image": definition_image}
+bound_policy = {**effects_policy, "ledger_path": temporary / "bound-effects-receipts.json"}
+code_hash = module["hashlib"].sha256(module["BOOTSTRAP_EFFECTS_RECONCILIATION_PROGRAM"].encode("utf-8")).hexdigest()
+module["reserve_stage"](module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"], bound_policy, {**binding, "diagnostic_code_sha256": code_hash})
+bound_receipt = module["load_ledger"](bound_policy)["stages"][module["BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE"]]
+assert {key: bound_receipt[key] for key in ("task_definition_revision", "image", "diagnostic_code_sha256")} == {**binding, "diagnostic_code_sha256": code_hash}
+
 observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)
