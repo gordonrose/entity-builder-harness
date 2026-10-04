@@ -130,6 +130,21 @@ module["no_prior_label"].__globals__["aws"] = empty_task_list
 module["no_prior_label"]("reviewed-fixed-label-a1", {"cluster": "reviewed-cluster"})
 assert [arguments[-1] for arguments in observed] == ["RUNNING", "STOPPED"]
 
+# The relational controller must consume the exact successful candidate receipt,
+# including a successful later same-image reattempt, rather than re-deriving a
+# divergent label shape.
+candidate_image = "registry.example/platform-shell@sha256:" + "a" * 64
+candidate_hash = module["hashlib"].sha256(("a" * 64).encode("ascii")).hexdigest()[:16]
+candidate_receipts = temporary / "candidate-receipts.json"
+candidate_receipts.write_text(module["json"].dumps({
+    "schema": "postgresql-candidate-attempt-ledger/v1",
+    "attempts": [
+        {"image_hash": candidate_hash, "label": f"kb-candidate-{candidate_hash}-a1", "state": "failed"},
+        {"image_hash": candidate_hash, "label": f"kb-candidate-{candidate_hash}-a2", "state": "succeeded"},
+    ],
+}), encoding="utf-8")
+assert module["candidate_preflight_label"](candidate_image, candidate_receipts) == f"kb-candidate-{candidate_hash}-a2"
+
 observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)

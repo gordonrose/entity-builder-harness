@@ -25,6 +25,7 @@ CANDIDATE_TASK_FAMILY = "kanbien-staging-platform-shell-candidate-preflight"
 IMMUTABLE_IMAGE = re.compile(r"^.+@sha256:([0-9a-f]{64})$")
 STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verification")
 DEFAULT_LEDGER_PATH = Path(".cache/04.deploy/postgresql-stage6-attempt-ledger.json")
+DEFAULT_CANDIDATE_LEDGER_PATH = Path(".cache/04.deploy/postgresql-candidate-attempt-ledger.json")
 
 
 class RelationalSmokeError(Exception):
@@ -399,13 +400,31 @@ def service_counts(name: str, policy: dict[str, Any]) -> tuple[int, int]:
         raise RelationalSmokeError("a reviewed service returned invalid aggregate counts") from exception
 
 
-def candidate_preflight_label(image: str) -> str:
-    """Derive the exact candidate label from the active immutable server image."""
+def candidate_preflight_label(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> str:
+    """Require the successful durable candidate receipt for the active image."""
 
     match = IMMUTABLE_IMAGE.fullmatch(image)
     if match is None:
         raise RelationalSmokeError("the active service image is not an immutable candidate digest")
-    return f"kb-candidate-{hashlib.sha256(match.group(1).encode('ascii')).hexdigest()[:20]}"
+    try:
+        ledger = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise RelationalSmokeError("the active service candidate receipt is unavailable") from exception
+    if ledger.get("schema") != "postgresql-candidate-attempt-ledger/v1" or not isinstance(ledger.get("attempts"), list):
+        raise RelationalSmokeError("the active service candidate receipt is invalid")
+    image_hash = hashlib.sha256(match.group(1).encode("ascii")).hexdigest()[:16]
+    successful = [
+        receipt.get("label")
+        for receipt in ledger["attempts"]
+        if isinstance(receipt, dict)
+        and receipt.get("image_hash") == image_hash
+        and receipt.get("state") == "succeeded"
+        and isinstance(receipt.get("label"), str)
+        and re.fullmatch(r"kb-candidate-[a-f0-9]{16}-a[1-4]", receipt["label"])
+    ]
+    if len(successful) != 1:
+        raise RelationalSmokeError("the active image lacks one durable successful candidate receipt")
+    return successful[0]
 
 
 def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
