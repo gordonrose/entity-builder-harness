@@ -145,6 +145,17 @@ candidate_receipts.write_text(module["json"].dumps({
 }), encoding="utf-8")
 assert module["candidate_preflight_label"](candidate_image, candidate_receipts) == f"kb-candidate-{candidate_hash}-a2"
 
+# Diagnosis must use the durable failed attempt label, not the unqualified
+# base label that cannot identify a finite Recovery-5 task.
+diagnostic_policy = {
+    **ledger_policy,
+    "ledger_path": temporary / "diagnostic-receipts.json",
+    "labels": {stage: f"kb-pg6-{stage.replace('_verification', '')}-r5" for stage in ("bootstrap", "migration", "relay", "worker", "restore_verification")},
+}
+module["reserve_stage"]("bootstrap", diagnostic_policy)
+module["record_stage_state"]("bootstrap", "failed", diagnostic_policy)
+assert module["failed_bootstrap_receipt_label"](diagnostic_policy) == "kb-pg6-bootstrap-r5-a1"
+
 observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)
