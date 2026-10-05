@@ -303,7 +303,17 @@ function verifyCompiledRelationalRestoreVerification() {
     env: { ...process.env },
     encoding: "utf8",
   });
-  const expected = JSON.stringify({ level: "error", message: "kanbien-platform.relational-smoke.restore_verified", fields: { outcome: "failed" } });
+  const expected = JSON.stringify({
+    level: "error",
+    message: "kanbien-platform.relational-smoke.restore_verified",
+    fields: {
+      outcome: "failed",
+      failure_phase: "input-validation",
+      failure_category: "restore-input-validation-failure",
+      expected: { migration_checksums: "two", accepted_work_item: "one", published_outbox: "one", completed_processing: "one" },
+      observed: { migration_checksums: "not-queried", accepted_work_item: "not-queried", published_outbox: "not-queried", completed_processing: "not-queried" },
+    },
+  });
   if (result.status !== 1 || result.stdout.trim() !== expected) {
     throw new Error("Compiled relational restore verification payload must load and retain its reviewed safe failure outcome.");
   }

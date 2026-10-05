@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -843,15 +844,50 @@ def source_database(policy: dict[str, Any]) -> dict[str, Any]:
     subnet_group = instance.get("DBSubnetGroup", {}).get("DBSubnetGroupName") if isinstance(instance.get("DBSubnetGroup"), dict) else None
     groups = instance.get("VpcSecurityGroups")
     parameter_groups = instance.get("DBParameterGroups")
-    if instance.get("DBInstanceStatus") != "available" or instance.get("PubliclyAccessible") is not False or instance.get("StorageEncrypted") is not True or not isinstance(subnet_group, str) or not isinstance(groups, list) or len(groups) != 1 or not isinstance(groups[0], dict) or not isinstance(groups[0].get("VpcSecurityGroupId"), str) or not isinstance(parameter_groups, list) or len(parameter_groups) != 1 or not isinstance(parameter_groups[0], dict) or not isinstance(parameter_groups[0].get("DBParameterGroupName"), str):
+    latest_restorable_time = instance.get("LatestRestorableTime")
+    if instance.get("DBInstanceStatus") != "available" or instance.get("PubliclyAccessible") is not False or instance.get("StorageEncrypted") is not True or not isinstance(subnet_group, str) or not isinstance(groups, list) or len(groups) != 1 or not isinstance(groups[0], dict) or not isinstance(groups[0].get("VpcSecurityGroupId"), str) or not isinstance(parameter_groups, list) or len(parameter_groups) != 1 or not isinstance(parameter_groups[0], dict) or not isinstance(parameter_groups[0].get("DBParameterGroupName"), str) or not isinstance(latest_restorable_time, str):
         raise RelationalSmokeError("the relational source database recovery boundary differs from the reviewed posture")
-    return {"subnet_group": subnet_group, "security_group": groups[0]["VpcSecurityGroupId"], "parameter_group": parameter_groups[0]["DBParameterGroupName"]}
+    return {"subnet_group": subnet_group, "security_group": groups[0]["VpcSecurityGroupId"], "parameter_group": parameter_groups[0]["DBParameterGroupName"], "latest_restorable_time": latest_restorable_time}
 
 
 def restore_absent(policy: dict[str, Any]) -> bool:
     """Require the fixed disposable recovery identifier to be unused before restore."""
 
     return aws(["rds", "describe-db-instances", "--db-instance-identifier", policy["restore_database"]], policy, allowed_not_found_code="DBInstanceNotFound") is None
+
+
+def restore_point_time(value: str) -> float:
+    """Parse only the timestamp AWS supplied for the fixed source instance."""
+
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+    except ValueError as exception:
+        raise RelationalSmokeError("the source database did not retain a usable latest restore time") from exception
+
+
+def record_restore_point(policy: dict[str, Any], source: dict[str, Any], state: str) -> None:
+    """Durably bind the fixed restore request to proof completion before RDS submission."""
+
+    ledger = load_ledger(policy)
+    worker = ledger["stages"].get("worker")
+    latest = source.get("latest_restorable_time")
+    completed_at = worker.get("updated_at") if isinstance(worker, dict) else None
+    if not isinstance(worker, dict) or worker.get("state") != "succeeded" or not isinstance(completed_at, (int, float)) or not isinstance(latest, str):
+        raise RelationalSmokeError("restore verification requires the durable completed worker proof")
+    includes_proof = restore_point_time(latest) >= completed_at
+    receipt = {
+        "stage": "restore_point_reconciliation",
+        "state": state,
+        "restore_mode": "latest-restorable-time",
+        "source_latest_restorable_time": latest,
+        "proof_completed_at": completed_at,
+        "proof_data_included": includes_proof,
+        "updated_at": time.time(),
+    }
+    ledger["stages"]["restore_point_reconciliation"] = receipt
+    save_ledger(policy, ledger)
+    if not includes_proof:
+        raise RelationalSmokeError("the requested restore point does not yet include the completed worker proof")
 
 
 def reconcile_current_state(policy: dict[str, Any]) -> dict[str, Any]:
@@ -882,6 +918,7 @@ def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
     if not restore_absent(policy):
         raise RelationalSmokeError("the fixed disposable recovery target is not absent")
     source = source_database(policy)
+    record_restore_point(policy, source, "submission-in-progress")
     created = False
     try:
         response = aws([
@@ -898,6 +935,7 @@ def restore_and_verify(network: str, policy: dict[str, Any]) -> None:
         # A successful restore call owns cleanup even if a later response-shape
         # assertion fails. This prevents a disposable recovery from lingering.
         created = True
+        record_restore_point(policy, source, "submitted")
         if not isinstance(response.get("DBInstance"), dict):
             raise RelationalSmokeError("the disposable recovery database was not created uniquely")
         deadline = time.monotonic() + policy["restore_wait_seconds"]
