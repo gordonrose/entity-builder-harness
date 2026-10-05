@@ -330,7 +330,7 @@ observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)
     if arguments[0:2] == ["ecs", "list-tasks"]:
-        return {"taskArns": ["reviewed-task"]}
+        return {"taskArns": [] if arguments[-1] == "RUNNING" else ["reviewed-task"]}
     return {"tasks": [{"containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
 
 module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
@@ -340,7 +340,19 @@ predecessor_policy = {
     "containers": {"bootstrap": "reviewed-container"},
 }
 module["prior_label_succeeded"]("bootstrap", predecessor_policy)
-assert observed[0][-1] == "STOPPED"
+assert [arguments[-1] for arguments in observed[:2]] == ["RUNNING", "STOPPED"]
+
+# ECS may expire stopped-task history after a successful durable receipt.  It
+# remains a safe predecessor only when no matching task is still running.
+module["prior_label_succeeded"].__globals__["aws"] = lambda arguments, *_args, **_kwargs: {"taskArns": []} if arguments[0:2] == ["ecs", "list-tasks"] else AssertionError("expired task metadata must not be described")
+module["prior_label_succeeded"]("bootstrap", predecessor_policy)
+module["prior_label_succeeded"].__globals__["aws"] = lambda arguments, *_args, **_kwargs: {"taskArns": ["still-running"]} if arguments[0:2] == ["ecs", "list-tasks"] else {}
+try:
+    module["prior_label_succeeded"]("bootstrap", predecessor_policy)
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("a live predecessor was accepted after receipt retention")
 
 # A later-stage failure resumes only the first incomplete checkpoint after a restart.
 for stage in ("migration",):
