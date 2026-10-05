@@ -151,6 +151,24 @@ assert attempt == 1 and label == "reviewed-bootstrap-a1"
 module["record_stage_state"]("bootstrap", "succeeded", ledger_policy)
 assert module["stage_succeeded"]("bootstrap", ledger_policy)
 
+# The requested restore point is durable and must include the completed proof
+# before an RDS restore can be submitted; a lagging point blocks without an
+# infrastructure effect.
+restore_point_policy = {**ledger_policy, "ledger_path": temporary / "restore-point-receipts.json"}
+restore_point_ledger = module["empty_ledger"]()
+restore_point_ledger["stages"]["worker"] = {"state": "succeeded", "updated_at": 1_700_000_000.0}
+module["save_ledger"](restore_point_policy, restore_point_ledger)
+restore_source = {"latest_restorable_time": "2023-11-14T22:14:00+00:00"}
+module["record_restore_point"](restore_point_policy, restore_source, "submission-in-progress")
+restore_receipt = module["load_ledger"](restore_point_policy)["stages"]["restore_point_reconciliation"]
+assert restore_receipt["proof_data_included"] is True and restore_receipt["restore_mode"] == "latest-restorable-time"
+try:
+    module["record_restore_point"](restore_point_policy, {"latest_restorable_time": "2023-11-14T22:12:00+00:00"}, "submission-in-progress")
+except module["RelationalSmokeError"] as error:
+    assert str(error) == "the requested restore point does not yet include the completed worker proof"
+else:
+    raise AssertionError("restore request accepted a point preceding the completed proof")
+
 observed = []
 
 def empty_task_list(arguments, _policy, allow_not_found=False):

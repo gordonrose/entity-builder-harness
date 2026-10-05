@@ -45,6 +45,37 @@ export type BootstrapFailureCategory =
   | "bootstrap-schema-grant-failure"
   | "bootstrap-workload-failure-unclassified";
 
+/** Fixed, non-sensitive classifications for the isolated restore proof. */
+export type RestoreVerificationFailureCategory =
+  | "restore-input-validation-failure"
+  | "restore-certificate-authority-unavailable"
+  | "restore-database-authentication-failure"
+  | "restore-database-authorization-failure"
+  | "restore-database-connectivity-failure"
+  | "restore-database-tls-failure"
+  | "restore-database-query-failure"
+  | "restore-migration-checksum-mismatch"
+  | "restore-missing-proof-data"
+  | "restore-processing-state-mismatch";
+
+export type RestoreVerificationPhase =
+  | "input-validation"
+  | "connection"
+  | "migration-checksum-verification"
+  | "work-item-verification"
+  | "outbox-verification"
+  | "processing-state-verification";
+
+export type RestoreVerificationObserved = "not-queried" | "zero" | "one" | "two" | "other";
+
+export interface RestoreVerificationFailureDetails {
+  readonly failure_phase: RestoreVerificationPhase;
+  readonly failure_category: RestoreVerificationFailureCategory;
+  readonly database_error_code?: string;
+  readonly expected: Readonly<Record<"migration_checksums" | "accepted_work_item" | "published_outbox" | "completed_processing", "two" | "one">>;
+  readonly observed: Readonly<Record<"migration_checksums" | "accepted_work_item" | "published_outbox" | "completed_processing", RestoreVerificationObserved>>;
+}
+
 export function secretFromEnvironment(name: string): RelationalTaskSecret {
   const candidate = secretObjectFromEnvironment(name);
   const credentials = credentialsFromSecret(candidate);
@@ -129,11 +160,20 @@ export async function closePool(pool: PostgreSqlConnectionPool | undefined): Pro
   }
 }
 
-export function writeOutcome(operation: string, outcome: "succeeded" | "failed", failureCategory?: BootstrapFailureCategory): void {
+export function writeOutcome(operation: string, outcome: "succeeded" | "failed", failureCategory?: BootstrapFailureCategory | RestoreVerificationFailureCategory): void {
   const fields = outcome === "failed" && failureCategory !== undefined
     ? { outcome, failure_category: failureCategory }
     : { outcome };
   console.log(JSON.stringify({ level: outcome === "succeeded" ? "info" : "error", message: "kanbien-platform.relational-smoke." + operation, fields }));
+}
+
+/** Emit only the reviewed, count-bucketed restore failure facts. */
+export function writeRestoreVerificationFailure(details: RestoreVerificationFailureDetails): void {
+  console.log(JSON.stringify({
+    level: "error",
+    message: "kanbien-platform.relational-smoke.restore_verified",
+    fields: { outcome: "failed", ...details },
+  }));
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
