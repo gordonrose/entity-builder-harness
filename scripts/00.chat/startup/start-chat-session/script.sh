@@ -92,10 +92,11 @@ if [ -z "${BASE_BRANCH// }" ]; then
   exit 1
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-  WORKTREE_STATUS="dirty"
-else
-  WORKTREE_STATUS="clean"
+if ! WORKTREE_STATUS="$(bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping)"; then
+  if [ "$WORKTREE_STATUS" != "dirty" ]; then
+    echo "ERROR: could not determine bootstrap worktree status." >&2
+    exit 1
+  fi
 fi
 
 if [ "$OUTPUT_FORMAT" = "text" ]; then
@@ -214,10 +215,25 @@ Estimated chat cost basis:
 - None recorded yet.
 EOF
 
+report_created_worktree() {
+  local output_fd="$1"
+
+  {
+    echo "Created branch: $BRANCH"
+    echo "Created log: $LOG_FILE"
+    echo "Created worktree: $WORKTREE_PATH"
+    echo "Inspect the new worktree:"
+    printf '  cd %q\n' "$WORKTREE_PATH"
+    echo "Open it in a new VS Code window:"
+    printf '  (cd %q && npm run chat -- open-window)\n' "$WORKTREE_PATH"
+  } >&"$output_fd"
+}
+
 if [ "$OUTPUT_FORMAT" = "text" ]; then
-  echo "Created branch: $BRANCH"
-  echo "Created log: $LOG_FILE"
-  echo "Created worktree: $WORKTREE_PATH"
+  report_created_worktree 1
+else
+  # Keep --json stdout machine-readable while still reporting actual creation.
+  report_created_worktree 2
 fi
 
 if [ "$OUTPUT_FORMAT" = "text" ]; then
@@ -237,6 +253,10 @@ If Bootstrap worktree status is dirty, reply exactly:
 Blocked: dirty worktree. Confirm proceed?
 
 Before that response, do not read workflows or run git status/dirty checks.
+
+If Bootstrap worktree status is bookkeeping-only, its changes are limited to the
+current session log. Treat that as safe ongoing work and do not ask for
+permission solely for that condition.
 
 Governed startup bootstrap has already created this chat branch, worktree, and session log.
 Default mode after startup bootstrap: read-only until I grant write permission in this chat.

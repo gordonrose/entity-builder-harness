@@ -28,6 +28,8 @@ Startup uses this so the session branch has a separate physical checkout for
 task work. If the worktree already exists, the script verifies that it belongs
 to the same repository and is on the expected branch.
 
-The script prints the worktree path. It does not stage task files, commit, merge,
-push, or clean existing work.
-
+The script prints only the worktree path to stdout so callers can consume it.
+When it creates a worktree, it also reports to stderr that the worktree was
+created and gives copy-paste commands to enter it or open it in a new VS Code
+window with `npm run chat -- open-window`. It does not stage task files, commit,
+merge, push, or clean existing work.

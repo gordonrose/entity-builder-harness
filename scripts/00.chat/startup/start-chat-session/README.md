@@ -120,9 +120,11 @@ to present or pass the session packet in their own way.
 
 4. Capture the starting worktree state.
 
-   Startup records whether the current worktree was clean or dirty. If it was
-   dirty, the first prompt tells the next agent to stop and ask for confirmation
-   before doing more discovery. That protects existing uncommitted work.
+   Startup records whether the current worktree was clean, `bookkeeping-only`,
+   or dirty. `bookkeeping-only` means the current chat session log is the only
+   changed path, so the first prompt permits ongoing work without another
+   confirmation. Any other dirty state still tells the next agent to stop and
+   ask for confirmation before doing more discovery.
 
 5. Create the branch and chat-owned worktree.
 
@@ -130,8 +132,9 @@ to present or pass the session packet in their own way.
    script falls back to the current branch so the harness can still bootstrap in
    a new or unusual repo. It creates the worktree below the persistent default
    root (or the configured override) and fails if that location is unusable; it
-   never falls back to a temporary directory. The sibling worktree is where the
-   chat should edit files.
+   never falls back to a temporary directory. It reports the newly created
+   worktree and copy-paste commands to enter it or open it in a new VS Code
+   window. The sibling worktree is where the chat should edit files.
 
 6. Write the session log.
 
@@ -182,6 +185,7 @@ After a successful run, expect:
 
 - a new `chat/*` branch
 - a sibling chat worktree
+- terminal commands to enter the new worktree or open it in VS Code
 - a staged session log inside that worktree
 - a first prompt printed or copied for the next agent
 - no VS Code window unless `CHAT_OPEN_WORKTREE_WINDOW=open` is set

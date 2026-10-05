@@ -100,6 +100,7 @@ case "$RECORDED_WORKTREE" in
 esac
 
 registered_status=0
+CREATED_WORKTREE="no"
 set +e
 WORKTREE_PATH="$(chat_worktree_registered_path_for_branch "$REPO_ROOT" "$BRANCH")"
 registered_status=$?
@@ -140,6 +141,7 @@ elif [ "$registered_status" -eq 1 ]; then
     exit 1
   fi
   git -C "$REPO_ROOT" worktree add --quiet "$WORKTREE_PATH" "$BRANCH"
+  CREATED_WORKTREE="yes"
 else
   exit "$registered_status"
 fi
@@ -152,6 +154,16 @@ current_branch="$(git -C "$WORKTREE_PATH" branch --show-current)"
 if [ "$current_branch" != "$BRANCH" ]; then
   echo "ERROR: chat worktree is on '$current_branch', expected '$BRANCH': $WORKTREE_PATH" >&2
   exit 1
+fi
+
+if [ "$CREATED_WORKTREE" = "yes" ]; then
+  {
+    echo "Created worktree: $WORKTREE_PATH"
+    echo "Inspect the new worktree:"
+    printf '  cd %q\n' "$WORKTREE_PATH"
+    echo "Open it in a new VS Code window:"
+    printf '  (cd %q && npm run chat -- open-window)\n' "$WORKTREE_PATH"
+  } >&2
 fi
 
 printf '%s\n' "$WORKTREE_PATH"

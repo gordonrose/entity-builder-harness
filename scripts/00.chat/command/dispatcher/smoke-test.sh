@@ -62,6 +62,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/auto-start-missing-session" \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
   "$REPO/scripts/00.chat/startup/start-new-chat" \
+  "$REPO/scripts/00.chat/worktree/dirty-worktree-check" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
   "$REPO/scripts/00.chat/worktree/open-window" \
   "$REPO/scripts/00.chat/worktree/paths"
@@ -80,11 +81,12 @@ cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/w
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
-chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/download-repo/script.sh" "$REPO/scripts/00.chat/command/download-repo-diff/script.sh" "$REPO/scripts/00.chat/export/worktree/script.sh" "$REPO/scripts/00.chat/export/worktree-diff/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/closeout/build-closeout-prompt/script.sh" "$REPO/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/close/script.sh" "$REPO/scripts/00.chat/command/open-window/script.sh" "$REPO/scripts/00.chat/command/download-repo/script.sh" "$REPO/scripts/00.chat/command/download-repo-diff/script.sh" "$REPO/scripts/00.chat/export/worktree/script.sh" "$REPO/scripts/00.chat/export/worktree-diff/script.sh" "$REPO/scripts/00.chat/startup/auto-start-missing-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 chmod 0644 "$REPO/scripts/00.chat/command/new/script.sh"
 
 printf 'base\n' > "$REPO/README.md"

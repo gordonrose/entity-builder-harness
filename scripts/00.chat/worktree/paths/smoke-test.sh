@@ -46,6 +46,7 @@ copy_harness() {
     "$repo/scripts/00.chat/session-log/paths" \
     "$repo/scripts/00.chat/startup/start-chat-session" \
     "$repo/scripts/00.chat/worktree/check-write-location" \
+    "$repo/scripts/00.chat/worktree/dirty-worktree-check" \
     "$repo/scripts/00.chat/worktree/ensure-chat-worktree" \
     "$repo/scripts/00.chat/worktree/open-window" \
     "$repo/scripts/00.chat/worktree/paths"
@@ -54,6 +55,7 @@ copy_harness() {
   cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$repo/scripts/00.chat/session-log/paths/lib.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$repo/scripts/00.chat/startup/start-chat-session/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/check-write-location/script.sh" "$repo/scripts/00.chat/worktree/check-write-location/script.sh"
+  cp "$SOURCE_ROOT/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$repo/scripts/00.chat/worktree/dirty-worktree-check/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$repo/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$repo/scripts/00.chat/worktree/open-window/script.sh"
   cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$repo/scripts/00.chat/worktree/paths/lib.sh"
@@ -118,6 +120,31 @@ ensure_result="$(env -u AGENTIC_CHAT_WORKTREE_ROOT HOME="$home_root" bash -c 'cd
 [ "$ensure_result" = "$worktree" ] || fail "ensure did not reuse the persistent worktree"
 check_result="$(env -u AGENTIC_CHAT_WORKTREE_ROOT HOME="$home_root" bash -c 'cd "$1" && bash scripts/00.chat/worktree/check-write-location/script.sh' sh "$worktree")"
 [ "$check_result" = "chat-worktree" ] || fail "write-location did not validate the persistent worktree"
+
+repo="$TMP_ROOT/ensure-create/repo"
+home_root="$TMP_ROOT/ensure-create-home"
+init_repo "$repo"
+session="2026-10-05-ensure-create"
+branch="chat/$session"
+git -C "$repo" branch "$branch"
+expected_worktree="$(env -u AGENTIC_CHAT_WORKTREE_ROOT HOME="$home_root" bash -c 'cd "$1" && source scripts/00.chat/worktree/paths/lib.sh && chat_worktree_path_for_branch "$1" "$2"' sh "$repo" "$branch")"
+session_log="$repo/commitLogs/2026/oct/05/$session/README.md"
+mkdir -p "$(dirname "$session_log")"
+cat > "$session_log" <<EOF
+<!-- agentic-session
+id: $session
+branch: $branch
+worktree: $expected_worktree
+-->
+EOF
+ensure_result="$(env -u AGENTIC_CHAT_WORKTREE_ROOT HOME="$home_root" bash -c 'cd "$1" && bash scripts/00.chat/worktree/ensure-chat-worktree/script.sh "$2"' sh "$repo" "$session_log" 2>"$TMP_ROOT/ensure-create.err")"
+[ "$ensure_result" = "$expected_worktree" ] || fail "ensure did not preserve its stdout path contract after creating a worktree"
+grep -Fqx "Created worktree: $expected_worktree" "$TMP_ROOT/ensure-create.err" \
+  || fail "ensure did not report creating the worktree"
+grep -Fqx "  cd $expected_worktree" "$TMP_ROOT/ensure-create.err" \
+  || fail "ensure did not provide the command to enter the created worktree"
+grep -Fqx "  (cd $expected_worktree && npm run chat -- open-window)" "$TMP_ROOT/ensure-create.err" \
+  || fail "ensure did not provide the command to open the created worktree"
 
 repo="$TMP_ROOT/legacy/repo"
 init_repo "$repo"
