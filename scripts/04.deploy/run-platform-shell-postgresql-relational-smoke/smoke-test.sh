@@ -194,6 +194,45 @@ candidate_receipts.write_text(module["json"].dumps({
 }), encoding="utf-8")
 assert module["candidate_preflight_label"](candidate_image, candidate_receipts) == f"kb-candidate-{candidate_hash}-a2"
 
+# A controller inspection failure remains failed.  A separate terminal
+# assessment can authorize only its exact immutable image and first consumed
+# label after independently proving the healthy controlled stop.
+candidate_assessment = temporary / "candidate-assessment.json"
+candidate_receipts.write_text(module["json"].dumps({
+    "schema": "postgresql-candidate-attempt-ledger/v1",
+    "attempts": [{"image_hash": candidate_hash, "label": f"kb-candidate-{candidate_hash}-a1", "state": "failed"}],
+}), encoding="utf-8")
+valid_candidate_assessment = {"stage": module["CANDIDATE_EXECUTION_ASSESSMENT_STAGE"], "state": "succeeded", "account": module["ACCOUNT"], "region": module["REGION"], "image": candidate_image, "label": f"kb-candidate-{candidate_hash}-a1", "original_receipt_state": "failed", "task_definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell-candidate-preflight:8", "task_definition_revision": 8, "last_status": "STOPPED", "health_status": "HEALTHY", "stop_code": "UserInitiated", "stopped_reason": "controlled-candidate-preflight-complete", "platform_shell_exit_code": 0, "platform_shell_health_status": "HEALTHY"}
+candidate_assessment.write_text(module["json"].dumps({"stages": {module["CANDIDATE_EXECUTION_ASSESSMENT_STAGE"]: valid_candidate_assessment}}), encoding="utf-8")
+assert module["candidate_preflight_label"](candidate_image, candidate_receipts, candidate_assessment) == f"kb-candidate-{candidate_hash}-a1"
+for invalid in (
+    {**valid_candidate_assessment, "label": f"kb-candidate-{candidate_hash}-a2"},
+    {**valid_candidate_assessment, "original_receipt_state": "succeeded"},
+    {**valid_candidate_assessment, "state": "failed"},
+    {key: value for key, value in valid_candidate_assessment.items() if key != "platform_shell_exit_code"},
+):
+    candidate_assessment.write_text(module["json"].dumps({"stages": {module["CANDIDATE_EXECUTION_ASSESSMENT_STAGE"]: invalid}}), encoding="utf-8")
+    try:
+        module["candidate_preflight_label"](candidate_image, candidate_receipts, candidate_assessment)
+    except module["RelationalSmokeError"]:
+        pass
+    else:
+        raise AssertionError("missing, mismatched, or unexplained candidate evidence was accepted")
+
+candidate_task = {
+    "taskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/reviewed-candidate:8",
+    "lastStatus": "STOPPED", "healthStatus": "HEALTHY", "stopCode": "UserInitiated", "stoppedReason": "controlled-candidate-preflight-complete",
+    "containers": [{"name": "platform-shell", "image": candidate_image, "imageDigest": "sha256:" + "a" * 64, "lastStatus": "STOPPED", "healthStatus": "HEALTHY", "exitCode": 0}],
+}
+assert module["terminal_candidate_facts"](candidate_task, candidate_image, candidate_task["taskDefinitionArn"])["task_definition_revision"] == 8
+candidate_task["containers"][0]["exitCode"] = 1
+try:
+    module["terminal_candidate_facts"](candidate_task, candidate_image, candidate_task["taskDefinitionArn"])
+except module["RelationalSmokeError"]:
+    pass
+else:
+    raise AssertionError("an unsuccessful candidate container exit was accepted")
+
 # Diagnosis must use the durable failed attempt label, not the unqualified
 # base label that cannot identify a finite Recovery-5 task.
 diagnostic_policy = {
