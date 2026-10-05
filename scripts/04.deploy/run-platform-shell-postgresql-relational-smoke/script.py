@@ -698,9 +698,19 @@ def prior_label_succeeded(stage: str, policy: dict[str, Any]) -> None:
     receipt = ledger["stages"].get(stage)
     if not isinstance(receipt, dict) or receipt.get("state") != "succeeded" or not isinstance(receipt.get("label"), str):
         raise RelationalSmokeError("the fixed relational continuation predecessor has no durable successful receipt")
+    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "RUNNING"], policy).get("taskArns")
+    if not isinstance(running, list) or running:
+        raise RelationalSmokeError("the fixed relational continuation predecessor is still active")
     listed = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", receipt["label"], "--desired-status", "STOPPED"], policy)
     tasks = listed.get("taskArns")
-    if not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], str):
+    if not isinstance(tasks, list):
+        raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
+    # ECS eventually removes stopped-task metadata.  The controller's durable
+    # successful receipt remains the completion record once there is no live
+    # task; expired metadata is not evidence that the consumed stage failed.
+    if not tasks:
+        return
+    if len(tasks) != 1 or not isinstance(tasks[0], str):
         raise RelationalSmokeError("the fixed relational continuation predecessor is not one consumed terminal stage")
     described = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", tasks[0]], policy)
     current = described.get("tasks")
