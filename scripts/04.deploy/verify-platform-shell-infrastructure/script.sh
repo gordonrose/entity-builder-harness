@@ -1303,6 +1303,7 @@ expected_relational_reference = {
             "bootstrap_recovery_execution_guard": "execute-bootstrap-recovery-and-approve-relational-bootstrap-recovery",
             "recovery_continuation_execution_guard": "execute-recovery-continuation-and-approve-relational-recovery-continuation",
             "bootstrap_recovery_diagnostic_guard": "diagnose-bootstrap-recovery-and-approve-relational-bootstrap-recovery-diagnostic",
+            "bootstrap_effects_reconciliation_guard": "reconcile-bootstrap-effects-and-approve-relational-bootstrap-effects-reconciliation",
             "bootstrap_recovery_diagnostic": {
                 "metadata_fallback": "allowlisted-task-stop-code-and-bootstrap-container-reason-classification-only-after-direct-and-derived-log-stream-unavailable",
                 "derived_log_stream_prefix": "relational-bootstrap/relational-bootstrap/",
@@ -1333,6 +1334,14 @@ expected_relational_reference = {
                     "bootstrap-essential-container-exited-without-log-stream",
                     "bootstrap-task-terminal-metadata-unclassified",
                 ],
+            },
+            "bootstrap_effects_reconciliation": {
+                "task_family": "bootstrap",
+                "started_by": "kb-pg6-bootstrap-effects-r5",
+                "task_wait_seconds": 300,
+                "output_policy": "safe-allowlisted-boolean-role-membership-database-grant-schema-ownership-and-privilege-facts-only-no-identifiers-endpoints-records-secrets-headers-bodies-messages-or-provider-payloads",
+                "database_identity": "existing-bootstrap-task-master-identity-through-existing-migration-endpoint-and-verify-full-tls",
+                "transaction_policy": "one-fixed-begin-read-only-catalog-select-rollback-no-database-writes",
             },
             "cluster": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
             "foundation_stack": "kanbien-staging-platform-shell-foundation",
