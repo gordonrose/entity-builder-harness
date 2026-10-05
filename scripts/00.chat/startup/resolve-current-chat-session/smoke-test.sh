@@ -53,6 +53,7 @@ mkdir -p \
   "$REPO/scripts/00.chat/startup/resolve-current-chat-session" \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
   "$REPO/scripts/00.chat/startup/start-new-chat" \
+  "$REPO/scripts/00.chat/worktree/dirty-worktree-check" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
   "$REPO/scripts/00.chat/worktree/open-window" \
   "$REPO/scripts/00.chat/worktree/paths"
@@ -66,6 +67,7 @@ cp "$SOURCE_ROOT/scripts/00.chat/command/dispatcher/script.sh" "$REPO/scripts/00
 cp "$SOURCE_ROOT/scripts/00.chat/command/new/script.sh" "$REPO/scripts/00.chat/command/new/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-new-chat/script.sh" "$REPO/scripts/00.chat/startup/start-new-chat/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
@@ -77,6 +79,7 @@ chmod +x \
   "$REPO/scripts/00.chat/command/new/script.sh" \
   "$REPO/scripts/00.chat/startup/start-new-chat/script.sh" \
   "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" \
+  "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" \
   "$REPO/scripts/00.chat/worktree/open-window/script.sh" \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"

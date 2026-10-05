@@ -50,17 +50,19 @@ mkdir -p \
   "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches" \
   "$REPO/scripts/00.chat/session-log/paths" \
   "$REPO/scripts/00.chat/startup/start-chat-session" \
+  "$REPO/scripts/00.chat/worktree/dirty-worktree-check" \
   "$REPO/scripts/00.chat/worktree/ensure-chat-worktree" \
   "$REPO/scripts/00.chat/worktree/open-window" \
   "$REPO/scripts/00.chat/worktree/paths"
 
 cp "$SOURCE_ROOT/scripts/00.chat/session-log/paths/lib.sh" "$REPO/scripts/00.chat/session-log/paths/lib.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/paths/lib.sh" "$REPO/scripts/00.chat/worktree/paths/lib.sh"
+cp "$SOURCE_ROOT/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/startup/start-chat-session/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 cp "$SOURCE_ROOT/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh"
-chmod +x "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
+chmod +x "$REPO/scripts/00.chat/startup/start-chat-session/script.sh" "$REPO/scripts/00.chat/worktree/dirty-worktree-check/script.sh" "$REPO/scripts/00.chat/worktree/ensure-chat-worktree/script.sh" "$REPO/scripts/00.chat/worktree/open-window/script.sh" "$REPO/scripts/00.chat/git/cleanup-empty-chat-branches/script.sh"
 
 printf 'base\n' > "$REPO/README.md"
 git -C "$REPO" add README.md scripts
@@ -75,6 +77,10 @@ CHAT_COPY_PROMPT=skip \
 
 if ! grep -q 'Skipping VS Code window open:' "$TMP_ROOT/chat-worktree-session.out"; then
   fail "startup did not skip VS Code window open by default"
+fi
+
+if ! grep -q '^Inspect the new worktree:$' "$TMP_ROOT/chat-worktree-session.out"; then
+  fail "startup did not report how to inspect the new worktree"
 fi
 
 root_branch="$(git -C "$REPO" branch --show-current)"
@@ -98,6 +104,11 @@ worktree_path="$(
 if [ -z "$worktree_path" ] || [ "$worktree_path" = "$REPO" ]; then
   fail "chat branch does not have a separate worktree"
 fi
+
+grep -Fqx "  cd $worktree_path" "$TMP_ROOT/chat-worktree-session.out" \
+  || fail "startup did not provide the command to enter the new worktree"
+grep -Fqx "  (cd $worktree_path && npm run chat -- open-window)" "$TMP_ROOT/chat-worktree-session.out" \
+  || fail "startup did not provide the command to open the new worktree"
 
 if [ -n "$(git -C "$REPO" diff --cached --name-only)" ]; then
   fail "root worktree has staged changes"
@@ -140,6 +151,28 @@ fi
 if ! grep -q '^## Context Hygiene$' "$worktree_path/$session_log"; then
   fail "chat startup did not initialize the context hygiene section"
 fi
+
+renamed_session_dir="${session_log%/README.md}-renamed"
+mv "$worktree_path/${session_log%/README.md}" "$worktree_path/$renamed_session_dir"
+git -C "$worktree_path" add -A commitLogs
+session_log="$renamed_session_dir/README.md"
+
+if bash -c 'cd "$1" && bash scripts/00.chat/worktree/dirty-worktree-check/script.sh' sh "$worktree_path" >"$TMP_ROOT/default-dirty.out"; then
+  fail "default dirty-worktree check accepted the staged session log"
+fi
+grep -qx 'dirty' "$TMP_ROOT/default-dirty.out" \
+  || fail "default dirty-worktree check did not report dirty"
+
+bookkeeping_status="$(bash -c 'cd "$1" && bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping' sh "$worktree_path")"
+[ "$bookkeeping_status" = "bookkeeping-only" ] \
+  || fail "renamed session log changes were not accepted as bookkeeping-only"
+
+printf 'unrelated work\n' > "$worktree_path/unrelated.txt"
+if bash -c 'cd "$1" && bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping' sh "$worktree_path" >"$TMP_ROOT/mixed-dirty.out"; then
+  fail "bookkeeping tolerance accepted unrelated worktree changes"
+fi
+grep -qx 'dirty' "$TMP_ROOT/mixed-dirty.out" \
+  || fail "bookkeeping tolerance did not report mixed changes as dirty"
 
 FAKE_BIN="$TMP_ROOT/fake-bin"
 mkdir -p "$FAKE_BIN"

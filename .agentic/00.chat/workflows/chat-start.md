@@ -146,11 +146,15 @@ packet's prompt route into chat session `layer`, `mode`, or `workflow` fields.
 Before editing files, run:
 
 ```bash
-bash scripts/00.chat/worktree/dirty-worktree-check/script.sh
+bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
 ```
 
-<!-- deterministic-check: allow reason="dirty-worktree-check.sh detects dirty state; workflow defines the exact blocked response" -->
-If dirty, respond exactly:
+If it reports `clean` or `bookkeeping-only`, proceed. `bookkeeping-only` means
+the only changes are to the current chat session log and is safe ongoing work;
+do not ask for permission solely for that condition.
+
+<!-- deterministic-check: allow reason="dirty-worktree-check.sh detects dirty state; this workflow owns the human-facing blocked response" -->
+If it reports `dirty`, respond exactly:
 
 ```txt
 Blocked: dirty worktree. Confirm proceed?

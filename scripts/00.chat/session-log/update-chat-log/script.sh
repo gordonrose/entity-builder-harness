@@ -131,6 +131,9 @@ set_adr_disposition() {
   tmp="$(mktemp)"
 
   awk -v needed="$needed" -v path="$path" -v reason="$reason" '
+    function adr_path_line() {
+      return path == "" ? "ADR path:" : "ADR path: " path
+    }
     BEGIN {
       in_adr = 0
       saw_needed = 0
@@ -147,7 +150,7 @@ set_adr_disposition() {
         print "ADR needed: " needed
       }
       if (saw_path == 0) {
-        print "ADR path: " path
+        print adr_path_line()
       }
       if (saw_reason == 0) {
         print "Reason: " reason
@@ -160,7 +163,7 @@ set_adr_disposition() {
       next
     }
     in_adr && /^ADR path:/ {
-      print "ADR path: " path
+      print adr_path_line()
       saw_path = 1
       next
     }
@@ -178,7 +181,7 @@ set_adr_disposition() {
           print "ADR needed: " needed
         }
         if (saw_path == 0) {
-          print "ADR path: " path
+          print adr_path_line()
         }
         if (saw_reason == 0) {
           print "Reason: " reason

@@ -73,6 +73,12 @@ test context hygiene
 
 - None recorded yet.
 
+## ADR Disposition
+
+ADR needed: unknown
+ADR path:
+Reason:
+
 ## Activity Log
 
 - None recorded yet.
@@ -100,5 +106,16 @@ grep -q '^  Durable evidence: Durable evidence lives in the task commit and sess
 
 grep -q '^### .* - Context hygiene$' "$LOG_FILE" \
   || fail "context hygiene activity entry was not recorded"
+
+bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+  bash scripts/00.chat/session-log/update-chat-log/script.sh adr-disposition not-needed \
+    "The smoke update does not make an architectural decision." \
+  >"$TMP_ROOT/adr-disposition.out"
+
+grep -qx 'ADR path:' "$LOG_FILE" \
+  || fail "not-needed ADR disposition left whitespace in the empty ADR path"
+
+git -C "$REPO" diff --check \
+  || fail "ADR disposition introduced whitespace errors"
 
 echo "update chat log smoke test passed."
