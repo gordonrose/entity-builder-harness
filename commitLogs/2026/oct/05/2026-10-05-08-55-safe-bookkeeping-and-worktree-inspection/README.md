@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-05T07:55:25Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-05T08:43:23Z
+latest_commit_sha: edc757432a9f6c533a639030f554965d338d7c38
+chat_duration: 2878s (00:00:47:58)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -103,6 +103,17 @@ ADR needed: no
 
 Reason: This is a scoped lifecycle behavior and reporting change within the established chat-worktree architecture; it creates no durable architectural alternative.
 
+
+### 2026-10-05T08:43:23Z - Commit recorded
+
+Commit: `edc757432a9f6c533a639030f554965d338d7c38`
+
+Message: Improve chat worktree bookkeeping and inspection
+
+Summary: Allow current-session session-log-only dirt, report new worktree inspection commands, and prevent whitespace errors in not-needed ADR session-log updates.
+
+ADR impact: No ADR: scoped lifecycle behavior within the established chat-worktree architecture.
+
 ## Sub-Agent Activity
 
 
@@ -122,7 +133,13 @@ Summary: Updated chat-start, startup, ensure-worktree, docs, and focused smoke c
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `edc757432a9f6c533a639030f554965d338d7c38`
+  Time UTC: 2026-10-05T08:43:23Z
+  Message: Improve chat worktree bookkeeping and inspection
+  Summary: Allow current-session session-log-only dirt, report new worktree inspection commands, and prevent whitespace errors in not-needed ADR session-log updates.
+  ADR impact: No ADR: scoped lifecycle behavior within the established chat-worktree architecture.
 
 ## Main Refresh Conflicts
 
@@ -137,12 +154,12 @@ Reason: This is a scoped lifecycle behavior and reporting change within the esta
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T07:55:25Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-05T08:43:23Z
+Latest commit SHA: edc757432a9f6c533a639030f554965d338d7c38
+Chat duration: 2878s (00:00:47:58)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
