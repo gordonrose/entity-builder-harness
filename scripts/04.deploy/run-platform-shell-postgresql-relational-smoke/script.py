@@ -28,6 +28,7 @@ STAGE_ORDER = ("bootstrap", "migration", "relay", "worker", "restore_verificatio
 BOOTSTRAP_EFFECTS_RECONCILIATION_STAGE = "bootstrap_effects_reconciliation"
 BOOTSTRAP_EFFECTS_FACT_STAGES = ("bootstrap_effects_facts_one", "bootstrap_effects_facts_two")
 BOOTSTRAP_EFFECTS_ASSESSMENT_STAGE = "bootstrap_effects_assessment"
+CANDIDATE_EXECUTION_ASSESSMENT_STAGE = "candidate_execution_assessment"
 BOOTSTRAP_EFFECTS_FACT_LABELS = {
     "bootstrap_effects_facts_one": "kb-pg6-be-f1-r5-a1",
     "bootstrap_effects_facts_two": "kb-pg6-be-f2-r5-a1",
@@ -109,17 +110,18 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--reconcile-current-state", action="store_true", help="Read only the fixed relational aggregate state without starting a task.")
     parser.add_argument("--reconcile-bootstrap-effects", action="store_true", help="Run one fixed read-only bootstrap-effect reconciliation task.")
     parser.add_argument("--assess-bootstrap-effects", action="store_true", help="Persist a validated assessment from completed fixed fact receipts.")
+    parser.add_argument("--assess-candidate-execution", action="store_true", help="Persist a validated assessment from one completed candidate terminal task.")
     parser.add_argument("--approve-relational-stage6", action="store_true", help="Acknowledge the one bounded relational proof and recovery cleanup.")
     parser.add_argument("--approve-relational-bootstrap-recovery", action="store_true", help="Acknowledge only the fixed bootstrap recovery stage.")
     parser.add_argument("--approve-relational-recovery-continuation", action="store_true", help="Acknowledge only the one bounded post-bootstrap continuation.")
     parser.add_argument("--approve-relational-bootstrap-recovery-diagnostic", action="store_true", help="Acknowledge only the fixed bootstrap failure classification read.")
     parser.add_argument("--approve-relational-bootstrap-effects-reconciliation", action="store_true", help="Acknowledge only the fixed read-only bootstrap-effect reconciliation task.")
     result = parser.parse_args()
-    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state, result.reconcile_bootstrap_effects, result.assess_bootstrap_effects))
+    selected = sum((result.validate, result.execute, result.execute_bootstrap_recovery, result.execute_recovery_continuation, result.diagnose_bootstrap_recovery, result.reconcile_current_state, result.reconcile_bootstrap_effects, result.assess_bootstrap_effects, result.assess_candidate_execution))
     if selected != 1:
         parser.error("choose exactly one fixed validation, execution, recovery, or diagnostic mode")
     approvals = (result.approve_relational_stage6, result.approve_relational_bootstrap_recovery, result.approve_relational_recovery_continuation, result.approve_relational_bootstrap_recovery_diagnostic, result.approve_relational_bootstrap_effects_reconciliation)
-    if (result.validate or result.reconcile_current_state or result.assess_bootstrap_effects) and any(approvals):
+    if (result.validate or result.reconcile_current_state or result.assess_bootstrap_effects or result.assess_candidate_execution) and any(approvals):
         parser.error("an execution approval guard is unavailable in validation mode")
     if result.execute and (not result.approve_relational_stage6 or any(approvals[1:])):
         parser.error("the fixed relational proof requires --approve-relational-stage6")
@@ -490,8 +492,8 @@ def service_counts(name: str, policy: dict[str, Any]) -> tuple[int, int]:
         raise RelationalSmokeError("a reviewed service returned invalid aggregate counts") from exception
 
 
-def candidate_preflight_label(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH) -> str:
-    """Require the successful durable candidate receipt for the active image."""
+def candidate_preflight_label(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_PATH, assessment_path: Path = DEFAULT_LEDGER_PATH) -> str:
+    """Require a successful receipt, or a separately validated terminal assessment."""
 
     match = IMMUTABLE_IMAGE.fullmatch(image)
     if match is None:
@@ -512,9 +514,104 @@ def candidate_preflight_label(image: str, path: Path = DEFAULT_CANDIDATE_LEDGER_
         and isinstance(receipt.get("label"), str)
         and re.fullmatch(r"kb-candidate-[a-f0-9]{16}-a[1-4]", receipt["label"])
     ]
-    if len(successful) != 1:
-        raise RelationalSmokeError("the active image lacks one durable successful candidate receipt")
-    return successful[0]
+    if len(successful) == 1:
+        return successful[0]
+    if successful:
+        raise RelationalSmokeError("the active image has multiple durable successful candidate receipts")
+    try:
+        assessment_ledger = json.loads(assessment_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exception:
+        raise RelationalSmokeError("the active image lacks one durable successful candidate receipt") from exception
+    assessment = assessment_ledger.get("stages", {}).get(CANDIDATE_EXECUTION_ASSESSMENT_STAGE) if isinstance(assessment_ledger.get("stages"), dict) else None
+    expected_label = f"kb-candidate-{image_hash}-a1"
+    assessment_task_definition = assessment.get("task_definition") if isinstance(assessment, dict) else None
+    assessment_facts = {
+        "stage": CANDIDATE_EXECUTION_ASSESSMENT_STAGE,
+        "state": "succeeded",
+        "account": ACCOUNT,
+        "region": REGION,
+        "image": image,
+        "label": expected_label,
+        "original_receipt_state": "failed",
+        "last_status": "STOPPED",
+        "health_status": "HEALTHY",
+        "stop_code": "UserInitiated",
+        "stopped_reason": "controlled-candidate-preflight-complete",
+        "platform_shell_exit_code": 0,
+        "platform_shell_health_status": "HEALTHY",
+    }
+    if not isinstance(assessment, dict) or any(assessment.get(key) != value for key, value in assessment_facts.items()) or not isinstance(assessment_task_definition, str) or not re.fullmatch(r"arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell-candidate-preflight:[1-9][0-9]*", assessment_task_definition) or not isinstance(assessment.get("task_definition_revision"), int) or assessment_task_definition.rsplit(":", 1)[-1] != str(assessment["task_definition_revision"]):
+        raise RelationalSmokeError("the active image lacks one validated candidate terminal assessment")
+    matching_failed = [
+        receipt for receipt in ledger["attempts"]
+        if isinstance(receipt, dict) and receipt.get("image_hash") == image_hash and receipt.get("label") == expected_label and receipt.get("state") == "failed"
+    ]
+    if len(matching_failed) != 1:
+        raise RelationalSmokeError("the candidate terminal assessment does not preserve one failed original receipt")
+    return expected_label
+
+
+def terminal_candidate_facts(task: dict[str, Any], image: str, candidate_reference: str) -> dict[str, Any]:
+    """Accept only the precise healthy, controlled-stop candidate outcome."""
+
+    containers = task.get("containers")
+    application = next((item for item in containers if isinstance(item, dict) and item.get("name") == "platform-shell"), None) if isinstance(containers, list) else None
+    if not isinstance(application, dict) or task.get("taskDefinitionArn") != candidate_reference or task.get("lastStatus") != "STOPPED" or task.get("healthStatus") != "HEALTHY" or task.get("stopCode") != "UserInitiated" or task.get("stoppedReason") != "controlled-candidate-preflight-complete" or application.get("image") != image or application.get("imageDigest") != image.rsplit("@", 1)[-1] or application.get("lastStatus") != "STOPPED" or application.get("healthStatus") != "HEALTHY" or application.get("exitCode") != 0:
+        raise RelationalSmokeError("the active image candidate execution preflight did not establish the reviewed healthy controlled stop")
+    revision = candidate_reference.rsplit(":", 1)[-1]
+    if not revision.isdigit():
+        raise RelationalSmokeError("the active image candidate task definition revision is invalid")
+    return {
+        "task_definition": candidate_reference,
+        "task_definition_revision": int(revision),
+        "last_status": "STOPPED",
+        "health_status": "HEALTHY",
+        "stop_code": "UserInitiated",
+        "stopped_reason": "controlled-candidate-preflight-complete",
+        "platform_shell_exit_code": 0,
+        "platform_shell_health_status": "HEALTHY",
+    }
+
+
+def assess_candidate_execution(policy: dict[str, Any]) -> None:
+    """Persist read-only reconciliation of a failed controller receipt and terminal ECS facts."""
+
+    response = aws(["cloudformation", "describe-stacks", "--stack-name", policy["service_stack"]], policy)
+    stacks = response.get("Stacks")
+    outputs = stacks[0].get("Outputs") if isinstance(stacks, list) and len(stacks) == 1 and isinstance(stacks[0], dict) else None
+    values = {item.get("OutputKey"): item.get("OutputValue") for item in outputs if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)} if isinstance(outputs, list) else {}
+    candidate_reference = values.get("CandidatePreflightTaskDefinitionArn")
+    if not isinstance(candidate_reference, str):
+        raise RelationalSmokeError("the candidate terminal assessment source is unavailable")
+    definition = aws(["ecs", "describe-task-definition", "--task-definition", candidate_reference], policy).get("taskDefinition")
+    containers = definition.get("containerDefinitions") if isinstance(definition, dict) else None
+    application = next((item for item in containers if isinstance(item, dict) and item.get("name") == "platform-shell"), None) if isinstance(containers, list) else None
+    image = application.get("image") if isinstance(application, dict) else None
+    if not isinstance(definition, dict) or definition.get("family") != CANDIDATE_TASK_FAMILY or not isinstance(image, str) or IMMUTABLE_IMAGE.fullmatch(image) is None:
+        raise RelationalSmokeError("the candidate terminal assessment definition is not the reviewed immutable candidate")
+    image_hash = hashlib.sha256(IMMUTABLE_IMAGE.fullmatch(image).group(1).encode("ascii")).hexdigest()[:16]
+    label = f"kb-candidate-{image_hash}-a1"
+    ledger = json.loads(DEFAULT_CANDIDATE_LEDGER_PATH.read_text(encoding="utf-8"))
+    attempts = ledger.get("attempts") if isinstance(ledger, dict) else None
+    original = [item for item in attempts if isinstance(item, dict) and item.get("image_hash") == image_hash and item.get("label") == label and item.get("state") == "failed"] if isinstance(attempts, list) else []
+    if len(original) != 1:
+        raise RelationalSmokeError("the candidate terminal assessment requires one preserved failed original receipt")
+    running = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "RUNNING"], policy).get("taskArns")
+    stopped = aws(["ecs", "list-tasks", "--cluster", policy["cluster"], "--started-by", label, "--desired-status", "STOPPED"], policy).get("taskArns")
+    if not isinstance(running, list) or running or not isinstance(stopped, list) or len(stopped) != 1 or not isinstance(stopped[0], str):
+        raise RelationalSmokeError("the candidate terminal assessment lacks one stopped task and zero running tasks")
+    observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", stopped[0]], policy).get("tasks")
+    task = observed[0] if isinstance(observed, list) and len(observed) == 1 and isinstance(observed[0], dict) else None
+    if not isinstance(task, dict):
+        raise RelationalSmokeError("the candidate terminal assessment task is unavailable")
+    facts = terminal_candidate_facts(task, image, candidate_reference)
+    ledger = load_ledger(policy)
+    existing = ledger["stages"].get(CANDIDATE_EXECUTION_ASSESSMENT_STAGE)
+    assessment = {"stage": CANDIDATE_EXECUTION_ASSESSMENT_STAGE, "state": "succeeded", "account": ACCOUNT, "region": REGION, "image": image, "label": label, "original_receipt_state": "failed", **facts}
+    if existing is not None and existing != assessment:
+        raise RelationalSmokeError("the candidate terminal assessment conflicts with existing durable evidence")
+    ledger["stages"][CANDIDATE_EXECUTION_ASSESSMENT_STAGE] = assessment
+    save_ledger(policy, ledger)
 
 
 def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
@@ -547,11 +644,12 @@ def candidate_execution_preflight_succeeded(policy: dict[str, Any]) -> None:
     observed = aws(["ecs", "describe-tasks", "--cluster", policy["cluster"], "--tasks", stopped[0]], policy).get("tasks")
     task = observed[0] if isinstance(observed, list) and len(observed) == 1 and isinstance(observed[0], dict) else None
     candidate_reference = task.get("taskDefinitionArn") if isinstance(task, dict) else None
-    if not isinstance(task, dict) or task.get("lastStatus") != "STOPPED" or task.get("healthStatus") != "HEALTHY" or not isinstance(candidate_reference, str):
+    if not isinstance(task, dict) or not isinstance(candidate_reference, str):
         raise RelationalSmokeError("the active image candidate execution preflight did not become healthy and stop")
     candidate_definition = aws(["ecs", "describe-task-definition", "--task-definition", candidate_reference], policy).get("taskDefinition")
     if not isinstance(candidate_definition, dict) or candidate_definition.get("family") != CANDIDATE_TASK_FAMILY:
         raise RelationalSmokeError("the active image candidate preflight did not use the reviewed dormant task family")
+    terminal_candidate_facts(task, image, candidate_reference)
 
 
 def worker_network(policy: dict[str, Any]) -> str:
@@ -1191,7 +1289,7 @@ def main() -> int:
 
     parsed = arguments()
     try:
-        mode = "diagnostic" if (parsed.diagnose_bootstrap_recovery or parsed.reconcile_current_state) else "validate" if parsed.validate else "execution"
+        mode = "diagnostic" if (parsed.diagnose_bootstrap_recovery or parsed.reconcile_current_state or parsed.assess_candidate_execution) else "validate" if parsed.validate else "execution"
         policy = load_policy(mode)
         if parsed.validate:
             print('{"postgresql_relational_smoke":"validated"}')
@@ -1215,6 +1313,10 @@ def main() -> int:
         if parsed.assess_bootstrap_effects:
             print(json.dumps({"postgresql_relational_bootstrap_effect_assessment": assess_bootstrap_effects(policy)}, sort_keys=True))
             return 0
+        if parsed.assess_candidate_execution:
+            assess_candidate_execution(policy)
+            print('{"postgresql_relational_candidate_execution_assessment":"passed"}')
+            return 0
         if parsed.reconcile_current_state:
             print(json.dumps({"postgresql_relational_current_state": reconcile_current_state(policy)}, sort_keys=True))
             return 0
@@ -1230,6 +1332,8 @@ def main() -> int:
             print('{"postgresql_relational_bootstrap_recovery_diagnostic":"diagnostic-unavailable"}')
         elif parsed.reconcile_bootstrap_effects:
             print('{"postgresql_relational_bootstrap_effects_reconciliation":"failed"}')
+        elif parsed.assess_candidate_execution:
+            print('{"postgresql_relational_candidate_execution_assessment":"failed"}')
         else:
             print('{"postgresql_relational_smoke":"failed"}')
         return 1
