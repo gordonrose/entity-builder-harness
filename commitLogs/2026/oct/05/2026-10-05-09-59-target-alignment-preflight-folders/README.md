@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-06T16:57:10Z
-latest_commit_sha: 9868be3a9bede808dd5bf3872d1a89fa64c62503
-chat_duration: 115061s (01:07:57:41)
+latest_commit_at_utc: 2026-10-06T23:16:09Z
+latest_commit_sha: f994270373f9703f1ebe1ce5c03d016ccfe91f53
+chat_duration: 137800s (01:14:16:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -149,6 +149,17 @@ Summary: Scope/pipeline model and drift-evidence gap captured
 
 Durable evidence: The deployment-chain plan now defines scope records, scope governance, pipeline catalogues, staged full-coverage adoption, and a separate AWS-governed drift-evidence producer before target-alignment automation. GitHub run 37510472773 showed reconciliation authentication/account/artifact-stack status pass but fail-closed stale artifact-stack drift evidence because its planned separate producer is not deployed. Local image smoke, ingress smoke, and controlled smoke are existing proof surfaces; they remain scattered until the first scope links them.
 
+
+### 2026-10-06T23:16:09Z - Commit recorded
+
+Commit: `f994270373f9703f1ebe1ce5c03d016ccfe91f53`
+
+Message: docs(deploy): refine scope and pipeline control plan
+
+Summary: Expanded the draft plan with scope criteria, target-local scope and pipeline catalogues, the first public-server scope path, package-publication custody, scope-qualified alignment, staged full-repository coverage, and an AWS-governed drift-evidence producer track based on verified reconciliation failures.
+
+ADR impact: No ADR: this remains a draft planning refinement; AWS authority and target changes remain separately governed.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -163,6 +174,13 @@ Durable evidence: The deployment-chain plan now defines scope records, scope gov
   Summary: Added the provider-neutral deployment governance foundation, bounded declaration coverage and target-alignment planning, lifecycle map, deploy-control inventory, session-continuity safeguard, and the draft platform-to-target chain plan. No AWS, target, secret, or PostgreSQL Stage 6 mutation occurred.
   ADR impact: No ADR: draft transition only; the existing migration plan retains AWS authority and any durable authority change needs separate review.
 
+
+- Commit: `f994270373f9703f1ebe1ce5c03d016ccfe91f53`
+  Time UTC: 2026-10-06T23:16:09Z
+  Message: docs(deploy): refine scope and pipeline control plan
+  Summary: Expanded the draft plan with scope criteria, target-local scope and pipeline catalogues, the first public-server scope path, package-publication custody, scope-qualified alignment, staged full-repository coverage, and an AWS-governed drift-evidence producer track based on verified reconciliation failures.
+  ADR impact: No ADR: this remains a draft planning refinement; AWS authority and target changes remain separately governed.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -176,9 +194,9 @@ Reason: This commit establishes a draft, provider-neutral governance transition 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-06T16:57:10Z
-Latest commit SHA: 9868be3a9bede808dd5bf3872d1a89fa64c62503
-Chat duration: 115061s (01:07:57:41)
+Latest commit at UTC: 2026-10-06T23:16:09Z
+Latest commit SHA: f994270373f9703f1ebe1ce5c03d016ccfe91f53
+Chat duration: 137800s (01:14:16:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
