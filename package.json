@@ -28,6 +28,8 @@
     "rag:image:build": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/build-service-image/script.sh",
     "rag:image:smoke": "bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
     "platform:shell:image:build": "bash scripts/04.deploy/build-platform-shell-image/script.sh",
+    "deploy:control:inventory": "bash scripts/04.deploy/inventory-deploy-control/script.sh",
+    "deploy:control:inventory:check": "bash scripts/04.deploy/inventory-deploy-control/smoke-test.sh",
     "platform:shell:image:smoke": "bash scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
     "platform:shell:controlled-smoke": "bash scripts/04.deploy/run-platform-shell-controlled-smoke/script.sh",
     "platform:shell:controlled-smoke:check": "bash scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh",

@@ -13,6 +13,16 @@ Follow `.agentic/00.chat/workflows/chat-start.md` at the start of each chat.
 Use `commitLogs/<session>/README.md` as the first source of truth for chat
 lifecycle, branch, worktree, context-packet references, commits, and metrics.
 
+- **Session continuity:** If this conversation already has a session log with a
+  recorded `worktree`, that is the active worktree for this chat. Use it as the
+  explicit working directory for all repository commands. Never treat the
+  tool-provided cwd, the root checkout, a branch name, or a date change as a
+  new session.
+
+- Create or resolve a new chat worktree only when this conversation has no
+  active recorded worktree or the user explicitly requests a new chat or
+  worktree. If the active session is unclear, stop and ask; do not create one.
+
 <!-- deterministic-check: allow reason="prompt routing may be manual or repo-specific; no universal script can decide whether a context router exists" -->
 Do not assign the whole chat a durable layer, mode, or workflow. When a prompt
 needs layer, mode, workflow, corpus, or rule context, use the current user
@@ -33,7 +43,7 @@ explicitly grants write permission for task files.
 * `01.harness` (`.agentic/01.harness/`) governs the agentic harness itself, including routing, workflows, standards, gates, agents, and artifact metadata.
 * `02.rag-rulebook` (`.agentic/02.rag-rulebook/`) governs reusable RAG and rulebook machinery, including corpora, indexing, retrieval, intent, and context packets.
 * `03.product` (`.agentic/03.product/`) governs product and runtime contract work, including current `packages/core/` and `platform/contracts/` surfaces.
-* `04.deploy` (`.agentic/aws/`, `infra/04.deploy/`, `docs/04.deploy/`, and `scripts/04.deploy/`) governs deployment, infrastructure, AWS operations, runtime operations, and CI/CD surfaces.
+* `04.deploy` (`.agentic/04.deploy/`, `.agentic/aws/`, `infra/04.deploy/`, `docs/04.deploy/`, and `scripts/04.deploy/`) governs deployment, infrastructure, runtime operations, and CI/CD surfaces. `.agentic/04.deploy/` is the provider-neutral layer; `.agentic/aws/` remains the active AWS-specific governance surface during its planned transition.
 * `05.education` (`.agentic/education/`) governs educational resources derived from repo work.
 * `06.shared` (`.agentic/shared/`) governs cross-layer process primitives, including git approval rules, handoff, context compaction, and reusable standards.
 

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: harness.standards.document-artifact-placement
-version: 1
+version: 2
 status: active
 layer: 01.harness
 domain: governance
@@ -59,7 +59,8 @@ governed artifact path migration plan.
 | Harness governance | `.agentic/01.harness/` | `docs/01.harness/` |
 | RAG/rulebook service and self-corpus | `.agentic/02.rag-rulebook/` | `docs/02.rag-rulebook/` |
 | Product and runtime contracts | `.agentic/03.product/` | `docs/03.product/` |
-| Deployment and operations | `.agentic/aws/` | `docs/04.deploy/` |
+| Deployment and operations, provider-neutral | `.agentic/04.deploy/` | `docs/04.deploy/` |
+| AWS-specific deployment and operations during transition | `.agentic/aws/` | `docs/04.deploy/` |
 | Education | `.agentic/education/` | `docs/education/`, or `docs/05.education/` after a namespace decision |
 | Cross-layer shared process | `.agentic/shared/` | `docs/06.shared/` |
 

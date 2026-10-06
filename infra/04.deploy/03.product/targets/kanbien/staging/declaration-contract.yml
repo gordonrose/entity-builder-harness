@@ -1,0 +1,135 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.declaration-contract
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: deployment-declaration-contract
+#   purpose: Declare the bounded platform-shell server baseline requirements before target alignment.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.workflow.declaration-coverage
+#     path: .agentic/04.deploy/workflows/declaration-coverage.md
+#   - id: deploy.schema.declaration-contract.v1
+#     path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
+schema: deploy/declaration-contract/v1
+id: kanbien-staging-platform-shell-server-baseline
+status: draft
+target:
+  profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+  environment: staging
+  service: platform-shell
+scope:
+  covers:
+    - platform-shell-server-runtime-image
+    - platform-shell-immutable-package-identity
+    - platform-shell-http-health-boundary
+    - platform-shell-required-app-configuration
+    - platform-shell-rollback-declaration
+  excludes:
+    - PostgreSQL relational persistence and Stage 6 operations
+    - worker, relay, queue, and outbox execution
+    - rate-limit store behavior
+    - Cognito client provisioning and negative-authorization proof
+    - public ingress, WAF, DNS, and TLS configuration
+    - observability delivery, alarms, SLO coverage, and cost controls
+requirements:
+  - id: platform-shell.runtime-image
+    purpose: Package the server with a Node 22 build stage and a minimal non-root Node 22 runtime.
+    required_by:
+      - platform/server/
+    declarations:
+      - path: infra/04.deploy/03.product/image/Dockerfile
+        expectation: Node 22 build image and distroless non-root Node 22 runtime image.
+    expectation: The deployable package uses the declared Node 22 non-root runtime boundary.
+    local_proofs:
+      - npm run platform:server:image-runtime-check
+      - npm run platform:server:check
+    target_proofs:
+      - task-definition-runtime-platform
+      - published-image-platform
+    package_proofs:
+      - npm run platform:shell:image:smoke
+    owner: platform-runtime
+  - id: platform-shell.immutable-package-identity
+    purpose: Bind the service to a reviewed immutable image rather than a mutable tag.
+    required_by:
+      - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    declarations:
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+        expectation: ImageUri accepts only a repository digest reference.
+      - path: .github/workflows/deploy-platform-shell-staging.yml
+        expectation: The publisher resolves and records the image digest.
+    expectation: A candidate service image is addressed by immutable SHA-256 digest.
+    local_proofs:
+      - npm run platform:shell:deployment-workflow:check
+    target_proofs:
+      - image-repository-immutability
+      - candidate-image-digest-availability
+    package_proofs:
+      - npm run platform:shell:image:smoke
+    owner: deployment-platform
+  - id: platform-shell.http-health-boundary
+    purpose: Make the server reachable through the declared port and expose its liveness and readiness policy.
+    required_by:
+      - platform/server/src/main.ts
+    declarations:
+      - path: platform/server/src/main.ts
+        expectation: Default server port is 3000 and health exposure is configuration controlled.
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+        expectation: Task container port is 3000 and container health uses /livez.
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+        expectation: Liveness is /livez and readiness is /readyz.
+    expectation: Server and task declarations agree on port 3000, /livez, and /readyz policy.
+    local_proofs:
+      - npm run platform:server:check
+    target_proofs:
+      - task-definition-container-port
+      - service-health-policy
+    package_proofs:
+      - npm run platform:shell:image:smoke
+    run_proofs:
+      - npm run platform:shell:ingress-smoke
+    owner: platform-runtime
+  - id: platform-shell.required-app-configuration
+    purpose: Supply the product's required non-secret application name through the target composition.
+    required_by:
+      - products/kanbien-platform/src/product.manifest.ts
+    declarations:
+      - path: products/kanbien-platform/src/product.manifest.ts
+        expectation: The mounted platform-smoke app declares PLATFORM_SMOKE_APP_NAME as required configuration.
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+        expectation: Task environment declares PLATFORM_SMOKE_APP_NAME.
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+        expectation: Target configuration records PLATFORM_SMOKE_APP_NAME.
+    expectation: Required application configuration is declared consistently without a secret value in the contract.
+    local_proofs:
+      - npm run product:kanbien-platform:check
+    target_proofs:
+      - task-definition-required-config-shape
+    package_proofs:
+      - npm run platform:shell:image:smoke
+    owner: product-platform
+  - id: platform-shell.rollback-declaration
+    purpose: Keep a defined, governed recovery route for a failed service revision.
+    required_by:
+      - infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    declarations:
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+        expectation: ECS deployment circuit breaker and rollback are enabled.
+      - path: infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+        expectation: Previous task-definition/image rollback target and rollback runbook are named.
+    expectation: Service deployment and target readiness declare a recoverable rollback route.
+    local_proofs:
+      - npm run platform:shell:infrastructure:check
+    target_proofs:
+      - service-deployment-rollback-policy
+      - previous-task-definition-availability
+    owner: deployment-platform

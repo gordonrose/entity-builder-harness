@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 10
+version: 12
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -32,8 +32,15 @@ Commands in this folder must fail closed for deploy execution and must not
 mutate cloud state unless their README and workflow explicitly declare a
 mutating effect and require current-chat approval.
 
+New lifecycle-owned capabilities use the phase homes defined in
+`.agentic/04.deploy/lifecycle/README.md`. Existing capability paths remain
+canonical until individually migrated through the artifact-path migration
+workflow; this index does not authorize a bulk rename.
+
 Current commands:
 
+- `inventory-deploy-control/`: read-only census of deploy scripts and
+  infrastructure files, their callers, declared effects, and catalogue gaps.
 - `build-platform-shell-image/`: local-only Docker image build wrapper for the
   provider-neutral platform shell.
 - `smoke-test-platform-shell-image/`: local-only image smoke test for platform
