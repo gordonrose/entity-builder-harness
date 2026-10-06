@@ -63,6 +63,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Deployment governance baseline ready for checkpoint
   Durable evidence: The active October 5 worktree contains the provider-neutral deployment layer, lifecycle/declaration-preflight foundations, deploy-control inventory, session-continuity safeguard, and the draft platform-to-target chain plan. PostgreSQL and AWS execution controls remain unchanged; the next step is a reviewed Phase 0 evidence map.
 
+
+- Summary: Scope/pipeline model and drift-evidence gap captured
+  Durable evidence: The deployment-chain plan now defines scope records, scope governance, pipeline catalogues, staged full-coverage adoption, and a separate AWS-governed drift-evidence producer before target-alignment automation. GitHub run 37510472773 showed reconciliation authentication/account/artifact-stack status pass but fail-closed stale artifact-stack drift evidence because its planned separate producer is not deployed. Local image smoke, ingress smoke, and controlled smoke are existing proof surfaces; they remain scattered until the first scope links them.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -137,6 +141,13 @@ Message: feat(deploy): add target alignment governance foundation
 Summary: Added the provider-neutral deployment governance foundation, bounded declaration coverage and target-alignment planning, lifecycle map, deploy-control inventory, session-continuity safeguard, and the draft platform-to-target chain plan. No AWS, target, secret, or PostgreSQL Stage 6 mutation occurred.
 
 ADR impact: No ADR: draft transition only; the existing migration plan retains AWS authority and any durable authority change needs separate review.
+
+
+### 2026-10-06T23:15:16Z - Context hygiene
+
+Summary: Scope/pipeline model and drift-evidence gap captured
+
+Durable evidence: The deployment-chain plan now defines scope records, scope governance, pipeline catalogues, staged full-coverage adoption, and a separate AWS-governed drift-evidence producer before target-alignment automation. GitHub run 37510472773 showed reconciliation authentication/account/artifact-stack status pass but fail-closed stale artifact-stack drift evidence because its planned separate producer is not deployed. Local image smoke, ingress smoke, and controlled smoke are existing proof surfaces; they remain scattered until the first scope links them.
 
 ## Sub-Agent Activity
 
