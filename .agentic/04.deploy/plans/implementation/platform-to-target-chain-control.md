@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 7
+version: 11
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -80,6 +80,61 @@ and exclusions. A target is fully covered only when every active required scope
 in its scope index has current, successful alignment evidence and no unresolved
 common-foundation gap.
 
+## Foundation Resource, Provider Selection, and Access Model
+
+The plan distinguishes four facts which must never be collapsed into one vague
+"service" or "persistence" field:
+
+| Fact | Question answered | Example |
+| --- | --- | --- |
+| Logical capability | What behaviour is needed? | Shared request rate limiting. |
+| Provider realisation | Which technology fulfils it? | AWS DynamoDB. |
+| Exact target resource | Which concrete provider resource is used? | The staging `RateLimitTable`. |
+| Workload runtime | How does the consuming scope run? | An ECS service, Lambda function, or one-pass task. |
+
+A target may have several resources in the same capability family, several
+providers for different purposes, and several workload runtime types. A
+foundation resource is not inferred from its filename or provider type.
+
+A resource is **foundation-owned** when it is shared, long-lived, required
+before workloads can run, or has an independently managed security, recovery,
+or operational lifecycle. A resource is **scope-owned** when it exists only
+for one scope and should be created, changed, and retired with that scope.
+This is a reviewed ownership decision. A foundation control domain is not
+automatically a deployment scope; it becomes a scope only when it has its own
+distinct runnable process, requirements, proof, recovery behaviour, or
+lifecycle.
+
+Each active foundation resource will receive one target-local index record with
+these facts: stable repository ID; logical capability; provider; resource kind;
+exact provider identity or safe lookup path; ownership and lifecycle rationale;
+authoritative declaration path; consumers; exported configuration references;
+security/recovery requirements; status; and proof path. Provider identity uses
+safe identifiers such as account, region, stack, logical ID, output, name, or
+ARN reference as appropriate; it never stores a secret value.
+
+A scope declares its dependency by stable resource ID. A workload binding then
+records the selected provider realisation, workload runtime, configuration
+binding, and runtime role. An access requirement records the workload, exact
+provider action, exact resource, reason, attached role, policy declaration,
+safe proof, and prohibited/bounded access. This is the required chain:
+
+```text
+capability need
+  -> selected adapter and provider
+  -> foundation or scope-owned resource
+  -> configuration binding
+  -> workload role and narrow provider policy
+  -> safe behavioural and policy proof
+```
+
+Selecting a provider is a compatibility decision, not merely an environment
+variable. The selection review must prove that the selected adapter implements
+the required provider-neutral capability, the runnable program supports the
+selection, target configuration and secret references are valid, the resource
+and network path exist, the role has only the required access, and migration,
+rollback, and proof are appropriate for the dependency.
+
 ## Scope Records and Change Maintenance
 
 The plan separates the authoritative facts needed to keep scopes current:
@@ -88,6 +143,8 @@ The plan separates the authoritative facts needed to keep scopes current:
 | --- | --- | --- |
 | Scope names, state, owner, required dependencies, and declaration-contract path | Future target-local scope index under `infra/04.deploy/03.product/targets/<client>/<environment>/` | Add, retire, or change a scope in the same change set as its runnable program, workload, or requirement change. |
 | Expected settings, secret names, permissions, dependencies, health, rollback, and proof paths | One bounded declaration contract per active scope in that target directory | Update whenever functionality adds, changes, or removes a runtime setting, dependency, image input, identity requirement, network path, persistence need, queue, rollback condition, or operational signal. |
+| Foundation resource identity, ownership, lifecycle, consumers, exported configuration references, and proof | Future target-local `foundation/foundation-index.yml` | Add, reclassify, or retire a resource in the same reviewed change as its authoritative declaration, consumer binding, security/recovery rule, or provider migration. |
+| Provider selection and workload access requirements | Scope declaration contract and workload binding, pointing to the authoritative adapter and provider-policy sources | Update whenever a scope adds, changes, or removes an adapter, provider, resource binding, role, action, resource permission, secret reference, or dependency proof. |
 | Generic field shapes and validation rules | `.agentic/04.deploy/schemas/` | Change through the provider-neutral deployment governance workflow, with a field guide and compatibility review. |
 | When scope review is required | `.agentic/04.deploy/standards/` and workflows | A changed platform module, adapter, entrypoint, image, target definition, or deploy script must be mapped to affected scope records before completion. |
 | Deterministic proof of current repository consistency | `scripts/04.deploy/` | The future chain checker fails for a missing, orphaned, stale, or contradictory scope link. |
@@ -99,11 +156,14 @@ per-scope contract directory through a compatible migration, rather than
 silently relocating the current contract.
 
 Adding functionality therefore requires its owning change to identify affected
-scopes and update their contracts and proofs. Removing functionality requires
-the reverse: remove its workload/program references, update or retire the
-scope record, and prove that no target binding or requirement still refers to
-it. The checker reports an unreviewed affected scope, an orphaned declaration,
-or a target reference to a retired program as a failure.
+scopes, foundation resources, provider selections, access requirements, and
+proofs. Removing functionality requires the reverse: remove its
+workload/program references, consumer bindings, roles, configuration,
+pipelines, and proofs; update or retire its scope/resource record; and prove
+that no target binding or requirement still refers to it. The checker reports
+an unreviewed affected scope, an orphaned declaration, a permission without a
+declared dependency, a resource without an owner or consumer, or a target
+reference to a retired program as a failure.
 
 ## Scope Governance Artifact Set
 
@@ -133,10 +193,36 @@ changing code or target definitions. The schema and template define the folder
 shape and fields. The script and gate validate the facts that can be checked
 deterministically.
 
+Before the first foundation resource record is created, the harness must also
+provide a Foundation Resource Governance Artifact Set:
+
+```text
+.agentic/04.deploy/
+  standards/target-foundation-resource.md
+  workflows/change-target-foundation-resource.md
+  schemas/target-foundation-resource.v1.schema.yml
+  schemas/target-foundation-resource.v1.guide.md
+  templates/target-foundation-resource/
+  gates/check-target-foundation-resource.md
+
+scripts/04.deploy/
+  check-target-foundation-resource/
+```
+
+It teaches and checks the ownership classification, capability/provider/kind
+distinction, provider identity, consumers, exported configuration references,
+access requirements, lifecycle, security/recovery facts, and retirement path.
+It must reject a broad provider policy unless a reviewed exception records why
+the exact action or resource cannot be narrowed. It validates links and safe
+identifiers; it does not read secret values or replace provider declarations.
+
 The first target-local layout will be:
 
 ```text
 infra/04.deploy/03.product/targets/kanbien/staging/
+  foundation/
+    README.md
+    foundation-index.yml
   scope-index.yml
   pipelines/
     github-actions/
@@ -153,6 +239,13 @@ infra/04.deploy/03.product/targets/kanbien/staging/
 The scope README explains the capability, covered concerns, exclusions, and
 evidence path for a human. It links to the owning `.agentic` workflow and
 standard; it does not create independent agent instructions.
+
+The foundation README explains target-level facilities, ownership boundaries,
+and how to follow an index record to its provider declaration and consuming
+scopes. `foundation-index.yml` is a map of authoritative declarations, not a
+second CloudFormation, IAM, or secret definition. This is a logical layout
+only; existing files remain in place until the later reviewed information
+architecture migration.
 
 ## Pipeline Catalogue
 
@@ -236,6 +329,11 @@ the agent must stop and resolve the conflict rather than choose silently.
   understood and corrected.
 - Assign each control to one lifecycle stage under
   `.agentic/04.deploy/lifecycle/`; do not duplicate checks across stages.
+- Treat a self-explanatory deployment tree as an architectural outcome, not a
+  cosmetic refactor. A person must be able to navigate from a scope, shared
+  foundation, pipeline, or check to its purpose, owner, lifecycle role,
+  dependencies, evidence, and governing instructions without relying on
+  filename archaeology.
 - Do not move existing AWS or PostgreSQL artifacts as part of this plan.
 - Keep provider-neutral governance in `.agentic/04.deploy/`; retain AWS
   execution authority in `.agentic/aws/` until the existing migration plan
@@ -260,6 +358,11 @@ Create a read-only evidence map for the public server that identifies:
   the absent drift-evidence producer on which it depends;
 - staging workload command, configuration names, health policy, permissions,
   dependencies, immutable-image rule, and rollback declaration;
+- every discovered target resource, provider adapter, permission-bearing role,
+  workload, and pipeline with status `covered`, `deferred`, `unclassified`,
+  or `retired`;
+- each foundation-resource candidate's logical capability, provider, kind,
+  source declaration, consumers, lifecycle/ownership rationale, and unknowns;
 - missing, duplicated, contradictory, and currently unproved links.
 
 **Deliverable:** a current-state report with source paths and no new runtime or
@@ -267,18 +370,26 @@ target declarations.
 
 **Exit criterion:** every statement in the report points to existing
 repository evidence; unknowns are labelled as unknown rather than inferred.
-The report also proposes the initial scope catalogue, clearly separating active
-server coverage from excluded or not-yet-modelled capabilities.
+The report also proposes the initial scope catalogue and foundation-resource
+catalogue, clearly separating active server coverage, foundation control
+domains, excluded capabilities, and not-yet-modelled capabilities. No active
+item may disappear into an unlabelled remainder.
 
-### Phase 1 — Establish scope governance and the first scope
+### Phase 1 — Establish scope and foundation governance
 
-**Question answered:** How does an agent create, change, or retire a scope
-consistently rather than relying on memory?
+**Question answered:** How does an agent create, change, or retire a scope or
+target resource consistently rather than relying on memory?
 
 Create the Scope Governance Artifact Set above, with fixtures proving both a
 valid public-server scope and common invalid cases: absent index record,
 missing owner, missing exclusion list, unresolved declaration path, and a
 retired scope still selected by a target binding.
+
+Create the Foundation Resource Governance Artifact Set with fixtures proving
+valid shared and scope-owned records, multiple resources in one capability
+family, multiple provider types in one target, an unclassified active resource,
+a missing consumer, a stale exported configuration reference, a permission not
+connected to a declared dependency, and an impermissibly broad policy.
 
 Add the target-local pipeline catalogue and its first package-publication
 record for `.github/workflows/deploy-platform-shell-staging.yml`. The record
@@ -293,25 +404,30 @@ clear that the existing reconciler authenticates and reads safely but cannot
 create the required fresh evidence itself.
 
 Use that workflow and template to establish the first public-server scope. It
-must introduce the target-local scope index, `scopes/README.md`, and the
-public-server scope README. After Phase 0 has inventoried every reference to
+must introduce the target-local scope index, foundation index,
+`scopes/README.md`, foundation README, and public-server scope README. The
+foundation index must record every public-server dependency that Phase 0 has
+classified as foundation-owned, or record its status as deferred/unclassified
+with an owner and follow-up path. After Phase 0 has inventoried every reference to
 the current root-level `declaration-contract.yml`, migrate that contract into
 the scope folder in one compatible, reviewed change. Update every repository
 reference; do not leave two authoritative copies. A compatibility pointer is
 permitted only when a verified consumer requires it.
 
 The initial scope record must name its active state, owner, covered concerns,
-explicit exclusions, dependencies, contract path, and known proof paths. Its
-workload binding is added in the later target-binding phase; the scope record
-must say that this proof is pending rather than pretending it exists.
+explicit exclusions, dependencies, provider-selection status, contract path,
+and known proof paths. Its workload binding and access requirements are added
+in the later target-binding phase; the scope record must say that this proof is
+pending rather than pretending it exists.
 
-**Deliverable:** a report-only scope-and-pipeline checker, the governed first
-`platform-server` scope, and its declared package-publication pipeline.
+**Deliverable:** report-only scope, foundation-resource, and pipeline checks;
+the governed first `platform-server` scope; its classified foundation
+dependencies; and its declared package-publication pipeline.
 
 **Exit criterion:** a reviewer can follow the scope workflow, find the first
 scope from the index, understand it from its README, validate its structure,
-identify its approved package route, and distinguish its current coverage from
-its pending target-binding work.
+identify its approved package route and foundation dependencies, and distinguish
+its current coverage from pending target-binding and access work.
 
 ### Phase 2 — Establish documentation and governance linkage
 
@@ -344,9 +460,48 @@ require evidence for:
 
 - a supported public boundary such as `index.ts`;
 - ownership, non-ownership, and dependency-direction rules;
+- an explicit configuration surface when the module consumes or defines
+  runtime configuration;
 - type check, build, runtime test, and boundary test when applicable;
 - a module README and source map that explain the module to a human;
 - a recorded reason when a normal proof is not applicable.
+
+The configuration surface must be visible from the module tree rather than
+hidden among unrelated implementation. A configured module uses this shape:
+
+```text
+platform/<module>/
+  src/
+    configuration/
+      README.md
+      <configuration-concern>.ts
+      index.ts
+```
+
+Each concern file owns one coherent configuration concern and its typed shape,
+validation, defaults, sensitivity classification, and documented relationship
+to any dependency. `configuration/index.ts` is the deliberate shared doorway
+for those individual concerns, following the same public-surface pattern used
+for module responsibilities. The module's `src/index.ts` re-exports only the
+configuration contracts that other modules or a runnable-program composition
+are allowed to use.
+
+`configuration/README.md` is the human configuration source map. It explains
+each concern in plain language, names its owning TypeScript file, states
+whether it is required or optional, identifies its runtime consumer and
+dependency relationship, and links to its validation and proof. It records
+secret *classification* and approved source only; it never contains a secret
+value. The README orients a reader and links to the authoritative contracts; it
+must not duplicate configuration values or override the TypeScript definition.
+
+A module with no configuration does not need an empty directory; its README
+and source map must state that it consumes and defines no runtime
+configuration. A module may retain a small private constant beside one function
+only when it is not a runtime configuration choice. Existing direct
+environment reads are an inventory-and-migration concern: later work must move
+their parsing and validation to the runnable-program composition boundary and
+pass typed configuration into modules. It must not claim that this structure
+already exists until each selected module has been reviewed and migrated.
 
 The checker must derive the build and test facts from `package.json`,
 `tsconfig*`, and test locations. It must not introduce a duplicate module
@@ -368,7 +523,10 @@ lists runnable programs only, not shared helpers. Each record must identify:
 - stable program identifier;
 - source file;
 - role: HTTP server, long-running worker, or one-pass task;
-- selected product composition and provider adapters;
+- selected product composition, provider-neutral capability contracts, and
+  supported provider-adapter selections;
+- the boundary at which raw target configuration is validated and translated
+  into typed module configuration;
 - expected compiled command;
 - required local proof; and
 - owner.
@@ -414,14 +572,23 @@ Add a target-local workload binding beside the staging target profile. A
 binding refers to a runnable-program identifier and names:
 
 - the target workload/service or one-pass task;
+- workload runtime type, such as ECS service, Lambda function, or one-pass
+  task;
 - selected image contract;
 - configuration/declaration-contract scope;
+- selected provider adapters and the foundation or scope-owned resource IDs
+  that fulfil their dependencies;
+- attached execution and runtime roles, plus each access requirement's policy
+  declaration and bounded action/resource reference;
 - health and rollback proofs; and
 - target owner.
 
 AWS-specific command details remain in the existing CloudFormation source. The
 binding is provider-neutral and the checker compares it to the provider
-definition; it does not replace that definition.
+definition; it does not replace that definition. A provider selection is valid
+only when its adapter, typed configuration, target resource, network/secret
+reference where applicable, role policy, migration/rollback treatment, and
+proof are all linked.
 
 **Deliverable:** a public-server workload binding and static comparison with
 the existing task/service definition.
@@ -442,13 +609,17 @@ platform/module evidence
 -> adapter selection
 -> runnable-program record
 -> image contract and compiled command
+-> foundation/scope-owned resource classification
 -> target workload binding
+-> configuration and access requirement bindings
 -> declaration-contract requirements and proofs
 ```
 
 Possible results are `complete`, `missing-declaration`,
 `declared-but-not-implemented`, `implemented-but-unproved`, and
-`explicitly-out-of-scope`.
+`explicitly-out-of-scope`. It additionally reports `unclassified-active-item`,
+`permission-without-dependency`, `dependency-without-permission`, and
+`provider-selection-incompatible`.
 
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
@@ -494,6 +665,8 @@ The preflight consumes the chain-check result and safely confirms live facts:
 
 - destination identity and selected workload;
 - image identity and approved deployment route;
+- selected provider, foundation-resource identity, workload role, and narrow
+  access-policy facts;
 - non-secret configuration and secret-name presence;
 - permissions, dependencies, health, and rollback configuration;
 - freshness and drift.
@@ -528,19 +701,69 @@ Adopt controls in order:
    declaration;
 3. required before packaging, with a fresh target-alignment refresh required
    before deployment;
-4. add the scope index and extend coverage one reviewed scope at a time:
-   shared target foundation, worker/queue execution, relay, PostgreSQL,
-   identity/access, public ingress, observability/alerting, and any other
-   active deployable capability revealed by Phase 0;
-5. make an aggregate target result possible only after the scope index has no
-   unowned, unknown, or deliberately deferred active capability.
+4. require every new or changed module configuration concern, adapter,
+   runnable program, resource, role, workload, or pipeline to identify its
+   affected scope and foundation records before completion;
+5. extend coverage one reviewed area at a time: foundation control domains,
+   worker/queue execution, relay, PostgreSQL, identity/access, public ingress,
+   observability/alerting, and any other active capability revealed by Phase 0;
+6. make an aggregate target result possible only after the scope and foundation
+   indexes contain no unowned, unknown, or deliberately deferred active item.
 
 **Deliverable:** lifecycle-stage gate references and change-scope routing.
 
 **Exit criterion:** a relevant change cannot be treated as deploy-ready with a
-missing source-to-target link or unreviewed affected scope, while unrelated
-platform changes do not trigger provider checks. A claim of full target
-coverage names every active scope and any remaining exclusions.
+missing source-to-target link, unreviewed affected scope/foundation record, or
+unbounded provider selection or access requirement, while unrelated platform
+changes do not trigger provider checks. A claim of full target coverage names
+every active scope, foundation resource, and remaining exclusion.
+
+### Phase 11 — Reorganise the verified deployment information architecture
+
+**Question answered:** Once ownership and proof are known, how should `infra`
+and `scripts` be arranged so their purpose and relationships are apparent from
+their structure?
+
+This phase follows the evidence mapping and scope adoption work; it does not
+guess ownership from a filename or move files merely to make the tree look
+tidier. Design a reviewed target information architecture that makes these
+boundaries visible:
+
+- deployable scopes and their human-readable maps;
+- foundation-owned target facilities, including resources that are shared,
+  long-lived, target-wide, or independently managed;
+- provider-specific adapters and target bindings;
+- package-publication, deployment, verification, and drift-detection
+  pipelines;
+- reusable lifecycle-stage checks and scope-specific checks; and
+- the governing workflow, standard, and deterministic validation for each
+  meaningful directory.
+
+<!-- deterministic-check: allow reason="Each reviewed migration has different consumers and requires a specifically designed reference check; the plan cannot safely invent that check before the migration design exists." -->
+For every proposed move or split, the migration design must name the current
+authoritative file, its consumers, its scope or foundation owner, the logical
+capability/provider/resource-kind classification where applicable, the new
+authoritative location, compatibility requirements, and the check that proves
+every reference was updated. A scope or foundation map may link to shared or
+reusable implementation, but it must never become a duplicate authority for
+the same configuration, permission, or provider-resource fact.
+
+Migrate one bounded, reviewed area at a time. Directory READMEs explain how a
+human should navigate and link to governing `.agentic` artifacts; they do not
+invent independent instructions. Retire an old path only after its consumers,
+indexes, documentation, and deterministic checks all point to the approved
+replacement. This phase does not authorize AWS mutation, target mutation, or
+unreviewed PostgreSQL changes.
+
+**Deliverable:** a reviewed deployment-tree information-architecture design,
+a migration ledger, and one or more independently verified, bounded
+migrations.
+
+**Exit criterion:** a reviewer can navigate from any active scope,
+foundation-owned facility, pipeline, or check to its purpose, owner,
+dependencies, proof, and governance without reverse-engineering unrelated
+files; every retained path is intentional and every migrated path has no stale
+consumer.
 
 ## Decisions Required Before Implementation
 
@@ -556,6 +779,10 @@ coverage names every active scope and any remaining exclusions.
 6. Review the Phase 0 evidence map before creating any new declarations.
 7. Review the proposed scope catalogue and the compatibility path for adding
    the target-local scope index before adding a second active scope.
+8. Confirm the foundation-resource classification criteria, index shape, and
+   provider-identity fields before creating target foundation records.
+9. Confirm the provider-selection compatibility and access-requirement fields
+   before binding a workload to a new provider or resource.
 
 ## Safety Boundaries
 
@@ -572,8 +799,9 @@ coverage names every active scope and any remaining exclusions.
 ## Definition of Success
 
 For the public server, a reviewer can start with one program identifier and
-find, by command and source path, its platform inputs, adapter choice, compiled
-image command, staging workload, required non-secret configuration, permission
-and dependency declarations, local/package proofs, target-alignment result,
-and target/run proofs. Any missing or contradictory link is reported before a
-deployment is treated as ready.
+find, by command and source path, its platform inputs, adapter choice,
+capability/provider/resource classification, compiled image command, staging
+workload/runtime, required non-secret configuration, attached roles and narrow
+access requirements, dependency declarations, local/package proofs,
+target-alignment result, and target/run proofs. Any missing or contradictory
+link is reported before a deployment is treated as ready.

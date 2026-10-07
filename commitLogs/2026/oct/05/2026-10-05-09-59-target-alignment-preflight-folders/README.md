@@ -67,6 +67,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Scope/pipeline model and drift-evidence gap captured
   Durable evidence: The deployment-chain plan now defines scope records, scope governance, pipeline catalogues, staged full-coverage adoption, and a separate AWS-governed drift-evidence producer before target-alignment automation. GitHub run 37510472773 showed reconciliation authentication/account/artifact-stack status pass but fail-closed stale artifact-stack drift evidence because its planned separate producer is not deployed. Local image smoke, ingress smoke, and controlled smoke are existing proof surfaces; they remain scattered until the first scope links them.
 
+
+- Summary: Captured the provider-neutral deployment learning and planning decisions: scope versus foundation ownership, configuration-surface visibility, provider selection, workload access, coverage states, and safe future tree migration.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -160,6 +164,20 @@ Summary: Expanded the draft plan with scope criteria, target-local scope and pip
 
 ADR impact: No ADR: this remains a draft planning refinement; AWS authority and target changes remain separately governed.
 
+
+### 2026-10-07T15:38:27Z - Context hygiene
+
+Summary: Captured the provider-neutral deployment learning and planning decisions: scope versus foundation ownership, configuration-surface visibility, provider selection, workload access, coverage states, and safe future tree migration.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
+
+### 2026-10-07T15:43:45Z - ADR disposition
+
+ADR needed: no
+
+Reason: No ADR required: this commit refines a draft implementation plan and teaching note only; it makes no live provider-authority, target, or deployed-architecture decision. The plan retains review gates before implementation, provider selection, target-resource records, or AWS mutation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -189,7 +207,7 @@ ADR impact: No ADR: this remains a draft planning refinement; AWS authority and 
 
 ADR needed: no
 ADR path:
-Reason: This commit establishes a draft, provider-neutral governance transition while leaving AWS execution authority and PostgreSQL controls unchanged. The existing migration plan records the transition; a separate ADR is required if a later change makes a durable provider-authority or deployment-architecture decision.
+Reason: No ADR required: this commit refines a draft implementation plan and teaching note only; it makes no live provider-authority, target, or deployed-architecture decision. The plan retains review gates before implementation, provider selection, target-resource records, or AWS mutation.
 
 ## Session Metrics
 
