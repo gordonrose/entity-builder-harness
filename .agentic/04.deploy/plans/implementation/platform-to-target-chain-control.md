@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 11
+version: 13
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -56,6 +56,48 @@ The initial vertical slice is the existing Kanbien Platform public server only.
 Workers, relay, PostgreSQL Stage 6, identity provisioning, ingress, and
 observability delivery remain out of scope until this slice is proven. This
 preserves the existing PostgreSQL controls and avoids a broad reorganisation.
+
+## Repo-Wide Agentic Change-Governance Outcome
+
+This is a platform-to-target plan, not a deployment-only plan. Its outcome is
+that an agent can safely add, refactor, or retire product functionality by
+following one connected, layer-owned set of instructions rather than collecting
+mandatory rules from code comments, READMEs, and documentation.
+
+`.agentic` is the authoritative source for *how an agent changes the
+repository*: required assessment, ownership, stop conditions, records, checks,
+and evidence. It does not replace the authoritative implementation facts in
+source, package configuration, infrastructure declarations, or executable
+scripts. READMEs and documentation remain essential human explanation and
+reference material, but a mandatory instruction in either must link to its
+owning `.agentic` artifact.
+
+<!-- deterministic-check: allow reason="This table is an architectural ownership map; future workflows and gates own executable procedures." -->
+The intended connected ownership is:
+
+| Change concern | Governing layer | Required outcome |
+| --- | --- | --- |
+| How an agent finds applicable rules, records evidence, and handles cross-layer work | `.agentic/01.harness/` and `.agentic/06.shared/` | A change route and shared rules that do not depend on an agent remembering scattered instructions. |
+| How a platform module, adapter, configuration contract, or runnable program is added or changed | `.agentic/03.product/` | The product change is structurally complete, testable, documented, and mapped to downstream impact. |
+| How a runnable program is packaged, bound to a target, and proved safe to deploy and run | `.agentic/04.deploy/` | The deployment decision, target prerequisites, and proof chain are explicit and checked. |
+| What the software and target actually do | Source, package configuration, `infra/`, and executable scripts | One implementation authority for each factual setting or behaviour. |
+| How a person understands the system | READMEs and `docs/` | Clear explanation that links to, but does not compete with, the governing instruction. |
+
+A product change therefore follows this governed path:
+
+```text
+change request
+  -> shared change routing
+  -> product-module or runnable-program assessment
+  -> local construction and proof
+  -> affected deployment-scope assessment, where applicable
+  -> package, target, and deployment proof
+```
+
+Not every platform-module change reaches a provider or target check. The
+product workflow must record when there is no runnable-program or deployment
+impact. When there is impact, it must identify the affected scope; it may not
+leave that decision implicit.
 
 ## Scope Model
 
@@ -320,6 +362,22 @@ the agent must stop and resolve the conflict rather than choose silently.
 
 ## Principles
 
+- Keep harness governance generic and portable. An `.agentic` standard,
+  workflow, schema, template, or gate may define how any scope, dependency,
+  provider selection, workload, or target resource is assessed; it must not
+  prescribe the current product, environment, provider, account, region,
+  service, database, queue, or other target decision.
+- Model generic governance fields in terms such as capability, provider,
+  resource kind, availability classification, configuration binding, access
+  requirement, and proof. A target-specific record supplies their concrete
+  values in `infra/04.deploy/.../targets/<client>/<environment>/`.
+- Mark examples in governance artifacts as non-normative. Examples may explain
+  a rule, but cannot turn a current provider or target choice into a universal
+  requirement. Provider-specific implementation belongs in the appropriate
+  adapter or target declaration, not in provider-neutral harness governance.
+- Review proposed harness artifacts for accidental embedded target decisions.
+  Reject or relocate a product-, environment-, or provider-specific decision
+  unless it is genuinely required by the owning governance boundary.
 - Derive facts from existing source and configuration where possible; do not
   create a second hand-maintained copy merely to satisfy the harness.
 - Add a declaration only where a relationship cannot be reliably derived, such
@@ -385,6 +443,13 @@ valid public-server scope and common invalid cases: absent index record,
 missing owner, missing exclusion list, unresolved declaration path, and a
 retired scope still selected by a target binding.
 
+All Phase 1 harness artifacts must obey the governance portability boundary:
+their rules, schemas, and templates describe generic classes of scope,
+dependency, provider, resource, access, and proof. Fixtures may use concrete
+example values to test a shape, but must be marked non-normative and must not
+make a current product, environment, AWS service, or provider choice a
+requirement. Concrete decisions remain in the target-local records.
+
 Create the Foundation Resource Governance Artifact Set with fixtures proving
 valid shared and scope-owned records, multiple resources in one capability
 family, multiple provider types in one target, an unclassified active resource,
@@ -437,6 +502,14 @@ which artifact merely explains the system?
 Extend the harness placement/authoring rules with a small, enforceable
 documentation-linkage standard. It will define:
 
+- a repository-wide instruction inventory that classifies existing material in
+  platform modules, adapters, `infra`, scripts, READMEs, docs, and comments as
+  implementation fact, human explanation, executable check, or mandatory
+  agent instruction;
+- a migration rule: each mandatory agent instruction receives one owned
+  `.agentic` home in the appropriate harness, product, deploy, or shared
+  layer; its former README or documentation location becomes explanation with
+  a link to that governing artifact;
 - required links from module and deploy READMEs to their governing workflow or
   standard;
 - required links from agentic workflows to the human explanation necessary to
@@ -446,17 +519,30 @@ documentation-linkage standard. It will define:
 - a deliberately limited checker that detects missing links, not the truth of
   prose.
 
-**Deliverable:** one cross-layer standard and an initially report-only check.
+The inventory is a migration ledger, not a reason to copy all existing prose
+into `.agentic`. It must preserve one authoritative implementation fact and
+one authoritative agent instruction for each governed concern.
 
-**Exit criterion:** the public-server chain has a clear map from each README
-and document to its governance owner or has a recorded gap.
+**Deliverable:** one cross-layer standard, a repository-wide instruction
+inventory and migration ledger, and an initially report-only linkage check.
+
+**Exit criterion:** the public-server chain and its selected product modules
+have a clear map from each mandatory instruction to its governance owner; each
+README or document either links to that owner or has a recorded migration gap.
 
 ### Phase 3 — Define the platform-module contract
 
 **Question answered:** What evidence makes a platform module safe to change?
 
-Build on the existing platform-runtime workflow. The module contract must
-require evidence for:
+Build on the existing platform-runtime workflow. Establish the corresponding
+generic product-governance artifact set under `.agentic/03.product/`: a
+platform-module standard, change workflow, field guide or schema where a
+machine-readable record is needed, template where it improves consistency, and
+report-only gate backed by a deterministic check. These artifacts govern a
+class of module change; they must not prescribe a current module, product,
+provider, or target.
+
+The module contract must require evidence for:
 
 - a supported public boundary such as `index.ts`;
 - ownership, non-ownership, and dependency-direction rules;
@@ -465,6 +551,11 @@ require evidence for:
 - type check, build, runtime test, and boundary test when applicable;
 - a module README and source map that explain the module to a human;
 - a recorded reason when a normal proof is not applicable.
+
+The change workflow must first identify whether the module is used by a
+runnable program. If it is, it must pass that impact to the relevant
+deployment-scope workflow. If it is not, it must record that no deployment
+scope is affected rather than forcing an irrelevant target check.
 
 The configuration surface must be visible from the module tree rather than
 hidden among unrelated implementation. A configured module uses this shape:
@@ -507,8 +598,9 @@ The checker must derive the build and test facts from `package.json`,
 `tsconfig*`, and test locations. It must not introduce a duplicate module
 manifest for information already held there.
 
-**Deliverable:** a report-only product-layer module-contract check, first
-applied to the modules used by the public-server chain.
+**Deliverable:** generic product-governance artifacts and a report-only
+product-layer module-contract check, first applied to the modules used by the
+public-server chain.
 
 **Exit criterion:** the checker identifies whether each selected module has a
 public boundary, declared ownership, expected proofs, and an explanation.
@@ -701,9 +793,11 @@ Adopt controls in order:
    declaration;
 3. required before packaging, with a fresh target-alignment refresh required
    before deployment;
-4. require every new or changed module configuration concern, adapter,
-   runnable program, resource, role, workload, or pipeline to identify its
-   affected scope and foundation records before completion;
+4. require every new or changed platform module, configuration concern,
+   adapter, runnable program, resource, role, workload, or pipeline to satisfy
+   its product-layer contract and identify its affected scope and foundation
+   records before completion; where no deployment scope is affected, require a
+   recorded reason instead of an irrelevant provider check;
 5. extend coverage one reviewed area at a time: foundation control domains,
    worker/queue execution, relay, PostgreSQL, identity/access, public ingress,
    observability/alerting, and any other active capability revealed by Phase 0;
@@ -715,8 +809,12 @@ Adopt controls in order:
 **Exit criterion:** a relevant change cannot be treated as deploy-ready with a
 missing source-to-target link, unreviewed affected scope/foundation record, or
 unbounded provider selection or access requirement, while unrelated platform
-changes do not trigger provider checks. A claim of full target coverage names
-every active scope, foundation resource, and remaining exclusion.
+changes do not trigger provider checks. A relevant product change cannot be
+treated as complete without its product-layer contract and recorded deployment
+impact decision. A claim of full target coverage names every active scope,
+foundation resource, and remaining exclusion. New harness artifacts are also
+rejected when they embed a target-specific decision that belongs in a target
+record or provider-specific implementation.
 
 ### Phase 11 — Reorganise the verified deployment information architecture
 
