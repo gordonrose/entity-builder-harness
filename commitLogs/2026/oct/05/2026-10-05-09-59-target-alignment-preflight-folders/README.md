@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-07T15:47:49Z
-latest_commit_sha: 6572d8b5
-chat_duration: 197300s (02:06:48:20)
+latest_commit_at_utc: 2026-10-07T23:06:05Z
+latest_commit_sha: 4a1ee583
+chat_duration: 223596s (02:14:06:36)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -70,6 +70,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Captured the provider-neutral deployment learning and planning decisions: scope versus foundation ownership, configuration-surface visibility, provider selection, workload access, coverage states, and safe future tree migration.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
+
+- Summary: Expanded the draft platform-to-target plan with repo-wide agentic change governance, generic harness portability rules, and product-to-deployment impact routing.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. The plan now defines .agentic as the authority for how agents change the repository, with source/infra as factual implementation and READMEs/docs as linked explanation.
 
 ## Activity Log
 
@@ -189,6 +193,31 @@ Summary: Expanded the draft deployment-control plan with module configuration su
 
 ADR impact: No ADR: planning and education artifacts only; no live provider, target, or deployed-architecture decision.
 
+
+### 2026-10-07T23:04:16Z - Context hygiene
+
+Summary: Expanded the draft platform-to-target plan with repo-wide agentic change governance, generic harness portability rules, and product-to-deployment impact routing.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. The plan now defines .agentic as the authority for how agents change the repository, with source/infra as factual implementation and READMEs/docs as linked explanation.
+
+
+### 2026-10-07T23:04:19Z - ADR disposition
+
+ADR needed: no
+
+Reason: This commit changes a draft governance plan only. It makes no live provider authority, target configuration, or deployed architecture decision.
+
+
+### 2026-10-07T23:06:05Z - Commit recorded
+
+Commit: `4a1ee583`
+
+Message: docs(agentic): govern product-to-target changes
+
+Summary: Expanded the draft plan with repo-wide agentic governance, generic harness portability rules, a migration path for scattered mandatory instructions, product-module contract controls, and explicit product-to-deployment impact routing. No AWS, target, secret, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: draft plan and governance guidance only; no live provider authority, target configuration, or deployed architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -217,6 +246,13 @@ ADR impact: No ADR: planning and education artifacts only; no live provider, tar
   Summary: Expanded the draft deployment-control plan with module configuration surfaces, foundation-resource ownership, provider-selection and workload-access contracts, complete-estate coverage states, lifecycle change/retirement rules, and safe future tree migration. Added a living packaging and deployment learning handbook.
   ADR impact: No ADR: planning and education artifacts only; no live provider, target, or deployed-architecture decision.
 
+
+- Commit: `4a1ee583`
+  Time UTC: 2026-10-07T23:06:05Z
+  Message: docs(agentic): govern product-to-target changes
+  Summary: Expanded the draft plan with repo-wide agentic governance, generic harness portability rules, a migration path for scattered mandatory instructions, product-module contract controls, and explicit product-to-deployment impact routing. No AWS, target, secret, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: draft plan and governance guidance only; no live provider authority, target configuration, or deployed architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -225,14 +261,14 @@ ADR impact: No ADR: planning and education artifacts only; no live provider, tar
 
 ADR needed: no
 ADR path:
-Reason: No ADR required: this commit refines a draft implementation plan and teaching note only; it makes no live provider-authority, target, or deployed-architecture decision. The plan retains review gates before implementation, provider selection, target-resource records, or AWS mutation.
+Reason: This commit changes a draft governance plan only. It makes no live provider authority, target configuration, or deployed architecture decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-07T15:47:49Z
-Latest commit SHA: 6572d8b5
-Chat duration: 197300s (02:06:48:20)
+Latest commit at UTC: 2026-10-07T23:06:05Z
+Latest commit SHA: 4a1ee583
+Chat duration: 223596s (02:14:06:36)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
