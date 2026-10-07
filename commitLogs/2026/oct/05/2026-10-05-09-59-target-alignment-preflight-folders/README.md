@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-06T23:16:09Z
-latest_commit_sha: f994270373f9703f1ebe1ce5c03d016ccfe91f53
-chat_duration: 137800s (01:14:16:40)
+latest_commit_at_utc: 2026-10-07T15:47:49Z
+latest_commit_sha: 6572d8b5
+chat_duration: 197300s (02:06:48:20)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -178,6 +178,17 @@ ADR needed: no
 
 Reason: No ADR required: this commit refines a draft implementation plan and teaching note only; it makes no live provider-authority, target, or deployed-architecture decision. The plan retains review gates before implementation, provider selection, target-resource records, or AWS mutation.
 
+
+### 2026-10-07T15:47:49Z - Commit recorded
+
+Commit: `6572d8b5`
+
+Message: docs(deploy): expand target control plan
+
+Summary: Expanded the draft deployment-control plan with module configuration surfaces, foundation-resource ownership, provider-selection and workload-access contracts, complete-estate coverage states, lifecycle change/retirement rules, and safe future tree migration. Added a living packaging and deployment learning handbook.
+
+ADR impact: No ADR: planning and education artifacts only; no live provider, target, or deployed-architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -199,6 +210,13 @@ Reason: No ADR required: this commit refines a draft implementation plan and tea
   Summary: Expanded the draft plan with scope criteria, target-local scope and pipeline catalogues, the first public-server scope path, package-publication custody, scope-qualified alignment, staged full-repository coverage, and an AWS-governed drift-evidence producer track based on verified reconciliation failures.
   ADR impact: No ADR: this remains a draft planning refinement; AWS authority and target changes remain separately governed.
 
+
+- Commit: `6572d8b5`
+  Time UTC: 2026-10-07T15:47:49Z
+  Message: docs(deploy): expand target control plan
+  Summary: Expanded the draft deployment-control plan with module configuration surfaces, foundation-resource ownership, provider-selection and workload-access contracts, complete-estate coverage states, lifecycle change/retirement rules, and safe future tree migration. Added a living packaging and deployment learning handbook.
+  ADR impact: No ADR: planning and education artifacts only; no live provider, target, or deployed-architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -212,9 +230,9 @@ Reason: No ADR required: this commit refines a draft implementation plan and tea
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-06T23:16:09Z
-Latest commit SHA: f994270373f9703f1ebe1ce5c03d016ccfe91f53
-Chat duration: 137800s (01:14:16:40)
+Latest commit at UTC: 2026-10-07T15:47:49Z
+Latest commit SHA: 6572d8b5
+Chat duration: 197300s (02:06:48:20)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
