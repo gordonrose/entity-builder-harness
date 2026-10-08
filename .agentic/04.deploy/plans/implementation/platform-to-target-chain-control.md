@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 13
+version: 17
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -78,6 +78,7 @@ The intended connected ownership is:
 | Change concern | Governing layer | Required outcome |
 | --- | --- | --- |
 | How an agent finds applicable rules, records evidence, and handles cross-layer work | `.agentic/01.harness/` and `.agentic/06.shared/` | A change route and shared rules that do not depend on an agent remembering scattered instructions. |
+| How failures are classified, redacted, tested, and made actionable without exposing sensitive information | `.agentic/06.shared/`, referenced by product and deploy controls | Safe diagnostic records distinguish observed failures from guessed causes and give an agent a bounded next check. |
 | How a platform module, adapter, configuration contract, or runnable program is added or changed | `.agentic/03.product/` | The product change is structurally complete, testable, documented, and mapped to downstream impact. |
 | How a runnable program is packaged, bound to a target, and proved safe to deploy and run | `.agentic/04.deploy/` | The deployment decision, target prerequisites, and proof chain are explicit and checked. |
 | What the software and target actually do | Source, package configuration, `infra/`, and executable scripts | One implementation authority for each factual setting or behaviour. |
@@ -99,6 +100,70 @@ product workflow must record when there is no runnable-program or deployment
 impact. When there is impact, it must identify the affected scope; it may not
 leave that decision implicit.
 
+## Safe Diagnostic and Error-Evidence Model
+
+Safe, granular diagnostics are a required part of any product-to-target
+implementation. They must let an agent distinguish a missing setting from a
+name-resolution failure, a connection timeout, a TLS failure, authentication
+failure, permission denial, absent resource, invalid response, or
+schema/version mismatch without disclosing secret values, connection strings,
+tokens, headers, or unapproved private target details.
+
+A diagnostic records the observed fact rather than guessing its cause. It has a
+stable code; logical scope and dependency identifiers; lifecycle stage such as
+startup, readiness, request, background work, preflight, or deployment
+verification; safe context; retryability; and a bounded next check. A timeout,
+for example, may direct an agent to the network-path proof; it must not assert
+that one particular firewall rule is wrong without evidence.
+
+The future shared standard under `.agentic/06.shared/` defines this safe
+diagnostic contract, redaction rules, code taxonomy, test expectations, and
+remediation-routing rules. Product controls require modules, adapters, and
+runnable programs to map their meaningful failures into the contract. Deploy
+controls require scope declarations, preflight, and target evidence to state
+the expected failure behaviour and safe proof without duplicating raw provider
+errors. Runtime events remain in the approved operational logging system, not
+in Git; repository records retain only contracts, mappings, tests, and safe
+evidence references.
+
+Every declared dependency-availability behaviour must also declare its required
+observation: safe failure diagnostic, safe recovery diagnostic, health-state
+effect, metric or status signal, alert policy, and proof path. An alert policy
+is explicitly `required`, `deferred`, or `not-required`; `deferred` records an
+owner and follow-up path and prevents a claim of complete observability. This
+is a declaration of required evidence, not a second definition of the log,
+metric, dashboard, or alert implementation.
+
+## Concern Control Matrix
+
+Before implementation, the plan maintains one concern-control matrix for the
+selected vertical slice. It prevents a concern from being treated as covered
+merely because it is mentioned in prose. Each row names the intended record or
+implementation home, the quality/proof obligation, the agentic instruction
+owner, and whether the design is ready or still needs detailed design.
+
+| Concern | Structure: record or implementation home | Quality: required proof | Instructions: owning agentic layer | Design state |
+| --- | --- | --- | --- | --- |
+| Repository change routing and source-of-truth linkage | Layer-owned `.agentic` workflow plus migration ledger; implementation facts remain in source and `infra` | Every mandatory instruction has one owner; explanations link to it; conflicts stop work | `01.harness` and `06.shared` | Planned in Phase 2 |
+| Platform modules and provider adapters | Module source, public boundary, visible configuration surface when applicable, tests, source map | Type, build, boundary, runtime, and configuration proof as applicable | `03.product` | Planned in Phase 3 |
+| Runnable program and image | Runnable-program registry, entrypoint, image contract, compiled command | Validated configuration boundary, payload check, local image smoke proof | `03.product` and `04.deploy` | Planned in Phases 4–5 |
+| Configuration and secret references | Typed module configuration plus target scope declaration and authoritative target binding | Required/optional status, validation, safe secret-reference handling, local and target proof | `03.product` and `04.deploy` | Planned; field-level scope design remains to be reviewed |
+| Dependency and availability behaviour | Scope declaration and workload binding, linked to foundation or scope-owned resource | Required/optional/degraded classification; startup, readiness, request, recovery behaviour; safe failure/recovery diagnostics; health effect; metric/status signal; alert policy; and proof | `04.deploy`, with product contracts where the failure originates | Needs dedicated contract, schema, field guide, fixtures, and checker design |
+| Foundation resource and provider selection | Target-local foundation index, scope declaration, workload binding, authoritative provider declaration | Ownership/lifecycle rationale, adapter compatibility, resource identity, consumer, migration and rollback proof | `04.deploy` | Planned in Phase 1 and later binding phases |
+| Network relationship | Scope/workload requirement linked to authoritative provider network declaration | Safe proof of name resolution, route, allowed source/destination/protocol/port, TLS where required, and local equivalent | `04.deploy`, with product diagnostics at the connection boundary | Needs dedicated requirement model, fixtures, and alignment-check design |
+| Workload access and application authentication | Workload binding and authoritative provider/IAM or application-auth declaration | Narrow action/resource access; safe authentication failure proof; separation of execution, runtime, and application identities | `03.product` and `04.deploy` | Access planned; application-auth detail remains to be designed |
+| Health and recovery | Runnable-program behaviour, image contract, scope declaration, target health declaration | Process, liveness, readiness, safe meaningful request, rollback/recovery proof | `03.product` and `04.deploy` | Planned; existing checks must be gathered per scope |
+| Safe diagnostics and operational evidence | Shared diagnostic contract, product/adaptor mapping, scope proof references, approved runtime logging | Stable observed-fact code, redaction, stage, retryability, bounded next check, test fixtures, and safe evidence reference | `06.shared`, referenced by `03.product` and `04.deploy` | Needs dedicated standard, taxonomy, schema, fixtures, and gate design |
+| Observability and alerting implementation | Authoritative logging, metric, trace, dashboard, retention, and alert declarations | Event transport, aggregation, retention, threshold, notification, and recovery-observation proof | `04.deploy` and provider-specific operations governance | Deferred from the first scope; required evidence expectations are declared now |
+| Package publication and delivery pipeline | Target-local pipeline catalogue and existing workflow/provider declarations | Tested scanned immutable digest, approval/identity route, custody handoff, and rollback route | `04.deploy` | Planned in Phase 1 and pipeline phases |
+| Target alignment, drift, and live verification | Alignment contract, safe evidence record, target read adapter, and run proof | Fresh expected-versus-actual comparison, expiry, drift state, live health and meaningful behaviour | `04.deploy`, with AWS execution remaining under `.agentic/aws/` | Planned in Phases 8–9 |
+
+The matrix is a governance index, not a second configuration system. It points
+to the authoritative source or target record for each fact. A row marked
+“needs dedicated design” is an explicit gap: no agent may claim that concern is
+fully governed, or silently invent its missing structure, quality rule, or
+instruction.
+
 ## Scope Model
 
 A **scope** is a bounded deployable capability, not a repository layer and not
@@ -110,6 +175,7 @@ expected target requirements and later report an alignment result.
 | Platform module | Reusable runtime building block. A module can be used by several deployable capabilities. | `platform/security` or `platform/observability` |
 | Runnable program | A process that composes product, platform, and selected adapters. | `kanbien-platform-server.main.ts` |
 | Deployment scope | The bounded capability and target workload whose requirements are declared and proved together. | `kanbien-staging-platform-server-baseline` |
+| Scope operation | A named job the scope promises to perform, with its required outcome. | `save-work`: report success only after durable storage confirms the save. |
 | Target | The real destination in which one or more scopes run. | Kanbien staging in its selected AWS account and region |
 
 For example, a change to `platform/security` may affect the public-server,
@@ -184,6 +250,7 @@ The plan separates the authoritative facts needed to keep scopes current:
 | Information | Canonical location | Update rule |
 | --- | --- | --- |
 | Scope names, state, owner, required dependencies, and declaration-contract path | Future target-local scope index under `infra/04.deploy/03.product/targets/<client>/<environment>/` | Add, retire, or change a scope in the same change set as its runnable program, workload, or requirement change. |
+| Scope operations, their promised outcomes, implementation/test evidence, and explicit exclusions | The active scope's bounded declaration contract | Add, change, or retire an operation in the same reviewed change as the product behaviour, route, job, command, or test that implements it. A dependency must reference the operation it supports; no operation means no inferred business criticality. |
 | Expected settings, secret names, permissions, dependencies, health, rollback, and proof paths | One bounded declaration contract per active scope in that target directory | Update whenever functionality adds, changes, or removes a runtime setting, dependency, image input, identity requirement, network path, persistence need, queue, rollback condition, or operational signal. |
 | Foundation resource identity, ownership, lifecycle, consumers, exported configuration references, and proof | Future target-local `foundation/foundation-index.yml` | Add, reclassify, or retire a resource in the same reviewed change as its authoritative declaration, consumer binding, security/recovery rule, or provider migration. |
 | Provider selection and workload access requirements | Scope declaration contract and workload binding, pointing to the authoritative adapter and provider-policy sources | Update whenever a scope adds, changes, or removes an adapter, provider, resource binding, role, action, resource permission, secret reference, or dependency proof. |
@@ -232,8 +299,12 @@ required proof, recovery behaviour, or lifecycle. Capabilities remain in one
 scope only when those properties change together. The workflow requires an
 agent to assess those criteria and name all affected existing scopes before
 changing code or target definitions. The schema and template define the folder
-shape and fields. The script and gate validate the facts that can be checked
-deterministically.
+shape and fields, including an operation-and-promise catalogue. Each operation
+has a stable ID, plain-language promised outcome, implementation and test
+evidence links, and explicit exclusions. The script and gate validate the
+facts that can be checked deterministically. They do not infer business
+criticality from source code: a missing promised outcome is a design gap that
+requires a reviewed human decision.
 
 Before the first foundation resource record is created, the harness must also
 provide a Foundation Resource Governance Artifact Set:
@@ -257,6 +328,34 @@ access requirements, lifecycle, security/recovery facts, and retirement path.
 It must reject a broad provider policy unless a reviewed exception records why
 the exact action or resource cannot be narrowed. It validates links and safe
 identifiers; it does not read secret values or replace provider declarations.
+
+Before a scope can claim a dependency's availability behaviour is governed, the
+harness must also provide a Dependency Availability and Observation Artifact
+Set:
+
+```text
+.agentic/04.deploy/
+  standards/dependency-availability-and-observation.md
+  workflows/change-scope-dependency.md
+  schemas/dependency-availability-and-observation.v1.schema.yml
+  schemas/dependency-availability-and-observation.v1.guide.md
+  templates/dependency-availability-and-observation/
+  gates/check-dependency-availability-and-observation.md
+
+scripts/04.deploy/
+  check-dependency-availability-and-observation/
+```
+
+It defines the provider-neutral shape for a dependency classification; startup,
+readiness, request, and recovery behaviour; safe failure and recovery
+diagnostics; health effect; metric or status signal; alert policy; and local,
+target, and runtime proof. It must distinguish an explicitly deferred alert
+implementation from an intentional no-alert decision, and require an owner and
+follow-up for the former. It validates declarations and safe links only; it
+does not read secret values, capture production error dumps, or duplicate a
+provider's logging, metric, dashboard, or alert definition. Each dependency
+record must reference one declared scope operation; it must not classify a
+provider or resource as universally required, optional, or degraded.
 
 The first target-local layout will be:
 
@@ -441,7 +540,10 @@ target resource consistently rather than relying on memory?
 Create the Scope Governance Artifact Set above, with fixtures proving both a
 valid public-server scope and common invalid cases: absent index record,
 missing owner, missing exclusion list, unresolved declaration path, and a
-retired scope still selected by a target binding.
+retired scope still selected by a target binding. Include an operation with no
+promised outcome, an operation lacking implementation or test evidence, a
+changed operation absent from the scope declaration, and a dependency pointing
+to an unknown operation.
 
 All Phase 1 harness artifacts must obey the governance portability boundary:
 their rules, schemas, and templates describe generic classes of scope,
@@ -455,6 +557,15 @@ valid shared and scope-owned records, multiple resources in one capability
 family, multiple provider types in one target, an unclassified active resource,
 a missing consumer, a stale exported configuration reference, a permission not
 connected to a declared dependency, and an impermissibly broad policy.
+
+Create the Dependency Availability and Observation Artifact Set with fixtures
+proving required, optional, and degraded behaviour; a missing lifecycle action;
+a missing failure or recovery diagnostic; an absent health effect; a missing
+metric/status signal; an intentional no-alert decision; a deferred alert with
+owner/follow-up; an unowned deferred alert; and a proof reference that exposes
+a prohibited sensitive value. The first scope may record a concern as pending
+while its detailed declaration is reviewed, but may not report it as governed
+or fully observed without a valid record.
 
 Add the target-local pipeline catalogue and its first package-publication
 record for `.github/workflows/deploy-platform-shell-staging.yml`. The record
@@ -480,10 +591,11 @@ reference; do not leave two authoritative copies. A compatibility pointer is
 permitted only when a verified consumer requires it.
 
 The initial scope record must name its active state, owner, covered concerns,
-explicit exclusions, dependencies, provider-selection status, contract path,
-and known proof paths. Its workload binding and access requirements are added
-in the later target-binding phase; the scope record must say that this proof is
-pending rather than pretending it exists.
+explicit exclusions, operations and their promised outcomes, dependencies,
+provider-selection status, contract path, and known proof paths. Its workload
+binding and access requirements are added in the later target-binding phase;
+the scope record must say that this proof is pending rather than pretending it
+exists.
 
 **Deliverable:** report-only scope, foundation-resource, and pipeline checks;
 the governed first `platform-server` scope; its classified foundation
@@ -510,6 +622,9 @@ documentation-linkage standard. It will define:
   `.agentic` home in the appropriate harness, product, deploy, or shared
   layer; its former README or documentation location becomes explanation with
   a link to that governing artifact;
+- the shared safe-diagnostic standard and its links to product and deployment
+  controls, so error guidance is a governed cross-cutting requirement rather
+  than prose scattered through integration code or operational notes;
 - required links from module and deploy READMEs to their governing workflow or
   standard;
 - required links from agentic workflows to the human explanation necessary to
@@ -523,12 +638,19 @@ The inventory is a migration ledger, not a reason to copy all existing prose
 into `.agentic`. It must preserve one authoritative implementation fact and
 one authoritative agent instruction for each governed concern.
 
-**Deliverable:** one cross-layer standard, a repository-wide instruction
-inventory and migration ledger, and an initially report-only linkage check.
+Create and maintain the concern-control matrix above for the selected
+public-server slice. It must identify every relevant concern as planned,
+explicitly out of scope, or needing detailed design before a later phase claims
+full chain coverage.
+
+**Deliverable:** cross-layer documentation-linkage and safe-diagnostic
+standards, a repository-wide instruction inventory and migration ledger, and
+an initially report-only linkage check.
 
 **Exit criterion:** the public-server chain and its selected product modules
 have a clear map from each mandatory instruction to its governance owner; each
 README or document either links to that owner or has a recorded migration gap.
+The concern-control matrix contains no silently unowned active concern.
 
 ### Phase 3 — Define the platform-module contract
 
@@ -548,6 +670,8 @@ The module contract must require evidence for:
 - ownership, non-ownership, and dependency-direction rules;
 - an explicit configuration surface when the module consumes or defines
   runtime configuration;
+- a safe diagnostic mapping and redaction test when it communicates with an
+  external dependency or translates lower-level failures;
 - type check, build, runtime test, and boundary test when applicable;
 - a module README and source map that explain the module to a human;
 - a recorded reason when a normal proof is not applicable.
@@ -619,6 +743,8 @@ lists runnable programs only, not shared helpers. Each record must identify:
   supported provider-adapter selections;
 - the boundary at which raw target configuration is validated and translated
   into typed module configuration;
+- the boundary at which dependency failures are translated into the shared
+  safe diagnostic contract and startup/readiness/request behaviour;
 - expected compiled command;
 - required local proof; and
 - owner.
@@ -672,6 +798,9 @@ binding refers to a runnable-program identifier and names:
   that fulfil their dependencies;
 - attached execution and runtime roles, plus each access requirement's policy
   declaration and bounded action/resource reference;
+- expected dependency-availability behaviour and safe failure/recovery
+  diagnostic, health-effect, metric/status, alert-policy, and proof references
+  for startup, readiness, real requests, and recovery;
 - health and rollback proofs; and
 - target owner.
 
@@ -711,7 +840,10 @@ Possible results are `complete`, `missing-declaration`,
 `declared-but-not-implemented`, `implemented-but-unproved`, and
 `explicitly-out-of-scope`. It additionally reports `unclassified-active-item`,
 `permission-without-dependency`, `dependency-without-permission`, and
-`provider-selection-incompatible`.
+`provider-selection-incompatible`. It also reports a missing diagnostic
+contract, recovery observation, health effect, metric/status signal, alert
+decision, or proof where a declared dependency has no safe, actionable failure
+path.
 
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
@@ -761,6 +893,9 @@ The preflight consumes the chain-check result and safely confirms live facts:
   access-policy facts;
 - non-secret configuration and secret-name presence;
 - permissions, dependencies, health, and rollback configuration;
+- safe diagnostic categories, health effects, metric/status and alert-policy
+  references, and safe evidence for target mismatches or unavailable declared
+  dependencies;
 - freshness and drift.
 
 It has two required use points with the same comparison contract:
@@ -798,10 +933,16 @@ Adopt controls in order:
    its product-layer contract and identify its affected scope and foundation
    records before completion; where no deployment scope is affected, require a
    recorded reason instead of an irrelevant provider check;
-5. extend coverage one reviewed area at a time: foundation control domains,
+5. require each changed or newly introduced scope operation to have a declared
+   promised outcome and implementation/test evidence; require each dependency
+   to reference the operation whose behaviour it affects;
+6. require each affected concern to have a matrix row with an approved
+    structure, quality obligation, and instruction owner, or to remain an
+    explicitly recorded design gap that blocks any claim of full coverage;
+7. extend coverage one reviewed area at a time: foundation control domains,
    worker/queue execution, relay, PostgreSQL, identity/access, public ingress,
    observability/alerting, and any other active capability revealed by Phase 0;
-6. make an aggregate target result possible only after the scope and foundation
+8. make an aggregate target result possible only after the scope and foundation
    indexes contain no unowned, unknown, or deliberately deferred active item.
 
 **Deliverable:** lifecycle-stage gate references and change-scope routing.
@@ -900,6 +1041,8 @@ For the public server, a reviewer can start with one program identifier and
 find, by command and source path, its platform inputs, adapter choice,
 capability/provider/resource classification, compiled image command, staging
 workload/runtime, required non-secret configuration, attached roles and narrow
-access requirements, dependency declarations, local/package proofs,
-target-alignment result, and target/run proofs. Any missing or contradictory
-link is reported before a deployment is treated as ready.
+access requirements, scope operations and their promised outcomes, dependency
+declarations linked to those operations, local/package proofs,
+target-alignment result, target/run proofs, and safe diagnostics for failures
+at each boundary. Any missing or contradictory link is reported before a
+deployment is treated as ready.

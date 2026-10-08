@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 4
+  version: 6
   status: active
   layer: 05.education
   domain: education
@@ -52,7 +52,11 @@ checks remain the evidence.
 9. [From a scattered tree to a scannable deployment architecture](#9-from-a-scattered-tree-to-a-scannable-deployment-architecture)
 10. [A visible module configuration surface](#10-a-visible-module-configuration-surface)
 11. [Foundation resources, scopes, and provider selection](#11-foundation-resources-scopes-and-provider-selection)
-12. [Next lesson queue](#12-next-lesson-queue)
+12. [Where rules, decisions, and runtime evidence live](#12-where-rules-decisions-and-runtime-evidence-live)
+13. [Dependencies and availability behaviour](#13-dependencies-and-availability-behaviour)
+14. [Networking: reaching a dependency](#14-networking-reaching-a-dependency)
+15. [Safe diagnostics: useful errors without leaks](#15-safe-diagnostics-useful-errors-without-leaks)
+16. [Next lesson queue](#16-next-lesson-queue)
 
 ## 1. The Deployment Journey
 
@@ -542,7 +546,255 @@ No. A foundation resource existing only makes it available. A named workload
 binding must select the compatible adapter, configuration, resource, role, and
 proof for a particular scope.
 
-## 12. Next Lesson Queue
+## 12. Where Rules, Decisions, and Runtime Evidence Live
+
+### The main mental model
+
+```text
+.agentic  → how an agent must change the repository
+source and infra → what the software and target actually do
+scripts → what can be checked deterministically
+README and docs → human explanation and orientation
+runtime logging → actual operational events
+```
+
+One concern can appear in several places, but each location has a different
+job. The goal is not to put every fact in one file. The goal is to prevent two
+places from silently claiming authority over the same fact.
+
+### Architecture intent
+
+The planned product-to-target controls divide responsibility as follows:
+
+| Question | Intended authoritative home |
+| --- | --- |
+| How must an agent add or refactor a platform module? | `.agentic/03.product/` |
+| How must an agent bind and prove a target workload? | `.agentic/04.deploy/` |
+| Which shared rules apply across the repository? | `.agentic/01.harness/` and `.agentic/06.shared/` |
+| Which provider, resource, configuration, and IAM policy are actually used? | Target declarations under `infra/` and provider implementation source |
+| How does a human understand the design? | Local READMEs and `docs/`, linked to the governing instruction |
+
+Mandatory instructions currently scattered through READMEs, docs, comments,
+and operational notes will be inventoried and moved or linked to one owned
+agentic artifact. The explanation stays where it is useful; the authority moves
+to the governed location.
+
+### Misconception check
+
+“Making `.agentic` authoritative means it must copy all infrastructure and
+application facts.”
+
+No. `.agentic` governs how changes are assessed and verified. It must point to
+the actual implementation rather than become a competing copy of it.
+
+## 13. Dependencies and Availability Behaviour
+
+A dependency is anything outside a deployment scope that it needs to do its
+job: a data store, queue, identity service, rate-limit store, configuration
+source, network path, or similar facility.
+
+### The dependency chain
+
+```text
+scope needs a capability
+  → target selects a provider
+  → a concrete resource fulfils it
+  → configuration binds the workload to it
+  → access and network rules permit its use
+  → proof verifies the declared behaviour
+```
+
+### Availability classification
+
+Each dependency must be classified for the specific scope:
+
+| Classification | Meaning |
+| --- | --- |
+| Required | The scope cannot safely perform its affected normal job without it. |
+| Optional | The core job remains safe and honest without it; an extra capability is absent. |
+| Degraded | The scope continues under deliberately restricted or safer rules. |
+
+The classification is not enough by itself. The scope must declare what happens
+at each point:
+
+```text
+startup → readiness → real request → recovery
+```
+
+A required dependency does not automatically mean “crash the process.” It may
+mean that the process starts but reports not-ready, or that it rejects only the
+operation that cannot safely proceed. The intended response must be explicit.
+
+### Declare operations, not “core functionality”
+
+The harness cannot safely infer business criticality from source code. It can
+see that an operation calls a dependency, but cannot know whether a failed save
+is acceptable, whether audit evidence is mandatory, or which reduced behaviour
+is honest. A scope must therefore declare named operations and the promise each
+one makes.
+
+```text
+operation: save-work
+promise: report success only after durable storage confirms the save
+```
+
+Each dependency record points to the operation it supports. Its
+required/optional/degraded classification is then a decision about that
+operation and promise, not a permanent label on a database, queue, or provider.
+Missing operation or promise information is a design gap that needs a reviewed
+human decision; the harness must not guess.
+
+### Behaviour must be observable
+
+Each declared failure and recovery behaviour also needs a safe observation
+path:
+
+```text
+dependency failure
+  → safe failure diagnostic
+  → declared health effect
+  → metric or status signal
+  → alert policy: required, deferred, or not required
+  → safe proof
+  → safe recovery diagnostic when normal behaviour resumes
+```
+
+This does not mean every dependency failure immediately needs a dashboard or
+human page. It means the scope must not become not-ready, reject work, or enter
+degraded mode invisibly. A deferred alert requires an owner and follow-up; it
+cannot be silently treated as complete observability.
+
+### Current state
+
+Dependency facts are still distributed among TypeScript, environment settings,
+CloudFormation, IAM policies, and smoke checks. The planned scope declaration,
+workload binding, and foundation index will make the relationship visible and
+checkable without duplicating the provider declaration.
+
+### Misconception check
+
+“Optional means we can ignore errors.”
+
+No. Optional means the approved reduced behaviour is known, observable, and
+safe. Silent loss or invented success is not an optional-dependency policy.
+
+## 14. Networking: Reaching a Dependency
+
+Configuration identifies the dependency; networking determines whether the
+workload can reach it.
+
+```text
+host → which network destination to contact
+port → which network entrance to use
+network path and rule → whether the workload may reach that entrance
+TLS → whether the connection is securely established
+```
+
+For example, a host can be a private name such as `database.internal`. It is
+the database server's network address, not the database name and not a
+password.
+
+### The separate gates
+
+```text
+correct configuration
+  + usable network path
+  + permitted network rule
+  + valid TLS connection
+  + valid application credentials
+  + required provider/database permission
+  = usable dependency
+```
+
+These gates are independent. Knowing a host name does not grant network access;
+being able to reach a database door does not grant a valid database login; an
+AWS IAM permission does not automatically create a network route.
+
+### Architecture intent
+
+The target scope will declare the network relationship it requires in generic
+terms. Target infrastructure remains authoritative for real subnets, routes,
+security groups, DNS, load balancers, and firewall rules. Target alignment
+will compare the declared requirement with safe live facts. Local tests use a
+safe equivalent rather than pretending a laptop network is AWS.
+
+## 15. Safe Diagnostics: Useful Errors Without Leaks
+
+An agent cannot safely remediate a vague message such as “database connection
+failed.” It needs a safe diagnostic record: enough specific evidence to choose
+the next check, without revealing secrets or claiming an unproved cause.
+
+### The main mental model
+
+```text
+observed failure
+  → stable diagnostic code
+  → logical scope and dependency
+  → lifecycle stage
+  → safe context and retryability
+  → bounded next check
+```
+
+For example, “network connection timed out during readiness” is an observed
+fact. It can direct an agent to verify the network-path proof. It must not
+claim that a particular firewall rule is wrong unless evidence proves that.
+
+### Required distinction
+
+Safe diagnostics should distinguish meaningful cases such as:
+
+- missing or invalid configuration;
+- unavailable secret reference, without revealing its value;
+- name-resolution failure;
+- connection refused or timed out;
+- TLS failure;
+- application authentication failure;
+- provider permission denial;
+- absent or wrong resource;
+- invalid response; and
+- schema, version, or migration mismatch.
+
+They must also identify whether the failure occurred at startup, readiness,
+a real request, background work, target preflight, or deployment verification.
+
+### Where the pieces live
+
+```text
+shared diagnostic contract and redaction rules
+  → future `.agentic/06.shared/` governance and shared product contracts
+
+module and provider-adapter mappings
+  → product implementation and tests
+
+startup/readiness/request behaviour
+  → runnable-program composition boundary
+
+expected dependency behaviour and proof
+  → target scope declarations and deployment checks
+
+actual runtime events
+  → approved operational logging, not Git
+```
+
+The dependency contract declares what observation is required. A later
+observability scope supplies the actual log transport, metric storage,
+dashboard, alert threshold, and notification route. This separation prevents
+one dependency record from becoming a duplicate monitoring-system definition.
+
+Never expose passwords, tokens, private keys, full connection strings, secret
+values, sensitive headers, or raw provider responses that could contain them.
+The repository stores diagnostic contracts, mappings, tests, and safe evidence
+references—not production error dumps.
+
+### Misconception check
+
+“A detailed error must show every underlying value.”
+
+No. A useful error identifies the safe logical dependency and observed failure,
+then sends the agent to the next approved evidence check. Detail without
+redaction is a security incident, not good observability.
+
+## 16. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
