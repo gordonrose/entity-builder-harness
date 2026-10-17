@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-08T16:32:57Z
-latest_commit_sha: 82ac95eb
-chat_duration: 286408s (03:07:33:28)
+latest_commit_at_utc: 2026-10-17T21:14:01Z
+latest_commit_sha: a6e69078
+chat_duration: 1080872s (12:12:14:32)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -77,6 +77,10 @@ can you walk me through which part of my repo work on the following stages
 
 
 - Summary: Expanded the draft plan and teaching handbook with a concern-control matrix, dependency availability and observation governance, operation-and-promise scope declarations, safe diagnostics, networking, and source-of-truth lessons.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
+
+- Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling lessons.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
 
 ## Activity Log
@@ -247,6 +251,31 @@ Summary: Added concern-control governance, dependency availability and observati
 
 ADR impact: No ADR: draft governance and education only; no live provider authority, target configuration, or deployed architecture decision.
 
+
+### 2026-10-17T21:12:27Z - Context hygiene
+
+Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling lessons.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
+
+### 2026-10-17T21:12:35Z - ADR disposition
+
+ADR needed: no
+
+Reason: This change refines a draft provider-neutral governance plan and teaching material only. It makes no live target, provider-authority, or deployed-architecture decision.
+
+
+### 2026-10-17T21:14:01Z - Commit recorded
+
+Commit: `a6e69078`
+
+Message: docs(deploy): govern dependency identity lifecycle
+
+Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling governance. No AWS, target, secret, or runtime changes occurred.
+
+ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -289,6 +318,13 @@ ADR impact: No ADR: draft governance and education only; no live provider author
   Summary: Added concern-control governance, dependency availability and observation artifacts, operation-and-promise scope declarations, and durable teaching lessons for dependency behaviour, networking, safe diagnostics, and source-of-truth ownership. No AWS, target, secret, or PostgreSQL mutation occurred.
   ADR impact: No ADR: draft governance and education only; no live provider authority, target configuration, or deployed architecture decision.
 
+
+- Commit: `a6e69078`
+  Time UTC: 2026-10-17T21:14:01Z
+  Message: docs(deploy): govern dependency identity lifecycle
+  Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling governance. No AWS, target, secret, or runtime changes occurred.
+  ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -297,14 +333,14 @@ ADR impact: No ADR: draft governance and education only; no live provider author
 
 ADR needed: no
 ADR path:
-Reason: This commit updates a draft plan and teaching material only. It creates no live target, provider-authority, or deployed-architecture decision.
+Reason: This change refines a draft provider-neutral governance plan and teaching material only. It makes no live target, provider-authority, or deployed-architecture decision.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-08T16:32:57Z
-Latest commit SHA: 82ac95eb
-Chat duration: 286408s (03:07:33:28)
+Latest commit at UTC: 2026-10-17T21:14:01Z
+Latest commit SHA: a6e69078
+Chat duration: 1080872s (12:12:14:32)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
