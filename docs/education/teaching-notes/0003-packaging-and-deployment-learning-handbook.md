@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 6
+  version: 8
   status: active
   layer: 05.education
   domain: education
@@ -644,6 +644,73 @@ operation and promise, not a permanent label on a database, queue, or provider.
 Missing operation or promise information is a design gap that needs a reviewed
 human decision; the harness must not guess.
 
+### The lifecycle in detail
+
+The four lifecycle stages answer different questions:
+
+| Stage | Question | Example of a required storage dependency |
+| --- | --- | --- |
+| Startup | May the process begin? | Start but remain not-ready for a temporary storage outage; fail start for missing or invalid required configuration. |
+| Readiness | May normal traffic be accepted? | Ready only after a safe storage check succeeds. |
+| Real request | What honest outcome is given to the caller? | Do not report a save as successful unless durable storage confirms it. |
+| Recovery | When may normal behaviour resume? | Verify the dependency for new work, then restore readiness. |
+
+Process running is not the same as ready. A process may remain alive to provide
+safe diagnostics and retry a temporary problem, while declaring itself not
+ready so normal traffic is withheld.
+
+### Request uncertainty and recovery
+
+There are three different request outcomes:
+
+```text
+dependency unavailable before work begins
+  → reject the operation; it was not attempted
+
+confirmed failure
+  → reject the operation; it did not complete
+
+outcome unknown after work may have been sent
+  → do not claim success or failure; use an approved idempotent retry
+    or reconciliation path
+```
+
+For example, a connection might drop after a save request was sent. The server
+cannot safely invent either answer. Blindly retrying can create duplicate work.
+
+Recovery has two separate meanings:
+
+```text
+availability recovery
+  → can safe new work resume?
+
+outcome recovery
+  → what happened to work already in progress when the failure occurred?
+```
+
+The first may restore readiness after a safe dependency check. The second may
+require reconciliation before uncertain work is repeated or treated as complete.
+
+### What a complete dependency declaration records
+
+For each dependency used by an operation, the future record will make these
+decisions visible:
+
+```text
+identity and capability
+→ operation and promise it supports
+→ required, optional, or degraded classification and reason
+→ startup, readiness, request, and recovery behaviour
+→ safe failure/recovery observations and health effect
+→ metric/status signal and alert decision
+→ implementation, local, target, and runtime proof
+```
+
+It deliberately does not become a place to copy a password, connection string,
+private address, vendor-specific policy, or provider definition. Those facts
+belong in their own controlled configuration, network, permission, or provider
+records and are linked by safe references.
+
 ### Behaviour must be observable
 
 Each declared failure and recovery behaviour also needs a safe observation
@@ -717,6 +784,61 @@ terms. Target infrastructure remains authoritative for real subnets, routes,
 security groups, DNS, load balancers, and firewall rules. Target alignment
 will compare the declared requirement with safe live facts. Local tests use a
 safe equivalent rather than pretending a laptop network is AWS.
+
+### Building a connection path
+
+A connection is a chain, not one setting:
+
+```text
+destination name
+→ name resolution
+→ route
+→ narrow network rule
+→ transport and application protocol
+→ TLS encryption and endpoint identity
+→ application authentication and provider permission
+```
+
+Each point answers a different question. A name-resolution failure means the
+workload could not turn the name into an address; it does not prove that a route
+or firewall rule is wrong. A timeout can mean the name resolved but the
+connection did not complete; it does not prove which rule caused it. A refusal
+means a reachable endpoint was not accepting that entrance. A TLS failure is
+about secure connection setup or endpoint identity, not evidence that the
+password is wrong.
+
+The transport is the basic connection method, commonly TCP. The application
+protocol is the language spoken over it, such as PostgreSQL or HTTPS. The port
+is the numbered entrance, such as PostgreSQL's usual `5432`. All three need to
+be declared independently.
+
+### TLS and certificates
+
+TLS has two jobs: encrypt the connection and verify that the workload reached
+the intended server. The server endpoint normally presents the certificate; a
+database client verifies it and then authenticates separately with its own
+credentials. A certificate therefore belongs to an endpoint, not automatically
+to every dependency record or every client.
+
+One certificate may cover multiple names, a provider may manage and rotate it,
+or an internal certificate authority may issue it. Mutual TLS is different: it
+also asks the client to present a certificate and is a deliberate client-
+authentication design. The scope must not fall back to plaintext or skip server
+identity verification merely because TLS is difficult to configure.
+
+### What the future network record will declare
+
+The future provider-neutral network record will name the workload and logical
+destination, then declare the resolution policy, transport, application
+protocol, port, private/public boundary, route expectation, narrow
+source-to-destination rule, TLS and server-identity policy, any client-
+authentication reference, local equivalent, safe diagnostic categories, and
+local/target/runtime proof.
+
+It will link to—rather than duplicate—the target provider's real DNS names,
+addresses, subnets, routes, firewall or security-group rules, certificates,
+certificate rotation, and mutual-TLS configuration. It must never store a
+private address, certificate body, or secret value merely for convenience.
 
 ## 15. Safe Diagnostics: Useful Errors Without Leaks
 
@@ -794,7 +916,127 @@ No. A useful error identifies the safe logical dependency and observed failure,
 then sends the agent to the next approved evidence check. Detail without
 redaction is a security incident, not good observability.
 
-## 16. Next Lesson Queue
+## 16. Identity, Authentication, Authorisation, and Workload Access
+
+Authentication asks “who are you?” Authorisation asks “what may you do?” They
+are related but must not be confused.
+
+```text
+user request
+  → application authentication identifies the user
+  → platform authorisation decides whether that user may perform an operation
+
+running workload
+  → workload authentication identifies the server to a dependency
+  → provider or dependency permission decides what that server may do there
+```
+
+For example, platform authorisation decides whether Alice may update a profile
+in her tenant. Infrastructure cannot make that decision: AWS sees the platform
+server, not Alice or the tenant rule. Infrastructure instead limits what the
+server process can reach if it is misconfigured or compromised.
+
+### The identities around one workload
+
+Each identity has a separate job and should receive only the authority needed
+for that job:
+
+| Identity | Job |
+| --- | --- |
+| User identity | Identifies the person or client making an application request. |
+| Pipeline identity | Lets the delivery pipeline publish and deploy an approved package. |
+| ECS execution role | Lets AWS prepare a task: pull an image, write logs, and obtain approved startup inputs. |
+| ECS task role | Lets the running application call narrowly approved AWS services. |
+| Dependency identity | Lets the running application authenticate to PostgreSQL, an external API, or another non-AWS dependency. |
+
+The pipeline identity must not silently become the server's runtime identity.
+The execution role must not become a broad application role. A user-facing
+authorisation rule must not be treated as an IAM policy. These separations
+limit the consequences of a faulty component or leaked credential.
+
+### Supplying a dependency identity
+
+A workload can prove itself to a dependency in different ways:
+
+```text
+AWS task role
+→ calling an AWS service directly
+
+secret-backed service account
+→ logging into PostgreSQL or another service protocol
+
+API token or OAuth client credential
+→ calling an external API
+
+mutual-TLS client certificate
+→ proving a client identity during the TLS connection
+```
+
+The repository declares a safe reference and the required capability, never a
+credential value. For a database login, that might be a username configuration
+reference plus a password secret reference. For an AWS service call, it might
+be a task-role action and resource reference. The real password, token, private
+key, and certificate body remain in approved identity or secret-management
+systems.
+
+### Lifecycle: create, supply, rotate, revoke
+
+```text
+create
+→ provider or identity system establishes the identity
+
+supply
+→ approved workload mechanism receives a safe reference or value
+
+use
+→ application authenticates only for its declared dependency operation
+
+rotate
+→ provider and secret store are updated together; workload refresh behaviour is proved
+
+revoke
+→ access, references, and identity are removed when the dependency is retired
+```
+
+When ECS injects a secret at task start, a running task normally retains the
+value it started with. Rotation may therefore require replacement tasks: the
+replacement receives the new value, proves readiness, and then replaces the
+old task. A design may support safe live refresh, but that must be explicit and
+tested rather than assumed.
+
+### Identity failures are distinct
+
+```text
+missing credential reference
+→ workload was not given needed identity material
+
+credential rejected
+→ dependency was reached but did not accept the identity
+
+permission denied
+→ identity was accepted but lacks the needed action
+
+secret retrieval denied
+→ AWS could not supply the approved material to the relevant role
+```
+
+Each result has a different next check. Diagnostics record the observed
+category, operation, logical dependency, lifecycle stage, and safe next check;
+they never print a username, password, token, connection string, or secret
+value. A required dependency normally keeps the workload not-ready until it is
+safe, while an individual request must be rejected honestly if its required
+identity or permission is unavailable.
+
+### Architecture intent
+
+The future workload identity and access record will link an operation and
+dependency to its authentication method, safe identity/credential reference,
+supply and refresh method, rotation/revocation owner, narrow permissions,
+failure behaviour, diagnostics, and proof. It will link to authoritative IAM,
+secret-management, provider, and application-auth definitions rather than
+duplicating them.
+
+## 17. Next Lesson Queue
 
 Continue this handbook incrementally with:
 

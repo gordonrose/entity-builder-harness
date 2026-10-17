@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 17
+version: 19
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -150,8 +150,8 @@ owner, and whether the design is ready or still needs detailed design.
 | Configuration and secret references | Typed module configuration plus target scope declaration and authoritative target binding | Required/optional status, validation, safe secret-reference handling, local and target proof | `03.product` and `04.deploy` | Planned; field-level scope design remains to be reviewed |
 | Dependency and availability behaviour | Scope declaration and workload binding, linked to foundation or scope-owned resource | Required/optional/degraded classification; startup, readiness, request, recovery behaviour; safe failure/recovery diagnostics; health effect; metric/status signal; alert policy; and proof | `04.deploy`, with product contracts where the failure originates | Needs dedicated contract, schema, field guide, fixtures, and checker design |
 | Foundation resource and provider selection | Target-local foundation index, scope declaration, workload binding, authoritative provider declaration | Ownership/lifecycle rationale, adapter compatibility, resource identity, consumer, migration and rollback proof | `04.deploy` | Planned in Phase 1 and later binding phases |
-| Network relationship | Scope/workload requirement linked to authoritative provider network declaration | Safe proof of name resolution, route, allowed source/destination/protocol/port, TLS where required, and local equivalent | `04.deploy`, with product diagnostics at the connection boundary | Needs dedicated requirement model, fixtures, and alignment-check design |
-| Workload access and application authentication | Workload binding and authoritative provider/IAM or application-auth declaration | Narrow action/resource access; safe authentication failure proof; separation of execution, runtime, and application identities | `03.product` and `04.deploy` | Access planned; application-auth detail remains to be designed |
+| Network relationship | Scope/workload network requirement linked to authoritative provider network declaration | Safe proof of name resolution, transport/application protocol and port, route, narrow source/destination rule, TLS/server-identity policy, local equivalent, and target/runtime evidence | `04.deploy`, with product diagnostics at the connection boundary | Needs dedicated contract, schema, field guide, fixtures, and alignment-check design |
+| Workload identity, access, and application authentication | Workload identity/access record, workload binding, and authoritative provider/IAM or application-auth declaration | Authz versus workload-identity separation; narrow action/resource access; safe credential supply, rotation/revocation, and authentication-failure proof; execution/runtime/dependency identity separation | `03.product` and `04.deploy` | Needs dedicated contract, schema, field guide, fixtures, and checker design |
 | Health and recovery | Runnable-program behaviour, image contract, scope declaration, target health declaration | Process, liveness, readiness, safe meaningful request, rollback/recovery proof | `03.product` and `04.deploy` | Planned; existing checks must be gathered per scope |
 | Safe diagnostics and operational evidence | Shared diagnostic contract, product/adaptor mapping, scope proof references, approved runtime logging | Stable observed-fact code, redaction, stage, retryability, bounded next check, test fixtures, and safe evidence reference | `06.shared`, referenced by `03.product` and `04.deploy` | Needs dedicated standard, taxonomy, schema, fixtures, and gate design |
 | Observability and alerting implementation | Authoritative logging, metric, trace, dashboard, retention, and alert declarations | Event transport, aggregation, retention, threshold, notification, and recovery-observation proof | `04.deploy` and provider-specific operations governance | Deferred from the first scope; required evidence expectations are declared now |
@@ -356,6 +356,76 @@ does not read secret values, capture production error dumps, or duplicate a
 provider's logging, metric, dashboard, or alert definition. Each dependency
 record must reference one declared scope operation; it must not classify a
 provider or resource as universally required, optional, or degraded.
+
+At minimum, the record must carry a stable logical identity and stated
+capability; its operation and promise; its classification and rationale; all
+four lifecycle behaviours; observation and proof references; and safe links to
+the configuration, network, access, and provider/foundation records that make
+the dependency usable. Those linked records retain their own facts. The
+dependency record must not become a copy of a connection string, credential,
+private network address, IAM policy, or provider resource definition.
+
+The request and recovery fields must also distinguish a dependency unavailable
+before work starts, a confirmed failure, and an unknown outcome after work may
+have been sent. An unknown outcome requires an explicit idempotent-retry or
+reconciliation path; no declaration may silently convert it into confirmed
+success, confirmed failure, or unrestricted blind retry. Recovery must
+separately prove availability for new work and state how uncertain in-progress
+work is reconciled.
+
+Before a scope can claim a network relationship is governed, the harness must
+also provide a Network Relationship Governance Artifact Set:
+
+```text
+.agentic/04.deploy/
+  standards/network-relationship.md
+  workflows/change-scope-network-relationship.md
+  schemas/network-relationship.v1.schema.yml
+  schemas/network-relationship.v1.guide.md
+  templates/network-relationship/
+  gates/check-network-relationship.md
+
+scripts/04.deploy/
+  check-network-relationship/
+```
+
+It defines the provider-neutral relationship between a named workload and a
+named dependency/resource: approved destination-name and resolution policy;
+transport and application protocol; port; private/public boundary; route;
+narrow source/destination network rule; TLS encryption and server-identity
+verification policy; any reference to client authentication; local equivalent;
+safe diagnostic categories; and local, target, and runtime proof. The
+authoritative provider declaration owns the real DNS, addresses, subnets,
+routes, firewalls, security groups, certificates, certificate rotation, and
+mutual-TLS configuration. The network record links to those facts; it does not
+duplicate them or store a private address, certificate, or secret value.
+
+Before a scope can claim workload identity, access, or dependency
+authentication is governed, the harness must provide a Workload Identity and
+Access Artifact Set:
+
+```text
+.agentic/04.deploy/
+  standards/workload-identity-and-access.md
+  workflows/change-scope-workload-identity-and-access.md
+  schemas/workload-identity-and-access.v1.schema.yml
+  schemas/workload-identity-and-access.v1.guide.md
+  templates/workload-identity-and-access/
+  gates/check-workload-identity-and-access.md
+
+scripts/04.deploy/
+  check-workload-identity-and-access/
+```
+
+It distinguishes user-facing application authorisation from the identity used
+by a workload to reach a dependency. It records the workload and operation,
+authentication method, safe identity or credential reference, supply method,
+refresh method, rotation and revocation owner, narrow required actions, and
+startup/readiness/request/recovery behaviour. It separately identifies the
+pipeline identity, execution role, runtime role, and any dependency identity;
+one must not be silently reused as another. It links to the authoritative IAM,
+secret-management, provider, and application-auth declarations rather than
+copying role policy, token, password, certificate body, or secret value.
 
 The first target-local layout will be:
 
@@ -563,9 +633,30 @@ proving required, optional, and degraded behaviour; a missing lifecycle action;
 a missing failure or recovery diagnostic; an absent health effect; a missing
 metric/status signal; an intentional no-alert decision; a deferred alert with
 owner/follow-up; an unowned deferred alert; and a proof reference that exposes
-a prohibited sensitive value. The first scope may record a concern as pending
-while its detailed declaration is reviewed, but may not report it as governed
-or fully observed without a valid record.
+a prohibited sensitive value. Include an unknown request outcome without an
+idempotent-retry or reconciliation path, a blind retry of uncertain work, and
+<!-- deterministic-check: allow reason="This is a non-executable fixture requirement for a future checker; the future gate will own the deterministic assertion." -->
+a recovery check that restores readiness without addressing uncertain work.
+The first scope may record a concern as pending while its detailed declaration
+is reviewed, but may not report it as governed or fully observed without a
+valid record.
+
+Create the Network Relationship Governance Artifact Set with fixtures proving
+a valid private connection; a missing name-resolution policy; a missing
+transport, application protocol, or port; an absent route or narrow
+source/destination rule; a TLS-required relationship without server-identity
+verification; a local equivalent that weakens the target requirement; a
+diagnostic that reveals a prohibited sensitive network detail; and a target
+proof reference that does not establish the declared relationship.
+
+Create the Workload Identity and Access Artifact Set with fixtures proving an
+approved workload identity and narrow action/resource access; a user-facing
+authorisation rule incorrectly treated as an infrastructure permission; a
+missing or exposed credential reference; a missing supply or refresh method;
+an unowned rotation or revocation path; an execution, runtime, pipeline, or
+dependency identity reused for the wrong job; authentication rejection without
+safe failure behaviour; and a permission denial without an operation-specific
+access requirement or proof.
 
 Add the target-local pipeline catalogue and its first package-publication
 record for `.github/workflows/deploy-platform-shell-staging.yml`. The record
@@ -796,8 +887,13 @@ binding refers to a runnable-program identifier and names:
 - configuration/declaration-contract scope;
 - selected provider adapters and the foundation or scope-owned resource IDs
   that fulfil their dependencies;
+- selected network-relationship records and their authoritative provider
+  declaration references;
 - attached execution and runtime roles, plus each access requirement's policy
   declaration and bounded action/resource reference;
+- each dependency authentication method, safe credential or identity reference,
+  supply/refresh method, rotation/revocation owner, and safe authentication
+  failure proof;
 - expected dependency-availability behaviour and safe failure/recovery
   diagnostic, health-effect, metric/status, alert-policy, and proof references
   for startup, readiness, real requests, and recovery;
@@ -843,7 +939,11 @@ Possible results are `complete`, `missing-declaration`,
 `provider-selection-incompatible`. It also reports a missing diagnostic
 contract, recovery observation, health effect, metric/status signal, alert
 decision, or proof where a declared dependency has no safe, actionable failure
-path.
+path; an unknown request outcome without reconciliation treatment; and a
+network relationship missing a declared or proved name-resolution, protocol,
+port, route, narrow rule, TLS policy, local equivalent, or target/runtime path;
+or a workload identity/access record missing a supply, rotation, least-
+privilege, operation, or safe authentication-failure link.
 
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
@@ -891,7 +991,11 @@ The preflight consumes the chain-check result and safely confirms live facts:
 - image identity and approved deployment route;
 - selected provider, foundation-resource identity, workload role, and narrow
   access-policy facts;
-- non-secret configuration and secret-name presence;
+- network-relationship facts: approved workload and destination, safe
+  resolution, protocol/port, private/public boundary, narrow rule, and TLS
+  policy where applicable;
+- non-secret configuration and secret-name presence, workload identity/role
+  references, and safe credential supply/rotation facts;
 - permissions, dependencies, health, and rollback configuration;
 - safe diagnostic categories, health effects, metric/status and alert-policy
   references, and safe evidence for target mismatches or unavailable declared
