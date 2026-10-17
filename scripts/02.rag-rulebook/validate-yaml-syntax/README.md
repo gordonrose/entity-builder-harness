@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: rag-rulebook.script.validate-yaml-syntax.readme
-version: 1
+version: 2
 status: active
 layer: 02.rag-rulebook
 domain: validation
@@ -41,7 +41,7 @@ Validate explicit paths:
 
 ```bash
 bash scripts/02.rag-rulebook/validate-yaml-syntax/script.sh \
-  --paths .agentic/02.rag-rulebook docs/04.deploy .agentic/aws
+  --paths .agentic/02.rag-rulebook docs/04.deploy .agentic/04.deploy .agentic/aws
 ```
 
 Emit JSON:

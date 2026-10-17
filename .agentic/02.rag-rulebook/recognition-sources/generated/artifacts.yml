@@ -49,8 +49,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 964
-  term_count: 1941
+  indexed_artifacts: 985
+  term_count: 1984
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2345,6 +2345,18 @@ terms:
   match_type: exact
   canonical_id: chat.script.worktree.paths.lib
   evidence_path: scripts/00.chat/worktree/paths/lib.sh
+  confidence_weight: 1
+- term: chat.script.worktree.paths.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.script.worktree.paths.smoke-test
+  evidence_path: scripts/00.chat/worktree/paths/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/00.chat/worktree/paths/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: chat.script.worktree.paths.smoke-test
+  evidence_path: scripts/00.chat/worktree/paths/smoke-test.sh
   confidence_weight: 1
 - term: harness.readme
   category: artifact-id
@@ -8172,6 +8184,180 @@ terms:
   canonical_id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
   evidence_path: docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md
   confidence_weight: 1
+- term: deploy.layer.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.layer.readme
+  evidence_path: .agentic/04.deploy/README.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.layer.readme
+  evidence_path: .agentic/04.deploy/README.md
+  confidence_weight: 1
+- term: deploy.lifecycle.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.lifecycle.readme
+  evidence_path: .agentic/04.deploy/lifecycle/README.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/lifecycle/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.lifecycle.readme
+  evidence_path: .agentic/04.deploy/lifecycle/README.md
+  confidence_weight: 1
+- term: deploy.plan.implementation.platform-to-target-chain-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.implementation.platform-to-target-chain-control
+  evidence_path: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.implementation.platform-to-target-chain-control
+  evidence_path: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md
+  confidence_weight: 1
+- term: deploy.plan.migration.aws-provider-neutral-transition
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.migration.aws-provider-neutral-transition
+  evidence_path: .agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.migration.aws-provider-neutral-transition
+  evidence_path: .agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md
+  confidence_weight: 1
+- term: deploy.providers.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.providers.readme
+  evidence_path: .agentic/04.deploy/providers/README.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/providers/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.providers.readme
+  evidence_path: .agentic/04.deploy/providers/README.md
+  confidence_weight: 1
+- term: deploy.schema.declaration-contract.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.declaration-contract.v1.guide
+  evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/schemas/declaration-contract.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.declaration-contract.v1.guide
+  evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.declaration-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.declaration-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.declaration-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
+  confidence_weight: 1
+- term: declaration-contract.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.declaration-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.standards.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.readme
+  evidence_path: .agentic/04.deploy/standards/README.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.readme
+  evidence_path: .agentic/04.deploy/standards/README.md
+  confidence_weight: 1
+- term: deploy.standards.declaration-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.declaration-coverage
+  evidence_path: .agentic/04.deploy/standards/declaration-coverage.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/declaration-coverage.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.declaration-coverage
+  evidence_path: .agentic/04.deploy/standards/declaration-coverage.md
+  confidence_weight: 1
+- term: deploy.standards.lifecycle-stage-ownership
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.lifecycle-stage-ownership
+  evidence_path: .agentic/04.deploy/standards/lifecycle-stage-ownership.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/lifecycle-stage-ownership.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.lifecycle-stage-ownership
+  evidence_path: .agentic/04.deploy/standards/lifecycle-stage-ownership.md
+  confidence_weight: 1
+- term: deploy.standards.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/target-alignment-preflight.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  confidence_weight: 1
+- term: deploy.workflows.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflows.readme
+  evidence_path: .agentic/04.deploy/workflows/README.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/workflows/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflows.readme
+  evidence_path: .agentic/04.deploy/workflows/README.md
+  confidence_weight: 1
+- term: deploy.workflow.declaration-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.declaration-coverage
+  evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/workflows/declaration-coverage.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.declaration-coverage
+  evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
+  confidence_weight: 1
+- term: deploy.workflow.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  confidence_weight: 1
 - term: aws.readme
   category: artifact-id
   match_type: exact
@@ -9372,6 +9558,66 @@ terms:
   canonical_id: deploy.script.build-platform-shell-image.verify-runtime-payload
   evidence_path: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
   confidence_weight: 1
+- term: deploy.script.inventory-deploy-control.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control.readme
+  evidence_path: scripts/04.deploy/inventory-deploy-control/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/inventory-deploy-control/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control.readme
+  evidence_path: scripts/04.deploy/inventory-deploy-control/README.md
+  confidence_weight: 1
+- term: deploy.script.inventory-deploy-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control
+  evidence_path: scripts/04.deploy/inventory-deploy-control/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/inventory-deploy-control/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control
+  evidence_path: scripts/04.deploy/inventory-deploy-control/script.sh
+  confidence_weight: 1
+- term: deploy.script.inventory-deploy-control.smoke-test
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control.smoke-test
+  evidence_path: scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.inventory-deploy-control.smoke-test
+  evidence_path: scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.declaration-coverage.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.declaration-coverage.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.declaration-coverage.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
+  confidence_weight: 1
+- term: deploy.script.target-alignment-preflight.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.target-alignment-preflight.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/target-alignment-preflight/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/target-alignment-preflight/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.target-alignment-preflight.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/target-alignment-preflight/README.md
+  confidence_weight: 1
 - term: deploy.script.operational-realization-gate.readme
   category: artifact-id
   match_type: exact
@@ -9923,6 +10169,18 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.script.run-platform-shell-postgresql-relational-smoke.test-immutable-bootstrap-effects-override
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.test-immutable-bootstrap-effects-override
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test-immutable-bootstrap-effects-override.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test-immutable-bootstrap-effects-override.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.run-platform-shell-postgresql-relational-smoke.test-immutable-bootstrap-effects-override
+  evidence_path: scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/test-immutable-bootstrap-effects-override.mjs
   confidence_weight: 1
 - term: deploy.script.run-platform-shell-rate-limit-smoke.readme
   category: artifact-id

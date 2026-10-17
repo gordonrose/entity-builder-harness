@@ -50,8 +50,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 122
-  workflow_files: 39
+  term_count: 126
+  workflow_files: 41
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -481,6 +481,18 @@ terms:
   canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
   evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
   confidence_weight: 1
+- term: .agentic/04.deploy/workflows/declaration-coverage.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.declaration-coverage
+  evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
   match_type: exact
@@ -673,6 +685,12 @@ terms:
   canonical_id: 01.harness.workflow.create-rule-pack.workflow
   evidence_path: .agentic/01.harness/workflows/create-rule-pack.workflow.md
   confidence_weight: 1
+- term: declaration-coverage.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.declaration-coverage
+  evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
+  confidence_weight: 1
 - term: default.md
   category: workflow-name
   match_type: exact
@@ -780,6 +798,12 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
+  confidence_weight: 1
+- term: target-alignment-preflight.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
 - term: untrusted-input-and-bounded-agent-safety.md
   category: workflow-name

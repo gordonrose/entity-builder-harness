@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: rag-rulebook.script.validate-yaml-syntax
-#   version: 1
+#   version: 2
 #   status: active
 #   layer: 02.rag-rulebook
 #   domain: validation
@@ -82,6 +82,7 @@ if [ "${#PATHS[@]}" -eq 0 ]; then
     "docs/03.product"
     "docs/04.deploy"
     "docs/06.shared"
+    ".agentic/04.deploy"
     ".agentic/aws"
   )
 fi

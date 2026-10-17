@@ -1,0 +1,66 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.schema.declaration-contract.v1
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: schema
+#   purpose: Define the machine-readable shape of a bounded deployment declaration contract.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.standards.declaration-coverage
+#     path: .agentic/04.deploy/standards/declaration-coverage.md
+#   - id: deploy.schema.declaration-contract.v1.guide
+#     path: .agentic/04.deploy/schemas/declaration-contract.v1.guide.md
+schema: deploy/declaration-contract-schema/v1
+required:
+  - schema
+  - id
+  - status
+  - target
+  - scope
+  - requirements
+field_guide:
+  - path: schema
+    meaning: Identifies the declaration-contract format.
+    rules: Must equal deploy/declaration-contract/v1 in a contract instance.
+  - path: id
+    meaning: Stable identifier for one bounded declaration scope.
+    rules: Must not be reused for a materially different capability scope.
+  - path: target
+    meaning: Names the target profile and environment this contract expects.
+    rules: Must not contain credentials or secret values.
+  - path: scope
+    meaning: States what the contract covers and explicitly excludes.
+    rules: A coverage result applies only to the named scope.
+  - path: requirements[]
+    meaning: Lists the complete declaration and proof chain for one requirement.
+    rules: Each item must have a unique id, owner, non-secret expectation, declaration, and proof references.
+requirement_required:
+  - id
+  - purpose
+  - required_by
+  - declarations
+  - expectation
+  - local_proofs
+  - target_proofs
+  - owner
+requirement_optional:
+  - package_proofs
+  - run_proofs
+  - notes
+prohibitions:
+  - secret values
+  - tokens
+  - raw provider responses
+  - customer data
+  - unbounded provider queries
