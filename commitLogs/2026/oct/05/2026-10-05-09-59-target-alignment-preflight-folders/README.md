@@ -56,6 +56,10 @@ can you walk me through which part of my repo work on the following stages
 - Placed Declaration Coverage before Target Alignment: it accounts for each
   declared requirement and proof path before any provider inspection begins.
 
+
+- Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
+  Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
+
 ## Context Hygiene
 
 
@@ -94,6 +98,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
   Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
+
+- Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
 
 ## Activity Log
 
@@ -346,6 +354,20 @@ ADR impact: No ADR: this refines the draft provider-neutral governance and educa
 Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
 
 Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
+
+### 2026-10-18T23:48:58Z - Decision
+
+Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
+
+Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
+
+
+### 2026-10-18T23:49:03Z - Context hygiene
+
+Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
 
 ## Sub-Agent Activity
 
