@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 24
+version: 26
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -56,6 +56,43 @@ The initial vertical slice is the existing Kanbien Platform public server only.
 Workers, relay, PostgreSQL Stage 6, identity provisioning, ingress, and
 observability delivery remain out of scope until this slice is proven. This
 preserves the existing PostgreSQL controls and avoids a broad reorganisation.
+
+## Staged Foundation Model
+
+The initial public-server slice is the **bootstrap runtime slice**, not a claim
+that the full platform foundation already exists. Its purpose is to prove that
+one exact server package can be configured, deployed, observed safely enough
+to make a release decision, and restored to a prior immutable package. It
+includes the runnable server, configuration and secret-reference boundary,
+health/readiness, package and delivery route, rollback route, and safe release
+receipts. It deliberately does not claim durable application data, end-user
+security, external integration, queue processing, or a complete production
+observability service.
+
+The intended foundation grows in ordered slices:
+
+```text
+bootstrap runtime and minimum release evidence
+  -> persistence foundation
+  -> application security boundary
+  -> fuller observability foundation
+  -> product capabilities that use those foundations
+```
+
+This order avoids circular proof: for example, initial delivery receipts live
+in the delivery system rather than relying on an application persistence
+capability whose own safe deployment is still being proved. A later foundation
+slice must declare its configuration, provider selection, network, workload
+access, failure behaviour, observation, recovery, and proof before product
+capabilities may rely on it.
+
+Existing `packages/core/` and `platform/` work remains the factual product
+source. The plan does not duplicate or relocate that work into `infra`. It
+first maps only the core/package and platform modules actually composed by the
+bootstrap runnable program; later foundation slices bring their relevant
+modules, adapters, configuration surfaces, and tests into the same controlled
+chain. A module is not assumed deployable solely because it exists, and a
+module not selected by a scope is not prematurely treated as a gap.
 
 ## Repo-Wide Agentic Change-Governance Outcome
 
@@ -1179,6 +1216,13 @@ state, and actual observation. The preflight must distinguish `match`,
 `mismatch`, `insufficient-evidence`, and explicit `not-applicable`; only all
 required `match` results allow the delivery pipeline to proceed.
 
+An approved pending transition is comparison context, not a fifth assertion
+verdict: before candidate deployment, the previous accepted digest may still be
+the expected actual state. After deployment, only an accepted candidate-specific
+live-verification receipt may advance the known healthy baseline. A rejected or
+unproved candidate never becomes baseline merely because it was selected,
+started, or briefly answered a health request.
+
 The preflight safely confirms assertions including:
 
 - destination identity and selected workload;
@@ -1207,6 +1251,12 @@ It has two required use points with the same comparison contract:
 2. **Pre-deploy refresh:** re-run the comparison immediately before target
    mutation so a changed account, workload, permission, setting, dependency,
    health policy, or rollback route cannot be hidden by an old result.
+
+The resulting evidence sequence is: approved candidate and declaration,
+fresh pre-deployment observation, approved delivery action, candidate-specific
+live verification, then acceptance or rejection receipt. Only acceptance links
+the selected immutable digest and its proved target facts to the next baseline;
+the detector itself never repairs a mismatch or initiates another deployment.
 
 No secret values may be read or reported. The future AWS read adapter remains
 subject to the existing AWS workflow and approval boundary. It uses a dedicated

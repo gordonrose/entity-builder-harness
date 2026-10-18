@@ -87,6 +87,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
   Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
+
+- Summary: Refined the deployment learning model: the public server is the bootstrap runtime slice, not the complete platform foundation. The agreed staged foundation order is bootstrap runtime/release evidence, persistence, application security, fuller observability, then product capabilities. Existing platform and core code remains factual source material and will be brought into scope incrementally.
+  Durable evidence: Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md and docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The next approved activity is a read-only inventory of modules composed by the bootstrap server.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -313,6 +317,13 @@ ADR impact: No ADR: this remains draft provider-neutral governance and education
 Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
 
 Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
+
+### 2026-10-18T22:40:12Z - Context hygiene
+
+Summary: Refined the deployment learning model: the public server is the bootstrap runtime slice, not the complete platform foundation. The agreed staged foundation order is bootstrap runtime/release evidence, persistence, application security, fuller observability, then product capabilities. Existing platform and core code remains factual source material and will be brought into scope incrementally.
+
+Durable evidence: Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md and docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The next approved activity is a read-only inventory of modules composed by the bootstrap server.
 
 ## Sub-Agent Activity
 

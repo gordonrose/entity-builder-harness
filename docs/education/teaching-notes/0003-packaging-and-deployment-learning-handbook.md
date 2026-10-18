@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 13
+  version: 15
   status: active
   layer: 05.education
   domain: education
@@ -61,7 +61,8 @@ checks remain the evidence.
 18. [Target alignment and drift](#18-target-alignment-and-drift)
 19. [Defining a scope's responsibilities](#19-defining-a-scopes-responsibilities)
 20. [Package publication and custody](#20-package-publication-and-custody)
-21. [Next lesson queue](#21-next-lesson-queue)
+21. [Foundation bootstrap and existing product work](#21-foundation-bootstrap-and-existing-product-work)
+22. [Next lesson queue](#22-next-lesson-queue)
 
 ## 1. The Deployment Journey
 
@@ -1279,6 +1280,12 @@ baseline require task role X but the fresh target observation reports role Y.
 The check reports that mismatch; it never fixes the role or triggers another
 deployment by itself.
 
+An approved pending release is not a fifth assertion result. Before candidate
+digest B is deployed, the target continuing to run accepted digest A is an
+expected transition state. The assertion results remain `match`, `mismatch`,
+`insufficient-evidence`, and `not-applicable`; the approved transition merely
+explains why A is currently expected.
+
 ```text
 detection never implies remediation
 remediation never implies deployment
@@ -1318,6 +1325,22 @@ role names, configuration and secret-reference names, health configuration,
 and safe drift-evidence status. It cannot deploy, alter resources, retrieve
 secret values, or expand its own permission. If it cannot safely establish a
 fact, the honest result is `insufficient-evidence`.
+
+### How evidence moves forward
+
+```text
+approved candidate and declaration
+→ fresh pre-deployment observation
+→ approved delivery action
+→ candidate-specific live verification
+→ acceptance or rejection receipt
+```
+
+Only an **accepted** receipt advances the known healthy baseline. A candidate
+that was selected, started, or briefly answered a generic health check has not
+earned that status. A rejection preserves the prior accepted baseline and its
+safe failure evidence. The alignment check only observes and records; it never
+repairs AWS or launches another deployment itself.
 
 ### First core-server slice
 
@@ -1472,11 +1495,57 @@ schema, fixtures, and checker. Target-local pipeline records will link the
 existing GitHub workflow to its source-to-digest evidence without copying its
 steps or granting it deployment authority.
 
-## 21. Next Lesson Queue
+## 21. Foundation Bootstrap and Existing Product Work
+
+A minimum usable platform foundation is larger than a server process, but it
+does not have to arrive in one risky deployment. The server is the **bootstrap
+runtime slice**: it proves we can start, configure, release, verify, and
+restore one exact package. It is not yet a complete application foundation.
+
+```text
+bootstrap runtime and release evidence
+→ persistence
+→ application security boundary
+→ fuller observability
+→ product capabilities
+```
+
+The bootstrap slice includes a runnable server, configuration and
+secret-reference validation, health/readiness, immutable package identity,
+approved delivery/rollback route, and safe GitHub Actions receipts. It does
+not claim durable user data, end-user login/authorisation, queues, external
+integrations, or complete dashboards and alerts.
+
+The staged order prevents circular proof. For example, the first deployment
+receipt is held by the delivery system, rather than by a new persistence
+capability whose own deployment has not yet been proved.
+
+### Existing platform and core code
+
+Existing `packages/core/` and `platform/` work is retained as the factual
+source for what the software does. The plan does not copy it into `infra` or
+replace it with a second manifest. Instead, it progressively links selected
+modules to their public boundary, configuration surface, adapters, tests,
+runnable program, and deployment scope.
+
+```text
+platform capability
+→ adapter when selected
+→ runnable program
+→ target resource and access
+→ configuration, behaviour, and proof
+```
+
+The first inventory looks only at modules actually used by the bootstrap server.
+A later persistence, security, or observability slice brings its own relevant
+modules and adapters into the chain. A module does not become a deployment
+scope merely because it exists, and an unselected module is not automatically a
+gap.
+
+## 22. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
-1. live verification and drift evidence;
-2. the public-server scope's complete evidence map;
-3. additional scopes: shared foundation, worker/queue, relay, PostgreSQL,
+1. the public-server scope's complete evidence map;
+2. additional scopes: shared foundation, worker/queue, relay, PostgreSQL,
    identity/access, public ingress, and observability/alerting.
