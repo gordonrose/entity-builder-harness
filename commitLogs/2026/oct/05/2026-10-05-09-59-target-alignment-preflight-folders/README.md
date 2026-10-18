@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-18T21:04:40Z
-latest_commit_sha: 49f12712
-chat_duration: 1166711s (13:12:05:11)
+latest_commit_at_utc: 2026-10-18T22:40:52Z
+latest_commit_sha: cfb65999
+chat_duration: 1172483s (13:13:41:23)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -86,6 +86,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
   Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
+
+- Summary: Refined the deployment learning model: the public server is the bootstrap runtime slice, not the complete platform foundation. The agreed staged foundation order is bootstrap runtime/release evidence, persistence, application security, fuller observability, then product capabilities. Existing platform and core code remains factual source material and will be brought into scope incrementally.
+  Durable evidence: Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md and docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The next approved activity is a read-only inventory of modules composed by the bootstrap server.
+
+
+- Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
+  Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
 ## Activity Log
 
@@ -314,6 +322,31 @@ Summary: Refreshed the active chat branch from local main through a governed reh
 
 Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
+
+### 2026-10-18T22:40:12Z - Context hygiene
+
+Summary: Refined the deployment learning model: the public server is the bootstrap runtime slice, not the complete platform foundation. The agreed staged foundation order is bootstrap runtime/release evidence, persistence, application security, fuller observability, then product capabilities. Existing platform and core code remains factual source material and will be brought into scope incrementally.
+
+Durable evidence: Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md and docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The next approved activity is a read-only inventory of modules composed by the bootstrap server.
+
+
+### 2026-10-18T22:40:52Z - Commit recorded
+
+Commit: `cfb65999`
+
+Message: docs(deploy): stage platform foundation controls
+
+Summary: Defined the bootstrap runtime slice, staged persistence/security/observability foundation order, and incremental product/core integration path. Existing platform and core code remains factual source material; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: this refines the draft provider-neutral governance and education model without making a live target, provider-authority, or deployed-architecture decision.
+
+
+### 2026-10-18T22:41:35Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
+
+Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -370,6 +403,13 @@ Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830;
   Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
   ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
 
+
+- Commit: `cfb65999`
+  Time UTC: 2026-10-18T22:40:52Z
+  Message: docs(deploy): stage platform foundation controls
+  Summary: Defined the bootstrap runtime slice, staged persistence/security/observability foundation order, and incremental product/core integration path. Existing platform and core code remains factual source material; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: this refines the draft provider-neutral governance and education model without making a live target, provider-authority, or deployed-architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -383,9 +423,9 @@ Reason: This change refines a draft provider-neutral governance plan and teachin
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-18T21:04:40Z
-Latest commit SHA: 49f12712
-Chat duration: 1166711s (13:12:05:11)
+Latest commit at UTC: 2026-10-18T22:40:52Z
+Latest commit SHA: cfb65999
+Chat duration: 1172483s (13:13:41:23)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
