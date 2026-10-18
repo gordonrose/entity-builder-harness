@@ -276,6 +276,22 @@ Summary: Expanded the deployment-control plan and teaching handbook with depende
 
 ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
 
+### 2026-10-18T21:01:46Z - Context hygiene
+
+Summary: Continued the deployment learning and draft control design without
+mutating AWS, targets, secrets, runtime code, or PostgreSQL. The uncommitted
+plan and handbook now cover health and release verification, recovery and
+rollback evidence, safe observability and alerting, target alignment and
+drift, scope responsibility inventories, and package publication, custody,
+promotion, and policy exceptions.
+
+Durable evidence: `.agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md`
+and `docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md`.
+Both files are intentionally uncommitted pending the user's later review and
+explicit commit request. The plan defines future provider-neutral artifact
+sets only; it does not authorise target inspection, AWS mutation, deployment,
+or automatic remediation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.

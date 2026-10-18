@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 8
+  version: 13
   status: active
   layer: 05.education
   domain: education
@@ -56,7 +56,12 @@ checks remain the evidence.
 13. [Dependencies and availability behaviour](#13-dependencies-and-availability-behaviour)
 14. [Networking: reaching a dependency](#14-networking-reaching-a-dependency)
 15. [Safe diagnostics: useful errors without leaks](#15-safe-diagnostics-useful-errors-without-leaks)
-16. [Next lesson queue](#16-next-lesson-queue)
+16. [Identity, authentication, authorisation, and workload access](#16-identity-authentication-authorisation-and-workload-access)
+17. [Observability and alerts](#17-observability-and-alerts)
+18. [Target alignment and drift](#18-target-alignment-and-drift)
+19. [Defining a scope's responsibilities](#19-defining-a-scopes-responsibilities)
+20. [Package publication and custody](#20-package-publication-and-custody)
+21. [Next lesson queue](#21-next-lesson-queue)
 
 ## 1. The Deployment Journey
 
@@ -210,6 +215,88 @@ The repository contains local image smoke checks for `/livez` and `/readyz`,
 ECS and load-balancer health declarations, an ingress smoke check, and a
 controlled protected-route smoke check. They are not yet assembled into a
 single formal health-evidence record for the public-server scope.
+
+### Different failures need different responders
+
+| Observed problem | Safe immediate response | Primary responder |
+| --- | --- | --- |
+| Process crashes or freezes | Replace the task. | ECS or equivalent workload runtime. |
+| Required dependency is temporarily unavailable | Stay alive if safe, become not-ready, and give a safe diagnostic. | Application. |
+| One ordinary request fails | Reject that request honestly; do not automatically take down the server. | Application. |
+| New release cannot become ready or verify | Reject the candidate and preserve the prior healthy release. | Deployment mechanism. |
+
+This separates **recovery** from **rollback**. Recovery keeps the intended
+release and restores it after a temporary problem. Rollback stops using a new
+release because evidence indicates that the release itself is unsafe.
+
+```text
+temporary database outage while version A is running
+→ A becomes not-ready
+→ dependency returns
+→ A proves readiness and resumes
+
+new version B fails verification
+→ reject B
+→ restore prior tested version A
+→ verify A again
+```
+
+### Accepting or rejecting a deployment candidate
+
+A release needs a decision window: a declared startup grace period and
+deadline. It is accepted only when the target proves the selected immutable
+image digest is running at the required healthy capacity, passes liveness and
+readiness, remains stable for that window, and passes a meaningful operation
+check. It is rejected if it misses the deadline, repeatedly stops, fails a
+required check, or reports a declared blocking diagnostic.
+
+During a gradual rollout, old version A and new version B may run together.
+Traffic must reach only ready tasks, and healthy A tasks stay available until
+B has earned further rollout. A simple initial policy can keep the old healthy
+task serving until its replacement has become ready and passed verification.
+
+### Meaningful and candidate-specific verification
+
+A meaningful verification proves a small, safe, deterministic operation tied
+to a scope promise. It should not alter real user data or claim to test every
+feature. Its response must also identify the candidate release, because a
+shared load-balancer route can otherwise return a healthy response from old
+version A while version B is broken.
+
+```text
+successful smoke response
++ observed release identity equals selected image digest B
+= candidate B was verified
+```
+
+The scope may use a candidate-aware response, a candidate-specific route, or
+provider deployment-controller evidence combined with an application check.
+Any release identity returned by an endpoint must expose only approved safe
+metadata.
+
+### Receipts and rollback proof
+
+Each deployment verification produces a safe receipt, for example:
+
+```text
+scope, target, candidate digest, workload revision, verification operation,
+time, result, observed release identity, health state, diagnostic code when
+needed, and an evidence reference
+```
+
+Initially, a GitHub Actions deployment run stores the receipt as a
+machine-readable artifact and a human-readable job summary. Git stores the
+requirement and the safe evidence reference, not the receipt. A later durable
+operational evidence store can replace or supplement that route only after its
+retention, access, independence, and bootstrap behaviour are reviewed.
+Application persistence is not automatically suitable: deployment evidence may
+be needed to prove that the persistence capability itself was safely deployed.
+
+Rollback always selects the recorded prior **immutable digest**, never a
+movable tag. It is complete only after the restored digest is running at the
+required healthy capacity and passes readiness plus the meaningful verification
+again. The rejected candidate's safe failure evidence is retained so the same
+broken release is not blindly retried.
 
 ### Misconception check
 
@@ -904,9 +991,11 @@ dashboard, alert threshold, and notification route. This separation prevents
 one dependency record from becoming a duplicate monitoring-system definition.
 
 Never expose passwords, tokens, private keys, full connection strings, secret
-values, sensitive headers, or raw provider responses that could contain them.
-The repository stores diagnostic contracts, mappings, tests, and safe evidence
-references—not production error dumps.
+values, sensitive headers, raw provider responses that could contain them, or
+PII by default. PII includes names, email addresses, phone numbers, addresses,
+profile content, uploaded files, and personal identifiers when a safer opaque
+correlation ID will do. The repository stores diagnostic contracts, mappings,
+tests, and safe evidence references—not production error dumps.
 
 ### Misconception check
 
@@ -1036,16 +1125,358 @@ failure behaviour, diagnostics, and proof. It will link to authoritative IAM,
 secret-management, provider, and application-auth definitions rather than
 duplicating them.
 
-## 17. Next Lesson Queue
+## 17. Observability and Alerts
+
+Observability is the ability to understand how a running system is behaving.
+An alert is the smaller set of observations that requires a named person or
+automation to act.
+
+| Evidence | Main job | Example |
+| --- | --- | --- |
+| Log | Explain one observed event. | “Storage authentication rejected during readiness.” |
+| Metric | Count or trend a condition. | “Ready task count is zero.” |
+| Trace | Follow one operation through several components. | “Request reached the server then timed out at storage.” |
+| Health state | Decide whether traffic is safe. | “This task is not-ready.” |
+| Deployment receipt | Record a release decision. | “Candidate digest B was rejected and digest A restored.” |
+| Alert | Tell an owner that action is needed. | “Zero ready tasks for five minutes.” |
+
+### What must become observable
+
+If a scope changes behaviour in a way that affects safety, availability,
+correctness, or recovery, it needs a safe observation path. For a dependency
+failure this commonly means:
+
+```text
+safe diagnostic event
+→ structured log
+→ metric or health-state transition where appropriate
+→ alert only when the declared condition persists or creates serious risk
+→ safe recovery event when normal behaviour is proved again
+```
+
+Not every failure should alert. A single invalid user request may need only a
+safe log or counter. A required dependency making every server task not-ready
+needs a health-state change, evidence for investigation, and usually an alert
+if it persists.
+
+### Evidence has different owners
+
+```text
+application
+→ operation outcome, dependency behaviour, diagnostic code
+
+workload runtime
+→ task starts/stops, health, and replacement activity
+
+provider resources
+→ database, queue, network, IAM, and load-balancer facts
+
+delivery pipeline
+→ candidate digest, deployment decision, verification receipt, rollback result
+```
+
+Each producer records the facts it actually knows. The evidence is joined by
+safe identifiers rather than copying private data between systems.
+
+### Correlation identifiers
+
+```text
+scope and target
+→ which bounded deployment concern and destination?
+
+release digest and workload revision
+→ which exact deployed software and runtime recipe?
+
+operation and dependency
+→ which promised job and logical facility were involved?
+
+diagnostic code
+→ which observed failure category occurred?
+
+request ID and trace ID, when needed
+→ which individual operation crossed components?
+```
+
+Request and trace IDs must be random opaque values, never a user ID, email,
+session token, or encoded personal data. Metrics use only stable,
+low-cardinality safe labels; individual requests belong in appropriately
+controlled logs or traces, not metric labels.
+
+### Alerts detect impact and guide action
+
+A good alert names its signal, condition, persistence duration, scope,
+severity, owner, safe next check, deduplication rule, and recovery condition.
+
+```text
+signal: ready task count
+condition: zero
+duration: five minutes
+scope: platform-server / kanbien-staging
+next check: inspect readiness diagnostic and active release receipt
+recovery: required healthy capacity returns and meaningful verification passes
+```
+
+A **symptom** alert says users are affected, such as zero ready tasks. A
+**cause** alert says something may lead to impact, such as rising database
+connection failures. Symptom alerts are usually the urgent signal; cause
+alerts help diagnose or warn earlier and can otherwise be noisy.
+
+### Safe evidence, access, and retention
+
+Operational evidence must contain no secret or PII by default. An approved
+exception requires a specific purpose, minimised fields, restricted access,
+defined retention/deletion, access auditability, and protection from broad logs
+or alerts. The evidence design must state where it is stored, who can inspect
+it, how long it is kept, and how it is removed.
+
+The initial core-server slice has a deliberately small contract:
+
+```text
+required now
+→ candidate digest, health result, safe server-level verification,
+  GitHub Actions receipt, rollback receipt when needed
+
+deferred
+→ approved runtime log/metric/trace store, dashboards, notification routes,
+  production alerts, SLOs, and error budgets
+
+excluded until selected by a future scope
+→ persistence, queue, identity, and external-dependency observation
+```
+
+`deferred` requires an owner and follow-up. `excluded` means the scope does not
+use the concern. Neither may be described as complete coverage.
+
+## 18. Target Alignment and Drift
+
+Target alignment is a read-only comparison between what the repository says a
+selected scope needs and safe facts from the real target. It answers:
+
+```text
+Are we looking at the right destination, and is it ready for this approved
+candidate without relying on stale or guessed information?
+```
+
+It does not deploy, repair, reconcile, or read secret values.
+
+### Planned change is not drift
+
+The model keeps three separate records:
+
+| Record | Meaning | Home |
+| --- | --- | --- |
+| Declared desired state | Reviewed intention for the selected scope and candidate. | Versioned repository declarations. |
+| Known live baseline | The last release proved safely running. | Safe deployment verification evidence. |
+| Fresh actual observation | What the provider safely reports now. | Time-limited alignment evidence. |
+
+If digest A is the healthy baseline and digest B is the approved candidate,
+the target still running A before deployment is expected. The alignment check
+asks whether the target can safely receive B; it does not treat A as drift.
+After B is verified, B becomes the new known live baseline.
+
+Drift is an unexplained difference, for example when the repository and known
+baseline require task role X but the fresh target observation reports role Y.
+The check reports that mismatch; it never fixes the role or triggers another
+deployment by itself.
+
+```text
+detection never implies remediation
+remediation never implies deployment
+deployment uses only an approved delivery route
+```
+
+### Assertions and verdicts
+
+An alignment result is a set of assertions, not one vague pass/fail:
+
+```text
+right target and workload
+approved delivery route
+required non-secret configuration and secret-reference names
+roles and narrow access bindings
+health, verification, and rollback prerequisites
+selected dependency/network facts when the scope uses them
+freshness and unexplained drift
+```
+
+Each assertion is `match`, `mismatch`, `insufficient-evidence`, or explicit
+`not-applicable`. A required mismatch or insufficient-evidence result stops the
+delivery pipeline. `not-applicable` is valid only when the scope declaration
+explicitly says that concern is not used.
+
+### Freshness and safe read access
+
+An alignment snapshot records target, checked time, expiry, declared-state
+reference, safe observed facts, verdict, and evidence reference. It may be
+reused only until its declared expiry. A fresh read is required immediately
+before a target mutation, because roles, configuration, services, and other
+facts may have changed since earlier planning.
+
+A dedicated read-only alignment identity may inspect only safe metadata needed
+for declared assertions: target identity, workload/revision, image reference,
+role names, configuration and secret-reference names, health configuration,
+and safe drift-evidence status. It cannot deploy, alter resources, retrieve
+secret values, or expand its own permission. If it cannot safely establish a
+fact, the honest result is `insufficient-evidence`.
+
+### First core-server slice
+
+The first slice aligns only its applicable facts: target/workload identity,
+approved delivery route, declared configuration and role names,
+health/release-verification/rollback prerequisites, and evidence freshness.
+Persistence, queue, identity, and network assertions are excluded until a
+scope actually selects those dependencies. Runtime-observability assertions are
+deferred until their approved evidence route exists.
+
+## 19. Defining a Scope's Responsibilities
+
+An agent must not create a scope by guessing from directory names, or by
+assuming that every platform module is separately deployable. Scope definition
+starts from evidence: a runnable process, the operations it promises, the
+target workload, and the concerns needed to make those promises true.
+
+### The responsibility inventory
+
+Before creating or changing a scope, the agent builds one inventory covering
+every standard concern:
+
+```text
+runnable program and image
+configuration
+dependencies
+foundation/provider selection
+network
+workload identity and access
+health, recovery, and rollback
+observability
+delivery route
+target alignment
+```
+
+Every concern must have one of four states:
+
+| State | Meaning |
+| --- | --- |
+| Covered | The scope uses the concern and has the required declarations, implementation links, and proof. |
+| Deferred | The concern is relevant, but later approved work owns the missing implementation or proof. It needs an owner and follow-up. |
+| Excluded | The scope does not use the concern. The record explains why. |
+| Unresolved | A product or architecture decision is missing. This blocks a claim that the scope is complete. |
+
+There is no blank state. An agent may not silently omit a concern just because
+it cannot find an obvious file for it.
+
+### What the agent can and cannot determine
+
+The workflow can trace candidates from the approved product change, entrypoint,
+image boundary, configuration declarations, adapter/dependency use, existing
+target declarations, and the repository evidence map. It records links between
+source, target, and proof.
+
+It cannot safely infer a business decision such as:
+
+```text
+is this operation allowed to lose data?
+is a degraded response honest?
+which provider should satisfy this capability?
+is a permission or alert policy acceptable?
+```
+
+If one of those decisions is missing, the agent records `unresolved` and asks
+for review. It must not invent a promise, mark a dependency optional, choose a
+provider, or claim complete coverage.
+
+### What makes the result checkable
+
+The future scope workflow, schema, template, and checker will require stable
+operations and promises, owners, covered/deferred/excluded/unresolved state,
+reasons, follow-ups, and evidence links. They will reject, for example:
+
+```text
+a scope with an unnamed operation
+a dependency linked to no operation
+an excluded concern with no reason
+a deferred concern with no owner
+a scope claiming completeness while a decision is unresolved
+```
+
+This gives an agent a repeatable checklist while preserving the human decisions
+that source code cannot reveal.
+
+## 20. Package Publication and Custody
+
+Publishing a package is not the same as deploying it. Publishing places one
+verified container image into an approved warehouse, such as ECR. Deployment
+later tells a selected target workload to use that exact package.
+
+### An immutable package identity
+
+The useful handoff is the image digest, not an image tag:
+
+```text
+approved source revision
+  -> build
+  -> tests and scans
+  -> attestation
+  -> immutable digest
+  -> approved package repository
+  -> publication receipt
+```
+
+A tag such as `staging` is a convenient label that can later be moved. A digest
+identifies the exact image bytes that were tested. A target must select the
+digest, and promotion must transfer that same digest rather than rebuild it.
+
+### Custody is deliberately split
+
+Different identities have different jobs:
+
+| Job | It may do | It must not automatically do |
+| --- | --- | --- |
+| Build and publication | Build, test, scan, attest, and publish an approved digest. | Change a target workload. |
+| Package approval | Decide whether the published digest meets package policy. | Decide that a specific target is ready. |
+| Target promotion/deployment | Select the already approved digest for an approved target. | Rebuild or silently replace the package. |
+| Live verification | Check what the target actually ran and whether it behaved correctly. | Approve its own deployment or alter the target. |
+
+This separation limits the damage from a mistake or stolen credential. A
+successful build cannot quietly become a production deployment just because it
+uses the same automation account.
+
+### Package approval is not target approval
+
+Package approval asks: “Is digest D built from allowed source, tested, scanned,
+attested, and stored in the approved repository?”
+
+Target approval asks: “May this target receive digest D now?” It also needs
+fresh target alignment, the approved delivery route, target-specific policy,
+and the required human or governed approval. A database migration, unavailable
+dependency, or failed alignment can block a target even when the package is
+perfectly valid.
+
+### Evidence and exceptions
+
+A publication receipt links the source revision, digest, repository, required
+checks, attestation, publishing identity, time, and safe evidence location. A
+promotion receipt adds the source and destination targets, the same digest,
+destination alignment, approval route, deployment result, and later live
+verification result.
+
+If a required scan is unavailable, the honest result is missing evidence, not
+a pass. An exception may be prepared by an agent, but it needs an independent
+approver, a narrow reason, compensating evidence, an expiry, and follow-up. An
+agent must never approve its own exception.
+
+### Architecture intent
+
+The plan will add a provider-neutral package-custody standard, workflow,
+schema, fixtures, and checker. Target-local pipeline records will link the
+existing GitHub workflow to its source-to-digest evidence without copying its
+steps or granting it deployment authority.
+
+## 21. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
-1. required configuration versus secret references, including safe proof;
-2. target alignment: comparing expected declarations with real AWS state;
-3. package publication and custody: GitHub Actions, OIDC, ECR, approvals, and
-   immutable-digest handoff;
-4. deployment and rollback: changing the workload to run a tested candidate;
-5. live verification and drift evidence;
-6. the public-server scope's complete evidence map;
-7. additional scopes: shared foundation, worker/queue, relay, PostgreSQL,
+1. live verification and drift evidence;
+2. the public-server scope's complete evidence map;
+3. additional scopes: shared foundation, worker/queue, relay, PostgreSQL,
    identity/access, public ingress, and observability/alerting.
