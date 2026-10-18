@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-17T21:14:01Z
-latest_commit_sha: a6e69078
-chat_duration: 1080872s (12:12:14:32)
+latest_commit_at_utc: 2026-10-18T21:04:40Z
+latest_commit_sha: 49f12712
+chat_duration: 1166711s (13:12:05:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -292,6 +292,17 @@ explicit commit request. The plan defines future provider-neutral artifact
 sets only; it does not authorise target inspection, AWS mutation, deployment,
 or automatic remediation.
 
+
+### 2026-10-18T21:04:40Z - Commit recorded
+
+Commit: `49f12712`
+
+Message: docs(deploy): govern release and package control
+
+Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -341,6 +352,13 @@ or automatic remediation.
   Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling governance. No AWS, target, secret, or runtime changes occurred.
   ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
 
+
+- Commit: `49f12712`
+  Time UTC: 2026-10-18T21:04:40Z
+  Message: docs(deploy): govern release and package control
+  Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -354,9 +372,9 @@ Reason: This change refines a draft provider-neutral governance plan and teachin
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-17T21:14:01Z
-Latest commit SHA: a6e69078
-Chat duration: 1080872s (12:12:14:32)
+Latest commit at UTC: 2026-10-18T21:04:40Z
+Latest commit SHA: 49f12712
+Chat duration: 1166711s (13:12:05:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
