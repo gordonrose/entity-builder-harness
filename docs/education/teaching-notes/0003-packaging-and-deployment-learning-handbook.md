@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 15
+  version: 17
   status: active
   layer: 05.education
   domain: education
@@ -1516,6 +1516,95 @@ approved delivery/rollback route, and safe GitHub Actions receipts. It does
 not claim durable user data, end-user login/authorisation, queues, external
 integrations, or complete dashboards and alerts.
 
+### The first lifecycle proof
+
+The first controlled slice must prove both that the repository can establish a
+clean target and that it can safely change one.
+
+```text
+declared absent baseline
+→ create and verify immutable release A
+→ accept A as the first known baseline
+→ plan one controlled immutable update B
+→ fresh comparison against A
+→ verify B
+→ accept B, or reject B and retain/recover A
+```
+
+This is intentionally more demanding than a one-off launch. It proves that
+the repository can distinguish expected change from drift, keep an accepted
+baseline, record receipts, and avoid an automatic failure/deploy loop. On the
+very first failed release there is no prior baseline to restore, so the process
+stops with safe evidence rather than inventing a replacement deployment.
+
+### The planned bootstrap boundary
+
+`kanbien-core-platform` is planned as a private target. Its first meaningful
+operation is not a user feature: a controlled internal verifier asks the
+server to perform one safe bootstrap operation. The server validates required
+safe configuration and returns a non-secret identity for the exact immutable
+release being tested. This proves a real request path without adding public
+ingress, users, persistence, queues, or inherited staging dependencies.
+
+The design separates five jobs:
+
+```text
+server code
+→ implements the safe verification operation
+
+scope declaration
+→ says exactly what must be proved
+
+verifier script
+→ makes the controlled request and evaluates the result
+
+delivery pipeline
+→ runs the verifier at the candidate stage
+
+receipt
+→ records the digest, target, time, result, and safe diagnostic code
+```
+
+The current repository does not yet contain this verifier for the planned
+target. Existing image smoke tests are useful evidence, but are not assumed to
+be its controlled internal verifier without a later review.
+
+### Configuration, access, and network boundary
+
+The server-side platform code defines the shape and validation behaviour of a
+setting. The target scope decides whether that setting is required, optional,
+or not applicable and how it is supplied. The target never stores secret
+values in Git; it stores only approved references when secrets are introduced.
+
+For the bootstrap target, likely required non-secret settings include listener
+port, target identity, and immutable release identity. Persistence, login, and
+queue settings are explicitly not applicable until a later scope selects those
+dependencies.
+
+Infrastructure access is named separately from application authentication:
+
+```text
+delivery access
+→ may make approved target changes
+
+workload-startup access
+→ lets AWS pull the package, write startup evidence, and later supply named secrets
+
+runtime access
+→ lets the running server call only the services needed for its declared work
+```
+
+The initial runtime-access set should be empty of application-service access.
+Its network boundary denies public and staging access, permits only the
+controlled internal verifier route, and adds outbound routes only when a
+declared startup, evidence, or later dependency need is reviewed. The exact
+AWS network mechanism remains a target-design decision, not an assumption.
+
+Verifier results use safe structured codes such as `WORKLOAD_NOT_READY`,
+`CONFIG_REQUIRED_SETTING_MISSING`, or `VERIFIER_NETWORK_UNREACHABLE`. They
+must never reveal secret values, tokens, connection strings, personal data, or
+unapproved private target details.
+
 The staged order prevents circular proof. For example, the first deployment
 receipt is held by the delivery system, rather than by a new persistence
 capability whose own deployment has not yet been proved.
@@ -1542,10 +1631,43 @@ modules and adapters into the chain. A module does not become a deployment
 scope merely because it exists, and an unselected module is not automatically a
 gap.
 
+### Keep the existing target safe while rebuilding the model
+
+The existing `kanbien/staging` server already uses public ingress, Cognito,
+DynamoDB, rate limiting, and CloudWatch-related composition. It is useful
+evidence, but it is not the small dependency-free bootstrap target described
+in this handbook.
+
+The agreed approach is therefore:
+
+```text
+kanbien/staging
+→ preserved reference target
+→ no automatic migration, rename, deletion, or retrofit
+
+kanbien-core-platform
+→ planned new controlled foundation target
+→ bootstrap runtime first
+→ persistence, security, observability, then product capabilities
+```
+
+`kanbien-core-platform` is a target name, not evidence that AWS resources
+already exist. Before any AWS work, it needs a separately reviewed target
+design: workload and stack names, identities, configuration/secret-reference
+namespace, network boundary, evidence route, delivery route, and rollback
+record. It may share an account or region with the existing target only by an
+explicit isolation decision. Nothing is inherited merely because both targets
+belong to Kanbien.
+
 ## 22. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
-1. the public-server scope's complete evidence map;
-2. additional scopes: shared foundation, worker/queue, relay, PostgreSQL,
-   identity/access, public ingress, and observability/alerting.
+1. design the planned `kanbien-core-platform` bootstrap target: absent baseline,
+   release A, controlled update B, private verifier route, safe receipt, and
+   recovery path—without creating AWS resources;
+2. complete the read-only reference inventory for the existing public staging
+   server and identify only explicit migration candidates;
+3. additional foundation and product scopes: persistence, security,
+   observability, worker/queue, relay, PostgreSQL, identity/access, and public
+   ingress.

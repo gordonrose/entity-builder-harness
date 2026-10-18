@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-18T22:40:52Z
-latest_commit_sha: cfb65999
-chat_duration: 1172483s (13:13:41:23)
+latest_commit_at_utc: 2026-10-18T23:50:23Z
+latest_commit_sha: 8315f1d1
+chat_duration: 1176654s (13:14:50:54)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -55,6 +55,10 @@ can you walk me through which part of my repo work on the following stages
   current paths until individually migrated.
 - Placed Declaration Coverage before Target Alignment: it accounts for each
   declared requirement and proof path before any provider inspection begins.
+
+
+- Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
+  Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
 
 ## Context Hygiene
 
@@ -94,6 +98,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
   Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
+
+- Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
 
 ## Activity Log
 
@@ -347,6 +355,31 @@ Summary: Refreshed the active chat branch from local main through a governed reh
 
 Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
+
+### 2026-10-18T23:48:58Z - Decision
+
+Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
+
+Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
+
+
+### 2026-10-18T23:49:03Z - Context hygiene
+
+Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
+
+
+### 2026-10-18T23:50:23Z - Commit recorded
+
+Commit: `8315f1d1`
+
+Message: docs(deploy): define bootstrap target lifecycle
+
+Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -410,6 +443,13 @@ Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e;
   Summary: Defined the bootstrap runtime slice, staged persistence/security/observability foundation order, and incremental product/core integration path. Existing platform and core code remains factual source material; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
   ADR impact: No ADR: this refines the draft provider-neutral governance and education model without making a live target, provider-authority, or deployed-architecture decision.
 
+
+- Commit: `8315f1d1`
+  Time UTC: 2026-10-18T23:50:23Z
+  Message: docs(deploy): define bootstrap target lifecycle
+  Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -423,9 +463,9 @@ Reason: This change refines a draft provider-neutral governance plan and teachin
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-18T22:40:52Z
-Latest commit SHA: cfb65999
-Chat duration: 1172483s (13:13:41:23)
+Latest commit at UTC: 2026-10-18T23:50:23Z
+Latest commit SHA: 8315f1d1
+Chat duration: 1176654s (13:14:50:54)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

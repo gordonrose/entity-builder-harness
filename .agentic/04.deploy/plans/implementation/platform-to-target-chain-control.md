@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 26
+version: 28
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -52,14 +52,18 @@ those declared expectations with the actual target. It runs early enough to
 identify an unsuitable target before implementation work, and again immediately
 before deployment because the target may have changed since the earlier check.
 
-The initial vertical slice is the existing Kanbien Platform public server only.
-Workers, relay, PostgreSQL Stage 6, identity provisioning, ingress, and
-observability delivery remain out of scope until this slice is proven. This
-preserves the existing PostgreSQL controls and avoids a broad reorganisation.
+The first controlled vertical slice is the planned `kanbien-core-platform`
+target, beginning with a bootstrap runtime scope. No target directory, AWS
+resource, identity, or deployment route is created by this planning phase. The
+existing `kanbien/staging` public server remains unchanged as a read-only
+reference and possible later migration candidate. Its workers, relay,
+PostgreSQL Stage 6, Cognito, DynamoDB, ingress, and observability work are not
+silently inherited by the new target. This preserves existing PostgreSQL
+controls and avoids retrofitting a new model around a live composition.
 
 ## Staged Foundation Model
 
-The initial public-server slice is the **bootstrap runtime slice**, not a claim
+The initial `kanbien-core-platform` slice is the **bootstrap runtime slice**, not a claim
 that the full platform foundation already exists. Its purpose is to prove that
 one exact server package can be configured, deployed, observed safely enough
 to make a release decision, and restored to a prior immutable package. It
@@ -68,6 +72,16 @@ health/readiness, package and delivery route, rollback route, and safe release
 receipts. It deliberately does not claim durable application data, end-user
 security, external integration, queue processing, or a complete production
 observability service.
+
+Its first implementation goal is a complete but deliberately narrow lifecycle
+proof: establish the target from a declared absent baseline as immutable
+release A, then make one separately declared update to immutable release B.
+The target can be treated as updated only after B completes the same health and
+meaningful-operation verification and has an accepted receipt. A failed B must
+not advance the baseline or trigger an automatic replacement deployment; the
+recorded prior baseline A remains the recovery target. This tests target
+creation, planned change, package custody, fresh alignment, verification,
+receipt, and recovery before deferred foundations are introduced.
 
 The intended foundation grows in ordered slices:
 
@@ -93,6 +107,65 @@ bootstrap runnable program; later foundation slices bring their relevant
 modules, adapters, configuration surfaces, and tests into the same controlled
 chain. A module is not assumed deployable solely because it exists, and a
 module not selected by a scope is not prematurely treated as a gap.
+
+## Target Separation Decision
+
+The target identifier for the first controlled foundation build is
+`kanbien-core-platform`. Its planned repository location is
+`infra/04.deploy/03.product/targets/kanbien/core-platform/`, but that path is
+not created until the target-design package is separately approved. The target
+will have distinct declared workload names, infrastructure-stack names,
+identity/permission bindings, configuration and secret-reference namespace,
+network boundary, evidence route, package/delivery route, and rollback record.
+
+It may later share an AWS account or region with `kanbien/staging` only through
+an explicit target declaration and isolation review; same-account placement is
+not assumed. Reuse of an existing ECR repository, role, secret, VPC, security
+group, log store, service, or pipeline requires the same explicit decision.
+Until then, the correct status is `planned`, not deployed or aligned.
+
+`kanbien/staging` is retained as a **reference target**. A read-only inventory
+may learn from its existing public-server composition, but no foundation
+requirement is inferred from that composition and no migration, deletion,
+rename, or target mutation is authorised. A later, separately approved
+comparison will decide whether any workload moves, remains, or is retired.
+
+## Bootstrap Lifecycle and Boundary Design
+
+The planned bootstrap target is private. It has no public ingress, end-user
+authentication route, persistence provider, queue, or inherited staging
+dependency. Its one meaningful operation is a controlled internal verification
+request: the server accepts the request, validates its required safe startup
+configuration, and returns a safe identity for the selected immutable release.
+That operation proves more than process liveness or generic readiness without
+claiming a product capability that the slice does not yet provide.
+
+The separately reviewed target-design package must declare, before any target
+path or AWS resource is created:
+
+- the absent-baseline, first-release, accepted-baseline, update-candidate, and
+  failed-candidate lifecycle states;
+- the selected runnable program and immutable package identity;
+- every required, optional, and not-applicable configuration setting, including
+  value shape, supply route, and safe missing/invalid-setting diagnostic;
+- the delivery, workload-startup, and running-workload access requirements as
+  separate technical access concerns, without conflating them with application
+  identity or authentication;
+- the private network boundary and the deliberately narrow internal verifier
+  route, while leaving the AWS mechanism unresolved until reviewed;
+- distinct liveness, readiness, and meaningful-operation checks; candidate
+  acceptance/rejection rules; GitHub Actions receipt route; and prior accepted
+  immutable rollback target; and
+- safe structured verifier result codes and evidence fields that reveal no
+  secrets, tokens, connection strings, personal data, or unapproved private
+  target details.
+
+The repository will eventually separate these factual target declarations from
+the verifier implementation and pipeline orchestration: server code implements
+the verification operation; the scope declaration states what must be proved;
+the deploy script performs the controlled request; the pipeline runs it; and
+the receipt records the result. No existing staging smoke test is assumed to
+fill any of these roles without review.
 
 ## Repo-Wide Agentic Change-Governance Outcome
 
@@ -211,8 +284,8 @@ expected target requirements and later report an alignment result.
 | --- | --- | --- |
 | Platform module | Reusable runtime building block. A module can be used by several deployable capabilities. | `platform/security` or `platform/observability` |
 | Runnable program | A process that composes product, platform, and selected adapters. | `kanbien-platform-server.main.ts` |
-| Deployment scope | The bounded capability and target workload whose requirements are declared and proved together. | `kanbien-staging-platform-server-baseline` |
-| Scope operation | A named job the scope promises to perform, with its required outcome. | `save-work`: report success only after durable storage confirms the save. |
+| Deployment scope | The bounded capability and target workload whose requirements are declared and proved together. | `kanbien-core-platform-bootstrap-runtime` |
+| Scope operation | A named job the scope promises to perform, with its required outcome. | `bootstrap-verification`: safely report that the selected release accepts a controlled internal request. |
 | Target | The real destination in which one or more scopes run. | Kanbien staging in its selected AWS account and region |
 
 For example, a change to `platform/security` may affect the public-server,
@@ -725,7 +798,8 @@ the agent must stop and resolve the conflict rather than choose silently.
 
 **Question answered:** What does the repository currently claim and execute?
 
-Create a read-only evidence map for the public server that identifies:
+Create a read-only evidence map for the existing `kanbien/staging` public
+server as a reference and possible migration candidate. It identifies:
 
 - the platform modules and product composition it uses;
 - provider adapters selected by its target-specific composition;
@@ -761,7 +835,7 @@ item may disappear into an unlabelled remainder.
 target resource consistently rather than relying on memory?
 
 Create the Scope Governance Artifact Set above, with fixtures proving both a
-valid public-server scope and common invalid cases: absent index record,
+valid bootstrap-runtime scope and common invalid cases: absent index record,
 missing owner, missing exclusion list, unresolved declaration path, and a
 retired scope still selected by a target binding. Include an operation with no
 promised outcome, an operation lacking implementation or test evidence, a
@@ -847,7 +921,7 @@ must state that it publishes a tested, scanned, immutable image digest to the
 approved ECR repository and does not deploy that digest. It must link the
 source-to-digest receipt, required test/scan/attestation evidence, approved
 repository, and publication identity without granting target-deployment
-authority. The public-server scope must reference this record as its
+authority. The bootstrap-runtime scope must reference this record as its
 package-publication route.
 
 Record the scheduled reconciliation workflow as a `drift-detection` pipeline
@@ -856,10 +930,11 @@ drift-evidence producer as the missing dependency. The catalogue must make
 clear that the existing reconciler authenticates and reads safely but cannot
 create the required fresh evidence itself.
 
-Use that workflow and template to establish the first public-server scope. It
+Use that workflow and template to establish the first bootstrap-runtime scope.
+It
 must introduce the target-local scope index, foundation index,
-`scopes/README.md`, foundation README, and public-server scope README. The
-foundation index must record every public-server dependency that Phase 0 has
+`scopes/README.md`, foundation README, and bootstrap-runtime scope README. The
+foundation index must record every bootstrap-runtime dependency that Phase 0 has
 classified as foundation-owned, or record its status as deferred/unclassified
 with an owner and follow-up path. After Phase 0 has inventoried every reference to
 the current root-level `declaration-contract.yml`, migrate that contract into
@@ -916,7 +991,7 @@ into `.agentic`. It must preserve one authoritative implementation fact and
 one authoritative agent instruction for each governed concern.
 
 Create and maintain the concern-control matrix above for the selected
-public-server slice. It must identify every relevant concern as planned,
+`kanbien-core-platform` bootstrap scope. It must identify every relevant concern as planned,
 explicitly out of scope, or needing detailed design before a later phase claims
 full chain coverage.
 
@@ -924,7 +999,7 @@ full chain coverage.
 standards, a repository-wide instruction inventory and migration ledger, and
 an initially report-only linkage check.
 
-**Exit criterion:** the public-server chain and its selected product modules
+**Exit criterion:** the first controlled bootstrap chain and its selected product modules
 have a clear map from each mandatory instruction to its governance owner; each
 README or document either links to that owner or has a recorded migration gap.
 The concern-control matrix contains no silently unowned active concern.
@@ -1000,8 +1075,9 @@ The checker must derive the build and test facts from `package.json`,
 manifest for information already held there.
 
 **Deliverable:** generic product-governance artifacts and a report-only
-product-layer module-contract check, first applied to the modules used by the
-public-server chain.
+product-layer module-contract check, first applied to the modules selected by
+the `kanbien-core-platform` bootstrap design. The existing public-server
+composition is reference evidence only, not an implied selection.
 
 **Exit criterion:** the checker identifies whether each selected module has a
 public boundary, declared ownership, expected proofs, and an explanation.
@@ -1030,7 +1106,8 @@ The registry is necessary because role, intended command, and proof cannot be
 reliably inferred from a TypeScript filename alone.
 
 **Deliverable:** an entrypoint schema, field guide, registry, and static
-reporter for the existing public server only.
+reporter for the runnable-program candidates. The first target binding is
+created only after the `kanbien-core-platform` target design is approved.
 
 **Exit criterion:** the reporter proves that the registered server source file
 exists, is included in the image compilation input, has an expected compiled
@@ -1056,14 +1133,15 @@ smoke test.
 **Deliverable:** a report that identifies programs declared but absent from the
 payload, payload programs lacking proof, and an invalid default command.
 
-**Exit criterion:** the public server’s source, compiled output, Docker
+**Exit criterion:** the selected bootstrap program’s source, compiled output, Docker
 default command, and package smoke proof agree.
 
 ### Phase 6 — Bind programs to target workloads
 
 **Question answered:** Which target workload runs which approved program?
 
-Add a target-local workload binding beside the staging target profile. A
+Add a target-local workload binding beside the approved `kanbien-core-platform`
+target profile. A
 binding refers to a runnable-program identifier and names:
 
 - the target workload/service or one-pass task;
@@ -1098,8 +1176,9 @@ only when its adapter, typed configuration, target resource, network/secret
 reference where applicable, role policy, migration/rollback treatment, and
 proof are all linked.
 
-**Deliverable:** a public-server workload binding and static comparison with
-the existing task/service definition.
+**Deliverable:** a bootstrap-runtime workload binding and static comparison
+with its approved provider definition. The existing task/service definition is
+reference evidence only; it is not an implied binding for the new target.
 
 **Exit criterion:** no workload selects an unknown command; no declared
 runnable program is presented as deployed without an explicit binding.
@@ -1154,7 +1233,7 @@ owner, expiry, evidence, or follow-up.
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
 
-**Exit criterion:** the public-server chain is reported consistently from the
+**Exit criterion:** the first controlled target chain is reported consistently from the
 same authoritative declarations and existing factual evidence.
 
 ### Phase 8 — Design and establish the drift-evidence producer
@@ -1285,7 +1364,7 @@ from a live-target mismatch.
 
 Adopt controls in order:
 
-1. report-only for the public server;
+1. report-only for the `kanbien-core-platform` bootstrap scope;
 2. required on changes to its entrypoint, image, target, or deployment
    declaration;
 3. required before packaging, with a fresh target-alignment refresh required
@@ -1368,21 +1447,28 @@ consumer.
 
 ## Decisions Required Before Implementation
 
-1. Confirm the public server is the correct first vertical slice.
-2. Confirm the scope criteria and the target-local scope-folder shape before
+<!-- deterministic-check: allow reason="These are human design approvals that establish scope, lifecycle intent, and acceptable architecture before later scripts can validate the resulting declarations." -->
+1. Confirm the `kanbien-core-platform` bootstrap scope is the first controlled
+   vertical slice; retain `kanbien/staging` as reference only.
+2. Confirm that the first slice must prove both clean creation from an absent
+   baseline and one controlled update from accepted release A to candidate B.
+   Confirm the private internal-verifier boundary before any target-design
+   package selects an AWS implementation mechanism.
+3. Confirm the scope criteria and the target-local scope-folder shape before
    building the Scope Governance Artifact Set.
 <!-- deterministic-check: allow reason="Registry adoption depends on human assessment of which deployment facts cannot safely be derived from source code; a later validator enforces the approved registry." -->
-3. Confirm that a machine-readable runnable-program registry is acceptable
+4. Decide whether a machine-readable runnable-program registry is acceptable
    when role and proof cannot be derived from code.
-4. Choose whether the Phase 2 documentation-linkage rule belongs in the
+5. Choose whether the Phase 2 documentation-linkage rule belongs in the
    existing harness placement standard or in a new cross-layer standard.
-5. Agree the threshold at which report-only checks become blocking gates.
-6. Review the Phase 0 evidence map before creating any new declarations.
-7. Review the proposed scope catalogue and the compatibility path for adding
+6. Agree the threshold at which report-only checks become blocking gates.
+7. Review the Phase 0 reference evidence map and the separately proposed
+   `kanbien-core-platform` target design before creating any new declarations.
+8. Review the proposed scope catalogue and the compatibility path for adding
    the target-local scope index before adding a second active scope.
-8. Confirm the foundation-resource classification criteria, index shape, and
+9. Confirm the foundation-resource classification criteria, index shape, and
    provider-identity fields before creating target foundation records.
-9. Confirm the provider-selection compatibility and access-requirement fields
+10. Confirm the provider-selection compatibility and access-requirement fields
    before binding a workload to a new provider or resource.
 
 ## Safety Boundaries
@@ -1399,12 +1485,19 @@ consumer.
 
 ## Definition of Success
 
-For the public server, a reviewer can start with one program identifier and
+For the `kanbien-core-platform` bootstrap scope, a reviewer can start with one program identifier and
 find, by command and source path, its platform inputs, adapter choice,
-capability/provider/resource classification, compiled image command, staging
+capability/provider/resource classification, compiled image command, target
 workload/runtime, required non-secret configuration, attached roles and narrow
 access requirements, scope operations and their promised outcomes, dependency
 declarations linked to those operations, local/package proofs,
 target-alignment result, target/run proofs, and safe diagnostics for failures
 at each boundary. Any missing or contradictory link is reported before a
 deployment is treated as ready.
+
+The reviewer can also prove the full narrow lifecycle without relying on an
+existing staging resource: the declared target begins absent and conflict-free;
+release A establishes the first accepted baseline; a separately declared
+immutable release B is compared against that real baseline and verified; and a
+rejected B preserves the prior baseline rather than creating an automatic
+redeployment loop.
