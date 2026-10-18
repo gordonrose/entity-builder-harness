@@ -83,6 +83,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling lessons.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
 
+
+- Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
+  Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -302,6 +306,13 @@ Message: docs(deploy): govern release and package control
 Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
 
 ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
+
+
+### 2026-10-18T21:05:58Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
+
+Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
 ## Sub-Agent Activity
 
