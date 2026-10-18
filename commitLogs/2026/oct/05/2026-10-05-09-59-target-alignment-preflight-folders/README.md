@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-18T22:40:52Z
-latest_commit_sha: cfb65999
-chat_duration: 1172483s (13:13:41:23)
+latest_commit_at_utc: 2026-10-18T23:50:23Z
+latest_commit_sha: 8315f1d1
+chat_duration: 1176654s (13:14:50:54)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -369,6 +369,17 @@ Summary: Recorded the controlled first-target lifecycle, private verifier bounda
 
 Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
 
+
+### 2026-10-18T23:50:23Z - Commit recorded
+
+Commit: `8315f1d1`
+
+Message: docs(deploy): define bootstrap target lifecycle
+
+Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -432,6 +443,13 @@ Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform
   Summary: Defined the bootstrap runtime slice, staged persistence/security/observability foundation order, and incremental product/core integration path. Existing platform and core code remains factual source material; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
   ADR impact: No ADR: this refines the draft provider-neutral governance and education model without making a live target, provider-authority, or deployed-architecture decision.
 
+
+- Commit: `8315f1d1`
+  Time UTC: 2026-10-18T23:50:23Z
+  Message: docs(deploy): define bootstrap target lifecycle
+  Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -445,9 +463,9 @@ Reason: This change refines a draft provider-neutral governance plan and teachin
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-18T22:40:52Z
-Latest commit SHA: cfb65999
-Chat duration: 1172483s (13:13:41:23)
+Latest commit at UTC: 2026-10-18T23:50:23Z
+Latest commit SHA: 8315f1d1
+Chat duration: 1176654s (13:14:50:54)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
