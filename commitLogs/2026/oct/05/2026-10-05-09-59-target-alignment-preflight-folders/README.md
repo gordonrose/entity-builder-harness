@@ -91,6 +91,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Refined the deployment learning model: the public server is the bootstrap runtime slice, not the complete platform foundation. The agreed staged foundation order is bootstrap runtime/release evidence, persistence, application security, fuller observability, then product capabilities. Existing platform and core code remains factual source material and will be brought into scope incrementally.
   Durable evidence: Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md and docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The next approved activity is a read-only inventory of modules composed by the bootstrap server.
 
+
+- Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
+  Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -335,6 +339,13 @@ Message: docs(deploy): stage platform foundation controls
 Summary: Defined the bootstrap runtime slice, staged persistence/security/observability foundation order, and incremental product/core integration path. Existing platform and core code remains factual source material; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
 
 ADR impact: No ADR: this refines the draft provider-neutral governance and education model without making a live target, provider-authority, or deployed-architecture decision.
+
+
+### 2026-10-18T22:41:35Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local main through a governed rehearsal after local promotion verification reported divergence. The rehearsal had no conflicts; stash was not used.
+
+Durable evidence: Refresh source head: c4b01422ba10dfabf3111a88c693c186abae0a2e; applied tested merge commit: 02d0e7909b9dff9d492ff38a8a64a2e99208bfc3; temporary preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
 ## Sub-Agent Activity
 
