@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 19
+version: 24
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -152,10 +152,10 @@ owner, and whether the design is ready or still needs detailed design.
 | Foundation resource and provider selection | Target-local foundation index, scope declaration, workload binding, authoritative provider declaration | Ownership/lifecycle rationale, adapter compatibility, resource identity, consumer, migration and rollback proof | `04.deploy` | Planned in Phase 1 and later binding phases |
 | Network relationship | Scope/workload network requirement linked to authoritative provider network declaration | Safe proof of name resolution, transport/application protocol and port, route, narrow source/destination rule, TLS/server-identity policy, local equivalent, and target/runtime evidence | `04.deploy`, with product diagnostics at the connection boundary | Needs dedicated contract, schema, field guide, fixtures, and alignment-check design |
 | Workload identity, access, and application authentication | Workload identity/access record, workload binding, and authoritative provider/IAM or application-auth declaration | Authz versus workload-identity separation; narrow action/resource access; safe credential supply, rotation/revocation, and authentication-failure proof; execution/runtime/dependency identity separation | `03.product` and `04.deploy` | Needs dedicated contract, schema, field guide, fixtures, and checker design |
-| Health and recovery | Runnable-program behaviour, image contract, scope declaration, target health declaration | Process, liveness, readiness, safe meaningful request, rollback/recovery proof | `03.product` and `04.deploy` | Planned; existing checks must be gathered per scope |
-| Safe diagnostics and operational evidence | Shared diagnostic contract, product/adaptor mapping, scope proof references, approved runtime logging | Stable observed-fact code, redaction, stage, retryability, bounded next check, test fixtures, and safe evidence reference | `06.shared`, referenced by `03.product` and `04.deploy` | Needs dedicated standard, taxonomy, schema, fixtures, and gate design |
-| Observability and alerting implementation | Authoritative logging, metric, trace, dashboard, retention, and alert declarations | Event transport, aggregation, retention, threshold, notification, and recovery-observation proof | `04.deploy` and provider-specific operations governance | Deferred from the first scope; required evidence expectations are declared now |
-| Package publication and delivery pipeline | Target-local pipeline catalogue and existing workflow/provider declarations | Tested scanned immutable digest, approval/identity route, custody handoff, and rollback route | `04.deploy` | Planned in Phase 1 and pipeline phases |
+| Health, release verification, and recovery | Runnable-program behaviour, image contract, scope declaration, workload binding, target health/deployment declaration, and pipeline receipt | Process, liveness, readiness, candidate-specific meaningful verification, declared rollout/deadline, rollback to prior immutable digest, restoration proof, and safe receipt | `03.product` and `04.deploy` | Needs dedicated contract, schema, field guide, fixtures, and checker design |
+| Safe diagnostics and operational evidence | Shared diagnostic contract, product/adaptor mapping, scope proof references, approved runtime logging | Stable observed-fact code, secret and PII minimisation/redaction, stage, retryability, bounded next check, test fixtures, and safe evidence reference | `06.shared`, referenced by `03.product` and `04.deploy` | Needs dedicated standard, taxonomy, schema, fixtures, and gate design |
+| Observability and alerting implementation | Scope observation contract, workload binding, shared safe-evidence contract, and authoritative provider log/metric/trace/alert declarations | Operation-linked signal, safe correlation identifiers, access/retention, alert condition/duration/owner/deduplication/recovery proof, and explicit covered/deferred/excluded state | `04.deploy`, `06.shared`, and provider-specific operations governance | Needs dedicated contract, schema, field guide, fixtures, and checker design; deferred from first-slice runtime coverage |
+| Package publication and delivery pipeline | Target-local pipeline catalogue, package-custody record, and existing workflow/provider declarations | Source-to-digest provenance, test/scan/attestation evidence, approved repository and separated identities, target promotion/approval, exception expiry, custody handoff, and rollback route | `04.deploy` | Needs dedicated contract, schema, field guide, fixtures, and checker design |
 | Target alignment, drift, and live verification | Alignment contract, safe evidence record, target read adapter, and run proof | Fresh expected-versus-actual comparison, expiry, drift state, live health and meaningful behaviour | `04.deploy`, with AWS execution remaining under `.agentic/aws/` | Planned in Phases 8–9 |
 
 The matrix is a governance index, not a second configuration system. It points
@@ -306,6 +306,23 @@ facts that can be checked deterministically. They do not infer business
 criticality from source code: a missing promised outcome is a design gap that
 requires a reviewed human decision.
 
+The workflow must build a responsibility inventory before it creates or changes
+a scope. For every concern in the current concern-control matrix—runnable
+program, configuration, dependencies, foundation/provider selection, network,
+workload identity/access, health/recovery, observation, delivery route, and
+target alignment—the inventory records `covered`, `deferred`, `excluded`, or
+`unresolved`, with a reason, owner/follow-up where applicable, and source,
+target, and proof links. `excluded` requires evidence that the scope does not
+use the concern; `deferred` requires an owner and follow-up; `unresolved`
+blocks any claim of complete scope coverage. No concern may be silently absent.
+
+The agent derives candidates for the inventory from the approved product
+change, runnable-program and image boundaries, configuration declarations,
+adapter/dependency use, existing target declarations, and the Phase 0 evidence
+map. It must trace and record those links, not infer product criticality,
+acceptable degradation, provider choice, security policy, or alert policy. A
+missing human decision stays `unresolved` and stops the workflow for review.
+
 Before the first foundation resource record is created, the harness must also
 provide a Foundation Resource Governance Artifact Set:
 
@@ -427,6 +444,74 @@ one must not be silently reused as another. It links to the authoritative IAM,
 secret-management, provider, and application-auth declarations rather than
 copying role policy, token, password, certificate body, or secret value.
 
+Before a scope can claim its health, release verification, or rollback behaviour
+is governed, the harness must provide a Health and Release Verification
+Artifact Set:
+
+```text
+.agentic/04.deploy/
+  standards/health-and-release-verification.md
+  workflows/change-scope-health-and-release-verification.md
+  schemas/health-and-release-verification.v1.schema.yml
+  schemas/health-and-release-verification.v1.guide.md
+  templates/health-and-release-verification/
+  gates/check-health-and-release-verification.md
+
+scripts/04.deploy/
+  check-health-and-release-verification/
+```
+
+It distinguishes process/liveness, readiness, and meaningful operation proof;
+declares the candidate identity, rollout strategy, required healthy capacity,
+startup grace period, decision deadline, acceptance/rejection conditions,
+rollback target, and restoration proof. Meaningful verification must prove the
+candidate's immutable identity rather than merely obtain a successful response
+from an older task behind a shared route. The artifact set defines a safe
+verification-receipt shape and reference path; it does not store request
+payloads, credentials, or raw provider error dumps.
+
+Initially, the delivery pipeline stores each per-run receipt as a
+machine-readable GitHub Actions artifact with a human-readable job summary.
+The repository records the required receipt and its safe reference, not the
+receipt itself. A later durable operational-evidence store may replace or
+supplement that route only after its retention, access, independence, and
+bootstrap behaviour are reviewed; an application persistence capability is not
+automatically suitable because it can create circular deployment dependency.
+
+Before a scope can claim runtime observability or alerting is governed, the
+harness must provide an Observability and Alerting Artifact Set. It references
+the shared safe-diagnostic contract; it does not replace it:
+
+```text
+.agentic/04.deploy/
+  standards/observability-and-alerting.md
+  workflows/change-scope-observability-and-alerting.md
+  schemas/observability-and-alerting.v1.schema.yml
+  schemas/observability-and-alerting.v1.guide.md
+  templates/observability-and-alerting/
+  gates/check-observability-and-alerting.md
+
+scripts/04.deploy/
+  check-observability-and-alerting/
+```
+
+It records which scope operation or dependency behaviour needs a log, metric,
+trace, health-state transition, receipt, or combination; safe correlation
+identifiers; approved evidence location; access and retention policy; and the
+state `covered`, `deferred`, or `excluded`. Alert records name the signal,
+condition, persistence duration, severity, owner, safe next check,
+deduplication behaviour, and verified recovery condition. A deferred record
+requires an owner and follow-up; excluded means the scope does not use the
+concern and cannot conceal a relevant gap.
+
+<!-- deterministic-check: allow reason="This is a human-governed security design constraint; the future observability gate will enforce its concrete schema fields." -->
+Operational evidence must contain no secret or PII by default. Any approved
+exception requires a documented necessity, data minimisation, restricted
+access, retention/deletion behaviour, auditability, and an explicit rule that
+the data must not flow into broad logs, alerts, or high-cardinality metric
+labels. Metrics use stable, low-cardinality safe labels; individual requests
+belong in appropriately controlled logs or traces, not metrics.
+
 The first target-local layout will be:
 
 ```text
@@ -483,6 +568,37 @@ the executable workflow and target declarations where those comparisons are
 deterministic, and every scope requiring a package or live proof names an
 approved pipeline. It must not duplicate GitHub workflow semantics or grant
 execution authority.
+
+Before a scope can claim package publication or target promotion is governed,
+the harness must provide a Package Custody and Promotion Artifact Set:
+
+```text
+.agentic/04.deploy/
+  standards/package-custody-and-promotion.md
+  workflows/change-package-custody-and-promotion.md
+  schemas/package-custody-and-promotion.v1.schema.yml
+  schemas/package-custody-and-promotion.v1.guide.md
+  templates/package-custody-and-promotion/
+  gates/check-package-custody-and-promotion.md
+
+scripts/04.deploy/
+  check-package-custody-and-promotion/
+```
+
+It defines a provider-neutral chain from allowed source revision through build,
+test, scan, attestation, approved package repository, immutable digest, and
+publication receipt. It separates package approval from target approval: a
+digest may be safely stored without being authorised for any target. A target
+promotion records the same digest, source and destination targets, package
+evidence, source-target verification where required, destination alignment,
+approval route, and result. The standard prohibits a target from selecting a
+mutable tag as package identity or rebuilding a promoted package.
+
+The artifact set also separates build/publication, deployment, and verification
+identities. Package policy records required checks, blocking outcomes,
+target-specific stricter rules, and any exception's owner, expiry, evidence,
+and follow-up. An agent may prepare an exception record but may not approve its
+own exception or convert unavailable scan evidence into a pass.
 
 The catalogue must also report operational state. The current scheduled
 reconciliation pipeline is known to fail closed when fresh artifact-stack drift
@@ -613,7 +729,9 @@ missing owner, missing exclusion list, unresolved declaration path, and a
 retired scope still selected by a target binding. Include an operation with no
 promised outcome, an operation lacking implementation or test evidence, a
 changed operation absent from the scope declaration, and a dependency pointing
-to an unknown operation.
+to an unknown operation. Include an unclassified responsibility concern, an
+unjustified exclusion, a deferred concern with no owner/follow-up, and a scope
+that claims complete coverage despite an unresolved decision.
 
 All Phase 1 harness artifacts must obey the governance portability boundary:
 their rules, schemas, and templates describe generic classes of scope,
@@ -658,11 +776,42 @@ dependency identity reused for the wrong job; authentication rejection without
 safe failure behaviour; and a permission denial without an operation-specific
 access requirement or proof.
 
+Create the Health and Release Verification Artifact Set with fixtures proving
+distinct liveness, readiness, and meaningful-operation checks; a candidate
+response whose identity does not match the selected immutable digest; a rollout
+without a declared healthy-capacity rule, startup grace period, or decision
+deadline; a failure treated as acceptance; a rollback using a mutable tag
+rather than a recorded prior digest; a restoration reported without health and
+meaningful verification; and a receipt that exposes a prohibited sensitive
+value or is stored in Git.
+
+Create the Observability and Alerting Artifact Set with fixtures proving an
+operation-linked safe log/metric/health/receipt record; a missing owner or
+recovery condition for an alert; an alert without a persistence duration or
+deduplication rule; a symptom incorrectly treated as a cause, or vice versa;
+a deferred concern without owner/follow-up; an excluded concern that still has
+an active dependency; a secret or PII field in operational evidence; a
+high-cardinality or personal metric label; and a runtime-observability claim
+without approved evidence location, access, retention, and deletion policy.
+
+Create the Package Custody and Promotion Artifact Set with fixtures proving an
+allowed source revision through build, test, scan, attestation, approved
+repository, immutable digest, and publication receipt. Reject a mutable tag
+presented as the selected package; a source or digest mismatch; missing test,
+scan, or attestation evidence; unavailable scan evidence treated as a pass;
+package approval mistaken for target approval; a package rebuilt during
+promotion; a promotion without destination alignment or approval evidence; an
+unseparated identity performing incompatible custody and deployment actions;
+and an exception without an owner, expiry, evidence, or follow-up.
+
 Add the target-local pipeline catalogue and its first package-publication
 record for `.github/workflows/deploy-platform-shell-staging.yml`. The record
 must state that it publishes a tested, scanned, immutable image digest to the
-approved ECR repository and does not deploy that digest. The public-server
-scope must reference this record as its package-publication route.
+approved ECR repository and does not deploy that digest. It must link the
+source-to-digest receipt, required test/scan/attestation evidence, approved
+repository, and publication identity without granting target-deployment
+authority. The public-server scope must reference this record as its
+package-publication route.
 
 Record the scheduled reconciliation workflow as a `drift-detection` pipeline
 with state `blocked`, and record its planned separate artifact-stack
@@ -897,7 +1046,12 @@ binding refers to a runnable-program identifier and names:
 - expected dependency-availability behaviour and safe failure/recovery
   diagnostic, health-effect, metric/status, alert-policy, and proof references
   for startup, readiness, real requests, and recovery;
-- health and rollback proofs; and
+- liveness, readiness, and candidate-specific meaningful-verification
+  operations; rollout/healthy-capacity and timing policy; candidate acceptance
+  and rejection conditions; receipt route; prior immutable rollback target; and
+  restoration proof; and
+- applicable observation-contract records, or explicit deferred/excluded
+  status with owner and follow-up; and
 - target owner.
 
 AWS-specific command details remain in the existing CloudFormation source. The
@@ -944,6 +1098,21 @@ network relationship missing a declared or proved name-resolution, protocol,
 port, route, narrow rule, TLS policy, local equivalent, or target/runtime path;
 or a workload identity/access record missing a supply, rotation, least-
 privilege, operation, or safe authentication-failure link.
+It also reports a health/release declaration without distinct liveness,
+readiness, and meaningful-operation proof; candidate-identity comparison;
+rollout deadline; safe receipt route; immutable rollback target; or restoration
+verification.
+It reports an active scope behaviour without the required observation record,
+or a record with unsafe evidence data, missing location/access/retention,
+missing alert owner/recovery treatment, invalid correlation identifier, or an
+unjustified deferred/excluded state.
+It also reports a package route without source-to-digest provenance, required
+test/scan/attestation evidence, an approved repository, immutable selected
+digest, or safe publication receipt; a target binding that selects a mutable
+tag; a promotion that rebuilds rather than transfers the approved digest; a
+package approval substituted for destination alignment or target approval; an
+unavailable required scan treated as successful; or an exception lacking its
+owner, expiry, evidence, or follow-up.
 
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
@@ -985,7 +1154,32 @@ evidence producer exists.
 repository declaration?
 
 Extend the existing Target Alignment Preflight only after Phase 7 is stable.
-The preflight consumes the chain-check result and safely confirms live facts:
+The preflight consumes the chain-check result and safely confirms live facts.
+It is strictly read-only: detection never implies remediation, remediation
+never implies deployment, and only an approved delivery route may mutate a
+target.
+
+The comparison keeps three distinct records:
+
+```text
+declared desired state
+→ reviewed repository intention for the selected scope and candidate
+
+known live baseline
+→ last verified safe release and target state, referenced by operational proof
+
+fresh actual observation
+→ time-limited safe facts read from the provider now
+```
+
+An approved transition from a healthy baseline digest to a selected candidate
+is not drift merely because the target has not yet run the candidate. Drift is
+an unexplained difference between declared expectation, the approved transition
+state, and actual observation. The preflight must distinguish `match`,
+`mismatch`, `insufficient-evidence`, and explicit `not-applicable`; only all
+required `match` results allow the delivery pipeline to proceed.
+
+The preflight safely confirms assertions including:
 
 - destination identity and selected workload;
 - image identity and approved deployment route;
@@ -997,10 +1191,13 @@ The preflight consumes the chain-check result and safely confirms live facts:
 - non-secret configuration and secret-name presence, workload identity/role
   references, and safe credential supply/rotation facts;
 - permissions, dependencies, health, and rollback configuration;
+- candidate-specific verification, receipt-route, and immutable rollback facts;
 - safe diagnostic categories, health effects, metric/status and alert-policy
   references, and safe evidence for target mismatches or unavailable declared
   dependencies;
-- freshness and drift.
+- freshness and drift; and
+- assertion verdict, safe observed fact, expiry, evidence reference, and
+  bounded next check for every non-match.
 
 It has two required use points with the same comparison contract:
 
@@ -1012,7 +1209,18 @@ It has two required use points with the same comparison contract:
    health policy, or rollback route cannot be hidden by an old result.
 
 No secret values may be read or reported. The future AWS read adapter remains
-subject to the existing AWS workflow and approval boundary.
+subject to the existing AWS workflow and approval boundary. It uses a dedicated
+least-privilege read identity which may inspect only the safe facts needed by
+the declared assertions and write safe evidence; it cannot deploy, alter
+resources, read secret values, or widen its own access. If an assertion cannot
+be established within that boundary, its verdict is `insufficient-evidence`.
+
+The initial core-server scope applies only its relevant assertions: target and
+workload identity, approved delivery route, declared configuration/role names,
+health/release-verification/rollback prerequisites, and evidence freshness.
+Dependency-specific assertions remain explicitly excluded until their scope
+selects a dependency; runtime observability assertions remain deferred until
+their approved evidence route exists.
 
 **Deliverable:** a provider-neutral input/output contract and an AWS read-only
 adapter design; no target mutation.

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-17T21:14:01Z
-latest_commit_sha: a6e69078
-chat_duration: 1080872s (12:12:14:32)
+latest_commit_at_utc: 2026-10-18T21:04:40Z
+latest_commit_sha: 49f12712
+chat_duration: 1166711s (13:12:05:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -82,6 +82,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling lessons.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md.
+
+
+- Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
+  Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
 
 ## Activity Log
 
@@ -276,6 +280,40 @@ Summary: Expanded the deployment-control plan and teaching handbook with depende
 
 ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
 
+### 2026-10-18T21:01:46Z - Context hygiene
+
+Summary: Continued the deployment learning and draft control design without
+mutating AWS, targets, secrets, runtime code, or PostgreSQL. The uncommitted
+plan and handbook now cover health and release verification, recovery and
+rollback evidence, safe observability and alerting, target alignment and
+drift, scope responsibility inventories, and package publication, custody,
+promotion, and policy exceptions.
+
+Durable evidence: `.agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md`
+and `docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md`.
+Both files are intentionally uncommitted pending the user's later review and
+explicit commit request. The plan defines future provider-neutral artifact
+sets only; it does not authorise target inspection, AWS mutation, deployment,
+or automatic remediation.
+
+
+### 2026-10-18T21:04:40Z - Commit recorded
+
+Commit: `49f12712`
+
+Message: docs(deploy): govern release and package control
+
+Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+
+ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
+
+
+### 2026-10-18T21:05:58Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local main through a governed rehearsal after merge verification reported one incoming main commit and two chat-only commits. The rehearsal had no overlapping paths or conflicts; stash was not used.
+
+Durable evidence: Refresh source head: 18d9bb031b3ec6d709b1d5fd3018233cb1b18830; applied tested merge commit: d479bece947e091737fe27e729a9f12b33eb2b27; preflight branch/worktree were removed by the governed apply script; documentation header validation passed afterward.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -325,6 +363,13 @@ ADR impact: No ADR: draft provider-neutral governance and education only; no liv
   Summary: Expanded the deployment-control plan and teaching handbook with dependency lifecycle, network relationship, workload identity/access, credential rotation, and safe failure-handling governance. No AWS, target, secret, or runtime changes occurred.
   ADR impact: No ADR: draft provider-neutral governance and education only; no live provider, target, or deployed-architecture decision.
 
+
+- Commit: `49f12712`
+  Time UTC: 2026-10-18T21:04:40Z
+  Message: docs(deploy): govern release and package control
+  Summary: Expanded the draft deployment-control plan and teaching handbook with scope responsibility inventories; health, release-verification, rollback and recovery controls; safe observability and alerting; target alignment; and immutable package custody, promotion, and exception governance. No AWS, target, secret, runtime, or PostgreSQL mutation occurred.
+  ADR impact: No ADR: this remains draft provider-neutral governance and education material; it makes no live provider-authority, target-configuration, or deployed-architecture decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -338,9 +383,9 @@ Reason: This change refines a draft provider-neutral governance plan and teachin
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-17T21:14:01Z
-Latest commit SHA: a6e69078
-Chat duration: 1080872s (12:12:14:32)
+Latest commit at UTC: 2026-10-18T21:04:40Z
+Latest commit SHA: 49f12712
+Chat duration: 1166711s (13:12:05:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
