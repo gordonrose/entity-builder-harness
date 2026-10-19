@@ -1,0 +1,53 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.image.core-server.contract
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.package-candidates
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: manifest
+#   purpose: Record the factual local container boundary for the Kanbien core bootstrap server.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.build-core-server-image
+#     path: scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh
+#   - id: deploy.command.smoke-test-core-server-image
+#     path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+schema: deploy/core-server-image-contract/v1
+id: kanbien-core-server-image
+version: 1
+runnable_program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+program_id: kanbien-core-server
+compiled_entrypoint: artifacts/kanbien-core-server.main.js
+command:
+  - node
+  - artifacts/kanbien-core-server.main.js
+runtime:
+  user: node
+  non_secret_defaults:
+    NODE_ENV: production
+    HOST: 0.0.0.0
+    PORT: "3000"
+    PLATFORM_SOURCE_COMMIT_SHA: build-argument
+health:
+  liveness_path: /livez
+  readiness_path: /readyz
+  release_verification_path: /internal/release-verification
+payload:
+  allowed_program: kanbien-core-server
+  forbidden_dependency_ids:
+    - app-platform-smoke
+    - platform-adapter-aws
+    - platform-persistence
+    - platform-workers
+    - product-kanbien-platform
+    - staging-platform-server
+    - postgresql
+    - relay
+    - worker

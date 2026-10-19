@@ -40,7 +40,10 @@ can you walk me through which part of my repo work on the following stages
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Docker daemon unavailable for local core image smoke
+  Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
 
 ## Decisions Made
 
@@ -87,6 +90,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt the core-server runnable-program boundary and dependency proof
   Rationale: The bootstrap program reuses platform-server, exposes only a safe release-verification operation, and is rejected if its source or compiled output includes a forbidden dependency. No target, image, provider, or cloud choice is made.
+
+
+- Decision: Adopt a dedicated local core-server image boundary
+  Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
 
 ## Context Hygiene
 
@@ -154,6 +161,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: R3 proves the core server route and dependency graph locally: release verification responds safely, product routes are absent, and a compiled persistence import fails closed.
   Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
+
+
+- Summary: R4 adds a minimal core-server Dockerfile, image contract, package payload verifier, and smoke capability. The machine has Docker CLI but no daemon; no image was built or started.
+  Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
 
 ## Activity Log
 
@@ -624,6 +635,34 @@ Summary: Added the core-server entrypoint, factual runnable-program declaration,
 
 ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
 
+
+### 2026-10-19T21:02:49Z - Decision
+
+Decision: Adopt a dedicated local core-server image boundary
+
+Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
+
+
+### 2026-10-19T21:02:49Z - ADR disposition
+
+ADR needed: no
+
+Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
+
+
+### 2026-10-19T21:02:49Z - Issue
+
+Raised: Docker daemon unavailable for local core image smoke
+
+Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
+
+
+### 2026-10-19T21:02:49Z - Context hygiene
+
+Summary: R4 adds a minimal core-server Dockerfile, image contract, package payload verifier, and smoke capability. The machine has Docker CLI but no daemon; no image was built or started.
+
+Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -744,7 +783,7 @@ ADR impact: No ADR: implements the approved bootstrap boundary without selecting
 
 ADR needed: no
 ADR path:
-Reason: This implements the approved bootstrap-program boundary without a durable provider, target, network, or authority decision.
+Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
 
 ## Session Metrics
 
