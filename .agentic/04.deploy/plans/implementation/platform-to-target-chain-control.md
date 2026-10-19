@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 28
+version: 30
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -139,6 +139,68 @@ request: the server accepts the request, validates its required safe startup
 configuration, and returns a safe identity for the selected immutable release.
 That operation proves more than process liveness or generic readiness without
 claiming a product capability that the slice does not yet provide.
+
+The bootstrap runnable program is a planned new
+`infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts`. The
+`kanbien-core-<role>.main.ts` prefix identifies runnable programs for the new
+controlled core family; helper files do not use `.main.ts`. The existing
+`kanbien-platform-server.main.ts` remains reference evidence and must not be
+reused unchanged: it composes the product-smoke application and optional
+staging-era adapter paths that this slice deliberately excludes.
+
+`kanbien-core-server.main.ts` reuses the existing generic
+`platform/server/src/main.ts` process lifecycle and
+`platform/server/src/transport.ts` HTTP transport. It must not fork either.
+The planned configuration surface under `platform/server/src/configuration/`
+makes generic server requirements, including safe release identity, visible
+and typed; it is a future migration from the selected direct environment reads
+in the existing startup code, not a claim that the folder already exists.
+
+The selected bootstrap module graph is `platform/server` and its existing
+generic contracts, runtime, configuration, health, security, and observability
+dependencies. It selects no product application, provider adapter, persistence
+service, identity provider, queue, or public-ingress capability. A code-package
+dependency is not by itself a selected runtime dependency or live target
+service, but it must be inventoried before the image is accepted.
+
+Generic release verification belongs in `platform/server`, not in an AWS target
+or one product app. It provides a controlled route that returns only approved
+release metadata. It does not itself prove the running image digest: the
+candidate verifier must combine the server response with independent workload
+image-digest evidence and package-custody evidence before accepting a release.
+
+Before the bootstrap image is selected, split the existing persistence-related
+observability bridge from generic `platform/observability` into an optional
+provider-neutral `platform/observability-persistence` integration package.
+Generic logs, metrics, traces, correlation, and health signals remain in
+`platform/observability` without a `platform/persistence` dependency. The
+optional bridge depends on both modules and is selected only by a later
+persistence scope. This is a required dependency-boundary refactor, not a
+provider adapter or an AWS target decision.
+
+Technical infrastructure permissions are grouped under `technical-access/`,
+not `identity/` or bare `access/`, to keep them distinct from application
+authentication and authorisation. Target-wide records may declare
+`delivery-permissions.yml` and `workload-startup-permissions.yml`; a scope
+declares its own `runtime-permissions.yml`. The first bootstrap runtime grants
+no application-service runtime permission. The actual provider roles and
+policies remain their authoritative provider declarations; these records state
+the bounded purpose, actor, action/resource requirement, and proof link.
+
+A shared internal-verifier *facility*, if one is later selected, is
+foundation-owned. The verifier-to-bootstrap-server route is scope-owned and
+must be declared with the bootstrap runtime rather than incorrectly presented
+as a target-wide route for every future workload.
+
+The bootstrap program has a dedicated `core-server` container image boundary,
+not the existing broad platform-shell image. Its planned location is
+`infra/04.deploy/03.product/image/core-server/`. The image contract compiles
+and starts only `kanbien-core-server.main.ts` and includes only its reviewed
+runtime dependency graph, safe defaults, health command, and local payload
+proof. It must not package staging-server, worker, relay, PostgreSQL-specific,
+or provider-adapter programs merely because they exist elsewhere in the
+repository. The image repository decision remains unresolved and requires the
+same target-isolation review as every other shared AWS resource.
 
 The separately reviewed target-design package must declare, before any target
 path or AWS resource is created:
@@ -1101,6 +1163,11 @@ lists runnable programs only, not shared helpers. Each record must identify:
 - expected compiled command;
 - required local proof; and
 - owner.
+
+The first core-family record uses the `kanbien-core-server.main.ts` source
+name. Future core-family runnable programs follow
+`kanbien-core-<role>.main.ts`; non-runnable composition helpers omit the
+`.main.ts` suffix.
 
 The registry is necessary because role, intended command, and proof cannot be
 reliably inferred from a TypeScript filename alone.

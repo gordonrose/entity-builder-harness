@@ -60,6 +60,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
   Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
 
+
+- Decision: Adopt a dedicated core-server package boundary
+  Rationale: The planned kanbien-core-server.main.ts uses existing platform-server startup and transport, gains generic release-verification and visible configuration contracts, and is packaged in a dedicated core-server image. Generic observability must be separated from its optional persistence bridge. Technical infrastructure permissions are grouped under technical-access; the verifier route remains bootstrap-scope-owned.
+
 ## Context Hygiene
 
 
@@ -102,6 +106,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
+
+
+- Summary: Recorded runnable-program selection, generic release-verification ownership, package versus runtime dependency distinction, optional observability-persistence bridge, technical-access naming, and dedicated core-image boundary. No source implementation, AWS resource, target directory, secret, or PostgreSQL state changed.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Artifact metadata and whitespace checks passed.
 
 ## Activity Log
 
@@ -379,6 +387,20 @@ Message: docs(deploy): define bootstrap target lifecycle
 Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
 
 ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
+
+
+### 2026-10-19T06:49:54Z - Decision
+
+Decision: Adopt a dedicated core-server package boundary
+
+Rationale: The planned kanbien-core-server.main.ts uses existing platform-server startup and transport, gains generic release-verification and visible configuration contracts, and is packaged in a dedicated core-server image. Generic observability must be separated from its optional persistence bridge. Technical infrastructure permissions are grouped under technical-access; the verifier route remains bootstrap-scope-owned.
+
+
+### 2026-10-19T06:49:54Z - Context hygiene
+
+Summary: Recorded runnable-program selection, generic release-verification ownership, package versus runtime dependency distinction, optional observability-persistence bridge, technical-access naming, and dedicated core-image boundary. No source implementation, AWS resource, target directory, secret, or PostgreSQL state changed.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Artifact metadata and whitespace checks passed.
 
 ## Sub-Agent Activity
 
