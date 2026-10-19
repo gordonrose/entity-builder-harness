@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-19T20:50:37Z
-latest_commit_sha: 8c110812
-chat_duration: 1252268s (14:11:51:08)
+latest_commit_at_utc: 2026-10-19T21:04:22Z
+latest_commit_sha: bb539fe3
+chat_duration: 1253093s (14:12:04:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -663,6 +663,17 @@ Summary: R4 adds a minimal core-server Dockerfile, image contract, package paylo
 
 Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
 
+
+### 2026-10-19T21:04:22Z - Commit recorded
+
+Commit: `bb539fe3`
+
+Message: feat(deploy): add core server image boundary
+
+Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
+
+ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -775,6 +786,13 @@ Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-serve
   Summary: Added the core-server entrypoint, factual runnable-program declaration, isolated compile configuration, and deterministic dependency-boundary proof that rejects forbidden package payloads.
   ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
 
+
+- Commit: `bb539fe3`
+  Time UTC: 2026-10-19T21:04:22Z
+  Message: feat(deploy): add core server image boundary
+  Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
+  ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -788,9 +806,9 @@ Reason: The dedicated package boundary was approved in the existing core release
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-19T20:50:37Z
-Latest commit SHA: 8c110812
-Chat duration: 1252268s (14:11:51:08)
+Latest commit at UTC: 2026-10-19T21:04:22Z
+Latest commit SHA: bb539fe3
+Chat duration: 1253093s (14:12:04:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
