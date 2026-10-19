@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 12
+version: 13
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -39,6 +39,9 @@ workflow; this index does not authorize a bulk rename.
 
 Current commands:
 
+- `lifecycle/20-build/runnable-program-contract/`: report-only validation of a
+  provider-neutral runnable-program, image-command, dependency-boundary, and
+  safe-evidence declaration before package construction.
 - `inventory-deploy-control/`: read-only census of deploy scripts and
   infrastructure files, their callers, declared effects, and catalogue gaps.
 - `build-platform-shell-image/`: local-only Docker image build wrapper for the

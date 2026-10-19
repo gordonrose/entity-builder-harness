@@ -72,6 +72,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Approve the target-scoped script structure for the rehearsal
   Rationale: Build and package scripts remain lifecycle-owned and target-neutral; deploy and run scripts are nested under the exact target and scope so no staging script can be repointed by a free-form flag.
 
+
+- Decision: Adopt generic runnable-program contract control
+  Rationale: R1 supplies provider-neutral runnable-program, image-command, candidate-identity, dependency-boundary, and safe-evidence declaration governance with deterministic report-only failure fixtures before package construction.
+
 ## Context Hygiene
 
 
@@ -126,6 +130,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Target-specific release rehearsal plan ready
   Durable evidence: Durable review plan: docs/aws/kanbien-core-platform-release-rehearsal-plan.md. It defines R1-R6 repository packages, E0-E7 AWS gates, isolation from staging, and requires exact future approval before any AWS mutation.
+
+
+- Summary: R1 runnable-program contract control is ready to commit
+  Durable evidence: Generic standard/workflow/schema/template/guide are under .agentic/04.deploy; report-only checker and fixtures are at scripts/04.deploy/lifecycle/20-build/runnable-program-contract/. It passed its smoke, metadata, drift, and whitespace checks; no AWS or runtime change occurred.
 
 ## Activity Log
 
@@ -493,6 +501,27 @@ Summary: Added the review-only, target-specific Kanbien core-platform rehearsal 
 
 ADR impact: No ADR: no target/provider decision is selected or executed by this plan.
 
+
+### 2026-10-19T20:11:17Z - Decision
+
+Decision: Adopt generic runnable-program contract control
+
+Rationale: R1 supplies provider-neutral runnable-program, image-command, candidate-identity, dependency-boundary, and safe-evidence declaration governance with deterministic report-only failure fixtures before package construction.
+
+
+### 2026-10-19T20:11:17Z - ADR disposition
+
+ADR needed: no
+
+Reason: R1 is generic provider-neutral governance and a report-only check; it creates no target-specific architecture or external state.
+
+
+### 2026-10-19T20:11:17Z - Context hygiene
+
+Summary: R1 runnable-program contract control is ready to commit
+
+Durable evidence: Generic standard/workflow/schema/template/guide are under .agentic/04.deploy; report-only checker and fixtures are at scripts/04.deploy/lifecycle/20-build/runnable-program-contract/. It passed its smoke, metadata, drift, and whitespace checks; no AWS or runtime change occurred.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -592,7 +621,7 @@ ADR impact: No ADR: no target/provider decision is selected or executed by this 
 
 ADR needed: no
 ADR path:
-Reason: The rehearsal plan remains review-only, leaves target/provider decisions unselected, and authorizes no AWS change. A later approved target design may require an ADR.
+Reason: R1 is generic provider-neutral governance and a report-only check; it creates no target-specific architecture or external state.
 
 ## Session Metrics
 

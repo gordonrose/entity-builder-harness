@@ -1,0 +1,59 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: deploy.fixture.runnable-program-contract.valid
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.package-candidates
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: fixture
+#   purpose: Provide a safe provider-neutral runnable-program contract accepted by the report-only checker.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.test.runnable-program-contract
+#     path: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh
+schema: deploy/runnable-program-contract/v1
+id: generic-server-candidate
+version: 1
+runnable_programs:
+  - id: generic-server
+    entrypoint: artifacts/generic-server.main.js
+    approved_dependencies:
+      - platform-health
+      - platform-observability
+      - platform-server
+    observed_dependencies:
+      - platform-health
+      - platform-observability
+      - platform-server
+image_contracts:
+  - id: generic-server-image
+    program: generic-server
+    command_mode: exec
+    command:
+      - node
+      - artifacts/generic-server.main.js
+package_candidates:
+  - id: generic-server-candidate
+    image_contract: generic-server-image
+    immutable_identity_rule: runtime-bound-sha256
+candidate_verification:
+  candidate: generic-server-candidate
+  required_evidence_fields:
+    - package_contract_id
+    - candidate_id
+    - program_id
+    - source_revision
+    - image_digest
+    - release_identity
+    - health_verdict
+    - verification_verdict
+    - checked_at
+    - receipt_reference
