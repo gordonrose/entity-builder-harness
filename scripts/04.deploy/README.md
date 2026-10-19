@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 13
+version: 14
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -39,6 +39,11 @@ workflow; this index does not authorize a bulk rename.
 
 Current commands:
 
+- `lifecycle/20-build/core-server-dependency-boundary/`: local-only report of
+  the declared Kanbien core-server compile graph, derived from TypeScript
+  imports, workspace manifests, lockfile records, and temporary build output;
+  it rejects product, persistence, worker, relay, PostgreSQL, staging-server,
+  and AWS-adapter dependencies before packaging.
 - `lifecycle/20-build/runnable-program-contract/`: report-only validation of a
   provider-neutral runnable-program, image-command, dependency-boundary, and
   safe-evidence declaration before package construction.

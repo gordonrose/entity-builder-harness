@@ -84,6 +84,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt persistence-owned observability integration and server configuration boundary
   Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
 
+
+- Decision: Adopt the core-server runnable-program boundary and dependency proof
+  Rationale: The bootstrap program reuses platform-server, exposes only a safe release-verification operation, and is rejected if its source or compiled output includes a forbidden dependency. No target, image, provider, or cloud choice is made.
+
 ## Context Hygiene
 
 
@@ -146,6 +150,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: R2 passed the server, persistence, and observability package checks. The persistence observer was moved out of generic observability, and server configuration/release identity are now explicit exported contracts.
   Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
+
+
+- Summary: R3 proves the core server route and dependency graph locally: release verification responds safely, product routes are absent, and a compiled persistence import fails closed.
+  Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
 
 ## Activity Log
 
@@ -584,6 +592,27 @@ Summary: Moved persistence-specific observation integration into platform/persis
 
 ADR impact: No ADR: implements the approved package boundary without provider or target selection.
 
+
+### 2026-10-19T20:49:42Z - Decision
+
+Decision: Adopt the core-server runnable-program boundary and dependency proof
+
+Rationale: The bootstrap program reuses platform-server, exposes only a safe release-verification operation, and is rejected if its source or compiled output includes a forbidden dependency. No target, image, provider, or cloud choice is made.
+
+
+### 2026-10-19T20:49:42Z - ADR disposition
+
+ADR needed: no
+
+Reason: This implements the approved bootstrap-program boundary without a durable provider, target, network, or authority decision.
+
+
+### 2026-10-19T20:49:42Z - Context hygiene
+
+Summary: R3 proves the core server route and dependency graph locally: release verification responds safely, product routes are absent, and a compiled persistence import fails closed.
+
+Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -697,7 +726,7 @@ ADR impact: No ADR: implements the approved package boundary without provider or
 
 ADR needed: no
 ADR path:
-Reason: This applies the already-approved core release boundary; it does not select a provider, target, runtime, networking design, or authority model.
+Reason: This implements the approved bootstrap-program boundary without a durable provider, target, network, or authority decision.
 
 ## Session Metrics
 

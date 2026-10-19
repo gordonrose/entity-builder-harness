@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "declaration": false,
+    "exactOptionalPropertyTypes": true,
+    "incremental": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noEmitOnError": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "../../../../.cache/core-server-program-build",
+    "rootDir": "../../../..",
+    "strict": true,
+    "target": "ES2022",
+    "baseUrl": "../../../..",
+    "paths": {
+      "@kanbien/core": ["packages/core/src/index.ts"],
+      "@kanbien/core/*": ["packages/core/src/*/index.ts"],
+      "@kanbien/platform-contracts": ["platform/contracts/src/index.ts"],
+      "@kanbien/platform-config": ["platform/config/src/index.ts"],
+      "@kanbien/platform-health": ["platform/health/src/index.ts"],
+      "@kanbien/platform-observability": ["platform/observability/src/index.ts"],
+      "@kanbien/platform-runtime": ["platform/runtime/src/index.ts"],
+      "@kanbien/platform-security": ["platform/security/src/index.ts"],
+      "@kanbien/platform-server": ["platform/server/src/index.ts"],
+      "@kanbien/platform-server/main": ["platform/server/src/main.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": [
+    "./kanbien-core-server.main.ts",
+    "../../../../packages/core/src/**/*.ts",
+    "../../../../platform/config/src/**/*.ts",
+    "../../../../platform/contracts/src/**/*.ts",
+    "../../../../platform/health/src/**/*.ts",
+    "../../../../platform/observability/src/**/*.ts",
+    "../../../../platform/runtime/src/**/*.ts",
+    "../../../../platform/security/src/**/*.ts",
+    "../../../../platform/server/src/**/*.ts"
+  ]
+}
