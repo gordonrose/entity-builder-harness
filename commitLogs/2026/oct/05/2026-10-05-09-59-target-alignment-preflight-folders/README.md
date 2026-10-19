@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-19T20:12:10Z
-latest_commit_sha: e9fbc711
-chat_duration: 1249961s (14:11:12:41)
+latest_commit_at_utc: 2026-10-19T20:35:28Z
+latest_commit_sha: 2a96d7f2
+chat_duration: 1251359s (14:11:35:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -573,6 +573,17 @@ Summary: R2 passed the server, persistence, and observability package checks. Th
 
 Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
 
+
+### 2026-10-19T20:35:28Z - Commit recorded
+
+Commit: `2a96d7f2`
+
+Message: feat(platform): separate persistence observability
+
+Summary: Moved persistence-specific observation integration into platform/persistence; removed persistence from generic observability; made server runtime configuration and safe release identity explicit, tested platform contracts.
+
+ADR impact: No ADR: implements the approved package boundary without provider or target selection.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -671,6 +682,13 @@ Durable evidence: Durable implementation: platform/observability, platform/persi
   Summary: Added provider-neutral runnable-program and package-candidate governance, contract schema/template/guide, and report-only checker fixtures that fail closed for missing records, invalid commands, unapproved dependencies, and unsafe evidence fields. No runtime, target, AWS, or GitHub change occurred.
   ADR impact: No ADR: generic governance and a local report-only gate only.
 
+
+- Commit: `2a96d7f2`
+  Time UTC: 2026-10-19T20:35:28Z
+  Message: feat(platform): separate persistence observability
+  Summary: Moved persistence-specific observation integration into platform/persistence; removed persistence from generic observability; made server runtime configuration and safe release identity explicit, tested platform contracts.
+  ADR impact: No ADR: implements the approved package boundary without provider or target selection.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -684,9 +702,9 @@ Reason: This applies the already-approved core release boundary; it does not sel
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-19T20:12:10Z
-Latest commit SHA: e9fbc711
-Chat duration: 1249961s (14:11:12:41)
+Latest commit at UTC: 2026-10-19T20:35:28Z
+Latest commit SHA: 2a96d7f2
+Chat duration: 1251359s (14:11:35:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
