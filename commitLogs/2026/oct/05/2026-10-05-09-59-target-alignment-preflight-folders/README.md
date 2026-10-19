@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-19T06:51:03Z
-latest_commit_sha: 39d4a649
-chat_duration: 1201894s (13:21:51:34)
+latest_commit_at_utc: 2026-10-19T19:38:57Z
+latest_commit_sha: fa4fcaae
+chat_duration: 1247968s (14:10:39:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -442,6 +442,17 @@ Summary: Core rehearsal blueprint is ready to commit
 
 Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
 
+
+### 2026-10-19T19:38:57Z - Commit recorded
+
+Commit: `fa4fcaae`
+
+Message: docs(deploy): map core release rehearsal
+
+Summary: Recorded the core-server release rehearsal layout, lifecycle-owned check locations, persistence-owned observability integration, safe evidence locations, and staged implementation order. No runtime, AWS, target, or GitHub mutation occurred.
+
+ADR impact: No ADR: documentation-only planning refinement; target and provider decisions remain subject to later review.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -519,6 +530,13 @@ Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-targ
   Summary: Recorded the planned kanbien-core-server entrypoint family, generic release-verification/configuration ownership, technical-access naming, optional observability-persistence bridge, and dedicated core-server image boundary. No source implementation, AWS resource, target directory, secret, runtime, or PostgreSQL state changed.
   ADR impact: No ADR: this remains a draft governance and education refinement; it creates no live target or deployed architecture.
 
+
+- Commit: `fa4fcaae`
+  Time UTC: 2026-10-19T19:38:57Z
+  Message: docs(deploy): map core release rehearsal
+  Summary: Recorded the core-server release rehearsal layout, lifecycle-owned check locations, persistence-owned observability integration, safe evidence locations, and staged implementation order. No runtime, AWS, target, or GitHub mutation occurred.
+  ADR impact: No ADR: documentation-only planning refinement; target and provider decisions remain subject to later review.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -532,9 +550,9 @@ Reason: This commits a planning and teaching refinement only. It creates no dura
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-19T06:51:03Z
-Latest commit SHA: 39d4a649
-Chat duration: 1201894s (13:21:51:34)
+Latest commit at UTC: 2026-10-19T19:38:57Z
+Latest commit SHA: fa4fcaae
+Chat duration: 1247968s (14:10:39:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
