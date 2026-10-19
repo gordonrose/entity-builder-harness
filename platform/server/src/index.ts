@@ -78,6 +78,21 @@ export type {
 } from "./transport";
 export { resolvePlatformServerTransportOptions } from "./transport";
 
+export { resolvePlatformServerRuntimeConfiguration } from "./configuration";
+export type {
+  PlatformServerHealthEndpointExposure,
+  PlatformServerRuntimeConfiguration,
+} from "./configuration";
+
+export {
+  platformReleaseVerificationResponse,
+  resolvePlatformReleaseIdentity,
+} from "./verification";
+export type {
+  PlatformReleaseIdentity,
+  PlatformReleaseVerificationResponse,
+} from "./verification";
+
 export type PlatformServerMiddlewareStep =
   | "request-id"
   | "request-logging"

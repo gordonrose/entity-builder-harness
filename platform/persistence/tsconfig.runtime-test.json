@@ -16,6 +16,12 @@
       ],
       "@kanbien/core/*": [
         "packages/core/src/*/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
       ]
     },
     "rootDir": "../..",
@@ -25,6 +31,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "tests/*-runtime.test.ts"
+    "tests/*-runtime.test.ts",
+    "../contracts/src/**/*.ts",
+    "../observability/src/**/*.ts"
   ]
 }

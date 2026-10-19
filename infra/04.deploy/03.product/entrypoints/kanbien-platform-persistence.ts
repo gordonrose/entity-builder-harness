@@ -30,7 +30,7 @@ import type { Queue } from "@kanbien/core/queues";
 import type { Clock } from "@kanbien/core/shared";
 import { ok, systemClock } from "@kanbien/core/shared";
 import type { PlatformExecutionContext } from "@kanbien/platform-contracts";
-import { createPlatformPersistenceTransitionObserver } from "@kanbien/platform-observability";
+import { createPlatformPersistenceTransitionObserver } from "@kanbien/platform-persistence";
 import {
   createDynamoDbPlatformPersistenceAtomicWriter,
   createDynamoDbPlatformOutboxStore,

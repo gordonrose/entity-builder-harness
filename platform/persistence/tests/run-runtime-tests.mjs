@@ -4,11 +4,32 @@ import path, { join } from "node:path";
 
 const runtimeRoot = ".cache/platform-persistence-runtime";
 const testDirectory = join(runtimeRoot, "platform/persistence/tests");
-const coreModules = ["persistence", "queues", "shared"];
+const coreModules = [
+  "audit",
+  "authn",
+  "authz",
+  "config",
+  "diagnostics",
+  "events",
+  "i18n",
+  "logging",
+  "monitoring",
+  "persistence",
+  "queues",
+  "shared",
+  "tenancy",
+  "validation",
+];
 
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
   ...Object.fromEntries(coreModules.map((moduleName) => [`./${moduleName}`, join(runtimeRoot, `packages/core/src/${moduleName}/index.js`)])),
+});
+writePackageShim("@kanbien/platform-contracts", {
+  ".": join(runtimeRoot, "platform/contracts/src/index.js"),
+});
+writePackageShim("@kanbien/platform-observability", {
+  ".": join(runtimeRoot, "platform/observability/src/index.js"),
 });
 
 const testFiles = readdirSync(testDirectory)

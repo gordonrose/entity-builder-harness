@@ -76,6 +76,14 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt generic runnable-program contract control
   Rationale: R1 supplies provider-neutral runnable-program, image-command, candidate-identity, dependency-boundary, and safe-evidence declaration governance with deterministic report-only failure fixtures before package construction.
 
+
+- Decision: Adopt persistence-owned observability integration and server configuration boundary
+  Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+- Decision: Adopt persistence-owned observability integration and server configuration boundary
+  Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
 ## Context Hygiene
 
 
@@ -134,6 +142,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: R1 runnable-program contract control is ready to commit
   Durable evidence: Generic standard/workflow/schema/template/guide are under .agentic/04.deploy; report-only checker and fixtures are at scripts/04.deploy/lifecycle/20-build/runnable-program-contract/. It passed its smoke, metadata, drift, and whitespace checks; no AWS or runtime change occurred.
+
+
+- Summary: R2 passed the server, persistence, and observability package checks. The persistence observer was moved out of generic observability, and server configuration/release identity are now explicit exported contracts.
+  Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
 
 ## Activity Log
 
@@ -533,6 +545,34 @@ Summary: Added provider-neutral runnable-program and package-candidate governanc
 
 ADR impact: No ADR: generic governance and a local report-only gate only.
 
+
+### 2026-10-19T20:33:22Z - Decision
+
+Decision: Adopt persistence-owned observability integration and server configuration boundary
+
+Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+### 2026-10-19T20:33:28Z - Decision
+
+Decision: Adopt persistence-owned observability integration and server configuration boundary
+
+Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+### 2026-10-19T20:33:29Z - ADR disposition
+
+ADR needed: no
+
+Reason: This applies the already-approved core release boundary; it does not select a provider, target, runtime, networking design, or authority model.
+
+
+### 2026-10-19T20:33:29Z - Context hygiene
+
+Summary: R2 passed the server, persistence, and observability package checks. The persistence observer was moved out of generic observability, and server configuration/release identity are now explicit exported contracts.
+
+Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -639,7 +679,7 @@ ADR impact: No ADR: generic governance and a local report-only gate only.
 
 ADR needed: no
 ADR path:
-Reason: R1 is generic provider-neutral governance and a report-only check; it creates no target-specific architecture or external state.
+Reason: This applies the already-approved core release boundary; it does not select a provider, target, runtime, networking design, or authority model.
 
 ## Session Metrics
 

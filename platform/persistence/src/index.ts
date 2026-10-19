@@ -1,11 +1,16 @@
 export { platformPersistenceError } from "./errors";
 export type { PlatformPersistenceError, PlatformPersistenceErrorCode } from "./errors";
 
-export { recordPlatformPersistenceObservation } from "./observability";
+export {
+  createPlatformPersistenceTransitionObserver,
+  platformPersistenceTransitionProfile,
+  recordPlatformPersistenceObservation,
+} from "./observability";
 export type {
   PlatformPersistenceObservation,
   PlatformPersistenceObserver,
   PlatformPersistenceTransition,
+  PlatformPersistenceTransitionObserverOptions,
   PlatformPersistenceTransitionOutcome,
 } from "./observability";
 
