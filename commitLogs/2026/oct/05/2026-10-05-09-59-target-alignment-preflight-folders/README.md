@@ -68,6 +68,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt lifecycle-owned core release rehearsal layout
   Rationale: The first core-server rehearsal uses numbered build, package, deploy, and run script homes; it keeps generic rules in .agentic, factual selection in platform and infra, and safe run receipts in GitHub Actions without altering staging.
 
+
+- Decision: Approve the target-scoped script structure for the rehearsal
+  Rationale: Build and package scripts remain lifecycle-owned and target-neutral; deploy and run scripts are nested under the exact target and scope so no staging script can be repointed by a free-form flag.
+
 ## Context Hygiene
 
 
@@ -118,6 +122,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Core rehearsal blueprint is ready to commit
   Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
+
+
+- Summary: Target-specific release rehearsal plan ready
+  Durable evidence: Durable review plan: docs/aws/kanbien-core-platform-release-rehearsal-plan.md. It defines R1-R6 repository packages, E0-E7 AWS gates, isolation from staging, and requires exact future approval before any AWS mutation.
 
 ## Activity Log
 
@@ -453,6 +461,27 @@ Summary: Recorded the core-server release rehearsal layout, lifecycle-owned chec
 
 ADR impact: No ADR: documentation-only planning refinement; target and provider decisions remain subject to later review.
 
+
+### 2026-10-19T19:58:27Z - Decision
+
+Decision: Approve the target-scoped script structure for the rehearsal
+
+Rationale: Build and package scripts remain lifecycle-owned and target-neutral; deploy and run scripts are nested under the exact target and scope so no staging script can be repointed by a free-form flag.
+
+
+### 2026-10-19T19:58:27Z - ADR disposition
+
+ADR needed: no
+
+Reason: The rehearsal plan remains review-only, leaves target/provider decisions unselected, and authorizes no AWS change. A later approved target design may require an ADR.
+
+
+### 2026-10-19T19:58:27Z - Context hygiene
+
+Summary: Target-specific release rehearsal plan ready
+
+Durable evidence: Durable review plan: docs/aws/kanbien-core-platform-release-rehearsal-plan.md. It defines R1-R6 repository packages, E0-E7 AWS gates, isolation from staging, and requires exact future approval before any AWS mutation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -545,7 +574,7 @@ ADR impact: No ADR: documentation-only planning refinement; target and provider 
 
 ADR needed: no
 ADR path:
-Reason: This commits a planning and teaching refinement only. It creates no durable target, provider-authority, or runtime architecture decision; those require later reviewed implementation and target-design work.
+Reason: The rehearsal plan remains review-only, leaves target/provider decisions unselected, and authorizes no AWS change. A later approved target design may require an ADR.
 
 ## Session Metrics
 
