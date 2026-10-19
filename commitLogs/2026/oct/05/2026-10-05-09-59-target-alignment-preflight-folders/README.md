@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-19T20:35:28Z
-latest_commit_sha: 2a96d7f2
-chat_duration: 1251359s (14:11:35:59)
+latest_commit_at_utc: 2026-10-19T20:50:37Z
+latest_commit_sha: 8c110812
+chat_duration: 1252268s (14:11:51:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -613,6 +613,17 @@ Summary: R3 proves the core server route and dependency graph locally: release v
 
 Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
 
+
+### 2026-10-19T20:50:37Z - Commit recorded
+
+Commit: `8c110812`
+
+Message: feat(deploy): add core server runnable program
+
+Summary: Added the core-server entrypoint, factual runnable-program declaration, isolated compile configuration, and deterministic dependency-boundary proof that rejects forbidden package payloads.
+
+ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -718,6 +729,13 @@ Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-c
   Summary: Moved persistence-specific observation integration into platform/persistence; removed persistence from generic observability; made server runtime configuration and safe release identity explicit, tested platform contracts.
   ADR impact: No ADR: implements the approved package boundary without provider or target selection.
 
+
+- Commit: `8c110812`
+  Time UTC: 2026-10-19T20:50:37Z
+  Message: feat(deploy): add core server runnable program
+  Summary: Added the core-server entrypoint, factual runnable-program declaration, isolated compile configuration, and deterministic dependency-boundary proof that rejects forbidden package payloads.
+  ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -731,9 +749,9 @@ Reason: This implements the approved bootstrap-program boundary without a durabl
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-19T20:35:28Z
-Latest commit SHA: 2a96d7f2
-Chat duration: 1251359s (14:11:35:59)
+Latest commit at UTC: 2026-10-19T20:50:37Z
+Latest commit SHA: 8c110812
+Chat duration: 1252268s (14:11:51:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
