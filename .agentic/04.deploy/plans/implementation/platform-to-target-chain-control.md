@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 30
+version: 32
 status: draft
 layer: 04.deploy
 domain: deployment.governance
@@ -169,14 +169,14 @@ release metadata. It does not itself prove the running image digest: the
 candidate verifier must combine the server response with independent workload
 image-digest evidence and package-custody evidence before accepting a release.
 
-Before the bootstrap image is selected, split the existing persistence-related
-observability bridge from generic `platform/observability` into an optional
-provider-neutral `platform/observability-persistence` integration package.
-Generic logs, metrics, traces, correlation, and health signals remain in
-`platform/observability` without a `platform/persistence` dependency. The
-optional bridge depends on both modules and is selected only by a later
-persistence scope. This is a required dependency-boundary refactor, not a
-provider adapter or an AWS target decision.
+Before the bootstrap image is selected, move the existing
+persistence-observability bridge from generic `platform/observability` into
+`platform/persistence/src/observability/`. Generic logs, metrics, traces,
+correlation, and health signals remain in `platform/observability` without a
+`platform/persistence` dependency. The persistence-owned integration depends
+on generic observability and is selected only by a later persistence scope.
+This is a required dependency-boundary refactor, not a provider adapter or an
+AWS target decision.
 
 Technical infrastructure permissions are grouped under `technical-access/`,
 not `identity/` or bare `access/`, to keep them distinct from application
@@ -228,6 +228,95 @@ the verification operation; the scope declaration states what must be proved;
 the deploy script performs the controlled request; the pipeline runs it; and
 the receipt records the result. No existing staging smoke test is assumed to
 fill any of these roles without review.
+
+## First Bootstrap Implementation Map
+
+This is the intended *future* layout for the first bounded implementation
+packages. It is not authorisation to create the target, AWS resources, or
+runtime code in one change. Each package remains separately reviewable, and
+the existing `kanbien/staging` tree and its scripts are not moved as part of
+this work.
+
+```text
+.agentic/
+  03.product/
+    standards/runnable-program-contract.md
+    workflows/runnable-program-change.md
+  04.deploy/
+    standards/image-contract.md
+    workflows/package-candidate.md
+    workflows/verify-candidate-release.md
+
+platform/
+  server/src/
+    configuration/                 ← typed generic server configuration
+    verification/                  ← safe generic release-verification route
+  persistence/src/
+    observability/                 ← persistence-owned integration only
+
+infra/04.deploy/03.product/
+  entrypoints/
+    runnable-program-index.yml     ← factual program records
+    kanbien-core-server.main.ts    ← first runnable program
+  image/core-server/
+    Dockerfile
+    image-contract.yml             ← factual image boundary and start facts
+
+infra/04.deploy/03.product/targets/kanbien-core-platform/
+  target-profile.yml               ← created only after target design approval
+  foundation/                      ← shared target requirements
+  scopes/bootstrap-runtime/
+    declaration-contract.yml       ← required settings and proof promises
+    workload-binding.yml           ← program-to-workload selection
+    technical-access/              ← delivery, startup, runtime access facts
+    network/                       ← verifier route and network proof
+
+scripts/04.deploy/lifecycle/
+  20-build/core-server-dependency-boundary/
+  40-package/build-core-server-image/
+  40-package/smoke-test-core-server-image/
+  50-deploy/prepare-core-server-candidate/
+  50-deploy/deploy-core-server-candidate/
+  60-run/verify-core-server-candidate/
+```
+
+The `.agentic` artifacts govern how agents assess and change a class of
+program, image, or candidate verification. The `platform`, `infra`, and
+`scripts` artifacts state and perform the factual implementation. README files
+explain the local tree and link back to the governing artifact; they do not add
+independent mandatory rules.
+
+The four checks have deliberately separate jobs:
+
+| Check | Inputs | Required result | Safe result location |
+| --- | --- | --- | --- |
+| `20-build/core-server-dependency-boundary` | declared program root, TypeScript imports, package manifests, lockfile, and forbidden roots | the allowed compile/runtime graph is reported; a product app, provider adapter, persistence package, worker, relay, or old staging program cannot enter unnoticed | ephemeral local output and CI artifact; never a committed generated list |
+| `40-package/build-core-server-image` | program record, image contract, Docker build output, payload verifier | the compiled selected command and only its reviewed runtime payload are present | CI build artifact and package custody record |
+| `40-package/smoke-test-core-server-image` | locally built image | one declared start command, liveness, readiness, safe release identity, and no sensitive output | CI/local test output; only safe receipt fields are retained |
+| `60-run/verify-core-server-candidate` | tested digest, target declaration, fresh read-only target evidence, controlled verifier response | the deployed workload digest, safe server identity, and package custody evidence agree | GitHub Actions candidate receipt and job summary |
+
+The dependency-boundary reporter derives its result rather than accepting a
+hand-written exhaustive file list. The program record names the root and its
+deliberate exclusions; TypeScript imports, package manifests, the lockfile,
+and built payload establish the actual graph. A mismatch is a safe failure,
+not an invitation for the check to widen the image automatically.
+
+Implementation order is intentionally narrow:
+
+1. create generic runnable-program and image-contract governance plus
+   report-only fixtures;
+2. extract the persistence-owned observability integration and verify the
+   generic observability graph no longer selects persistence;
+3. add the core program record, entrypoint, dependency-boundary reporter, and
+   local proof without AWS state;
+4. add the dedicated image contract, build, payload check, and local smoke
+   proof;
+5. only after an approved target design, create target declarations and add
+   the read-only alignment, deployment, and candidate-verification path.
+
+Each package stops on a failed gate, unclear declaration, or target-mutation
+boundary. No report, check, or pipeline may create AWS resources merely to
+make its own evidence pass.
 
 ## Repo-Wide Agentic Change-Governance Outcome
 

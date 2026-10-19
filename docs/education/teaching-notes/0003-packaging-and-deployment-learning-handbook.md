@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 19
+  version: 21
   status: active
   layer: 05.education
   domain: education
@@ -1658,9 +1658,9 @@ platform/observability
 → generic logs, metrics, traces, correlation, and health signals
 → no platform/persistence dependency
 
-platform/observability-persistence
-→ optional provider-neutral bridge
-→ depends on observability and persistence
+platform/persistence/src/observability/
+→ persistence-owned integration code
+→ depends on generic observability
 → selected only by a later persistence scope
 ```
 
@@ -1812,7 +1812,71 @@ record. It may share an account or region with the existing target only by an
 explicit isolation decision. Nothing is inherited merely because both targets
 belong to Kanbien.
 
-## 22. Next Lesson Queue
+## 22. From a Runnable Program to a Proven Package
+
+The first core-server package will be built in small, separately checkable
+pieces. This is the planned layout, not a description of files that already
+exist:
+
+```text
+.agentic/
+  03.product/  → generic rules for runnable-program changes
+  04.deploy/   → generic rules for image and candidate-release checks
+
+platform/server/src/
+  configuration/  → typed generic server settings
+  verification/   → safe generic release-verification response
+
+platform/persistence/src/observability/
+  → optional persistence-specific integration
+
+infra/04.deploy/03.product/
+  entrypoints/runnable-program-index.yml
+  entrypoints/kanbien-core-server.main.ts
+  image/core-server/image-contract.yml
+  image/core-server/Dockerfile
+
+scripts/04.deploy/lifecycle/
+  20-build/core-server-dependency-boundary/
+  40-package/build-core-server-image/
+  40-package/smoke-test-core-server-image/
+  50-deploy/prepare-core-server-candidate/
+  50-deploy/deploy-core-server-candidate/
+  60-run/verify-core-server-candidate/
+```
+
+The important separation is:
+
+| Place | What it owns |
+| --- | --- |
+| `.agentic` | The rules an agent must follow when changing this kind of thing. |
+| `platform` | Reusable program behaviour and typed generic contracts. |
+| `infra` | The factual statement of which program, image, and later target are selected. |
+| `scripts` | The repeatable checks that build, inspect, smoke-test, and verify those facts. |
+| GitHub Actions receipt | Safe evidence from a particular candidate run; not a new source of truth. |
+
+The first check does not maintain a fragile manual list of every source file.
+It begins with the selected entrypoint and derives what it needs through the
+TypeScript imports, package manifests, lockfile, and final image payload. The
+program declaration also names what must stay out. If persistence, a product
+app, old staging program, worker, relay, or provider adapter enters the graph,
+the check reports the mismatch rather than silently widening the image.
+
+The order is deliberately safe:
+
+```text
+generic rules and report-only fixtures
+→ separate generic observability from persistence-owned integration
+→ core entrypoint and local dependency proof
+→ dedicated image and local smoke proof
+→ approved target declaration, alignment, deployment, and live verification
+```
+
+The final arrow is not automatic. A failed check, unclear declaration, or AWS
+mutation boundary stops the work for review. No diagnostic check creates AWS
+resources just to make itself pass.
+
+## 23. Next Lesson Queue
 
 Continue this handbook incrementally with:
 

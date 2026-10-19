@@ -64,6 +64,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt a dedicated core-server package boundary
   Rationale: The planned kanbien-core-server.main.ts uses existing platform-server startup and transport, gains generic release-verification and visible configuration contracts, and is packaged in a dedicated core-server image. Generic observability must be separated from its optional persistence bridge. Technical infrastructure permissions are grouped under technical-access; the verifier route remains bootstrap-scope-owned.
 
+
+- Decision: Adopt lifecycle-owned core release rehearsal layout
+  Rationale: The first core-server rehearsal uses numbered build, package, deploy, and run script homes; it keeps generic rules in .agentic, factual selection in platform and infra, and safe run receipts in GitHub Actions without altering staging.
+
 ## Context Hygiene
 
 
@@ -110,6 +114,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Recorded runnable-program selection, generic release-verification ownership, package versus runtime dependency distinction, optional observability-persistence bridge, technical-access naming, and dedicated core-image boundary. No source implementation, AWS resource, target directory, secret, or PostgreSQL state changed.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Artifact metadata and whitespace checks passed.
+
+
+- Summary: Core rehearsal blueprint is ready to commit
+  Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
 
 ## Activity Log
 
@@ -413,6 +421,27 @@ Summary: Recorded the planned kanbien-core-server entrypoint family, generic rel
 
 ADR impact: No ADR: this remains a draft governance and education refinement; it creates no live target or deployed architecture.
 
+
+### 2026-10-19T19:37:55Z - Decision
+
+Decision: Adopt lifecycle-owned core release rehearsal layout
+
+Rationale: The first core-server rehearsal uses numbered build, package, deploy, and run script homes; it keeps generic rules in .agentic, factual selection in platform and infra, and safe run receipts in GitHub Actions without altering staging.
+
+
+### 2026-10-19T19:37:56Z - ADR disposition
+
+ADR needed: no
+
+Reason: This commits a planning and teaching refinement only. It creates no durable target, provider-authority, or runtime architecture decision; those require later reviewed implementation and target-design work.
+
+
+### 2026-10-19T19:37:56Z - Context hygiene
+
+Summary: Core rehearsal blueprint is ready to commit
+
+Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -498,7 +527,7 @@ ADR impact: No ADR: this remains a draft governance and education refinement; it
 
 ADR needed: no
 ADR path:
-Reason: This change refines a draft provider-neutral governance plan and teaching material only. It makes no live target, provider-authority, or deployed-architecture decision.
+Reason: This commits a planning and teaching refinement only. It creates no durable target, provider-authority, or runtime architecture decision; those require later reviewed implementation and target-design work.
 
 ## Session Metrics
 
