@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.core-server-package-custody
 #   version: 1
 #   status: draft
@@ -15,5 +15,7 @@ set -euo pipefail
 #   used_by:
 #   - id: deploy.test.kanbien-core-platform.core-server-package-custody
 #     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
 ROOT="$(git rev-parse --show-toplevel)"
 exec python3 "$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py" "$@"

@@ -1,5 +1,5 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.command.kanbien-core-platform.core-server-package-custody.readme
 version: 1
 status: draft
@@ -12,6 +12,8 @@ portability: { class: internal, targets: [] }
 used_by:
   - id: deploy.command.kanbien-core-platform.core-server-package-custody
     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh
+created_on: "2026-10-20"
+updated_on: "2026-10-20"
 -->
 # Core Server Package Custody Workflow Check
 

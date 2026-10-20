@@ -1,5 +1,5 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.standards.package-custody-and-promotion
 version: 1
 status: draft
@@ -21,6 +21,8 @@ used_by:
     path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+created_on: "2026-10-20"
+updated_on: "2026-10-20"
 -->
 # Package Custody and Promotion
 
