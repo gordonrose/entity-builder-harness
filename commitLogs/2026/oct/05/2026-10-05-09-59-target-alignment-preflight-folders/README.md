@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:59:20Z
-latest_commit_sha: 4ddad06f033d6eac10a48ade42f0d72e9c3e7b89
-chat_duration: 1335591s (15:10:59:51)
+latest_commit_at_utc: 2026-10-20T22:10:46Z
+latest_commit_sha: 832e709a
+chat_duration: 1343477s (15:13:11:17)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1399,6 +1399,17 @@ Decision: The kanbien-core-platform bootstrap runtime deployed from the qualifie
 
 Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
 
+
+### 2026-10-20T22:10:46Z - Commit recorded
+
+Commit: `832e709a`
+
+Message: feat(deploy): govern core platform release updates
+
+Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
+
+ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1644,6 +1655,13 @@ Rationale: Live evidence: ECS rollout completed with one healthy task; verifier 
   Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
   ADR impact: No new ADR; corrects reusable deployment-control interpretation.
 
+
+- Commit: `832e709a`
+  Time UTC: 2026-10-20T22:10:46Z
+  Message: feat(deploy): govern core platform release updates
+  Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
+  ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1657,9 +1675,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:59:20Z
-Latest commit SHA: 4ddad06f033d6eac10a48ade42f0d72e9c3e7b89
-Chat duration: 1335591s (15:10:59:51)
+Latest commit at UTC: 2026-10-20T22:10:46Z
+Latest commit SHA: 832e709a
+Chat duration: 1343477s (15:13:11:17)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
