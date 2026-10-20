@@ -20,6 +20,8 @@
   used_by:
   - id: harness.standard.operational-realization-gate
     path: .agentic/01.harness/standards/operational-realization-gate.md
+  - id: harness.standard.delegated-execution-state
+    path: .agentic/01.harness/standards/delegated-execution-state.md
 -->
 # Operational Realization Workflow
 
@@ -76,11 +78,16 @@ Without both approvals, follow the normal procedure below.
    mutation is proposed.
 5. Obtain the separate target-specific authorization required to execute the
    reviewed mutation. This generic workflow never grants cloud authority.
-6. Run one labelled controlled execution. Record safe terminal evidence.
-7. If it reaches a terminal failure or stop, do not replay it. Define and
+6. If execution is delegated, bind the worker to a packet whose reports follow
+   `delegated-execution-state`. A non-complete state must name the current
+   gate, completed gates, evidence reference, next permitted action, and any
+   blocker. An asynchronous provider wait is `waiting-on-external-system`,
+   never `complete`.
+7. Run one labelled controlled execution. Record safe terminal evidence.
+8. If it reaches a terminal failure or stop, do not replay it. Define and
    review a new recovery label and use the `recovery` gate. A recovery is never
    a substitute for omitted preflight evidence.
-8. Record the final safe evidence location in the capability plan and update
+9. Record the final safe evidence location in the capability plan and update
    the contract's proof states only after the relevant proof actually passes.
 
 ## Stop Conditions

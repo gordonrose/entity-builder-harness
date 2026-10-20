@@ -1,0 +1,24 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.fixture.delivery-access-contract.sample-workflow
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 04.deploy
+#   domain: deployment.delivery-access
+#   disciplines:
+#   - security
+#   kind: fixture
+#   purpose: Supply named workflow steps for generic delivery-access validator tests.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.test.validate-delivery-access-contract
+#     path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh
+name: Sample package custody
+steps:
+  - name: Obtain package access
+  - name: Read package status

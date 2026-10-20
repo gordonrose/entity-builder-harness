@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.package-custody-and-promotion
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: deployment.package-candidates
@@ -42,6 +42,12 @@ A publication route must:
 4. fail closed if a required scan, SBOM, provenance attestation, or digest
    binding is absent or rejected; and
 5. write only a receipt conforming to the safe receipt schema.
+
+Before publication, the exact pipeline's declared provider access must pass its
+static policy-coverage check. After its delivery identity is assumed, named
+safe read-only access probes must pass before a consequential publication
+operation. The custody receipt records those two checks separately from image
+qualification and scan evidence.
 
 The receipt may contain stable identifiers, source revision, digest, bounded
 check verdicts, timestamp, and a non-secret run reference. It must not contain

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.build-core-server-image.verify-payload
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
 #   updated_on: "2026-10-20"
@@ -36,6 +36,7 @@ IMAGE_CONTRACT = ROOT / "infra/04.deploy/03.product/image/core-server/image-cont
 PROGRAM_CONTRACT = ROOT / "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml"
 DOCKERFILE = ROOT / "infra/04.deploy/03.product/image/core-server/Dockerfile"
 DOCKERIGNORE = ROOT / "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore"
+BUILD_SCRIPT = ROOT / "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh"
 COMPILED_ENTRYPOINT = Path("kanbien-core-server.main.js")
 EXPECTED_SHIMS = {
     "@kanbien/core", "@kanbien/platform-config", "@kanbien/platform-contracts",
@@ -77,27 +78,49 @@ def validate_source_contracts() -> dict:
     program = load_document(PROGRAM_CONTRACT, "program-contract-missing", "program-contract-invalid")
     if image.get("id") != "kanbien-core-server-image" or image.get("program_id") != "kanbien-core-server":
         raise PayloadFailure("image-contract-program-mismatch")
-    command = ["node", f"artifacts/{COMPILED_ENTRYPOINT.as_posix()}"]
-    if image.get("compiled_entrypoint") != command[1] or image.get("command") != command:
+    command = [f"artifacts/{COMPILED_ENTRYPOINT.as_posix()}"]
+    if image.get("compiled_entrypoint") != command[0] or image.get("command") != command:
         raise PayloadFailure("image-contract-command-invalid")
+    runtime = image.get("runtime")
+    base = image.get("runtime_base")
+    health = image.get("health")
+    if (
+        not isinstance(runtime, dict)
+        or runtime.get("user") != "nonroot"
+        or not isinstance(base, dict)
+        or not isinstance(base.get("reference"), str)
+        or "@sha256:" not in base["reference"]
+        or not isinstance(base.get("vulnerability_policy"), dict)
+        or base["vulnerability_policy"].get("blocked_severities") != ["CRITICAL", "HIGH"]
+        or base["vulnerability_policy"].get("required_evidence") != "published-ecr-scan"
+        or not isinstance(health, dict)
+        or health.get("proof") != "external-container-smoke"
+    ):
+        raise PayloadFailure("image-contract-runtime-policy-invalid")
+    try:
+        build_script = BUILD_SCRIPT.read_text(encoding="utf-8")
+    except OSError:
+        raise PayloadFailure("image-build-script-missing") from None
+    if f"RUNTIME_NODE_IMAGE={base['reference']}" not in build_script:
+        raise PayloadFailure("image-build-runtime-base-mismatch")
     programs = program.get("runnable_programs")
     if not isinstance(programs, list) or not any(isinstance(item, dict) and item.get("id") == "kanbien-core-server" for item in programs):
         raise PayloadFailure("program-record-missing")
     return image
 
 
-def validate_docker_boundary() -> None:
+def validate_docker_boundary(image: dict) -> None:
     try:
         dockerfile = DOCKERFILE.read_text(encoding="utf-8")
         dockerignore = DOCKERIGNORE.read_text(encoding="utf-8")
     except OSError:
         raise PayloadFailure("image-source-missing") from None
     required = (
-        "USER node",
-        'CMD ["node", "artifacts/kanbien-core-server.main.js"]',
-        "HEALTHCHECK",
-        "/livez",
-        "COPY --chown=node:node --from=build /payload/artifacts/ ./artifacts/",
+        f"ARG RUNTIME_NODE_IMAGE={image['runtime_base']['reference']}",
+        "FROM ${RUNTIME_NODE_IMAGE}",
+        "USER nonroot",
+        f"CMD {json.dumps(image['command'])}",
+        "COPY --chown=nonroot:nonroot --from=build /payload/artifacts/ ./artifacts/",
     )
     if dockerfile.count("\nCMD ") != 1 or any(item not in dockerfile for item in required):
         raise PayloadFailure("dockerfile-runtime-boundary-invalid")
@@ -140,7 +163,7 @@ def main() -> int:
         if unknown:
             raise PayloadFailure("payload-check-argument-invalid")
         image = validate_source_contracts()
-        validate_docker_boundary()
+        validate_docker_boundary(image)
         validate_payload(Path(args.compiled_root), image)
         report = {"scope": "core-server-image-payload", "verdict": "passed", "diagnostics": []}
         status = 0

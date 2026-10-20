@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server.contract
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
 #   updated_on: "2026-10-20"
@@ -28,19 +28,27 @@ runnable_program_contract: infra/04.deploy/03.product/entrypoints/runnable-progr
 program_id: kanbien-core-server
 compiled_entrypoint: artifacts/kanbien-core-server.main.js
 command:
-  - node
   - artifacts/kanbien-core-server.main.js
 runtime:
-  user: node
+  user: nonroot
   non_secret_defaults:
     NODE_ENV: production
     HOST: 0.0.0.0
     PORT: "3000"
     PLATFORM_SOURCE_COMMIT_SHA: build-argument
+runtime_base:
+  reference: gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
+  vulnerability_policy:
+    blocked_severities:
+      - CRITICAL
+      - HIGH
+    required_evidence: published-ecr-scan
+    exception: explicit-approved-package-exception-only
 health:
   liveness_path: /livez
   readiness_path: /readyz
   release_verification_path: /internal/release-verification
+  proof: external-container-smoke
 payload:
   allowed_program: kanbien-core-server
   forbidden_dependency_ids:

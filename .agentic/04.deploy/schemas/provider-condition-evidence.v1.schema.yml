@@ -1,0 +1,53 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.provider-condition-evidence.v1
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 04.deploy
+#   domain: deployment.target-alignment
+#   disciplines:
+#   - agentic
+#   - security
+#   - sre
+#   kind: schema
+#   purpose: Define safe evidence for an asynchronous provider condition.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.standards.provider-async-conditions
+#     path: .agentic/04.deploy/standards/provider-async-conditions.md
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/cost-control.yml
+schema: deploy/provider-condition-evidence-schema/v1
+evidence_schema: deploy/provider-condition-evidence/v1
+required_fields:
+  - schema
+  - condition_id
+  - target
+  - status
+  - checked_at
+  - next_check_after
+  - evidence_reference
+allowed_statuses:
+  - not-requested
+  - requested
+  - waiting-on-provider
+  - verified
+  - expired
+  - waived-by-approved-exception
+waiver_required_fields:
+  - authority_reference
+  - reason_code
+  - expires_at
+  - compensating_controls
+  - follow_up_owner
+prohibited_values:
+  - account identifiers
+  - secret values
+  - email addresses
+  - provider response bodies
+  - endpoint URLs

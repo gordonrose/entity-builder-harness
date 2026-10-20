@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.package-custody-receipt-validation
-#   version: 1
+#   version: 2
 #   status: draft
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
@@ -23,7 +23,7 @@ from pathlib import Path
 
 SCHEMA = "deploy/package-custody-receipt/v1"
 FIELDS = {"schema", "target", "environment_class", "provider_region_alias", "candidate_id", "package_contract_id", "program_id", "source_revision", "image_digest", "release_identity", "checked_at", "checks", "verdict", "receipt_reference"}
-CHECKS = {"runnable_program_contract", "dependency_boundary", "local_image_smoke", "ecr_scan", "sbom", "provenance_attestation"}
+CHECKS = {"runnable_program_contract", "dependency_boundary", "delivery_access_static", "delivery_access_live", "local_image_smoke", "ecr_scan", "sbom", "provenance_attestation"}
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]{1,95}$")
 REGION = re.compile(r"^[a-z][a-z0-9-]{1,31}-[a-z]+-[a-z0-9-]{1,31}$")
 SHA = re.compile(r"^[0-9a-f]{40,64}$")

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-20"
@@ -108,5 +108,18 @@ value["live_alignment"] = "aligned"
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
 expect_failure "live-alignment-falsely-ready" "$ready"
+
+cost="$(copy_fixture invalid-cost-control)"
+python3 - "$cost/foundation/cost-control.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+path = Path(sys.argv[1])
+value = yaml.safe_load(path.read_text(encoding="utf-8"))
+value["waiver"]["compensating_controls"] = []
+path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+PY
+expect_failure "cost-control-invalid" "$cost"
 
 echo "Core-platform target declaration tests passed."

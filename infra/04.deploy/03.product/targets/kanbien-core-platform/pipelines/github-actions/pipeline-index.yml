@@ -28,6 +28,7 @@ pipelines:
     owner: deployment-platform
     state: active
     executable_workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
+    delivery_access_contract: core-server-package-custody.delivery-access.yml
     trigger: workflow_dispatch
     permitted_source_ref: refs/heads/main
     approval: github-environment:kanbien-core-platform
@@ -49,6 +50,7 @@ pipelines:
     receipt_contract: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
     required_proofs:
       - local-image-qualification
+      - delivery-access-coverage
       - vulnerability-scan
       - sbom
       - provenance-attestation
