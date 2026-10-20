@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.script.inventory-deploy-control.smoke-test
 #   version: 1
 #   status: active
+#   created_on: "2026-10-06"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: deployment.governance
 #   disciplines:

@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.architecture.adr.0029-use-purpose-and-authority-aware-rag-retrieval
 version: 1
 status: active
+created_on: "2026-07-11"
+updated_on: "2026-10-20"
 layer: 02.rag-rulebook
 domain: architecture
 disciplines:

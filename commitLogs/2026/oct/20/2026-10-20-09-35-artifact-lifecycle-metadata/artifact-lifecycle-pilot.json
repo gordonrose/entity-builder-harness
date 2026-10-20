@@ -1,0 +1,113 @@
+{
+  "mode": "apply",
+  "today_utc": "2026-10-20",
+  "plans": [
+    {
+      "path": ".agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md",
+      "id": "deploy.plan.migration.aws-provider-neutral-transition",
+      "changed": true,
+      "content_differs_from_head": false,
+      "creation_evidence": {
+        "last_committed_on": "2026-10-06",
+        "last_commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "basis": "git-first-added",
+        "created_on": "2026-10-06",
+        "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-06",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "draft",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "cab43460c9850feadc5bbf2612fe03a2f3e4c8f857aecd82ed79cd519039c696",
+      "sha256_after": "74b7faa8688f7fa6070d11551fcdbb1db6b47ea484055fa474cab347ad0a0b46"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/declaration-contract.v1.guide.md",
+      "id": "deploy.schema.declaration-contract.v1.guide",
+      "changed": true,
+      "content_differs_from_head": false,
+      "creation_evidence": {
+        "last_committed_on": "2026-10-06",
+        "last_commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "basis": "git-first-added",
+        "created_on": "2026-10-06",
+        "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-06",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "draft",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "51f8ec20060743fc341332bd5cb0f9f657bacc6cc7ebe9fef96c6769f172a230",
+      "sha256_after": "690da458641c1be2799862d0ae987b671af8b8a0b342f63632085d0fd5c8ffd0"
+    },
+    {
+      "path": ".agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md",
+      "id": "deploy.plan.implementation.platform-to-target-chain-control",
+      "changed": true,
+      "content_differs_from_head": false,
+      "creation_evidence": {
+        "last_committed_on": "2026-10-19",
+        "last_commit": "fa4fcaae0d59f6360f754f654e13d9e332c6acff",
+        "basis": "git-first-added",
+        "created_on": "2026-10-06",
+        "commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-19",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "draft",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-06",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "558da4154cef56ef1c98d53947e7082151d935571d6cf4b97b3a9ed7bc02f8fb",
+      "sha256_after": "36f42cf2081135ced9aa40141a0730f3f7527997ff61dcdf30026a7cb5e97ba7"
+    }
+  ],
+  "errors": [],
+  "applied": true
+}

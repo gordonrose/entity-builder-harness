@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: product.plan.tenant-resource-authorization-platform-seam
 version: 1
 status: active
+created_on: "2026-09-01"
+updated_on: "2026-10-20"
 layer: 03.product
 domain: identity-access
 disciplines:

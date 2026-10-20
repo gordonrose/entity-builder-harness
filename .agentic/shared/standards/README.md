@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: shared.standards.readme
 version: 1
 status: active
+created_on: "2026-06-19"
+updated_on: "2026-10-20"
 layer: 06.shared
 domain: governance
 disciplines:

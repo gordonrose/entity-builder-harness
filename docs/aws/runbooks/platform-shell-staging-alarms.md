@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: aws.runbook.platform-shell-staging-alarms
 version: 1
 status: draft
+created_on: "2026-09-08"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:

@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
 #   version: 1
 #   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:

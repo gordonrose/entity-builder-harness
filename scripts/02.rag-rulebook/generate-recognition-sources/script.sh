@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.generate-recognition-sources
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -38,6 +40,7 @@ python3 - "$@" <<'PY'
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import difflib
 import json
 import os
@@ -276,6 +279,7 @@ def build_artifacts_source(index: dict[str, Any]) -> dict[str, Any]:
         ],
         "source_artifacts": [
             ".agentic/01.harness/artifact-metadata/schema.v2.yml",
+            ".agentic/01.harness/artifact-metadata/schema.v3.yml",
             ".agentic/01.harness/artifact-metadata/taxonomy.yml",
             "scripts/01.harness/artifact-metadata/generate-index/script.sh",
         ],
@@ -294,7 +298,7 @@ def build_artifacts_source(index: dict[str, Any]) -> dict[str, Any]:
             "Generated terms must retain evidence paths.",
             "Generated terms must be regenerated when artifact metadata headers, indexed paths, or the artifact metadata indexer change.",
             "Generated terms must not include duplicate canonical lookup terms.",
-            "Generated recognition sources must stay deterministic and omit timestamps.",
+            "Generated recognition-source bodies must stay deterministic and omit timestamps; v3 headers preserve lifecycle dates on no-op regeneration.",
         ],
         "refresh_policy": {
             "trigger": "Regenerate when artifact metadata headers, indexed paths, or artifact metadata index generation logic changes.",
@@ -560,8 +564,47 @@ def source_header(source_name: str) -> str:
 """
 
 
-def render_source(source_name: str, source: dict[str, Any]) -> str:
-    return source_header(source_name) + "\n" + yaml.safe_dump(source, sort_keys=False, allow_unicode=False)
+def split_generated_header(text: str) -> tuple[dict[str, Any], str]:
+    lines = text.splitlines(keepends=True)
+    header_lines: list[str] = []
+    for line in lines:
+        if not line.startswith("#"):
+            break
+        header_lines.append(line[2:] if line.startswith("# ") else line[1:])
+    parsed = yaml.safe_load("".join(header_lines)) or {}
+    metadata = parsed.get("agentic-artifact") or {}
+    return metadata, "".join(lines[len(header_lines):]).lstrip("\n")
+
+
+def render_source(source_name: str, source: dict[str, Any], previous_path: Path) -> str:
+    body = yaml.safe_dump(source, sort_keys=False, allow_unicode=False)
+    template = source_header(source_name)
+    previous = previous_path.read_text(encoding="utf-8") if previous_path.exists() else None
+    previous_metadata, previous_body = split_generated_header(previous) if previous is not None else ({}, "")
+    schema = previous_metadata.get("schema")
+    if previous is not None and schema not in {"agentic-artifact/v2", "agentic-artifact/v3"}:
+        raise ValueError(f"Unsupported generated metadata schema in {previous_path}: {schema}")
+    if schema == "agentic-artifact/v2":
+        return template + "\n" + body
+
+    metadata, _ = split_generated_header(template)
+    metadata["schema"] = "agentic-artifact/v3"
+    today = dt.datetime.now(dt.UTC).date().isoformat()
+    for field in ("version", "status", "created_on", "updated_on", "deprecated_on", "superseded_on", "superseded_by"):
+        if field in previous_metadata:
+            metadata[field] = previous_metadata[field]
+    if previous is not None:
+        for field in ("created_on", "updated_on"):
+            if not isinstance(metadata.get(field), str):
+                raise ValueError(f"Missing quoted {field} in {previous_path}")
+            dt.date.fromisoformat(metadata[field])
+    metadata.setdefault("created_on", today)
+    metadata.setdefault("updated_on", today)
+    if metadata == previous_metadata and body == previous_body:
+        return previous
+    metadata["updated_on"] = today
+    header = yaml.safe_dump({"agentic-artifact": metadata}, sort_keys=False, allow_unicode=False)
+    return "".join("# " + line + "\n" for line in header.splitlines()) + "\n" + body
 
 
 def requested_sources(source: str) -> list[str]:
@@ -570,32 +613,37 @@ def requested_sources(source: str) -> list[str]:
     return [source]
 
 
-def rendered_sources(source_names: list[str]) -> dict[str, str]:
+def rendered_sources(source_names: list[str], output_paths: dict[str, Path] | None = None) -> dict[str, str]:
     index = run_artifact_index() if "artifacts" in source_names else None
     return {
-        source_name: render_source(source_name, build_source(source_name, index=index))
+        source_name: render_source(
+            source_name,
+            build_source(source_name, index=index),
+            (output_paths or {}).get(source_name, ROOT / DEFAULT_OUTPUTS[source_name]),
+        )
         for source_name in source_names
     }
 
 
 def check_output(path: Path, label: str, rendered: str) -> int:
+    display_path = path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else path.as_posix()
     if not path.exists():
-        print(f"ERROR: generated recognition source is missing: {path.relative_to(ROOT)}", file=sys.stderr)
+        print(f"ERROR: generated recognition source is missing: {display_path}", file=sys.stderr)
         return 1
     current = path.read_text(encoding="utf-8")
     if current != rendered:
         diff = difflib.unified_diff(
             current.splitlines(),
             rendered.splitlines(),
-            fromfile=path.relative_to(ROOT).as_posix(),
-            tofile=f"{path.relative_to(ROOT).as_posix()} (regenerated)",
+            fromfile=display_path,
+            tofile=f"{display_path} (regenerated)",
             lineterm="",
         )
         print(f"ERROR: generated recognition source is stale: {label}", file=sys.stderr)
         for line in diff:
             print(line, file=sys.stderr)
         return 1
-    print(f"Generated recognition source is current: {path.relative_to(ROOT).as_posix()}")
+    print(f"Generated recognition source is current: {display_path}")
     return 0
 
 
@@ -610,8 +658,8 @@ def main(argv: list[str]) -> int:
 
     if args.output is not None:
         source_name = args.source
-        rendered = rendered_sources([source_name])[source_name]
         output_path = ROOT / args.output
+        rendered = rendered_sources([source_name], {source_name: output_path})[source_name]
         if args.check:
             return check_output(output_path, source_name, rendered)
         output_path.parent.mkdir(parents=True, exist_ok=True)

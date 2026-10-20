@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: education.architecture.adr.0002-use-article-editor-agent-before-public-article-drafting
   version: 1
   status: active
+  created_on: "2026-06-16"
+  updated_on: "2026-10-20"
   layer: 05.education
   domain: education
   disciplines:

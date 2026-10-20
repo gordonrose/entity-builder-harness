@@ -1,0 +1,119 @@
+{
+  "recorded_on": "2026-10-20T09:31:46.511519+00:00",
+  "scope": "Bootstrap template lifecycle compatibility and owned ordinary artifact headers",
+  "applied": true,
+  "errors": [],
+  "artifacts": [
+    {
+      "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh",
+      "creation_evidence": {
+        "last_committed_on": "2026-09-01",
+        "last_commit": "afa29cff2e2baa24d8be476a826e2b6ac694bb85",
+        "basis": "git-first-added",
+        "created_on": "2026-06-20",
+        "commit": "5ebdfbc515947d4a16042a9b592b46cb5df439d2",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      }
+    },
+    {
+      "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh",
+      "creation_evidence": {
+        "last_committed_on": "2026-09-01",
+        "last_commit": "afa29cff2e2baa24d8be476a826e2b6ac694bb85",
+        "basis": "git-first-added",
+        "created_on": "2026-06-20",
+        "commit": "5ebdfbc515947d4a16042a9b592b46cb5df439d2",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      }
+    },
+    {
+      "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/README.md",
+      "creation_evidence": {
+        "last_committed_on": "2026-06-25",
+        "last_commit": "93cff5985e45665792e4e9abe5cfd3c759435185",
+        "basis": "git-first-added",
+        "created_on": "2026-06-20",
+        "commit": "5ebdfbc515947d4a16042a9b592b46cb5df439d2",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      }
+    },
+    {
+      "path": "docs/00.chat/bootstrap/llm-workbench-template/README.md",
+      "creation_evidence": {
+        "last_committed_on": "2026-07-03",
+        "last_commit": "e7a62451d2d458ec832329ebda831f0b0cc5f710",
+        "basis": "git-first-added",
+        "created_on": "2026-06-20",
+        "commit": "8a05a18225c5476c3e509cb7e5d69fcc8f6b7dee",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      }
+    }
+  ],
+  "template_scaffolds": [
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/uninstall.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/.github/workflows/portability.yml.template"
+  ],
+  "template_contract": "Lifecycle placeholders describe instantiated output scripts and CI workflow; new output uses UTC today; byte-identical existing v3 output preserves dates; differing target content remains a conflict.",
+  "sanitizer_contract": "Preserve creation dates and stamp UTC updated_on when missing portability path hints are removed from v3 copied headers.",
+  "checks": [
+    {
+      "command": "bash scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh",
+      "result": "passed"
+    },
+    {
+      "command": "bash -n on bootstrap script, smoke test, install template, uninstall template",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check on six owned files",
+      "result": "passed"
+    },
+    {
+      "command": "lifecycle helper complete proposed-header validation during apply",
+      "result": "passed"
+    },
+    {
+      "command": "Extended bootstrap smoke covering all three template outputs and repeat-run date stability",
+      "result": "passed"
+    }
+  ],
+  "inspection": "No additional fixed-v2 runtime parsers found beyond already updated metadata checker/index/RAG consumers and intentional legacy backfill/compatibility fixtures.",
+  "repository_staging_or_commits": false
+}

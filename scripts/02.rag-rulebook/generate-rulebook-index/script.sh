@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.generate-rulebook-index
-#   version: 3
+#   version: 4
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: indexing
 #   disciplines:
@@ -156,7 +158,7 @@ SUPPORTING_SOURCE_ENTRIES = (
             "retrieval_roles": ["artifact-metadata-capability"],
             "answers_questions_about": ["how harness artifact metadata is organized"],
             "produces": [],
-            "consumes": ["agentic-artifact/v2 metadata headers"],
+            "consumes": ["agentic-artifact/v2 and v3 metadata headers"],
             "validates": [],
         },
     },
@@ -168,7 +170,7 @@ SUPPORTING_SOURCE_ENTRIES = (
         "retrieval_profile": {
             "retrieval_roles": ["artifact-metadata-standard"],
             "answers_questions_about": ["how artifact metadata headers are shaped"],
-            "produces": ["agentic-artifact/v2 metadata contract"],
+            "produces": ["agentic-artifact/v2 and v3 metadata contracts"],
             "consumes": [],
             "validates": [],
         },
@@ -187,6 +189,19 @@ SUPPORTING_SOURCE_ENTRIES = (
         },
     },
     {
+        "current_path": ".agentic/01.harness/artifact-metadata/schema.v3.yml",
+        "corpus_id": HARNESS_CORPUS_ID,
+        "artifact_type": "schema",
+        "source_type": "schema",
+        "retrieval_profile": {
+            "retrieval_roles": ["artifact-metadata-schema", "artifact-lifecycle-schema"],
+            "answers_questions_about": ["machine-readable artifact metadata fields", "artifact creation and update dates", "artifact deprecation and supersession links"],
+            "produces": ["agentic-artifact/v3 field contract"],
+            "consumes": [],
+            "validates": ["agentic-artifact/v3 field shape"],
+        },
+    },
+    {
         "current_path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
         "corpus_id": HARNESS_CORPUS_ID,
         "artifact_type": "script",
@@ -195,7 +210,7 @@ SUPPORTING_SOURCE_ENTRIES = (
             "retrieval_roles": ["artifact-header-validator"],
             "answers_questions_about": ["how artifact metadata headers are validated"],
             "produces": ["artifact metadata validation report"],
-            "consumes": ["agentic-artifact/v2 metadata headers", "agentic-script metadata headers"],
+            "consumes": ["agentic-artifact/v2 and v3 metadata headers", "agentic-script metadata headers"],
             "validates": ["metadata header shape", "metadata taxonomy values"],
         },
     },
@@ -208,7 +223,7 @@ SUPPORTING_SOURCE_ENTRIES = (
             "retrieval_roles": ["artifact-index-builder"],
             "answers_questions_about": ["how the harness is indexed", "how metadata headers become an artifact index"],
             "produces": ["agentic-artifact-index"],
-            "consumes": ["agentic-artifact/v2 metadata headers", "agentic-script metadata headers"],
+            "consumes": ["agentic-artifact/v2 and v3 metadata headers", "agentic-script metadata headers"],
             "validates": ["artifact metadata index"],
         },
     },
@@ -925,8 +940,19 @@ def parse_metadata_header(path: str) -> dict[str, Any]:
                     break
                 break
         parsed = yaml.safe_load("\n".join(header_lines)) or {}
-        return parsed.get("agentic-artifact") or parsed.get("agentic-script") or {}
+        metadata = parsed.get("agentic-artifact") or parsed.get("agentic-script") or {}
+        schema = metadata.get("schema")
+        supported = {"agentic-artifact/v1", "agentic-artifact/v2", "agentic-artifact/v3"}
+        if "agentic-script" in parsed:
+            supported = {"agentic-script/v1"}
+        if "schema" in metadata and schema not in supported:
+            raise ValueError(f"Unsupported metadata schema in {path}: {schema}")
+        return metadata
     return {}
+
+
+def is_current_guidance(metadata: dict[str, Any]) -> bool:
+    return metadata.get("status", "active") not in {"deprecated", "superseded", "retired"}
 
 
 def owner_layer_for_corpus(corpus_id: str) -> str:
@@ -1255,7 +1281,7 @@ def discover_process_source_entries(excluded_paths: set[str]) -> list[dict[str, 
                 continue
             metadata = parse_metadata_header(path)
             status = str(metadata.get("status") or "active")
-            if status not in {"active", "draft"}:
+            if status not in {"active", "draft", "deprecated", "superseded", "retired"}:
                 continue
             seen.add(path)
             entries.append(
@@ -1470,6 +1496,15 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         path_to_artifact_ref[normalize_path(current_path)] = artifact_ref
 
     def add_artifact(artifact: dict[str, Any]) -> None:
+        current_path = artifact.get("current_path")
+        if isinstance(current_path, str) and repo_path(current_path).is_file():
+            metadata = parse_metadata_header(current_path)
+            if metadata.get("schema") in {"agentic-artifact/v2", "agentic-artifact/v3"}:
+                artifact["metadata_schema"] = metadata["schema"]
+                # Header lifecycle status takes precedence over a stale body status.
+                for field in ("status", "created_on", "updated_on", "deprecated_on", "superseded_on", "superseded_by"):
+                    if field in metadata:
+                        artifact[field] = metadata[field]
         artifact_ref = artifact["artifact_ref"]
         if artifact_ref in artifact_refs:
             errors.append(f"duplicate artifact_ref: {artifact_ref}")
@@ -1485,6 +1520,8 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             "Artifact belongs to the corpus selected by the migration map.",
             artifact.get("source_ref_ids", []),
         )
+        if not is_current_guidance(artifact):
+            return
         chunk_id = f"chunk.summary.{safe_id(artifact_ref)}"
         chunk_candidates.append(
             {
@@ -1542,6 +1579,8 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             warnings.append(f"missing Markdown explanation source: {current_path}")
             return
         markdown_input_paths.add(current_path)
+        if not is_current_guidance(parse_metadata_header(current_path)):
+            return
         for section in parse_markdown_sections(current_path):
             source_ref_id = make_source_ref_id("markdown-section", f"{current_path}.{section['section_id']}")
             source_references.append(
@@ -1708,7 +1747,7 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
         if current_path in markdown_artifact_paths or current_path in supporting_paths:
             continue
         metadata = parse_metadata_header(current_path)
-        if metadata.get("schema") != "agentic-artifact/v2":
+        if metadata.get("schema") not in {"agentic-artifact/v2", "agentic-artifact/v3"}:
             continue
         if metadata.get("kind") not in {"source-material", "guide"}:
             continue
@@ -1771,6 +1810,8 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             },
             artifact_ref,
         )
+        if not is_current_guidance(metadata):
+            continue
         chunk_id = f"chunk.source.{safe_id(artifact_ref)}"
         chunk_candidates.append(
             {
@@ -1875,6 +1916,8 @@ def build_index(source_root: str, migration_map_path: str, corpus_rule_roots: li
             artifact["source_derivation"] = source_derivation
         add_artifact(artifact)
         add_path_mapping(entry, artifact_ref)
+        if not is_current_guidance(artifact):
+            continue
 
         for path_glob in applies_to_paths:
             add_edge(artifact_ref, path_glob, "applies-to-path", "Ruleset declares this path glob in applies_to.paths.")

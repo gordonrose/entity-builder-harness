@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.adrs.readme
 version: 1
 status: active
+created_on: "2026-08-31"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: architecture
 disciplines:
@@ -34,3 +36,8 @@ workflow, standard, checklist, gate, and policy artifacts stay under
 
 The old prototype ADR pointers have been retired. Use this owner-aligned ADR
 root directly for harness-owned decision history.
+
+## Artifact Metadata Decisions
+
+- [0021: Versioned metadata](0021-use-versioned-artifact-metadata-for-agent-navigation.md)
+- [0038: Lifecycle dates and supersession](0038-track-artifact-lifecycle-dates.md)

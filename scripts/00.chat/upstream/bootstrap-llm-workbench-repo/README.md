@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.script.upstream.bootstrap-llm-workbench-repo.readme
-  version: 1
+  version: 2
   status: active
+  created_on: "2026-06-20"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: upstream
   disciplines:
@@ -58,6 +60,18 @@ planner as a gate before an apply step.
 
 Apply mode uses the same conflict detection. It only writes after the plan is
 clean.
+
+Script templates use `{{ARTIFACT_CREATED_ON}}` and `{{ARTIFACT_UPDATED_ON}}`
+placeholders. The planner renders new artifacts with today's UTC date before
+comparing or copying files. An existing v3 artifact with matching identity and
+otherwise identical generated content keeps both dates, so repeating the plan
+on a later day does not create date-only conflicts. Other differences remain
+conflicts. Placeholders belong to template output scaffolds, not to real
+artifact headers.
+
+Copied canonical artifacts keep their creation dates. When bootstrap removes
+unavailable `used_by` path hints from a copied v3 header, it stamps that header's
+`updated_on` with today's UTC date.
 
 ## Usage
 

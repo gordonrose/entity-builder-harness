@@ -2,16 +2,18 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.generate-index
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-24"
+#   updated_on: "2026-10-20"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
 #     - agentic
 #   kind: script
-#   purpose: Generate a machine-readable artifact metadata index from v1 and v2 headers.
+#   purpose: Generate a machine-readable artifact metadata index from v1, v2, and v3 headers.
 #   portability:
 #     class: required
 #     targets:
@@ -277,8 +279,20 @@ def used_by_paths(entries: Any) -> list[str]:
     return paths
 
 
-def normalize_v2(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
-    return {
+def normalize_versioned(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    date_fields = ("created_on", "updated_on", "deprecated_on", "superseded_on")
+    for field in date_fields:
+        required = metadata.get("schema") == "agentic-artifact/v3" and field in {"created_on", "updated_on"}
+        if field not in metadata and not required:
+            continue
+        value = metadata.get(field)
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+            raise IndexErrorInfo(f"{field} must be a quoted YYYY-MM-DD date")
+        try:
+            dt.date.fromisoformat(value)
+        except ValueError as exc:
+            raise IndexErrorInfo(f"{field} must be a valid calendar date") from exc
+    artifact = {
         "path": path,
         "metadata_schema": metadata.get("schema"),
         "id": metadata.get("id"),
@@ -295,6 +309,10 @@ def normalize_v2(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
         "legacy": False,
         "content_hash": content_hash(path),
     }
+    for field in ("created_on", "updated_on", "deprecated_on", "superseded_on", "superseded_by"):
+        if field in metadata:
+            artifact[field] = metadata[field]
+    return artifact
 
 
 def normalize_v1_artifact(path: str, metadata: dict[str, Any]) -> dict[str, Any]:
@@ -351,10 +369,16 @@ def normalize_artifact(path: str) -> dict[str, Any]:
     artifact = parsed.get("agentic-artifact")
     script = parsed.get("agentic-script")
     if isinstance(artifact, dict):
-        if artifact.get("schema") == "agentic-artifact/v2":
-            return normalize_v2(path, artifact)
+        schema = artifact.get("schema")
+        if schema in {"agentic-artifact/v2", "agentic-artifact/v3"}:
+            return normalize_versioned(path, artifact)
+        if "schema" in artifact and schema != "agentic-artifact/v1":
+            raise IndexErrorInfo(f"unsupported metadata schema: {schema}")
         return normalize_v1_artifact(path, artifact)
     if isinstance(script, dict):
+        schema = script.get("schema")
+        if "schema" in script and schema != "agentic-script/v1":
+            raise IndexErrorInfo(f"unsupported metadata schema: {schema}")
         return normalize_v1_script(path, script)
     raise IndexErrorInfo("missing recognized metadata payload")
 
@@ -402,6 +426,7 @@ def main(argv: list[str]) -> int:
             "artifacts": len(artifacts),
             "legacy_artifacts": sum(1 for artifact in artifacts if artifact.get("legacy")),
             "v2_artifacts": sum(1 for artifact in artifacts if artifact.get("metadata_schema") == "agentic-artifact/v2"),
+            "v3_artifacts": sum(1 for artifact in artifacts if artifact.get("metadata_schema") == "agentic-artifact/v3"),
             "skipped": len(skipped),
             "duplicate_ids": len(duplicate_ids),
         },

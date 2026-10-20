@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: aws.plan.kanbien-core-platform-release-rehearsal
   version: 2
   status: draft
+  created_on: "2026-10-19"
+  updated_on: "2026-10-20"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:

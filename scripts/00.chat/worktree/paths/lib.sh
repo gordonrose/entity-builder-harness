@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.worktree.paths.lib
 #   version: 2
 #   status: active
+#   created_on: "2026-06-16"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: worktree
 #   disciplines:

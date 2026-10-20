@@ -1,0 +1,118 @@
+{
+  "mode": "apply",
+  "today_utc": "2026-10-20",
+  "plans": [
+    {
+      "path": "docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md",
+      "id": "aws.architecture.adr.0003-private-ecs-bootstrap-target-kanbien-core-platform",
+      "changed": true,
+      "content_differs_from_head": false,
+      "head_baseline_path": "docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md",
+      "creation_evidence": {
+        "last_committed_on": "2026-10-20",
+        "last_commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe",
+        "basis": "git-first-added",
+        "created_on": "2026-10-20",
+        "commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "ba046381949dfaf4aa275b504e2e81ca99e4febffa5fb289e5040b8c77e8a73a",
+      "sha256_after": "391aa48d5bcf45ff7f876668271227c13b5be5244f5ff5a5563919d3a4f5ef8e"
+    },
+    {
+      "path": "docs/aws/kanbien-core-platform-e1-foundation-change-set.md",
+      "id": "aws.plan.kanbien-core-platform-e1-foundation-change-set",
+      "changed": true,
+      "content_differs_from_head": false,
+      "head_baseline_path": "docs/aws/kanbien-core-platform-e1-foundation-change-set.md",
+      "creation_evidence": {
+        "last_committed_on": "2026-10-20",
+        "last_commit": "60a59af366eea2ceed84ea83cd960e2a6d4a350a",
+        "basis": "git-first-added",
+        "created_on": "2026-10-20",
+        "commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "draft",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "649ba99f468586a071b4041ef2e0dbcb2a27fe27082e3c40a62657a45c4c08e2",
+      "sha256_after": "3cc50a9d81941066b5a4301e75b79c04c4bb5f2940eabb01c17cb5c08be1af0c"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md",
+      "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme",
+      "changed": true,
+      "content_differs_from_head": false,
+      "head_baseline_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md",
+      "creation_evidence": {
+        "last_committed_on": "2026-10-20",
+        "last_commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe",
+        "basis": "git-first-added",
+        "created_on": "2026-10-20",
+        "commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "draft",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "draft",
+        "created_on": "2026-10-20",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "22cd34004f34025a9bb251c1b658b09b131951e551a6f9e481cd8da02f701793",
+      "sha256_after": "b6a6c5f0857823bcc298178f89553b4d41ae870ea4a62444cf470f5817d4c426"
+    }
+  ],
+  "errors": [],
+  "applied": true,
+  "body_and_unrelated_metadata_preserved": true,
+  "creation_commit": "ca639258dab1c423d7d8ac7c2045223bbbb358fe"
+}

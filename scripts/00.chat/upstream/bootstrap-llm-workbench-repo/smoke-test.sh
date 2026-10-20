@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-20"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -87,6 +89,71 @@ for source_only_path in \
     fail "apply created source-maintenance harness script: $source_only_path"
 done
 node -e "const p=require(process.argv[1]); if (p.name !== 'llm-workbench') process.exit(1); if (!p.scripts.chat) process.exit(1)" "$EMPTY_REPO/package.json" || fail "created package.json did not match template"
+
+node - "$EMPTY_REPO" <<'NODE'
+const fs = require('fs');
+const path = require('path');
+const today = new Date().toISOString().slice(0, 10);
+for (const name of ['scripts/install.sh', 'scripts/uninstall.sh', '.github/workflows/portability.yml']) {
+  const file = path.join(process.argv[2], name);
+  const text = fs.readFileSync(file, 'utf8');
+  for (const expected of ['schema: agentic-artifact/v3', `created_on: "${today}"`, `updated_on: "${today}"`]) {
+    if (!text.includes(expected)) throw new Error(`${name} missing ${expected}`);
+  }
+  if (text.includes('{{ARTIFACT_')) throw new Error(`${name} contains an unrendered lifecycle placeholder`);
+  fs.writeFileSync(file, text.replace(`created_on: "${today}"`, 'created_on: "2001-01-01"')
+    .replace(`updated_on: "${today}"`, 'updated_on: "2001-01-02"'));
+}
+NODE
+# Copied canonical files can have existing conflicts after portability
+# sanitization; template lifecycle idempotence is independent of those.
+run_plan "$EMPTY_REPO" "$TMP_ROOT/repeated.out" || :
+grep -q '^SAME scripts/install.sh$' "$TMP_ROOT/repeated.out" || fail "repeat plan changed install lifecycle dates"
+grep -q '^SAME scripts/uninstall.sh$' "$TMP_ROOT/repeated.out" || fail "repeat plan changed uninstall lifecycle dates"
+grep -q '^SAME .github/workflows/portability.yml$' "$TMP_ROOT/repeated.out" || fail "repeat plan changed CI lifecycle dates"
+grep -q '^#   updated_on: "2001-01-02"$' "$EMPTY_REPO/scripts/install.sh" || fail "dry run rewrote target dates"
+printf '\n# target customization\n' >> "$EMPTY_REPO/scripts/install.sh"
+if run_apply "$EMPTY_REPO" "$TMP_ROOT/template-conflict.out"; then
+  fail "customized generated script did not conflict"
+fi
+grep -q '^CONFLICT scripts/install.sh$' "$TMP_ROOT/template-conflict.out" || fail "template conflict was not reported"
+grep -q '^# target customization$' "$EMPTY_REPO/scripts/install.sh" || fail "conflicting apply overwrote customization"
+
+# A copied v3 header changed by portability sanitization keeps its creation
+# evidence while receiving the date of the actual metadata edit.
+LIFECYCLE_SOURCE="$TMP_ROOT/lifecycle-source"
+LIFECYCLE_TARGET="$TMP_ROOT/lifecycle-target"
+make_repo "$LIFECYCLE_SOURCE"
+make_repo "$LIFECYCLE_TARGET"
+LIFECYCLE_TEMPLATES="$LIFECYCLE_SOURCE/docs/00.chat/bootstrap/llm-workbench-template/root"
+mkdir -p "$LIFECYCLE_TEMPLATES" "$LIFECYCLE_SOURCE/.agentic/00.chat"
+printf '{"name":"lifecycle-fixture","scripts":{}}\n' > "$LIFECYCLE_TEMPLATES/package.json.template"
+cat > "$LIFECYCLE_SOURCE/.agentic/00.chat/lifecycle.md" <<'EOF'
+<!-- agentic-artifact:
+schema: agentic-artifact/v3
+id: test.bootstrap.lifecycle
+version: 1
+status: active
+created_on: "2001-01-01"
+updated_on: "2001-01-02"
+used_by:
+- id: test.absent
+  path: .agentic/01.harness/absent.md
+-->
+# Lifecycle fixture
+EOF
+(
+  cd "$LIFECYCLE_SOURCE"
+  run_apply "$LIFECYCLE_TARGET" "$TMP_ROOT/lifecycle.out"
+)
+node - "$LIFECYCLE_TARGET/.agentic/00.chat/lifecycle.md" <<'NODE'
+const fs = require('fs');
+const text = fs.readFileSync(process.argv[2], 'utf8');
+const today = new Date().toISOString().slice(0, 10);
+if (!text.includes('created_on: "2001-01-01"')) throw new Error('sanitizer reset creation date');
+if (!text.includes(`updated_on: "${today}"`)) throw new Error('sanitizer did not stamp update date');
+if (text.includes('path: .agentic/01.harness/absent.md')) throw new Error('sanitizer retained missing path');
+NODE
 
 PACKAGE_REPO="$TMP_ROOT/package"
 make_repo "$PACKAGE_REPO"

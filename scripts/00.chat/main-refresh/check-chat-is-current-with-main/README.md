@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.script.main-refresh.check-chat-is-current-with-main.readme
   version: 1
   status: active
+  created_on: "2026-06-19"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: main-refresh
   disciplines:

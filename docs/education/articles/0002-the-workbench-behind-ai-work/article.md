@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: education.articles.0002-the-workbench-behind-ai-work.article
   version: 1
   status: active
+  created_on: "2026-06-19"
+  updated_on: "2026-10-20"
   layer: 05.education
   domain: education
   disciplines:

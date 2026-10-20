@@ -1,0 +1,25 @@
+{
+  "source_main": "34efea7e894a5aa93aa59bf015785a635bd50ed7",
+  "rehearsed_merge": "78521ecbcf508bb5db4a2f0b86688f45b009cb6a",
+  "result": "clean merge; validated before and after apply",
+  "metadata_coverage": {
+    "artifacts": 1042,
+    "duplicate_ids": 0,
+    "legacy_artifacts": 0,
+    "skipped": 0,
+    "v2_artifacts": 2,
+    "v3_artifacts": 1040
+  },
+  "covered_incoming_headers_migrated": 3,
+  "body_and_unrelated_metadata_preserved": true,
+  "recognition_sources": 7,
+  "recognition_terms": 2376,
+  "checks": [
+    "preflight full metadata and index smoke",
+    "preflight incoming CloudFormation YAML syntax",
+    "post-refresh full metadata and strict index",
+    "post-refresh recognition freshness and validation",
+    "git diff --check"
+  ],
+  "coverage_note": "infra YAML is outside current checker/index coverage and requires a separately governed scope update."
+}

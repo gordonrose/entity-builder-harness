@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
 version: 32
 status: draft
+created_on: "2026-10-06"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:

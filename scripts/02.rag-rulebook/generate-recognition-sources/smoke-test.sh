@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.generate-recognition-sources.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -51,23 +53,15 @@ bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
   --source artifacts \
   --print > "$PRINTED_ARTIFACTS"
 
-cmp "$GENERATED_ARTIFACTS" "$PRINTED_ARTIFACTS" >/dev/null || {
-  echo "ERROR: artifact --output and --print produced different recognition sources" >&2
-  exit 1
-}
-
 bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh \
   --source routing \
   --print > "$PRINTED_ROUTING"
 
-cmp "$GENERATED_ROUTING" "$PRINTED_ROUTING" >/dev/null || {
-  echo "ERROR: routing --output and --print produced different recognition sources" >&2
-  exit 1
-}
-
-python3 - "$GENERATED_ARTIFACTS" "$GENERATED_ROUTING" <<'PY'
+python3 - "$GENERATED_ARTIFACTS" "$GENERATED_ROUTING" "$PRINTED_ARTIFACTS" "$PRINTED_ROUTING" <<'PY'
 from __future__ import annotations
 
+import datetime as dt
+import subprocess
 import sys
 from pathlib import Path
 
@@ -75,6 +69,38 @@ import yaml
 
 artifacts = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
 routing = yaml.safe_load(Path(sys.argv[2]).read_text(encoding="utf-8"))
+assert artifacts == yaml.safe_load(Path(sys.argv[3]).read_text(encoding="utf-8"))
+assert routing == yaml.safe_load(Path(sys.argv[4]).read_text(encoding="utf-8"))
+
+# New output paths use v3; a no-op preserves old dates and exact bytes.
+path = Path(sys.argv[2])
+def header(text):
+    lines = []
+    for line in text.splitlines():
+        if not line.startswith("#"):
+            break
+        lines.append(line[2:])
+    return yaml.safe_load("\n".join(lines))["agentic-artifact"]
+
+metadata = header(path.read_text())
+assert metadata["schema"] == "agentic-artifact/v3"
+today = dt.datetime.now(dt.UTC).date().isoformat()
+assert metadata["created_on"] == metadata["updated_on"] == today
+text = path.read_text().replace(today, "2000-01-01")
+path.write_text(text)
+command = ["bash", "scripts/02.rag-rulebook/generate-recognition-sources/script.sh", "--source", "routing", "--output", str(path)]
+subprocess.run(command + ["--check"], check=True, capture_output=True, text=True)
+subprocess.run(command, check=True, capture_output=True, text=True)
+assert path.read_text() == text
+path.write_text(text + "obsolete_body_field: remove-me\n")
+subprocess.run(command, check=True, capture_output=True, text=True)
+updated = header(path.read_text())
+assert updated["created_on"] == "2000-01-01"
+assert updated["updated_on"] == today
+subprocess.run(command + ["--check"], check=True, capture_output=True, text=True)
+path.write_text(path.read_text().replace("agentic-artifact/v3", "agentic-artifact/v99", 1))
+failure = subprocess.run(command, capture_output=True, text=True)
+assert failure.returncode != 0 and "Unsupported generated metadata schema" in failure.stderr
 
 assert artifacts["schema"] == "rag-rulebook/recognition-source/v1"
 assert artifacts["source_id"] == "recognition.generated.artifacts"

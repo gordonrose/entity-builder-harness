@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.standards.agentic-artifact-standards
 version: 1
 status: active
+created_on: "2026-06-15"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -191,8 +193,9 @@ support dry-run mode first.
 - Exit non-zero on failure and print concise, actionable output.
 - Support dry-run mode before any delete, move, commit, push, clean, overwrite,
   or other destructive behavior.
-- Include an `agentic-script` metadata header as defined in
-  `.agentic/01.harness/standards/artifact-metadata-headers.md`.
+- Include an `agentic-artifact/v3` metadata header with `kind: script` and
+  `effects`, as defined in `.agentic/01.harness/artifact-metadata/standard.md`.
+  Existing v1/v2 headers remain valid during focused migration.
 
 ### Gate
 

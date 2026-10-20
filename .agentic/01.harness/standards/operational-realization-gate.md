@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: harness.standard.operational-realization-gate
   version: 2
   status: active
+  created_on: "2026-09-27"
+  updated_on: "2026-10-20"
   layer: 01.harness
   domain: deployment.realization
   disciplines:

@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.plan.local-to-proven-deployment-reliability
 version: 3
 status: draft
+created_on: "2026-09-27"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: deployment.realization
 disciplines:

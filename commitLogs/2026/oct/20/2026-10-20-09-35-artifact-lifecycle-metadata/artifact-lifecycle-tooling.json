@@ -1,0 +1,708 @@
+{
+  "mode": "apply",
+  "today_utc": "2026-10-20",
+  "plans": [
+    {
+      "path": ".agentic/00.chat/checklists/before-commit.md",
+      "id": "chat.checklists.before-commit",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "e253afac4a4f95dba3eed935a6a4dad59bb6f146",
+        "basis": "git-first-added",
+        "created_on": "2026-06-15",
+        "commit": "a6c6afd555d23609789a11f134805aa53cb85fdc",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-15",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "315e96bb2f8c7c1c889967897585d8afacb7cfbd8fa062f9f8005831f685377f",
+      "sha256_after": "279eb938f8205e8257bc76db1986e4a6f30dbc8fb5547e2c6b1b46669aef4ec0"
+    },
+    {
+      "path": ".agentic/01.harness/README.md",
+      "id": "harness.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-09-27",
+        "last_commit": "fb9e7d25a0aa4a5424566aa18ee7a5b88db21525",
+        "basis": "git-first-added",
+        "created_on": "2026-06-15",
+        "commit": "c85ab8037ba108887eb57c86c375499e97d66c8d",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-09-27",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-15",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bfb603a93c22508ea7ff0a9cc33975abf078aa85fe78728123701cf5592a8a54",
+      "sha256_after": "befb4672e11a0b0e8a9bbc240be28e088577c395757b1209109094f0b7230ea9"
+    },
+    {
+      "path": ".agentic/01.harness/artifact-metadata/README.md",
+      "id": "harness.capability.artifact-metadata",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-06-25",
+        "last_commit": "1eddbbb3b90a6ae6507a93cade45c290c3b22009",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "1295766b569c52a290c34f64b409e9ceb6810fd7",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-06-25",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "9b35256403dc45e48870140842dd4190abdc163b5f59ebf93b89ce75b80c2ffa",
+      "sha256_after": "2b46eff0b32c0d6f22025c6ef68a44c14db392ba646408813695e2ad20682348"
+    },
+    {
+      "path": ".agentic/01.harness/artifact-metadata/schema.v2.yml",
+      "id": "harness.schema.artifact-metadata-v2",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-06-24",
+        "last_commit": "bb1de3677a306b13006c0348d9d9ab9308b15d81",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "1295766b569c52a290c34f64b409e9ceb6810fd7",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-06-24",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "62efc64e9aedf3b3dc3967909d138eb55affc8774a48fc34e3624fc5d6121055",
+      "sha256_after": "069ee362276cc76bae16e63bb59641659302ceb48d8c2ce69598a2c7b97caaf2"
+    },
+    {
+      "path": ".agentic/01.harness/artifact-metadata/standard.md",
+      "id": "harness.standard.artifact-metadata",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "eac8713f04865dae70dd2f1791f948905cb5b7ae",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "1295766b569c52a290c34f64b409e9ceb6810fd7",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "00b2692478731ef432a6cd1d7edbf308453add5fa2def6dbdd36c4d0f7b0f519",
+      "sha256_after": "020b25225f91e81a3660df39b5ab385310802fc5bb95f671f74ee9998a56311c"
+    },
+    {
+      "path": ".agentic/01.harness/artifact-metadata/taxonomy.yml",
+      "id": "harness.taxonomy.artifact-metadata",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-07-03",
+        "last_commit": "e7a62451d2d458ec832329ebda831f0b0cc5f710",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "1295766b569c52a290c34f64b409e9ceb6810fd7",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-07-03",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "1311f3e8ad4b5b87204b0fdf166e3ce29a4efb5582f18b805d6f2adaafc36ed0",
+      "sha256_after": "a4a4efa664412aaa84e4247fd472f8e0056c9d3512c871da1958de43b6db1bad"
+    },
+    {
+      "path": ".agentic/01.harness/standards/agentic-artifact-standards.md",
+      "id": "harness.standards.agentic-artifact-standards",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "95e75346978cfd7f6f8e4e039b868a21b3126c27",
+        "basis": "git-first-added",
+        "created_on": "2026-06-15",
+        "commit": "f68aa2d701fab7773347de63cac3d14dc8955f29",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-15",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "adbc6831b71f4c5792bfbb64371e03caf41ba31c7b2a96e1ac33e6b95034cea1",
+      "sha256_after": "0d63d47a6fb03f0527892b0186c86187dc27255dd3c0c7671a5fdab80ad95c74"
+    },
+    {
+      "path": ".agentic/01.harness/standards/artifact-metadata-headers.md",
+      "id": "harness.standards.artifact-metadata-headers",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "eac8713f04865dae70dd2f1791f948905cb5b7ae",
+        "basis": "git-first-added",
+        "created_on": "2026-06-19",
+        "commit": "1f1e19cbb085fbc6e9a53c5c24515567442d5d49",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-19",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "cdfd20b36d5518230cb26a8951e391393d15cc42e98e007f6bbe92b6b8cc13c3",
+      "sha256_after": "9cd11b5a2128b5abe2402aad637bb9b703d1c16b579ff4bb586abf6cf019f1f3"
+    },
+    {
+      "path": "docs/01.harness/adrs/README.md",
+      "id": "harness.adrs.readme",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-09-01",
+        "last_commit": "afa29cff2e2baa24d8be476a826e2b6ac694bb85",
+        "basis": "git-first-added",
+        "created_on": "2026-08-31",
+        "commit": "e253afac4a4f95dba3eed935a6a4dad59bb6f146",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-09-01",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-08-31",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "57e8254e9e428875f9478e2af61825102def33e7d1ebcdc7c93494d636822fa6",
+      "sha256_after": "968b6cf5585057b7bef3b38df1f7593c9dbbe10ec46de094260956c74a67e06b"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+      "id": "chat.script.session-log.prepare-chat-session-before-commit",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "e253afac4a4f95dba3eed935a6a4dad59bb6f146",
+        "basis": "git-first-added",
+        "created_on": "2026-06-15",
+        "commit": "a6c6afd555d23609789a11f134805aa53cb85fdc",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-15",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "3bc33fd13bcbb9923b141550b49c00cd149a3023b58e9982683d797412fdf64f",
+      "sha256_after": "a536a60dd7604eebc28112075c115214236564c4ff63bd1dede0554e16d4b7ca"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh",
+      "id": "harness.script.artifact-metadata.backfill-v2-headers",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-09-01",
+        "last_commit": "afa29cff2e2baa24d8be476a826e2b6ac694bb85",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "1eddbbb3b90a6ae6507a93cade45c290c3b22009",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-09-01",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "e99e7079a1bc117214594720aa2a5c70be0594284671bad41416623b09364aad",
+      "sha256_after": "dd3e6ad8b33d4dcac3ae45e23c1e33e8825af7fb013c2b83178b72ccd1a98b2c"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "id": "harness.script.artifact-metadata.check-headers",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "087415a50d615e4c63fdc0a44d6d098043a7aab3",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "1295766b569c52a290c34f64b409e9ceb6810fd7",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "5562b2802bd014dc7c63a679e0dcb41269af9657fcd7a0569e6d200446c817db",
+      "sha256_after": "e15015956a2490f3168ceb76b5d2049f67c2aa6afca837dfc7dae4aa000c7e29"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh",
+      "id": "harness.script.artifact-metadata.check-headers-smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-07-03",
+        "last_commit": "e7a62451d2d458ec832329ebda831f0b0cc5f710",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "442cdb1b54cc699c65debd5df402c0aee63fba92",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-07-03",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "bd78c2fb5cdd8a3fcccd1018d57e04c638246fd9a6ab934fed2fb65543cc8ab0",
+      "sha256_after": "6a7aaa13cd6dab4d6828bf3ce994ae5e26cc179f93cdb656f9a665572712c5e3"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+      "id": "harness.script.artifact-metadata.generate-index",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "087415a50d615e4c63fdc0a44d6d098043a7aab3",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "bf2ded50767d097a1f0ae53b12c11022ebf109dd",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "febe221e8fd736e1c4d6ab484ac54a5027e5a6363eb35bf9c82db0dbcac35223",
+      "sha256_after": "43c1e6790e924a43746b66fa50d210e7daa249a4661f7921c05df05c901ce37a"
+    },
+    {
+      "path": "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+      "id": "harness.script.artifact-metadata.generate-index-smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "eac8713f04865dae70dd2f1791f948905cb5b7ae",
+        "basis": "git-first-added",
+        "created_on": "2026-06-24",
+        "commit": "bf2ded50767d097a1f0ae53b12c11022ebf109dd",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-24",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "9d4b7e1a85351468cdbee40c911c88f206957821b66a27b585da6e7b5e20f245",
+      "sha256_after": "d462dd7638d6555f67e33630cc83b6814b834f9b1bf25b687cf7abf33ee30440"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/generate-recognition-sources/script.sh",
+      "id": "rag-rulebook.script.generate-recognition-sources",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-07-01",
+        "last_commit": "cc34b92e438c2423802f9bd1aee03b3bd469e7de",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "f4d6b9dcfd4768c700e8e028de2aacccb4b525f9",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-07-01",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "4cdcff49a0831345a1d37a175b3daba564e83fede82a16329f540349830e40bf",
+      "sha256_after": "0385fca5dd1e4d31bff6e75e19aa913c1498af72b55b42d51184e753b987565e"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/generate-recognition-sources/smoke-test.sh",
+      "id": "rag-rulebook.script.generate-recognition-sources.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-06-25",
+        "last_commit": "ce34f141705a93a68a7d91eb12350bb5714ee62c",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "f4d6b9dcfd4768c700e8e028de2aacccb4b525f9",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-06-25",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "b7d10f264e6dd613e62506d9bfe62c6336b8859f45b58ac096b5eab7fbe1ab48",
+      "sha256_after": "d6f5e6182ab9acff6aa72a6a85545f0f9cbc790ec86e2ef4dba89034ffad8d9f"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+      "id": "rag-rulebook.script.generate-rulebook-index",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-09-01",
+        "last_commit": "afa29cff2e2baa24d8be476a826e2b6ac694bb85",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "258891a4b37f7cdaf18e5709a54226856a1e8457",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-09-01",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "afb9091fe2cce36f10e99f58813aa7a26c6d578978fdfa6cf0ff6a1a3f0659f2",
+      "sha256_after": "8a3220a5d4e16539dab8ba02b75a9167dc40b2528ad3b32cf5b27ade48986703"
+    },
+    {
+      "path": "scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh",
+      "id": "rag-rulebook.script.generate-rulebook-index.smoke-test",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-08-31",
+        "last_commit": "e5a4cbd05636d470a3b6a244fcd2cfbd602717b1",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "258891a4b37f7cdaf18e5709a54226856a1e8457",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-08-31",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "6592e7b55876e959abbc6b2a7f2810850ccac467a01ec0efbd0bd678d5ec495b",
+      "sha256_after": "2e2e441c9f30d005bab5b23b964b4fc0dc26eadf10b9bc41db048ba06f3b3db4"
+    },
+    {
+      "path": "scripts/repo/commit-gates/script.sh",
+      "id": "repo.script.commit-gates",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-09-26",
+        "last_commit": "41688020266a6d66da9289a581ac5063da8ae8ff",
+        "basis": "git-first-added",
+        "created_on": "2026-07-04",
+        "commit": "ceb01ffe6817eadcc480ecf32168bcc85f1401db",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-09-26",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-07-04",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "e4ec347f3e7860f14ea2b3b45ad09555398bad1ca6b6cb48a173aa8b2206caa8",
+      "sha256_after": "2d0d9b03cd5173193299dd4262caa74deb74a9b6f11757e912491695aa7b4e76"
+    }
+  ],
+  "errors": [],
+  "applied": true
+}

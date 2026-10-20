@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: rag-rulebook.script.validate-yaml-syntax.readme
 version: 2
 status: active
+created_on: "2026-06-26"
+updated_on: "2026-10-20"
 layer: 02.rag-rulebook
 domain: validation
 disciplines:

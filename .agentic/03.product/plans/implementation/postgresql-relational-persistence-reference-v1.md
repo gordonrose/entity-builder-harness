@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: product.plan.postgresql-relational-persistence-reference-v1
 version: 11
 status: draft
+created_on: "2026-09-25"
+updated_on: "2026-10-20"
 layer: 03.product
 domain: persistence
 disciplines:

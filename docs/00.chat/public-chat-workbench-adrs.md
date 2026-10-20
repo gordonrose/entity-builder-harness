@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.public-chat-workbench-adrs
   version: 1
   status: deprecated
+  created_on: "2026-06-20"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: bootstrap
   disciplines:
@@ -17,6 +19,7 @@
   used_by:
   - id: chat.docs.llm-workbench-acceptance-matrix
     path: docs/00.chat/llm-workbench-acceptance-matrix.md
+  deprecated_on: "2026-07-03"
 -->
 # Retired Public Chat Workbench ADR Manifest
 

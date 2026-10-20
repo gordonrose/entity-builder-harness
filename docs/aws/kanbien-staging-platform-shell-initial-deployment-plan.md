@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: aws.plan.kanbien-staging-platform-shell-initial-deployment
 version: 19
 status: draft
+created_on: "2026-09-06"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
