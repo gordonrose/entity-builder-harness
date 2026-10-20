@@ -66,8 +66,9 @@ split deliberately:
    with every billable target resource carrying the same `Target` tag and the
    approved USD 100/month budget filter.
 
-Each phase has its own reviewed change set and current-chat approval. No phase
-automatically starts the next one.
+Each phase has its own reviewed change set. The bounded E1--E7 execution packet
+approved for this target authorizes the ordered phases and their ordinary
+verification; it does not authorize resources outside the stated boundary.
 
 ## What E2c would add
 
@@ -76,7 +77,7 @@ add only the following resources:
 
 | Resource | Why it exists | Boundary |
 | --- | --- | --- |
-| Immutable ECR repository | Holds only `kanbien-core-server` images | Created empty in E2a; scan on push; immutable tags; no staging repository |
+| Immutable ECR repository | Holds only `kanbien-core-server` images | Created empty in E2a; later foundation consumes its exact ARN and URI rather than attempting a second repository |
 | ECS cluster | Owns this target's tasks | Dedicated cluster; no staging service membership |
 | CloudWatch log group | Receives bootstrap and verifier logs | Short approved retention; no secret or request-payload logging |
 | ECS execution role | Lets AWS pull the selected image and write logs | ECR and log-stream permissions only |

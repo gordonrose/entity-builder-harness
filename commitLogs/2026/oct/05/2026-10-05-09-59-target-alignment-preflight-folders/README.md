@@ -65,6 +65,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: AWS rejected cost-allocation tag activation without mutation
   Resolution: The approved Cost Explorer activation command failed with Tag keys not found: Target. AWS requires the user-defined tag to exist on a resource before it can be activated. No account setting or target resource changed; the foundation sequence must introduce a target-tagged low-risk resource, then activate and wait for propagation before relying on the USD 100 target budget.
 
+
+- Raised: E2b account tag discovery is still propagating
+  Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -130,6 +134,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: User approved bounded kanbien-core-platform E1-E7 execution packet
   Rationale: Authority covers reviewed repository changes, commits, main promotion and push; selected kanbien-dev/eu-west-1 target resources; USD 100/month target guard; protected GitHub Environment; one B-to-A rollback; cost-tag propagation wait; and stops only for unexpected security risk, extra cost/resource category, AWS/GitHub denial, or an out-of-bound result. Alert email is execution-only and must not be recorded.
+
+
+- Decision: Completed E2a tag bootstrap and GitHub Environment guard
+  Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
 
 ## Context Hygiene
 
@@ -225,6 +233,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch cleanly from accepted local main through a rehearsed preflight; recorded E1 candidate topology and budget evidence.
   Durable evidence: Durable design: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md and docs/aws/kanbien-core-platform-e1-foundation-change-set.md. Read-only provider evidence only; no AWS mutation.
+
+
+- Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+  Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
 
 ## Activity Log
 
@@ -896,6 +908,27 @@ Message: docs(deploy): phase core platform cost controls
 Summary: Recorded the E1 private ECS target design, phased cost-tag bootstrap, review-only foundation templates, and bounded execution authority. No AWS resource was created; the first AWS mutation remains the separately controlled empty ECR tag bootstrap.
 
 ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC exception.
+
+
+### 2026-10-20T10:32:22Z - Issue
+
+Raised: E2b account tag discovery is still propagating
+
+Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
+
+
+### 2026-10-20T10:32:22Z - Decision
+
+Decision: Completed E2a tag bootstrap and GitHub Environment guard
+
+Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
+
+
+### 2026-10-20T10:32:23Z - Context hygiene
+
+Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+
+Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
 
 ## Sub-Agent Activity
 
