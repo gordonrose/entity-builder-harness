@@ -80,6 +80,8 @@ assert endpoint, "missing CloudWatch Logs endpoint"
 expected = "Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*'"
 assert expected in endpoint.group(0), "missing exact CloudWatch Logs endpoint policy resource"
 assert "Resource: !Sub '${LogGroup.Arn}:log-stream:*'" not in endpoint.group(0)
+assert template.count(expected) == 2, "endpoint and execution-role policies must use the exact log-stream ARN"
+assert "Resource: !Sub '${LogGroup.Arn}:log-stream:*'" not in template
 PY
 
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py" <<'PY'

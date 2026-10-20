@@ -183,7 +183,7 @@ Resources:
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ExistingRepositoryArn }
-              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub '${LogGroup.Arn}:log-stream:*' }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*' }
   DeliveryRole:
     Type: AWS::IAM::Role
     Properties:

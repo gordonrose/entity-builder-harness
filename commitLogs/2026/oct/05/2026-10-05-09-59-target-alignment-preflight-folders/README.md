@@ -93,6 +93,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The corrected service failed to launch because the private CloudWatch Logs endpoint policy denied CreateLogStream.
   Resolution: The endpoint policy appended log-stream syntax to LogGroup.Arn, producing an ARN shape that did not match the actual log stream resource.
 
+
+- Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
+  Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -206,6 +210,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: CloudWatch Logs endpoint policies must use an explicitly constructed log-stream ARN, tested against the endpoint block.
   Rationale: The shared foundation policy now uses partition, region, account, log-group name, and log-stream wildcard directly; the task role policy remains separate.
+
+
+- Decision: Both endpoint and task execution-role logging permissions now use the same exact log-stream ARN contract.
+  Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
 
 ## Context Hygiene
 
@@ -1299,6 +1307,20 @@ Message: fix(deploy): permit logs endpoint streams
 Summary: Corrected the private Logs endpoint policy to allow exact log-stream ARNs and added a focused foundation policy regression test.
 
 ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:58:27Z - Issue
+
+Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
+
+Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
+
+
+### 2026-10-20T19:58:27Z - Decision
+
+Decision: Both endpoint and task execution-role logging permissions now use the same exact log-stream ARN contract.
+
+Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
 
 ## Sub-Agent Activity
 
