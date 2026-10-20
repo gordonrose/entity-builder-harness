@@ -243,6 +243,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Promoted governed core-platform release controls to origin/main
   Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
 
+
+- Decision: Qualified Release B locally
+  Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
+
 ## Context Hygiene
 
 
@@ -1431,6 +1435,13 @@ Message: chore(core-server): label bootstrap release
 Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
 
 ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
+
+
+### 2026-10-20T22:22:10Z - Decision
+
+Decision: Qualified Release B locally
+
+Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
 
 ## Sub-Agent Activity
 
