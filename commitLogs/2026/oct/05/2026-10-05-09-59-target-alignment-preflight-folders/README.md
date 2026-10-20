@@ -139,6 +139,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Completed E2a tag bootstrap and GitHub Environment guard
   Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
 
+
+- Decision: Implemented E3/E4 repository controls while E2b propagates
+  Rationale: Added package custody receipt governance and a protected manual-only target image workflow; added a private immutable-digest runtime and verifier stack; hardened the E2 foundation. No E2c+ AWS resource was created.
+
 ## Context Hygiene
 
 
@@ -237,6 +241,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
   Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+
+
+- Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer. E3/E4 are now repository-defined, static-validated controls awaiting guarded foundation creation and a real workflow run.
+  Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
 
 ## Activity Log
 
@@ -940,6 +948,20 @@ Message: fix(deploy): consume core tag bootstrap repository
 Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
 
 ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
+
+
+### 2026-10-20T10:52:01Z - Decision
+
+Decision: Implemented E3/E4 repository controls while E2b propagates
+
+Rationale: Added package custody receipt governance and a protected manual-only target image workflow; added a private immutable-digest runtime and verifier stack; hardened the E2 foundation. No E2c+ AWS resource was created.
+
+
+### 2026-10-20T10:52:01Z - Context hygiene
+
+Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer. E3/E4 are now repository-defined, static-validated controls awaiting guarded foundation creation and a real workflow run.
+
+Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
 
 ## Sub-Agent Activity
 

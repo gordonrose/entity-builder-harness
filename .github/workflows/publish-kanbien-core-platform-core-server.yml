@@ -1,0 +1,187 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: github.workflow.publish-kanbien-core-platform-core-server
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Manually qualify, scan, attest, and publish the immutable core-server image without deploying it.
+#   portability: { class: internal, targets: [] }
+#   effects: [network]
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
+name: Publish Kanbien Core Platform Core Server
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+concurrency:
+  group: kanbien-core-platform-core-server-publication
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
+  ECR_REPOSITORY: kanbien-core-platform/core-server
+  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+
+jobs:
+  publish-core-server:
+    name: Qualify and publish immutable core server image
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: kanbien-core-platform
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Enforce protected main source
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo 'Publication blocked: expected refs/heads/main.' >&2
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install repository dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Qualify the declared core-server candidate
+        run: |
+          bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+          bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json
+          bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh --json
+          bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh --tag kanbien-core-server:publication
+
+      - name: Configure target-scoped AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Publish immutable image
+        id: image
+        run: |
+          set -euo pipefail
+          tag="core-${GITHUB_SHA::12}-run${GITHUB_RUN_ID}"
+          local_image='kanbien-core-server:publication'
+          docker tag "$local_image" "$ECR_URI:$tag"
+          docker push "$ECR_URI:$tag"
+          digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$tag" --query 'imageDetails[0].imageDigest' --output text)"
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo 'Publication blocked: ECR did not return an immutable digest.' >&2
+            exit 1
+          fi
+          image="$ECR_URI@$digest"
+          docker pull "$image" >/dev/null
+          revision="$(docker image inspect "$image" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          if [ "$revision" != "$GITHUB_SHA" ]; then
+            echo 'Publication blocked: published image revision does not match checked-out main.' >&2
+            exit 1
+          fi
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Require clean ECR scan
+        id: scan
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --max-results 1 >/dev/null 2>"$RUNNER_TEMP/scan.err"; then break; fi
+            if ! grep -q 'ScanNotFoundException' "$RUNNER_TEMP/scan.err" || [ "$attempt" = 30 ]; then echo 'Publication blocked: ECR scan record was unavailable.' >&2; exit 1; fi
+            sleep 10
+          done
+          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}"
+          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
+          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
+          if [ "${critical:-0}" != 0 ] || [ "${high:-0}" != 0 ]; then echo 'Publication blocked: ECR scan found blocked severities.' >&2; exit 1; fi
+          echo 'verdict=passed' >> "$GITHUB_OUTPUT"
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ runner.temp }}/core-server.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest image provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+
+      - name: Attest image SBOM
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.ECR_URI }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/core-server.sbom.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+
+      - name: Write and validate safe package-custody receipt
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          receipt="$RUNNER_TEMP/package-custody-receipt.json"
+          export RECEIPT_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          python3 - "$receipt" <<'PY'
+          import json, os, sys
+          json.dump({
+            'schema': 'deploy/package-custody-receipt/v1', 'target': 'kanbien-core-platform',
+            'environment_class': 'private-bootstrap', 'provider_region_alias': 'aws-eu-west-1',
+            'candidate_id': 'kanbien-core-server-candidate', 'package_contract_id': 'kanbien-core-server-image',
+            'program_id': 'kanbien-core-server', 'source_revision': os.environ['GITHUB_SHA'],
+            'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
+            'checked_at': os.environ['RECEIPT_CHECKED_AT'],
+            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','local_image_smoke':'passed','ecr_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
+            'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
+          }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
+          PY
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$receipt" --expected-target kanbien-core-platform --expected-candidate kanbien-core-server-candidate --expected-package-contract kanbien-core-server-image --expected-program kanbien-core-server --json
+
+      - name: Upload safe package-custody evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-package-custody-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/package-custody-receipt.json
+            ${{ runner.temp }}/core-server.sbom.spdx.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Record package-custody summary
+        run: |
+          {
+            echo '## Kanbien core platform package custody'
+            echo "- Source revision: $GITHUB_SHA"
+            echo "- Immutable image digest: ${{ steps.image.outputs.digest }}"
+            echo "- ECR scan: ${{ steps.scan.outputs.verdict }}"
+            echo "- Receipt: github-actions-run:$GITHUB_RUN_ID"
+            echo '- Deployment: not performed by this workflow.'
+          } >> "$GITHUB_STEP_SUMMARY"

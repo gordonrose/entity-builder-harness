@@ -22,7 +22,9 @@
 
 `tag-bootstrap.yml` is E2a's only change: it creates an empty, tagged ECR
 repository so AWS can activate the `Target` cost-allocation tag. `foundation.yml`
-is E2c's private foundation after that activation has propagated. A later
-`bootstrap-runtime.yml` will be E4's workload stack and requires an E3
-immutable image digest. No file may be applied without its separately approved
-AWS change set.
+is E2c's private foundation after that activation has propagated.
+`bootstrap-runtime.yml` is E4's private workload stack. It requires an E3
+immutable image digest and never accepts a tag as an image identity. It creates
+the server service and the dormant one-shot verifier task definition, but does
+not run the verifier itself. No file may be applied without its separately
+approved AWS change set.
