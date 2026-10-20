@@ -15,6 +15,12 @@ Description: Proposed private foundation for kanbien-core-platform; no public in
 Parameters:
   VpcId: { Type: 'AWS::EC2::VPC::Id' }
   PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  ExistingRepositoryArn:
+    Type: String
+    AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$'
+  ExistingRepositoryUri:
+    Type: String
+    AllowedPattern: '^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/kanbien-core-platform/core-server$'
   ExistingGitHubOidcProviderArn:
     Type: String
     AllowedPattern: '^arn:aws:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$'
@@ -24,29 +30,36 @@ Parameters:
     AllowedPattern: '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
 
 Resources:
-  Repository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: kanbien-core-platform/core-server
-      ImageTagMutability: IMMUTABLE
-      ImageScanningConfiguration: { ScanOnPush: true }
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: kanbien-core-platform
       ClusterSettings: [{ Name: containerInsights, Value: enabled }]
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   LogGroup:
     Type: AWS::Logs::LogGroup
-    Properties: { LogGroupName: /aws/ecs/kanbien-core-platform, RetentionInDays: 14 }
+    Properties:
+      LogGroupName: /aws/ecs/kanbien-core-platform
+      RetentionInDays: 14
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   ServiceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Properties: { GroupDescription: Private core server ingress from verifier only., VpcId: !Ref VpcId }
+    Properties:
+      GroupDescription: Private core server ingress from verifier only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   VerifierSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Properties: { GroupDescription: Private one-pass release verifier., VpcId: !Ref VpcId }
+    Properties:
+      GroupDescription: Private one-pass release verifier.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Properties: { GroupDescription: HTTPS from core tasks to required AWS endpoints., VpcId: !Ref VpcId }
+    Properties:
+      GroupDescription: HTTPS from core tasks to required AWS endpoints.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   ServerIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
@@ -58,26 +71,28 @@ Resources:
     Properties: { GroupId: !Ref EndpointSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
   EcrApiEndpoint:
     Type: AWS::EC2::VPCEndpoint
-    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
   EcrDkrEndpoint:
     Type: AWS::EC2::VPCEndpoint
-    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
   LogsEndpoint:
     Type: AWS::EC2::VPCEndpoint
-    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
   Namespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
-    Properties: { Name: kanbien-core-platform.internal, Vpc: !Ref VpcId }
+    Properties: { Name: kanbien-core-platform.internal, Vpc: !Ref VpcId, Tags: [{ Key: Target, Value: kanbien-core-platform }] }
   BootstrapServiceDiscovery:
     Type: AWS::ServiceDiscovery::Service
     Properties:
       Name: bootstrap-runtime
       DnsConfig: { NamespaceId: !Ref Namespace, DnsRecords: [{ Type: A, TTL: 10 }] }
       HealthCheckCustomConfig: { FailureThreshold: 1 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
   TaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: kanbien-core-platform-task-execution
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
         - PolicyName: pull-image-and-write-logs
@@ -85,12 +100,13 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
-              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !GetAtt Repository.Arn }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ExistingRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub '${LogGroup.Arn}:log-stream:*' }
   DeliveryRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: github-kanbien-core-platform-delivery
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -106,7 +122,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
-              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !GetAtt Repository.Arn }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !Ref ExistingRepositoryArn }
   Budget:
     Type: AWS::Budgets::Budget
     Properties:
@@ -121,7 +137,7 @@ Resources:
           Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CostAlertEmail }]
 
 Outputs:
-  RepositoryUri: { Value: !GetAtt Repository.RepositoryUri }
+  RepositoryUri: { Value: !Ref ExistingRepositoryUri }
   ClusterArn: { Value: !GetAtt Cluster.Arn }
   LogGroupName: { Value: !Ref LogGroup }
   TaskExecutionRoleArn: { Value: !GetAtt TaskExecutionRole.Arn }

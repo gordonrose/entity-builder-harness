@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:07:39Z
-latest_commit_sha: ca639258dab1c423d7d8ac7c2045223bbbb358fe
-chat_duration: 1300090s (15:01:08:10)
+latest_commit_at_utc: 2026-10-20T10:33:20Z
+latest_commit_sha: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
+chat_duration: 1301631s (15:01:33:51)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -64,6 +64,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: AWS rejected cost-allocation tag activation without mutation
   Resolution: The approved Cost Explorer activation command failed with Tag keys not found: Target. AWS requires the user-defined tag to exist on a resource before it can be activated. No account setting or target resource changed; the foundation sequence must introduce a target-tagged low-risk resource, then activate and wait for propagation before relying on the USD 100 target budget.
+
+
+- Raised: E2b account tag discovery is still propagating
+  Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
 
 ## Decisions Made
 
@@ -130,6 +134,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: User approved bounded kanbien-core-platform E1-E7 execution packet
   Rationale: Authority covers reviewed repository changes, commits, main promotion and push; selected kanbien-dev/eu-west-1 target resources; USD 100/month target guard; protected GitHub Environment; one B-to-A rollback; cost-tag propagation wait; and stops only for unexpected security risk, extra cost/resource category, AWS/GitHub denial, or an out-of-bound result. Alert email is execution-only and must not be recorded.
+
+
+- Decision: Completed E2a tag bootstrap and GitHub Environment guard
+  Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
 
 ## Context Hygiene
 
@@ -225,6 +233,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch cleanly from accepted local main through a rehearsed preflight; recorded E1 candidate topology and budget evidence.
   Durable evidence: Durable design: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md and docs/aws/kanbien-core-platform-e1-foundation-change-set.md. Read-only provider evidence only; no AWS mutation.
+
+
+- Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+  Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
 
 ## Activity Log
 
@@ -897,6 +909,38 @@ Summary: Recorded the E1 private ECS target design, phased cost-tag bootstrap, r
 
 ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC exception.
 
+
+### 2026-10-20T10:32:22Z - Issue
+
+Raised: E2b account tag discovery is still propagating
+
+Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
+
+
+### 2026-10-20T10:32:22Z - Decision
+
+Decision: Completed E2a tag bootstrap and GitHub Environment guard
+
+Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
+
+
+### 2026-10-20T10:32:23Z - Context hygiene
+
+Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+
+Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+
+
+### 2026-10-20T10:33:20Z - Commit recorded
+
+Commit: `60a59af366eea2ceed84ea83cd960e2a6d4a350a`
+
+Message: fix(deploy): consume core tag bootstrap repository
+
+Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
+
+ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1044,6 +1088,13 @@ ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC e
   Summary: Recorded the E1 private ECS target design, phased cost-tag bootstrap, review-only foundation templates, and bounded execution authority. No AWS resource was created; the first AWS mutation remains the separately controlled empty ECR tag bootstrap.
   ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC exception.
 
+
+- Commit: `60a59af366eea2ceed84ea83cd960e2a6d4a350a`
+  Time UTC: 2026-10-20T10:33:20Z
+  Message: fix(deploy): consume core tag bootstrap repository
+  Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
+  ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1057,9 +1108,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T10:07:39Z
-Latest commit SHA: ca639258dab1c423d7d8ac7c2045223bbbb358fe
-Chat duration: 1300090s (15:01:08:10)
+Latest commit at UTC: 2026-10-20T10:33:20Z
+Latest commit SHA: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
+Chat duration: 1301631s (15:01:33:51)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
