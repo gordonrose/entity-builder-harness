@@ -9,19 +9,26 @@
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
 #   kind: target-alignment-contract
-#   purpose: Bind the bootstrap runtime's first-release alignment assertions to safe AWS evidence.
+#   purpose: Bind the bootstrap runtime's accepted-baseline update and restoration assertions to safe AWS evidence.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
 schema: deploy/target-alignment-contract/v1
 target: kanbien-core-platform
 scope: bootstrap-runtime
-baseline: first-immutable-release
+baseline: accepted-immutable-release
+accepted_release: accepted-release.yml
+permitted_operations:
+  - update
+  - restore
 assertions:
   - { id: right-destination, expected: aws-account-337159794548-eu-west-1 }
   - { id: right-application, expected: kanbien-core-platform-foundation-create-complete }
-  - { id: known-healthy-baseline, expected: bootstrap-runtime-stack-absent }
-  - { id: allowed-deployment-route, expected: fixed-cloudformation-create-change-set }
+  - { id: known-healthy-baseline, expected: accepted-runtime-stack-healthy-and-digest-matches-baseline }
+  - { id: allowed-deployment-route, expected: fixed-cloudformation-update-change-set }
   - { id: package-destination, expected: qualified-immutable-ecr-digest }
   - { id: required-access, expected: delivery-and-task-execution-roles-present }
   - { id: required-settings, expected: only-declared-non-secret-runtime-settings }
-  - { id: change-safety, expected: create-only-no-automatic-retry }
+  - { id: change-safety, expected: retained-accepted-immutable-release-and-no-automatic-retry }
   - { id: freshness-and-drift, expected: current-read-only-inspection }

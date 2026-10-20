@@ -21,59 +21,59 @@
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
 schema: deploy/target-profile/v1
 id: kanbien-core-platform
-status: foundation-ready-runtime-absent
-baseline: runtime-absent
-live_alignment: fresh-e4-required
+status: healthy-runtime-accepted
+baseline: accepted-immutable-release
+live_alignment: fresh-update-or-restore-alignment-required
 repository_declaration: repository-declaration-complete
 provider:
   family: aws
-  selection_status: selected-e2c-fresh-e4-evidence-required
+  selection_status: selected-and-live-verified
 target_mutation:
   status: blocked
-  allowed_after: qualified-e3-receipt-fresh-e4-alignment-and-approved-change-set
-  allowed_operation: create-only
+  allowed_after: qualified-receipt-fresh-alignment-release-contract-reviewed-change-set-and-explicit-approval
+  allowed_operation: update-or-restore
 e0_required_facts:
   - id: provider-account-profile
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
     evidence: read-only-identity-inspection
   - id: provider-region
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
     evidence: read-only-region-and-quota-inspection
   - id: runtime-family
-    status: selected-e2c-fresh-e4-evidence-required
+    status: selected-and-live-verified
     owner: deployment-platform
     evidence: approved-runtime-selection
   - id: private-network-placement
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: network-owner
     evidence: read-only-network-feasibility-inspection
   - id: image-custody-destination
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
     evidence: read-only-registry-availability-inspection
   - id: private-verifier-placement
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: platform-runtime
     evidence: read-only-private-route-feasibility-inspection
   - id: logging-destination
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: observability-owner
     evidence: approved-logging-selection
   - id: cost-guard
-    status: declared-create-only-no-automatic-retry
+    status: inactive-tag-waiver-renewal-required-before-mutation
     owner: cost-owner
     evidence: read-only-cost-and-budget-inspection
   - id: delivery-identity
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
     evidence: approved-github-oidc-selection
   - id: workload-startup-identity
-    status: fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: platform-runtime
     evidence: approved-runtime-access-selection
   - id: rollback-custody
-    status: qualified-e3-receipt-required-before-e4
+    status: accepted-release-retained-and-private-verified
     owner: deployment-platform
     evidence: approved-immutable-release-retention-selection

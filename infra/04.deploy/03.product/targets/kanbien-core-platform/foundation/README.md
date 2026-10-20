@@ -12,7 +12,7 @@ disciplines:
 - security
 - sre
 kind: foundation-guide
-purpose: Explain shared target facilities required by the planned bootstrap target.
+purpose: Explain shared target facilities used by the accepted bootstrap runtime.
 portability:
   class: internal
   targets: []
@@ -23,14 +23,18 @@ used_by:
 # Foundation
 
 Foundation records facilities shared by workloads in this target, not a
-workload’s application behaviour. Every record is still an unresolved E0 fact:
-these files declare what must be decided, not a provider resource to create.
+workload’s application behaviour. The recorded facilities are live-verified
+starting facts; fresh alignment still checks that they remain fit for a proposed
+update or restoration.
 
-`technical-access.yml` separates the future delivery identity from the
-workload startup identity. `network.yml` reserves a private verifier boundary;
-it deliberately declares no public ingress, endpoint, security group, or
-network identifier. It also declares the distinct private paths needed to
+`technical-access.yml` separates the delivery identity from the workload
+startup identity. `network.yml` declares the private verifier boundary and the
+distinct private paths needed to
 retrieve an immutable image: registry control plane, registry data plane, and
 the object store that serves image layers. The latter must be restricted to the
 provider-managed object-store prefix list, not widened to general internet
 egress.
+
+`cost-control.yml` remains unresolved: AWS currently exposes the `Target` tag
+as inactive. No update or restoration may mutate AWS until the tag is active or
+a fresh, explicit waiver is validated.

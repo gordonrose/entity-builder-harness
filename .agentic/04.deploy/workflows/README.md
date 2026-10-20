@@ -28,3 +28,7 @@ Current workflows:
 
 - `runnable-program-candidates.md`: reviews a program's declaration before
   package construction, without building or publishing a package.
+- `declaration-coverage.md`: ensures a deployable change has a bounded target declaration.
+- `package-custody-and-promotion.md`: governs immutable package evidence without deployment authority.
+- `target-alignment-preflight.md`: governs fresh local-to-target comparison before a target mutation.
+- `release-update-and-recovery.md`: governs the provider-neutral update and restoration sequence for an accepted scope release.

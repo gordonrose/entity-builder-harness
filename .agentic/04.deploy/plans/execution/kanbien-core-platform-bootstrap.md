@@ -13,7 +13,7 @@ disciplines:
 - security
 - sre
 kind: execution-plan
-purpose: Govern the exact qualification and E0-E7 execution sequence for the isolated kanbien-core-platform bootstrap target.
+purpose: Record bootstrap execution history and remaining status for the isolated kanbien-core-platform target.
 portability:
   class: internal
   targets: []
@@ -25,12 +25,12 @@ used_by:
 
 ## Authority and status
 
-This is the execution authority for the target-specific bootstrap packet. The
-generic implementation plan defines reusable rules; explanatory documents under
-`docs/` do not authorise execution. A separate approved packet is still
-required for any AWS or GitHub mutation.
+This is a historical status tracker, not execution authority. The reusable
+procedure is `.agentic/04.deploy/workflows/release-update-and-recovery.md`; the
+fixed AWS procedure is `.agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md`.
+A separate approved packet remains required for any AWS or GitHub mutation.
 
-Current execution status: `E3-qualified; E4 alignment and foundation-output update required before a runtime change set can be created`.
+Current execution status: `A accepted and running; normal UPDATE and restoration controls are being implemented before the B-to-A rehearsal.`
 
 ## Completion criterion
 

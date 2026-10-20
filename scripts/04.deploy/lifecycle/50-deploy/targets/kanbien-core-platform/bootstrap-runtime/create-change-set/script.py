@@ -22,6 +22,7 @@
 from __future__ import annotations
 import argparse, json, subprocess, sys, tempfile
 from pathlib import Path
+import yaml
 
 ROOT = Path(__file__).resolve().parents[8]
 PROFILE, REGION = "kanbien-dev", "eu-west-1"
@@ -50,19 +51,39 @@ def receipt(path: Path) -> tuple[str, str] | None:
     if result.returncode: return None
     data = json.loads(result.stdout); return data["image_digest"], data["source_revision"]
 
+def baseline() -> tuple[str, str] | None:
+    path = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml"
+    try:
+        record = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return None
+    release = record.get("release") if isinstance(record, dict) else None
+    if not isinstance(release, dict) or record.get("status") != "accepted":
+        return None
+    digest, revision = release.get("image_digest"), release.get("source_revision")
+    return (digest, revision) if isinstance(digest, str) and isinstance(revision, str) else None
+
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--json", action="store_true")
+    parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--operation", choices=("update", "restore"), required=True); parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown: return fail("runtime-change-set-arguments-invalid")
     candidate = receipt(args.receipt)
     if candidate is None: return fail("package-custody-receipt-invalid")
     digest, revision = candidate
+    accepted = baseline()
+    if accepted is None: return fail("accepted-release-invalid")
+    if args.operation == "update" and digest == accepted[0]: return fail("update-candidate-matches-accepted-release")
+    if args.operation == "restore" and candidate != accepted: return fail("restore-candidate-does-not-match-accepted-release")
+    contract = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh"), "--json"], capture_output=True, text=True)
+    if contract.returncode: return fail("release-contract-not-proven")
+    alignment = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"), "--receipt", str(args.receipt), "--operation", args.operation, "--json"], capture_output=True, text=True)
+    if alignment.returncode: return fail("runtime-update-alignment-not-proven")
     ok, foundation, code = aws("cloudformation", "describe-stacks", "--stack-name", FOUNDATION)
     if not ok: return fail(code)
     stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
     outputs = {item.get("OutputKey"): item.get("OutputValue") for item in stacks[0].get("Outputs", [])} if stacks else {}
     if not REQUIRED <= set(outputs) or any(not isinstance(outputs[key], str) or not outputs[key] for key in REQUIRED): return fail("foundation-runtime-parameters-unavailable")
-    change_set = f"kanbien-core-platform-a-{digest[7:19]}"
+    change_set = f"kanbien-core-platform-{args.operation}-{digest[7:19]}"
     parameters = [
         {"ParameterKey":"ClusterArn", "ParameterValue":outputs["ClusterArn"]}, {"ParameterKey":"PrivateSubnetIds", "ParameterValue":outputs["PrivateSubnetIds"]},
         {"ParameterKey":"ServiceSecurityGroupId", "ParameterValue":outputs["ServiceSecurityGroupId"]}, {"ParameterKey":"VerifierSecurityGroupId", "ParameterValue":outputs["VerifierSecurityGroupId"]},
@@ -72,7 +93,7 @@ def main() -> int:
     ]
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
         json.dump(parameters, file); file.flush()
-        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "CREATE", "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
+        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "UPDATE", "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
     if not ok: return fail(code)
-    print(json.dumps({"schema":"deploy/runtime-change-set-report/v1", "target":"kanbien-core-platform", "stack":"kanbien-core-platform-bootstrap-runtime", "change_set":change_set, "image_digest":digest, "source_revision":revision, "verdict":"created-awaiting-review", "findings":[]} , sort_keys=True)); return 0
+    print(json.dumps({"schema":"deploy/runtime-change-set-report/v1", "target":"kanbien-core-platform", "stack":"kanbien-core-platform-bootstrap-runtime", "operation":args.operation, "change_set":change_set, "image_digest":digest, "source_revision":revision, "verdict":"created-awaiting-review", "findings":[]} , sort_keys=True)); return 0
 if __name__ == "__main__": sys.exit(main())

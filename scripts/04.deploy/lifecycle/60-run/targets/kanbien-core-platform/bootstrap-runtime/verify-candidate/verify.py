@@ -12,6 +12,9 @@
 #   kind: script
 #   purpose: Verify the deployed immutable runtime and run its fixed private release verifier exactly once.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.verify-candidate.wrapper
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh
 #   effects: [aws-mutation]
 from __future__ import annotations
 import argparse, json, subprocess, sys
@@ -26,7 +29,10 @@ def aws(*p: str):
   t=r.stderr.lower(); return False,None,"aws-access-denied" if "accessdenied" in t or "not authorized" in t else "aws-command-failed"
  try:return True,json.loads(r.stdout),"ok"
  except json.JSONDecodeError:return False,None,"aws-response-invalid"
-def out(verdict,*codes): print(json.dumps({"schema":"deploy/private-runtime-verification-report/v1","target":"kanbien-core-platform","verdict":verdict,"findings":[{"code":c} for c in codes]},sort_keys=True))
+def out(verdict,*codes,facts=None):
+ report={"schema":"deploy/private-runtime-verification-report/v1","target":"kanbien-core-platform","verdict":verdict,"findings":[{"code":c} for c in codes]}
+ if facts: report["facts"]=facts
+ print(json.dumps(report,sort_keys=True))
 def candidate(path):
  v=ROOT/"scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
  r=subprocess.run(["bash",str(v),"--receipt",str(path),"--expected-target","kanbien-core-platform","--expected-candidate","kanbien-core-server-candidate","--expected-package-contract","kanbien-core-server-image","--expected-program","kanbien-core-server","--json"],capture_output=True,text=True)
@@ -64,5 +70,5 @@ def main():
  ok, finished, code=aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",arn)
  exited=finished.get("tasks",[{}])[0].get("containers",[]) if ok else []
  if not ok or not exited or exited[0].get("exitCode")!=0:out("blocked","private-release-verification-failed");return 1
- out("accepted","runtime-digest-and-private-verifier-accepted");return 0
+ out("accepted","runtime-digest-and-private-verifier-accepted",facts={"source_revision":c["source_revision"],"image_digest":c["image_digest"],"runtime_task_definition":taskdef,"verifier_task_definition":verifier});return 0
 if __name__=="__main__":sys.exit(main())

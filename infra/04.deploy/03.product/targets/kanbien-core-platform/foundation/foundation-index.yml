@@ -21,25 +21,25 @@
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
 schema: deploy/target-foundation-index/v1
 target: kanbien-core-platform
-status: foundation-established-runtime-absent
+status: foundation-established-runtime-accepted
 resources:
   - id: private-network
     declaration: network.yml
-    status: established-e2c-fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: network-owner
   - id: technical-access
     declaration: technical-access.yml
-    status: established-e2c-fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
   - id: image-custody
     declaration: target-profile.yml#image-custody-destination
-    status: established-e2c-fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: deployment-platform
   - id: logging-destination
     declaration: target-profile.yml#logging-destination
-    status: established-e2c-fresh-e4-evidence-required
+    status: live-verified-fresh-alignment-required
     owner: observability-owner
   - id: cost-guard
     declaration: cost-control.yml
-    status: waived-with-compensating-controls-fresh-e4-evidence-required
+    status: inactive-tag-waiver-renewal-required-before-mutation
     owner: cost-owner

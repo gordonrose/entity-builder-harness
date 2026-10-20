@@ -29,6 +29,9 @@ ROOT="$(git rev-parse --show-toplevel)"
 PREPARE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"
 DEPLOY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh"
 VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh"
+RELEASE_CONTRACT="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh"
+RESTORE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh"
+ACCEPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh"
 expect_failure() {
   local code="$1"; shift
   local output
@@ -50,11 +53,25 @@ expect_selector_rejected() {
 }
 
 expect_failure RUNTIME_ALIGNMENT_RECEIPT_REQUIRED "$PREPARE" --json
-expect_failure package-custody-receipt-invalid "$DEPLOY" --receipt /tmp/missing-core-receipt.json --approved-change-set kanbien-core-platform-a-aaaaaaaaaaaa --json
+expect_failure package-custody-receipt-invalid "$DEPLOY" --receipt /tmp/missing-core-receipt.json --operation update --approved-change-set kanbien-core-platform-update-aaaaaaaaaaaa --json
 expect_failure package-custody-receipt-invalid "$VERIFY" --receipt /tmp/missing-core-receipt.json --json
+expect_failure package-custody-receipt-invalid "$ACCEPT" --receipt /tmp/missing-core-receipt.json --verification-report /tmp/missing-verification-report.json --json
+expect_failure RESTORE_CHANGE_SET_NOT_APPROVED "$RESTORE" --approved-change-set kanbien-core-platform-restore-aaaaaaaaaaaa --json
 expect_selector_rejected "$PREPARE"
 expect_selector_rejected "$DEPLOY"
 expect_selector_rejected "$VERIFY"
+"$RELEASE_CONTRACT" --json | grep -q '"verdict": "passed"'
+bash "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh"
+
+accepted_receipt="$(mktemp)"; accepted_verification="$(mktemp)"; trap 'rm -f "$accepted_receipt" "$accepted_verification"' EXIT
+python3 - "$accepted_receipt" "$accepted_verification" <<'PY'
+import json, sys
+digest="sha256:" + "a" * 64
+revision="1" * 40
+json.dump({"schema":"deploy/package-custody-receipt/v1","target":"kanbien-core-platform","environment_class":"private-bootstrap","provider_region_alias":"aws-eu-west-1","candidate_id":"kanbien-core-server-candidate","package_contract_id":"kanbien-core-server-image","program_id":"kanbien-core-server","source_revision":revision,"image_digest":digest,"release_identity":"source-"+revision,"checked_at":"2026-10-20T21:15:49Z","checks":{"runnable_program_contract":"passed","dependency_boundary":"passed","delivery_access_static":"passed","delivery_access_live":"passed","local_image_smoke":"passed","ecr_scan":"passed","sbom":"passed","provenance_attestation":"passed"},"verdict":"qualified","receipt_reference":"github-actions-run:39464882266"}, open(sys.argv[1], "w"))
+json.dump({"schema":"deploy/private-runtime-verification-report/v1","target":"kanbien-core-platform","verdict":"accepted","findings":[{"code":"runtime-digest-and-private-verifier-accepted"}],"facts":{"source_revision":revision,"image_digest":digest,"runtime_task_definition":"runtime:2","verifier_task_definition":"verifier:2"}}, open(sys.argv[2], "w"))
+PY
+"$ACCEPT" --receipt "$accepted_receipt" --verification-report "$accepted_verification" --json | grep -q '"verdict": "ready-to-record"'
 
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml" <<'PY'
 import re
@@ -109,6 +126,10 @@ assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, No
 assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "REVIEW_IN_PROGRESS")
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "REVIEW_IN_PROGRESS")
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "CREATE_COMPLETE")
+assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_COMPLETE")
+assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "CREATE_COMPLETE")
+assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "UPDATE_COMPLETE")
+assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_IN_PROGRESS")
 assert module.decoded_aws_response("") == {}
 assert module.decoded_aws_response('{"accepted": true}') == {"accepted": True}
 PY
