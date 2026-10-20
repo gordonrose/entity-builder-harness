@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:04:38Z
-latest_commit_sha: 8a0ffd8f
-chat_duration: 1332309s (15:10:05:09)
+latest_commit_at_utc: 2026-10-20T19:12:51Z
+latest_commit_sha: 5fd8014c
+chat_duration: 1332802s (15:10:13:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1157,6 +1157,17 @@ Decision: Cloud-mutating controls now have a standard metadata effect category.
 
 Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
 
+
+### 2026-10-20T19:12:51Z - Commit recorded
+
+Commit: `5fd8014c`
+
+Message: fix(deploy): validate runtime provider parameters
+
+Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
+
+ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1360,6 +1371,13 @@ Rationale: aws-mutation is added to the central metadata taxonomy, documented st
   Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
   ADR impact: No new ADR; corrects the implementation of the approved alignment control.
 
+
+- Commit: `5fd8014c`
+  Time UTC: 2026-10-20T19:12:51Z
+  Message: fix(deploy): validate runtime provider parameters
+  Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
+  ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1373,9 +1391,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:04:38Z
-Latest commit SHA: 8a0ffd8f
-Chat duration: 1332309s (15:10:05:09)
+Latest commit at UTC: 2026-10-20T19:12:51Z
+Latest commit SHA: 5fd8014c
+Chat duration: 1332802s (15:10:13:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
