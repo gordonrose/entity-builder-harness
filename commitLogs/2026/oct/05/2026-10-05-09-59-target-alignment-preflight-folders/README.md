@@ -235,6 +235,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
   Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
 
+
+- Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
+  Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
+
 ## Context Hygiene
 
 
@@ -1387,6 +1391,13 @@ Rationale: Use ECS CMD form with the image-declared Node binary and arguments as
 Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
 
 Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
+
+
+### 2026-10-20T21:15:49Z - Decision
+
+Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
+
+Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
 
 ## Sub-Agent Activity
 
