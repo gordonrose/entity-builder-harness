@@ -1,0 +1,28 @@
+<!-- agentic-artifact:
+  schema: agentic-artifact/v2
+  id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  version: 1
+  status: draft
+  layer: 04.deploy
+  domain: deployment.bootstrap-runtime
+  disciplines:
+  - architecture
+  - security
+  - sre
+  kind: infrastructure-guide
+  purpose: Explain the review-only CloudFormation boundary for the isolated core target.
+  portability:
+    class: internal
+    targets: []
+  used_by:
+  - id: aws.plan.kanbien-core-platform-e1-foundation-change-set
+    path: docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+-->
+# Core Platform CloudFormation
+
+`tag-bootstrap.yml` is E2a's only change: it creates an empty, tagged ECR
+repository so AWS can activate the `Target` cost-allocation tag. `foundation.yml`
+is E2c's private foundation after that activation has propagated. A later
+`bootstrap-runtime.yml` will be E4's workload stack and requires an E3
+immutable image digest. No file may be applied without its separately approved
+AWS change set.
