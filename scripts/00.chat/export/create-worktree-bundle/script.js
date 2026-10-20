@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: chat.script.export.create-worktree-bundle
 //   version: 1
 //   status: active
+//   created_on: "2026-07-03"
+//   updated_on: "2026-10-20"
 //   layer: 00.chat
 //   domain: export
 //   disciplines:

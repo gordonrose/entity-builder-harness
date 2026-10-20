@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: harness.architecture.source-material.packages-core-contract-surface-v1
   version: 17
   status: active
+  created_on: "2026-07-04"
+  updated_on: "2026-10-20"
   layer: 03.product
   domain: architecture
   disciplines:

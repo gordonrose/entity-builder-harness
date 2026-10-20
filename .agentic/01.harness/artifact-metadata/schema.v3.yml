@@ -1,0 +1,245 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: harness.schema.artifact-metadata-v3
+#   version: 1
+#   status: active
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 01.harness
+#   domain: metadata
+#   disciplines: [agentic]
+#   kind: schema
+#   purpose: Define artifact lifecycle dates and supersession relationships.
+#   portability:
+#     class: required
+#     targets: [llm-workbench, entity-builder, design-system-builder]
+#   used_by:
+#     - id: harness.standard.artifact-metadata
+#       path: .agentic/01.harness/artifact-metadata/standard.md
+#     - id: harness.script.artifact-metadata.check-headers
+#       path: scripts/01.harness/artifact-metadata/check-headers/script.sh
+
+schema: agentic-artifact-schema/v1
+artifact_schema: agentic-artifact/v3
+required_fields:
+- schema
+- id
+- version
+- status
+- layer
+- domain
+- disciplines
+- kind
+- purpose
+- portability
+- used_by
+- created_on
+- updated_on
+fields:
+  schema:
+    type: string
+    allowed_values:
+    - agentic-artifact/v3
+    field_guide:
+      what: Header format version
+      does: Dispatches explicit v1/v2/v3 parsing; unknown schemas fail.
+      rules: Follow the field constraints and the companion standard.
+  id:
+    type: string
+    format: lower-dot-id
+    stable_across_path_moves: true
+    field_guide:
+      what: Stable artifact identity
+      does: Keep unchanged across moves and lifecycle transitions.
+      rules: Follow the field constraints and the companion standard.
+  version:
+    type: integer
+    minimum: 1
+    field_guide:
+      what: Semantic artifact version
+      does: Bump for changed guidance or behavior, not every date refresh.
+      rules: Follow the field constraints and the companion standard.
+  status:
+    type: enum
+    values_from: taxonomy.statuses
+    field_guide:
+      what: Current lifecycle state
+      does: Determines conditional date and replacement requirements.
+      rules: Follow the field constraints and the companion standard.
+  layer:
+    type: enum
+    values_from: taxonomy.layers[].id
+    field_guide:
+      what: Owning governance layer
+      does: Routes ownership using the numbered taxonomy.
+      rules: Follow the field constraints and the companion standard.
+  domain:
+    type: string
+    format: lower-dot-domain
+    extensible: true
+    field_guide:
+      what: Topic or mechanism
+      does: Supports extensible dot-separated discovery.
+      rules: Follow the field constraints and the companion standard.
+  disciplines:
+    type: array
+    items_from: taxonomy.disciplines
+    min_items: 1
+    field_guide:
+      what: Relevant review disciplines
+      does: Uses non-empty controlled taxonomy values.
+      rules: Follow the field constraints and the companion standard.
+  kind:
+    type: string
+    extensible: true
+    field_guide:
+      what: Artifact type
+      does: Selects script-specific effects validation when applicable.
+      rules: Follow the field constraints and the companion standard.
+  purpose:
+    type: string
+    max_sentences: 1
+    field_guide:
+      what: Reason for existence
+      does: Describes the artifact concisely.
+      rules: Follow the field constraints and the companion standard.
+  portability:
+    type: object
+    required_fields:
+    - class
+    - targets
+    fields:
+      class:
+        type: enum
+        values_from: taxonomy.portability_classes
+      targets:
+        type: array
+        items_from: taxonomy.seed_targets
+        extensible: true
+    field_guide:
+      what: Cross-repository extraction policy
+      does: Names the portability class and targets.
+      rules: Follow the field constraints and the companion standard.
+  effects:
+    type: array
+    items_from: taxonomy.script_effects
+    required_when:
+      kind: script
+    field_guide:
+      what: Script side effects
+      does: Required for scripts; uses controlled effects.
+      rules: Follow the field constraints and the companion standard.
+  used_by:
+    type: array
+    min_items: 1
+    item:
+      type: object
+      required_fields:
+      - id
+      fields:
+        id:
+          type: string
+          format: lower-dot-id
+        path:
+          type: string
+          required_during_migration: false
+    field_guide:
+      what: Incoming usage relationships
+      does: Names stable artifact IDs and optional path hints.
+      rules: Follow the field constraints and the companion standard.
+  created_on:
+    type: string
+    format: quoted-iso-8601-date
+    timezone: UTC
+    field_guide:
+      what: Creation date, preserved across moves and renames.
+      does: Makes lifecycle timing readable without Git queries.
+      rules: Use a real, non-future YYYY-MM-DD string; obey lifecycle ordering and conditional requirements.
+  updated_on:
+    type: string
+    format: quoted-iso-8601-date
+    timezone: UTC
+    field_guide:
+      what: Date of latest body or metadata edit, including schema migration.
+      does: Makes lifecycle timing readable without Git queries.
+      rules: Use a real, non-future YYYY-MM-DD string; obey lifecycle ordering and conditional requirements.
+  deprecated_on:
+    type: string
+    format: quoted-iso-8601-date
+    timezone: UTC
+    field_guide:
+      what: Date the artifact became deprecated.
+      does: Makes lifecycle timing readable without Git queries.
+      rules: Use a real, non-future YYYY-MM-DD string; obey lifecycle ordering and conditional requirements.
+    required_when:
+      status: deprecated
+    allowed_statuses:
+    - deprecated
+    - superseded
+    - retired
+  superseded_on:
+    type: string
+    format: quoted-iso-8601-date
+    timezone: UTC
+    field_guide:
+      what: Date the artifact was replaced.
+      does: Makes lifecycle timing readable without Git queries.
+      rules: Use a real, non-future YYYY-MM-DD string; obey lifecycle ordering and conditional requirements.
+    required_when:
+      status: superseded
+    allowed_statuses:
+    - superseded
+    - retired
+  superseded_by:
+    type: array
+    min_items: 1
+    required_when:
+      status: superseded
+    paired_with: superseded_on
+    allowed_statuses:
+    - superseded
+    - retired
+    item:
+      type: object
+      required_fields:
+      - id
+      - path
+      fields:
+        id:
+          type: string
+          format: lower-dot-id
+        path:
+          type: string
+          format: repository-relative-existing-file
+    field_guide:
+      what: One or more successor artifacts.
+      does: Connects obsolete guidance to replacements through durable IDs and current paths.
+      rules: Targets must exist with matching IDs; reject self-reference and cycles.
+fixtures:
+  markdown: .agentic/01.harness/artifact-metadata/examples/markdown.v3.md
+  yaml: .agentic/01.harness/artifact-metadata/examples/yaml.v3.yml
+  script: scripts/01.harness/artifact-metadata/check-headers/script.sh
+  script_smoke_test: scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh
+  index_generator: scripts/01.harness/artifact-metadata/generate-index/script.sh
+  index_generator_smoke_test: scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh
+  lifecycle_smoke_test: scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh
+companion_guide: .agentic/01.harness/artifact-metadata/standard.md
+constraints:
+  date_order:
+  - created_on <= updated_on
+  - created_on <= deprecated_on <= updated_on when present
+  - created_on <= superseded_on <= updated_on when present
+  - deprecated_on <= superseded_on when both present
+  immutable_after_migration:
+  - created_on
+  paired_fields:
+  - - superseded_on
+    - superseded_by
+  staged_checks:
+  - Validate staged blobs and staged replacement targets.
+  - Reject v3 downgrade.
+  - Preserve retained transition dates; remove them only on explicit reactivation.
+  - Preserve artifact ID across renames.
+  - Compare rename source to HEAD when preserving creation date.
+  - Require current UTC updated_on on non-date content or metadata changes.
+  - Require current UTC event date on new lifecycle transitions.

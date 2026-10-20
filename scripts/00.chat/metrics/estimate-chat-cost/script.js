@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: chat.script.metrics.estimate-chat-cost
 //   version: 1
 //   status: active
+//   created_on: "2026-06-19"
+//   updated_on: "2026-10-20"
 //   layer: 00.chat
 //   domain: metrics
 //   disciplines:

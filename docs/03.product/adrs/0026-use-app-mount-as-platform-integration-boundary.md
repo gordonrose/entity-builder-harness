@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: harness.architecture.adr.0026-use-app-mount-as-platform-integration-boundary
   version: 1
   status: active
+  created_on: "2026-07-10"
+  updated_on: "2026-10-20"
   layer: 03.product
   domain: architecture
   disciplines:

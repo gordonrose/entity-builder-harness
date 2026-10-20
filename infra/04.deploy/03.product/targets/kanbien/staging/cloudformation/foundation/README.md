@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation.readme
 version: 7
 status: draft
+created_on: "2026-09-06"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:

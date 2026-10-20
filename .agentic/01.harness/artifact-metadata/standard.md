@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.standard.artifact-metadata
-version: 1
+version: 2
 status: active
+created_on: "2026-06-24"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: metadata
 disciplines:
@@ -36,14 +38,134 @@ relationship without reading every file in full.
 
 ## Compatibility
 
-Existing `agentic-artifact` and `agentic-script` v1 headers remain valid during
-migration. New or materially changed artifacts should prefer
-`agentic-artifact/v2`.
+Existing v1 and `agentic-artifact/v2` headers remain valid during migration.
+New artifacts and intentionally migrated artifacts use `agentic-artifact/v3`.
+Legacy files do not require a bulk rewrite to pass ordinary commit checks.
+An explicit unknown schema must fail validation rather than fall back to v1.
 
 Do not bulk-migrate historical artifacts only to modernize headers. Backfill in
 focused batches with validation evidence.
 
-## V2 Header
+## V3 Lifecycle Contract
+
+`schema.v3.yml` extends the v2 fields with lifecycle dates and replacement
+references. This standard is its companion guide; the schema includes structured
+field explanations. Dates are quoted strings in `YYYY-MM-DD` format, interpreted
+as UTC calendar dates. Unquoted YAML dates and impossible or future dates fail.
+
+```yaml
+schema: agentic-artifact/v3
+id: harness.example.lifecycle
+version: 1
+status: active
+created_on: "2026-10-20"
+updated_on: "2026-10-20"
+```
+
+The remaining v2 identity, ownership, portability and relationship fields are
+still required. Use the same comment wrapper as v2 for Markdown, YAML and scripts.
+
+| Field | Rule |
+| --- | --- |
+| `created_on` | Required; creation date, immutable after migration, including renames. |
+| `updated_on` | Required; UTC date of the latest body or metadata edit, including formatting and schema migration. |
+| `deprecated_on` | Required for `deprecated`; may be retained in `superseded` or `retired`. |
+| `superseded_on` | Required for `superseded`; may be retained in `retired`. |
+| `superseded_by` | Non-empty list of `{id, path}` references paired with `superseded_on`. |
+
+`deprecated` means continued use is discouraged without asserting a complete
+replacement. `superseded` means the artifact has been replaced by the listed
+artifacts. `retired` remains a separate inactive state. Draft and active artifacts
+do not carry deprecation or supersession metadata. Reactivation removes obsolete
+transition fields; Git preserves the historical transitions.
+
+Dates must satisfy `created_on <= updated_on`. Each transition date must lie
+between those dates; deprecation must not follow supersession when both exist.
+A transition made now uses today's UTC date, not a guessed historical date.
+
+Replacement paths are repository-relative files whose header IDs match the
+reference IDs. References cannot point to the same artifact or form cycles.
+Multiple replacements support documents split into several successors. Keep
+replacement paths current when files move; the ID remains the durable identity.
+A superseded Markdown document also carries a visible notice after its title,
+linking to the replacements with relative Markdown links, because its metadata
+comment is invisible in rendered documentation. Supersession does not authorize
+file removal; path retirement still uses `migrate-artifact-paths.md`.
+
+A lifecycle-only change does not automatically increment artifact `version`.
+The existing semantic version policy still applies to changed guidance or
+behavior. Refreshing dates alone must not cause a daily update loop.
+
+## Lifecycle Maintenance And Backfill
+
+The governed helper owns date maintenance and bounded migration:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/artifact-metadata/update-lifecycle/script.sh --paths <file> [<file>...]
+```
+
+The default is a read-only JSON report. After reviewing it, append `--apply`
+to apply only those explicit files. The helper neither stages nor commits.
+Use `--status deprecated` or `--status superseded --replacement <file>` for a
+current transition; repeat `--replacement` when multiple artifacts replace one.
+These status changes require the task's ordinary write permission. Apply must
+prepare and validate the entire batch before writing and preserve concurrent
+edits. Do not invoke the historical auto-committing v2 backfill for this work.
+
+Backfill uses Git history with rename following. The first observed addition is
+evidence of repository introduction, not proof that an imported document was
+originally authored that day. Report the source commit and basis with the
+proposed dates. Refuse incomplete or ambiguous history; `--created-on` supplies
+an explicitly confirmed date when automatic history inference cannot establish it.
+Confirmation may come from reviewed Git copy/rename/merge evidence; record the
+exact source commit and reasoning with the batch report. The override reports
+`basis: explicit-date` and never implies original-author confirmation. If repo
+evidence remains ambiguous, obtain the date from the user rather than guess.
+For an existing inactive state, `--deprecated-on` or `--superseded-on` can supply an explicitly
+confirmed historical event date; these flags cannot backdate a new transition.
+Do not infer old deprecation or supersession dates from the current file modification time.
+Migration itself is a metadata update, so `updated_on` becomes today's UTC date;
+the report retains the prior last-commit date as evidence. Work in focused batches.
+
+After content edits, run the helper for the affected v3 files. Creation dates
+remain fixed. No-op runs must not rewrite files or advance dates. The helper's
+status-transition convenience path does not replace historical lifecycle review.
+
+## Enforcement And Consumers
+
+The header checker supports v1, v2 and v3 and validates the staged blobs in
+`--staged` mode, including replacement targets. It also checks supersession
+links from unchanged indexed artifacts, so a target move, removal, or identity
+change cannot leave dangling references. Unchanged sources retain their dates.
+It checks added/copied/renamed and modified artifact files; missing legacy headers on ordinary modifications
+remain grandfathered. Existing v3 artifacts cannot downgrade to bypass lifecycle
+checks. For v3 changes, compare against HEAD (including rename sources), preserve
+creation dates and require today's update date for body or non-date metadata
+changes. New deprecation/supersession transitions require today's event date.
+Retained transition dates are immutable; reactivation removes obsolete event
+fields rather than rewriting history. The check reports errors without editing
+or staging files. The helper uses the checker's read-only `--proposed` JSON
+path-to-text overlay to validate a whole proposed batch and its references
+before writing.
+
+Use `--paths` or `--all` for standalone structural validation; they do not claim
+to prove historical date accuracy. `--staged-added` remains a compatibility mode.
+Legacy v2 retains its original four statuses; `superseded` belongs to v3.
+
+Indexes preserve v3 identity, dates and replacement references. Superseded IDs
+remain discoverable as history; inactive documents must not become active RAG
+guidance. Header generators preserve v3 creation dates and keep no-op output
+stable; existing generated v2 artifacts may remain v2 during migration. Newly
+generated artifacts use v3. Refresh recognition sources through the existing
+`generate-recognition-sources` command after inventory changes, then validate
+freshness. Never hand-edit generated recognition inventories.
+
+Validate this contract with checker, index and lifecycle-helper smoke tests,
+including invalid dates, missing replacements, cycles, staged-content isolation,
+legacy compatibility and repeat-run stability. New comment syntax and consumers
+must be migrated together before publishing a new schema version.
+
+## V2 Compatibility Header
 
 Markdown artifacts should use this shape at the top of the file:
 
@@ -120,12 +242,12 @@ Script artifacts are also in scope for v2. They should eventually use the same
 ```
 
 Existing scripts with `agentic-script` v1 headers remain valid during migration.
-New or materially changed scripts should prefer `agentic-artifact/v2` once they
-are intentionally migrated.
+New or intentionally migrated scripts use `agentic-artifact/v3`. The v2
+examples above demonstrate compatibility only.
 
 ## Fields
 
-`schema` is required. The current value is `agentic-artifact/v2`.
+`schema` is required. Use `agentic-artifact/v3`; v2 is retained for compatibility.
 
 `id` is required. It is the stable identity of the artifact and must not encode
 the current file path. Use lowercase dot-separated segments.
@@ -133,7 +255,8 @@ the current file path. Use lowercase dot-separated segments.
 `version` is required. It is an integer that tracks meaningful changes to the
 artifact contract or guidance.
 
-`status` is required. Use `draft`, `active`, `deprecated`, or `retired`.
+`status` is required. V3 uses `draft`, `active`, `deprecated`, `superseded`, or
+`retired`. V2 retains its original statuses without `superseded`.
 
 `layer` is required. Use a numbered layer from `taxonomy.yml`.
 

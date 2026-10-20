@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
 version: 1
 status: active
+created_on: "2026-09-27"
+updated_on: "2026-10-20"
 layer: 00.chat
 domain: main-refresh
 disciplines:

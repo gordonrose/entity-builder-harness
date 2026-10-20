@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit
 #   version: 1
 #   status: active
+#   created_on: "2026-06-15"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -29,7 +31,7 @@ bash scripts/00.chat/worktree/check-write-location/script.sh
 bash scripts/00.chat/session-log/check-commit-prerequisites/script.sh
 bash scripts/00.chat/session-log/check-commitlog-deletions/script.sh
 bash scripts/01.harness/check-deterministic-process-drift.sh --staged
-bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
+bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged
 bash scripts/01.harness/check-governed-script-command-drift.sh
 
 REPO_COMMIT_GATES_SCRIPT="${CHAT_REPO_COMMIT_GATES_SCRIPT:-${LLM_WORKBENCH_OPTIONAL_COMMIT_GATE:-scripts/repo/commit-gates/script.sh}}"

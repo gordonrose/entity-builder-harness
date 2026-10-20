@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: product.plan.product-harness-foundation
 version: 9
 status: active
+created_on: "2026-09-01"
+updated_on: "2026-10-20"
 layer: 03.product
 domain: governance
 disciplines:

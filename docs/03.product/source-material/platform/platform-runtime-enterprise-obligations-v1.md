@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: harness.architecture.source-material.platform-runtime-enterprise-obligations-v1
   version: 8
   status: active
+  created_on: "2026-07-07"
+  updated_on: "2026-10-20"
   layer: 03.product
   domain: architecture
   disciplines:

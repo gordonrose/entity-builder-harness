@@ -1,0 +1,115 @@
+{
+  "scope": "Remaining repository artifact headers and necessary lifecycle compatibility fixes",
+  "migrated_this_phase": 1006,
+  "metadata_coverage": {
+    "artifacts": 1039,
+    "duplicate_ids": 0,
+    "legacy_artifacts": 0,
+    "skipped": 0,
+    "v2_artifacts": 2,
+    "v3_artifacts": 1037
+  },
+  "intentional_v2_examples": [
+    ".agentic/01.harness/artifact-metadata/examples/markdown.v2.md",
+    ".agentic/01.harness/artifact-metadata/examples/yaml.v2.yml"
+  ],
+  "generated_templates": [
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/uninstall.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/.github/workflows/portability.yml.template"
+  ],
+  "history_exceptions_remaining": 0,
+  "creation_date_policy": "First repository introduction in available Git history, with exact commit evidence and reviewed overrides; not a claim of original authorship.",
+  "updated_on": "2026-10-20",
+  "batch_reports": [
+    "backfill-agentic.json",
+    "backfill-scripts.json",
+    "backfill-docs-infra-ci.json",
+    "backfill-templates.json",
+    "backfill-generated.json"
+  ],
+  "checks": [
+    {
+      "name": "metadata-index",
+      "script": "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+      "exit_code": 0,
+      "duration_seconds": 2.2,
+      "stdout": "Artifact metadata index generator smoke test passed.\n",
+      "stderr": ""
+    },
+    {
+      "name": "recognition-generator",
+      "script": "scripts/02.rag-rulebook/generate-recognition-sources/smoke-test.sh",
+      "exit_code": 0,
+      "duration_seconds": 11.96,
+      "stdout": "Recognition-source generator smoke test passed.\n",
+      "stderr": ""
+    },
+    {
+      "name": "rulebook-index",
+      "script": "scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh",
+      "exit_code": 0,
+      "duration_seconds": 5.82,
+      "stdout": "Rulebook index smoke test passed.\n{\"artifacts\": 738, \"chunk_candidates\": 3344, \"corpus_packages\": 10, \"graph_edges\": 5414, \"rule_packs\": 4, \"rules\": 237, \"unresolved_references\": 1}\nRulebook lifecycle compatibility fixtures passed.\n",
+      "stderr": ""
+    },
+    {
+      "name": "changed-yaml-syntax",
+      "exit_code": 0,
+      "checked": 244,
+      "errors": [],
+      "duration_seconds": 2.71
+    },
+    {
+      "name": "deterministic-process-drift",
+      "exit_code": 0,
+      "checked_body_changed_prose": 10,
+      "new_findings": [],
+      "preexisting_findings": [],
+      "stdout": "No deterministic process drift found.\n",
+      "stderr": "",
+      "duration_seconds": 1.17
+    },
+    {
+      "name": "all-metadata-headers",
+      "checked": 1039,
+      "exit_code": 0
+    },
+    {
+      "name": "checker-regressions",
+      "assertions": 101,
+      "exit_code": 0
+    },
+    {
+      "name": "lifecycle-helper-regressions-including-renames",
+      "exit_code": 0
+    },
+    {
+      "name": "bootstrap-including-all-template-dates",
+      "exit_code": 0
+    },
+    {
+      "name": "recognition-current-validation",
+      "sources": 7,
+      "terms": 2370,
+      "errors": [],
+      "exit_code": 0
+    },
+    {
+      "name": "git-diff-check",
+      "exit_code": 0
+    }
+  ],
+  "nonfatal_existing_reference": {
+    "owner_ref": "artifact.concern.mcp.server.deployment.architecture",
+    "source": "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml",
+    "ref": ".agentic/shared/workflows/deployment-process.md",
+    "ref_type": "related-ruleset",
+    "severity": "warning",
+    "preexisting_in_head": true,
+    "diagnostics_ok": true,
+    "diagnostic_errors": []
+  },
+  "real_repository_task_staging_or_commits": false,
+  "staged_startup_bookkeeping": "commitLogs/2026/oct/20/2026-10-20-09-35-artifact-lifecycle-metadata/README.md"
+}

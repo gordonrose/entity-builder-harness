@@ -1,8 +1,10 @@
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.workflow.portability-ci
 #   version: 1
 #   status: active
+#   created_on: "{{ARTIFACT_CREATED_ON}}"
+#   updated_on: "{{ARTIFACT_UPDATED_ON}}"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:

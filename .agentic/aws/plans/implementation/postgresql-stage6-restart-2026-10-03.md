@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: aws.plan.postgresql-stage6-restart-2026-10-03
 version: 3
 status: draft
+created_on: "2026-10-03"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: persistence.operations
 disciplines:

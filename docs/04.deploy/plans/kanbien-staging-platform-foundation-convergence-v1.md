@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.plan.kanbien-staging-platform-foundation-convergence-v1
 version: 3
 status: draft
+created_on: "2026-09-27"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: platform-foundation
 disciplines:

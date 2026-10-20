@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: aws.workflows.deploy-rag-rulebook-service
   version: 1
   status: active
+  created_on: "2026-06-26"
+  updated_on: "2026-10-20"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:

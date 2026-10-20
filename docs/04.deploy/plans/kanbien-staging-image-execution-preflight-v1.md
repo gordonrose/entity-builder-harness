@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.plan.kanbien-staging-image-execution-preflight-v1
 version: 2
 status: deprecated
+created_on: "2026-09-27"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -17,6 +19,7 @@ portability:
 used_by:
 - id: deploy.plan.operational-realization-v2-programme
   path: docs/04.deploy/plans/operational-realization-v2-programme.md
+deprecated_on: "2026-09-27"
 -->
 # Kanbien staging image execution preflight v1
 

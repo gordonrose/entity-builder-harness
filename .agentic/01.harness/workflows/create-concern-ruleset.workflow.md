@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.workflows.create-concern-ruleset
 version: 1
 status: active
+created_on: "2026-06-22"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: architecture-rulebook
 disciplines:
