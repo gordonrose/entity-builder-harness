@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.capability.artifact-metadata
-version: 2
+version: 3
 status: active
 created_on: "2026-06-24"
 updated_on: "2026-10-20"
@@ -43,12 +43,14 @@ planning, and cross-repo extraction.
 
 ## Scripts
 
+- `scripts/01.harness/artifact-metadata/header_discovery.py` supplies shared leading-header discovery and parsing across paths and file types.
 - `scripts/01.harness/artifact-metadata/check-headers/script.sh` is the
   capability-scoped entrypoint for metadata header checks.
 - `scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh` proves compatibility, lifecycle validation and staged-content enforcement.
 - `bash scripts/01.harness/run-governed-script.sh --approved-action scripts/01.harness/artifact-metadata/backfill-v2-headers/script.sh --batch <n>` applies one governed v2 backfill batch, validates it, commits it, records the chat commit, and checkpoints the session log.
 - `scripts/01.harness/artifact-metadata/generate-index/script.sh` emits a JSON
   artifact index from v1/v2/v3 metadata headers, preserving lifecycle fields.
+  Use `--all --strict --check-coverage` to verify every discovered declaration is indexed.
 - `scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh` proves
   index generation preserves v3 lifecycle fields, v2 IDs and legacy v1 entries.
 - `scripts/01.harness/artifact-metadata/update-lifecycle/script.sh` reports a
@@ -69,3 +71,5 @@ script-specific `effects` validation.
 
 The lifecycle decision is recorded in
 `docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md`.
+Declaration-based discovery and its separate required-header scope are recorded in
+`docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md`.

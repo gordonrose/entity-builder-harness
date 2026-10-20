@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.check-headers-smoke-test
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-24"
 #   updated_on: "2026-10-20"
@@ -366,6 +366,198 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-check-") as temp:
     reset(root)
     git(root, "rm", "--", historic_source, target)
     check(root, "--staged")
+
+# A copied checker installation must remain complete and discover declarations
+# independently from required-header path rules or the caller's checkout.
+with tempfile.TemporaryDirectory(prefix="artifact-discovery-check-") as temp:
+    import shutil
+    temp = Path(temp)
+    installation = temp / "installation/artifact-metadata"
+    (installation / "check-headers").mkdir(parents=True)
+    shutil.copyfile(CHECKER, installation / "check-headers/script.sh")
+    shutil.copyfile(Path(CHECKER).parent.parent / "header_discovery.py", installation / "header_discovery.py")
+    CHECKER = str(installation / "check-headers/script.sh")
+    root = temp / "repo"
+    root.mkdir()
+    git(root, "init", "--quiet")
+    git(root, "config", "user.name", "Discovery Fixture")
+    git(root, "config", "user.email", "discovery@example.invalid")
+    git(root, "config", "core.hooksPath", os.devnull)
+    current = "src/current.ts"
+    historic = payload(id="test.current", updated_on=YESTERDAY)
+    declarations = {
+        "README.md": text(payload(id="test.readme", updated_on=YESTERDAY)),
+        "docs/general/guide.rst": text(payload(id="test.guide", updated_on=YESTERDAY)),
+        "infra/templates/cloudformation.yaml": text(payload(id="test.template", updated_on=YESTERDAY), style="shell"),
+        current: text(historic, style="javascript"),
+        "tools/helper.py": '#!/usr/bin/env python3\n"""A module docstring."""\n\n' + text(payload(id="test.python", updated_on=YESTERDAY), style="shell").split('\n', 1)[1],
+        "Dockerfile": '# syntax=docker/dockerfile:1.7\n\n' + text(payload(id="test.docker", updated_on=YESTERDAY), style="shell").split('\n', 1)[1],
+        "notes/old.txt": text(payload(id="test.old", status="superseded", updated_on=YESTERDAY,
+            superseded_on="2024-02-01", superseded_by=[{"id":"test.current", "path":current}])),
+    }
+    for path, content in declarations.items():
+        write(root, path, content)
+    embedded = text(payload(updated_on="9999-01-01"))
+    examples = {
+        "examples/fenced.md": '```markdown\n' + embedded + '```\n',
+        "examples/indented.md": ''.join('    ' + line for line in embedded.splitlines(keepends=True)),
+        "examples/quoted.md": ''.join('> ' + line for line in embedded.splitlines(keepends=True)),
+        "examples/change.patch": 'diff --git a/README.md b/README.md\n@@ -1,2 +1,2 @@\n' + embedded,
+        "examples/string.py": 'value = """\n' + embedded + '"""\n',
+        "examples/docstring.py": '"""\n' + embedded + '"""\nprint("done")\n',
+        "examples/heredoc.txt": "cat <<'EOF'\n" + embedded + "EOF\n",
+        "src/headerless.ts": 'export const ok = true;\n',
+        "tools/headerless.py": 'print("ok")\n',
+        "infra/headerless.yaml": 'Resources: {}\n',
+    }
+    for path, content in examples.items():
+        write(root, path, content)
+    scaffolds = ["scripts/install.sh.template", "scripts/uninstall.sh.template", ".github/workflows/portability.yml.template"]
+    for scaffold in scaffolds:
+        write(root, "docs/00.chat/bootstrap/llm-workbench-template/root/" + scaffold,
+              text(payload(created_on="{{ARTIFACT_CREATED_ON}}"), style="shell"))
+    (root / "binary.data").write_bytes(b"\xff\xfe# agentic-artifact:\n")
+    (root / "nul.data").write_bytes(b"\0binary data\n# agentic-artifact:\n")
+    outside = temp / "outside.txt"
+    outside.write_text(embedded)
+    (root / "symlink.txt").symlink_to(outside)
+    git(root, "add", ".")
+    git(root, "commit", "-qm", "Declared artifacts and unrelated files")
+    output = check(root, "--all")
+    assert "for 7 file(s)" in output, output
+    for path in declarations:
+        check(root, "--paths", path)
+    for path in examples:
+        assert "for 0 file(s)" in check(root, "--paths", path)
+    assert not list(installation.rglob("__pycache__")), "Read-only checker wrote bytecode"
+
+    # Declarations outside the old path/extension allowlist receive full checks.
+    for path, bad, message in (
+        (current, text(dict(historic, updated_on="9999-01-01"), style="javascript"), "in the future"),
+        (current, '// agentic-artifact:\n//   schema: [broken\n', "invalid metadata YAML"),
+        ("README.md", '<!-- agentic-artifact:\nschema: agentic-artifact/v3\n', "unterminated metadata"),
+        (current, text(historic, style="javascript").replace('//   id: test.current', '//   id: test.current\n//   id: test.duplicate'), "duplicate metadata key"),
+        ("infra/templates/cloudformation.yaml", text(payload(status="deprecated"), style="shell"), "requires deprecated_on"),
+    ):
+        reset(root)
+        write(root, path, bad)
+        check(root, "--all", error=message)
+    reset(root)
+    check(root, "--proposed", proposed={"other/no-extension": text(payload())})
+    check(root, "--proposed", proposed={"other/no-extension": "No header.\n"}, error="outside metadata coverage")
+    check(root, "--proposed", proposed={"other/no-extension": '<!-- agentic-artifact:\nschema: [bad\n-->\n'}, error="invalid metadata YAML")
+    check(root, "--proposed", proposed={"docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template": text(payload())}, error="excluded bootstrap scaffold")
+
+    # Raw bootstrap scaffolds stay excluded when their existing placeholders change.
+    scaffold = "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template"
+    (root / scaffold).write_text((root / scaffold).read_text() + "# Scaffold change.\n")
+    git(root, "add", "--", scaffold)
+    check(root, "--staged")
+    reset(root)
+    for invalid_bytes, message in ((b"\xff", "must be UTF-8"), (b"\0", "NUL bytes")):
+        (root / current).write_bytes(declarations[current].encode("utf-8") + invalid_bytes)
+        check(root, "--all", error=message)
+        git(root, "add", "--", current)
+        check(root, "--staged", error=message)
+        reset(root)
+    (root / current).unlink()
+    (root / current).symlink_to(outside)
+    git(root, "add", "--", current)
+    check(root, "--staged", error="regular text repository file")
+    reset(root)
+    write(root, "new/untracked.custom", payload(updated_on="9999-01-01"))
+    check(root, "--all", error="in the future")
+    reset(root)
+
+    # Index blobs, not unstaged repairs, determine freshness and header removal.
+    write(root, current, historic, "Changed body.\n", style="javascript")
+    git(root, "add", "--", current)
+    write(root, current, dict(historic, updated_on=TODAY), "Changed body.\n", style="javascript")
+    check(root, "--staged", error="updated_on must be today's UTC date")
+    git(root, "add", "--", current)
+    check(root, "--staged")
+    write(root, current, dict(historic, created_on="2024-01-02"), style="javascript")
+    check(root, "--staged")
+    reset(root)
+    write(root, current, "export const removed = true;\n")
+    git(root, "add", "--", current)
+    write(root, current, historic, style="javascript")
+    check(root, "--staged", error="must not be downgraded or removed")
+
+    # Renaming globally declared metadata preserves its identity and creation.
+    reset(root)
+    original = "tools/helper.py"
+    renamed = "other/renamed.custom"
+    (root / "other").mkdir()
+    git(root, "mv", "--", original, renamed)
+    check(root, "--staged")
+    (root / renamed).write_text((root / renamed).read_text().replace("'2024-01-01'", "'2024-01-02'"))
+    git(root, "add", "--", renamed)
+    check(root, "--staged", error="created_on is immutable")
+    reset(root)
+
+    # Unchanged global sources still constrain staged target deletion.
+    git(root, "rm", "--", current)
+    write(root, current, historic, style="javascript")
+    check(root, "--staged", error="superseded_by references missing or non-regular")
+    reset(root)
+    old = payload(id="test.old", status="superseded", updated_on=TODAY, superseded_on="2024-02-01",
+                  superseded_by=[{"id":"test.outside", "path":"symlink.txt"}])
+    write(root, "notes/old.txt", old)
+    git(root, "add", "--", "notes/old.txt")
+    check(root, "--staged", error="missing or non-regular")
+
+    # A repaired legacy v2 header may have malformed historical YAML. Its
+    # explicit identity is recoverable; ambiguous or v3 history is not waived.
+    reset(root)
+    legacy_path = "other/malformed-legacy.data"
+    legacy_fields = payload(schema="agentic-artifact/v2", id="test.legacy-repair")
+    legacy_fields.pop("created_on")
+    legacy_fields.pop("updated_on")
+    malformed = text(legacy_fields).replace("- id: test.harness", "- id: test.harness\n    path: docs/missing.md")
+    write(root, legacy_path, malformed)
+    git(root, "add", "--", legacy_path)
+    git(root, "commit", "-qm", "Malformed legacy fixture")
+    fixed = payload(id="test.legacy-repair")
+    write(root, legacy_path, fixed)
+    git(root, "add", "--", legacy_path)
+    check(root, "--staged")
+    write(root, legacy_path, dict(fixed, updated_on=YESTERDAY))
+    git(root, "add", "--", legacy_path)
+    check(root, "--staged", error="updated_on must be today's UTC date")
+    reset(root)
+    write(root, legacy_path, malformed.replace("schema: agentic-artifact/v2", "schema: agentic-artifact/v3"))
+    git(root, "add", "--", legacy_path)
+    git(root, "commit", "-qm", "Malformed v3 history must remain protected")
+    write(root, legacy_path, fixed)
+    git(root, "add", "--", legacy_path)
+    check(root, "--staged", error="invalid metadata YAML")
+    reset(root)
+    ambiguous = malformed.replace("schema: agentic-artifact/v2", "schema: agentic-artifact/v2\nschema: agentic-artifact/v3")
+    write(root, legacy_path, ambiguous)
+    git(root, "add", "--", legacy_path)
+    git(root, "commit", "-qm", "Ambiguous schema history must remain protected")
+    write(root, legacy_path, fixed)
+    git(root, "add", "--", legacy_path)
+    check(root, "--staged", error="invalid metadata YAML")
+
+    for key, value in (("\"schema\"", "agentic-artifact/v3"), ("'schema'", "agentic-artifact/v3"),
+                       ('"sch\\u0065ma"', "agentic-artifact/v3"), ("\"id\"", "test.hidden"), ("'status'", "retired")):
+        reset(root)
+        ambiguous = malformed.replace("schema: agentic-artifact/v2", "schema: agentic-artifact/v2\n" + key + ": " + value)
+        write(root, legacy_path, ambiguous)
+        git(root, "add", "--", legacy_path)
+        git(root, "commit", "-qm", "Quoted historical identity ambiguity")
+        write(root, legacy_path, fixed)
+        git(root, "add", "--", legacy_path)
+        check(root, "--staged", error="invalid metadata YAML")
+    reset(root)
+    write(root, legacy_path, malformed + "\0")
+    git(root, "add", "--", legacy_path)
+    git(root, "commit", "-qm", "NUL historical metadata is not recoverable")
+    write(root, legacy_path, fixed)
+    git(root, "add", "--", legacy_path)
+    check(root, "--staged", error="NUL bytes")
 
 print(f"Artifact metadata header checker smoke test passed ({COUNT} assertions).")
 PY

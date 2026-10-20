@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: platform.adapters.readme
 version: 2
 status: active
+created_on: "2026-07-10"
+updated_on: "2026-10-20"
 layer: 03.product
 domain: platform
 disciplines:
@@ -15,7 +17,7 @@ portability:
   targets: []
 used_by:
 - id: harness.architecture.adr.0027-use-provider-type-service-adapter-layout
-    path: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
+  path: docs/03.product/adrs/0027-use-provider-type-service-adapter-layout.md
 -->
 # Platform Adapters
 

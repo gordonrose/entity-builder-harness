@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.command.build-core-server-image.verify-payload
 #   version: 1
 #   status: draft
+#   created_on: "2026-10-19"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -15,7 +17,7 @@
 #   portability:
 #     class: internal
 #     targets: []
-#   effects: []
+#   effects: [read-only]
 #   used_by:
 #   - id: deploy.command.build-core-server-image
 #     path: scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh

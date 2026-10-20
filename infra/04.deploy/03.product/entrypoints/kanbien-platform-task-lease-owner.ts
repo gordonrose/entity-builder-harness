@@ -1,8 +1,10 @@
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-task-lease-owner
 //   version: 1
 //   status: active
+//   created_on: "2026-09-25"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: persistence
 //   disciplines:
@@ -11,9 +13,14 @@
 //   kind: code
 //   purpose: Derive a non-sensitive unique durable lease owner for one Kanbien staging Fargate task.
 //   portability:
-//     class: target-specific
+//     class: internal
 //     targets:
 //     - kanbien/staging
+//   used_by:
+//   - id: infra.04-deploy.03-product.entrypoint.kanbien-platform-relay
+//     path: infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts
+//   - id: infra.04-deploy.03-product.entrypoint.kanbien-platform-worker
+//     path: infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts
 
 import { createHash } from "node:crypto"; // Hash the provider task identity before it becomes a lease-owner component.
 import { // Keep durable coordination types inside the provider-neutral persistence package.

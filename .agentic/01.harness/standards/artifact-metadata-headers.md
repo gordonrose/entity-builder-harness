@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standards.artifact-metadata-headers
-version: 1
+version: 2
 status: active
 created_on: "2026-06-19"
 updated_on: "2026-10-20"
@@ -42,6 +42,11 @@ current metadata model, date-maintenance rules, taxonomy, stable ID policy and
 index contract live in `.agentic/01.harness/artifact-metadata/standard.md`.
 
 ## Scope
+
+These placement rules are separate from discovery. Every leading artifact
+header is validated and indexed regardless of path or extension; see the
+canonical metadata standard for discovery, template exceptions and coverage
+checks. Discovery alone does not require headers on additional files.
 
 This standard applies to new:
 

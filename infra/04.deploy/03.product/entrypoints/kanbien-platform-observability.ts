@@ -1,8 +1,10 @@
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-observability
 //   version: 1
 //   status: active
+//   created_on: "2026-09-21"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: infra.observability
 //   disciplines:
@@ -12,7 +14,7 @@
 //   kind: code
 //   purpose: Translate reviewed target environment values into the AWS CloudWatch OTel metrics runtime.
 //   portability:
-//     class: target-specific
+//     class: internal
 //     targets:
 //     - kanbien/staging
 //   used_by:

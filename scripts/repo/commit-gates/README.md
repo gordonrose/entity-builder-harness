@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: repo.script.commit-gates.readme
-  version: 1
+  version: 2
   status: active
   created_on: "2026-07-04"
   updated_on: "2026-10-20"
@@ -25,3 +25,9 @@ the chat commit boundary but do not belong inside portable `00.chat`.
 
 `00.chat` may call this hook when it exists. The hook owns the selection of
 repo-specific, harness-specific, deployment, or product checks.
+
+The metadata gates validate staged lifecycle edits and run
+`generate-index --all --strict --check-coverage` against the working-tree artifact
+inventory. Coverage includes declared headers outside required-header paths;
+malformed or omitted declarations fail before commit. The hook does not edit
+headers or stage files.

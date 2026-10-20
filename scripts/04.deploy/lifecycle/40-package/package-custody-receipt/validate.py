@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.command.package-custody-receipt-validation
 #   version: 1
 #   status: draft
@@ -11,6 +11,11 @@
 #   purpose: Fail closed when a package-custody receipt is missing, mismatched, or unsafe.
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   used_by:
+#   - id: deploy.command.package-custody-receipt
+#     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
 from __future__ import annotations
 import argparse, json, re, sys
 from datetime import datetime

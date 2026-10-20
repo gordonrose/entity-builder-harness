@@ -1,8 +1,10 @@
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-postgresql-persistence
 //   version: 1
 //   status: draft
+//   created_on: "2026-09-26"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: persistence
 //   disciplines:
@@ -12,9 +14,12 @@
 //   kind: code
 //   purpose: Compose the harmless platform-smoke work-item persistence seam with the PostgreSQL adapter for disposable and later staging reference proofs.
 //   portability:
-//     class: target-specific
+//     class: internal
 //     targets:
 //     - kanbien/staging
+//   used_by:
+//   - id: aws.plan.kanbien-staging-postgresql-relational-reference-v1
+//     path: docs/aws/kanbien-staging-postgresql-relational-reference-v1-deployment-plan.md
 
 import type {
   PlatformSmokeWorkItem,

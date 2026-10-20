@@ -2,10 +2,12 @@
 """Classify one bounded Foundation drift assessment without exposing provider values."""
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.script.assess-platform-shell-foundation-drift
 #   version: 2
 #   status: active
+#   created_on: "2026-09-26"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -19,6 +21,9 @@
 #     - kanbien/staging
 #   effects:
 #   - network
+#   used_by:
+#   - id: deploy.script.assess-platform-shell-foundation-drift.shell
+#     path: scripts/04.deploy/assess-platform-shell-foundation-drift/script.sh
 
 from __future__ import annotations
 

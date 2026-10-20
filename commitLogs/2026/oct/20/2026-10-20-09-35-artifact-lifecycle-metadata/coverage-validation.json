@@ -1,0 +1,656 @@
+{
+  "schema": "artifact-discovery-validation/v1",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-20-09-35-plan-artifact-header-lifecycle-dates-and-supersession-links-2732208033",
+  "head": "390abb2e43693b0bcc224f7b09bfbb6cdbaa041f",
+  "date_utc": "2026-10-20",
+  "status": "passed",
+  "index_summary": {
+    "artifacts": 1092,
+    "duplicate_ids": 0,
+    "legacy_artifacts": 0,
+    "skipped": 0,
+    "v2_artifacts": 2,
+    "v3_artifacts": 1090
+  },
+  "coverage": {
+    "declared_artifacts": 1092,
+    "indexed_declared_artifacts": 1092,
+    "missing_paths": [],
+    "scope": "tracked-and-untracked"
+  },
+  "unchanged_legacy_examples": [
+    ".agentic/01.harness/artifact-metadata/examples/markdown.v2.md",
+    ".agentic/01.harness/artifact-metadata/examples/yaml.v2.yml"
+  ],
+  "excluded_raw_scaffolds": [
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/uninstall.sh.template",
+    "docs/00.chat/bootstrap/llm-workbench-template/root/.github/workflows/portability.yml.template"
+  ],
+  "passed_checks": [
+    "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh",
+    "scripts/00.chat/startup/start-chat-session/smoke-test.sh",
+    "scripts/00.chat/session-log/record-chat-commit/smoke-test.sh",
+    "scripts/00.chat/session-log/update-chat-log/smoke-test.sh",
+    "scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh",
+    "scripts/00.chat/session-log/record-sub-agent-activity/smoke-test.sh",
+    "scripts/00.chat/command/package-scripts/smoke-test.sh",
+    "scripts/00.chat/command/dispatcher/smoke-test.sh",
+    "scripts/00.chat/export/smoke-test.sh",
+    "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+    "scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh",
+    "scripts/02.rag-rulebook/generate-recognition-sources/smoke-test.sh",
+    "scripts/02.rag-rulebook/generate-rulebook-index/smoke-test.sh",
+    "scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check",
+    "scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current",
+    "scripts/01.harness/check-governed-script-command-drift.sh",
+    "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh",
+    "scripts/01.harness/artifact-metadata/check-headers/script.sh --all",
+    "scripts/01.harness/artifact-metadata/generate-index/script.sh --all --strict --check-coverage",
+    "scripts/01.harness/check-deterministic-process-drift.sh --paths <changed governance documents>",
+    "git diff --check"
+  ],
+  "syntax": {
+    "shell": 11,
+    "python": 14,
+    "yaml": 24
+  },
+  "metadata_only_migration": {
+    "files": 48,
+    "body_bytes_preserved": 48,
+    "stable_ids_and_statuses_preserved": 48,
+    "repeat_report_changes": 0,
+    "repeat_report_errors": 0,
+    "evidence": "coverage-backfill.json"
+  },
+  "regressions": [
+    "previously excluded file types and locations",
+    "unignored untracked declarations",
+    "embedded examples and raw scaffold exclusions",
+    "malformed declarations and invalid UTF-8/NUL",
+    "source archive isolation and dependency exclusions",
+    "independent coverage comparison with a deliberately omitted declaration",
+    "staged removal, rename, symlink and schema downgrade handling",
+    "strict historical v3 protection during malformed legacy v2 repair"
+  ],
+  "resolved_validation_observations": [
+    "Recognition smoke initially failed because the old inventory omitted 50 artifacts (48 migrations plus the discovery module and ADR); governed regeneration and repeat checks passed.",
+    "An empty real index retains the original malformed v2 README; commit gates are verified using a complete staged snapshot in an isolated clone instead of staging the real worktree."
+  ],
+  "existing_unrelated_warning": {
+    "path": "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml",
+    "reference": ".agentic/shared/workflows/deployment-process.md",
+    "note": "Existing unresolved reference reported by rulebook validation; smoke checks pass."
+  },
+  "real_git_actions": {
+    "staged": false,
+    "committed": false,
+    "pushed": false
+  },
+  "completed_at_utc": "2026-10-20T12:44:55.561236+00:00",
+  "checker": {
+    "checks": [
+      {
+        "command": "bash scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh",
+        "exit_code": 0,
+        "assertions": 153
+      },
+      {
+        "command": "bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all",
+        "exit_code": 0,
+        "artifacts": 1092,
+        "grandfathered": 0
+      },
+      {
+        "command": "bash -n checker script and smoke; Python ast.parse(shared module); git diff --check scoped files",
+        "exit_code": 0
+      }
+    ],
+    "files": [
+      "scripts/01.harness/artifact-metadata/header_discovery.py",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh"
+    ],
+    "real_repository_staged_or_committed": false,
+    "source_sha256": {
+      "scripts/01.harness/artifact-metadata/header_discovery.py": "7746893ec23986751f83fd85b184650f1961ef630a766f3b9d2a097848eff5cc",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh": "9741ca25f045c86c01ce3471720d6a9a5a5b76787be1b7f154468d95cd60dc0d",
+      "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh": "3fc98eefc71937e1a4c2018df1e845698c63c204f115d3fbbfb6ec9bd66e26bc"
+    }
+  },
+  "staged_gate": {
+    "source_worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-20-09-35-plan-artifact-header-lifecycle-dates-and-supersession-links-2732208033",
+    "checks": [
+      {
+        "command": [
+          "git",
+          "clone",
+          "--quiet",
+          "--no-hardlinks",
+          "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-20-09-35-plan-artifact-header-lifecycle-dates-and-supersession-links-2732208033",
+          "/tmp/lifecycle-staged-clone-pplb3l5b/repo"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "duration_seconds": 1.45
+      },
+      {
+        "command": [
+          "bash",
+          "scripts/repo/commit-gates/script.sh"
+        ],
+        "cwd": "disposable clone of source HEAD with full pending overlay staged",
+        "exit_code": 0,
+        "stdout": "No deterministic process drift found.\nArtifact metadata headers passed for 67 file(s); 0 existing headerless modification(s) grandfathered.\nNo governed script command drift found.\nRepository commit extension gates passed.\n",
+        "stderr": "",
+        "duration_seconds": 21.19
+      }
+    ],
+    "source_index_before_sha256": "eb3cbb5c1526ce1ac0e146072b510e9a6649e6a5b23b000dfdb86f5c4b17d24f",
+    "source_head": "390abb2e43693b0bcc224f7b09bfbb6cdbaa041f",
+    "tracked_patch_sha256": "e4303956ffa73ec632f95564d32d18cfd5fa384dcea2f0c0e328e33a7c25ecba",
+    "overlay_manifest": [
+      {
+        "path": ".agentic/01.harness/artifact-metadata/README.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "25bf0e96fd9ae1cda797df99665b306a9f65d0f90ff027f3da64cf32fb9e24a7"
+      },
+      {
+        "path": ".agentic/01.harness/artifact-metadata/standard.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "cdfc3b7a097ad379a355884f7e40d7efc510e77b906f395e844c5c0eb4a8106c"
+      },
+      {
+        "path": ".agentic/01.harness/standards/artifact-metadata-headers.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fd6a42c9fe506fd336b2dc40afbf60941dae6c1c40164f0033bba4b3d460362a"
+      },
+      {
+        "path": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "6773d0f9f4ee8c0b1ab5d86b1611bcbd70b40e2b81b8fe57a08c8930f1facb22"
+      },
+      {
+        "path": "commitLogs/2026/oct/20/2026-10-20-09-35-artifact-lifecycle-metadata/README.md",
+        "kind": "file",
+        "mode": 384,
+        "sha256": "2e2c376716479e149ca3ce632b18e1febc61e182fcda18fc955640b5dc3b89a2"
+      },
+      {
+        "path": "commitLogs/2026/oct/20/2026-10-20-09-35-artifact-lifecycle-metadata/coverage-backfill.json",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8ea5b4ce3a733a7d649053a4bab136c5e8363c6262899d78b0c08528105bc1f5"
+      },
+      {
+        "path": "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "a0ec4a7038a0214a169b3f566f596b94fa04f1ee52b16036c0e3dd1b5a205245"
+      },
+      {
+        "path": "docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "26fa6e99df3b12ccc2178a1b3fd5352e65cbebed94cefe493f86d799d925ab31"
+      },
+      {
+        "path": "docs/01.harness/adrs/README.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "9094e131e1b2f7835751ba4412ccf2b4e010a423f223f1f16a12e119c6e464ea"
+      },
+      {
+        "path": "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "0d73fcf199ec5a05bf7e5c97f6cd7c27b5ef7b29327bd904ff2dfe18c0a760c2"
+      },
+      {
+        "path": "infra/04.deploy/03.product/aws-runtime-family.decision.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "e0d7a4664f15feecc4596b07f89d517c7e1690d2643e2d586c4da89bee1f93f2"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "adf06eb18f2429190c6a76f23a045a4a98be233f9e5a59a11ae5bd1b5a9f5fd4"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "ad9c440611acb27c463b45942dce5f9e50f5fe701c2103c13bd57f51ca4ddbe7"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "545d1c1da6c6c93663051e028b379902e3722f080ed42c0788365f28f68a2cb7"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "98402fd7e96fac297e682949c18ba7d8b7163b9b44a5b980263c7b674a6b032f"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "d5259d03c0b50d7b708be335272f9aa3e3ef1860e576f8c6c2135648ad5d94b2"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "24ce0a06e3ddad5ffec7099802f564b5f735ed3d38f487a784524018b280fd16"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "ef7fb68b26b7c117d6a1e9bf1a7d8142f6a13adafc81bdfe658f935813de0137"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "4610927ad950a1c4a07fb162bf5d690b26825acd6a2f1bbe4b93cf967dd96a00"
+      },
+      {
+        "path": "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "2aff7b7c4f52002a3aae7c6a4e49aaf542fae1aae25806cf9786e9cadb96269b"
+      },
+      {
+        "path": "infra/04.deploy/03.product/image/Dockerfile",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "1ffcf9c9abf6e895942275352513ff5223608326748a812a166ca7aff75bb47c"
+      },
+      {
+        "path": "infra/04.deploy/03.product/image/core-server/Dockerfile",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "096198dc4068863e456023490a8102e5be1eb0156ca331b64df65ff80add16f1"
+      },
+      {
+        "path": "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "85b7da72d55bc156010b97effb6e67b13a5f4c083402a716b1150d44025a5206"
+      },
+      {
+        "path": "infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "ccd29238b5b000e3e3dc52de2064758aff3d0a311c49b5fbb846c3af586d95f2"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "79bd1787ca5ae479976241e800c310a55e8477ea1c694ba7581a46bd14843f0a"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "c7af0dbf0866a3830fff45da95bb0431adf69145c85c8b92f7baf3e26e69632f"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "6bd05063290014637389391c58df063dd489047623878987f90b8f368f312462"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b2be6be20afb47477af67b4eac0996bd226b4758c645aea296a3a96725dfc2c1"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8f35922cadd5315d52c7c4dbfb117881494ab0ae054bd81ff2a92aff8a5a58c1"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "a2d92b123275f796c3f2e731cadd78ed297b9f73074b5013ef28a6663d0db3f8"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "6ed67c6f8cddebe576a1d28eada15108124b2fd43368a73fc80015d452f6d5f9"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "c09fe38c61be7f856573d91429100f71008861589f936d7f999a29b2cccc01e1"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "c766b36f8a28c6c1ed11e86da177e9c8ac012ed22faeef3a5b810d01cf1b496d"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8099e4af25af2c758510f8a26edca68fc6668796425f57ad560db40217ac2336"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "c76b762b3bdba3a21325e2297b8c0bdea6fafcd94049f01d981d9ec0acc6ba96"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "90ae34a1f9d4711d5712b69e39df620a72e3961e013a6f1504a1aad05cdf3758"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "cf8f98d5d3a2e6920ea75647b120923eefa0a6eea2d5c4eaad989fa8da33cb3c"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "33d06c6b0e63195a21a10a8a132b87a684d81d05def70a078a60c3d2b4bed0d3"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "2ca547983671075fa11dcb65f639d68554dfa78c2697cb6c194ed1d87e6134eb"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "9fbc296646460a9a1601c33b78757f8e9c729dcf97b6e45ad2bc6a3563b52970"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "b23a0aba36f7e8623055bab61dff6860c699a729ac119da3be024e122c7ec7c7"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "4a7a8f04e63901a26676b3e7528c77cb2f44d1f880ad32d4e32d08e03c040b17"
+      },
+      {
+        "path": "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "f3c662d6465dc538df5f97e6db161eb33bbae2dbbab76a9ab82a1f6bb7a013e6"
+      },
+      {
+        "path": "platform/adapters/README.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "ec69a547d814462699db90857fcf5946c1f3f9a4705bc5ecca4d680df8fe72e1"
+      },
+      {
+        "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "4c407a69ae1e86d0082602b9a54c198482279bcf23c69f83b447df3bd8fb356b"
+      },
+      {
+        "path": "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "8479785ac3f5435dad7e384c8b72335eea74b36693d940b95648362ce97599c5"
+      },
+      {
+        "path": "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "bdc40338d322fad2bced189bc270c1f31ab60e90b77908ec5928315a0d9a539d"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "9741ca25f045c86c01ce3471720d6a9a5a5b76787be1b7f154468d95cd60dc0d"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "3fc98eefc71937e1a4c2018df1e845698c63c204f115d3fbbfb6ec9bd66e26bc"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "c89877936afa985ebbddaae9b22c43531dbba2f9869ffd5975c419fa798dce4f"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "d0b67d1fcac4c756ce8af17fc189fa20f36cd4b9442994201240c64c98c5462c"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/header_discovery.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "7746893ec23986751f83fd85b184650f1961ef630a766f3b9d2a097848eff5cc"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/update-lifecycle/README.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fbf6741a54e815b1cc856e15ade0c25ecad7a3f6875d0be7a6b866cbb7f9dd42"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/update-lifecycle/script.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "d8b986bc56df6f3a7815ce8fd4995b72b570194dc9df8ac8131ad6214ec9ff65"
+      },
+      {
+        "path": "scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "78f034ea069c770a1b19ce1cd51c37639e45bc276cb277330d4f0f1adef3df53"
+      },
+      {
+        "path": "scripts/04.deploy/assess-platform-shell-artifact-drift/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "7b6ec0022ac32244c9d13d5f06f3d77f2c2b4d984b9cb1e72e7097533c532415"
+      },
+      {
+        "path": "scripts/04.deploy/assess-platform-shell-foundation-drift/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "e29dd0a89ebaa233987ad480670044278dc0b5f478a26bc1e6543b27d464c9f8"
+      },
+      {
+        "path": "scripts/04.deploy/assess-platform-shell-service-drift/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "4c5a1d0421f4580402d33a2086a1f0f5cb6d96a339b2a4454f37170b64644e6c"
+      },
+      {
+        "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "87c97505ef0df00e104036f06a082dd701babcd72eccfe29ac1e4155c8cba271"
+      },
+      {
+        "path": "scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fb58983f2f898f39039a8cc1beeb99520a9a73778126f970d03101f7d4121793"
+      },
+      {
+        "path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "0c7591bb98fea2b2d7aa4601102575effd041e88d0b6ec452b825d4e04486396"
+      },
+      {
+        "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "c084a87fb9588e9d6178b198d79c300d13c728e0a815a4773ac8b071052062e7"
+      },
+      {
+        "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "fbe8c80fa79df7804b6a75b8478883c1117384c65642066640ef0f8cef04d0c2"
+      },
+      {
+        "path": "scripts/04.deploy/operational-realization-gate/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "2545ca9f60908e34338edf36f4148e5492b30deec3061f5a3900d0b1398139bc"
+      },
+      {
+        "path": "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "0a0b2d545a3d1d5877b5826bdb39c63fcb4b2d992c6a4e3b885bfe6df5316363"
+      },
+      {
+        "path": "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "49f5bbf908f4edc3e36894ba28ec9fee0077ed4a1d74ffc05d2baa23d2410aa7"
+      },
+      {
+        "path": "scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "14f3bb19566dfc637945e9ee8e5964e45775b4a124517393530e3f48f76597d3"
+      },
+      {
+        "path": "scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "67820a8d1da3c8c2ae6222877835b5c3f5ea21b6180773256e56f9063c06f571"
+      },
+      {
+        "path": "scripts/repo/commit-gates/README.md",
+        "kind": "file",
+        "mode": 420,
+        "sha256": "be1ee1aa0985449948637f9ff22cd7e98da4e54332ad9912d188b59d66603b4c"
+      },
+      {
+        "path": "scripts/repo/commit-gates/script.sh",
+        "kind": "file",
+        "mode": 493,
+        "sha256": "a0839ff1404fec6edc175a49783621731e691feee953756de916e4483c73eef1"
+      }
+    ],
+    "overlay_sha256": "075fce946539cc134eb097bafcdff8d0593283cb3be0071f6efd2ce84a56a60f",
+    "fixture_staged_paths": [
+      ".agentic/01.harness/artifact-metadata/README.md",
+      ".agentic/01.harness/artifact-metadata/standard.md",
+      ".agentic/01.harness/standards/artifact-metadata-headers.md",
+      ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "commitLogs/2026/oct/20/2026-10-20-09-35-artifact-lifecycle-metadata/README.md",
+      "commitLogs/2026/oct/20/2026-10-20-09-35-artifact-lifecycle-metadata/coverage-backfill.json",
+      "docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template",
+      "docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md",
+      "docs/01.harness/adrs/README.md",
+      "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+      "infra/04.deploy/03.product/aws-runtime-family.decision.yml",
+      "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts",
+      "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+      "infra/04.deploy/03.product/image/Dockerfile",
+      "infra/04.deploy/03.product/image/core-server/Dockerfile",
+      "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+      "infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml",
+      "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+      "platform/adapters/README.md",
+      "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh",
+      "scripts/00.chat/upstream/bootstrap-llm-workbench-repo/smoke-test.sh",
+      "scripts/00.chat/upstream/validate-llm-workbench-portability/script.sh",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh",
+      "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+      "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+      "scripts/01.harness/artifact-metadata/header_discovery.py",
+      "scripts/01.harness/artifact-metadata/update-lifecycle/README.md",
+      "scripts/01.harness/artifact-metadata/update-lifecycle/script.sh",
+      "scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh",
+      "scripts/04.deploy/assess-platform-shell-artifact-drift/script.py",
+      "scripts/04.deploy/assess-platform-shell-foundation-drift/script.py",
+      "scripts/04.deploy/assess-platform-shell-service-drift/script.py",
+      "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py",
+      "scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py",
+      "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py",
+      "scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py",
+      "scripts/04.deploy/operational-realization-gate/script.py",
+      "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+      "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+      "scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py",
+      "scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py",
+      "scripts/repo/commit-gates/README.md",
+      "scripts/repo/commit-gates/script.sh"
+    ],
+    "fixture_staged_file_count": 70,
+    "gate_passed": true,
+    "disposable_clone_removed": true,
+    "source_index_after_sha256": "eb3cbb5c1526ce1ac0e146072b510e9a6649e6a5b23b000dfdb86f5c4b17d24f",
+    "source_index_unchanged": true,
+    "source_index_still_empty": true
+  },
+  "post_gate_changes": "Only session activity and validation evidence were recorded after the isolated staged snapshot; every implementation file still matches its staged-fixture hash."
+}

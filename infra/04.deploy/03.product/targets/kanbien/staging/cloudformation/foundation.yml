@@ -1,8 +1,10 @@
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.foundation
 #   version: 6
 #   status: draft
+#   created_on: "2026-09-06"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -12,7 +14,7 @@
 #   kind: cloudformation-composition
 #   purpose: Compose the dedicated Kanbien staging platform-shell foundation from focused CloudFormation source units.
 #   portability:
-#     class: target-specific
+#     class: internal
 #     targets:
 #     - kanbien/staging
 #   used_by:
