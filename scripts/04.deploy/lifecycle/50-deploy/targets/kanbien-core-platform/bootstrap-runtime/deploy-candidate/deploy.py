@@ -25,6 +25,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[8]
 PROFILE, REGION, STACK = "kanbien-dev", "eu-west-1", "kanbien-core-platform-bootstrap-runtime"
 ALLOWED_TYPES = {"AWS::ECS::TaskDefinition", "AWS::ECS::Service"}
+def decoded_aws_response(raw: str):
+    """Mutation commands may succeed without a response body."""
+    return {} if not raw.strip() else json.loads(raw)
 def aws(*parts: str):
     r = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True)
     if r.returncode:
@@ -32,7 +35,7 @@ def aws(*parts: str):
         if "accessdenied" in text or "not authorized" in text: return False, None, "aws-access-denied"
         if "does not exist" in text: return False, None, "aws-resource-missing"
         return False, None, "aws-command-failed"
-    try: return True, json.loads(r.stdout), "ok"
+    try: return True, decoded_aws_response(r.stdout), "ok"
     except json.JSONDecodeError: return False, None, "aws-response-invalid"
 def report(verdict: str, *codes: str):
     print(json.dumps({"schema":"deploy/runtime-deployment-report/v1", "target":"kanbien-core-platform", "stack":STACK, "verdict":verdict, "findings":[{"code":c} for c in codes]}, sort_keys=True))

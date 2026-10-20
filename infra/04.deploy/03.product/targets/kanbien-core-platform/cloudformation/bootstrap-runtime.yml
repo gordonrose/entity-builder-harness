@@ -121,8 +121,6 @@ Resources:
           Subnets: !Ref PrivateSubnetIds
       ServiceRegistries:
         - RegistryArn: !Ref ServiceDiscoveryArn
-          ContainerName: kanbien-core-server
-          ContainerPort: 3000
       TaskDefinition: !Ref BootstrapRuntimeTaskDefinition
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 

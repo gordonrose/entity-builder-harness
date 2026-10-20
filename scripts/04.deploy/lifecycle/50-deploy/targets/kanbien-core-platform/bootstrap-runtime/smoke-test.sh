@@ -64,6 +64,10 @@ template = open(sys.argv[1], encoding="utf-8").read()
 match = re.search(r"ImageRepositoryUri:\n    Type: String\n    AllowedPattern: '([^']+)'", template)
 assert match, "missing image repository pattern"
 assert re.fullmatch(match.group(1), "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server")
+service_registry = re.search(r"ServiceRegistries:\n        - RegistryArn: !Ref ServiceDiscoveryArn\n(?P<body>.*?)      TaskDefinition:", template, re.S)
+assert service_registry, "missing service-discovery registry binding"
+assert "ContainerName:" not in service_registry.group("body")
+assert "ContainerPort:" not in service_registry.group("body")
 PY
 
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py" <<'PY'
@@ -78,6 +82,8 @@ assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, No
 assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "REVIEW_IN_PROGRESS")
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "REVIEW_IN_PROGRESS")
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "CREATE_COMPLETE")
+assert module.decoded_aws_response("") == {}
+assert module.decoded_aws_response('{"accepted": true}') == {"accepted": True}
 PY
 
 echo "Fixed core-platform target control tests passed."

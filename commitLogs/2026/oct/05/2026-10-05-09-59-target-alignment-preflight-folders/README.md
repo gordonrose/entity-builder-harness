@@ -85,6 +85,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The deploy control still rejected the initial change set because CloudFormation creates an empty REVIEW_IN_PROGRESS stack while the change set awaits execution.
   Resolution: No runtime resources existed; the review stack is CloudFormation’s normal create-change-set lifecycle state.
 
+
+- Raised: CloudFormation rejected the ECS service registry binding because the target service-discovery resource uses A records.
+  Resolution: The runtime template incorrectly supplied container-name and container-port fields that apply to SRV-style registration, and the deploy wrapper then misreported the successful execute response because it was empty.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -190,6 +194,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRESS as an empty review boundary, not a deployed runtime.
   Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
+
+
+- Decision: The runtime template and deploy control now model the A-record service-discovery contract explicitly.
+  Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
 
 ## Context Hygiene
 
@@ -1233,6 +1241,20 @@ Message: fix(deploy): recognise initial review stack
 Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
 
 ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:24:01Z - Issue
+
+Raised: CloudFormation rejected the ECS service registry binding because the target service-discovery resource uses A records.
+
+Resolution: The runtime template incorrectly supplied container-name and container-port fields that apply to SRV-style registration, and the deploy wrapper then misreported the successful execute response because it was empty.
+
+
+### 2026-10-20T19:24:01Z - Decision
+
+Decision: The runtime template and deploy control now model the A-record service-discovery contract explicitly.
+
+Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
 
 ## Sub-Agent Activity
 
