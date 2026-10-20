@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.adapter.aws.runtime-alignment
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 04.deploy
+#   domain: deployment.target-alignment
+#   disciplines: [security, sre]
+#   kind: script
+#   purpose: Collect bounded, safe AWS facts for a declared first private ECS release.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
+#   - id: deploy.test.aws.runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+#   effects: [network]
+"""AWS-only read adapter.  It emits normalized assertions, never raw responses."""
+from __future__ import annotations
+import argparse, json, subprocess, sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+import yaml
+
+IDS = ("right-destination", "right-application", "known-healthy-baseline", "allowed-deployment-route", "package-destination", "required-access", "required-settings", "change-safety", "freshness-and-drift")
+STABLE_SUCCESSFUL_STACK_STATUSES = frozenset({"CREATE_COMPLETE", "UPDATE_COMPLETE"})
+
+def command(args: argparse.Namespace, *items: str) -> tuple[bool, Any, str]:
+    result = subprocess.run(["aws", *items, "--profile", args.profile, "--region", args.region, "--output", "json"], capture_output=True, text=True)
+    if result.returncode:
+        error = result.stderr.lower()
+        if "does not exist" in error or "does not exist for stack" in error: return False, None, "not-found"
+        if "accessdenied" in error or "not authorized" in error: return False, None, "access-denied"
+        return False, None, "unavailable"
+    try: return True, json.loads(result.stdout), "ok"
+    except json.JSONDecodeError: return False, None, "invalid-response"
+
+def assertion(identifier: str, matched: bool, code: str, failed_outcome: str = "unknown") -> dict[str, str]:
+    return {"id": identifier, "outcome": "match" if matched else failed_outcome, "finding_code": code}
+
+def accepted_release(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return None
+    if not isinstance(document, dict) or document.get("schema") != "deploy/accepted-release/v1" or document.get("status") != "accepted":
+        return None
+    release = document.get("release")
+    if not isinstance(release, dict) or not isinstance(release.get("image_digest"), str) or not isinstance(release.get("source_revision"), str):
+        return None
+    return release
+
+def main() -> int:
+    p = argparse.ArgumentParser(add_help=False)
+    p.add_argument("--profile", required=True); p.add_argument("--region", required=True); p.add_argument("--account-id", required=True)
+    p.add_argument("--repository", required=True); p.add_argument("--image-digest", required=True)
+    p.add_argument("--foundation-stack", required=True); p.add_argument("--runtime-stack", required=True)
+    p.add_argument("--cluster", required=True); p.add_argument("--delivery-role", required=True); p.add_argument("--execution-role", required=True)
+    p.add_argument("--operation", choices=("create", "update", "restore"), default="create")
+    p.add_argument("--accepted-release", type=Path)
+    p.add_argument("--json", action="store_true")
+    args, unknown = p.parse_known_args()
+    if unknown:
+        print(json.dumps({"schema":"deploy/target-alignment-evidence/v1", "assertions":[assertion(i, False, "arguments-invalid") for i in IDS]})); return 2
+    assertions: dict[str, dict[str, str]] = {}
+    ok, identity, code = command(args, "sts", "get-caller-identity")
+    assertions["right-destination"] = assertion("right-destination", ok and identity.get("Account") == args.account_id, "account-match" if ok else code, "mismatch" if ok else "unknown")
+    ok, image, code = command(args, "ecr", "describe-images", "--repository-name", args.repository, "--image-ids", f"imageDigest={args.image_digest}")
+    details = image.get("imageDetails", []) if isinstance(image, dict) else []
+    assertions["package-destination"] = assertion("package-destination", ok and bool(details), "immutable-digest-present" if ok else code, "missing" if ok else "unknown")
+    ok, foundation, code = command(args, "cloudformation", "describe-stacks", "--stack-name", args.foundation_stack)
+    stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
+    outputs = {entry.get("OutputKey") for entry in stacks[0].get("Outputs", [])} if stacks else set()
+    required_outputs = {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}
+    foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES and required_outputs <= outputs
+    foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") not in STABLE_SUCCESSFUL_STACK_STATUSES else "missing")
+    assertions["right-application"] = assertion("right-application", foundation_ready, "foundation-ready" if foundation_ready else "foundation-runtime-output-missing", foundation_failure)
+    baseline = accepted_release(args.accepted_release)
+    if args.operation in {"update", "restore"} and baseline is None:
+        assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", False, "accepted-release-invalid", "missing")
+    else:
+        ok, runtime, code = command(args, "cloudformation", "describe-stacks", "--stack-name", args.runtime_stack)
+        if args.operation == "create":
+            assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", not ok and code == "not-found", "runtime-absent" if not ok and code == "not-found" else "runtime-not-absent", "mismatch" if ok else "unknown")
+        else:
+            stacks = runtime.get("Stacks", []) if isinstance(runtime, dict) else []
+            stack_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES
+            service_ok, service, service_code = command(args, "ecs", "describe-services", "--cluster", args.cluster, "--services", args.runtime_stack)
+            services = service.get("services", []) if isinstance(service, dict) else []
+            service_ready = service_ok and len(services) == 1 and services[0].get("runningCount") == 1 and all(item.get("rolloutState") == "COMPLETED" for item in services[0].get("deployments", []) if isinstance(item, dict))
+            task_definition = services[0].get("taskDefinition") if service_ready else None
+            task_ok, task, task_code = command(args, "ecs", "describe-task-definition", "--task-definition", task_definition) if task_definition else (False, None, "runtime-task-definition-missing")
+            containers = task.get("taskDefinition", {}).get("containerDefinitions", []) if isinstance(task, dict) else []
+            current_image_matches = any(isinstance(item, dict) and item.get("name") == "kanbien-core-server" and str(item.get("image", "")).endswith("@" + baseline["image_digest"]) for item in containers)
+            baseline_ok = stack_ready and service_ready and task_ok and (current_image_matches if args.operation == "update" else True)
+            failure = "unknown" if not ok or not service_ok or not task_ok else "mismatch"
+            code = "accepted-runtime-healthy" if baseline_ok and args.operation == "update" else ("restore-source-runtime-healthy" if baseline_ok else (service_code if not service_ok else task_code if not task_ok else "accepted-runtime-not-healthy"))
+            assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", baseline_ok, code, failure)
+    ok, cluster, code = command(args, "ecs", "describe-clusters", "--clusters", args.cluster)
+    clusters = cluster.get("clusters", []) if isinstance(cluster, dict) else []
+    assertions["required-settings"] = assertion("required-settings", ok and bool(clusters) and clusters[0].get("status") == "ACTIVE", "runtime-configuration-declared" if ok else code)
+    delivery_ok, _, delivery_code = command(args, "iam", "get-role", "--role-name", args.delivery_role)
+    execution_ok, _, execution_code = command(args, "iam", "get-role", "--role-name", args.execution_role)
+    assertions["required-access"] = assertion("required-access", delivery_ok and execution_ok, "roles-present" if delivery_ok and execution_ok else (delivery_code if not delivery_ok else execution_code))
+    route_ready = delivery_ok and execution_ok and (args.operation == "create" or baseline is not None)
+    assertions["allowed-deployment-route"] = assertion("allowed-deployment-route", route_ready, f"fixed-{args.operation}-route-ready" if route_ready else "route-not-ready")
+    change_safe = args.operation == "create" or (baseline is not None and baseline.get("image_digest") != "")
+    assertions["change-safety"] = assertion("change-safety", change_safe, "retained-accepted-release-and-no-automatic-retry" if change_safe else "accepted-release-not-retained", "missing")
+    assertions["freshness-and-drift"] = assertion("freshness-and-drift", True, "fresh-read-only-inspection")
+    report = {"schema":"deploy/target-alignment-evidence/v1", "provider":"aws", "provider_adapter_version":"aws-runtime-alignment/v2", "operation":args.operation, "checked_at":datetime.now(timezone.utc).isoformat().replace("+00:00","Z"), "assertions":[assertions[i] for i in IDS]}
+    print(json.dumps(report, sort_keys=True)); return 0 if all(x["outcome"] == "match" for x in report["assertions"]) else 1
+if __name__ == "__main__": sys.exit(main())

@@ -77,6 +77,7 @@ script_effects:
   - branches
   - worktrees
   - network
+  - aws-mutation
   - destructive
 
 seed_domains:

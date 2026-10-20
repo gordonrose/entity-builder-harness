@@ -24,9 +24,10 @@ used_by:
 
 `script.sh` is the sole operator entrypoint for preparation of
 `kanbien-core-platform/bootstrap-runtime`. It accepts no target selector. It
-checks only safe repository declarations for the core runnable program, image,
-scope, and planned target.
+accepts only a qualified package-custody receipt. It derives the immutable
+digest from that receipt and performs the bounded AWS alignment inspection for
+the fixed account, region, foundation, roles, repository and runtime stack.
 
-While E0 facts remain unresolved it exits non-zero with a deterministic JSON
-report containing `blocked-live-target-not-selected` and safe fact identifiers.
-It never reads a provider, registry, credentials, or a live target.
+It cannot create a change set or alter a provider resource. Missing, stale, or
+unavailable evidence—including an expired AWS login—blocks preparation without
+falling back to a manually supplied identifier.

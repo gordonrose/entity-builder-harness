@@ -29,3 +29,5 @@
   record the result.
 - `deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment of the
   RAG/rulebook MCP service after readiness proof and explicit approval.
+- `kanbien-core-platform-bootstrap-runtime-release.md` - govern fixed-target
+  UPDATE, verification, accepted-release recording, and restoration.

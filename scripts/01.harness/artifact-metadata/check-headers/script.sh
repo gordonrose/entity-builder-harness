@@ -151,6 +151,7 @@ def load_taxonomy() -> dict[str, Any]:
                 "branches",
                 "worktrees",
                 "network",
+                "aws-mutation",
                 "destructive",
             ],
         }

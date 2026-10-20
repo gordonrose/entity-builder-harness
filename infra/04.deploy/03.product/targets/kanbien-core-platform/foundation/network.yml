@@ -21,14 +21,23 @@
 #     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
 schema: deploy/network-declaration/v1
 target: kanbien-core-platform
-status: unresolved-e0-required
+status: established-e2c-fresh-e4-evidence-required
 public_ingress: prohibited
 private_verifier_route:
-  status: unresolved-e0-required
+  status: established-e2c-fresh-e4-evidence-required
   route: /internal/release-verification
   permitted_caller: selected-private-verifier-only
   owner: network-owner
   evidence: read-only-private-route-feasibility-inspection
+private_image_retrieval:
+  status: required
+  transport: tcp/443
+  destinations:
+    - image-registry-control-plane
+    - image-registry-data-plane
+    - image-layer-object-store
+  restriction: only the target region's provider-managed object-store prefix list may be used for image-layer retrieval; broad internet egress is prohibited
+  evidence: workload-security-group-and-private-route-inspection
 forbidden:
   - public-load-balancer
   - public-dns

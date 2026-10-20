@@ -71,6 +71,7 @@ jobs:
           bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh --json
+          bash scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh --tag kanbien-core-server:publication
 
       - name: Configure target-scoped AWS credentials

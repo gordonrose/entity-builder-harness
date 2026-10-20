@@ -117,28 +117,29 @@ def required_mapping(document: dict[str, Any], key: str, code: str) -> dict[str,
 def check_profile(profile: dict[str, Any]) -> None:
     if profile.get("schema") != "deploy/target-profile/v1" or profile.get("id") != TARGET:
         raise DeclarationFailure("target-profile-invalid")
-    if profile.get("status") != "planned-not-live-selected":
+    if profile.get("status") != "healthy-runtime-accepted":
         raise DeclarationFailure("target-status-invalid")
-    if profile.get("baseline") != "absent" or profile.get("repository_declaration") != "repository-declaration-complete":
+    if profile.get("baseline") != "accepted-immutable-release" or profile.get("repository_declaration") != "repository-declaration-complete":
         raise DeclarationFailure("target-baseline-invalid")
-    if profile.get("live_alignment") != "not-checked":
-        raise DeclarationFailure("live-alignment-falsely-ready")
+    if profile.get("live_alignment") != "fresh-update-or-restore-alignment-required":
+        raise DeclarationFailure("live-alignment-state-invalid")
     provider = required_mapping(profile, "provider", "provider-declaration-missing")
-    if provider.get("family") != "aws" or provider.get("selection_status") != "unresolved-e0-required":
+    if provider.get("family") != "aws" or provider.get("selection_status") != "selected-and-live-verified":
         raise DeclarationFailure("provider-selection-invalid")
     mutation = required_mapping(profile, "target_mutation", "target-mutation-missing")
-    if mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "create-only":
-        raise DeclarationFailure("target-mutation-not-create-only")
+    if mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "update-or-restore":
+        raise DeclarationFailure("target-mutation-not-controlled")
     facts = profile.get("e0_required_facts")
     if not isinstance(facts, list):
         raise DeclarationFailure("e0-fact-missing")
     found: set[str] = set()
+    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "accepted-release-retained-and-private-verified"}
     for fact in facts:
         if not isinstance(fact, dict) or not non_empty(fact.get("id")):
             raise DeclarationFailure("e0-fact-invalid")
         fact_id = fact["id"]
         found.add(fact_id)
-        if fact.get("status") != "unresolved-e0-required":
+        if fact.get("status") not in allowed_fact_statuses:
             raise DeclarationFailure("e0-fact-status-invalid")
         if not non_empty(fact.get("owner")):
             raise DeclarationFailure("e0-fact-unowned")
@@ -158,20 +159,20 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") != "unresolved-e0-required":
+        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
     network = mapping(root / "foundation" / "network.yml", "network-declaration-unreadable")
     route = required_mapping(network, "private_verifier_route", "private-verifier-missing")
-    if network.get("public_ingress") != "prohibited" or route.get("status") != "unresolved-e0-required" or route.get("permitted_caller") != "selected-private-verifier-only":
+    if network.get("public_ingress") != "prohibited" or route.get("status") != "established-e2c-fresh-e4-evidence-required" or route.get("permitted_caller") != "selected-private-verifier-only":
         raise DeclarationFailure("private-verifier-invalid")
     access = mapping(root / "foundation" / "technical-access.yml", "technical-access-unreadable")
     intents = access.get("access_intents")
     if not isinstance(intents, list) or {item.get("id") for item in intents if isinstance(item, dict)} != {"delivery-custody", "workload-startup"}:
         raise DeclarationFailure("technical-access-invalid")
     for intent in intents:
-        if not isinstance(intent, dict) or intent.get("provider_identity") != "unresolved-e0-required" or not non_empty(intent.get("owner")):
+        if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
     cost = mapping(root / "foundation" / "cost-control.yml", "cost-control-unreadable")
     waiver = required_mapping(cost, "waiver", "cost-control-invalid")
@@ -201,7 +202,7 @@ def check_scope(root: Path) -> None:
     if program.get("id") != "kanbien-core-server" or program.get("contract") != "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml" or program.get("image_contract") != "infra/04.deploy/03.product/image/core-server/image-contract.yml":
         raise DeclarationFailure("scope-program-invalid")
     workload = required_mapping(contract, "workload", "scope-workload-missing")
-    if workload.get("operation") != "create-only" or workload.get("runtime_selection") != "unresolved-e0-required" or workload.get("startup_access") != "foundation/technical-access.yml#workload-startup" or workload.get("network") != "foundation/network.yml#private-verifier-route":
+    if workload.get("operation") != "controlled-update-or-restoration" or workload.get("runtime_selection") != "ecs-fargate-private-immutable-digest" or workload.get("startup_access") != "foundation/technical-access.yml#workload-startup" or workload.get("network") != "foundation/network.yml#private-verifier-route":
         raise DeclarationFailure("scope-workload-invalid")
     configuration = required_mapping(contract, "configuration", "scope-configuration-missing")
     if configuration.get("value_policy") != "names-and-shapes-only-no-values" or configuration.get("secret_names") != []:
@@ -210,7 +211,7 @@ def check_scope(root: Path) -> None:
     if not names or not all(isinstance(name, str) and SAFE_CONFIG_NAME.fullmatch(name) for name in names):
         raise DeclarationFailure("scope-configuration-invalid")
     verification = required_mapping(contract, "verification", "scope-verification-missing")
-    if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "unresolved-e0-required" or not non_empty(verification.get("owner")):
+    if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "accepted-baseline-private-verification-complete-and-required-after-every-mutation" or not non_empty(verification.get("owner")):
         raise DeclarationFailure("scope-verification-invalid")
     dependencies = required_mapping(contract, "dependencies", "scope-dependencies-missing")
     if dependencies.get("required") != [] or dependencies.get("optional") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
@@ -219,7 +220,7 @@ def check_scope(root: Path) -> None:
         raise DeclarationFailure("scope-exclusions-invalid")
     for section, code in (("receipt", "receipt-declaration-invalid"), ("rollback", "rollback-declaration-invalid")):
         value = required_mapping(contract, section, code)
-        if value.get("status") != "unresolved-e0-required" or not non_empty(value.get("owner")):
+        if value.get("status") not in {"qualified-receipt-required-before-update-or-restore", "retained-accepted-immutable-release-required-for-restoration"} or not non_empty(value.get("owner")):
             raise DeclarationFailure(code)
     receipt = required_mapping(contract, "receipt", "receipt-declaration-invalid")
     receipt_fields = receipt.get("safe_fields")
@@ -227,8 +228,28 @@ def check_scope(root: Path) -> None:
         raise DeclarationFailure("receipt-declaration-invalid")
     binding = mapping(scope_root / "workload-binding.yml", "workload-binding-unreadable")
     mutation = required_mapping(binding, "mutation", "workload-binding-invalid")
-    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "unresolved-e0-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "create-only":
+    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "healthy-runtime-accepted" or binding.get("provider_workload") != "fixed-ecs-fargate-runtime-stack-live-verified-fresh-alignment-required" or binding.get("private_verifier") != "fixed-one-shot-private-ecs-task-live-verified-fresh-alignment-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "update-or-restore-after-fresh-alignment-and-reviewed-change-set":
         raise DeclarationFailure("workload-binding-invalid")
+
+
+def check_accepted_release(root: Path) -> None:
+    record = mapping(root / "scopes" / "bootstrap-runtime" / "accepted-release.yml", "accepted-release-unreadable")
+    release = required_mapping(record, "release", "accepted-release-invalid")
+    acceptance = required_mapping(record, "acceptance", "accepted-release-invalid")
+    verification = required_mapping(release, "private_verification", "accepted-release-invalid")
+    if (
+        record.get("schema") != "deploy/accepted-release/v1"
+        or record.get("target") != TARGET
+        or record.get("scope") != "bootstrap-runtime"
+        or record.get("status") != "accepted"
+        or not isinstance(release.get("source_revision"), str)
+        or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", str(release.get("image_digest")))
+        or not all(non_empty(release.get(field)) for field in ("runtime_stack", "service", "runtime_task_definition", "verifier_task_definition", "package_custody_reference"))
+        or verification.get("verdict") != "accepted"
+        or verification.get("code") != "runtime-digest-and-private-verifier-accepted"
+        or acceptance.get("retained_for_restoration") is not True
+    ):
+        raise DeclarationFailure("accepted-release-invalid")
 
 
 def check_pipeline(root: Path) -> None:
@@ -259,6 +280,7 @@ def main() -> int:
         check_profile(profile)
         check_foundation(root)
         check_scope(root)
+        check_accepted_release(root)
         check_pipeline(root)
         print(report("repository-declaration-complete", ()))
         return 0

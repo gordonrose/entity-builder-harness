@@ -22,10 +22,11 @@ used_by:
 -->
 # Deploy Core-Platform Candidate
 
-`script.sh` is fixed to `kanbien-core-platform/bootstrap-runtime`; it has no
-target selector. Once a target exists, it will require a candidate id,
-immutable image digest, and approved change-set reference. It reports only
-whether those fields were supplied, never their values.
+`script.sh` is fixed to `kanbien-core-platform/bootstrap-runtime`; it accepts
+a qualified receipt and the one deterministic change-set name derived from its
+digest. It re-reads the change set, confirms the selected digest and source
+revision, and rejects resource types outside the two declared ECS resource
+types before execution.
 
-At the current E0 boundary it always fails closed before a provider read or
-mutation. It does not turn a static declaration into permission to deploy.
+It has no target selector and no retry loop. A failed stack wait is a blocker,
+not permission to resubmit or replace the release.

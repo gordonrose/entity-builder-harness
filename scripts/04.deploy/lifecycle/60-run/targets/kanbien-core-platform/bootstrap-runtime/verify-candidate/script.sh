@@ -15,14 +15,14 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Validate release-verification evidence for the fixed core-platform target and fail closed before any provider read or mutation.
+#   purpose: Verify the fixed core-platform immutable release through its private one-shot verifier.
 #   portability:
 #     class: internal
 #     targets: []
 #   effects:
-#   - read-only
+#   - aws-mutation
 #   used_by:
 #   - id: deploy.test.kanbien-core-platform.target-controls
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
 
-exec python3 "$(dirname "$0")/../../../../../50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py" verify-candidate "$@"
+exec python3 "$(dirname "$0")/verify.py" "$@"

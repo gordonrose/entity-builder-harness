@@ -3,3 +3,4 @@ node_modules/
 .agentic/env.local
 .DS_Store
 .cache/
+__pycache__/

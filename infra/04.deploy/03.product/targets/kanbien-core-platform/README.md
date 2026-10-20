@@ -12,7 +12,7 @@ disciplines:
 - security
 - sre
 kind: target-guide
-purpose: Explain the repository declaration for the planned isolated Kanbien core-platform target.
+purpose: Explain the repository declaration for the isolated Kanbien core-platform target and its accepted bootstrap release.
 portability:
   class: internal
   targets: []
@@ -22,22 +22,20 @@ used_by:
 -->
 # Kanbien Core Platform Target
 
-This is a repository declaration for the planned `kanbien-core-platform`
-target. It is not an AWS environment, a selected account, a deployable
-workflow, or proof that any target is aligned.
+This target has a private foundation and one accepted bootstrap runtime. It is
+not proof that a future candidate is aligned: each mutation requires fresh
+alignment and the routed release workflow.
 
-The target begins from an absent baseline. `target-profile.yml` lists the
-facts that must be selected by the E0 read-only inspection before a target
-mutation can be proposed. The static declaration checker may report
-`repository-declaration-complete`; only later read-only provider evidence may
-report `live-target-aligned`.
+`target-profile.yml` records the accepted-baseline state. The durable identity
+of that release lives in `scopes/bootstrap-runtime/accepted-release.yml`.
+The static declaration checker proves the repository facts are complete; only
+fresh read-only provider evidence may report an update or restoration aligned.
 
-- `foundation/` owns shared target facilities and their unresolved E0 facts.
-- `scopes/bootstrap-runtime/` owns the first workload, its private verifier,
-  safe configuration names, and its excluded concerns.
-- `pipelines/github-actions/` records the future delivery-route requirements.
-  It does not create a workflow or grant publication or deployment authority.
+- `foundation/` owns shared target facilities and the outstanding cost condition.
+- `scopes/bootstrap-runtime/` owns the workload, private verifier, retained
+  accepted release, safe configuration names, and excluded concerns.
+- `pipelines/github-actions/` records the package-publication route. It does
+  not grant deployment authority.
 
-Do not add values for account identifiers, regions, resource names, endpoints,
-roles, secrets, network identifiers, or provider responses here before the
-approved E0 inspection selects them.
+Do not place secrets, raw provider responses, or uncontrolled runtime facts in
+these declarations.

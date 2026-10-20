@@ -1,0 +1,28 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.fixture.target-alignment-contract.example
+#   version: 1
+#   status: active
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 04.deploy
+#   domain: deployment.target-alignment
+#   disciplines: [security, sre]
+#   kind: fixture
+#   purpose: Provide a complete safe contract fixture for target-alignment validation tests.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.test.target-alignment-validation
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh
+schema: deploy/target-alignment-contract/v1
+target: example-target
+assertions:
+  - { id: right-destination }
+  - { id: right-application }
+  - { id: known-healthy-baseline }
+  - { id: allowed-deployment-route }
+  - { id: package-destination }
+  - { id: required-access }
+  - { id: required-settings }
+  - { id: change-safety }
+  - { id: freshness-and-drift }

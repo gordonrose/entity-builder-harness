@@ -106,6 +106,7 @@ Allowed `effects` values may be comma-separated:
 - `branches`
 - `worktrees`
 - `network`
+- `aws-mutation`
 - `destructive`
 
 Use `destructive` only when a script can delete, overwrite, rewrite history, or

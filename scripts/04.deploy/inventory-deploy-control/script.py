@@ -68,7 +68,11 @@ def tracked_paths(root: Path) -> list[Path]:
     )
     if result.returncode != 0:
         raise InventoryError("could not list repository files")
-    return [Path(line) for line in result.stdout.splitlines() if line]
+    # `git ls-files` intentionally reports a tracked file that has been
+    # removed in the working tree.  A read-only inventory must instead report
+    # the actual tree it is asked to inspect; otherwise a safe replacement of
+    # an obsolete control makes the inventory itself unusable before commit.
+    return [Path(line) for line in result.stdout.splitlines() if line and (root / line).is_file()]
 
 
 def is_text_candidate(path: Path) -> bool:

@@ -13,7 +13,7 @@ disciplines:
 - security
 - sre
 kind: execution-plan
-purpose: Govern the exact qualification and E0-E7 execution sequence for the isolated kanbien-core-platform bootstrap target.
+purpose: Record bootstrap execution history and remaining status for the isolated kanbien-core-platform target.
 portability:
   class: internal
   targets: []
@@ -25,12 +25,12 @@ used_by:
 
 ## Authority and status
 
-This is the execution authority for the target-specific bootstrap packet. The
-generic implementation plan defines reusable rules; explanatory documents under
-`docs/` do not authorise execution. A separate approved packet is still
-required for any AWS or GitHub mutation.
+This is a historical status tracker, not execution authority. The reusable
+procedure is `.agentic/04.deploy/workflows/release-update-and-recovery.md`; the
+fixed AWS procedure is `.agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md`.
+A separate approved packet remains required for any AWS or GitHub mutation.
 
-Current execution status: `hardening-required-before-e3-resume`.
+Current execution status: `A accepted and running; normal UPDATE and restoration controls are being implemented before the B-to-A rehearsal.`
 
 ## Completion criterion
 
@@ -67,3 +67,28 @@ supplies the package declaration and destination; the AWS adapter reads the
 declared role policy or runs a bounded ECR read probe; the reusable validator
 checks the contract against normalized coverage. None of those layers may
 silently substitute another target.
+
+## E4 live-control chain
+
+E4 is deliberately split into four fail-closed actions. A package receipt is
+necessary, but never enough to mutate a target.
+
+1. The fixed target alignment wrapper derives the candidate digest from the
+   qualified receipt, obtains only the declared AWS facts, and passes their
+   normalized result through the provider-neutral alignment validator.
+2. The foundation must export every value consumed by the runtime template.
+   Missing output is an alignment failure, not permission to supply a manual
+   identifier. The current foundation needs an output-only reviewed update for
+   `VpcId` and `PrivateSubnetIds` before the initial runtime stack can be
+   planned.
+3. The fixed change-set creator obtains parameters only from that foundation
+   and the qualified receipt. It makes exactly one named initial-release
+   change set and does not execute it.
+4. The fixed deployment control re-reads that change set, confirms its digest,
+   source revision, stack and resource boundary, then executes it. The private
+   verifier subsequently proves the running task uses the same immutable
+   digest. There is no automatic retry or replacement path.
+
+An expired local AWS SSO session is an `authentication-unavailable` alignment
+result. It is not evidence that a target fact is missing and must not cause a
+fallback to a manually supplied value.

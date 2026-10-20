@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T17:14:39Z
-latest_commit_sha: 02405b56499ba30f928aaad539df27756167c5cf
-chat_duration: 1325710s (15:08:15:10)
+latest_commit_at_utc: 2026-10-20T22:10:46Z
+latest_commit_sha: 832e709a
+chat_duration: 1343477s (15:13:11:17)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -68,6 +68,34 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: E2b account tag discovery is still propagating
   Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
+
+
+- Raised: The live alignment gate rejected a healthy foundation after an output-only stack update.
+  Resolution: The AWS adapter recognised CREATE_COMPLETE but not UPDATE_COMPLETE, despite both being stable CloudFormation success states.
+
+
+- Raised: Runtime change-set creation failed before creating the stack because the template rejected the qualified ECR repository URI.
+  Resolution: The ImageRepositoryUri AllowedPattern used double escaping in YAML single quotes, which made the regex require literal backslashes.
+
+
+- Raised: The deploy control rejected a reviewed initial change set because CloudFormation omitted ChangeSetType from its describe response.
+  Resolution: The stack was absent and the change set was CREATE_COMPLETE and AVAILABLE, but the control incorrectly required a field AWS did not return.
+
+
+- Raised: The deploy control still rejected the initial change set because CloudFormation creates an empty REVIEW_IN_PROGRESS stack while the change set awaits execution.
+  Resolution: No runtime resources existed; the review stack is CloudFormation’s normal create-change-set lifecycle state.
+
+
+- Raised: CloudFormation rejected the ECS service registry binding because the target service-discovery resource uses A records.
+  Resolution: The runtime template incorrectly supplied container-name and container-port fields that apply to SRV-style registration, and the deploy wrapper then misreported the successful execute response because it was empty.
+
+
+- Raised: The corrected service failed to launch because the private CloudWatch Logs endpoint policy denied CreateLogStream.
+  Resolution: The endpoint policy appended log-stream syntax to LogGroup.Arn, producing an ARN shape that did not match the actual log stream resource.
+
+
+- Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
+  Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
 
 ## Decisions Made
 
@@ -150,6 +178,66 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt reusable delivery-control layering
   Rationale: Provider-neutral validators now consume contracts and safe normalized evidence; AWS adapters own policy parsing and ECR probes; fixed target wrappers provide Kanbien choices without permitting arbitrary substitution.
+
+
+- Decision: Promoted the verified deployment-control source to origin/main.
+  Rationale: Remote promotion was a normal fast-forward from 1b56931d to 81abadac after the inventory, target-declaration, fixed runtime-control, package-custody, alignment-validation, and whitespace gates passed in the isolated integration worktree.
+
+
+- Decision: Alignment now recognises the stable successful CloudFormation lifecycle states explicitly.
+  Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
+
+
+- Decision: Runtime template parameter patterns must be tested against a representative valid provider identifier.
+  Rationale: The fixed bootstrap-runtime smoke test now validates the exact ECR repository URI shape, and the change-set control maps provider parameter-pattern failures to aws-parameter-invalid without exposing values.
+
+
+- Decision: Cloud-mutating controls now have a standard metadata effect category.
+  Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
+
+
+- Decision: Initial create review accepts an omitted ChangeSetType only with independent proof that the runtime stack is absent.
+  Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
+
+
+- Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRESS as an empty review boundary, not a deployed runtime.
+  Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
+
+
+- Decision: The runtime template and deploy control now model the A-record service-discovery contract explicitly.
+  Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
+
+
+- Decision: CloudWatch Logs endpoint policies must use an explicitly constructed log-stream ARN, tested against the endpoint block.
+  Rationale: The shared foundation policy now uses partition, region, account, log-group name, and log-stream wildcard directly; the task role policy remains separate.
+
+
+- Decision: Both endpoint and task execution-role logging permissions now use the same exact log-stream ARN contract.
+  Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
+
+
+- Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
+  Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
+
+
+- Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
+  Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
+
+
+- Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
+  Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
+
+
+- Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
+  Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
+
+
+- Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
+  Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
+
+
+- Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
+  Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
 
 ## Context Hygiene
 
@@ -1047,6 +1135,281 @@ Summary: Refreshed chat branch from current local main before promotion
 
 Durable evidence: Preflight branch agentic/preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-09a8fc533584/20261020171513 merged cleanly; applied commit 0b7768e9aa3e5f3ff60c6ae1f7635b304fbb939a; temporary preflight worktree and branch were removed; no stash or conflicts; post-refresh delivery controls passed.
 
+
+### 2026-10-20T18:53:06Z - Commit recorded
+
+Commit: `b34c211e`
+
+Message: feat(deploy): add live core runtime control chain
+
+Summary: Added reusable alignment, reviewed change-set, deployment, and private-verification controls; added the output-only foundation contract required for the core runtime.
+
+ADR impact: No new ADR; implements the existing deployment control plan.
+
+
+### 2026-10-20T18:53:06Z - Commit recorded
+
+Commit: `85cdd2d2`
+
+Message: chore(deploy): remove generated bytecode
+
+Summary: Removed accidental generated Python bytecode from the deployment-control commit.
+
+ADR impact: No ADR impact.
+
+
+### 2026-10-20T18:53:06Z - Commit recorded
+
+Commit: `139d26db`
+
+Message: chore(repo): ignore python bytecode
+
+Summary: Prevented generated Python bytecode from being tracked in future deployment work.
+
+ADR impact: No ADR impact.
+
+
+### 2026-10-20T18:55:19Z - Decision
+
+Decision: Promoted the verified deployment-control source to origin/main.
+
+Rationale: Remote promotion was a normal fast-forward from 1b56931d to 81abadac after the inventory, target-declaration, fixed runtime-control, package-custody, alignment-validation, and whitespace gates passed in the isolated integration worktree.
+
+
+### 2026-10-20T18:58:21Z - Issue
+
+Raised: The live alignment gate rejected a healthy foundation after an output-only stack update.
+
+Resolution: The AWS adapter recognised CREATE_COMPLETE but not UPDATE_COMPLETE, despite both being stable CloudFormation success states.
+
+
+### 2026-10-20T18:58:21Z - Decision
+
+Decision: Alignment now recognises the stable successful CloudFormation lifecycle states explicitly.
+
+Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
+
+
+### 2026-10-20T19:04:38Z - Commit recorded
+
+Commit: `8a0ffd8f`
+
+Message: fix(deploy): accept stable foundation update state
+
+Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
+
+ADR impact: No new ADR; corrects the implementation of the approved alignment control.
+
+
+### 2026-10-20T19:10:05Z - Issue
+
+Raised: Runtime change-set creation failed before creating the stack because the template rejected the qualified ECR repository URI.
+
+Resolution: The ImageRepositoryUri AllowedPattern used double escaping in YAML single quotes, which made the regex require literal backslashes.
+
+
+### 2026-10-20T19:10:05Z - Decision
+
+Decision: Runtime template parameter patterns must be tested against a representative valid provider identifier.
+
+Rationale: The fixed bootstrap-runtime smoke test now validates the exact ECR repository URI shape, and the change-set control maps provider parameter-pattern failures to aws-parameter-invalid without exposing values.
+
+
+### 2026-10-20T19:11:43Z - Decision
+
+Decision: Cloud-mutating controls now have a standard metadata effect category.
+
+Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
+
+
+### 2026-10-20T19:12:51Z - Commit recorded
+
+Commit: `5fd8014c`
+
+Message: fix(deploy): validate runtime provider parameters
+
+Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
+
+ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
+
+
+### 2026-10-20T19:16:03Z - Issue
+
+Raised: The deploy control rejected a reviewed initial change set because CloudFormation omitted ChangeSetType from its describe response.
+
+Resolution: The stack was absent and the change set was CREATE_COMPLETE and AVAILABLE, but the control incorrectly required a field AWS did not return.
+
+
+### 2026-10-20T19:16:03Z - Decision
+
+Decision: Initial create review accepts an omitted ChangeSetType only with independent proof that the runtime stack is absent.
+
+Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
+
+
+### 2026-10-20T19:16:57Z - Commit recorded
+
+Commit: `e517670c`
+
+Message: fix(deploy): verify initial change-set state
+
+Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:19:36Z - Issue
+
+Raised: The deploy control still rejected the initial change set because CloudFormation creates an empty REVIEW_IN_PROGRESS stack while the change set awaits execution.
+
+Resolution: No runtime resources existed; the review stack is CloudFormation’s normal create-change-set lifecycle state.
+
+
+### 2026-10-20T19:19:36Z - Decision
+
+Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRESS as an empty review boundary, not a deployed runtime.
+
+Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
+
+
+### 2026-10-20T19:20:33Z - Commit recorded
+
+Commit: `2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec`
+
+Message: fix(deploy): recognise initial review stack
+
+Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:24:01Z - Issue
+
+Raised: CloudFormation rejected the ECS service registry binding because the target service-discovery resource uses A records.
+
+Resolution: The runtime template incorrectly supplied container-name and container-port fields that apply to SRV-style registration, and the deploy wrapper then misreported the successful execute response because it was empty.
+
+
+### 2026-10-20T19:24:01Z - Decision
+
+Decision: The runtime template and deploy control now model the A-record service-discovery contract explicitly.
+
+Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
+
+
+### 2026-10-20T19:25:00Z - Commit recorded
+
+Commit: `28b9fcd8a18bab342c0160943d5460b8f60d80db`
+
+Message: fix(deploy): align service discovery binding
+
+Summary: Removed SRV-only fields from the A-record ECS registry binding and made successful empty AWS mutation responses valid, with regression coverage.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:46:08Z - Issue
+
+Raised: The corrected service failed to launch because the private CloudWatch Logs endpoint policy denied CreateLogStream.
+
+Resolution: The endpoint policy appended log-stream syntax to LogGroup.Arn, producing an ARN shape that did not match the actual log stream resource.
+
+
+### 2026-10-20T19:46:08Z - Decision
+
+Decision: CloudWatch Logs endpoint policies must use an explicitly constructed log-stream ARN, tested against the endpoint block.
+
+Rationale: The shared foundation policy now uses partition, region, account, log-group name, and log-stream wildcard directly; the task role policy remains separate.
+
+
+### 2026-10-20T19:47:04Z - Commit recorded
+
+Commit: `56a7952d874c094bb0dfcabb3c104bacfb32b87b`
+
+Message: fix(deploy): permit logs endpoint streams
+
+Summary: Corrected the private Logs endpoint policy to allow exact log-stream ARNs and added a focused foundation policy regression test.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:58:27Z - Issue
+
+Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
+
+Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
+
+
+### 2026-10-20T19:58:27Z - Decision
+
+Decision: Both endpoint and task execution-role logging permissions now use the same exact log-stream ARN contract.
+
+Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
+
+
+### 2026-10-20T19:59:20Z - Commit recorded
+
+Commit: `4ddad06f033d6eac10a48ade42f0d72e9c3e7b89`
+
+Message: fix(deploy): allow task log streams
+
+Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T20:20:17Z - Decision
+
+Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
+
+Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
+
+
+### 2026-10-20T20:32:24Z - Decision
+
+Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
+
+Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
+
+
+### 2026-10-20T20:40:28Z - Decision
+
+Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
+
+Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
+
+
+### 2026-10-20T20:55:36Z - Decision
+
+Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
+
+Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
+
+
+### 2026-10-20T21:12:11Z - Decision
+
+Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
+
+Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
+
+
+### 2026-10-20T21:15:49Z - Decision
+
+Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
+
+Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
+
+
+### 2026-10-20T22:10:46Z - Commit recorded
+
+Commit: `832e709a`
+
+Message: feat(deploy): govern core platform release updates
+
+Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
+
+ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1222,6 +1585,83 @@ Durable evidence: Preflight branch agentic/preflight/chat-2026-10-05-09-59-can-y
   Summary: Separated reusable delivery validators from AWS adapters and fixed target wrappers; added safe asynchronous-condition evidence, delivery policy coverage, package qualification, execution-state enforcement, and diagnostics. All selected repository checks passed; no AWS mutation occurred.
   ADR impact: No ADR needed: implements the existing provider-neutral deployment architecture.
 
+
+- Commit: `b34c211e`
+  Time UTC: 2026-10-20T18:53:06Z
+  Message: feat(deploy): add live core runtime control chain
+  Summary: Added reusable alignment, reviewed change-set, deployment, and private-verification controls; added the output-only foundation contract required for the core runtime.
+  ADR impact: No new ADR; implements the existing deployment control plan.
+
+
+- Commit: `85cdd2d2`
+  Time UTC: 2026-10-20T18:53:06Z
+  Message: chore(deploy): remove generated bytecode
+  Summary: Removed accidental generated Python bytecode from the deployment-control commit.
+  ADR impact: No ADR impact.
+
+
+- Commit: `139d26db`
+  Time UTC: 2026-10-20T18:53:06Z
+  Message: chore(repo): ignore python bytecode
+  Summary: Prevented generated Python bytecode from being tracked in future deployment work.
+  ADR impact: No ADR impact.
+
+
+- Commit: `8a0ffd8f`
+  Time UTC: 2026-10-20T19:04:38Z
+  Message: fix(deploy): accept stable foundation update state
+  Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
+  ADR impact: No new ADR; corrects the implementation of the approved alignment control.
+
+
+- Commit: `5fd8014c`
+  Time UTC: 2026-10-20T19:12:51Z
+  Message: fix(deploy): validate runtime provider parameters
+  Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
+  ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
+
+
+- Commit: `e517670c`
+  Time UTC: 2026-10-20T19:16:57Z
+  Message: fix(deploy): verify initial change-set state
+  Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+- Commit: `2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec`
+  Time UTC: 2026-10-20T19:20:33Z
+  Message: fix(deploy): recognise initial review stack
+  Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+- Commit: `28b9fcd8a18bab342c0160943d5460b8f60d80db`
+  Time UTC: 2026-10-20T19:25:00Z
+  Message: fix(deploy): align service discovery binding
+  Summary: Removed SRV-only fields from the A-record ECS registry binding and made successful empty AWS mutation responses valid, with regression coverage.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+- Commit: `56a7952d874c094bb0dfcabb3c104bacfb32b87b`
+  Time UTC: 2026-10-20T19:47:04Z
+  Message: fix(deploy): permit logs endpoint streams
+  Summary: Corrected the private Logs endpoint policy to allow exact log-stream ARNs and added a focused foundation policy regression test.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+- Commit: `4ddad06f033d6eac10a48ade42f0d72e9c3e7b89`
+  Time UTC: 2026-10-20T19:59:20Z
+  Message: fix(deploy): allow task log streams
+  Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+- Commit: `832e709a`
+  Time UTC: 2026-10-20T22:10:46Z
+  Message: feat(deploy): govern core platform release updates
+  Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
+  ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1235,9 +1675,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T17:14:39Z
-Latest commit SHA: 02405b56499ba30f928aaad539df27756167c5cf
-Chat duration: 1325710s (15:08:15:10)
+Latest commit at UTC: 2026-10-20T22:10:46Z
+Latest commit SHA: 832e709a
+Chat duration: 1343477s (15:13:11:17)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

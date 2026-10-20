@@ -28,3 +28,6 @@ Current standards:
 
 - `runnable-program-candidates.md`: declares the reviewed source boundary for
   a runnable program, its package candidate, and safe qualification evidence.
+- `declaration-coverage.md`, `delivery-access-coverage.md`, and `package-qualification.md`: define declaration, delivery, and package evidence requirements.
+- `target-alignment-preflight.md` and `provider-async-conditions.md`: define fresh target comparison and provider-controlled condition handling.
+- `accepted-release-and-recovery.md`: defines retained immutable baseline and bounded restoration rules.

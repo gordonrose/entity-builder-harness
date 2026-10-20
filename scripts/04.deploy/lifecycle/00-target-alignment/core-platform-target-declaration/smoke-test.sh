@@ -107,7 +107,7 @@ value = yaml.safe_load(path.read_text(encoding="utf-8"))
 value["live_alignment"] = "aligned"
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
-expect_failure "live-alignment-falsely-ready" "$ready"
+expect_failure "live-alignment-state-invalid" "$ready"
 
 cost="$(copy_fixture invalid-cost-control)"
 python3 - "$cost/foundation/cost-control.yml" <<'PY'
