@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T03:46:39Z
-latest_commit_sha: 25014ff9
-chat_duration: 1277230s (14:18:47:10)
+latest_commit_at_utc: 2026-10-20T03:54:43Z
+latest_commit_sha: ad6cf1e8
+chat_duration: 1277714s (14:18:55:14)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -787,6 +787,17 @@ Summary: Docker became available during the full proof run. It built the local c
 
 Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
 
+
+### 2026-10-20T03:54:43Z - Commit recorded
+
+Commit: `ad6cf1e8`
+
+Message: fix(deploy): start core image command
+
+Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
+
+ADR impact: No ADR: repair within the existing image contract.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -920,6 +931,13 @@ Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-c
   Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
   ADR impact: No ADR: no provider selection or target mutation occurred.
 
+
+- Commit: `ad6cf1e8`
+  Time UTC: 2026-10-20T03:54:43Z
+  Message: fix(deploy): start core image command
+  Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
+  ADR impact: No ADR: repair within the existing image contract.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -933,9 +951,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T03:46:39Z
-Latest commit SHA: 25014ff9
-Chat duration: 1277230s (14:18:47:10)
+Latest commit at UTC: 2026-10-20T03:54:43Z
+Latest commit SHA: ad6cf1e8
+Chat duration: 1277714s (14:18:55:14)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
