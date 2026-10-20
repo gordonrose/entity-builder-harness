@@ -147,7 +147,6 @@ Resources:
             Capabilities:
               Drop: [ALL]
           Command:
-            - node
             - -e
             - |
               const endpoint = process.env.KANBIEN_PRIVATE_VERIFICATION_URL;

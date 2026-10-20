@@ -231,6 +231,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
   Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
 
+
+- Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
+  Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
+
 ## Context Hygiene
 
 
@@ -1376,6 +1380,13 @@ Rationale: Bind the health check to the image-declared /nodejs/bin/node executab
 Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
 
 Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
+
+
+### 2026-10-20T21:12:11Z - Decision
+
+Decision: The private verifier inherited the distroless image Node entrypoint but duplicated node in its ECS Command, which made Node resolve /app/node as a script.
+
+Rationale: Verifier commands must pass only Node arguments to the image-declared entrypoint; target controls reject duplicated node command tokens.
 
 ## Sub-Agent Activity
 

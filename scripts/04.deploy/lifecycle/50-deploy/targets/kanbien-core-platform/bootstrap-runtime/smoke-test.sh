@@ -72,6 +72,10 @@ assert "User:" not in template, "the task definition must preserve the image's d
 assert "- CMD\n              - /nodejs/bin/node\n              - -e" in template, "the ECS health check must execute the distroless image's Node binary without a shell"
 assert "CMD-SHELL" not in template, "the ECS health check must not require a shell that the distroless image does not contain"
 assert "- 'node -e" not in template, "the ECS health check must not rely on PATH in the distroless image"
+verifier_command = re.search(r"Name: private-release-verifier\n.*?Command:\n(?P<body>.*?)          Environment:", template, re.S)
+assert verifier_command, "missing private verifier command"
+assert "- -e" in verifier_command.group("body"), "the private verifier must pass its inline program to the image entrypoint"
+assert "- node" not in verifier_command.group("body"), "the private verifier must not duplicate the distroless Node entrypoint"
 PY
 
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
