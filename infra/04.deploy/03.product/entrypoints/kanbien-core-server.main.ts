@@ -63,7 +63,7 @@ export function createKanbienCoreServerVerificationApp(
 ): PlatformApp {
   return definePlatformApp({
     id: coreServerAppId,
-    name: "Kanbien Core Server",
+    name: "Kanbien Core Server Bootstrap",
     mount(registry) {
       registry.registerObservabilityProfile(releaseVerificationProfile);
       registry.registerRoute({
