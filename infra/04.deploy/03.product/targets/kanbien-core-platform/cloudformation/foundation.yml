@@ -199,7 +199,7 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
-              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImageScanFindings, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !Ref ExistingRepositoryArn }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:CompleteLayerUpload, ecr:DescribeImageScanFindings, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !Ref ExistingRepositoryArn }
   Budget:
     Type: AWS::Budgets::Budget
     Condition: CreateTargetBudget

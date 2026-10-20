@@ -103,7 +103,7 @@ BUILD_ARGS=(
   --label "org.opencontainers.image.revision=$(git rev-parse HEAD)"
   --label 'org.opencontainers.image.source=entity-builder-harness'
   --build-arg 'BUILD_NODE_IMAGE=node:22-bookworm-slim'
-  --build-arg 'RUNTIME_NODE_IMAGE=node:22-bookworm-slim'
+  --build-arg 'RUNTIME_NODE_IMAGE=gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f'
   --build-arg "SOURCE_COMMIT_SHA=$(git rev-parse HEAD)"
 )
 if [[ "$NO_CACHE" == true ]]; then
