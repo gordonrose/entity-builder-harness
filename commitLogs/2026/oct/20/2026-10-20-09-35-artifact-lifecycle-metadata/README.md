@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:40:09Z
-latest_commit_sha: 78521ecbcf508bb5db4a2f0b86688f45b009cb6a
-chat_duration: 7450s (00:02:04:10)
+latest_commit_at_utc: 2026-10-20T10:42:15Z
+latest_commit_sha: 9797cca34b7e8f0ff9037968412550769873a3c3
+chat_duration: 7576s (00:02:06:16)
 estimated_chat_tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -337,6 +337,17 @@ Summary: Latest main is integrated and its covered headers are migrated.
 
 Durable evidence: Clean rehearsed merge78521ecb preserves main34efea7e. Three incoming indexed docs keep body, IDs, versions and statuses; creation commit ca639258 is2026-10-20 UTC. Current index1042 artifacts:1040v3,2intentionalv2examples. Metadata and recognition validation passed;7sources,2376terms. See backfill-main-refresh.json and integration-validation.json. Infrastructure YAML is a known pre-existing coverage exclusion.
 
+
+### 2026-10-20T10:42:15Z - Commit recorded
+
+Commit: `9797cca34b7e8f0ff9037968412550769873a3c3`
+
+Message: chore(metadata): migrate headers added during main refresh
+
+Summary: Migrated the three covered incoming document headers and refreshed recognition inventory after preserving latest deployment main changes. Validated1042 indexed artifacts;1040v3 plus2legacy examples. Infrastructure YAML coverage gap is explicitly recorded.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 
@@ -441,6 +452,13 @@ Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed he
   Summary: Applied clean merge of main34efea7e after preflight metadata/index checks, incoming YAML validation, whitespace and clean-worktree checks. Preserved incoming deployment edits.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `9797cca34b7e8f0ff9037968412550769873a3c3`
+  Time UTC: 2026-10-20T10:42:15Z
+  Message: chore(metadata): migrate headers added during main refresh
+  Summary: Migrated the three covered incoming document headers and refreshed recognition inventory after preserving latest deployment main changes. Validated1042 indexed artifacts;1040v3 plus2legacy examples. Infrastructure YAML coverage gap is explicitly recorded.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -454,9 +472,9 @@ Reason: Versioned required dates, compatibility policy, nonmutating staged enfor
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T08:35:59Z
-Latest commit at UTC: 2026-10-20T10:40:09Z
-Latest commit SHA: 78521ecbcf508bb5db4a2f0b86688f45b009cb6a
-Chat duration: 7450s (00:02:04:10)
+Latest commit at UTC: 2026-10-20T10:42:15Z
+Latest commit SHA: 9797cca34b7e8f0ff9037968412550769873a3c3
+Chat duration: 7576s (00:02:06:16)
 Estimated chat tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
