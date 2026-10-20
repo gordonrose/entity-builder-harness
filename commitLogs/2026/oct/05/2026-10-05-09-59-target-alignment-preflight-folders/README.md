@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:20:33Z
-latest_commit_sha: 2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec
-chat_duration: 1333264s (15:10:21:04)
+latest_commit_at_utc: 2026-10-20T19:25:00Z
+latest_commit_sha: 28b9fcd8a18bab342c0160943d5460b8f60d80db
+chat_duration: 1333531s (15:10:25:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1256,6 +1256,17 @@ Decision: The runtime template and deploy control now model the A-record service
 
 Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
 
+
+### 2026-10-20T19:25:00Z - Commit recorded
+
+Commit: `28b9fcd8a18bab342c0160943d5460b8f60d80db`
+
+Message: fix(deploy): align service discovery binding
+
+Summary: Removed SRV-only fields from the A-record ECS registry binding and made successful empty AWS mutation responses valid, with regression coverage.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1480,6 +1491,13 @@ Rationale: A-record registry bindings provide only RegistryArn; regression cover
   Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
   ADR impact: No new ADR; corrects reusable deployment-control interpretation.
 
+
+- Commit: `28b9fcd8a18bab342c0160943d5460b8f60d80db`
+  Time UTC: 2026-10-20T19:25:00Z
+  Message: fix(deploy): align service discovery binding
+  Summary: Removed SRV-only fields from the A-record ECS registry binding and made successful empty AWS mutation responses valid, with regression coverage.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1493,9 +1511,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:20:33Z
-Latest commit SHA: 2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec
-Chat duration: 1333264s (15:10:21:04)
+Latest commit at UTC: 2026-10-20T19:25:00Z
+Latest commit SHA: 28b9fcd8a18bab342c0160943d5460b8f60d80db
+Chat duration: 1333531s (15:10:25:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
