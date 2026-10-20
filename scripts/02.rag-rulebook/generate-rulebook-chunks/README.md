@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: rag-rulebook.script.generate-rulebook-chunks.readme
 version: 1
 status: active
+created_on: "2026-06-25"
+updated_on: "2026-10-20"
 layer: 02.rag-rulebook
 domain: chunking
 disciplines:

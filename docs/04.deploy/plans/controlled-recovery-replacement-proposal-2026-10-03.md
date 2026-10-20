@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.plan.controlled-recovery-replacement-2026-10-03
 version: 2
 status: draft
+created_on: "2026-10-03"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines: [architecture, agentic, sre]

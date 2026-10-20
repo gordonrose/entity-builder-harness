@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: aws.runbook.kanbien-staging-postgresql-relational-reference-v1-stage6
 version: 2
 status: active
+created_on: "2026-09-26"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: persistence.operations
 disciplines:

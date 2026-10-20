@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.script.verify-platform-shell-metric-coverage
 #   version: 4
 #   status: active
+#   created_on: "2026-09-22"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:

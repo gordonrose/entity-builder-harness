@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.run-local-service
 #   version: 1
 #   status: active
+#   created_on: "2026-06-29"
+#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:

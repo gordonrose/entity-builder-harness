@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.generate-rulebook-index.smoke-test
-#   version: 3
+#   version: 4
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: indexing
 #   disciplines:
@@ -132,4 +134,72 @@ assert any(rule["rule_id"] == "deployment-readiness-checks.controls-cost-capacit
 
 print("Rulebook index smoke test passed.")
 print(json.dumps(data["diagnostics"]["counts"], sort_keys=True))
+PY
+
+python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+import yaml
+
+generator = Path("scripts/02.rag-rulebook/generate-rulebook-index/script.sh").resolve()
+with tempfile.TemporaryDirectory() as temporary:
+    root = Path(temporary)
+    def write(path, content):
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+
+    def metadata(name, status, kind, layer):
+        result = {"schema": "agentic-artifact/v3", "id": "test." + name, "version": 1,
+                  "status": status, "kind": kind, "layer": layer,
+                  "created_on": "2020-01-01", "updated_on": "2024-01-01"}
+        if status == "superseded":
+            result.update(superseded_on="2024-01-01", superseded_by=[{"id": "test.current", "path": "docs/01.harness/source-material/current.md"}])
+        return result
+
+    write(".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml", yaml.safe_dump({
+        "target_corpora": [{"corpus_id": "corpus.01.harness"}, {"corpus_id": "corpus.02.rag-rulebook"}]
+    }))
+    fixture_paths = {}
+    for family, folder, kind in [
+        ("source", "docs/01.harness/source-material", "source-material"),
+        ("process", ".agentic/01.harness/standards", "standard"),
+    ]:
+        for status in ("active", "deprecated", "superseded", "retired"):
+            path = f"{folder}/{status}.md"
+            fixture_paths[path] = status
+            header = metadata(f"{family}.{status}", status, kind, "01.harness")
+            write(path, "<!-- agentic-artifact:\n" + yaml.safe_dump(header, sort_keys=False) + "-->\n\n# Fixture\n\nThis document has enough words to produce an explanation chunk when it is current guidance.\n")
+    for status in ("active", "superseded"):
+        path = f"docs/02.rag-rulebook/rules/concerns/{status}.yml"
+        fixture_paths[path] = status
+        header = yaml.safe_dump({"agentic-artifact": metadata(f"rules.{status}", status, "rule", "02.rag-rulebook")}, sort_keys=False)
+        body = yaml.safe_dump({"id": f"test.rules.{status}", "status": "active", "rules": [{"id": f"test.rule.{status}", "summary": "Fixture rule."}]})
+        write(path, "".join("# " + line + "\n" for line in header.splitlines()) + "\n" + body)
+    environment = {**os.environ, "RAG_REPO_ROOT": str(root), "RAG_SOURCE_COMMIT_SHA": "a" * 40}
+    command = ["bash", str(generator)]
+    result = subprocess.run(command, env=environment, check=True, capture_output=True, text=True)
+    data = json.loads(result.stdout)
+    by_path = {artifact["current_path"]: artifact for artifact in data["artifacts"]}
+    for path, status in fixture_paths.items():
+        artifact = by_path[path]
+        assert artifact["status"] == status, path
+        assert artifact["metadata_schema"] == "agentic-artifact/v3", path
+        assert artifact["created_on"] == "2020-01-01", path
+        if status == "superseded":
+            assert artifact["superseded_on"] == "2024-01-01", path
+            assert artifact["superseded_by"][0]["id"] == "test.current", path
+        candidates = [candidate for candidate in data["chunk_candidates"] if candidate["source_path"] == path]
+        assert bool(candidates) == (status == "active"), path
+    assert "test.rule.active" in {rule["rule_id"] for rule in data["rules"]}
+    assert "test.rule.superseded" not in {rule["rule_id"] for rule in data["rules"]}
+    path = root / "docs/01.harness/source-material/active.md"
+    path.write_text(path.read_text().replace("agentic-artifact/v3", "agentic-artifact/v99", 1))
+    failure = subprocess.run(command, env=environment, capture_output=True, text=True)
+    assert failure.returncode != 0 and "Unsupported metadata schema" in failure.stderr
+print("Rulebook lifecycle compatibility fixtures passed.")
 PY

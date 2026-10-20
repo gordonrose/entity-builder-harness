@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: education.teaching-notes.0002-architecture-learning-handbook
   version: 43
   status: active
+  created_on: "2026-09-01"
+  updated_on: "2026-10-20"
   layer: 05.education
   domain: education
   disciplines:

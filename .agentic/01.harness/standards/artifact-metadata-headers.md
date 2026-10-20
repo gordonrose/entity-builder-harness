@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.standards.artifact-metadata-headers
 version: 1
 status: active
+created_on: "2026-06-19"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: metadata
 disciplines:
@@ -34,8 +36,9 @@ repos.
 
 ## Capability Home
 
-This file defines the compatibility v1 header format used by the current
-checker. The versioned metadata model, taxonomy, stable ID policy, and future
+This file documents legacy v1 header shapes for compatibility. New authoring
+uses the v3 lifecycle contract; v1/v2 remain readable during migration. The
+current metadata model, date-maintenance rules, taxonomy, stable ID policy and
 index contract live in `.agentic/01.harness/artifact-metadata/standard.md`.
 
 ## Scope
@@ -49,8 +52,9 @@ This standard applies to new:
 - RAG/rulebook corpus documents and YAML artifacts under
   `docs/02.rag-rulebook/`
 
-Existing files should be backfilled in focused batches. Until backfill is
-complete, the commit gate enforces metadata for newly added files.
+Existing files should be backfilled in focused batches. The commit gate checks
+new files and existing metadata on modifications, including v3 lifecycle rules.
+Ordinary modifications to legacy files without headers remain grandfathered.
 
 ## Script Header
 
@@ -171,8 +175,11 @@ standard, or checker that treats that validation as part of the harness.
 Run:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
+bash scripts/01.harness/run-governed-script.sh scripts/01.harness/artifact-metadata/check-headers/script.sh --staged
 ```
 
-The staged-added mode is required before commits so newly created scripts and
-harness docs cannot enter the repo without metadata.
+The staged mode validates the Git index, including modifications to v3 lifecycle
+metadata. Legacy v1/v2 remain valid; missing headers on ordinary legacy
+modifications remain grandfathered. The compatibility `--staged-added` mode is
+still available. Current v3 authoring and migration rules live in the capability
+standard linked above.

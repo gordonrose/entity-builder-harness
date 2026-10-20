@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: aws.architecture.adr.0003-private-ecs-bootstrap-target-kanbien-core-platform
   version: 1
   status: active
+  created_on: "2026-10-20"
+  updated_on: "2026-10-20"
   layer: 04.deploy
   domain: deployment.bootstrap-runtime
   disciplines:

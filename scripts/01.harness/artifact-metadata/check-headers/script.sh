@@ -2,16 +2,18 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.check-headers
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-24"
+#   updated_on: "2026-10-20"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
 #     - agentic
 #   kind: script
-#   purpose: Validate v1 and v2 artifact metadata headers for harness artifacts.
+#   purpose: Validate artifact metadata, lifecycle dates, and staged changes across supported header versions.
 #   portability:
 #     class: required
 #     targets:
@@ -25,14 +27,17 @@ set -euo pipefail
 #     - id: harness.checklist.before-commit
 #       path: .agentic/00.chat/checklists/before-commit.md
 
-python3 - "$@" <<'PY'
+python3 - "$@" 3<&0 <<'PY'
 from __future__ import annotations
 
 import argparse
+import datetime as dt
+import json
+import os
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 try:
@@ -66,6 +71,14 @@ PATH_PREFIXES = (
 )
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$")
 DOMAIN_RE = ID_RE
+V2_STATUSES = {"draft", "active", "deprecated", "retired"}
+V3_STATUSES = V2_STATUSES | {"superseded"}
+DATE_FIELDS = ("created_on", "updated_on", "deprecated_on", "superseded_on")
+TODAY = dt.datetime.now(dt.timezone.utc).date()
+STAGED = False
+INDEX_ENTRIES: dict[str, tuple[str, str]] = {}
+CONTENT_CACHE: dict[str, str] = {}
+PROPOSED: dict[str, str] = {}
 
 
 class CheckError(Exception):
@@ -86,8 +99,8 @@ ROOT = repo_root()
 
 
 def load_taxonomy() -> dict[str, Any]:
-    path = ROOT / ".agentic" / "01.harness" / "artifact-metadata" / "taxonomy.yml"
-    if not path.exists():
+    path = PurePosixPath(".agentic", "01.harness", "artifact-metadata", "taxonomy.yml").as_posix()
+    if not path_exists(path):
         return {
             "layers": [
                 {"id": "00.chat"},
@@ -126,33 +139,40 @@ def load_taxonomy() -> dict[str, Any]:
                 "destructive",
             ],
         }
-    with path.open("r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle) or {}
-    return data
+    return yaml.safe_load(read_text(path)) or {}
 
 
-TAXONOMY = load_taxonomy()
-LAYERS = {entry["id"] for entry in TAXONOMY.get("layers", [])}
-DISCIPLINES = set(TAXONOMY.get("disciplines", []))
-STATUSES = set(TAXONOMY.get("statuses", []))
-PORTABILITY_CLASSES = set(TAXONOMY.get("portability_classes", []))
-SCRIPT_EFFECTS = set(TAXONOMY.get("script_effects", []))
+LAYERS: set[str] = set()
+DISCIPLINES: set[str] = set()
+PORTABILITY_CLASSES: set[str] = set()
+SCRIPT_EFFECTS: set[str] = set()
 
 
 def usage() -> str:
     return """Usage:
+  check-artifact-metadata-headers.sh --proposed < proposed-files.json
+  check-artifact-metadata-headers.sh --staged
   check-artifact-metadata-headers.sh --staged-added
   check-artifact-metadata-headers.sh --paths <path> [path...]
   check-artifact-metadata-headers.sh --all
 
 Checks scripts, chat Markdown documents, harness Markdown documents, and harness
-YAML artifacts for required agentic metadata headers. --staged-added enforces
-only newly added files so existing files can be backfilled in batches.
+YAML artifacts for v1, v2, and v3 metadata headers. --staged reads added,
+copied, renamed, and modified files from the Git index and checks v3 lifecycle
+maintenance against HEAD. It also validates supersession links from unchanged
+v3 sources against the full Git index, so target moves, removals, or identity
+changes cannot leave dangling references. Existing headerless files remain
+allowed on ordinary modifications during migration. --staged-added retains the legacy A/C/R scope.
+--proposed reads a JSON object mapping repository-relative paths to full proposed
+file text from stdin. It validates that overlay, including replacement links,
+without writing files or applying staged-maintenance rules.
 """
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--proposed", action="store_true")
+    parser.add_argument("--staged", action="store_true")
     parser.add_argument("--staged-added", action="store_true")
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--paths", nargs="*")
@@ -163,7 +183,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         print(usage(), end="")
         sys.exit(0)
 
-    modes = [args.staged_added, args.all, args.paths is not None]
+    modes = [args.proposed, args.staged, args.staged_added, args.all, args.paths is not None]
     if sum(1 for mode in modes if mode) != 1:
         print("ERROR: choose exactly one mode.", file=sys.stderr)
         print(usage(), end="", file=sys.stderr)
@@ -189,19 +209,70 @@ def normalize_path(path: Path | str) -> str:
     return path_obj.as_posix()
 
 
-def collect_staged_added_paths() -> list[str]:
-    output = run_git(["diff", "--cached", "--name-status", "--diff-filter=ACR"])
-    paths = []
-    for line in output.splitlines():
-        parts = line.split("\t")
-        if not parts:
+def collect_staged_changes(include_modified: bool) -> dict[str, tuple[str, str]]:
+    output = run_git([
+        "diff", "--cached", "--name-status", "-z", "--find-renames", "--find-copies",
+        "--diff-filter=ACRM" if include_modified else "--diff-filter=ACR",
+    ])
+    fields = iter(output.rstrip("\0").split("\0") if output else [])
+    changes: dict[str, tuple[str, str]] = {}
+    for status in fields:
+        source = next(fields)
+        path = next(fields) if status.startswith(("R", "C")) else source
+        changes[path] = (status[0], source)
+    return changes
+
+
+def load_index_entries() -> None:
+    for record in run_git(["ls-files", "--stage", "-z"]).split("\0"):
+        if not record:
             continue
-        status = parts[0]
-        if status.startswith("R") and len(parts) >= 3:
-            paths.append(parts[2])
-        elif len(parts) >= 2:
-            paths.append(parts[1])
-    return sorted(set(paths))
+        attributes, path = record.split("\t", 1)
+        mode, object_id, stage = attributes.split()
+        if stage != "0":
+            raise CheckError(f"unmerged index entry: {path}")
+        INDEX_ENTRIES[path] = (mode, object_id)
+
+
+def path_exists(path: str) -> bool:
+    if path in PROPOSED or any(p.startswith(path.rstrip("/") + "/") for p in PROPOSED):
+        return True
+    if STAGED:
+        return path in INDEX_ENTRIES or any(p.startswith(path.rstrip("/") + "/") for p in INDEX_ENTRIES)
+    return (ROOT / path).exists()
+
+
+def is_regular_file(path: str) -> bool:
+    if path in PROPOSED:
+        return True
+    if STAGED:
+        return INDEX_ENTRIES.get(path, ("", ""))[0] in {"100644", "100755"}
+    return (ROOT / path).is_file()
+
+
+def read_text(path: str) -> str:
+    if path in PROPOSED:
+        return PROPOSED[path]
+    if path not in CONTENT_CACHE:
+        try:
+            if STAGED:
+                mode, object_id = INDEX_ENTRIES[path]
+                if mode not in {"100644", "100755"}:
+                    raise CheckError(f"metadata requires a regular file: {path}")
+                CONTENT_CACHE[path] = run_git(["cat-file", "blob", object_id])
+            else:
+                CONTENT_CACHE[path] = (ROOT / path).read_text(encoding="utf-8")
+        except (OSError, UnicodeError, KeyError, subprocess.CalledProcessError) as exc:
+            raise CheckError(f"cannot read metadata file: {path}: {exc}") from exc
+    return CONTENT_CACHE[path]
+
+
+def head_text(path: str) -> str | None:
+    result = subprocess.run(
+        ["git", "show", f"HEAD:{path}"], text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+    return result.stdout if result.returncode == 0 else None
 
 
 def collect_paths_from_args(paths: list[str]) -> list[str]:
@@ -301,46 +372,62 @@ def strip_comment(line: str) -> str:
     return line
 
 
-def parse_header(path: str) -> dict[str, Any]:
-    full_path = ROOT / path
-    lines = full_path.read_text(encoding="utf-8").splitlines()[:120]
-
-    for index, line in enumerate(lines):
+def parse_header_text(path: str, text: str) -> tuple[dict[str, Any], tuple[int, int] | None]:
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines[:120]):
         if "agentic-artifact:" not in line and "agentic-script:" not in line:
             continue
-
+        end = index + 1
         if line.lstrip().startswith("<!--"):
             marker = line.replace("<!--", "", 1).strip()
             body_lines = []
-            for following in lines[index + 1 :]:
+            closed = False
+            for end, following in enumerate(lines[index + 1:], start=index + 2):
                 if "-->" in following:
                     before_end = following.split("-->", 1)[0]
                     if before_end.strip():
                         body_lines.append(before_end)
+                    closed = True
                     break
-                body_lines.append(following)
+                body_lines.append(following.rstrip("\r\n"))
+            if not closed:
+                raise CheckError(f"unterminated metadata header: {path}")
             header_lines = [marker]
-            header_lines.extend(f"  {body_line}" if body_line.strip() else body_line for body_line in body_lines)
+            header_lines.extend(f"  {line}" if line.strip() else line for line in body_lines)
         else:
-            header_lines = [strip_comment(line)]
-            for following in lines[index + 1 :]:
-                stripped = following.lstrip()
-                if stripped.startswith("#") or stripped.startswith("//"):
-                    header_lines.append(strip_comment(following))
-                    continue
-                if not following.strip():
+            header_lines = [strip_comment(line).rstrip("\r\n")]
+            for following in lines[index + 1:]:
+                if not following.lstrip().startswith(("#", "//")):
                     break
-                break
-
+                header_lines.append(strip_comment(following).rstrip("\r\n"))
+                end += 1
         try:
             parsed = yaml.safe_load("\n".join(header_lines)) or {}
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, ValueError) as exc:
             raise CheckError(f"invalid metadata YAML: {path}: {exc}") from exc
         if not isinstance(parsed, dict):
             raise CheckError(f"invalid metadata header shape: {path}")
-        return parsed
+        return parsed, (index, end)
+    return {}, None
 
-    return {}
+
+def parse_header(path: str, text: str | None = None) -> dict[str, Any]:
+    return parse_header_text(path, read_text(path) if text is None else text)[0]
+
+
+def without_lifecycle_dates(path: str, text: str) -> str:
+    _, span = parse_header_text(path, text)
+    if span is None:
+        return text
+    lines = text.splitlines(keepends=True)
+    start, end = span
+    kept = []
+    for index, line in enumerate(lines):
+        key = strip_comment(line).strip().split(":", 1)[0]
+        if start < index < end and key in DATE_FIELDS:
+            continue
+        kept.append(line)
+    return "".join(kept)
 
 
 def require_fields(path: str, metadata: dict[str, Any], fields: list[str], label: str) -> None:
@@ -352,7 +439,7 @@ def require_fields(path: str, metadata: dict[str, Any], fields: list[str], label
 def validate_used_by_path(path: str, ref: str) -> None:
     if not ref or not ref.startswith(PATH_PREFIXES):
         return
-    if not (ROOT / ref).exists():
+    if not path_exists(ref):
         raise CheckError(f"{path} references missing used_by path: {ref}")
 
 
@@ -387,15 +474,15 @@ def validate_v1_artifact(path: str, metadata: dict[str, Any], yaml_artifact: boo
 
 def require_type(path: str, field: str, value: Any, expected_type: type, description: str) -> None:
     if not isinstance(value, expected_type):
-        raise CheckError(f"{field} must be {description} in v2 metadata header: {path}")
+        raise CheckError(f"{field} must be {description} in versioned metadata header: {path}")
 
 
 def validate_id(path: str, field: str, value: str) -> None:
     if not ID_RE.match(value):
-        raise CheckError(f"invalid {field} value in v2 metadata header: {path}")
+        raise CheckError(f"invalid {field} value in versioned metadata header: {path}")
 
 
-def validate_v2(path: str, metadata: dict[str, Any]) -> None:
+def validate_versioned(path: str, metadata: dict[str, Any]) -> None:
     required = [
         "schema",
         "id",
@@ -409,132 +496,297 @@ def validate_v2(path: str, metadata: dict[str, Any]) -> None:
         "portability",
         "used_by",
     ]
-    require_fields(path, metadata, required, "v2 artifact")
+    require_fields(path, metadata, required, "versioned artifact")
 
-    if metadata["schema"] != "agentic-artifact/v2":
-        raise CheckError(f"invalid schema value in v2 metadata header: {path}")
 
     require_type(path, "id", metadata["id"], str, "a string")
     validate_id(path, "id", metadata["id"])
 
-    if not isinstance(metadata["version"], int) or metadata["version"] < 1:
-        raise CheckError(f"version must be an integer greater than zero in v2 metadata header: {path}")
+    if type(metadata["version"]) is not int or metadata["version"] < 1:
+        raise CheckError(f"version must be an integer greater than zero in versioned metadata header: {path}")
 
-    if metadata["status"] not in STATUSES:
-        raise CheckError(f"invalid status value in v2 metadata header: {path}")
-    if metadata["layer"] not in LAYERS:
-        raise CheckError(f"invalid layer value in v2 metadata header: {path}")
+    statuses = V3_STATUSES if metadata["schema"] == "agentic-artifact/v3" else V2_STATUSES
+    if not isinstance(metadata["status"], str) or metadata["status"] not in statuses:
+        raise CheckError(f"invalid status value in versioned metadata header: {path}")
+    if not isinstance(metadata["layer"], str) or metadata["layer"] not in LAYERS:
+        raise CheckError(f"invalid layer value in versioned metadata header: {path}")
 
     require_type(path, "domain", metadata["domain"], str, "a string")
     if not DOMAIN_RE.match(metadata["domain"]):
-        raise CheckError(f"invalid domain value in v2 metadata header: {path}")
+        raise CheckError(f"invalid domain value in versioned metadata header: {path}")
 
     disciplines = metadata["disciplines"]
     if not isinstance(disciplines, list) or not disciplines:
-        raise CheckError(f"disciplines must be a non-empty list in v2 metadata header: {path}")
+        raise CheckError(f"disciplines must be a non-empty list in versioned metadata header: {path}")
     for discipline in disciplines:
-        if discipline not in DISCIPLINES:
-            raise CheckError(f"invalid discipline value in v2 metadata header: {path}: {discipline}")
+        if not isinstance(discipline, str) or discipline not in DISCIPLINES:
+            raise CheckError(f"invalid discipline value in versioned metadata header: {path}: {discipline}")
 
     require_type(path, "kind", metadata["kind"], str, "a string")
     require_type(path, "purpose", metadata["purpose"], str, "a string")
     if not metadata["kind"].strip() or not metadata["purpose"].strip():
-        raise CheckError(f"kind and purpose must be non-empty in v2 metadata header: {path}")
+        raise CheckError(f"kind and purpose must be non-empty in versioned metadata header: {path}")
 
     portability = metadata["portability"]
     if not isinstance(portability, dict):
-        raise CheckError(f"portability must be an object in v2 metadata header: {path}")
-    if portability.get("class") not in PORTABILITY_CLASSES:
-        raise CheckError(f"invalid portability.class value in v2 metadata header: {path}")
+        raise CheckError(f"portability must be an object in versioned metadata header: {path}")
+    if not isinstance(portability.get("class"), str) or portability["class"] not in PORTABILITY_CLASSES:
+        raise CheckError(f"invalid portability.class value in versioned metadata header: {path}")
     targets = portability.get("targets")
     if not isinstance(targets, list):
-        raise CheckError(f"portability.targets must be a list in v2 metadata header: {path}")
+        raise CheckError(f"portability.targets must be a list in versioned metadata header: {path}")
     for target in targets:
         if not isinstance(target, str) or not target:
-            raise CheckError(f"portability.targets entries must be strings in v2 metadata header: {path}")
+            raise CheckError(f"portability.targets entries must be strings in versioned metadata header: {path}")
 
     used_by = metadata["used_by"]
     if not isinstance(used_by, list) or not used_by:
-        raise CheckError(f"used_by must be a non-empty list in v2 metadata header: {path}")
+        raise CheckError(f"used_by must be a non-empty list in versioned metadata header: {path}")
     for entry in used_by:
         if not isinstance(entry, dict):
-            raise CheckError(f"used_by entries must be objects in v2 metadata header: {path}")
+            raise CheckError(f"used_by entries must be objects in versioned metadata header: {path}")
         ref_id = entry.get("id")
         if not isinstance(ref_id, str) or not ref_id:
-            raise CheckError(f"used_by.id is required in v2 metadata header: {path}")
+            raise CheckError(f"used_by.id is required in versioned metadata header: {path}")
         validate_id(path, "used_by.id", ref_id)
         ref_path = entry.get("path")
         if ref_path is not None:
             if not isinstance(ref_path, str):
-                raise CheckError(f"used_by.path must be a string in v2 metadata header: {path}")
+                raise CheckError(f"used_by.path must be a string in versioned metadata header: {path}")
             validate_used_by_path(path, ref_path)
 
     effects = metadata.get("effects")
     if metadata["kind"] == "script" or is_script_artifact(path):
         if metadata["kind"] != "script":
-            raise CheckError(f"script file must use kind: script in v2 metadata header: {path}")
+            raise CheckError(f"script file must use kind: script in versioned metadata header: {path}")
         if not isinstance(effects, list) or not effects:
-            raise CheckError(f"effects must be a non-empty list for v2 script metadata header: {path}")
+            raise CheckError(f"effects must be a non-empty list for versioned script metadata header: {path}")
     if effects is not None:
         if not isinstance(effects, list):
-            raise CheckError(f"effects must be a list in v2 metadata header: {path}")
+            raise CheckError(f"effects must be a list in versioned metadata header: {path}")
         for effect in effects:
-            if effect not in SCRIPT_EFFECTS:
-                raise CheckError(f"invalid effects value in v2 metadata header: {path}: {effect}")
+            if not isinstance(effect, str) or effect not in SCRIPT_EFFECTS:
+                raise CheckError(f"invalid effects value in versioned metadata header: {path}: {effect}")
 
 
-def validate_path(path: str) -> None:
-    parsed = parse_header(path)
+def validate_lifecycle(path: str, metadata: dict[str, Any]) -> None:
+    require_fields(path, metadata, ["created_on", "updated_on"], "v3 artifact")
+    dates: dict[str, dt.date] = {}
+    for field in DATE_FIELDS:
+        if field not in metadata:
+            continue
+        value = metadata[field]
+        if not isinstance(value, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+            raise CheckError(f"{field} must be a quoted YYYY-MM-DD string: {path}")
+        try:
+            dates[field] = dt.date.fromisoformat(value)
+        except ValueError as exc:
+            raise CheckError(f"{field} must be a real calendar date: {path}") from exc
+        if dates[field] > TODAY:
+            raise CheckError(f"{field} cannot be in the future (UTC): {path}")
+    if dates["created_on"] > dates["updated_on"]:
+        raise CheckError(f"created_on must not follow updated_on: {path}")
+    for field in ("deprecated_on", "superseded_on"):
+        if field in dates and not dates["created_on"] <= dates[field] <= dates["updated_on"]:
+            raise CheckError(f"{field} must be between created_on and updated_on: {path}")
+    status = metadata["status"]
+    if status == "deprecated" and "deprecated_on" not in dates:
+        raise CheckError(f"deprecated status requires deprecated_on: {path}")
+    if "deprecated_on" in dates and status not in {"deprecated", "superseded", "retired"}:
+        raise CheckError(f"deprecated_on is only allowed for deprecated, superseded, or retired artifacts: {path}")
+    has_date, has_refs = "superseded_on" in metadata, "superseded_by" in metadata
+    if has_date != has_refs:
+        raise CheckError(f"superseded_on and superseded_by must be provided together: {path}")
+    if status == "superseded" and not has_date:
+        raise CheckError(f"superseded status requires superseded_on and superseded_by: {path}")
+    if has_date and status not in {"superseded", "retired"}:
+        raise CheckError(f"supersession metadata is only allowed for superseded or retired artifacts: {path}")
+    if "deprecated_on" in dates and "superseded_on" in dates and dates["deprecated_on"] > dates["superseded_on"]:
+        raise CheckError(f"deprecated_on must not follow superseded_on: {path}")
+    if has_refs:
+        validate_replacement_graph(path, metadata, [])
+
+
+def validate_replacement_graph(path: str, metadata: dict[str, Any], ancestors: list[str]) -> None:
+    if path in ancestors:
+        raise CheckError("supersession cycle: " + " -> ".join([*ancestors, path]))
+    if "superseded_by" not in metadata:
+        return
+    refs = metadata["superseded_by"]
+    if not isinstance(refs, list) or not refs:
+        raise CheckError(f"superseded_by must be a non-empty list: {path}")
+    seen: set[str] = set()
+    for entry in refs:
+        if not isinstance(entry, dict):
+            raise CheckError(f"superseded_by entries must be objects with id and path: {path}")
+        ref_id, ref_path = entry.get("id"), entry.get("path")
+        if not isinstance(ref_id, str) or not ref_id:
+            raise CheckError(f"superseded_by.id must be a non-empty string: {path}")
+        validate_id(path, "superseded_by.id", ref_id)
+        if not isinstance(ref_path, str) or not ref_path:
+            raise CheckError(f"superseded_by.path must be a non-empty repository-relative path: {path}")
+        parts = PurePosixPath(ref_path)
+        if parts.is_absolute() or ".." in parts.parts or "\\" in ref_path or parts.as_posix() != ref_path:
+            raise CheckError(f"superseded_by.path must stay inside the repository: {path}: {ref_path}")
+        if not STAGED and not (ROOT / ref_path).resolve().is_relative_to(ROOT.resolve()):
+            raise CheckError(f"superseded_by.path must stay inside the repository: {path}: {ref_path}")
+        if ref_path == path or ref_id == metadata.get("id"):
+            raise CheckError(f"superseded_by must not reference itself: {path}")
+        if ref_path in seen:
+            raise CheckError(f"duplicate superseded_by path: {path}: {ref_path}")
+        seen.add(ref_path)
+        if not is_regular_file(ref_path):
+            raise CheckError(f"superseded_by references missing or non-regular file: {path}: {ref_path}")
+        target = parse_header(ref_path).get("agentic-artifact")
+        if not isinstance(target, dict) or target.get("schema") not in ("agentic-artifact/v2", "agentic-artifact/v3"):
+            raise CheckError(f"superseded_by target needs a supported stable artifact ID: {path}: {ref_path}")
+        if target.get("id") != ref_id:
+            raise CheckError(f"superseded_by id/path mismatch: {path}: {ref_path}")
+        validate_replacement_graph(ref_path, target, [*ancestors, path])
+
+
+def validate_path(path: str, parsed: dict[str, Any]) -> None:
     artifact = parsed.get("agentic-artifact")
     script = parsed.get("agentic-script")
-
-    if is_script_artifact(path):
-        if isinstance(artifact, dict) and artifact.get("schema") == "agentic-artifact/v2":
-            validate_v2(path, artifact)
+    if isinstance(artifact, dict) and "schema" in artifact:
+        if artifact["schema"] not in ("agentic-artifact/v1", "agentic-artifact/v2", "agentic-artifact/v3"):
+            raise CheckError(f"unsupported artifact metadata schema: {path}: {artifact['schema']}")
+        if artifact["schema"] in ("agentic-artifact/v2", "agentic-artifact/v3"):
+            validate_versioned(path, artifact)
+            if artifact["schema"] == "agentic-artifact/v3":
+                validate_lifecycle(path, artifact)
             return
+    if isinstance(script, dict) and "schema" in script and script["schema"] != "agentic-script/v1":
+        raise CheckError(f"unsupported script metadata schema: {path}: {script['schema']}")
+    if is_script_artifact(path):
         if isinstance(script, dict):
             validate_v1_script(path, script)
             return
-        raise CheckError(f"missing agentic-script or agentic-artifact/v2 metadata header: {path}")
-
+        raise CheckError(f"missing agentic-script or versioned agentic-artifact metadata header: {path}")
     if isinstance(artifact, dict):
-        if artifact.get("schema") == "agentic-artifact/v2":
-            validate_v2(path, artifact)
-        else:
-            validate_v1_artifact(path, artifact, is_yaml_artifact(path))
+        validate_v1_artifact(path, artifact, is_yaml_artifact(path))
         return
-
     raise CheckError(f"missing agentic-artifact metadata header: {path}")
 
 
+def validate_staged_maintenance(path: str, change: tuple[str, str], parsed: dict[str, Any]) -> bool:
+    status, source = change
+    previous_text = head_text(source if status == "R" else path)
+    previous = parse_header(path, previous_text) if previous_text is not None else {}
+    old = previous.get("agentic-artifact") or {}
+    if not isinstance(old, dict):
+        old = {}
+    current = parsed.get("agentic-artifact") or {}
+    old_v3 = isinstance(old, dict) and old.get("schema") == "agentic-artifact/v3"
+    new_v3 = isinstance(current, dict) and current.get("schema") == "agentic-artifact/v3"
+    if old_v3 and not new_v3:
+        raise CheckError(f"v3 metadata must not be downgraded or removed: {path}")
+    if not parsed and status == "M" and not previous and previous_text is not None:
+        return False  # Grandfather only files which already had no header in HEAD.
+    if new_v3:
+        if old_v3 and current.get("created_on") != old.get("created_on"):
+            raise CheckError(f"created_on is immutable after v3 adoption: {path}")
+        if status == "R" and old.get("id") and current.get("id") != old["id"]:
+            raise CheckError(f"artifact id must be preserved across a rename: {path}")
+        if old_v3:
+            for field in ("deprecated_on", "superseded_on"):
+                if field in old and field not in current and current.get("status") not in ("active", "draft"):
+                    raise CheckError(f"{field} must be retained unless the artifact is reactivated: {path}")
+                if field in old and field in current and old[field] != current[field]:
+                    raise CheckError(f"{field} is immutable while retained: {path}")
+        text = read_text(path)
+        if previous_text is None or without_lifecycle_dates(path, text) != without_lifecycle_dates(path, previous_text):
+            if current.get("updated_on") != TODAY.isoformat():
+                raise CheckError(f"updated_on must be today's UTC date for changed content: {path}")
+        for field, event_status in (("deprecated_on", "deprecated"), ("superseded_on", "superseded")):
+            new_transition = current.get("status") == event_status and old.get("status") != event_status
+            new_retained_event = current.get("status") == "retired" and field in current and field not in old and old_v3
+            if (new_transition or new_retained_event) and current.get(field) != TODAY.isoformat():
+                raise CheckError(f"{field} must be today's UTC date for a new lifecycle transition: {path}")
+    return True
+
+
+def load_proposed() -> None:
+    try:
+        with os.fdopen(3, "r", encoding="utf-8") as handle:
+            proposed = json.load(handle)
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise CheckError(f"--proposed requires a JSON path-to-text object on stdin: {exc}") from exc
+    if not isinstance(proposed, dict) or not proposed:
+        raise CheckError("--proposed requires a non-empty JSON path-to-text object")
+    for path, text in proposed.items():
+        parts = PurePosixPath(path)
+        if not path or parts.is_absolute() or ".." in parts.parts or "\\" in path or parts.as_posix() != path:
+            raise CheckError(f"unsafe proposed repository path: {path}")
+        if not (ROOT / path).resolve().is_relative_to(ROOT.resolve()):
+            raise CheckError(f"proposed path resolves outside the repository: {path}")
+        if not is_relevant_path(path):
+            raise CheckError(f"proposed path is outside metadata coverage: {path}")
+        if not isinstance(text, str):
+            raise CheckError(f"proposed file text must be a string: {path}")
+        PROPOSED[path] = text
+
+
 def main(argv: list[str]) -> int:
+    global STAGED, LAYERS, DISCIPLINES, PORTABILITY_CLASSES, SCRIPT_EFFECTS
     args = parse_args(argv)
-    if args.staged_added:
-        paths = collect_staged_added_paths()
+    STAGED = args.staged or args.staged_added
+    try:
+        changes = collect_staged_changes(args.staged) if STAGED else {}
+        if STAGED:
+            load_index_entries()
+        if args.proposed:
+            load_proposed()
+        taxonomy = load_taxonomy()
+        LAYERS = {entry["id"] for entry in taxonomy.get("layers", [])}
+        DISCIPLINES = set(taxonomy.get("disciplines", []))
+        PORTABILITY_CLASSES = set(taxonomy.get("portability_classes", []))
+        SCRIPT_EFFECTS = set(taxonomy.get("script_effects", []))
+    except CheckError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    if args.proposed:
+        paths = sorted(PROPOSED)
+    elif STAGED:
+        paths = sorted(changes)
     elif args.all:
         paths = collect_all_paths()
     else:
         paths = collect_paths_from_args(args.paths or [])
-
-    failures = 0
-    checked = 0
+    failures = checked = grandfathered = 0
     for path in paths:
         if not path or not is_relevant_path(path):
             continue
-        if not (ROOT / path).is_file():
+        if not path_exists(path):
             continue
-        checked += 1
         try:
-            validate_path(path)
+            parsed = parse_header(path)
+            if args.staged and not validate_staged_maintenance(path, changes[path], parsed):
+                grandfathered += 1
+                continue
+            checked += 1
+            validate_path(path, parsed)
         except CheckError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             failures += 1
-
+    if args.staged:
+        # A target can change without its inbound sources appearing in the diff.
+        # Validate those sources against the same staged snapshot, without
+        # requiring unchanged files to refresh their lifecycle dates.
+        for path in sorted(INDEX_ENTRIES):
+            if path in changes or not is_relevant_path(path) or not is_regular_file(path):
+                continue
+            try:
+                metadata = parse_header(path).get("agentic-artifact")
+                if isinstance(metadata, dict) and metadata.get("schema") == "agentic-artifact/v3" and "superseded_by" in metadata:
+                    validate_replacement_graph(path, metadata, [])
+            except CheckError as exc:
+                print(f"ERROR: {exc}", file=sys.stderr)
+                failures += 1
     if failures:
         print(f"Artifact metadata header check failed: {failures} file(s).", file=sys.stderr)
         return 1
-
-    print(f"Artifact metadata headers passed for {checked} file(s).")
+    print(f"Artifact metadata headers passed for {checked} file(s); {grandfathered} existing headerless modification(s) grandfathered.")
     return 0
 
 

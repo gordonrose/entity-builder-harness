@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-20"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: upstream
 #   disciplines:
@@ -194,6 +196,7 @@ plan_templates() {
   local file
   local relative_template
   local relative_path
+  local rendered_template
 
   while IFS= read -r file; do
     relative_template="${file#$TEMPLATE_ROOT/}"
@@ -203,8 +206,72 @@ plan_templates() {
       continue
     fi
 
-    plan_file "$file" "$relative_path"
+    rendered_template="$TMP_DIR/templates/$relative_path"
+    mkdir -p "$(dirname "$rendered_template")"
+    render_template "$file" "$TARGET_REPO/$relative_path" "$rendered_template"
+    plan_file "$rendered_template" "$relative_path"
   done < <(find "$TEMPLATE_ROOT" -type f -name '*.template' | sort)
+}
+
+render_template() {
+  local source="$1"
+  local target="$2"
+  local rendered="$3"
+
+  node - "$source" "$target" "$rendered" <<'NODE'
+const fs = require('fs');
+const [source, target, rendered] = process.argv.slice(2);
+const template = fs.readFileSync(source, 'utf8');
+const createdToken = '{{ARTIFACT_CREATED_ON}}';
+const updatedToken = '{{ARTIFACT_UPDATED_ON}}';
+function writeRendered(content) {
+  fs.writeFileSync(rendered, content);
+  fs.chmodSync(rendered, fs.statSync(source).mode & 0o777);
+}
+if (!template.includes(createdToken) && !template.includes(updatedToken)) {
+  writeRendered(template);
+  process.exit(0);
+}
+if (!template.includes(createdToken) || !template.includes(updatedToken)) {
+  throw new Error(`incomplete artifact lifecycle placeholders in ${source}`);
+}
+const today = new Date().toISOString().slice(0, 10);
+function header(text) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((line, index) => index < 100 && /^# agentic-artifact:\s*$/.test(line));
+  if (start < 0) return '';
+  let end = start + 1;
+  while (end < lines.length && /^#/.test(lines[end])) end += 1;
+  return lines.slice(start + 1, end).join('\n');
+}
+function field(block, name) {
+  const matches = [...block.matchAll(new RegExp(`^#\\s+${name}:\\s*(.*?)\\s*$`, 'gm'))];
+  return matches.length === 1 ? matches[0][1] : null;
+}
+function validDate(value) {
+  if (!value || !/^"\d{4}-\d{2}-\d{2}"$/.test(value)) return null;
+  const date = value.slice(1, -1);
+  const parsed = new Date(`${date}T00:00:00Z`);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === date && date <= today
+    ? date : null;
+}
+let created = today;
+let updated = today;
+const existing = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : null;
+if (existing !== null) {
+  const previous = header(existing);
+  const priorCreated = validDate(field(previous, 'created_on'));
+  const priorUpdated = validDate(field(previous, 'updated_on'));
+  if (field(previous, 'schema') === 'agentic-artifact/v3'
+      && field(previous, 'id') === field(header(template), 'id')
+      && priorCreated && priorUpdated && priorCreated <= priorUpdated) {
+    created = priorCreated;
+    const unchanged = template.replaceAll(createdToken, priorCreated).replaceAll(updatedToken, priorUpdated);
+    if (unchanged === existing) updated = priorUpdated;
+  }
+}
+writeRendered(template.replaceAll(createdToken, created).replaceAll(updatedToken, updated));
+NODE
 }
 
 plan_package_json() {
@@ -442,6 +509,25 @@ for (const file of files) {
     return false;
   });
   if (changed) {
+    const start = sanitized.findIndex((line, index) => index < 100 &&
+      /^\s*(?:<!--|#|\/\/)\s*agentic-artifact:\s*$/.test(line));
+    if (start >= 0) {
+      const markdown = sanitized[start].includes('<!--');
+      let end = start + 1;
+      while (end < sanitized.length &&
+          (markdown ? !/^\s*-->\s*$/.test(sanitized[end]) : /^\s*(?:#|\/\/)/.test(sanitized[end]))) {
+        end += 1;
+      }
+      const header = sanitized.slice(start + 1, end);
+      if (header.some((line) => /^\s*(?:(?:#|\/\/)\s*)?schema:\s*agentic-artifact\/v3\s*$/.test(line))) {
+        const updated = header.findIndex((line) => /^\s*(?:(?:#|\/\/)\s*)?updated_on:/.test(line));
+        if (updated < 0) throw new Error(`v3 artifact is missing updated_on: ${file}`);
+        const index = start + 1 + updated;
+        const prefix = sanitized[index].slice(0, sanitized[index].indexOf('updated_on:'));
+        const ending = sanitized[index].endsWith('\r') ? '\r' : '';
+        sanitized[index] = `${prefix}updated_on: "${new Date().toISOString().slice(0, 10)}"${ending}`;
+      }
+    }
     fs.writeFileSync(fullPath, sanitized.join('\n'), 'utf8');
   }
 }

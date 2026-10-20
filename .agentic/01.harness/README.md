@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.readme
 version: 1
 status: active
+created_on: "2026-06-15"
+updated_on: "2026-10-20"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -74,7 +76,7 @@ workflow.
 ## Capabilities
 
 - `artifact-metadata/` - owns the versioned artifact metadata model, taxonomy,
-  v2 schema contract, and future artifact index generator guidance.
+  versioned lifecycle contracts, date maintenance, and artifact indexing.
 - `agents/` - defines reusable harness review agents, use-case quality bars,
   and bounded review roles for single-agent and review-board work.
 

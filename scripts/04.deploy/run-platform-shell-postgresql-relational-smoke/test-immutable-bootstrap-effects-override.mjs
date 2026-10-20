@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: deploy.script.run-platform-shell-postgresql-relational-smoke.test-immutable-bootstrap-effects-override
 //   version: 1
 //   status: active
+//   created_on: "2026-10-04"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: runtime.operations
 //   disciplines:

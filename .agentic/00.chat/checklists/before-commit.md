@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.checklists.before-commit
   version: 1
   status: active
+  created_on: "2026-06-15"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: git
   disciplines:
@@ -62,12 +64,16 @@ script or gate, or keeping the prose with an allow marker and reason.
 Run:
 
 ```bash
-bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged-added
+bash scripts/01.harness/artifact-metadata/check-headers/script.sh --staged
 ```
 
-New scripts and harness/process Markdown documents must declare metadata
-headers before entering the repo. Existing files are backfilled in focused
-batches.
+New artifact files require metadata. The checker validates staged additions,
+copies, renames and modifications, including v3 lifecycle dates and replacement
+references. Existing v1/v2 artifacts remain valid during focused migration;
+ordinary modifications to legacy files without headers remain grandfathered.
+Prepare lifecycle dates and replacement references before staging. For v3
+artifacts, preserve `created_on` and set `updated_on` to today's UTC date when
+content changes. The gate itself does not write or stage files.
 
 ## Repository Extensions
 

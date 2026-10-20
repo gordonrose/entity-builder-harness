@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: repo.script.commit-gates
 #   version: 1
 #   status: active
+#   created_on: "2026-07-04"
+#   updated_on: "2026-10-20"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines:
@@ -36,7 +38,7 @@ run_if_executable() {
 }
 
 run_if_executable "scripts/01.harness/check-deterministic-process-drift.sh" --staged
-run_if_executable "scripts/01.harness/artifact-metadata/check-headers/script.sh" --staged-added
+run_if_executable "scripts/01.harness/artifact-metadata/check-headers/script.sh" --staged
 run_if_executable "scripts/01.harness/check-governed-script-command-drift.sh"
 
 echo "Repository commit extension gates passed."

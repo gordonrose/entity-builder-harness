@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.backfill-v2-headers
-#   version: 1
+#   version: 2
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -123,7 +125,7 @@ from pathlib import Path
 
 ROOTS = [Path(".agentic"), Path("docs"), Path("scripts")]
 EXTENSIONS = {".md", ".yml", ".yaml", ".sh"}
-counts = {"v2": 0, "legacy": 0, "missing": 0}
+counts = {"v2": 0, "v3": 0, "legacy": 0, "missing": 0}
 for root in ROOTS:
     if not root.exists():
         continue
@@ -131,13 +133,26 @@ for root in ROOTS:
         if not path.is_file() or path.suffix.lower() not in EXTENSIONS:
             continue
         text = path.read_text(encoding="utf-8")
-        if "schema: agentic-artifact/v2" in text and "agentic-artifact:" in text:
+        # Inspect only the first header, never examples in the document body.
+        lines = text.splitlines()
+        header_lines = []
+        for index, line in enumerate(lines[:120]):
+            if "agentic-artifact:" not in line and "agentic-script:" not in line:
+                continue
+            for following in lines[index + 1:]:
+                if "-->" in following or not following.strip():
+                    break
+                header_lines.append(following.lstrip("# /"))
+            break
+        if "schema: agentic-artifact/v3" in header_lines:
+            counts["v3"] += 1
+        elif "schema: agentic-artifact/v2" in header_lines:
             counts["v2"] += 1
         elif "agentic-artifact:" in text or "agentic-script:" in text:
             counts["legacy"] += 1
         else:
             counts["missing"] += 1
-print(f"v2={counts['v2']} legacy={counts['legacy']} missing={counts['missing']}")
+print(f"v2={counts['v2']} v3={counts['v3']} legacy={counts['legacy']} missing={counts['missing']}")
 PY
     exit 0
     ;;
@@ -271,13 +286,19 @@ def existing_metadata(path: Path) -> dict[str, Any]:
     return {}
 
 
-def has_v2(path: Path) -> bool:
-    return existing_metadata(path).get("schema") == "agentic-artifact/v2"
+def has_versioned_header(path: Path) -> bool:
+    metadata = existing_metadata(path)
+    schema = metadata.get("schema")
+    if schema in {"agentic-artifact/v2", "agentic-artifact/v3"}:
+        return True
+    if "schema" in metadata and schema not in {"agentic-artifact/v1", "agentic-script/v1"}:
+        raise ValueError(f"Unsupported metadata schema in {path}: {schema}")
+    return False
 
 
 def selected_for_batch(path: Path) -> bool:
     s = path.as_posix()
-    if has_v2(path):
+    if has_versioned_header(path):
         return False
     if batch == 1:
         return s in {
@@ -699,7 +720,7 @@ def replace_header(path: Path, payload: dict[str, Any]) -> None:
 
 selected = [path for path in all_artifacts() if selected_for_batch(path)]
 if not selected:
-    raise SystemExit(f"Batch {batch} has no remaining non-v2 artifacts.")
+    raise SystemExit(f"Batch {batch} has no remaining artifacts requiring v2 backfill.")
 for path in selected:
     replace_header(path, v2_payload(path))
 for path in selected:

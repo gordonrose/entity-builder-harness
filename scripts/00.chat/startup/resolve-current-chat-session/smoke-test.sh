@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.startup.resolve-current-chat-session.smoke-test
 #   version: 1
 #   status: active
+#   created_on: "2026-06-25"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:

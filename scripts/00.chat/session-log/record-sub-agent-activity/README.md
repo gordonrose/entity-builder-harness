@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.script.session-log.record-sub-agent-activity.readme
   version: 1
   status: active
+  created_on: "2026-07-09"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: session-log
   disciplines:

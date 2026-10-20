@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.schema.runnable-program-contract.v1.guide
 version: 1
 status: draft
+created_on: "2026-10-19"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:

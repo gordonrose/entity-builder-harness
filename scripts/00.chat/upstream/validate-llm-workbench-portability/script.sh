@@ -2,10 +2,12 @@
 set -euo pipefail
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: chat.script.upstream.validate-llm-workbench-portability
 #   version: 1
 #   status: active
+#   created_on: "2026-07-03"
+#   updated_on: "2026-10-20"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -226,6 +228,8 @@ require_grep 'CHAT_TRANSCRIPT_PROVIDER' "$WORKBENCH_REPO/docs/workflows.md"
     > "$TMP_ROOT/public-contract-check.out"
   bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all \
     > "$TMP_ROOT/public-check-headers-all.out"
+  bash scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh \
+    > "$TMP_ROOT/public-check-headers-smoke.out"
   bash scripts/00.chat/session-log/record-chat-commit/smoke-test.sh \
     > "$TMP_ROOT/public-record-chat-commit-smoke.out"
   node scripts/00.chat/metrics/estimate-chat-cost/script.js 1024 \

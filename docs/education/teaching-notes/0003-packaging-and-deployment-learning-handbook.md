@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
   version: 21
   status: active
+  created_on: "2026-10-07"
+  updated_on: "2026-10-20"
   layer: 05.education
   domain: education
   disciplines:

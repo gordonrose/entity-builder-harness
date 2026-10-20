@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.architecture.adr.0035-require-fail-closed-staging-deployment-reconciliation
 version: 2
 status: active
+created_on: "2026-09-26"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:

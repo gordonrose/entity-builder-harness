@@ -1,0 +1,78 @@
+{
+  "mode": "apply",
+  "today_utc": "2026-10-20",
+  "plans": [
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "id": "rag-rulebook.recognition-source.generated.artifacts",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-10-06",
+        "last_commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "f4d6b9dcfd4768c700e8e028de2aacccb4b525f9",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-06",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "9a06808326234f5cf9b907f3325f9bdb522a528a1e1c035d9a7217ebdb2276dd",
+      "sha256_after": "11a1d4797090e3897d9aa8211cc0de07c155785f92aea92f035299ff27a78d34"
+    },
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
+      "id": "rag-rulebook.recognition-source.generated.routing",
+      "changed": true,
+      "content_differs_from_head": true,
+      "creation_evidence": {
+        "last_committed_on": "2026-10-06",
+        "last_commit": "9868be3a9bede808dd5bf3872d1a89fa64c62503",
+        "basis": "git-first-added",
+        "created_on": "2026-06-25",
+        "commit": "ce34f141705a93a68a7d91eb12350bb5714ee62c",
+        "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+      },
+      "last_committed_on": "2026-10-06",
+      "before": {
+        "schema": "agentic-artifact/v2",
+        "status": "active",
+        "created_on": null,
+        "updated_on": null,
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-06-25",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "297a6e85ca584d494464b6660d7433179e541912d920c128d75d3bcf6a3c9366",
+      "sha256_after": "51f637c23f6e4ba445313f4a3a3f269975e0cde14cd72607211505aa3bfa2b57"
+    }
+  ],
+  "errors": [],
+  "applied": true
+}

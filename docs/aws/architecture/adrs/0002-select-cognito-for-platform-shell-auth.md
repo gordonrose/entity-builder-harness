@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
   version: 2
   status: active
+  created_on: "2026-07-11"
+  updated_on: "2026-10-20"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:

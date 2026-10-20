@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: harness.architecture.source-material.untrusted-input-and-bounded-agent-safety-v1
 version: 1
 status: active
+created_on: "2026-09-05"
+updated_on: "2026-10-20"
 layer: 03.product
 domain: architecture
 disciplines:

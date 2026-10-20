@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: infra.04-deploy.03-product.targets.readme
 version: 4
 status: active
+created_on: "2026-09-08"
+updated_on: "2026-10-20"
 layer: 04.deploy
 domain: infra.observability
 disciplines:

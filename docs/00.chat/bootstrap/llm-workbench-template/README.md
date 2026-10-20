@@ -1,8 +1,10 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v2
+  schema: agentic-artifact/v3
   id: chat.bootstrap.llm-workbench-template.readme
-  version: 1
+  version: 2
   status: active
+  created_on: "2026-06-20"
+  updated_on: "2026-10-20"
   layer: 00.chat
   domain: bootstrap
   disciplines:
@@ -34,11 +36,20 @@ The bootstrap workflow should:
 - inspect the source repo and upstream repo before writing
 - copy canonical harness files listed in the readiness manifest
 - transform the files in `root/` by removing the `.template` suffix
+- render lifecycle date placeholders in script headers with the generated
+  artifact's creation and update dates in UTC
 - preserve the relative paths below `root/`
 - run the public install smoke test in the upstream repo before commit
 
 The template is not a substitute for the bootstrap workflow. It is starter
 material for the public product shell.
+
+The install and uninstall scaffolds use `{{ARTIFACT_CREATED_ON}}` and
+`{{ARTIFACT_UPDATED_ON}}`. The bootstrap planner supplies today's date for new
+artifacts and preserves valid existing dates when generated content is unchanged.
+Do not replace these placeholders with the template file's own creation date:
+they describe the instantiated script. Unrendered scaffolds are not standalone
+v3 artifacts and must not be installed by raw copy.
 
 ## Template Paths
 
