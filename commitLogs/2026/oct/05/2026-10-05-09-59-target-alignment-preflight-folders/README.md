@@ -215,6 +215,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Both endpoint and task execution-role logging permissions now use the same exact log-stream ARN contract.
   Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
 
+
+- Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
+  Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
+
 ## Context Hygiene
 
 
@@ -1332,6 +1336,13 @@ Message: fix(deploy): allow task log streams
 Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
 
 ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T20:20:17Z - Decision
+
+Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
+
+Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
 
 ## Sub-Agent Activity
 

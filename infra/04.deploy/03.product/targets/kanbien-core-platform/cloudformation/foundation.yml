@@ -23,6 +23,10 @@ Parameters:
     Type: String
     AllowedPattern: '^(10|172|192)\.[0-9]{1,3}\.[0-9]{1,3}\.0/[0-9]{1,2}$'
   PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  S3ArtifactPrefixListId:
+    Type: String
+    Description: AWS-managed S3 prefix list for private image-layer retrieval in this region.
+    AllowedPattern: '^pl-[a-z0-9]+$'
   ExistingRepositoryArn:
     Type: String
     AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$'
@@ -84,6 +88,9 @@ Resources:
   ServiceEndpointEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroup }
+  ServiceS3ArtifactEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
   VerifierDnsUdpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref VerifierSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
@@ -93,6 +100,9 @@ Resources:
   VerifierEndpointEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref VerifierSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroup }
+  VerifierS3ArtifactEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref VerifierSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
   VerifierServerEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref VerifierSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServiceSecurityGroup }

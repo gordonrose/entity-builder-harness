@@ -29,4 +29,8 @@ these files declare what must be decided, not a provider resource to create.
 `technical-access.yml` separates the future delivery identity from the
 workload startup identity. `network.yml` reserves a private verifier boundary;
 it deliberately declares no public ingress, endpoint, security group, or
-network identifier.
+network identifier. It also declares the distinct private paths needed to
+retrieve an immutable image: registry control plane, registry data plane, and
+the object store that serves image layers. The latter must be restricted to the
+provider-managed object-store prefix list, not widened to general internet
+egress.

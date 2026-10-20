@@ -29,6 +29,15 @@ private_verifier_route:
   permitted_caller: selected-private-verifier-only
   owner: network-owner
   evidence: read-only-private-route-feasibility-inspection
+private_image_retrieval:
+  status: required
+  transport: tcp/443
+  destinations:
+    - image-registry-control-plane
+    - image-registry-data-plane
+    - image-layer-object-store
+  restriction: only the target region's provider-managed object-store prefix list may be used for image-layer retrieval; broad internet egress is prohibited
+  evidence: workload-security-group-and-private-route-inspection
 forbidden:
   - public-load-balancer
   - public-dns

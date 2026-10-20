@@ -82,6 +82,11 @@ assert expected in endpoint.group(0), "missing exact CloudWatch Logs endpoint po
 assert "Resource: !Sub '${LogGroup.Arn}:log-stream:*'" not in endpoint.group(0)
 assert template.count(expected) == 2, "endpoint and execution-role policies must use the exact log-stream ARN"
 assert "Resource: !Sub '${LogGroup.Arn}:log-stream:*'" not in template
+assert "S3ArtifactPrefixListId:" in template, "private image-layer retrieval must require an object-store prefix list"
+for group in ("ServiceSecurityGroup", "VerifierSecurityGroup"):
+    expected_egress = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
+    assert expected_egress in template, f"{group} must permit private image-layer retrieval only through the managed object-store prefix list"
+assert "CidrIp: 0.0.0.0/0" not in template, "foundation must not widen private workload egress to the internet"
 PY
 
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py" <<'PY'
