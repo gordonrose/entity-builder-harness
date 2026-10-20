@@ -21,3 +21,8 @@ used_by:
 Add standards here only when they apply across providers. Provider-specific
 requirements remain in their active provider governance surface during the
 transition.
+
+Current standards:
+
+- `runnable-program-candidates.md`: declares the reviewed source boundary for
+  a runnable program, its package candidate, and safe qualification evidence.

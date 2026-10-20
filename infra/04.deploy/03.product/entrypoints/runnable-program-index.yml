@@ -1,0 +1,85 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.entrypoints.runnable-program-index
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: manifest
+#   purpose: Record the factual runnable-program and package-candidate boundary for the Kanbien core bootstrap server.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.workflow.runnable-program-candidates
+#     path: .agentic/04.deploy/workflows/runnable-program-candidates.md
+#   - id: deploy.command.core-server-dependency-boundary
+#     path: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh
+schema: deploy/runnable-program-contract/v1
+id: kanbien-core-server-candidate
+version: 1
+runnable_programs:
+  - id: kanbien-core-server
+    source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+    entrypoint: artifacts/kanbien-core-server.main.js
+    role: http-server
+    configuration_boundary: platform/server/src/configuration/
+    dependency_failure_boundary: platform/server/src/configuration/
+    local_proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
+    owner: 04.deploy/03.product
+    approved_dependencies:
+      - core
+      - platform-config
+      - platform-contracts
+      - platform-health
+      - platform-observability
+      - platform-runtime
+      - platform-security
+      - platform-server
+    observed_dependencies:
+      - core
+      - platform-config
+      - platform-contracts
+      - platform-health
+      - platform-observability
+      - platform-runtime
+      - platform-security
+      - platform-server
+    forbidden_dependencies:
+      - app-platform-smoke
+      - platform-adapter-aws
+      - platform-persistence
+      - platform-workers
+      - product-kanbien-platform
+      - staging-platform-server
+      - postgresql
+      - relay
+      - worker
+image_contracts:
+  - id: kanbien-core-server-image
+    program: kanbien-core-server
+    command_mode: exec
+    command:
+      - node
+      - artifacts/kanbien-core-server.main.js
+package_candidates:
+  - id: kanbien-core-server-candidate
+    image_contract: kanbien-core-server-image
+    immutable_identity_rule: runtime-bound-sha256
+candidate_verification:
+  candidate: kanbien-core-server-candidate
+  required_evidence_fields:
+    - package_contract_id
+    - candidate_id
+    - program_id
+    - source_revision
+    - image_digest
+    - release_identity
+    - health_verdict
+    - verification_verdict
+    - checked_at
+    - receipt_reference

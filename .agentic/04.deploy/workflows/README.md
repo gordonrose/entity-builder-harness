@@ -21,3 +21,8 @@ used_by:
 Add only workflows that apply independently of a specific target provider.
 AWS-specific execution authority remains under `.agentic/aws/` during the
 transition.
+
+Current workflows:
+
+- `runnable-program-candidates.md`: reviews a program's declaration before
+  package construction, without building or publishing a package.

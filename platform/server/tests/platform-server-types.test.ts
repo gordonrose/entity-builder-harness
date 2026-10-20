@@ -8,6 +8,9 @@ import {
 import { createPlatformTestMountDeps } from "@kanbien/platform-testing";
 import {
   createPlatformServerShell,
+  platformReleaseVerificationResponse,
+  resolvePlatformReleaseIdentity,
+  resolvePlatformServerRuntimeConfiguration,
   type PlatformServerAuthHook,
   type PlatformHealthExposurePolicy,
   type PlatformServerMiddlewareStep,
@@ -61,6 +64,18 @@ const response: PlatformServerResponse = {
   middleware: ["request-id", "handler"] satisfies readonly PlatformServerMiddlewareStep[],
 };
 void response;
+
+const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
+  env: {
+    PORT: "3001",
+    PLATFORM_SOURCE_COMMIT_SHA: "release_2026.10.19",
+  },
+});
+void runtimeConfiguration.config;
+const releaseVerification = platformReleaseVerificationResponse(
+  resolvePlatformReleaseIdentity("release_2026.10.19"),
+);
+void releaseVerification;
 
 // @ts-expect-error server requests are constrained to known HTTP methods.
 createPlatformServerShell({ apps: [app], deps: createPlatformTestMountDeps() }).then((created) => created.ok && created.value.handle({ method: "TRACE", path: "/x" }));

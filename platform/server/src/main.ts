@@ -1,4 +1,4 @@
-import { recordConfigSource, type ConfigRecord } from "@kanbien/core/config";
+import { recordConfigSource } from "@kanbien/core/config";
 import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { noopMetrics, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { systemClock, type Result } from "@kanbien/core/shared";
@@ -19,6 +19,8 @@ import {
   type PlatformServerShell,
   type PlatformServerTransportOptions,
 } from "./index";
+import { resolvePlatformServerRuntimeConfiguration } from "./configuration";
+import type { PlatformReleaseIdentity } from "./verification";
 
 export interface PlatformServerProcessOptions {
   readonly apps?: readonly PlatformApp[];
@@ -43,6 +45,7 @@ export interface PlatformServerProcessOptions {
 export interface PlatformServerProcess {
   readonly shell: PlatformServerShell;
   readonly handle: PlatformServerHandle;
+  readonly releaseIdentity: PlatformReleaseIdentity;
   close(): Promise<void>;
 }
 
@@ -51,7 +54,12 @@ export async function startPlatformServerProcess(
 ): Promise<Result<PlatformServerProcess, PlatformServerError>> {
   const env = options.env ?? process.env;
   const logger = options.logger ?? consoleJsonLogger;
-  const deps = createServerProcessMountDeps(env, logger, options.configKeys ?? [], options.metrics ?? noopMetrics);
+  const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
+    env,
+    ...(options.configKeys === undefined ? {} : { extraConfigKeys: options.configKeys }),
+    hasAuthentication: options.auth !== undefined,
+  });
+  const deps = createServerProcessMountDeps(runtimeConfiguration.config, logger, options.metrics ?? noopMetrics);
   const shell = await createPlatformServerShell({
     apps: options.apps ?? [],
     deps,
@@ -60,12 +68,9 @@ export async function startPlatformServerProcess(
     ...(options.clientAddressResolver === undefined ? {} : { clientAddressResolver: options.clientAddressResolver }),
     ...(options.tracer === undefined ? {} : { tracer: options.tracer }),
     ...(options.transport === undefined ? {} : { transport: options.transport }),
-    ...(env["PLATFORM_CORS_ORIGIN"] === undefined ? {} : { corsOrigin: env["PLATFORM_CORS_ORIGIN"] }),
-    ...(env["PLATFORM_CORS_ALLOWLIST"] === undefined ? {} : { corsAllowlist: csvEnv(env["PLATFORM_CORS_ALLOWLIST"]) }),
-    healthExposure: {
-      liveness: healthExposureFromEnv(env["PLATFORM_HEALTH_LIVEZ_EXPOSURE"], "public"),
-      readiness: healthExposureFromEnv(env["PLATFORM_HEALTH_READYZ_EXPOSURE"], options.auth === undefined ? "public" : "authenticated"),
-    },
+    ...(runtimeConfiguration.corsOrigin === undefined ? {} : { corsOrigin: runtimeConfiguration.corsOrigin }),
+    ...(runtimeConfiguration.corsAllowlist === undefined ? {} : { corsAllowlist: runtimeConfiguration.corsAllowlist }),
+    healthExposure: runtimeConfiguration.healthExposure,
   });
 
   if (!shell.ok) {
@@ -88,8 +93,8 @@ export async function startPlatformServerProcess(
   let handle: PlatformServerHandle;
   try {
     handle = await shell.value.listen({
-      port: options.port ?? numberFromEnv(env, "PORT", 3000),
-      host: options.host ?? env["HOST"] ?? "0.0.0.0",
+      port: options.port ?? runtimeConfiguration.port,
+      host: options.host ?? runtimeConfiguration.host,
     });
   } catch {
     await shell.value.lifecycle.shutdown();
@@ -105,6 +110,7 @@ export async function startPlatformServerProcess(
   const processHandle = {
     shell: shell.value,
     handle,
+    releaseIdentity: runtimeConfiguration.releaseIdentity,
     close: async () => {
       const draining = shell.value.lifecycle.beginDrain();
       if (!draining.ok) {
@@ -128,6 +134,9 @@ export async function startPlatformServerProcess(
     fields: {
       port: handle.port,
       host: handle.host ?? "0.0.0.0",
+      ...(runtimeConfiguration.releaseIdentity.sourceCommitSha === undefined
+        ? {}
+        : { sourceCommitSha: runtimeConfiguration.releaseIdentity.sourceCommitSha }),
     },
   });
 
@@ -155,53 +164,19 @@ export async function runPlatformServerMain(): Promise<void> {
 }
 
 function createServerProcessMountDeps(
-  env: NodeJS.ProcessEnv,
+  config: import("@kanbien/core/config").ConfigRecord,
   logger: Logger,
-  extraConfigKeys: readonly string[],
   metrics: Metrics,
 ): PlatformMountDeps {
   return {
     logger,
     metrics,
-    config: recordConfigSource(configRecordFromEnv(env, extraConfigKeys)),
+    config: recordConfigSource(config),
     flags: fixedFeatureFlagReader({}),
     clock: systemClock,
   };
 }
 
-function configRecordFromEnv(env: NodeJS.ProcessEnv, extraConfigKeys: readonly string[]): ConfigRecord {
-  const values: Record<string, string> = {};
-
-  for (const key of [...platformConfigEnvKeys, ...extraConfigKeys]) {
-    const value = env[key];
-    if (value !== undefined) {
-      values[key] = value;
-    }
-  }
-
-  return values;
-}
-
-function numberFromEnv(env: NodeJS.ProcessEnv, key: string, fallback: number): number {
-  const value = env[key];
-  if (value === undefined || value.length === 0) {
-    return fallback;
-  }
-
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 && parsed <= 65_535 ? parsed : fallback;
-}
-
-function csvEnv(value: string): readonly string[] {
-  return value.split(",").map((item) => item.trim()).filter((item) => item.length > 0);
-}
-
-function healthExposureFromEnv(
-  value: string | undefined,
-  fallback: "public" | "authenticated",
-): "public" | "authenticated" {
-  return value === "authenticated" || value === "public" ? value : fallback;
-}
 
 function installShutdownHandlers(processHandle: PlatformServerProcess, logger: Logger): void {
   let shuttingDown = false;
@@ -233,17 +208,6 @@ const consoleJsonLogger: Logger = {
     console.log(line);
   },
 };
-
-const platformConfigEnvKeys = [
-  "NODE_ENV",
-  "HOST",
-  "PORT",
-  "PLATFORM_CORS_ORIGIN",
-  "PLATFORM_CORS_ALLOWLIST",
-  "PLATFORM_HEALTH_LIVEZ_EXPOSURE",
-  "PLATFORM_HEALTH_READYZ_EXPOSURE",
-  "PLATFORM_SOURCE_COMMIT_SHA",
-] as const;
 
 if (typeof require !== "undefined" && require.main === module) {
   void runPlatformServerMain();

@@ -26,10 +26,33 @@ import {
   createPlatformTestMountDeps,
   validatorForTest,
 } from "@kanbien/platform-testing";
-import { createPlatformServerShell } from "../src/index";
+import {
+  createPlatformServerShell,
+  platformReleaseVerificationResponse,
+  resolvePlatformReleaseIdentity,
+  resolvePlatformServerRuntimeConfiguration,
+} from "../src/index";
 import { startPlatformServerProcess } from "../src/main";
 
 async function main(): Promise<void> {
+  const runtimeConfiguration = resolvePlatformServerRuntimeConfiguration({
+    env: {
+      HOST: "127.0.0.1",
+      PORT: "4100",
+      PLATFORM_CORS_ALLOWLIST: "https://first.example.test, https://second.example.test",
+      PLATFORM_SOURCE_COMMIT_SHA: "release_2026.10.19",
+    },
+  });
+  equal(runtimeConfiguration.host, "127.0.0.1");
+  equal(runtimeConfiguration.port, 4100);
+  deepEqual(runtimeConfiguration.corsAllowlist, ["https://first.example.test", "https://second.example.test"]);
+  deepEqual(platformReleaseVerificationResponse(runtimeConfiguration.releaseIdentity), {
+    release: { sourceCommitSha: "release_2026.10.19" },
+  });
+  deepEqual(platformReleaseVerificationResponse(resolvePlatformReleaseIdentity("secret value with spaces")), {
+    release: {},
+  });
+
   const appId = platformAppId("smoke");
   const routeName = platformRouteName("smoke.echo");
   const publicRouteName = platformRouteName("smoke.public");

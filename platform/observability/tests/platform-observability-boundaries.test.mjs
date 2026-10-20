@@ -12,7 +12,7 @@ const importSpecifierPatterns = [
   /\bexport\s+(?:type\s+)?[^"']*?\s+from\s+["']([^"']+)["']/g,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];
-const allowedSourceImportPattern = /^@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-contracts|platform-persistence)$/;
+const allowedSourceImportPattern = /^@kanbien\/(?:core(?:\/[a-z][a-z0-9-]*)?|platform-contracts)$/;
 const forbiddenProviderWords = /\b(?:S3|Kafka|Redis|Prisma|DynamoDB|CloudWatch|SQS|EventBridge)\b/;
 
 async function walk(dir) {
@@ -44,7 +44,7 @@ assert.equal(packageJson.name, "@kanbien/platform-observability");
 assert.equal(packageJson.exports?.["."], "./src/index.ts");
 assert.equal(packageJson.dependencies?.["@kanbien/core"], "0.0.0");
 assert.equal(packageJson.dependencies?.["@kanbien/platform-contracts"], "0.0.0");
-assert.equal(packageJson.dependencies?.["@kanbien/platform-persistence"], "0.0.0");
+assert.equal(packageJson.dependencies?.["@kanbien/platform-persistence"], undefined);
 
 const sourceFiles = (await walk(srcRoot)).filter((file) => file.endsWith(".ts"));
 assert.ok(sourceFiles.length > 0, "platform/observability should expose source files");

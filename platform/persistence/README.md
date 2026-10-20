@@ -14,7 +14,9 @@ application entity. The first provider implementation will live separately at
 | File | Owns | Does not own |
 | --- | --- | --- |
 | `errors.ts` | Stable, provider-neutral platform-persistence failure meanings. | Provider exception objects or application error policy. |
-| `observability.ts` | Closed no-payload transition vocabulary and best-effort observer port. | Logging, metric, trace-provider selection, profile policy, or cloud delivery. |
+| `observability/port.ts` | Closed no-payload transition vocabulary and best-effort observer port. | Logging, metric, trace-provider selection, profile policy, or cloud delivery. |
+| `observability/integration.ts` | Persistence-owned translation from a closed transition into generic observability helpers. | Provider selection, telemetry delivery, or cloud configuration. |
+| `observability/index.ts` | Deliberate transition-observability exports. | A second package or target boundary. |
 | `types.ts` | Mutable outbox/processing record shapes, attempts, leases, fences, and safe constructors. | A database representation or target configuration. |
 | `outbox.ts` | Pending-entry storage port, claim/lease/publish transitions, and deterministic in-memory proof store. | Queue sends; a relay calls a queue adapter after it claims an entry. |
 | `processing.ts` | Worker claim, release-for-retry, and completion transitions; duplicate recognition; and stale-fence rejection. | A job handler's business effect or queue acknowledgement. |
@@ -65,13 +67,14 @@ fact that a named transition happened—for example `outbox.published`,
 does not send an outbox ID, payload, record subject, tenant, fence, attempt,
 queue receipt, provider response, or a raw error message as telemetry data.
 
-`platform/observability` provides the complementary profile-governed observer.
-It projects capability/action/execution-context/outcome and a bounded error
-class into fixed log and trace names and fixed metric series. A Core correlation
-reference may link logs, while an existing trace parent may link spans; neither
-becomes a metric label or general trace attribute. Until an owning app
-registers a profile and target composition approves its metric catalogue
-entries, these local observer hooks are not live target evidence.
+The `observability/` folder owns the complementary profile-governed integration.
+It uses generic `platform/observability` helpers to project
+capability/action/execution-context/outcome and a bounded error class into
+fixed log and trace names and fixed metric series. A Core correlation reference
+may link logs, while an existing trace parent may link spans; neither becomes a
+metric label or general trace attribute. Until an owning app registers a
+profile and target composition approves its metric catalogue entries, these
+local observer hooks are not live target evidence.
 
 ## The worker-processing boundary
 

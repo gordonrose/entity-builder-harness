@@ -30,6 +30,8 @@ to compose its product and selected Cognito adapter.
 | File | Owns | Does not own |
 | --- | --- | --- |
 | `src/index.ts` | Registry validation, route adaptation, request pipeline order, health responses, authentication/authorization gates, response ownership, and transport-to-platform coordination. | App business rules, provider SDK configuration, cloud topology, or durable rate-limit storage. |
+| `src/configuration/` | Typed generic process configuration and safe release identity resolution. | Target-specific configuration requirements, secret retrieval, or provider selection. |
+| `src/verification/` | Safe application-side release identity response shape. | Workload digest proof, package custody, route selection, or deployment acceptance. |
 | `src/transport.ts` | Node HTTP adaptation, bounded headers and bodies, allowed methods, request IDs, cancellation, listener timeouts, concurrency admission, and bounded connection draining. | App route semantics, identity-provider selection, trusting a proxy header, or product policy. |
 | `src/main.ts` | Generic process startup/shutdown wiring and environment-neutral server options. | Selecting an app list, provider adapter, tenant policy, cloud account, or deployment target. |
 | `tests/` | Type, runtime-listener, and dependency-boundary proof. | Production traffic or provider integration tests. |

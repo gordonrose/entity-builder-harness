@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-18T23:50:23Z
-latest_commit_sha: 8315f1d1
-chat_duration: 1176654s (13:14:50:54)
+latest_commit_at_utc: 2026-10-19T21:04:22Z
+latest_commit_sha: bb539fe3
+chat_duration: 1253093s (14:12:04:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -40,7 +40,10 @@ can you walk me through which part of my repo work on the following stages
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Docker daemon unavailable for local core image smoke
+  Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
 
 ## Decisions Made
 
@@ -59,6 +62,38 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt the kanbien-core-platform bootstrap lifecycle proof
   Rationale: The first controlled slice must establish a private target from an absent baseline as immutable release A, then verify one planned update to release B. A rejected B preserves A and must not trigger automatic redeployment. Existing kanbien/staging remains read-only reference evidence.
+
+
+- Decision: Adopt a dedicated core-server package boundary
+  Rationale: The planned kanbien-core-server.main.ts uses existing platform-server startup and transport, gains generic release-verification and visible configuration contracts, and is packaged in a dedicated core-server image. Generic observability must be separated from its optional persistence bridge. Technical infrastructure permissions are grouped under technical-access; the verifier route remains bootstrap-scope-owned.
+
+
+- Decision: Adopt lifecycle-owned core release rehearsal layout
+  Rationale: The first core-server rehearsal uses numbered build, package, deploy, and run script homes; it keeps generic rules in .agentic, factual selection in platform and infra, and safe run receipts in GitHub Actions without altering staging.
+
+
+- Decision: Approve the target-scoped script structure for the rehearsal
+  Rationale: Build and package scripts remain lifecycle-owned and target-neutral; deploy and run scripts are nested under the exact target and scope so no staging script can be repointed by a free-form flag.
+
+
+- Decision: Adopt generic runnable-program contract control
+  Rationale: R1 supplies provider-neutral runnable-program, image-command, candidate-identity, dependency-boundary, and safe-evidence declaration governance with deterministic report-only failure fixtures before package construction.
+
+
+- Decision: Adopt persistence-owned observability integration and server configuration boundary
+  Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+- Decision: Adopt persistence-owned observability integration and server configuration boundary
+  Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+- Decision: Adopt the core-server runnable-program boundary and dependency proof
+  Rationale: The bootstrap program reuses platform-server, exposes only a safe release-verification operation, and is rejected if its source or compiled output includes a forbidden dependency. No target, image, provider, or cloud choice is made.
+
+
+- Decision: Adopt a dedicated local core-server image boundary
+  Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
 
 ## Context Hygiene
 
@@ -102,6 +137,38 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Recorded the controlled first-target lifecycle, private verifier boundary, configuration/access/network separation, safe verifier diagnostics, and A-to-B recovery evidence. No AWS, target directory, runtime, secret, or PostgreSQL change occurred.
   Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Validation: artifact metadata headers and git diff --check passed.
+
+
+- Summary: Recorded runnable-program selection, generic release-verification ownership, package versus runtime dependency distinction, optional observability-persistence bridge, technical-access naming, and dedicated core-image boundary. No source implementation, AWS resource, target directory, secret, or PostgreSQL state changed.
+  Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Artifact metadata and whitespace checks passed.
+
+
+- Summary: Core rehearsal blueprint is ready to commit
+  Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
+
+
+- Summary: Target-specific release rehearsal plan ready
+  Durable evidence: Durable review plan: docs/aws/kanbien-core-platform-release-rehearsal-plan.md. It defines R1-R6 repository packages, E0-E7 AWS gates, isolation from staging, and requires exact future approval before any AWS mutation.
+
+
+- Summary: R1 runnable-program contract control is ready to commit
+  Durable evidence: Generic standard/workflow/schema/template/guide are under .agentic/04.deploy; report-only checker and fixtures are at scripts/04.deploy/lifecycle/20-build/runnable-program-contract/. It passed its smoke, metadata, drift, and whitespace checks; no AWS or runtime change occurred.
+
+
+- Summary: R2 passed the server, persistence, and observability package checks. The persistence observer was moved out of generic observability, and server configuration/release identity are now explicit exported contracts.
+  Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
+
+
+- Summary: R3 proves the core server route and dependency graph locally: release verification responds safely, product routes are absent, and a compiled persistence import fails closed.
+  Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
+
+
+- Summary: R4 adds a minimal core-server Dockerfile, image contract, package payload verifier, and smoke capability. The machine has Docker CLI but no daemon; no image was built or started.
+  Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
+
+
+- Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
+  Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
 
 ## Activity Log
 
@@ -380,6 +447,244 @@ Summary: Defined the planned private kanbien-core-platform bootstrap target life
 
 ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
 
+
+### 2026-10-19T06:49:54Z - Decision
+
+Decision: Adopt a dedicated core-server package boundary
+
+Rationale: The planned kanbien-core-server.main.ts uses existing platform-server startup and transport, gains generic release-verification and visible configuration contracts, and is packaged in a dedicated core-server image. Generic observability must be separated from its optional persistence bridge. Technical infrastructure permissions are grouped under technical-access; the verifier route remains bootstrap-scope-owned.
+
+
+### 2026-10-19T06:49:54Z - Context hygiene
+
+Summary: Recorded runnable-program selection, generic release-verification ownership, package versus runtime dependency distinction, optional observability-persistence bridge, technical-access naming, and dedicated core-image boundary. No source implementation, AWS resource, target directory, secret, or PostgreSQL state changed.
+
+Durable evidence: Durable plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md. Teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. Artifact metadata and whitespace checks passed.
+
+
+### 2026-10-19T06:51:03Z - Commit recorded
+
+Commit: `39d4a649`
+
+Message: docs(deploy): define core server package boundary
+
+Summary: Recorded the planned kanbien-core-server entrypoint family, generic release-verification/configuration ownership, technical-access naming, optional observability-persistence bridge, and dedicated core-server image boundary. No source implementation, AWS resource, target directory, secret, runtime, or PostgreSQL state changed.
+
+ADR impact: No ADR: this remains a draft governance and education refinement; it creates no live target or deployed architecture.
+
+
+### 2026-10-19T19:37:55Z - Decision
+
+Decision: Adopt lifecycle-owned core release rehearsal layout
+
+Rationale: The first core-server rehearsal uses numbered build, package, deploy, and run script homes; it keeps generic rules in .agentic, factual selection in platform and infra, and safe run receipts in GitHub Actions without altering staging.
+
+
+### 2026-10-19T19:37:56Z - ADR disposition
+
+ADR needed: no
+
+Reason: This commits a planning and teaching refinement only. It creates no durable target, provider-authority, or runtime architecture decision; those require later reviewed implementation and target-design work.
+
+
+### 2026-10-19T19:37:56Z - Context hygiene
+
+Summary: Core rehearsal blueprint is ready to commit
+
+Durable evidence: Plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; teaching record: docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md. The planned target remains absent; implementation begins with generic rules and report-only local checks, not AWS mutation.
+
+
+### 2026-10-19T19:38:57Z - Commit recorded
+
+Commit: `fa4fcaae`
+
+Message: docs(deploy): map core release rehearsal
+
+Summary: Recorded the core-server release rehearsal layout, lifecycle-owned check locations, persistence-owned observability integration, safe evidence locations, and staged implementation order. No runtime, AWS, target, or GitHub mutation occurred.
+
+ADR impact: No ADR: documentation-only planning refinement; target and provider decisions remain subject to later review.
+
+
+### 2026-10-19T19:58:27Z - Decision
+
+Decision: Approve the target-scoped script structure for the rehearsal
+
+Rationale: Build and package scripts remain lifecycle-owned and target-neutral; deploy and run scripts are nested under the exact target and scope so no staging script can be repointed by a free-form flag.
+
+
+### 2026-10-19T19:58:27Z - ADR disposition
+
+ADR needed: no
+
+Reason: The rehearsal plan remains review-only, leaves target/provider decisions unselected, and authorizes no AWS change. A later approved target design may require an ADR.
+
+
+### 2026-10-19T19:58:27Z - Context hygiene
+
+Summary: Target-specific release rehearsal plan ready
+
+Durable evidence: Durable review plan: docs/aws/kanbien-core-platform-release-rehearsal-plan.md. It defines R1-R6 repository packages, E0-E7 AWS gates, isolation from staging, and requires exact future approval before any AWS mutation.
+
+
+### 2026-10-19T19:59:23Z - Commit recorded
+
+Commit: `f6256292`
+
+Message: docs(aws): plan core platform release rehearsal
+
+Summary: Added the review-only, target-specific Kanbien core-platform rehearsal plan. It defines isolated R1-R6 implementation packages, E0-E7 execution gates, stage-plus-target script ownership, safe receipts, and explicit future AWS approval requirements.
+
+ADR impact: No ADR: no target/provider decision is selected or executed by this plan.
+
+
+### 2026-10-19T20:11:17Z - Decision
+
+Decision: Adopt generic runnable-program contract control
+
+Rationale: R1 supplies provider-neutral runnable-program, image-command, candidate-identity, dependency-boundary, and safe-evidence declaration governance with deterministic report-only failure fixtures before package construction.
+
+
+### 2026-10-19T20:11:17Z - ADR disposition
+
+ADR needed: no
+
+Reason: R1 is generic provider-neutral governance and a report-only check; it creates no target-specific architecture or external state.
+
+
+### 2026-10-19T20:11:17Z - Context hygiene
+
+Summary: R1 runnable-program contract control is ready to commit
+
+Durable evidence: Generic standard/workflow/schema/template/guide are under .agentic/04.deploy; report-only checker and fixtures are at scripts/04.deploy/lifecycle/20-build/runnable-program-contract/. It passed its smoke, metadata, drift, and whitespace checks; no AWS or runtime change occurred.
+
+
+### 2026-10-19T20:12:10Z - Commit recorded
+
+Commit: `e9fbc711`
+
+Message: feat(deploy): add runnable program contract gate
+
+Summary: Added provider-neutral runnable-program and package-candidate governance, contract schema/template/guide, and report-only checker fixtures that fail closed for missing records, invalid commands, unapproved dependencies, and unsafe evidence fields. No runtime, target, AWS, or GitHub change occurred.
+
+ADR impact: No ADR: generic governance and a local report-only gate only.
+
+
+### 2026-10-19T20:33:22Z - Decision
+
+Decision: Adopt persistence-owned observability integration and server configuration boundary
+
+Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+### 2026-10-19T20:33:28Z - Decision
+
+Decision: Adopt persistence-owned observability integration and server configuration boundary
+
+Rationale: Generic observability now contains only reusable signals; persistence owns the optional bridge. Platform server owns safe runtime configuration resolution and release identity shaping. The change implements the approved core-server boundary without adding a target, image, AWS resource, or deployment.
+
+
+### 2026-10-19T20:33:29Z - ADR disposition
+
+ADR needed: no
+
+Reason: This applies the already-approved core release boundary; it does not select a provider, target, runtime, networking design, or authority model.
+
+
+### 2026-10-19T20:33:29Z - Context hygiene
+
+Summary: R2 passed the server, persistence, and observability package checks. The persistence observer was moved out of generic observability, and server configuration/release identity are now explicit exported contracts.
+
+Durable evidence: Durable implementation: platform/observability, platform/persistence/src/observability, and platform/server/src/{configuration,verification}; plan: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md.
+
+
+### 2026-10-19T20:35:28Z - Commit recorded
+
+Commit: `2a96d7f2`
+
+Message: feat(platform): separate persistence observability
+
+Summary: Moved persistence-specific observation integration into platform/persistence; removed persistence from generic observability; made server runtime configuration and safe release identity explicit, tested platform contracts.
+
+ADR impact: No ADR: implements the approved package boundary without provider or target selection.
+
+
+### 2026-10-19T20:49:42Z - Decision
+
+Decision: Adopt the core-server runnable-program boundary and dependency proof
+
+Rationale: The bootstrap program reuses platform-server, exposes only a safe release-verification operation, and is rejected if its source or compiled output includes a forbidden dependency. No target, image, provider, or cloud choice is made.
+
+
+### 2026-10-19T20:49:42Z - ADR disposition
+
+ADR needed: no
+
+Reason: This implements the approved bootstrap-program boundary without a durable provider, target, network, or authority decision.
+
+
+### 2026-10-19T20:49:42Z - Context hygiene
+
+Summary: R3 proves the core server route and dependency graph locally: release verification responds safely, product routes are absent, and a compiled persistence import fails closed.
+
+Durable evidence: Durable code: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts and runnable-program-index.yml; local proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/.
+
+
+### 2026-10-19T20:50:37Z - Commit recorded
+
+Commit: `8c110812`
+
+Message: feat(deploy): add core server runnable program
+
+Summary: Added the core-server entrypoint, factual runnable-program declaration, isolated compile configuration, and deterministic dependency-boundary proof that rejects forbidden package payloads.
+
+ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
+
+
+### 2026-10-19T21:02:49Z - Decision
+
+Decision: Adopt a dedicated local core-server image boundary
+
+Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
+
+
+### 2026-10-19T21:02:49Z - ADR disposition
+
+ADR needed: no
+
+Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
+
+
+### 2026-10-19T21:02:49Z - Issue
+
+Raised: Docker daemon unavailable for local core image smoke
+
+Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
+
+
+### 2026-10-19T21:02:49Z - Context hygiene
+
+Summary: R4 adds a minimal core-server Dockerfile, image contract, package payload verifier, and smoke capability. The machine has Docker CLI but no daemon; no image was built or started.
+
+Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
+
+
+### 2026-10-19T21:04:22Z - Commit recorded
+
+Commit: `bb539fe3`
+
+Message: feat(deploy): add core server image boundary
+
+Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
+
+ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
+
+
+### 2026-10-20T03:27:40Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
+
+Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -450,6 +755,55 @@ ADR impact: No ADR: this is a draft governance and education refinement. It does
   Summary: Defined the planned private kanbien-core-platform bootstrap target lifecycle: clean creation from absent baseline A, one controlled candidate update B, safe verifier/configuration/access/network boundaries, receipts, and recovery without automatic redeployment. Updated the deployment plan and teaching handbook; no AWS, target, secret, runtime, or PostgreSQL mutation occurred.
   ADR impact: No ADR: this is a draft governance and education refinement. It does not create a live target, change provider authority, or decide a deployed architecture.
 
+
+- Commit: `39d4a649`
+  Time UTC: 2026-10-19T06:51:03Z
+  Message: docs(deploy): define core server package boundary
+  Summary: Recorded the planned kanbien-core-server entrypoint family, generic release-verification/configuration ownership, technical-access naming, optional observability-persistence bridge, and dedicated core-server image boundary. No source implementation, AWS resource, target directory, secret, runtime, or PostgreSQL state changed.
+  ADR impact: No ADR: this remains a draft governance and education refinement; it creates no live target or deployed architecture.
+
+
+- Commit: `fa4fcaae`
+  Time UTC: 2026-10-19T19:38:57Z
+  Message: docs(deploy): map core release rehearsal
+  Summary: Recorded the core-server release rehearsal layout, lifecycle-owned check locations, persistence-owned observability integration, safe evidence locations, and staged implementation order. No runtime, AWS, target, or GitHub mutation occurred.
+  ADR impact: No ADR: documentation-only planning refinement; target and provider decisions remain subject to later review.
+
+
+- Commit: `f6256292`
+  Time UTC: 2026-10-19T19:59:23Z
+  Message: docs(aws): plan core platform release rehearsal
+  Summary: Added the review-only, target-specific Kanbien core-platform rehearsal plan. It defines isolated R1-R6 implementation packages, E0-E7 execution gates, stage-plus-target script ownership, safe receipts, and explicit future AWS approval requirements.
+  ADR impact: No ADR: no target/provider decision is selected or executed by this plan.
+
+
+- Commit: `e9fbc711`
+  Time UTC: 2026-10-19T20:12:10Z
+  Message: feat(deploy): add runnable program contract gate
+  Summary: Added provider-neutral runnable-program and package-candidate governance, contract schema/template/guide, and report-only checker fixtures that fail closed for missing records, invalid commands, unapproved dependencies, and unsafe evidence fields. No runtime, target, AWS, or GitHub change occurred.
+  ADR impact: No ADR: generic governance and a local report-only gate only.
+
+
+- Commit: `2a96d7f2`
+  Time UTC: 2026-10-19T20:35:28Z
+  Message: feat(platform): separate persistence observability
+  Summary: Moved persistence-specific observation integration into platform/persistence; removed persistence from generic observability; made server runtime configuration and safe release identity explicit, tested platform contracts.
+  ADR impact: No ADR: implements the approved package boundary without provider or target selection.
+
+
+- Commit: `8c110812`
+  Time UTC: 2026-10-19T20:50:37Z
+  Message: feat(deploy): add core server runnable program
+  Summary: Added the core-server entrypoint, factual runnable-program declaration, isolated compile configuration, and deterministic dependency-boundary proof that rejects forbidden package payloads.
+  ADR impact: No ADR: implements the approved bootstrap boundary without selecting a target or provider.
+
+
+- Commit: `bb539fe3`
+  Time UTC: 2026-10-19T21:04:22Z
+  Message: feat(deploy): add core server image boundary
+  Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
+  ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -458,14 +812,14 @@ ADR impact: No ADR: this is a draft governance and education refinement. It does
 
 ADR needed: no
 ADR path:
-Reason: This change refines a draft provider-neutral governance plan and teaching material only. It makes no live target, provider-authority, or deployed-architecture decision.
+Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-18T23:50:23Z
-Latest commit SHA: 8315f1d1
-Chat duration: 1176654s (13:14:50:54)
+Latest commit at UTC: 2026-10-19T21:04:22Z
+Latest commit SHA: bb539fe3
+Chat duration: 1253093s (14:12:04:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -7,6 +7,8 @@ approved image build supplies a runtime shim for `main.ts`.
 
 | File | Main question it answers | Why it is separate |
 | --- | --- | --- |
+| `configuration/` | “Which generic process settings may come from an environment?” | Runtime configuration and safe release identity stay typed, visible, and testable. |
+| `verification/` | “Which release metadata may a verifier receive?” | Safe application identity is separate from workload and package-custody proof. |
 | `index.ts` | “Given a valid mounted app registry, which policy steps may run a route handler?” | Request policy and app adaptation should remain readable without Node socket details. |
 | `transport.ts` | “How do untrusted Node HTTP bytes become a bounded, cancellable platform request?” | Listener limits, socket state, and connection draining are transport mechanics, not route policy. |
 | `main.ts` | “How does a generic server process start and stop?” | Process wiring should not force the generic HTTP layer to choose apps or providers. |
@@ -106,3 +108,13 @@ the same profile-governed points with the in-memory test sink, a no-op sink, or
 a target-selected adapter. The Kanbien staging entrypoint is the only current
 consumer that selects the CloudWatch OpenTelemetry adapter and owns its bounded
 flush/shutdown lifecycle.
+
+## `configuration/` and `verification/` — process facts without target selection
+
+`configuration/` resolves only generic server settings from an injected
+environment: the configuration record, listener settings, CORS and health
+exposure, and a bounded release identity. `verification/` returns that identity
+in a safe response shape. Neither folder selects a route, product, provider,
+target, secret source, image digest, or deployment outcome. A later internal
+verifier must combine this response with independent workload and
+package-custody evidence.

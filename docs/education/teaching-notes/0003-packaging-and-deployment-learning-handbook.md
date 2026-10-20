@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v2
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 17
+  version: 21
   status: active
   layer: 05.education
   domain: education
@@ -1569,6 +1569,159 @@ The current repository does not yet contain this verifier for the planned
 target. Existing image smoke tests are useful evidence, but are not assumed to
 be its controlled internal verifier without a later review.
 
+### Selecting the bootstrap runnable program
+
+An entrypoint is the source file that becomes the command the container runs
+first. The existing `kanbien-platform-server.main.ts` can run privately without
+activating its optional AWS adapters, but it still mounts the product-smoke app
+and carries staging-oriented composition choices. It is reference evidence,
+not the clean bootstrap program.
+
+The planned program is:
+
+```text
+infra/04.deploy/03.product/entrypoints/
+  kanbien-core-server.main.ts
+```
+
+The `kanbien-core-<role>.main.ts` naming family is reserved for runnable
+programs intended for the controlled core foundation. For example, a later
+worker uses `kanbien-core-worker.main.ts`. A helper such as a configuration or
+persistence composer does not use `.main.ts`, because it cannot be started as
+a process by itself.
+
+The new entrypoint is deliberately small. It reuses, rather than copies:
+
+```text
+platform/server/src/main.ts
+→ generic start, listen, and shutdown lifecycle
+
+platform/server/src/transport.ts
+→ HTTP port, request parsing, limits, timeouts, and response handling
+```
+
+It adds no product app, provider adapter, database, queue, identity provider,
+or public-ingress composition.
+
+### What the bootstrap server reuses and adds
+
+The first program reuses the existing generic server stack:
+
+```text
+platform/server
+platform/contracts
+platform/runtime
+platform/config
+platform/health
+platform/security
+platform/observability
+```
+
+It selects none of the AWS adapters or product apps. The presence of a code
+package in an image is not proof that the program uses a live dependency; the
+scope must separately declare selected runtime dependencies, configuration,
+network routes, and access.
+
+`platform/server/src/configuration/` is planned new structure. Today
+`main.ts` contains some direct environment handling. The future folder makes
+each generic server configuration concern, including safe release identity,
+visible, typed, testable, and exported through one shared index. It does not
+replace `main.ts` or `transport.ts`.
+
+The planned generic release-verification code belongs in `platform/server`.
+It returns only approved build/release metadata to the internal verifier. It
+does not itself prove the image digest: acceptance joins three independent
+facts:
+
+```text
+AWS workload evidence
+→ which immutable image digest the task actually runs
+
+server verification response
+→ which safe release/build metadata the reached process reports
+
+package-custody evidence
+→ how that digest relates to the reviewed source and build
+```
+
+### Split generic observability from persistence integration
+
+The current generic `platform/observability` package declares a dependency on
+`platform/persistence` for a persistence-observability bridge. That does not
+make the bootstrap server a database user, but it does unnecessarily place
+persistence code in its generic dependency graph.
+
+The agreed architecture is:
+
+```text
+platform/observability
+→ generic logs, metrics, traces, correlation, and health signals
+→ no platform/persistence dependency
+
+platform/persistence/src/observability/
+→ persistence-owned integration code
+→ depends on generic observability
+→ selected only by a later persistence scope
+```
+
+This is a dependency-boundary refactor. It is not an AWS adapter and does not
+create, configure, or contact a database.
+
+### Technical access is not application identity
+
+Infrastructure permissions are grouped under `technical-access/` so they are
+not confused with user identity, authentication, or authorisation.
+
+```text
+foundation/technical-access/
+  delivery-permissions.yml
+  workload-startup-permissions.yml
+
+scopes/bootstrap-runtime/technical-access/
+  runtime-permissions.yml
+```
+
+Delivery permissions describe what the release process may change. Workload
+startup permissions describe what the cloud runtime may do to start a
+container, such as pull its image or later supply a specifically named secret.
+Runtime permissions describe what the running application may access.
+
+The bootstrap server initially has no application-service runtime permissions.
+The actual AWS roles and policies remain in provider declarations; these
+provider-neutral records explain the narrow purpose, actor, permitted action
+and resource, and required proof.
+
+A shared verifier network facility may be foundation-owned. The concrete route
+from that verifier to the bootstrap server is scope-owned, because it exists
+only for that workload's verification operation.
+
+### Dedicated core-server image
+
+The bootstrap target will use a dedicated image rather than the current broad
+platform-shell image.
+
+```text
+kanbien-core-server.main.ts
+→ dedicated core-server image
+→ immutable image digest
+→ kanbien-core-platform workload
+```
+
+The planned image boundary is:
+
+```text
+infra/04.deploy/03.product/image/core-server/
+```
+
+It will compile and start only the core server and include only its reviewed
+runtime dependency graph, safe defaults, health command, and local payload
+proof. It must not include the staging server, worker, relay, PostgreSQL, or
+provider-adapter programs merely because they are present in the repository.
+
+Whether the image uses a dedicated ECR repository or an explicitly reviewed
+shared one remains a later target-isolation decision. A dedicated image does
+not by itself authorise reuse of existing AWS package storage.
+
 ### Configuration, access, and network boundary
 
 The server-side platform code defines the shape and validation behaviour of a
@@ -1659,7 +1812,71 @@ record. It may share an account or region with the existing target only by an
 explicit isolation decision. Nothing is inherited merely because both targets
 belong to Kanbien.
 
-## 22. Next Lesson Queue
+## 22. From a Runnable Program to a Proven Package
+
+The first core-server package will be built in small, separately checkable
+pieces. This is the planned layout, not a description of files that already
+exist:
+
+```text
+.agentic/
+  03.product/  → generic rules for runnable-program changes
+  04.deploy/   → generic rules for image and candidate-release checks
+
+platform/server/src/
+  configuration/  → typed generic server settings
+  verification/   → safe generic release-verification response
+
+platform/persistence/src/observability/
+  → optional persistence-specific integration
+
+infra/04.deploy/03.product/
+  entrypoints/runnable-program-index.yml
+  entrypoints/kanbien-core-server.main.ts
+  image/core-server/image-contract.yml
+  image/core-server/Dockerfile
+
+scripts/04.deploy/lifecycle/
+  20-build/core-server-dependency-boundary/
+  40-package/build-core-server-image/
+  40-package/smoke-test-core-server-image/
+  50-deploy/prepare-core-server-candidate/
+  50-deploy/deploy-core-server-candidate/
+  60-run/verify-core-server-candidate/
+```
+
+The important separation is:
+
+| Place | What it owns |
+| --- | --- |
+| `.agentic` | The rules an agent must follow when changing this kind of thing. |
+| `platform` | Reusable program behaviour and typed generic contracts. |
+| `infra` | The factual statement of which program, image, and later target are selected. |
+| `scripts` | The repeatable checks that build, inspect, smoke-test, and verify those facts. |
+| GitHub Actions receipt | Safe evidence from a particular candidate run; not a new source of truth. |
+
+The first check does not maintain a fragile manual list of every source file.
+It begins with the selected entrypoint and derives what it needs through the
+TypeScript imports, package manifests, lockfile, and final image payload. The
+program declaration also names what must stay out. If persistence, a product
+app, old staging program, worker, relay, or provider adapter enters the graph,
+the check reports the mismatch rather than silently widening the image.
+
+The order is deliberately safe:
+
+```text
+generic rules and report-only fixtures
+→ separate generic observability from persistence-owned integration
+→ core entrypoint and local dependency proof
+→ dedicated image and local smoke proof
+→ approved target declaration, alignment, deployment, and live verification
+```
+
+The final arrow is not automatic. A failed check, unclear declaration, or AWS
+mutation boundary stops the work for review. No diagnostic check creates AWS
+resources just to make itself pass.
+
+## 23. Next Lesson Queue
 
 Continue this handbook incrementally with:
 

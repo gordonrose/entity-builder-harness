@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.readme
-version: 4
+version: 5
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -24,6 +24,12 @@ This deploy track contains product-layer deployment implementation artifacts.
 The first artifact is the provider-neutral platform shell image boundary. It
 packages the local platform server entrypoint so the shell can be built and
 smoke-tested before AWS deployment readiness.
+
+`image/core-server/` is a second, deliberately narrower local package boundary
+for the declared `kanbien-core-server` bootstrap program. Its Dockerfile,
+image contract, and package-stage scripts compile and qualify only that
+program's reviewed dependency closure. It has no registry, target, credential,
+or deployment authority.
 
 `entrypoints/kanbien-platform-persistence.ts` is the first target-specific
 persistence composition root. It selects the DynamoDB persistence adapter and

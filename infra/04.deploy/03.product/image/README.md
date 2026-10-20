@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: infra.04-deploy.03-product.image.readme
-version: 4
+version: 5
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -19,9 +19,9 @@ used_by:
 -->
 # Image
 
-This directory owns the provider-neutral container packaging boundary for the
-platform runtime shell. A target-specific entrypoint may compose a provider
-adapter; that selection does not make `platform/server` provider-specific.
+This directory owns provider-neutral container packaging boundaries. A
+target-specific entrypoint may compose a provider adapter; that selection does
+not make `platform/server` provider-specific.
 
 The image packages the Kanbien Platform target entrypoints. Its Docker default
 starts the public server, while a target may override the command to start the
@@ -34,6 +34,9 @@ queue provider adapter.
 - `Dockerfile` builds the platform shell image.
 - `Dockerfile.dockerignore` protects the repo-root build context with a
   default-deny allowlist.
+- `core-server/` is the dedicated local candidate-image boundary for the
+  declared bootstrap server. It packages only its compiled program closure;
+  it is not an AWS target or a replacement for the platform shell image.
 
 ## Local Build
 
