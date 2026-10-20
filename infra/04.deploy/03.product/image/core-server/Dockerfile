@@ -21,7 +21,7 @@
 #     path: scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh
 
 ARG BUILD_NODE_IMAGE=node:22-bookworm-slim
-ARG RUNTIME_NODE_IMAGE=node:22-bookworm-slim
+ARG RUNTIME_NODE_IMAGE=gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
 
 FROM ${BUILD_NODE_IMAGE} AS build
 WORKDIR /app
@@ -54,7 +54,7 @@ LABEL org.opencontainers.image.title="kanbien-core-server"
 LABEL org.opencontainers.image.description="Local-only Kanbien core bootstrap server candidate"
 
 WORKDIR /app
-COPY --chown=node:node --from=build /payload/artifacts/ ./artifacts/
+COPY --chown=nonroot:nonroot --from=build /payload/artifacts/ ./artifacts/
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
@@ -62,9 +62,6 @@ ENV PORT=3000
 ENV PLATFORM_SOURCE_COMMIT_SHA=${SOURCE_COMMIT_SHA}
 
 EXPOSE 3000
-USER node
+USER nonroot
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/livez').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
-
-CMD ["node", "artifacts/kanbien-core-server.main.js"]
+CMD ["artifacts/kanbien-core-server.main.js"]
