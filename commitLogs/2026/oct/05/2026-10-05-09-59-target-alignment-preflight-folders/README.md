@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:47:04Z
-latest_commit_sha: 56a7952d874c094bb0dfcabb3c104bacfb32b87b
-chat_duration: 1334855s (15:10:47:35)
+latest_commit_at_utc: 2026-10-20T19:59:20Z
+latest_commit_sha: 4ddad06f033d6eac10a48ade42f0d72e9c3e7b89
+chat_duration: 1335591s (15:10:59:51)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1322,6 +1322,17 @@ Decision: Both endpoint and task execution-role logging permissions now use the 
 
 Rationale: The regression requires two exact policy occurrences and rejects the malformed LogGroup.Arn-derived stream expression everywhere in the foundation template.
 
+
+### 2026-10-20T19:59:20Z - Commit recorded
+
+Commit: `4ddad06f033d6eac10a48ade42f0d72e9c3e7b89`
+
+Message: fix(deploy): allow task log streams
+
+Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1560,6 +1571,13 @@ Rationale: The regression requires two exact policy occurrences and rejects the 
   Summary: Corrected the private Logs endpoint policy to allow exact log-stream ARNs and added a focused foundation policy regression test.
   ADR impact: No new ADR; corrects reusable deployment-control interpretation.
 
+
+- Commit: `4ddad06f033d6eac10a48ade42f0d72e9c3e7b89`
+  Time UTC: 2026-10-20T19:59:20Z
+  Message: fix(deploy): allow task log streams
+  Summary: Corrected the task execution-role CloudWatch Logs ARN to match the endpoint policy and strengthened the shared foundation regression.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1573,9 +1591,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:47:04Z
-Latest commit SHA: 56a7952d874c094bb0dfcabb3c104bacfb32b87b
-Chat duration: 1334855s (15:10:47:35)
+Latest commit at UTC: 2026-10-20T19:59:20Z
+Latest commit SHA: 4ddad06f033d6eac10a48ade42f0d72e9c3e7b89
+Chat duration: 1335591s (15:10:59:51)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
