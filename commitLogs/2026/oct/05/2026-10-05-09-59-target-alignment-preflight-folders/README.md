@@ -81,6 +81,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The deploy control rejected a reviewed initial change set because CloudFormation omitted ChangeSetType from its describe response.
   Resolution: The stack was absent and the change set was CREATE_COMPLETE and AVAILABLE, but the control incorrectly required a field AWS did not return.
 
+
+- Raised: The deploy control still rejected the initial change set because CloudFormation creates an empty REVIEW_IN_PROGRESS stack while the change set awaits execution.
+  Resolution: No runtime resources existed; the review stack is CloudFormation’s normal create-change-set lifecycle state.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -182,6 +186,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Initial create review accepts an omitted ChangeSetType only with independent proof that the runtime stack is absent.
   Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
+
+
+- Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRESS as an empty review boundary, not a deployed runtime.
+  Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
 
 ## Context Hygiene
 
@@ -1200,6 +1208,20 @@ Message: fix(deploy): verify initial change-set state
 Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
 
 ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:19:36Z - Issue
+
+Raised: The deploy control still rejected the initial change set because CloudFormation creates an empty REVIEW_IN_PROGRESS stack while the change set awaits execution.
+
+Resolution: No runtime resources existed; the review stack is CloudFormation’s normal create-change-set lifecycle state.
+
+
+### 2026-10-20T19:19:36Z - Decision
+
+Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRESS as an empty review boundary, not a deployed runtime.
+
+Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
 
 ## Sub-Agent Activity
 

@@ -36,10 +36,14 @@ def aws(*parts: str):
     except json.JSONDecodeError: return False, None, "aws-response-invalid"
 def report(verdict: str, *codes: str):
     print(json.dumps({"schema":"deploy/runtime-deployment-report/v1", "target":"kanbien-core-platform", "stack":STACK, "verdict":verdict, "findings":[{"code":c} for c in codes]}, sort_keys=True))
-def initial_change_set_is_reviewable(change, runtime_stack_absent: bool) -> bool:
-    """CloudFormation omits ChangeSetType for an initial create in some responses."""
+def initial_change_set_is_reviewable(change, runtime_stack_status: str | None) -> bool:
+    """An initial CloudFormation change set has no stack or an empty review stack."""
     reported_type = change.get("ChangeSetType")
-    return runtime_stack_absent and change.get("Status") == "CREATE_COMPLETE" and reported_type in (None, "CREATE")
+    return (
+        runtime_stack_status in (None, "REVIEW_IN_PROGRESS")
+        and change.get("Status") == "CREATE_COMPLETE"
+        and reported_type in (None, "CREATE")
+    )
 def candidate(path: Path):
     validator=ROOT/"scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
     r=subprocess.run(["bash",str(validator),"--receipt",str(path),"--expected-target","kanbien-core-platform","--expected-candidate","kanbien-core-server-candidate","--expected-package-contract","kanbien-core-server-image","--expected-program","kanbien-core-server","--json"],capture_output=True,text=True)
@@ -54,9 +58,10 @@ def main():
     if args.approved_change_set != expected: report("blocked","approved-change-set-does-not-match-qualified-digest"); return 1
     ok, change, code=aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",expected)
     if not ok: report("blocked",code); return 1
-    stack_ok, _, stack_code=aws("cloudformation","describe-stacks","--stack-name",STACK)
-    runtime_stack_absent = not stack_ok and stack_code == "aws-resource-missing"
-    if not initial_change_set_is_reviewable(change, runtime_stack_absent): report("blocked","change-set-not-reviewable"); return 1
+    stack_ok, stack, stack_code=aws("cloudformation","describe-stacks","--stack-name",STACK)
+    runtime_stack_status = stack.get("Stacks", [{}])[0].get("StackStatus") if stack_ok else None
+    if not stack_ok and stack_code != "aws-resource-missing": report("blocked",stack_code); return 1
+    if not initial_change_set_is_reviewable(change, runtime_stack_status): report("blocked","change-set-not-reviewable"); return 1
     parameters={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
     if parameters.get("ImageDigest") != c["image_digest"] or parameters.get("SourceRevision") != c["source_revision"]: report("blocked","change-set-candidate-mismatch"); return 1
     types={x.get("ResourceChange",{}).get("ResourceType") for x in change.get("Changes",[]) if isinstance(x,dict)}

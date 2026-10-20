@@ -74,10 +74,10 @@ spec = importlib.util.spec_from_file_location("deploy_candidate", sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
-assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, True)
-assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, True)
-assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, True)
-assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, False)
+assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, None)
+assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "REVIEW_IN_PROGRESS")
+assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "REVIEW_IN_PROGRESS")
+assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "CREATE_COMPLETE")
 PY
 
 echo "Fixed core-platform target control tests passed."
