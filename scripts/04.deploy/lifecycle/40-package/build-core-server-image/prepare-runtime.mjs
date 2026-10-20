@@ -51,7 +51,13 @@ for (const [packageName, exportsMap] of Object.entries(packages)) {
 }
 writeFileSync(
   join(compiledRoot, "kanbien-core-server.main.js"),
-  'require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.js");\n',
+  [
+    'const { runKanbienCoreServerMain } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.js");',
+    "void runKanbienCoreServerMain().catch(() => {",
+    "  process.exitCode = 1;",
+    "});",
+    "",
+  ].join("\n"),
 );
 
 function parseCompiledRoot(args) {

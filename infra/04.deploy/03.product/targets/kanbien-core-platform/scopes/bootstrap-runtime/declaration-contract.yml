@@ -1,0 +1,90 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: deployment-scope-contract
+#   purpose: Declare the bootstrap runtime's program, configuration names, verification, exclusions, receipt, and rollback requirements.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/target-scope-contract/v1
+id: kanbien-core-platform-bootstrap-runtime
+target: kanbien-core-platform
+status: planned-not-live-selected
+owner: platform-runtime
+program:
+  id: kanbien-core-server
+  contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+  image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
+  local_proof: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+workload:
+  operation: create-only
+  runtime_selection: unresolved-e0-required
+  startup_access: foundation/technical-access.yml#workload-startup
+  network: foundation/network.yml#private-verifier-route
+configuration:
+  value_policy: names-and-shapes-only-no-values
+  required_names:
+    - NODE_ENV
+    - HOST
+    - PORT
+    - PLATFORM_SOURCE_COMMIT_SHA
+  optional_names:
+    - PLATFORM_SERVER_CORS_ORIGIN
+    - PLATFORM_SERVER_CORS_ALLOWLIST
+    - PLATFORM_SERVER_HEALTH_EXPOSURE
+  secret_names: []
+verification:
+  liveness_path: /livez
+  readiness_path: /readyz
+  release_verification_path: /internal/release-verification
+  route_exposure: private-verifier-only
+  status: unresolved-e0-required
+  owner: platform-runtime
+dependencies:
+  required: []
+  optional: []
+  excluded:
+    - persistence
+    - queue
+    - product-application
+    - provider-adapter
+receipt:
+  status: unresolved-e0-required
+  owner: deployment-platform
+  safe_fields:
+    - target
+    - environment_class
+    - provider_region_alias
+    - program_id
+    - image_contract_id
+    - source_revision
+    - image_digest
+    - release_identity
+    - checked_at
+    - health_verdict
+    - verification_verdict
+    - receipt_reference
+rollback:
+  status: unresolved-e0-required
+  owner: deployment-platform
+  strategy: retain-prior-immutable-digest
+  maximum_automatic_retries: 0
+excludes:
+  - public-ingress
+  - persistence
+  - application-identity
+  - product-capabilities
+  - queues-and-workers
+  - provider-adapters
+  - full-observability-delivery

@@ -33,6 +33,8 @@ node scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runt
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts"
 python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py \
   --compiled-root "$TEMPORARY_DIRECTORY/artifacts" --json | grep -F '"verdict": "passed"' >/dev/null
+node scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/runtime-command-test.mjs \
+  "$TEMPORARY_DIRECTORY/artifacts"
 
 printf '%s\n' 'require("@kanbien/platform-persistence");' >> "$TEMPORARY_DIRECTORY/artifacts/kanbien-core-server.main.js"
 if output="$(python3 scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py --compiled-root "$TEMPORARY_DIRECTORY/artifacts" --json 2>&1)"; then

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-19T21:04:22Z
-latest_commit_sha: bb539fe3
-chat_duration: 1253093s (14:12:04:53)
+latest_commit_at_utc: 2026-10-20T03:54:43Z
+latest_commit_sha: ad6cf1e8
+chat_duration: 1277714s (14:18:55:14)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -44,6 +44,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Docker daemon unavailable for local core image smoke
   Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
+
+
+- Raised: Core-server image command wrapper exited cleanly without starting the server
+  Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
 
 ## Decisions Made
 
@@ -94,6 +98,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt a dedicated local core-server image boundary
   Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
+
+
+- Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
+  Rationale: The repository records the target’s scope, safe configuration shapes, technical-access intent, private verifier requirement, receipt and rollback requirements, and all E0 selection gaps. It blocks target mutation until live facts are inspected and an approved change set exists.
+
+
+- Decision: Adopt fixed target-bound R6 control surfaces
+  Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
 
 ## Context Hygiene
 
@@ -169,6 +181,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
   Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
+
+
+- Summary: Refreshed from the accepted local-main merge through a clean rehearsal, then added R5’s static planned-target declarations. The target checker passes only repository-declaration completeness; live alignment remains not checked and all E0 facts remain unresolved blockers.
+  Durable evidence: Durable artifacts: infra/04.deploy/03.product/targets/kanbien-core-platform/ and scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/.
+
+
+- Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider clients or external commands. They pass smoke tests, reject target override, and report unresolved E0 facts plus external_access_attempted false.
+  Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
+
+
+- Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
+  Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
 
 ## Activity Log
 
@@ -685,6 +709,95 @@ Summary: Refreshed the active chat branch from local and fetched origin/main thr
 
 Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
 
+
+### 2026-10-20T03:36:12Z - Decision
+
+Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
+
+Rationale: The repository records the target’s scope, safe configuration shapes, technical-access intent, private verifier requirement, receipt and rollback requirements, and all E0 selection gaps. It blocks target mutation until live facts are inspected and an approved change set exists.
+
+
+### 2026-10-20T03:36:12Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a fail-closed repository declaration; it does not choose an AWS account, region, runtime, network, role, registry, or provider resource.
+
+
+### 2026-10-20T03:36:12Z - Context hygiene
+
+Summary: Refreshed from the accepted local-main merge through a clean rehearsal, then added R5’s static planned-target declarations. The target checker passes only repository-declaration completeness; live alignment remains not checked and all E0 facts remain unresolved blockers.
+
+Durable evidence: Durable artifacts: infra/04.deploy/03.product/targets/kanbien-core-platform/ and scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/.
+
+
+### 2026-10-20T03:36:52Z - Commit recorded
+
+Commit: `60891e4b`
+
+Message: feat(deploy): declare core platform target
+
+Summary: Added the planned-not-live-selected kanbien-core-platform target, bootstrap scope, foundation/access/network/pipeline declarations, and fail-closed static coverage verifier. Every live provider fact remains explicit E0-required and target mutation is blocked.
+
+ADR impact: No ADR: no AWS/provider selection or live resource decision was made.
+
+
+### 2026-10-20T03:46:06Z - Decision
+
+Decision: Adopt fixed target-bound R6 control surfaces
+
+Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
+
+### 2026-10-20T03:46:06Z - ADR disposition
+
+ADR needed: no
+
+Reason: The controls implement the already-approved rehearsal boundary; they do not select or mutate any provider resource.
+
+
+### 2026-10-20T03:46:06Z - Context hygiene
+
+Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider clients or external commands. They pass smoke tests, reject target override, and report unresolved E0 facts plus external_access_attempted false.
+
+Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
+
+
+### 2026-10-20T03:46:39Z - Commit recorded
+
+Commit: `25014ff9`
+
+Message: feat(deploy): add core target control surfaces
+
+Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
+
+ADR impact: No ADR: no provider selection or target mutation occurred.
+
+
+### 2026-10-20T03:54:24Z - Issue
+
+Raised: Core-server image command wrapper exited cleanly without starting the server
+
+Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
+
+
+### 2026-10-20T03:54:24Z - Context hygiene
+
+Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
+
+Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
+
+
+### 2026-10-20T03:54:43Z - Commit recorded
+
+Commit: `ad6cf1e8`
+
+Message: fix(deploy): start core image command
+
+Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
+
+ADR impact: No ADR: repair within the existing image contract.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -804,6 +917,27 @@ Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeee
   Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
   ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
 
+
+- Commit: `60891e4b`
+  Time UTC: 2026-10-20T03:36:52Z
+  Message: feat(deploy): declare core platform target
+  Summary: Added the planned-not-live-selected kanbien-core-platform target, bootstrap scope, foundation/access/network/pipeline declarations, and fail-closed static coverage verifier. Every live provider fact remains explicit E0-required and target mutation is blocked.
+  ADR impact: No ADR: no AWS/provider selection or live resource decision was made.
+
+
+- Commit: `25014ff9`
+  Time UTC: 2026-10-20T03:46:39Z
+  Message: feat(deploy): add core target control surfaces
+  Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
+  ADR impact: No ADR: no provider selection or target mutation occurred.
+
+
+- Commit: `ad6cf1e8`
+  Time UTC: 2026-10-20T03:54:43Z
+  Message: fix(deploy): start core image command
+  Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
+  ADR impact: No ADR: repair within the existing image contract.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -812,14 +946,14 @@ Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeee
 
 ADR needed: no
 ADR path:
-Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
+Reason: The controls implement the already-approved rehearsal boundary; they do not select or mutate any provider resource.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-19T21:04:22Z
-Latest commit SHA: bb539fe3
-Chat duration: 1253093s (14:12:04:53)
+Latest commit at UTC: 2026-10-20T03:54:43Z
+Latest commit SHA: ad6cf1e8
+Chat duration: 1277714s (14:18:55:14)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

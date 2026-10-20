@@ -1,0 +1,77 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.target-profile
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: deployment-target-profile
+#   purpose: Declare the planned isolated Kanbien core-platform target without selecting live provider facts.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/target-profile/v1
+id: kanbien-core-platform
+status: planned-not-live-selected
+baseline: absent
+live_alignment: not-checked
+repository_declaration: repository-declaration-complete
+provider:
+  family: aws
+  selection_status: unresolved-e0-required
+target_mutation:
+  status: blocked
+  allowed_after: approved-e0-inspection-and-e1-change-set
+  allowed_operation: create-only
+e0_required_facts:
+  - id: provider-account-profile
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: read-only-identity-inspection
+  - id: provider-region
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: read-only-region-and-quota-inspection
+  - id: runtime-family
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: approved-runtime-selection
+  - id: private-network-placement
+    status: unresolved-e0-required
+    owner: network-owner
+    evidence: read-only-network-feasibility-inspection
+  - id: image-custody-destination
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: read-only-registry-availability-inspection
+  - id: private-verifier-placement
+    status: unresolved-e0-required
+    owner: platform-runtime
+    evidence: read-only-private-route-feasibility-inspection
+  - id: logging-destination
+    status: unresolved-e0-required
+    owner: observability-owner
+    evidence: approved-logging-selection
+  - id: cost-guard
+    status: unresolved-e0-required
+    owner: cost-owner
+    evidence: read-only-cost-and-budget-inspection
+  - id: delivery-identity
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: approved-github-oidc-selection
+  - id: workload-startup-identity
+    status: unresolved-e0-required
+    owner: platform-runtime
+    evidence: approved-runtime-access-selection
+  - id: rollback-custody
+    status: unresolved-e0-required
+    owner: deployment-platform
+    evidence: approved-immutable-release-retention-selection

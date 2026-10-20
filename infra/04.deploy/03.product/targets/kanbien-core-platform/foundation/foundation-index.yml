@@ -1,0 +1,43 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: foundation-index
+#   purpose: Index unresolved shared target facilities required before bootstrap target creation.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/target-foundation-index/v1
+target: kanbien-core-platform
+status: planned-not-live-selected
+resources:
+  - id: private-network
+    declaration: network.yml
+    status: unresolved-e0-required
+    owner: network-owner
+  - id: technical-access
+    declaration: technical-access.yml
+    status: unresolved-e0-required
+    owner: deployment-platform
+  - id: image-custody
+    declaration: target-profile.yml#image-custody-destination
+    status: unresolved-e0-required
+    owner: deployment-platform
+  - id: logging-destination
+    declaration: target-profile.yml#logging-destination
+    status: unresolved-e0-required
+    owner: observability-owner
+  - id: cost-guard
+    declaration: target-profile.yml#cost-guard
+    status: unresolved-e0-required
+    owner: cost-owner

@@ -1,0 +1,38 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: pipeline-index
+#   purpose: Catalogue the future package-custody pipeline without creating executable publication or deployment authority.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/pipeline-index/v1
+target: kanbien-core-platform
+status: planned-not-live-selected
+pipelines:
+  - id: core-server-package-custody
+    owner: deployment-platform
+    state: declaration-only
+    executable_workflow: not-created
+    provider_identity: unresolved-e0-required
+    package_destination: unresolved-e0-required
+    permitted_operations: []
+    required_proofs:
+      - local-image-qualification
+      - vulnerability-scan
+      - sbom
+      - provenance-attestation
+      - immutable-digest
+      - custody-receipt
+    deployment_boundary: target-bound-deploy-capability-not-this-pipeline

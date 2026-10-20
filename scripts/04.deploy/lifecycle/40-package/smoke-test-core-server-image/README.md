@@ -21,8 +21,10 @@ used_by:
 # Smoke Test Core Server Image
 
 This command runs a local-only image qualification. Before Docker is used, it
-proves a compiled payload passes its declared boundary and that an injected
-forbidden persistence dependency fails with one safe diagnostic code.
+proves the exact generated image command stays listening long enough to serve
+liveness, readiness, and safe release verification. It also proves a compiled
+payload passes its declared boundary and that an injected forbidden persistence
+dependency fails with one safe diagnostic code.
 
 With a working Docker daemon it builds the candidate image, starts it under a
 read-only filesystem and no Linux capabilities, then checks liveness,

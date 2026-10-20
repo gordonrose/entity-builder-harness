@@ -1,0 +1,34 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: network-declaration
+#   purpose: Declare the private network outcome required for bootstrap verification without selecting provider resources.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
+schema: deploy/network-declaration/v1
+target: kanbien-core-platform
+status: unresolved-e0-required
+public_ingress: prohibited
+private_verifier_route:
+  status: unresolved-e0-required
+  route: /internal/release-verification
+  permitted_caller: selected-private-verifier-only
+  owner: network-owner
+  evidence: read-only-private-route-feasibility-inspection
+forbidden:
+  - public-load-balancer
+  - public-dns
+  - public-verifier-route
+  - staging-network-reuse
