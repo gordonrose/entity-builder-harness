@@ -158,7 +158,7 @@ Resources:
           - Effect: Allow
             Principal: '*'
             Action: [logs:CreateLogStream, logs:PutLogEvents]
-            Resource: !Sub '${LogGroup.Arn}:log-stream:*'
+            Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*'
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   Namespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace

@@ -70,6 +70,18 @@ assert "ContainerName:" not in service_registry.group("body")
 assert "ContainerPort:" not in service_registry.group("body")
 PY
 
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
+import re
+import sys
+
+template = open(sys.argv[1], encoding="utf-8").read()
+endpoint = re.search(r"LogsEndpoint:.*?\n      Tags:", template, re.S)
+assert endpoint, "missing CloudWatch Logs endpoint"
+expected = "Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroup}:log-stream:*'"
+assert expected in endpoint.group(0), "missing exact CloudWatch Logs endpoint policy resource"
+assert "Resource: !Sub '${LogGroup.Arn}:log-stream:*'" not in endpoint.group(0)
+PY
+
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py" <<'PY'
 import importlib.util
 import sys

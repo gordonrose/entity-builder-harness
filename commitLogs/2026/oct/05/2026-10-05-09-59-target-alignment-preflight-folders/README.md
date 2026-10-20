@@ -89,6 +89,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: CloudFormation rejected the ECS service registry binding because the target service-discovery resource uses A records.
   Resolution: The runtime template incorrectly supplied container-name and container-port fields that apply to SRV-style registration, and the deploy wrapper then misreported the successful execute response because it was empty.
 
+
+- Raised: The corrected service failed to launch because the private CloudWatch Logs endpoint policy denied CreateLogStream.
+  Resolution: The endpoint policy appended log-stream syntax to LogGroup.Arn, producing an ARN shape that did not match the actual log stream resource.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -198,6 +202,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: The runtime template and deploy control now model the A-record service-discovery contract explicitly.
   Rationale: A-record registry bindings provide only RegistryArn; regression coverage rejects container fields and accepts empty successful mutation responses.
+
+
+- Decision: CloudWatch Logs endpoint policies must use an explicitly constructed log-stream ARN, tested against the endpoint block.
+  Rationale: The shared foundation policy now uses partition, region, account, log-group name, and log-stream wildcard directly; the task role policy remains separate.
 
 ## Context Hygiene
 
@@ -1266,6 +1274,20 @@ Message: fix(deploy): align service discovery binding
 Summary: Removed SRV-only fields from the A-record ECS registry binding and made successful empty AWS mutation responses valid, with regression coverage.
 
 ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
+
+### 2026-10-20T19:46:08Z - Issue
+
+Raised: The corrected service failed to launch because the private CloudWatch Logs endpoint policy denied CreateLogStream.
+
+Resolution: The endpoint policy appended log-stream syntax to LogGroup.Arn, producing an ARN shape that did not match the actual log stream resource.
+
+
+### 2026-10-20T19:46:08Z - Decision
+
+Decision: CloudWatch Logs endpoint policies must use an explicitly constructed log-stream ARN, tested against the endpoint block.
+
+Rationale: The shared foundation policy now uses partition, region, account, log-group name, and log-stream wildcard directly; the task role policy remains separate.
 
 ## Sub-Agent Activity
 
