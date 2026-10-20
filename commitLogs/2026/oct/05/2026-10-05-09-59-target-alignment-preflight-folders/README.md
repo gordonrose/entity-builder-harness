@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:33:20Z
-latest_commit_sha: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
-chat_duration: 1301631s (15:01:33:51)
+latest_commit_at_utc: 2026-10-20T10:53:24Z
+latest_commit_sha: 7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa
+chat_duration: 1302835s (15:01:53:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -963,6 +963,17 @@ Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer
 
 Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
 
+
+### 2026-10-20T10:53:24Z - Commit recorded
+
+Commit: `7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa`
+
+Message: feat(deploy): add core platform custody and runtime controls
+
+Summary: Added target-bound package custody workflow and safe receipt validation, private immutable-digest runtime/verifier CloudFormation, and hardened foundation network and ECR controls. All local static, receipt, workflow, target declaration, whitespace and CloudFormation validation checks passed; E2c remains blocked by AWS Target cost-tag propagation.
+
+ADR impact: ADR 0003 remains the applicable private ECS target decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1117,6 +1128,13 @@ Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-
   Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
   ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
 
+
+- Commit: `7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa`
+  Time UTC: 2026-10-20T10:53:24Z
+  Message: feat(deploy): add core platform custody and runtime controls
+  Summary: Added target-bound package custody workflow and safe receipt validation, private immutable-digest runtime/verifier CloudFormation, and hardened foundation network and ECR controls. All local static, receipt, workflow, target declaration, whitespace and CloudFormation validation checks passed; E2c remains blocked by AWS Target cost-tag propagation.
+  ADR impact: ADR 0003 remains the applicable private ECS target decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1130,9 +1148,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T10:33:20Z
-Latest commit SHA: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
-Chat duration: 1301631s (15:01:33:51)
+Latest commit at UTC: 2026-10-20T10:53:24Z
+Latest commit SHA: 7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa
+Chat duration: 1302835s (15:01:53:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
