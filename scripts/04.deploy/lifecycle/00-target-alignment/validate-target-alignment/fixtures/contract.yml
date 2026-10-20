@@ -1,0 +1,12 @@
+schema: deploy/target-alignment-contract/v1
+target: example-target
+assertions:
+  - { id: right-destination }
+  - { id: right-application }
+  - { id: known-healthy-baseline }
+  - { id: allowed-deployment-route }
+  - { id: package-destination }
+  - { id: required-access }
+  - { id: required-settings }
+  - { id: change-safety }
+  - { id: freshness-and-drift }

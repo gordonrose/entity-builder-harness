@@ -90,9 +90,11 @@ A provider adapter must:
   secret reads; and
 - stop before a provider mutation or an ungoverned recovery action.
 
-During the current transition, AWS inspection remains governed by
-`.agentic/aws/workflows/inspect-aws-state.md`. No AWS adapter exists under this
-standard yet.
+AWS inspection remains governed by `.agentic/aws/workflows/inspect-aws-state.md`.
+An AWS adapter may be introduced only for a fixed declared assertion set. It
+must normalize provider output before the generic validator receives it, and a
+target wrapper must bind the profile, region, account, stack and resource names
+without accepting user-supplied selectors.
 
 ## Evidence
 

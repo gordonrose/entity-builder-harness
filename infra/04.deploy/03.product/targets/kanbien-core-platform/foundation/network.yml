@@ -21,10 +21,10 @@
 #     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
 schema: deploy/network-declaration/v1
 target: kanbien-core-platform
-status: unresolved-e0-required
+status: established-e2c-fresh-e4-evidence-required
 public_ingress: prohibited
 private_verifier_route:
-  status: unresolved-e0-required
+  status: established-e2c-fresh-e4-evidence-required
   route: /internal/release-verification
   permitted_caller: selected-private-verifier-only
   owner: network-owner

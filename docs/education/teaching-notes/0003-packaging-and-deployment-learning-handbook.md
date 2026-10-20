@@ -1937,6 +1937,31 @@ Provider-controlled delays—such as a tag becoming visible, a scan completing,
 or DNS settling—use a separate safe condition-evidence record. `waiting` means
 the provider has not yet supplied proof; it never means the work is complete.
 
+### A foundation must export, not merely contain, runtime inputs
+
+An infrastructure template can create the right network and still be
+insufficient for a later workload. The workload can safely consume only values
+that the foundation explicitly exports. For the core runtime, that means the
+VPC and private subnet identifiers as well as the cluster, log group, security
+groups, service-discovery service, execution role, and repository address.
+
+This distinction prevents a common unsafe shortcut: an operator remembering or
+copying an identifier into a deployment command. The correct path is:
+
+```text
+qualified receipt
+→ fresh target alignment
+→ foundation outputs
+→ exact reviewed change set
+→ execute once
+→ private verifier
+```
+
+If an output is missing, the deployment is blocked. The remedy is an
+output-only reviewed foundation update, followed by fresh alignment—not an
+undeclared manual parameter. An expired local cloud login is also a blocked
+authentication condition, not proof that a cloud resource is absent.
+
 ## 23. Next Lesson Queue
 
 Continue this handbook incrementally with:

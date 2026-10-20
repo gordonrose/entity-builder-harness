@@ -15,14 +15,14 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Validate candidate evidence for the fixed core-platform target and fail closed before any target mutation.
+#   purpose: Execute only the exact reviewed core-platform CloudFormation change set derived from a qualified receipt.
 #   portability:
 #     class: internal
 #     targets: []
 #   effects:
-#   - read-only
+#   - aws-mutation
 #   used_by:
 #   - id: deploy.test.kanbien-core-platform.target-controls
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
 
-exec python3 "$(dirname "$0")/../control-surface.py" deploy-candidate "$@"
+exec python3 "$(dirname "$0")/deploy.py" "$@"

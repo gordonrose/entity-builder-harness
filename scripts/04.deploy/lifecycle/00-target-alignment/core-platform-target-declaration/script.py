@@ -117,14 +117,14 @@ def required_mapping(document: dict[str, Any], key: str, code: str) -> dict[str,
 def check_profile(profile: dict[str, Any]) -> None:
     if profile.get("schema") != "deploy/target-profile/v1" or profile.get("id") != TARGET:
         raise DeclarationFailure("target-profile-invalid")
-    if profile.get("status") != "planned-not-live-selected":
+    if profile.get("status") != "foundation-ready-runtime-absent":
         raise DeclarationFailure("target-status-invalid")
-    if profile.get("baseline") != "absent" or profile.get("repository_declaration") != "repository-declaration-complete":
+    if profile.get("baseline") != "runtime-absent" or profile.get("repository_declaration") != "repository-declaration-complete":
         raise DeclarationFailure("target-baseline-invalid")
-    if profile.get("live_alignment") != "not-checked":
-        raise DeclarationFailure("live-alignment-falsely-ready")
+    if profile.get("live_alignment") != "fresh-e4-required":
+        raise DeclarationFailure("live-alignment-state-invalid")
     provider = required_mapping(profile, "provider", "provider-declaration-missing")
-    if provider.get("family") != "aws" or provider.get("selection_status") != "unresolved-e0-required":
+    if provider.get("family") != "aws" or provider.get("selection_status") != "selected-e2c-fresh-e4-evidence-required":
         raise DeclarationFailure("provider-selection-invalid")
     mutation = required_mapping(profile, "target_mutation", "target-mutation-missing")
     if mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "create-only":
@@ -133,12 +133,13 @@ def check_profile(profile: dict[str, Any]) -> None:
     if not isinstance(facts, list):
         raise DeclarationFailure("e0-fact-missing")
     found: set[str] = set()
+    allowed_fact_statuses = {"fresh-e4-evidence-required", "selected-e2c-fresh-e4-evidence-required", "declared-create-only-no-automatic-retry", "qualified-e3-receipt-required-before-e4"}
     for fact in facts:
         if not isinstance(fact, dict) or not non_empty(fact.get("id")):
             raise DeclarationFailure("e0-fact-invalid")
         fact_id = fact["id"]
         found.add(fact_id)
-        if fact.get("status") != "unresolved-e0-required":
+        if fact.get("status") not in allowed_fact_statuses:
             raise DeclarationFailure("e0-fact-status-invalid")
         if not non_empty(fact.get("owner")):
             raise DeclarationFailure("e0-fact-unowned")
@@ -158,20 +159,20 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") != "unresolved-e0-required":
+        if item.get("status") not in {"established-e2c-fresh-e4-evidence-required", "waived-with-compensating-controls-fresh-e4-evidence-required"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
     network = mapping(root / "foundation" / "network.yml", "network-declaration-unreadable")
     route = required_mapping(network, "private_verifier_route", "private-verifier-missing")
-    if network.get("public_ingress") != "prohibited" or route.get("status") != "unresolved-e0-required" or route.get("permitted_caller") != "selected-private-verifier-only":
+    if network.get("public_ingress") != "prohibited" or route.get("status") != "established-e2c-fresh-e4-evidence-required" or route.get("permitted_caller") != "selected-private-verifier-only":
         raise DeclarationFailure("private-verifier-invalid")
     access = mapping(root / "foundation" / "technical-access.yml", "technical-access-unreadable")
     intents = access.get("access_intents")
     if not isinstance(intents, list) or {item.get("id") for item in intents if isinstance(item, dict)} != {"delivery-custody", "workload-startup"}:
         raise DeclarationFailure("technical-access-invalid")
     for intent in intents:
-        if not isinstance(intent, dict) or intent.get("provider_identity") != "unresolved-e0-required" or not non_empty(intent.get("owner")):
+        if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
     cost = mapping(root / "foundation" / "cost-control.yml", "cost-control-unreadable")
     waiver = required_mapping(cost, "waiver", "cost-control-invalid")
@@ -201,7 +202,7 @@ def check_scope(root: Path) -> None:
     if program.get("id") != "kanbien-core-server" or program.get("contract") != "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml" or program.get("image_contract") != "infra/04.deploy/03.product/image/core-server/image-contract.yml":
         raise DeclarationFailure("scope-program-invalid")
     workload = required_mapping(contract, "workload", "scope-workload-missing")
-    if workload.get("operation") != "create-only" or workload.get("runtime_selection") != "unresolved-e0-required" or workload.get("startup_access") != "foundation/technical-access.yml#workload-startup" or workload.get("network") != "foundation/network.yml#private-verifier-route":
+    if workload.get("operation") != "create-only" or workload.get("runtime_selection") != "ecs-fargate-private-immutable-digest" or workload.get("startup_access") != "foundation/technical-access.yml#workload-startup" or workload.get("network") != "foundation/network.yml#private-verifier-route":
         raise DeclarationFailure("scope-workload-invalid")
     configuration = required_mapping(contract, "configuration", "scope-configuration-missing")
     if configuration.get("value_policy") != "names-and-shapes-only-no-values" or configuration.get("secret_names") != []:
@@ -210,7 +211,7 @@ def check_scope(root: Path) -> None:
     if not names or not all(isinstance(name, str) and SAFE_CONFIG_NAME.fullmatch(name) for name in names):
         raise DeclarationFailure("scope-configuration-invalid")
     verification = required_mapping(contract, "verification", "scope-verification-missing")
-    if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "unresolved-e0-required" or not non_empty(verification.get("owner")):
+    if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "fresh-e4-live-verification-required" or not non_empty(verification.get("owner")):
         raise DeclarationFailure("scope-verification-invalid")
     dependencies = required_mapping(contract, "dependencies", "scope-dependencies-missing")
     if dependencies.get("required") != [] or dependencies.get("optional") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
@@ -219,7 +220,7 @@ def check_scope(root: Path) -> None:
         raise DeclarationFailure("scope-exclusions-invalid")
     for section, code in (("receipt", "receipt-declaration-invalid"), ("rollback", "rollback-declaration-invalid")):
         value = required_mapping(contract, section, code)
-        if value.get("status") != "unresolved-e0-required" or not non_empty(value.get("owner")):
+        if value.get("status") not in {"qualified-e3-receipt-required-before-e4", "immutable-first-release-rollback-declaration"} or not non_empty(value.get("owner")):
             raise DeclarationFailure(code)
     receipt = required_mapping(contract, "receipt", "receipt-declaration-invalid")
     receipt_fields = receipt.get("safe_fields")
@@ -227,7 +228,7 @@ def check_scope(root: Path) -> None:
         raise DeclarationFailure("receipt-declaration-invalid")
     binding = mapping(scope_root / "workload-binding.yml", "workload-binding-unreadable")
     mutation = required_mapping(binding, "mutation", "workload-binding-invalid")
-    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "unresolved-e0-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "create-only":
+    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "foundation-ready-runtime-absent" or binding.get("provider_workload") != "fixed-ecs-fargate-runtime-stack-fresh-e4-evidence-required" or binding.get("private_verifier") != "fixed-one-shot-private-ecs-task-fresh-e4-evidence-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "create-only":
         raise DeclarationFailure("workload-binding-invalid")
 
 

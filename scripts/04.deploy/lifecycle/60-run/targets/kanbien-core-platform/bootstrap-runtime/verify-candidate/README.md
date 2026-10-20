@@ -23,10 +23,10 @@ used_by:
 # Verify Core-Platform Candidate
 
 `script.sh` is fixed to `kanbien-core-platform/bootstrap-runtime`; it accepts
-no target selector. A later live verifier will require a candidate id,
-immutable image digest, and safe receipt reference before joining package,
-workload, and server identity evidence.
+only the qualified package receipt. It verifies that the running ECS service
+uses that receipt's immutable digest and runs the one-shot private verifier
+once. It cannot select another target, stack, region, route, or image.
 
-Until E0 selects the target and the approved deployment change exists, it
-returns a deterministic blocked report without reading or changing any live
-system.
+The verifier runs only after the fixed deployment command has accepted the
+matching reviewed change set. It has no retry loop: a failed check is a
+recorded blocker for diagnosis or explicit recovery.

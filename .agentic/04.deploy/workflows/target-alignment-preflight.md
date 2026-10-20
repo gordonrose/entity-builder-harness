@@ -71,17 +71,18 @@ an assertion is unknown or stale, a required comparison fails, a dependency is
 undeclared, a provider response cannot be normalized safely, or a proposed
 operation would mutate the target.
 
-## Transitional AWS Route
+## AWS Route
 
-Until an AWS adapter is separately designed and approved, use the existing
-AWS inspection workflow only when its required account/profile, region, and
-target inputs are known:
+AWS inspection remains governed by the existing inspection workflow when its
+required account/profile, region, and target inputs are known:
 
 ```text
 .agentic/aws/workflows/inspect-aws-state.md
 ```
 
-That workflow remains the authority for read-only AWS inspection. This
+That workflow remains the authority for read-only AWS inspection. The first
+AWS adapter may normalize the bounded first-release runtime facts only; it
+accepts no arbitrary provider query and has no mutation authority. This
 provider-neutral workflow adds no permission and does not authorize a live AWS
 call by itself.
 

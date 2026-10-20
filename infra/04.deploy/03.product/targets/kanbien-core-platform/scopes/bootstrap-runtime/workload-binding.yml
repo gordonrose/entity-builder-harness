@@ -12,7 +12,7 @@
 #   - security
 #   - sre
 #   kind: workload-binding
-#   purpose: Bind the bootstrap scope to its existing program and image contracts without selecting a provider workload.
+#   purpose: Bind the bootstrap scope to its selected ECS workload form while requiring fresh E4 evidence before creation.
 #   portability:
 #     class: internal
 #     targets: []
@@ -23,14 +23,14 @@ schema: deploy/workload-binding/v1
 id: kanbien-core-platform-bootstrap-runtime-workload
 target: kanbien-core-platform
 scope: bootstrap-runtime
-status: unresolved-e0-required
+status: foundation-ready-runtime-absent
 owner: platform-runtime
 program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
 program_id: kanbien-core-server
 image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
 package_identity: runtime-bound-sha256
-provider_workload: unresolved-e0-required
-private_verifier: unresolved-e0-required
+provider_workload: fixed-ecs-fargate-runtime-stack-fresh-e4-evidence-required
+private_verifier: fixed-one-shot-private-ecs-task-fresh-e4-evidence-required
 proposed_provider_binding:
   template: cloudformation/bootstrap-runtime.yml
   workload_kind: ecs-fargate-service

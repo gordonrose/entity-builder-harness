@@ -22,7 +22,7 @@
 schema: deploy/target-scope-contract/v1
 id: kanbien-core-platform-bootstrap-runtime
 target: kanbien-core-platform
-status: planned-not-live-selected
+status: foundation-ready-runtime-absent
 owner: platform-runtime
 program:
   id: kanbien-core-server
@@ -31,7 +31,7 @@ program:
   local_proof: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
 workload:
   operation: create-only
-  runtime_selection: unresolved-e0-required
+  runtime_selection: ecs-fargate-private-immutable-digest
   runtime_template: cloudformation/bootstrap-runtime.yml
   runtime_boundary: ecs-fargate-private-immutable-digest
   startup_access: foundation/technical-access.yml#workload-startup
@@ -54,7 +54,7 @@ verification:
   readiness_path: /readyz
   release_verification_path: /internal/release-verification
   route_exposure: private-verifier-only
-  status: unresolved-e0-required
+  status: fresh-e4-live-verification-required
   owner: platform-runtime
   verifier:
     type: one-shot-private-ecs-task
@@ -72,7 +72,7 @@ dependencies:
     - product-application
     - provider-adapter
 receipt:
-  status: unresolved-e0-required
+  status: qualified-e3-receipt-required-before-e4
   owner: deployment-platform
   safe_fields:
     - target
@@ -88,7 +88,7 @@ receipt:
     - verification_verdict
     - receipt_reference
 rollback:
-  status: unresolved-e0-required
+  status: immutable-first-release-rollback-declaration
   owner: deployment-platform
   strategy: retain-prior-immutable-digest
   maximum_automatic_retries: 0

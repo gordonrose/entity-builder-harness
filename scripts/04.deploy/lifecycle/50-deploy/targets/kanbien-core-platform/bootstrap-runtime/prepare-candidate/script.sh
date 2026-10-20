@@ -15,14 +15,15 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Prepare only the fixed core-platform candidate control report; never select or contact a live target.
+#   purpose: Inspect the fixed core-platform target against a qualified package before a change set may be created.
 #   portability:
 #     class: internal
 #     targets: []
 #   effects:
-#   - read-only
+#   - network
 #   used_by:
 #   - id: deploy.test.kanbien-core-platform.target-controls
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
 
-exec python3 "$(dirname "$0")/../control-surface.py" prepare-candidate "$@"
+ROOT="$(git rev-parse --show-toplevel)"
+exec bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh" "$@"

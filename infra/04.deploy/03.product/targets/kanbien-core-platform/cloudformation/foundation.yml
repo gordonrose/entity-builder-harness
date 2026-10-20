@@ -220,6 +220,8 @@ Resources:
           Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CostAlertEmail }]
 
 Outputs:
+  VpcId: { Value: !Ref VpcId }
+  PrivateSubnetIds: { Value: !Join [',', !Ref PrivateSubnetIds] }
   RepositoryUri: { Value: !Ref ExistingRepositoryUri }
   ClusterArn: { Value: !GetAtt Cluster.Arn }
   LogGroupName: { Value: !Ref LogGroup }

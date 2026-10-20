@@ -12,7 +12,7 @@
 #   - security
 #   - sre
 #   kind: deployment-target-profile
-#   purpose: Declare the planned isolated Kanbien core-platform target without selecting live provider facts.
+#   purpose: Declare the selected isolated Kanbien core-platform target and require fresh live evidence before each runtime mutation.
 #   portability:
 #     class: internal
 #     targets: []
@@ -21,59 +21,59 @@
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
 schema: deploy/target-profile/v1
 id: kanbien-core-platform
-status: planned-not-live-selected
-baseline: absent
-live_alignment: not-checked
+status: foundation-ready-runtime-absent
+baseline: runtime-absent
+live_alignment: fresh-e4-required
 repository_declaration: repository-declaration-complete
 provider:
   family: aws
-  selection_status: unresolved-e0-required
+  selection_status: selected-e2c-fresh-e4-evidence-required
 target_mutation:
   status: blocked
-  allowed_after: approved-e0-inspection-and-e1-change-set
+  allowed_after: qualified-e3-receipt-fresh-e4-alignment-and-approved-change-set
   allowed_operation: create-only
 e0_required_facts:
   - id: provider-account-profile
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: deployment-platform
     evidence: read-only-identity-inspection
   - id: provider-region
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: deployment-platform
     evidence: read-only-region-and-quota-inspection
   - id: runtime-family
-    status: unresolved-e0-required
+    status: selected-e2c-fresh-e4-evidence-required
     owner: deployment-platform
     evidence: approved-runtime-selection
   - id: private-network-placement
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: network-owner
     evidence: read-only-network-feasibility-inspection
   - id: image-custody-destination
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: deployment-platform
     evidence: read-only-registry-availability-inspection
   - id: private-verifier-placement
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: platform-runtime
     evidence: read-only-private-route-feasibility-inspection
   - id: logging-destination
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: observability-owner
     evidence: approved-logging-selection
   - id: cost-guard
-    status: unresolved-e0-required
+    status: declared-create-only-no-automatic-retry
     owner: cost-owner
     evidence: read-only-cost-and-budget-inspection
   - id: delivery-identity
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: deployment-platform
     evidence: approved-github-oidc-selection
   - id: workload-startup-identity
-    status: unresolved-e0-required
+    status: fresh-e4-evidence-required
     owner: platform-runtime
     evidence: approved-runtime-access-selection
   - id: rollback-custody
-    status: unresolved-e0-required
+    status: qualified-e3-receipt-required-before-e4
     owner: deployment-platform
     evidence: approved-immutable-release-retention-selection

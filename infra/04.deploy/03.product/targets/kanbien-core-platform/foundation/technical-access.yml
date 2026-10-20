@@ -21,12 +21,12 @@
 #     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
 schema: deploy/technical-access/v1
 target: kanbien-core-platform
-status: unresolved-e0-required
+status: established-e2c-fresh-e4-evidence-required
 access_intents:
   - id: delivery-custody
     actor: delivery-pipeline
     purpose: obtain-approved-immutable-package-and-submit-reviewed-change-set
-    provider_identity: unresolved-e0-required
+    provider_identity: github-kanbien-core-platform-delivery-fresh-e4-evidence-required
     owner: deployment-platform
     forbidden:
       - secret-value-read
@@ -35,7 +35,7 @@ access_intents:
   - id: workload-startup
     actor: target-runtime
     purpose: obtain-selected-package-and-approved-non-secret-startup-configuration
-    provider_identity: unresolved-e0-required
+    provider_identity: kanbien-core-platform-task-execution-fresh-e4-evidence-required
     owner: platform-runtime
     forbidden:
       - delivery-mutation
