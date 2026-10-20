@@ -143,6 +143,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Implemented E3/E4 repository controls while E2b propagates
   Rationale: Added package custody receipt governance and a protected manual-only target image workflow; added a private immutable-digest runtime and verifier stack; hardened the E2 foundation. No E2c+ AWS resource was created.
 
+
+- Decision: Accepted temporary waiver of the target-specific budget activation gate
+  Rationale: User explicitly accepts only the delay in Target cost-allocation tag discovery. E2c-E7 may proceed with one task, no autoscaling, no NAT, no public ingress, no data services, and no new cost categories. The USD 100 Target-filtered budget must be activated and verified once AWS exposes the tag.
+
 ## Context Hygiene
 
 
@@ -973,6 +977,13 @@ Message: feat(deploy): add core platform custody and runtime controls
 Summary: Added target-bound package custody workflow and safe receipt validation, private immutable-digest runtime/verifier CloudFormation, and hardened foundation network and ECR controls. All local static, receipt, workflow, target declaration, whitespace and CloudFormation validation checks passed; E2c remains blocked by AWS Target cost-tag propagation.
 
 ADR impact: ADR 0003 remains the applicable private ECS target decision.
+
+
+### 2026-10-20T11:32:15Z - Decision
+
+Decision: Accepted temporary waiver of the target-specific budget activation gate
+
+Rationale: User explicitly accepts only the delay in Target cost-allocation tag discovery. E2c-E7 may proceed with one task, no autoscaling, no NAT, no public ingress, no data services, and no new cost categories. The USD 100 Target-filtered budget must be activated and verified once AWS exposes the tag.
 
 ## Sub-Agent Activity
 
