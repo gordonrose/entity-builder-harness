@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.scripts.readme
-version: 15
+version: 16
 status: active
 layer: 04.deploy
 domain: infra.ci-cd
@@ -39,6 +39,11 @@ workflow; this index does not authorize a bulk rename.
 
 Current commands:
 
+- `lifecycle/00-target-alignment/core-platform-target-declaration/`:
+  report-only static coverage check for the planned `kanbien-core-platform`
+  target. It proves repository-declaration completeness only and rejects a
+  missing, replaced, unowned, or falsely live-ready E0 fact; it does not read
+  AWS, GitHub, Docker, credentials, or secrets.
 - `lifecycle/20-build/core-server-dependency-boundary/`: local-only report of
   the declared Kanbien core-server compile graph, derived from TypeScript
   imports, workspace manifests, lockfile records, and temporary build output;

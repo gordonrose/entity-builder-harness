@@ -95,6 +95,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt a dedicated local core-server image boundary
   Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
 
+
+- Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
+  Rationale: The repository records the target’s scope, safe configuration shapes, technical-access intent, private verifier requirement, receipt and rollback requirements, and all E0 selection gaps. It blocks target mutation until live facts are inspected and an approved change set exists.
+
 ## Context Hygiene
 
 
@@ -169,6 +173,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
   Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
+
+
+- Summary: Refreshed from the accepted local-main merge through a clean rehearsal, then added R5’s static planned-target declarations. The target checker passes only repository-declaration completeness; live alignment remains not checked and all E0 facts remain unresolved blockers.
+  Durable evidence: Durable artifacts: infra/04.deploy/03.product/targets/kanbien-core-platform/ and scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/.
 
 ## Activity Log
 
@@ -685,6 +693,27 @@ Summary: Refreshed the active chat branch from local and fetched origin/main thr
 
 Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
 
+
+### 2026-10-20T03:36:12Z - Decision
+
+Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
+
+Rationale: The repository records the target’s scope, safe configuration shapes, technical-access intent, private verifier requirement, receipt and rollback requirements, and all E0 selection gaps. It blocks target mutation until live facts are inspected and an approved change set exists.
+
+
+### 2026-10-20T03:36:12Z - ADR disposition
+
+ADR needed: no
+
+Reason: This is a fail-closed repository declaration; it does not choose an AWS account, region, runtime, network, role, registry, or provider resource.
+
+
+### 2026-10-20T03:36:12Z - Context hygiene
+
+Summary: Refreshed from the accepted local-main merge through a clean rehearsal, then added R5’s static planned-target declarations. The target checker passes only repository-declaration completeness; live alignment remains not checked and all E0 facts remain unresolved blockers.
+
+Durable evidence: Durable artifacts: infra/04.deploy/03.product/targets/kanbien-core-platform/ and scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -812,7 +841,7 @@ Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeee
 
 ADR needed: no
 ADR path:
-Reason: The dedicated package boundary was approved in the existing core release plan; no provider, target, registry, or runtime selection is made.
+Reason: This is a fail-closed repository declaration; it does not choose an AWS account, region, runtime, network, role, registry, or provider resource.
 
 ## Session Metrics
 

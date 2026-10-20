@@ -1,0 +1,34 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: workload-binding
+#   purpose: Bind the bootstrap scope to its existing program and image contracts without selecting a provider workload.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
+schema: deploy/workload-binding/v1
+id: kanbien-core-platform-bootstrap-runtime-workload
+target: kanbien-core-platform
+scope: bootstrap-runtime
+status: unresolved-e0-required
+owner: platform-runtime
+program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+program_id: kanbien-core-server
+image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
+package_identity: runtime-bound-sha256
+provider_workload: unresolved-e0-required
+private_verifier: unresolved-e0-required
+mutation:
+  status: blocked
+  allowed_operation: create-only
