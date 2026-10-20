@@ -22,11 +22,13 @@ used_by:
 -->
 # GitHub Actions Delivery Catalogue
 
-This catalogue is deliberately not a GitHub Actions workflow. It records what
-a later reviewed workflow must prove and which E0 facts it needs. It has no
-workflow filename, OIDC role, registry, publish step, deployment step, or
-target credentials.
+The catalogue records how the target's executable package-custody workflow
+fits the controlled delivery model. The executable definition is the fixed
+workflow in `.github/workflows/`; this record does not duplicate its steps or
+create deployment authority.
 
-A later workflow may be added only after custody, identity, and target facts
-are selected. It must remain unable to deploy without the separately approved
-target-bound deploy capability and current change set.
+`core-server-package-custody` is manual-dispatch only, requires the protected
+`kanbien-core-platform` GitHub Environment, accepts only `main`, and may build,
+scan, attest, publish one immutable image, and retain a safe receipt. It may
+not create, select, update, verify, restart, or roll back a workload. Those
+remain separate target-bound deploy and run controls.

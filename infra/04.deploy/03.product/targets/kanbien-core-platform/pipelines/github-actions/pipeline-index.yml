@@ -19,15 +19,32 @@
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
 schema: deploy/pipeline-index/v1
 target: kanbien-core-platform
-status: planned-not-live-selected
+status: package-publication-active-not-deployment-authority
 pipelines:
   - id: core-server-package-custody
+    type: package-publication
     owner: deployment-platform
-    state: declaration-only
-    executable_workflow: not-created
-    provider_identity: unresolved-e0-required
-    package_destination: unresolved-e0-required
-    permitted_operations: []
+    state: active
+    executable_workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
+    trigger: workflow_dispatch
+    permitted_source_ref: refs/heads/main
+    approval: github-environment:kanbien-core-platform
+    provider_identity: github-kanbien-core-platform-delivery
+    package_destination: kanbien-core-platform/core-server
+    provider_region_alias: aws-eu-west-1
+    permitted_operations:
+      - qualify-local-image
+      - publish-immutable-image
+      - vulnerability-scan
+      - sbom
+      - provenance-attestation
+      - write-safe-package-custody-receipt
+    outputs:
+      - immutable-image-digest
+      - package-custody-receipt
+    used_by_scopes:
+      - bootstrap-runtime
+    receipt_contract: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
     required_proofs:
       - local-image-qualification
       - vulnerability-scan
