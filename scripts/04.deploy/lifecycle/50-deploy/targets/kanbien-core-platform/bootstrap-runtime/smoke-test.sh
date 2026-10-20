@@ -69,7 +69,8 @@ assert service_registry, "missing service-discovery registry binding"
 assert "ContainerName:" not in service_registry.group("body")
 assert "ContainerPort:" not in service_registry.group("body")
 assert "User:" not in template, "the task definition must preserve the image's declared non-root runtime identity"
-assert "/nodejs/bin/node -e" in template, "the ECS health check must use the distroless image's declared Node executable"
+assert "- CMD\n              - /nodejs/bin/node\n              - -e" in template, "the ECS health check must execute the distroless image's Node binary without a shell"
+assert "CMD-SHELL" not in template, "the ECS health check must not require a shell that the distroless image does not contain"
 assert "- 'node -e" not in template, "the ECS health check must not rely on PATH in the distroless image"
 PY
 

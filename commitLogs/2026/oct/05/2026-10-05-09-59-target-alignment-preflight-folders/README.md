@@ -227,6 +227,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
   Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
 
+
+- Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
+  Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
+
 ## Context Hygiene
 
 
@@ -1365,6 +1369,13 @@ Rationale: Preserve the distroless image-declared nonroot account; regression ch
 Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
 
 Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
+
+
+### 2026-10-20T20:55:36Z - Decision
+
+Decision: The corrected readiness command still used CMD-SHELL, but the distroless image contains no shell.
+
+Rationale: Use ECS CMD form with the image-declared Node binary and arguments as separate tokens; static controls reject CMD-SHELL for the core distroless image.
 
 ## Sub-Agent Activity
 
