@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.script.artifact-metadata.update-lifecycle.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-10-20"
 updated_on: "2026-10-20"
@@ -22,6 +22,12 @@ used_by:
 Use this helper to migrate explicit v2 files to v3, refresh v3 update dates
 after edits, or mark artifacts deprecated or superseded. The governing contract
 is `.agentic/01.harness/artifact-metadata/standard.md`.
+
+Explicit paths may be outside traditional harness directories and use any file
+extension. The helper shares leading-header parsing with the checker and index,
+including Python, TypeScript and Dockerfile comments. It preserves file bodies
+and prologues; embedded header examples and raw bootstrap scaffolds are not
+lifecycle update targets.
 
 ## Report Before Applying
 
@@ -73,6 +79,7 @@ title. Status metadata does not authorize file removal or deployment actions.
 ```bash
 bash scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths <file>
+bash scripts/01.harness/artifact-metadata/generate-index/script.sh --all --strict --check-coverage
 ```
 
 Commit gates use `check-headers/script.sh --staged` to validate staged lifecycle

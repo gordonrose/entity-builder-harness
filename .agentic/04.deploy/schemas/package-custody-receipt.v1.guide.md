@@ -1,5 +1,5 @@
 <!-- agentic-artifact:
-schema: agentic-artifact/v2
+schema: agentic-artifact/v3
 id: deploy.schema.package-custody-receipt.v1.guide
 version: 2
 status: draft
@@ -19,6 +19,8 @@ portability:
 used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+created_on: "2026-10-20"
+updated_on: "2026-10-20"
 -->
 # Package Custody Receipt v1 Guide
 

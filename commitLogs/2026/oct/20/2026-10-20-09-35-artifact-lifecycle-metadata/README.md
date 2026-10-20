@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:42:15Z
-latest_commit_sha: 9797cca34b7e8f0ff9037968412550769873a3c3
-chat_duration: 7576s (00:02:06:16)
+latest_commit_at_utc: 2026-10-20T13:05:05Z
+latest_commit_sha: e145ee66
+chat_duration: 16146s (00:04:29:06)
 estimated_chat_tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -118,6 +118,10 @@ Remaining unindexed paths:
 - scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
 - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py
 
+
+- Raised: Broader discovery exposed malformed legacy metadata and a historical-v2 comparison edge case.
+  Resolution: Repaired metadata in 20 of 48 missed artifacts; migrated all 48 with 46 Git-first-add dates and 2 reviewed overrides. Shared strict parsing now permits only unambiguous malformed v2 HEAD recovery; protects malformed v3 history. Empty real Git index still contains the old malformed README; verify commit gates against complete pending staged snapshot in an isolated fixture.
+
 ## Decisions Made
 
 
@@ -149,6 +153,18 @@ Remaining unindexed paths:
 - Decision: Preserve current metadata coverage during integration.
   Rationale: Main refresh added three covered documents and two infrastructure YAML templates. Migrated the three covered headers with creation evidence ca639258 on2026-10-20 and refreshed generated inventories. Existing checker/index exclude infra YAML; record this previously unindexed coverage gap for a separate governed scope change. Do not silently expand commit enforcement while publishing the reviewed indexed migration.
 
+
+- Decision: User go authorizes declaration-based discovery, metadata repairs, 48-header lifecycle backfill and coverage regression checks.
+  Rationale: Keep existing mandatory-header scope separate; validate declared headers across tracked and unignored working files. Preserve artifact identities and file bodies; leave publication for the normal commit boundary.
+
+
+- Decision: User explicitly approves committing the metadata coverage follow-up, merging it to main, and pushing remote main.
+  Rationale: Approval includes staging reviewed task paths, required session checkpoints, a non-rewriting refresh from latest main, necessary metadata integration fixes and normal origin/main push. Preserve concurrent deployment changes; no force push, history rewrite or branch deletion.
+
+
+- Decision: User approved a one-off recovery for incoming-main metadata failures during publication.
+  Rationale: Exception permits applying and committing the reviewed 14-header correction in the rehearsal worktree, running all required checks, then applying the tested refresh and completing the already approved main merge and remote push. Three incoming headers lack used_by; ordinary task gates reject preflight branches while refresh forbids applying failed checks. Patch SHA256 6999c46943d6ee6fbff1459de028f47b04eff7aa163348d773fe997a9df02d3a preserves bodies and identity. Record this as a one-off, not precedent; a durable preflight metadata-repair workflow is a possible follow-up. Original rehearsal 8ca9ec47 is retained as evidence and will be superseded by a fresh rehearsal including this authorization.
+
 ## Context Hygiene
 
 
@@ -163,6 +179,14 @@ Remaining unindexed paths:
 
 - Summary: Latest main is integrated and its covered headers are migrated.
   Durable evidence: Clean rehearsed merge78521ecb preserves main34efea7e. Three incoming indexed docs keep body, IDs, versions and statuses; creation commit ca639258 is2026-10-20 UTC. Current index1042 artifacts:1040v3,2intentionalv2examples. Metadata and recognition validation passed;7sources,2376terms. See backfill-main-refresh.json and integration-validation.json. Infrastructure YAML is a known pre-existing coverage exclusion.
+
+
+- Summary: Discovery coverage follow-up completed: 48 missed headers migrated; 1092 declared artifacts indexed and valid, including 1090 v3 and two intentional v2 examples. Three raw bootstrap scaffolds remain explicit exclusions with rendered-output validation. All implementation and public checks passed; changes remain unstaged and uncommitted.
+  Durable evidence: See coverage-backfill.json for per-artifact repair/date evidence and coverage-validation.json for 153 checker assertions, index/helper/recognition/rulebook/public regression results, syntax checks and isolated staged commit gates. ADR 0039 records declaration-based discovery; all 48 bodies and identities preserved. No deployment code executed or real Git staging/commit/push performed.
+
+
+- Summary: Metadata coverage publication is ready after the approved main-integration recovery.
+  Durable evidence: Task commit 1520ef06; clean refresh merge 0e51f506; integration correction e145ee66. Main base 5189bada preserved, including all 26 incoming artifact bodies. Final inventory is 1106 artifacts: 1104 v3 and two intentional v2 examples; zero missing or duplicates. See coverage-main-integration.json for the one-off exception, provenance, 14-header no-op report, public acceptance and staged gates. The rehearsal worktree was removed by apply-rehearsed-refresh; original un-applied rehearsal 8ca9ec47 remains local review evidence. Next step: clean session checkpoint, eligibility verification from root, approved local merge and normal origin/main push.
 
 ## Activity Log
 
@@ -459,6 +483,129 @@ Remaining unindexed paths:
 - scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
 - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py
 
+
+### 2026-10-20T12:29:46Z - Decision
+
+Decision: User go authorizes declaration-based discovery, metadata repairs, 48-header lifecycle backfill and coverage regression checks.
+
+Rationale: Keep existing mandatory-header scope separate; validate declared headers across tracked and unignored working files. Preserve artifact identities and file bodies; leave publication for the normal commit boundary.
+
+
+### 2026-10-20T12:31:14Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+Reason: Declaration-based discovery and independent inventory coverage extend the lifecycle contract recorded in ADR 0038; both decisions are part of this session.
+
+
+### 2026-10-20T12:40:35Z - Issue
+
+Raised: Broader discovery exposed malformed legacy metadata and a historical-v2 comparison edge case.
+
+Resolution: Repaired metadata in 20 of 48 missed artifacts; migrated all 48 with 46 Git-first-add dates and 2 reviewed overrides. Shared strict parsing now permits only unambiguous malformed v2 HEAD recovery; protects malformed v3 history. Empty real Git index still contains the old malformed README; verify commit gates against complete pending staged snapshot in an isolated fixture.
+
+
+### 2026-10-20T12:41:29Z - Sub-agent activity recorded
+
+Agent: lifecycle_editor
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: 48 previously unindexed artifact headers
+
+
+### 2026-10-20T12:41:29Z - Sub-agent activity recorded
+
+Agent: index_consumers
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Index and lifecycle helper shared discovery
+
+
+### 2026-10-20T12:44:21Z - Sub-agent activity recorded
+
+Agent: inspect_metadata_tools
+
+Status: completed
+
+Delegation mode: sub-agent
+
+Fallback used: no
+
+Scope: Shared discovery, strict checker, portable dependency and staged integration verification
+
+
+### 2026-10-20T12:45:05Z - Context hygiene
+
+Summary: Discovery coverage follow-up completed: 48 missed headers migrated; 1092 declared artifacts indexed and valid, including 1090 v3 and two intentional v2 examples. Three raw bootstrap scaffolds remain explicit exclusions with rendered-output validation. All implementation and public checks passed; changes remain unstaged and uncommitted.
+
+Durable evidence: See coverage-backfill.json for per-artifact repair/date evidence and coverage-validation.json for 153 checker assertions, index/helper/recognition/rulebook/public regression results, syntax checks and isolated staged commit gates. ADR 0039 records declaration-based discovery; all 48 bodies and identities preserved. No deployment code executed or real Git staging/commit/push performed.
+
+
+### 2026-10-20T12:50:49Z - Decision
+
+Decision: User explicitly approves committing the metadata coverage follow-up, merging it to main, and pushing remote main.
+
+Rationale: Approval includes staging reviewed task paths, required session checkpoints, a non-rewriting refresh from latest main, necessary metadata integration fixes and normal origin/main push. Preserve concurrent deployment changes; no force push, history rewrite or branch deletion.
+
+
+### 2026-10-20T12:52:48Z - Commit recorded
+
+Commit: `1520ef06`
+
+Message: fix(metadata): discover declared artifacts across repository
+
+Summary: Added shared declaration discovery, repaired and migrated 48 missed headers, installed independent index coverage checks and portable dependencies, regenerated recognition sources, and passed all required checks including 153 checker assertions and staged commit gates.
+
+ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+
+### 2026-10-20T13:00:07Z - Decision
+
+Decision: User approved a one-off recovery for incoming-main metadata failures during publication.
+
+Rationale: Exception permits applying and committing the reviewed 14-header correction in the rehearsal worktree, running all required checks, then applying the tested refresh and completing the already approved main merge and remote push. Three incoming headers lack used_by; ordinary task gates reject preflight branches while refresh forbids applying failed checks. Patch SHA256 6999c46943d6ee6fbff1459de028f47b04eff7aa163348d773fe997a9df02d3a preserves bodies and identity. Record this as a one-off, not precedent; a durable preflight metadata-repair workflow is a possible follow-up. Original rehearsal 8ca9ec47 is retained as evidence and will be superseded by a fresh rehearsal including this authorization.
+
+
+### 2026-10-20T13:05:04Z - Commit recorded
+
+Commit: `0e51f506`
+
+Message: Merge main through rehearsed refresh
+
+Summary: Integrated main 5189bada without conflicts in a clean rehearsal. Preserved all 26 incoming artifact bodies; approved metadata-only recovery completed and tested before applying.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-20T13:05:05Z - Commit recorded
+
+Commit: `e145ee66`
+
+Message: fix(metadata): migrate headers introduced during main integration
+
+Summary: Under the explicitly approved one-off preflight exception, migrated 14 incoming headers, repaired three consumer references, refreshed recognition inventories and passed full metadata, coverage, staged gates, public acceptance and targeted deployment checks.
+
+ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+
+### 2026-10-20T13:06:00Z - Context hygiene
+
+Summary: Metadata coverage publication is ready after the approved main-integration recovery.
+
+Durable evidence: Task commit 1520ef06; clean refresh merge 0e51f506; integration correction e145ee66. Main base 5189bada preserved, including all 26 incoming artifact bodies. Final inventory is 1106 artifacts: 1104 v3 and two intentional v2 examples; zero missing or duplicates. See coverage-main-integration.json for the one-off exception, provenance, 14-header no-op report, public acceptance and staged gates. The rehearsal worktree was removed by apply-rehearsed-refresh; original un-applied rehearsal 8ca9ec47 remains local review evidence. Next step: clean session checkpoint, eligibility verification from root, approved local merge and normal origin/main push.
+
 ## Sub-Agent Activity
 
 
@@ -546,6 +693,48 @@ Blockers: none
 Next step: Review the complete uncommitted migration.
 Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed helper creation/update maintenance across uncommitted moves. Root also migrated the CI output template and reran bootstrap smoke.
 
+
+### 2026-10-20T12:41:29Z - lifecycle_editor
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: 48 previously unindexed artifact headers
+Files touched: 48 inventory paths; coverage-backfill.json
+Checks run: 48 body/identity checks; 46 automatic and 2 reviewed creation dates; repeat report has zero changes/errors
+Git actions: No real repository staging, commits or push; disposable fixture Git actions only.
+Blockers: none
+Next step: Final integration verification and user review.
+Summary: Migrated 48 headers with reviewed Git provenance and repaired existing metadata while preserving bodies and identity.
+
+
+### 2026-10-20T12:41:29Z - index_consumers
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Index and lifecycle helper shared discovery
+Files touched: generate-index and update-lifecycle scripts and smoke tests
+Checks run: Expanded index and helper smoke suites; coverage fault injection; 1092 indexed artifacts with zero missing or duplicates
+Git actions: No real repository staging, commits or push; disposable fixture Git actions only.
+Blockers: none
+Next step: Final integration verification and user review.
+Summary: Implemented declaration coverage, independent inventory comparison, safe archive support and legacy repair handling.
+
+
+### 2026-10-20T12:44:21Z - inspect_metadata_tools
+
+Status: completed
+Delegation mode: sub-agent
+Fallback used: no
+Scope: Shared discovery, strict checker, portable dependency and staged integration verification
+Files touched: header_discovery.py; check-headers script and smoke test
+Checks run: 153 regression assertions; 1092 full-tree artifacts; isolated commit gates passed for 70 staged task files, validating 67 artifact files; real index unchanged
+Git actions: Temporary fixture clone and staging only; clone removed. No real repository staging, commits or push.
+Blockers: none
+Next step: Final portable acceptance and user review.
+Summary: Implemented common leading-header discovery and strict historical repair handling; verified the complete pending change set without staging the real worktree.
+
 ## Commits
 
 
@@ -570,6 +759,27 @@ Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed he
   Summary: Migrated the three covered incoming document headers and refreshed recognition inventory after preserving latest deployment main changes. Validated1042 indexed artifacts;1040v3 plus2legacy examples. Infrastructure YAML coverage gap is explicitly recorded.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `1520ef06`
+  Time UTC: 2026-10-20T12:52:48Z
+  Message: fix(metadata): discover declared artifacts across repository
+  Summary: Added shared declaration discovery, repaired and migrated 48 missed headers, installed independent index coverage checks and portable dependencies, regenerated recognition sources, and passed all required checks including 153 checker assertions and staged commit gates.
+  ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+
+- Commit: `0e51f506`
+  Time UTC: 2026-10-20T13:05:04Z
+  Message: Merge main through rehearsed refresh
+  Summary: Integrated main 5189bada without conflicts in a clean rehearsal. Preserved all 26 incoming artifact bodies; approved metadata-only recovery completed and tested before applying.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `e145ee66`
+  Time UTC: 2026-10-20T13:05:05Z
+  Message: fix(metadata): migrate headers introduced during main integration
+  Summary: Under the explicitly approved one-off preflight exception, migrated 14 incoming headers, repaired three consumer references, refreshed recognition inventories and passed full metadata, coverage, staged gates, public acceptance and targeted deployment checks.
+  ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -577,15 +787,15 @@ Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed he
 ## ADR Disposition
 
 ADR needed: yes
-ADR path: docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md
-Reason: Versioned required dates, compatibility policy, nonmutating staged enforcement and auditable report/apply maintenance are durable harness decisions.
+ADR path: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+Reason: Declaration-based discovery and independent inventory coverage extend the lifecycle contract recorded in ADR 0038; both decisions are part of this session.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T08:35:59Z
-Latest commit at UTC: 2026-10-20T10:42:15Z
-Latest commit SHA: 9797cca34b7e8f0ff9037968412550769873a3c3
-Chat duration: 7576s (00:02:06:16)
+Latest commit at UTC: 2026-10-20T13:05:05Z
+Latest commit SHA: e145ee66
+Chat duration: 16146s (00:04:29:06)
 Estimated chat tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE

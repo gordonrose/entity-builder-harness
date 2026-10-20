@@ -1,8 +1,10 @@
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-worker
 //   version: 2
 //   status: active
+//   created_on: "2026-09-23"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -12,7 +14,7 @@
 //   kind: code
 //   purpose: Run the Kanbien Platform product's declared jobs through the selected staging SQS delivery adapter and optional durable outbox-processing seam.
 //   portability:
-//     class: target-specific
+//     class: internal
 //     targets:
 //     - kanbien/staging
 //   used_by:

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle-smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-20"
@@ -293,6 +293,43 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
     assert '  created_on: "' + TODAY + '"' in indented.read_text()
     assert indented.read_text().split("-->", 1)[1] == body
 
+    # Existing file-level declarations are updatable outside the old path and
+    # extension filters. Their preambles and executable bodies remain exact.
+    for name, prefix, preamble, body_text, identity in (
+        ("application/component.ts", "//", "", "export const value = 1;\n", "typescript"),
+        ("tools/inspect.py", "#", '#!/usr/bin/env python3\n"""Module description."""\n\n', "print('body')\n", "python"),
+        ("containers/Dockerfile", "#", "# syntax=docker/dockerfile:1.7\n\n", "FROM scratch\n", "docker"),
+        ("custom/metadata.anything", "#", "", "ordinary body\n", "arbitrary"),
+        ("infra/provider/foundation.yml", "#", "", "Resources: {}\n", "infra"),
+    ):
+        target = repo / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fields = HEADER.format(id="test.discovery." + identity, status="active").split("-->\n", 1)[0].splitlines()[1:]
+        original = preamble + prefix + " agentic-artifact:\n" + "".join(prefix + "   " + line + "\n" for line in fields) + "\n" + body_text
+        target.write_text(original)
+        report = update(repo, [name])
+        assert report["plans"][0]["changed"] and target.read_text() == original
+        update(repo, [name], "--apply")
+        migrated = target.read_text()
+        assert migrated.startswith(preamble + prefix + " agentic-artifact:\n")
+        assert migrated.endswith("\n" + body_text)
+        assert prefix + '   created_on: "' + TODAY + '"' in migrated
+        assert prefix + "   version: 7\n" in migrated
+        assert not update(repo, [name], "--apply")["plans"][0]["changed"]
+
+    for name, content in (
+        ("examples/fenced.md", "# Example\n\n```md\n" + HEADER.format(id="test.embedded.fence", status="active") + "```\n"),
+        ("examples/heredoc.sh", "cat <<'EOF'\n" + original_comment + "EOF\n"),
+        ("examples/docstring.py", '#!/usr/bin/env python3\n"""\n' + original_comment + '"""\nprint(1)\n'),
+        ("docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template", original_comment),
+    ):
+        target = repo / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content)
+        before = target.read_bytes()
+        update(repo, [name], "--apply", succeeds=False)
+        assert target.read_bytes() == before, "embedded examples and output scaffolds must never be edited"
+
     duplicate = artifact(repo, ".agentic/duplicate.md", "test.artifact.duplicate")
     duplicate.write_text(duplicate.read_text().replace("version: 7", "version: 7\nversion: 8"))
     update(repo, [".agentic/duplicate.md"], "--apply", succeeds=False)
@@ -349,6 +386,48 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
     assert "Shallow history" in report["errors"][0]["error"]
     report = update(shallow, [".agentic/replacement-renamed.md"], "--created-on", "2025-01-03")
     assert report["plans"][0]["creation_evidence"]["basis"] == "explicit-date"
+
+
+# A historical malformed v2 header can be repaired and migrated before its first
+# commit. Repeating the helper must remain a no-op without weakening v3 history.
+with tempfile.TemporaryDirectory(prefix="artifact-legacy-repair-") as temporary:
+    repo = Path(temporary)
+    git(repo, "init", "-q")
+    git(repo, "config", "user.name", "Lifecycle legacy repair test")
+    git(repo, "config", "user.email", "lifecycle-test@example.invalid")
+    source = artifact(repo, "platform/adapters/README.md", "test.artifact.legacy-repair")
+    fixed = source.read_text().replace(
+        "- id: test.lifecycle.updater\n", "- id: test.lifecycle.updater\n  path: platform/adapters/README.md\n"
+    )
+    malformed = fixed.replace("  path: platform/", "    path: platform/")
+    source.write_text(malformed)
+    commit(repo, "Historical malformed v2 metadata")
+    source.write_text(fixed)
+    update(repo, ["platform/adapters/README.md"], "--apply")
+    migrated = source.read_bytes()
+    mtime = source.stat().st_mtime_ns
+    assert migrated.split(b"-->", 1)[1] == fixed.encode().split(b"-->", 1)[1]
+    assert not update(repo, ["platform/adapters/README.md"])["plans"][0]["changed"]
+    assert not update(repo, ["platform/adapters/README.md"], "--apply")["plans"][0]["changed"]
+    assert source.read_bytes() == migrated and source.stat().st_mtime_ns == mtime
+    git(repo, "add", "platform/adapters/README.md")
+    validation = run(["bash", str(UPDATER.parents[1] / "check-headers/script.sh"), "--staged"], repo)
+    assert validation.returncode == 0, validation.stdout.decode() + validation.stderr.decode()
+    git(repo, "commit", "-qm", "Repair and migrate legacy metadata")
+
+    for name, historical in (
+        ("malformed-v3", malformed.replace("schema: agentic-artifact/v2", 'schema: agentic-artifact/v3\ncreated_on: "2025-01-03"\nupdated_on: "2025-01-03"')),
+        ("duplicate-schema", malformed.replace("schema: agentic-artifact/v2", "schema: agentic-artifact/v3\nschema: agentic-artifact/v2")),
+        ("unknown-schema", malformed.replace("schema: agentic-artifact/v2", "schema: agentic-artifact/v99")),
+    ):
+        path = repo / "platform" / (name + ".md")
+        path.write_text(historical.replace("test.artifact.legacy-repair", "test.artifact." + name))
+        git(repo, "add", str(path.relative_to(repo)))
+        git(repo, "commit", "-qm", "Historical invalid metadata fixture")
+        current = migrated.replace(b"test.artifact.legacy-repair", ("test.artifact." + name).encode())
+        path.write_bytes(current)
+        update(repo, [str(path.relative_to(repo))], "--apply", succeeds=False)
+        assert path.read_bytes() == current, "ambiguous or malformed v3 history must fail closed"
 
 print("Lifecycle updater smoke tests passed.")
 PY

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.upstream.bootstrap-llm-workbench-repo
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-20"
 #   updated_on: "2026-10-20"
@@ -188,6 +188,7 @@ plan_public_harness_scripts() {
   plan_selected_file "scripts/01.harness/run-governed-script.sh"
   plan_selected_file "scripts/01.harness/check-deterministic-process-drift.sh"
   plan_selected_file "scripts/01.harness/check-governed-script-command-drift.sh"
+  plan_selected_file "scripts/01.harness/artifact-metadata/header_discovery.py"
   plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/script.sh"
   plan_selected_file "scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh"
 }

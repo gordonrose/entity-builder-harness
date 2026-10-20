@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.core-server-package-custody.validation
 #   version: 2
 #   status: draft
@@ -11,6 +11,11 @@
 #   purpose: Reject an unsafe target-bound package workflow before it can publish an image.
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.core-server-package-custody
+#     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh
 from __future__ import annotations
 import argparse,json,re,sys
 from pathlib import Path
