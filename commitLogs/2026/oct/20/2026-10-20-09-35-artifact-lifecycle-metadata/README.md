@@ -64,6 +64,60 @@ Plan artifact header lifecycle dates and supersession links
 - Raised: Public-beta acceptance detected lifecycle export portability regressions.
   Resolution: Preserved optional taxonomy loading and portable checker fixture targets, removed a source-only documentation dependency from the exported checklist, and added exported checker regression coverage. All16 public-beta checks now pass; see precommit-public-validation.json. Source exclusion policy remains unchanged.
 
+
+- Raised: Repository-wide audit identified48 existing v2 headers outside metadata checker/index coverage.
+  Resolution: Correction: full migration completion applies to indexed artifacts, not every header in the repository. Audit found48 non-example v2 headers outside coverage:23infra YAML,8infra TypeScript,3Dockerfiles,13Python scripts,1platform Markdown. No v1 found. Nine headers lack used_by and platform/adapters/README.md has malformed header indentation. These require a governed coverage expansion and metadata repair; they are outside the currently validated migration.
+
+Remaining unindexed paths:
+- infra/04.deploy/02.rag-rulebook/image/Dockerfile
+- infra/04.deploy/03.product/aws-runtime-family.decision.yml
+- infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts
+- infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+- infra/04.deploy/03.product/image/Dockerfile
+- infra/04.deploy/03.product/image/core-server/Dockerfile
+- infra/04.deploy/03.product/image/core-server/image-contract.yml
+- infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+- platform/adapters/README.md
+- scripts/04.deploy/assess-platform-shell-artifact-drift/script.py
+- scripts/04.deploy/assess-platform-shell-foundation-drift/script.py
+- scripts/04.deploy/assess-platform-shell-service-drift/script.py
+- scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+- scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py
+- scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py
+- scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py
+- scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py
+- scripts/04.deploy/operational-realization-gate/script.py
+- scripts/04.deploy/reconcile-platform-shell-staging/script.py
+- scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py
+- scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
+- scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py
+
 ## Decisions Made
 
 
@@ -347,6 +401,63 @@ Message: chore(metadata): migrate headers added during main refresh
 Summary: Migrated the three covered incoming document headers and refreshed recognition inventory after preserving latest deployment main changes. Validated1042 indexed artifacts;1040v3 plus2legacy examples. Infrastructure YAML coverage gap is explicitly recorded.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-20T10:43:19Z - Issue
+
+Raised: Repository-wide audit identified48 existing v2 headers outside metadata checker/index coverage.
+
+Resolution: Correction: full migration completion applies to indexed artifacts, not every header in the repository. Audit found48 non-example v2 headers outside coverage:23infra YAML,8infra TypeScript,3Dockerfiles,13Python scripts,1platform Markdown. No v1 found. Nine headers lack used_by and platform/adapters/README.md has malformed header indentation. These require a governed coverage expansion and metadata repair; they are outside the currently validated migration.
+
+Remaining unindexed paths:
+- infra/04.deploy/02.rag-rulebook/image/Dockerfile
+- infra/04.deploy/03.product/aws-runtime-family.decision.yml
+- infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-persistence.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-relay.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-task-lease-owner.ts
+- infra/04.deploy/03.product/entrypoints/kanbien-platform-worker.main.ts
+- infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+- infra/04.deploy/03.product/image/Dockerfile
+- infra/04.deploy/03.product/image/core-server/Dockerfile
+- infra/04.deploy/03.product/image/core-server/image-contract.yml
+- infra/04.deploy/03.product/platform-shell.deploy-blueprint.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml
+- infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/deployment-artifact-store.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/foundation.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/deploy-readiness.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/administrator-active-foundation-assessment-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/drift-detection/resource-read-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/iam/github-oidc/reconciliation-operation-authorization-contract.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
+- infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+- platform/adapters/README.md
+- scripts/04.deploy/assess-platform-shell-artifact-drift/script.py
+- scripts/04.deploy/assess-platform-shell-foundation-drift/script.py
+- scripts/04.deploy/assess-platform-shell-service-drift/script.py
+- scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py
+- scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.py
+- scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py
+- scripts/04.deploy/lifecycle/40-package/build-core-server-image/verify-payload.py
+- scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py
+- scripts/04.deploy/operational-realization-gate/script.py
+- scripts/04.deploy/reconcile-platform-shell-staging/script.py
+- scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py
+- scripts/04.deploy/verify-platform-shell-drift-detection-boundary/script.py
+- scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.py
 
 ## Sub-Agent Activity
 
