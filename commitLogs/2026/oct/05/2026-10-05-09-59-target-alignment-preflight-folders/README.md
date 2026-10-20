@@ -49,6 +49,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Core-server image command wrapper exited cleanly without starting the server
   Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
 
+
+- Raised: E0 candidate network is not yet viable for an isolated private container workload
+  Resolution: Read-only candidate inspection found no core-target naming conflict in account 337159794548/eu-west-1 and found a project VPC with two private subnets, but they have only an S3 gateway endpoint and no NAT/ECR/CloudWatch route. Runtime, registry, verifier placement, cost guard, roles, and rollback custody remain unresolved. No AWS state changed.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -193,6 +197,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
   Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
+
+
+- Summary: Completed E0 read-only discovery against available profile kanbien-dev (account 337159794548, eu-west-1). The candidate account has a GitHub Actions OIDC provider and staging-only budgets but no core target resource conflict. Its private network is insufficient for container image pull/logging without an approved network design change.
+  Durable evidence: Safe evidence is in this session log; live target declaration remains intentionally unresolved in infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml. No resource, setting, secret, registry, or target was changed.
 
 ## Activity Log
 
@@ -797,6 +805,20 @@ Message: fix(deploy): start core image command
 Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
 
 ADR impact: No ADR: repair within the existing image contract.
+
+
+### 2026-10-20T08:08:38Z - Issue
+
+Raised: E0 candidate network is not yet viable for an isolated private container workload
+
+Resolution: Read-only candidate inspection found no core-target naming conflict in account 337159794548/eu-west-1 and found a project VPC with two private subnets, but they have only an S3 gateway endpoint and no NAT/ECR/CloudWatch route. Runtime, registry, verifier placement, cost guard, roles, and rollback custody remain unresolved. No AWS state changed.
+
+
+### 2026-10-20T08:08:38Z - Context hygiene
+
+Summary: Completed E0 read-only discovery against available profile kanbien-dev (account 337159794548, eu-west-1). The candidate account has a GitHub Actions OIDC provider and staging-only budgets but no core target resource conflict. Its private network is insufficient for container image pull/logging without an approved network design change.
+
+Durable evidence: Safe evidence is in this session log; live target declaration remains intentionally unresolved in infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml. No resource, setting, secret, registry, or target was changed.
 
 ## Sub-Agent Activity
 
