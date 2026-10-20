@@ -69,6 +69,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: E2b account tag discovery is still propagating
   Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
 
+
+- Raised: The live alignment gate rejected a healthy foundation after an output-only stack update.
+  Resolution: The AWS adapter recognised CREATE_COMPLETE but not UPDATE_COMPLETE, despite both being stable CloudFormation success states.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -150,6 +154,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt reusable delivery-control layering
   Rationale: Provider-neutral validators now consume contracts and safe normalized evidence; AWS adapters own policy parsing and ECR probes; fixed target wrappers provide Kanbien choices without permitting arbitrary substitution.
+
+
+- Decision: Promoted the verified deployment-control source to origin/main.
+  Rationale: Remote promotion was a normal fast-forward from 1b56931d to 81abadac after the inventory, target-declaration, fixed runtime-control, package-custody, alignment-validation, and whitespace gates passed in the isolated integration worktree.
+
+
+- Decision: Alignment now recognises the stable successful CloudFormation lifecycle states explicitly.
+  Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
 
 ## Context Hygiene
 
@@ -1079,6 +1091,27 @@ Message: chore(repo): ignore python bytecode
 Summary: Prevented generated Python bytecode from being tracked in future deployment work.
 
 ADR impact: No ADR impact.
+
+
+### 2026-10-20T18:55:19Z - Decision
+
+Decision: Promoted the verified deployment-control source to origin/main.
+
+Rationale: Remote promotion was a normal fast-forward from 1b56931d to 81abadac after the inventory, target-declaration, fixed runtime-control, package-custody, alignment-validation, and whitespace gates passed in the isolated integration worktree.
+
+
+### 2026-10-20T18:58:21Z - Issue
+
+Raised: The live alignment gate rejected a healthy foundation after an output-only stack update.
+
+Resolution: The AWS adapter recognised CREATE_COMPLETE but not UPDATE_COMPLETE, despite both being stable CloudFormation success states.
+
+
+### 2026-10-20T18:58:21Z - Decision
+
+Decision: Alignment now recognises the stable successful CloudFormation lifecycle states explicitly.
+
+Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
 
 ## Sub-Agent Activity
 

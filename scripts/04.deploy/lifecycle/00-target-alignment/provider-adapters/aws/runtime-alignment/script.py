@@ -12,6 +12,11 @@
 #   kind: script
 #   purpose: Collect bounded, safe AWS facts for a declared first private ECS release.
 #   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
+#   - id: deploy.test.aws.runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
 #   effects: [network]
 """AWS-only read adapter.  It emits normalized assertions, never raw responses."""
 from __future__ import annotations
@@ -20,6 +25,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 IDS = ("right-destination", "right-application", "known-healthy-baseline", "allowed-deployment-route", "package-destination", "required-access", "required-settings", "change-safety", "freshness-and-drift")
+STABLE_SUCCESSFUL_STACK_STATUSES = frozenset({"CREATE_COMPLETE", "UPDATE_COMPLETE"})
 
 def command(args: argparse.Namespace, *items: str) -> tuple[bool, Any, str]:
     result = subprocess.run(["aws", *items, "--profile", args.profile, "--region", args.region, "--output", "json"], capture_output=True, text=True)
@@ -54,8 +60,8 @@ def main() -> int:
     stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
     outputs = {entry.get("OutputKey") for entry in stacks[0].get("Outputs", [])} if stacks else set()
     required_outputs = {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}
-    foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") == "CREATE_COMPLETE" and required_outputs <= outputs
-    foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") != "CREATE_COMPLETE" else "missing")
+    foundation_ready = ok and bool(stacks) and stacks[0].get("StackStatus") in STABLE_SUCCESSFUL_STACK_STATUSES and required_outputs <= outputs
+    foundation_failure = "unknown" if not ok else ("mismatch" if stacks and stacks[0].get("StackStatus") not in STABLE_SUCCESSFUL_STACK_STATUSES else "missing")
     assertions["right-application"] = assertion("right-application", foundation_ready, "foundation-ready" if foundation_ready else "foundation-runtime-output-missing", foundation_failure)
     ok, runtime, code = command(args, "cloudformation", "describe-stacks", "--stack-name", args.runtime_stack)
     assertions["known-healthy-baseline"] = assertion("known-healthy-baseline", not ok and code == "not-found", "runtime-absent" if not ok and code == "not-found" else "runtime-not-absent", "mismatch" if ok else "unknown")
