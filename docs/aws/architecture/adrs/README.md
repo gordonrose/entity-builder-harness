@@ -43,3 +43,5 @@ Use one of these statuses:
   Fargate as the first AWS planning runtime family for the platform shell.
 - `0002-select-cognito-for-platform-shell-auth.md` - select Amazon Cognito as
   the first auth provider path for the platform shell staging target.
+- `0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md` - select
+  the private ECS Fargate bootstrap topology for the isolated core target.

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T03:54:43Z
-latest_commit_sha: ad6cf1e8
-chat_duration: 1277714s (14:18:55:14)
+latest_commit_at_utc: 2026-10-20T10:33:20Z
+latest_commit_sha: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
+chat_duration: 1301631s (15:01:33:51)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -48,6 +48,26 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Core-server image command wrapper exited cleanly without starting the server
   Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
+
+
+- Raised: E0 candidate network is not yet viable for an isolated private container workload
+  Resolution: Read-only candidate inspection found no core-target naming conflict in account 337159794548/eu-west-1 and found a project VPC with two private subnets, but they have only an S3 gateway endpoint and no NAT/ECR/CloudWatch route. Runtime, registry, verifier placement, cost guard, roles, and rollback custody remain unresolved. No AWS state changed.
+
+
+- Raised: E1 cannot yet become executable
+  Resolution: Read-only cost evidence shows only USD 25 monthly staging budgets. The selected two-AZ interface-endpoint topology has recurring cost, so a target-specific monthly ceiling, alert destination, and GitHub Environment protection owner remain required before an exact CloudFormation change set can be approved.
+
+
+- Raised: Target-scoped cost guard is not yet feasible
+  Resolution: Read-only Cost Explorer inspection returned no active Target cost-allocation tag. The proposed USD 100 budget would not reliably isolate kanbien-core-platform cost until account-level tag activation is approved and completed. No AWS billing setting or resource was changed.
+
+
+- Raised: AWS rejected cost-allocation tag activation without mutation
+  Resolution: The approved Cost Explorer activation command failed with Tag keys not found: Target. AWS requires the user-defined tag to exist on a resource before it can be activated. No account setting or target resource changed; the foundation sequence must introduce a target-tagged low-risk resource, then activate and wait for propagation before relying on the USD 100 target budget.
+
+
+- Raised: E2b account tag discovery is still propagating
+  Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
 
 ## Decisions Made
 
@@ -106,6 +126,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt fixed target-bound R6 control surfaces
   Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
+
+- Decision: Selected private ECS Fargate candidate design for kanbien-core-platform E1
+  Rationale: The candidate uses the existing private VPC/subnets as a limited shared-foundation exception; all workload, IAM, ECR, logging, service-discovery, and verifier resources remain target-owned. No AWS mutation was performed.
+
+
+- Decision: User approved bounded kanbien-core-platform E1-E7 execution packet
+  Rationale: Authority covers reviewed repository changes, commits, main promotion and push; selected kanbien-dev/eu-west-1 target resources; USD 100/month target guard; protected GitHub Environment; one B-to-A rollback; cost-tag propagation wait; and stops only for unexpected security risk, extra cost/resource category, AWS/GitHub denial, or an out-of-bound result. Alert email is execution-only and must not be recorded.
+
+
+- Decision: Completed E2a tag bootstrap and GitHub Environment guard
+  Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
 
 ## Context Hygiene
 
@@ -193,6 +225,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
   Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
+
+
+- Summary: Completed E0 read-only discovery against available profile kanbien-dev (account 337159794548, eu-west-1). The candidate account has a GitHub Actions OIDC provider and staging-only budgets but no core target resource conflict. Its private network is insufficient for container image pull/logging without an approved network design change.
+  Durable evidence: Safe evidence is in this session log; live target declaration remains intentionally unresolved in infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml. No resource, setting, secret, registry, or target was changed.
+
+
+- Summary: Refreshed the active chat branch cleanly from accepted local main through a rehearsed preflight; recorded E1 candidate topology and budget evidence.
+  Durable evidence: Durable design: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md and docs/aws/kanbien-core-platform-e1-foundation-change-set.md. Read-only provider evidence only; no AWS mutation.
+
+
+- Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+  Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
 
 ## Activity Log
 
@@ -798,6 +842,105 @@ Summary: Fixed the generated image command wrapper to invoke the core server. Ad
 
 ADR impact: No ADR: repair within the existing image contract.
 
+
+### 2026-10-20T08:08:38Z - Issue
+
+Raised: E0 candidate network is not yet viable for an isolated private container workload
+
+Resolution: Read-only candidate inspection found no core-target naming conflict in account 337159794548/eu-west-1 and found a project VPC with two private subnets, but they have only an S3 gateway endpoint and no NAT/ECR/CloudWatch route. Runtime, registry, verifier placement, cost guard, roles, and rollback custody remain unresolved. No AWS state changed.
+
+
+### 2026-10-20T08:08:38Z - Context hygiene
+
+Summary: Completed E0 read-only discovery against available profile kanbien-dev (account 337159794548, eu-west-1). The candidate account has a GitHub Actions OIDC provider and staging-only budgets but no core target resource conflict. Its private network is insufficient for container image pull/logging without an approved network design change.
+
+Durable evidence: Safe evidence is in this session log; live target declaration remains intentionally unresolved in infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml. No resource, setting, secret, registry, or target was changed.
+
+
+### 2026-10-20T08:46:15Z - Decision
+
+Decision: Selected private ECS Fargate candidate design for kanbien-core-platform E1
+
+Rationale: The candidate uses the existing private VPC/subnets as a limited shared-foundation exception; all workload, IAM, ECR, logging, service-discovery, and verifier resources remain target-owned. No AWS mutation was performed.
+
+
+### 2026-10-20T08:46:15Z - Issue
+
+Raised: E1 cannot yet become executable
+
+Resolution: Read-only cost evidence shows only USD 25 monthly staging budgets. The selected two-AZ interface-endpoint topology has recurring cost, so a target-specific monthly ceiling, alert destination, and GitHub Environment protection owner remain required before an exact CloudFormation change set can be approved.
+
+
+### 2026-10-20T08:46:15Z - Context hygiene
+
+Summary: Refreshed the active chat branch cleanly from accepted local main through a rehearsed preflight; recorded E1 candidate topology and budget evidence.
+
+Durable evidence: Durable design: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md and docs/aws/kanbien-core-platform-e1-foundation-change-set.md. Read-only provider evidence only; no AWS mutation.
+
+
+### 2026-10-20T09:01:30Z - Issue
+
+Raised: Target-scoped cost guard is not yet feasible
+
+Resolution: Read-only Cost Explorer inspection returned no active Target cost-allocation tag. The proposed USD 100 budget would not reliably isolate kanbien-core-platform cost until account-level tag activation is approved and completed. No AWS billing setting or resource was changed.
+
+
+### 2026-10-20T09:21:41Z - Issue
+
+Raised: AWS rejected cost-allocation tag activation without mutation
+
+Resolution: The approved Cost Explorer activation command failed with Tag keys not found: Target. AWS requires the user-defined tag to exist on a resource before it can be activated. No account setting or target resource changed; the foundation sequence must introduce a target-tagged low-risk resource, then activate and wait for propagation before relying on the USD 100 target budget.
+
+
+### 2026-10-20T10:06:41Z - Decision
+
+Decision: User approved bounded kanbien-core-platform E1-E7 execution packet
+
+Rationale: Authority covers reviewed repository changes, commits, main promotion and push; selected kanbien-dev/eu-west-1 target resources; USD 100/month target guard; protected GitHub Environment; one B-to-A rollback; cost-tag propagation wait; and stops only for unexpected security risk, extra cost/resource category, AWS/GitHub denial, or an out-of-bound result. Alert email is execution-only and must not be recorded.
+
+
+### 2026-10-20T10:07:39Z - Commit recorded
+
+Commit: `ca639258dab1c423d7d8ac7c2045223bbbb358fe`
+
+Message: docs(deploy): phase core platform cost controls
+
+Summary: Recorded the E1 private ECS target design, phased cost-tag bootstrap, review-only foundation templates, and bounded execution authority. No AWS resource was created; the first AWS mutation remains the separately controlled empty ECR tag bootstrap.
+
+ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC exception.
+
+
+### 2026-10-20T10:32:22Z - Issue
+
+Raised: E2b account tag discovery is still propagating
+
+Resolution: E2a created only the empty immutable Target-tagged core image repository. AWS Cost Explorer still returns Tag keys not found for Target, so no guarded foundation has been created.
+
+
+### 2026-10-20T10:32:22Z - Decision
+
+Decision: Completed E2a tag bootstrap and GitHub Environment guard
+
+Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
+
+
+### 2026-10-20T10:32:23Z - Context hygiene
+
+Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
+
+Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+
+
+### 2026-10-20T10:33:20Z - Commit recorded
+
+Commit: `60a59af366eea2ceed84ea83cd960e2a6d4a350a`
+
+Message: fix(deploy): consume core tag bootstrap repository
+
+Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
+
+ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -938,6 +1081,20 @@ ADR impact: No ADR: repair within the existing image contract.
   Summary: Fixed the generated image command wrapper to invoke the core server. Added a command-runtime test; the actual local Docker image now passes liveness, readiness, and safe release-verification smoke under restricted runtime settings.
   ADR impact: No ADR: repair within the existing image contract.
 
+
+- Commit: `ca639258dab1c423d7d8ac7c2045223bbbb358fe`
+  Time UTC: 2026-10-20T10:07:39Z
+  Message: docs(deploy): phase core platform cost controls
+  Summary: Recorded the E1 private ECS target design, phased cost-tag bootstrap, review-only foundation templates, and bounded execution authority. No AWS resource was created; the first AWS mutation remains the separately controlled empty ECR tag bootstrap.
+  ADR impact: ADR 0003 records the private ECS bootstrap topology and shared-VPC exception.
+
+
+- Commit: `60a59af366eea2ceed84ea83cd960e2a6d4a350a`
+  Time UTC: 2026-10-20T10:33:20Z
+  Message: fix(deploy): consume core tag bootstrap repository
+  Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
+  ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -951,9 +1108,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T03:54:43Z
-Latest commit SHA: ad6cf1e8
-Chat duration: 1277714s (14:18:55:14)
+Latest commit at UTC: 2026-10-20T10:33:20Z
+Latest commit SHA: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
+Chat duration: 1301631s (15:01:33:51)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

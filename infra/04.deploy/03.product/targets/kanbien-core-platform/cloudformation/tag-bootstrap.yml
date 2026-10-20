@@ -1,0 +1,26 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Introduce the Target cost-allocation tag using an empty immutable core image repository.
+#   portability: { class: internal, targets: [] }
+AWSTemplateFormatVersion: '2010-09-09'
+Description: E2a only. Empty tagged repository; no runtime, role, network, or image.
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: kanbien-core-platform/core-server
+      ImageTagMutability: IMMUTABLE
+      ImageScanningConfiguration: { ScanOnPush: true }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+Outputs:
+  RepositoryArn: { Value: !GetAtt Repository.Arn }
+  RepositoryUri: { Value: !GetAtt Repository.RepositoryUri }

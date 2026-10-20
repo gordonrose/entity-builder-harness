@@ -1,0 +1,146 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Define the proposed create-only private foundation for Kanbien core platform.
+#   portability: { class: internal, targets: [] }
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Proposed private foundation for kanbien-core-platform; no public ingress.
+
+Parameters:
+  VpcId: { Type: 'AWS::EC2::VPC::Id' }
+  PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  ExistingRepositoryArn:
+    Type: String
+    AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$'
+  ExistingRepositoryUri:
+    Type: String
+    AllowedPattern: '^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/kanbien-core-platform/core-server$'
+  ExistingGitHubOidcProviderArn:
+    Type: String
+    AllowedPattern: '^arn:aws:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$'
+  CostAlertEmail:
+    Type: String
+    NoEcho: true
+    AllowedPattern: '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: kanbien-core-platform
+      ClusterSettings: [{ Name: containerInsights, Value: enabled }]
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/ecs/kanbien-core-platform
+      RetentionInDays: 14
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private core server ingress from verifier only.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  VerifierSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private one-pass release verifier.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTPS from core tasks to required AWS endpoints.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  ServerIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  EndpointIngressFromService:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ServiceSecurityGroup }
+  EndpointIngressFromVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  EcrApiEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
+  EcrDkrEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
+  LogsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup], Tags: [{ Key: Target, Value: kanbien-core-platform }] }
+  Namespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties: { Name: kanbien-core-platform.internal, Vpc: !Ref VpcId, Tags: [{ Key: Target, Value: kanbien-core-platform }] }
+  BootstrapServiceDiscovery:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: bootstrap-runtime
+      DnsConfig: { NamespaceId: !Ref Namespace, DnsRecords: [{ Type: A, TTL: 10 }] }
+      HealthCheckCustomConfig: { FailureThreshold: 1 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-task-execution
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: pull-image-and-write-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ExistingRepositoryArn }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub '${LogGroup.Arn}:log-stream:*' }
+  DeliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: github-kanbien-core-platform-delivery
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Federated: !Ref ExistingGitHubOidcProviderArn }
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals: { 'token.actions.githubusercontent.com:aud': sts.amazonaws.com }
+              StringLike: { 'token.actions.githubusercontent.com:sub': 'repo:gordonrose/entity-builder-harness:environment:kanbien-core-platform' }
+      Policies:
+        - PolicyName: publish-core-image
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !Ref ExistingRepositoryArn }
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: kanbien-core-platform-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: 100, Unit: USD }
+        CostFilters: { TagKeyValue: ['user:Target$kanbien-core-platform'] }
+      NotificationsWithSubscribers:
+        - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80, ThresholdType: PERCENTAGE }
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CostAlertEmail }]
+
+Outputs:
+  RepositoryUri: { Value: !Ref ExistingRepositoryUri }
+  ClusterArn: { Value: !GetAtt Cluster.Arn }
+  LogGroupName: { Value: !Ref LogGroup }
+  TaskExecutionRoleArn: { Value: !GetAtt TaskExecutionRole.Arn }
+  ServiceSecurityGroupId: { Value: !Ref ServiceSecurityGroup }
+  VerifierSecurityGroupId: { Value: !Ref VerifierSecurityGroup }
+  ServiceDiscoveryArn: { Value: !GetAtt BootstrapServiceDiscovery.Arn }
