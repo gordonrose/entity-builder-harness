@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.standard.artifact-metadata
-version: 2
+version: 3
 status: active
 created_on: "2026-06-24"
 updated_on: "2026-10-20"
@@ -127,9 +127,60 @@ Do not infer old deprecation or supersession dates from the current file modific
 Migration itself is a metadata update, so `updated_on` becomes today's UTC date;
 the report retains the prior last-commit date as evidence. Work in focused batches.
 
+A malformed historical v2 header may be repaired during migration. HEAD
+comparison may recover only an unambiguous top-level v2 schema, stable ID and
+legacy status; current and proposed headers still require full validation.
+Ambiguous history and malformed v3 baselines remain errors. This narrow legacy
+recovery must not bypass immutable v3 dates or allow stale migration dates.
+
 After content edits, run the helper for the affected v3 files. Creation dates
 remain fixed. No-op runs must not rewrite files or advance dates. The helper's
 status-transition convenience path does not replace historical lifecycle review.
+
+## Discovery And Required Headers
+
+A file that declares a leading `agentic-artifact` or legacy `agentic-script`
+header participates in validation and indexing regardless of its path or
+extension. This includes infrastructure YAML, TypeScript, Python, Dockerfiles
+and platform documentation. A declaration's `kind` determines its metadata
+contract; being discovered does not automatically make a file a script.
+
+Discovery uses the shared `header_discovery.py` module. It recognizes only
+file-level headers in leading comments, allowing ordinary script prologues.
+Embedded examples, fenced code, patch text and strings in executable bodies are
+not additional artifact declarations. Malformed leading declarations are errors,
+not silently skipped files. Binary files and symlink targets are not followed.
+
+Full working-tree discovery includes tracked files and unignored untracked files.
+Source archives without Git use a filesystem scan that excludes repository
+internals and build/dependency directories. Staged validation reads Git blobs;
+a previous declaration remains in scope when a modification or rename removes
+its header. Removing or downgrading an existing v3 header cannot evade checks.
+
+This discovery rule does not expand the existing path and extension rules that
+require headers on new files. Headerless files outside those rules remain
+headerless. Existing ordinary legacy modifications retain their grandfathering.
+
+Three raw bootstrap scaffolds contain placeholders instead of artifact values:
+`docs/00.chat/bootstrap/llm-workbench-template/root/scripts/install.sh.template`,
+`docs/00.chat/bootstrap/llm-workbench-template/root/scripts/uninstall.sh.template`,
+and `docs/00.chat/bootstrap/llm-workbench-template/root/.github/workflows/portability.yml.template`.
+Only these exact paths are excluded from source-header discovery; their rendered
+outputs are validated by bootstrap and portability checks. Other templates,
+including CloudFormation templates, remain discoverable. The v2 compatibility
+examples are real declared artifacts and remain indexed.
+
+Run the inventory coverage gate after changing discovery or migrating headers:
+
+```bash
+bash scripts/01.harness/artifact-metadata/generate-index/script.sh --all --strict --check-coverage
+```
+
+It compares declared artifact paths with emitted index entries and fails on
+missing entries or malformed headers. The repository commit hook runs this
+working-tree coverage check alongside staged lifecycle validation. Keep the
+checker, index, helper and public checker distribution on the same discovery
+implementation; test new file types and negative embedded examples together.
 
 ## Enforcement And Consumers
 

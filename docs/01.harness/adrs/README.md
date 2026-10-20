@@ -41,3 +41,4 @@ root directly for harness-owned decision history.
 
 - [0021: Versioned metadata](0021-use-versioned-artifact-metadata-for-agent-navigation.md)
 - [0038: Lifecycle dates and supersession](0038-track-artifact-lifecycle-dates.md)
+- [0039: Discovery by declared headers](0039-discover-artifacts-by-declared-headers.md)

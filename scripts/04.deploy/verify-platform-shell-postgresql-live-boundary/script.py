@@ -2,12 +2,15 @@
 """Verify safe live boundary facts for the Kanbien staging PostgreSQL reference."""
 
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.script.verify-platform-shell-postgresql-live-boundary
 #   version: 1
 #   status: active
+#   created_on: "2026-09-26"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: persistence.operations
+#   disciplines: [security, sre]
 #   kind: script
 #   purpose: Fail closed unless the private PostgreSQL reference keeps its reviewed boundary.
 #   portability:
@@ -16,6 +19,9 @@
 #     - kanbien/staging
 #   effects:
 #   - network
+#   used_by:
+#   - id: deploy.script.verify-platform-shell-postgresql-live-boundary.shell
+#     path: scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
 
 from __future__ import annotations
 

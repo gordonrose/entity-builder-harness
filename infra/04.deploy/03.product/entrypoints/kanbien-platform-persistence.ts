@@ -1,8 +1,10 @@
 // agentic-artifact:
-//   schema: agentic-artifact/v2
+//   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-platform-persistence
 //   version: 3
 //   status: active
+//   created_on: "2026-09-24"
+//   updated_on: "2026-10-20"
 //   layer: 04.deploy
 //   domain: persistence
 //   disciplines:
@@ -12,7 +14,7 @@
 //   kind: code
 //   purpose: Compose Kanbien staging DynamoDB persistence seams for harmless smoke acceptance, durable outbox relay, and duplicate-safe worker processing.
 //   portability:
-//     class: target-specific
+//     class: internal
 //     targets:
 //     - kanbien/staging
 //   used_by:

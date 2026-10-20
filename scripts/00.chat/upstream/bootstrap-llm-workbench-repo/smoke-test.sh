@@ -73,6 +73,7 @@ grep -q '^conflicts: 0$' "$TMP_ROOT/empty.out" || fail "empty repo reported conf
 run_apply "$EMPTY_REPO" "$TMP_ROOT/empty-apply.out"
 test -f "$EMPTY_REPO/AGENTS.md" || fail "apply did not create AGENTS.md"
 test -f "$EMPTY_REPO/package.json" || fail "apply did not create package.json"
+test -f "$EMPTY_REPO/scripts/01.harness/artifact-metadata/header_discovery.py" || fail "apply did not include shared header discovery"
 test -f "$EMPTY_REPO/scripts/00.chat/upstream/bootstrap-llm-workbench-repo/script.sh" || fail "apply did not create planner script"
 test ! -e "$EMPTY_REPO/.agentic/01.harness" || fail "apply created source-maintenance .agentic/01.harness"
 test ! -e "$EMPTY_REPO/docs/00.chat/public-chat-workbench-adrs.md" || fail "apply created public ADR manifest"

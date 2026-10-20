@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: deploy.control.kanbien-core-platform.bootstrap-runtime
 #   version: 1
 #   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -17,6 +19,11 @@
 #     targets: []
 #   effects:
 #   - read-only
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.prepare-candidate
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh
+#   - id: deploy.command.kanbien-core-platform.deploy-candidate
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh
 
 """Shared, local-only implementation for fixed core-platform control commands."""
 

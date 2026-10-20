@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.generate-index
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-24"
 #   updated_on: "2026-10-20"
@@ -26,7 +26,7 @@ set -euo pipefail
 #     - id: harness.standard.artifact-metadata
 #       path: .agentic/01.harness/artifact-metadata/standard.md
 
-python3 - "$@" <<'PY'
+python3 - "${BASH_SOURCE[0]}" "$@" <<'PY'
 from __future__ import annotations
 
 import argparse
@@ -40,10 +40,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# Resolve support code from this capability, never an overridden source root.
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
 try:
-    import yaml
-except ImportError:  # pragma: no cover - environment gate
-    print("ERROR: python3 yaml module is required for artifact metadata indexing.", file=sys.stderr)
+    from header_discovery import (
+        HeaderError, has_declared_header, is_excluded, parse_header_text,
+        requires_header, repository_paths,
+    )
+except ImportError as exc:  # pragma: no cover - environment gate
+    print(f"ERROR: artifact metadata discovery support is required: {exc}", file=sys.stderr)
     sys.exit(2)
 
 
@@ -67,23 +73,47 @@ def repo_root() -> Path:
 ROOT = repo_root()
 
 
-def run_git(args: list[str]) -> str:
-    if args == ["rev-parse", "HEAD"]:
-        env_sha = os.environ.get("RAG_SOURCE_COMMIT_SHA", "").strip()
-        if env_sha:
-            return env_sha
-    result = subprocess.run(["git", *args], check=True, text=True, stdout=subprocess.PIPE)
+def is_git_root() -> bool:
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"],
+        text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0 and Path(result.stdout.strip()).resolve() == ROOT
+
+
+GIT_ROOT = is_git_root()
+
+
+def source_commit() -> str:
+    override = os.environ.get("RAG_SOURCE_COMMIT_SHA", "").strip()
+    if override:
+        return override
+    if not GIT_ROOT:
+        raise IndexErrorInfo("RAG_SOURCE_COMMIT_SHA is required for a source archive without Git metadata")
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
+        text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    if result.returncode:
+        raise IndexErrorInfo("source repository has no HEAD; provide RAG_SOURCE_COMMIT_SHA")
     return result.stdout.strip()
 
 
 def usage() -> str:
     return """Usage:
   generate-index.sh --paths <path> [path...] [--pretty] [--strict]
-  generate-index.sh --all [--pretty] [--strict]
+  generate-index.sh --all [--pretty] [--strict] [--check-coverage]
 
 Emits an agentic artifact metadata index as JSON to stdout. By default, files
 without parseable metadata are skipped and counted in the summary. Use --strict
-to fail when a relevant file cannot be indexed.
+to fail when a required or declared file cannot be indexed. --all scans tracked
+and untracked files outside Git ignore rules for file-level declarations; existing
+required-header scopes remain unchanged. --check-coverage requires --all and fails
+if any declared artifact is malformed or absent from the emitted index.
+
+RAG_REPO_ROOT can select a source archive without Git metadata. Archives are walked
+without following symlinks, excluding repository internals and conventional build/
+dependency directories, and require RAG_SOURCE_COMMIT_SHA for provenance.
 """
 
 
@@ -93,6 +123,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--paths", nargs="*")
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--check-coverage", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
 
@@ -107,153 +138,83 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     if args.paths == []:
         print("ERROR: --paths requires at least one path.", file=sys.stderr)
         sys.exit(2)
+    if args.check_coverage and not args.all:
+        print("ERROR: --check-coverage requires --all.", file=sys.stderr)
+        sys.exit(2)
     return args
 
 
 def normalize_path(path: Path | str) -> str:
     path_obj = Path(path)
-    if path_obj.is_absolute():
-        try:
-            return path_obj.resolve().relative_to(ROOT).as_posix()
-        except ValueError:
-            return path_obj.as_posix()
-    return path_obj.as_posix()
+    absolute = path_obj if path_obj.is_absolute() else ROOT / path_obj
+    if any(item.is_symlink() for item in (absolute, *absolute.parents)):
+        raise IndexErrorInfo(f"symlink paths are not supported: {path}")
+    try:
+        relative = absolute.resolve().relative_to(ROOT)
+    except ValueError as exc:
+        raise IndexErrorInfo(f"path must stay inside source root: {path}") from exc
+    if ".git" in relative.parts:
+        raise IndexErrorInfo(f"Git metadata is not an artifact path: {path}")
+    return relative.as_posix()
+
+
+ARCHIVE_EXCLUDED_DIRS = frozenset({
+    ".git", ".hg", ".svn", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
+})
+
+
+def walk_files(root: Path, *, archive: bool = False) -> list[str]:
+    paths = []
+    excluded = ARCHIVE_EXCLUDED_DIRS if archive else {".git"}
+    for directory, children, filenames in os.walk(root, followlinks=False):
+        children[:] = [name for name in children
+                       if name not in excluded and not (Path(directory) / name).is_symlink()]
+        for name in filenames:
+            path = Path(directory) / name
+            if name != ".git" and not path.is_symlink() and path.is_file():
+                paths.append(normalize_path(path))
+    return paths
 
 
 def collect_paths_from_args(paths: list[str]) -> list[str]:
     collected: list[str] = []
     for raw_path in paths:
-        path = Path(raw_path)
-        absolute = path if path.is_absolute() else ROOT / path
+        relative = normalize_path(raw_path)
+        absolute = ROOT / relative
         if absolute.is_dir():
-            collected.extend(normalize_path(child) for child in absolute.rglob("*") if child.is_file())
+            collected.extend(walk_files(absolute))
         elif absolute.is_file():
-            collected.append(normalize_path(absolute))
+            collected.append(relative)
         else:
             print(f"WARN: path does not exist, skipping: {raw_path}", file=sys.stderr)
     return sorted(set(collected))
 
 
 def collect_all_paths() -> list[str]:
-    roots = [
-        ROOT / "scripts",
-        ROOT / ".github/workflows",
-        ROOT / ".agentic",
-        ROOT / "docs/00.chat",
-        ROOT / "docs/01.harness",
-        ROOT / "docs/02.rag-rulebook",
-        ROOT / "docs/03.product",
-        ROOT / "docs/04.deploy",
-        ROOT / "docs/06.shared",
-        ROOT / "docs/aws",
-        ROOT / "docs/education",
-        ROOT / "docs/harness",
-        ROOT / "infra",
-    ]
-    collected: list[str] = []
-    for root in roots:
-        if root.is_dir():
-            collected.extend(normalize_path(path) for path in root.rglob("*") if path.is_file())
-    return sorted(set(collected))
+    if not GIT_ROOT:
+        return sorted(set(walk_files(ROOT, archive=True)))
+    return repository_paths(ROOT)
 
 
-def is_script_artifact(path: str) -> bool:
-    return (
-        path.startswith("scripts/")
-        and path.endswith((".sh", ".js", ".mjs"))
-    ) or (
-        path.startswith(".agentic/")
-        and path.endswith((".js", ".mjs"))
-    )
+def readable_path(path: str) -> bool:
+    absolute = ROOT / path
+    return (not is_excluded(path) and absolute.is_file()
+            and not any(item.is_symlink() for item in (absolute, *absolute.parents)))
 
 
-def is_markdown_artifact(path: str) -> bool:
-    return path.endswith(".md") and (
-        path.startswith(".agentic/")
-        or path.startswith("docs/00.chat/")
-        or path.startswith("docs/01.harness/")
-        or path.startswith("docs/02.rag-rulebook/")
-        or path.startswith("docs/03.product/")
-        or path.startswith("docs/04.deploy/")
-        or path.startswith("docs/06.shared/")
-        or path.startswith("docs/aws/")
-        or path.startswith("docs/education/")
-        or path.startswith("docs/harness/")
-        or path.startswith("infra/")
-        or path.startswith("scripts/")
-    )
-
-
-def is_yaml_artifact(path: str) -> bool:
-    return path.endswith((".yml", ".yaml")) and (
-        path.startswith(".agentic/")
-        or path.startswith(".github/workflows/")
-        or path.startswith("docs/01.harness/")
-        or path.startswith("docs/02.rag-rulebook/")
-        or path.startswith("docs/03.product/")
-        or path.startswith("docs/04.deploy/")
-        or path.startswith("docs/06.shared/")
-        or path.startswith("docs/aws/")
-        or path.startswith("docs/education/")
-        or path.startswith("docs/harness/")
-        or path.startswith("scripts/")
-    )
-
-
-def is_relevant_path(path: str) -> bool:
-    return is_script_artifact(path) or is_markdown_artifact(path) or is_yaml_artifact(path)
-
-
-def strip_comment(line: str) -> str:
-    stripped = line.lstrip()
-    if stripped.startswith("# "):
-        return stripped[2:]
-    if stripped.startswith("#"):
-        return stripped[1:]
-    if stripped.startswith("// "):
-        return stripped[3:]
-    if stripped.startswith("//"):
-        return stripped[2:]
-    return line
+def declares_header(path: str) -> bool:
+    # Invalid UTF-8 after a declaration must be reported, not hide the header.
+    return has_declared_header((ROOT / path).read_bytes().decode("utf-8", "replace"))
 
 
 def parse_header(path: str) -> dict[str, Any]:
-    full_path = ROOT / path
-    lines = full_path.read_text(encoding="utf-8").splitlines()[:120]
-
-    for index, line in enumerate(lines):
-        if "agentic-artifact:" not in line and "agentic-script:" not in line:
-            continue
-        if line.lstrip().startswith("<!--"):
-            marker = line.replace("<!--", "", 1).strip()
-            body_lines = []
-            for following in lines[index + 1 :]:
-                if "-->" in following:
-                    before_end = following.split("-->", 1)[0]
-                    if before_end.strip():
-                        body_lines.append(before_end)
-                    break
-                body_lines.append(following)
-            header_lines = [marker]
-            header_lines.extend(f"  {body_line}" if body_line.strip() else body_line for body_line in body_lines)
-        else:
-            header_lines = [strip_comment(line)]
-            for following in lines[index + 1 :]:
-                stripped = following.lstrip()
-                if stripped.startswith("#") or stripped.startswith("//"):
-                    header_lines.append(strip_comment(following))
-                    continue
-                if not following.strip():
-                    break
-                break
-        try:
-            parsed = yaml.safe_load("\n".join(header_lines)) or {}
-        except yaml.YAMLError as exc:
-            raise IndexErrorInfo(f"invalid metadata YAML: {exc}") from exc
-        if not isinstance(parsed, dict):
-            raise IndexErrorInfo("invalid metadata header shape")
-        return parsed
-    raise IndexErrorInfo("missing metadata header")
+    try:
+        parsed = parse_header_text((ROOT / path).read_text(encoding="utf-8"))
+    except (HeaderError, UnicodeError) as exc:
+        raise IndexErrorInfo(str(exc)) from exc
+    if not parsed:
+        raise IndexErrorInfo("missing metadata header")
+    return parsed
 
 
 def content_hash(path: str) -> str:
@@ -386,6 +347,7 @@ def normalize_artifact(path: str) -> dict[str, Any]:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     paths = collect_all_paths() if args.all else collect_paths_from_args(args.paths or [])
+    commit = source_commit()
 
     artifacts: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
@@ -393,7 +355,9 @@ def main(argv: list[str]) -> int:
     duplicate_ids: list[dict[str, str]] = []
 
     for path in paths:
-        if not is_relevant_path(path) or not (ROOT / path).is_file():
+        if not readable_path(path):
+            continue
+        if not requires_header(path) and not declares_header(path):
             continue
         try:
             artifact = normalize_artifact(path)
@@ -408,7 +372,32 @@ def main(argv: list[str]) -> int:
                 ids[artifact_id] = path
         artifacts.append(artifact)
 
-    if args.strict and (skipped or duplicate_ids):
+    coverage = None
+    missing = []
+    if args.check_coverage:
+        # Independently rescan the complete declaration scope, so a future
+        # collector/filter regression cannot silently shrink index coverage.
+        if GIT_ROOT:
+            reference_paths = repository_paths(ROOT)
+        else:
+            reference_paths = []
+            for directory, children, filenames in os.walk(ROOT, followlinks=False):
+                children[:] = [name for name in children if name not in ARCHIVE_EXCLUDED_DIRS
+                               and not (Path(directory) / name).is_symlink()]
+                reference_paths.extend((Path(directory) / name).relative_to(ROOT).as_posix()
+                                       for name in filenames if name != ".git")
+        declared = {path for path in reference_paths
+                    if readable_path(path) and declares_header(path)}
+        indexed = {artifact["path"] for artifact in artifacts}
+        missing = sorted(declared - indexed)
+        coverage = {
+            "scope": "tracked-and-untracked" if GIT_ROOT else "source-archive",
+            "declared_artifacts": len(declared),
+            "indexed_declared_artifacts": len(declared & indexed),
+            "missing_paths": missing,
+        }
+
+    if (args.strict and (skipped or duplicate_ids)) or missing:
         for entry in skipped:
             print(f"ERROR: skipped {entry['path']}: {entry['reason']}", file=sys.stderr)
         for entry in duplicate_ids:
@@ -416,12 +405,14 @@ def main(argv: list[str]) -> int:
                 f"ERROR: duplicate id {entry['id']}: {entry['first_path']} and {entry['path']}",
                 file=sys.stderr,
             )
+        for path in missing:
+            print(f"ERROR: declared artifact missing from index: {path}", file=sys.stderr)
         return 1
 
     output = {
         "schema": "agentic-artifact-index/v1",
         "generated_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "git_commit": run_git(["rev-parse", "HEAD"]),
+        "git_commit": commit,
         "summary": {
             "artifacts": len(artifacts),
             "legacy_artifacts": sum(1 for artifact in artifacts if artifact.get("legacy")),
@@ -434,11 +425,17 @@ def main(argv: list[str]) -> int:
         "skipped": skipped,
         "duplicate_ids": duplicate_ids,
     }
+    if coverage is not None:
+        output["coverage"] = coverage
     indent = 2 if args.pretty else None
     print(json.dumps(output, indent=indent, sort_keys=True))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    try:
+        sys.exit(main(sys.argv[2:]))
+    except (IndexErrorInfo, HeaderError, OSError, subprocess.CalledProcessError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
 PY

@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.check-headers
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-06-24"
 #   updated_on: "2026-10-20"
@@ -27,7 +27,7 @@ set -euo pipefail
 #     - id: harness.checklist.before-commit
 #       path: .agentic/00.chat/checklists/before-commit.md
 
-python3 - "$@" 3<&0 <<'PY'
+python3 - "${BASH_SOURCE[0]}" "$@" 3<&0 <<'PY'
 from __future__ import annotations
 
 import argparse
@@ -40,10 +40,25 @@ import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
+
+
 try:
     import yaml
 except ImportError:  # pragma: no cover - environment gate
     print("ERROR: python3 yaml module is required for artifact metadata checks.", file=sys.stderr)
+    sys.exit(2)
+
+try:
+    from header_discovery import (
+        HeaderError, has_declared_header, header_span, is_excluded,
+        is_legacy_script_path, is_legacy_markdown_path, is_legacy_yaml_path,
+        parse_header_text as shared_parse_header_text, requires_header,
+        strip_comment, repository_paths, recover_legacy_baseline,
+    )
+except ImportError:
+    print("ERROR: installed header_discovery.py is required beside metadata capabilities.", file=sys.stderr)
     sys.exit(2)
 
 
@@ -156,8 +171,9 @@ def usage() -> str:
   check-artifact-metadata-headers.sh --paths <path> [path...]
   check-artifact-metadata-headers.sh --all
 
-Checks scripts, chat Markdown documents, harness Markdown documents, and harness
-YAML artifacts for v1, v2, and v3 metadata headers. --staged reads added,
+Checks declared file-level metadata across tracked files of every extension,
+plus existing paths that require headers, for v1, v2, and v3 compatibility.
+Embedded examples are not declarations; public bootstrap scaffolds are excluded. --staged reads added,
 copied, renamed, and modified files from the Git index and checks v3 lifecycle
 maintenance against HEAD. It also validates supersession links from unchanged
 v3 sources against the full Git index, so target moves, removals, or identity
@@ -212,7 +228,7 @@ def normalize_path(path: Path | str) -> str:
 def collect_staged_changes(include_modified: bool) -> dict[str, tuple[str, str]]:
     output = run_git([
         "diff", "--cached", "--name-status", "-z", "--find-renames", "--find-copies",
-        "--diff-filter=ACRM" if include_modified else "--diff-filter=ACR",
+        "--diff-filter=ACRMT" if include_modified else "--diff-filter=ACR",
     ])
     fields = iter(output.rstrip("\0").split("\0") if output else [])
     changes: dict[str, tuple[str, str]] = {}
@@ -247,7 +263,9 @@ def is_regular_file(path: str) -> bool:
         return True
     if STAGED:
         return INDEX_ENTRIES.get(path, ("", ""))[0] in {"100644", "100755"}
-    return (ROOT / path).is_file()
+    candidate = ROOT / path
+    return (candidate.is_file() and candidate.resolve().is_relative_to(ROOT.resolve())
+            and not any(item.is_symlink() for item in (candidate, *candidate.parents)))
 
 
 def read_text(path: str) -> str:
@@ -261,6 +279,8 @@ def read_text(path: str) -> str:
                     raise CheckError(f"metadata requires a regular file: {path}")
                 CONTENT_CACHE[path] = run_git(["cat-file", "blob", object_id])
             else:
+                if not is_regular_file(path):
+                    raise CheckError(f"metadata requires a regular repository file: {path}")
                 CONTENT_CACHE[path] = (ROOT / path).read_text(encoding="utf-8")
         except (OSError, UnicodeError, KeyError, subprocess.CalledProcessError) as exc:
             raise CheckError(f"cannot read metadata file: {path}: {exc}") from exc
@@ -269,10 +289,15 @@ def read_text(path: str) -> str:
 
 def head_text(path: str) -> str | None:
     result = subprocess.run(
-        ["git", "show", f"HEAD:{path}"], text=True,
+        ["git", "show", f"HEAD:{path}"],
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
     )
-    return result.stdout if result.returncode == 0 else None
+    if result.returncode != 0:
+        return None
+    try:
+        return result.stdout.decode("utf-8")
+    except UnicodeError:
+        return None
 
 
 def collect_paths_from_args(paths: list[str]) -> list[str]:
@@ -290,125 +315,49 @@ def collect_paths_from_args(paths: list[str]) -> list[str]:
 
 
 def collect_all_paths() -> list[str]:
-    roots = [
-        ROOT / "scripts",
-        ROOT / ".github/workflows",
-        ROOT / ".agentic",
-        ROOT / "docs/00.chat",
-        ROOT / "docs/01.harness",
-        ROOT / "docs/02.rag-rulebook",
-        ROOT / "docs/03.product",
-        ROOT / "docs/04.deploy",
-        ROOT / "docs/06.shared",
-        ROOT / "docs/aws",
-        ROOT / "docs/education",
-        ROOT / "docs/harness",
-        ROOT / "infra",
-    ]
-    collected: list[str] = []
-    for root in roots:
-        if root.is_dir():
-            collected.extend(normalize_path(path) for path in root.rglob("*") if path.is_file())
-    return sorted(set(collected))
+    return repository_paths(ROOT)
 
 
-def is_script_artifact(path: str) -> bool:
-    return (
-        path.startswith("scripts/")
-        and path.endswith((".sh", ".js", ".mjs"))
-    ) or (
-        path.startswith(".agentic/")
-        and path.endswith((".js", ".mjs"))
-    )
-
-
-def is_markdown_artifact(path: str) -> bool:
-    return path.endswith(".md") and (
-        path.startswith(".agentic/")
-        or path.startswith("docs/00.chat/")
-        or path.startswith("docs/01.harness/")
-        or path.startswith("docs/02.rag-rulebook/")
-        or path.startswith("docs/03.product/")
-        or path.startswith("docs/04.deploy/")
-        or path.startswith("docs/06.shared/")
-        or path.startswith("docs/aws/")
-        or path.startswith("docs/education/")
-        or path.startswith("docs/harness/")
-        or path.startswith("infra/")
-        or path.startswith("scripts/")
-    )
-
-
-def is_yaml_artifact(path: str) -> bool:
-    return path.endswith((".yml", ".yaml")) and (
-        path.startswith(".agentic/")
-        or path.startswith(".github/workflows/")
-        or path.startswith("docs/01.harness/")
-        or path.startswith("docs/02.rag-rulebook/")
-        or path.startswith("docs/03.product/")
-        or path.startswith("docs/04.deploy/")
-        or path.startswith("docs/06.shared/")
-        or path.startswith("docs/aws/")
-        or path.startswith("docs/education/")
-        or path.startswith("docs/harness/")
-        or path.startswith("scripts/")
-    )
-
-
-def is_relevant_path(path: str) -> bool:
-    return is_script_artifact(path) or is_markdown_artifact(path) or is_yaml_artifact(path)
-
-
-def strip_comment(line: str) -> str:
-    stripped = line.lstrip()
-    if stripped.startswith("# "):
-        return stripped[2:]
-    if stripped.startswith("#"):
-        return stripped[1:]
-    if stripped.startswith("// "):
-        return stripped[3:]
-    if stripped.startswith("//"):
-        return stripped[2:]
-    return line
+is_script_artifact = is_legacy_script_path
+is_markdown_artifact = is_legacy_markdown_path
+is_yaml_artifact = is_legacy_yaml_path
 
 
 def parse_header_text(path: str, text: str) -> tuple[dict[str, Any], tuple[int, int] | None]:
-    lines = text.splitlines(keepends=True)
-    for index, line in enumerate(lines[:120]):
-        if "agentic-artifact:" not in line and "agentic-script:" not in line:
-            continue
-        end = index + 1
-        if line.lstrip().startswith("<!--"):
-            marker = line.replace("<!--", "", 1).strip()
-            body_lines = []
-            closed = False
-            for end, following in enumerate(lines[index + 1:], start=index + 2):
-                if "-->" in following:
-                    before_end = following.split("-->", 1)[0]
-                    if before_end.strip():
-                        body_lines.append(before_end)
-                    closed = True
-                    break
-                body_lines.append(following.rstrip("\r\n"))
-            if not closed:
-                raise CheckError(f"unterminated metadata header: {path}")
-            header_lines = [marker]
-            header_lines.extend(f"  {line}" if line.strip() else line for line in body_lines)
+    try:
+        parsed = shared_parse_header_text(text)
+        span = header_span(text)
+    except HeaderError as exc:
+        raise CheckError(f"{exc}: {path}") from exc
+    return parsed, (span.start, span.end) if span else None
+
+
+def discovery_text(path: str) -> str | None:
+    """Skip unrelated binary files, but fail on corrupt declared metadata."""
+    if not is_regular_file(path):
+        return None
+    try:
+        if path in PROPOSED:
+            raw = PROPOSED[path].encode("utf-8")
+        elif STAGED:
+            raw = subprocess.run(["git", "cat-file", "blob", INDEX_ENTRIES[path][1]],
+                                 check=True, stdout=subprocess.PIPE).stdout
         else:
-            header_lines = [strip_comment(line).rstrip("\r\n")]
-            for following in lines[index + 1:]:
-                if not following.lstrip().startswith(("#", "//")):
-                    break
-                header_lines.append(strip_comment(following).rstrip("\r\n"))
-                end += 1
-        try:
-            parsed = yaml.safe_load("\n".join(header_lines)) or {}
-        except (yaml.YAMLError, ValueError) as exc:
-            raise CheckError(f"invalid metadata YAML: {path}: {exc}") from exc
-        if not isinstance(parsed, dict):
-            raise CheckError(f"invalid metadata header shape: {path}")
-        return parsed, (index, end)
-    return {}, None
+            raw = (ROOT / path).read_bytes()
+    except (OSError, UnicodeError, subprocess.CalledProcessError) as exc:
+        raise CheckError(f"cannot read artifact candidate: {path}: {exc}") from exc
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeError as exc:
+        if requires_header(path) or has_declared_header(raw.decode("utf-8", errors="replace")):
+            raise CheckError(f"declared metadata must be UTF-8 text: {path}") from exc
+        return None
+    if "\0" in text:
+        if requires_header(path) or has_declared_header(text):
+            raise CheckError(f"declared metadata must not contain NUL bytes: {path}")
+        return None
+    CONTENT_CACHE[path] = text
+    return text
 
 
 def parse_header(path: str, text: str | None = None) -> dict[str, Any]:
@@ -658,7 +607,7 @@ def validate_path(path: str, parsed: dict[str, Any]) -> None:
             return
     if isinstance(script, dict) and "schema" in script and script["schema"] != "agentic-script/v1":
         raise CheckError(f"unsupported script metadata schema: {path}: {script['schema']}")
-    if is_script_artifact(path):
+    if is_script_artifact(path) or isinstance(script, dict):
         if isinstance(script, dict):
             validate_v1_script(path, script)
             return
@@ -672,7 +621,14 @@ def validate_path(path: str, parsed: dict[str, Any]) -> None:
 def validate_staged_maintenance(path: str, change: tuple[str, str], parsed: dict[str, Any]) -> bool:
     status, source = change
     previous_text = head_text(source if status == "R" else path)
-    previous = parse_header(path, previous_text) if previous_text is not None else {}
+    repairing_legacy = False
+    try:
+        previous = parse_header(path, previous_text) if previous_text is not None else {}
+    except CheckError:
+        previous = recover_legacy_baseline(previous_text or "")
+        if not previous:
+            raise
+        repairing_legacy = True
     old = previous.get("agentic-artifact") or {}
     if not isinstance(old, dict):
         old = {}
@@ -695,7 +651,7 @@ def validate_staged_maintenance(path: str, change: tuple[str, str], parsed: dict
                 if field in old and field in current and old[field] != current[field]:
                     raise CheckError(f"{field} is immutable while retained: {path}")
         text = read_text(path)
-        if previous_text is None or without_lifecycle_dates(path, text) != without_lifecycle_dates(path, previous_text):
+        if repairing_legacy or previous_text is None or without_lifecycle_dates(path, text) != without_lifecycle_dates(path, previous_text):
             if current.get("updated_on") != TODAY.isoformat():
                 raise CheckError(f"updated_on must be today's UTC date for changed content: {path}")
         for field, event_status in (("deprecated_on", "deprecated"), ("superseded_on", "superseded")):
@@ -720,10 +676,12 @@ def load_proposed() -> None:
             raise CheckError(f"unsafe proposed repository path: {path}")
         if not (ROOT / path).resolve().is_relative_to(ROOT.resolve()):
             raise CheckError(f"proposed path resolves outside the repository: {path}")
-        if not is_relevant_path(path):
-            raise CheckError(f"proposed path is outside metadata coverage: {path}")
         if not isinstance(text, str):
             raise CheckError(f"proposed file text must be a string: {path}")
+        if is_excluded(path):
+            raise CheckError(f"proposed path is an excluded bootstrap scaffold: {path}")
+        if not requires_header(path) and not has_declared_header(text):
+            raise CheckError(f"proposed path is outside metadata coverage: {path}")
         PROPOSED[path] = text
 
 
@@ -755,12 +713,26 @@ def main(argv: list[str]) -> int:
         paths = collect_paths_from_args(args.paths or [])
     failures = checked = grandfathered = 0
     for path in paths:
-        if not path or not is_relevant_path(path):
-            continue
-        if not path_exists(path):
+        if not path or not path_exists(path):
             continue
         try:
-            parsed = parse_header(path)
+            previous = None
+            previous_path = path
+            if args.staged:
+                change, source = changes[path]
+                previous_path = source if change == "R" else path
+                previous = head_text(previous_path)
+            previously_declared = not is_excluded(previous_path) and has_declared_header(previous or "")
+            if is_excluded(path) and not previously_declared:
+                continue
+            text = discovery_text(path)
+            if text is None:
+                if requires_header(path) or previously_declared:
+                    raise CheckError(f"metadata requires a regular text repository file: {path}")
+                continue
+            if not (requires_header(path) or has_declared_header(text) or previously_declared):
+                continue
+            parsed = parse_header(path, text)
             if args.staged and not validate_staged_maintenance(path, changes[path], parsed):
                 grandfathered += 1
                 continue
@@ -774,10 +746,13 @@ def main(argv: list[str]) -> int:
         # Validate those sources against the same staged snapshot, without
         # requiring unchanged files to refresh their lifecycle dates.
         for path in sorted(INDEX_ENTRIES):
-            if path in changes or not is_relevant_path(path) or not is_regular_file(path):
+            if path in changes or is_excluded(path) or not is_regular_file(path):
                 continue
             try:
-                metadata = parse_header(path).get("agentic-artifact")
+                text = discovery_text(path)
+                if text is None or not has_declared_header(text):
+                    continue
+                metadata = parse_header(path, text).get("agentic-artifact")
                 if isinstance(metadata, dict) and metadata.get("schema") == "agentic-artifact/v3" and "superseded_by" in metadata:
                     validate_replacement_graph(path, metadata, [])
             except CheckError as exc:
@@ -791,5 +766,5 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[2:]))
 PY

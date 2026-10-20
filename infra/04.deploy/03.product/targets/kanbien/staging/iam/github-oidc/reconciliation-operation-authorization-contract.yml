@@ -1,8 +1,10 @@
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.iam.github-oidc.reconciliation-operation-authorization-contract
 #   version: 2
 #   status: active
+#   created_on: "2026-09-26"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: infra.access
 #   disciplines:
@@ -11,7 +13,7 @@
 #   kind: infrastructure-dependency-contract
 #   purpose: Map every GitHub reconciliation provider operation to its reviewed IAM action and exact target scope.
 #   portability:
-#     class: target-specific
+#     class: internal
 #     targets:
 #     - kanbien/staging
 #   used_by:

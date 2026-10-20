@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-20"
@@ -39,36 +39,20 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-import textwrap
 from urllib.parse import quote
 
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(sys.argv[1]).resolve().parents[1]))
 try:
-    import yaml
-except ImportError:
-    raise SystemExit("ERROR: python3 yaml module is required for lifecycle updates.")
+    from header_discovery import (
+        HeaderError, header_span, is_excluded, parse_header_text, recover_legacy_baseline,
+    )
+except ImportError as exc:
+    raise SystemExit(f"ERROR: artifact metadata discovery support is required: {exc}")
 
 
 class PlanError(Exception):
     pass
-
-
-class UniqueLoader(yaml.SafeLoader):
-    pass
-
-
-def unique_mapping(loader, node, deep=False):
-    result = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        if key in result:
-            raise PlanError(f"duplicate metadata key: {key}")
-        result[key] = loader.construct_object(value_node, deep=deep)
-    return result
-
-
-UniqueLoader.add_constructor(
-    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping
-)
 
 
 def git(*args, check=True):
@@ -106,6 +90,8 @@ def explicit_path(raw):
     path = path.resolve()
     if not path.is_relative_to(ROOT) or ".git" in path.relative_to(ROOT).parts:
         raise PlanError(f"path must be a repository file outside .git: {raw}")
+    if is_excluded(path.relative_to(ROOT).as_posix()):
+        raise PlanError(f"bootstrap output scaffolds are excluded from lifecycle updates: {raw}")
     if not path.is_file():
         raise PlanError(f"file does not exist: {raw}")
     return path
@@ -120,47 +106,29 @@ class Header:
         except UnicodeError as exc:
             raise PlanError("artifact must be UTF-8 text") from exc
         self.newline = "\r\n" if any(s.endswith("\r\n") for s in self.lines) else "\n"
-        self.start = next(
-            (
-                i for i, line in enumerate(self.lines[:100])
-                if line.strip() in ("<!-- agentic-artifact:", "# agentic-artifact:", "// agentic-artifact:")
-            ),
-            None,
-        )
-        if self.start is None:
-            raise PlanError("requires an existing agentic-artifact/v2 or v3 header")
-        self.markdown = self.lines[self.start].lstrip().startswith("<!--")
-        self.comment = "//" if self.lines[self.start].lstrip().startswith("//") else "#"
-        self.end = self.start + 1
-        while self.end < len(self.lines):
-            line = self.lines[self.end]
-            if self.markdown:
-                if line.strip() == "-->":
-                    break
-            elif not line.lstrip().startswith(self.comment):
-                break
-            self.end += 1
-        if self.markdown and self.end == len(self.lines):
-            raise PlanError("unterminated metadata comment")
+        try:
+            text = raw.decode("utf-8")
+            span = header_span(text)
+            parsed = parse_header_text(text)
+        except HeaderError as exc:
+            raise PlanError(str(exc)) from exc
+        if span is None or span.marker != "agentic-artifact":
+            raise PlanError("requires an existing file-level agentic-artifact/v2 or v3 header")
+        self.start = span.start
+        self.markdown = span.style == "html"
+        self.comment = span.comment
+        # Editing offsets exclude the HTML close but include all metadata lines.
+        self.end = span.end - 1 if self.markdown else span.end
         block = self.lines[self.start + 1:self.end]
         if self.markdown:
-            payload = textwrap.dedent("".join(block))
             schema_line = next((line for line in block if re.match(r"^\s*schema:", line)), "")
             self.prefix = schema_line[:schema_line.index("schema:")] if schema_line else ""
         else:
-            payload = textwrap.dedent(
-                "".join(re.sub(r"^\s*" + re.escape(self.comment) + " ?", "", line) for line in block)
-            )
             schema_line = next(
                 (line for line in block if re.match(r"^\s*" + re.escape(self.comment) + r"\s+schema:", line)), ""
             )
             self.prefix = schema_line[:schema_line.index("schema:")] if schema_line else self.comment + "   "
-        try:
-            self.data = yaml.load(payload, Loader=UniqueLoader)
-        except yaml.YAMLError as exc:
-            raise PlanError(f"invalid metadata YAML: {exc}") from exc
-        if not isinstance(self.data, dict):
-            raise PlanError("metadata must be a mapping")
+        self.data = parsed["agentic-artifact"]
         if self.data.get("schema") not in ("agentic-artifact/v2", "agentic-artifact/v3"):
             raise PlanError("only v2 and v3 headers can be updated")
         if not isinstance(self.data.get("id"), str) or not ID_RE.fullmatch(self.data["id"]):
@@ -476,9 +444,17 @@ def prepare(path, args):
     relative = path.relative_to(ROOT).as_posix()
     baseline_path, baseline = head_baseline(path, original["id"])
     if baseline is not None and original["schema"] == "agentic-artifact/v3":
-        old_header = Header(baseline)
-        if old_header.data["schema"] == "agentic-artifact/v3":
-            if old_header.data.get("created_on") != created:
+        try:
+            old_data = Header(baseline).data
+        except PlanError:
+            # A repaired legacy header may still be malformed in HEAD until
+            # this migration is committed. Recover only an unambiguous v2
+            # identity; never waive historical v3 creation-date protection.
+            old_data = recover_legacy_baseline(baseline.decode("utf-8")).get("agentic-artifact")
+            if old_data is None:
+                raise
+        if old_data["schema"] == "agentic-artifact/v3":
+            if old_data.get("created_on") != created:
                 raise PlanError("created_on differs from HEAD; creation dates are immutable after migration")
     # Ignore changes to the update-date line when deciding whether content
     # differs from HEAD. Reading an unchanged old artifact must be a no-op.

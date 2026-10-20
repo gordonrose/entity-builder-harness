@@ -1,8 +1,10 @@
 # agentic-artifact:
-#   schema: agentic-artifact/v2
+#   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien.staging.drift-detection.administrator-active-foundation-assessment-contract
 #   version: 1
 #   status: active
+#   created_on: "2026-09-26"
+#   updated_on: "2026-10-20"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -11,9 +13,12 @@
 #   kind: infrastructure-dependency-contract
 #   purpose: Bound one human-approved administrator-only Foundation drift assessment, declared TLS-normalization check, and structural classification needed for the reviewed PostgreSQL database-egress correction.
 #   portability:
-#     class: target-specific
+#     class: internal
 #     targets:
 #     - kanbien/staging
+#   used_by:
+#   - id: deploy.script.assess-platform-shell-foundation-drift
+#     path: scripts/04.deploy/assess-platform-shell-foundation-drift/script.py
 schema: deploy/cloudformation-administrator-active-foundation-assessment-contract/v2
 target: kanbien/staging
 status: active
