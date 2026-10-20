@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T03:36:52Z
-latest_commit_sha: 60891e4b
-chat_duration: 1276643s (14:18:37:23)
+latest_commit_at_utc: 2026-10-20T03:46:39Z
+latest_commit_sha: 25014ff9
+chat_duration: 1277230s (14:18:47:10)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -754,6 +754,17 @@ Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider
 
 Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
 
+
+### 2026-10-20T03:46:39Z - Commit recorded
+
+Commit: `25014ff9`
+
+Message: feat(deploy): add core target control surfaces
+
+Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
+
+ADR impact: No ADR: no provider selection or target mutation occurred.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -880,6 +891,13 @@ Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/target
   Summary: Added the planned-not-live-selected kanbien-core-platform target, bootstrap scope, foundation/access/network/pipeline declarations, and fail-closed static coverage verifier. Every live provider fact remains explicit E0-required and target mutation is blocked.
   ADR impact: No ADR: no AWS/provider selection or live resource decision was made.
 
+
+- Commit: `25014ff9`
+  Time UTC: 2026-10-20T03:46:39Z
+  Message: feat(deploy): add core target control surfaces
+  Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
+  ADR impact: No ADR: no provider selection or target mutation occurred.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -893,9 +911,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T03:36:52Z
-Latest commit SHA: 60891e4b
-Chat duration: 1276643s (14:18:37:23)
+Latest commit at UTC: 2026-10-20T03:46:39Z
+Latest commit SHA: 25014ff9
+Chat duration: 1277230s (14:18:47:10)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
