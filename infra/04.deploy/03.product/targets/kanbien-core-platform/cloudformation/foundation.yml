@@ -1,0 +1,130 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Define the proposed create-only private foundation for Kanbien core platform.
+#   portability: { class: internal, targets: [] }
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Proposed private foundation for kanbien-core-platform; no public ingress.
+
+Parameters:
+  VpcId: { Type: 'AWS::EC2::VPC::Id' }
+  PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
+  ExistingGitHubOidcProviderArn:
+    Type: String
+    AllowedPattern: '^arn:aws:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$'
+  CostAlertEmail:
+    Type: String
+    NoEcho: true
+    AllowedPattern: '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: kanbien-core-platform/core-server
+      ImageTagMutability: IMMUTABLE
+      ImageScanningConfiguration: { ScanOnPush: true }
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: kanbien-core-platform
+      ClusterSettings: [{ Name: containerInsights, Value: enabled }]
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: { LogGroupName: /aws/ecs/kanbien-core-platform, RetentionInDays: 14 }
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: { GroupDescription: Private core server ingress from verifier only., VpcId: !Ref VpcId }
+  VerifierSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: { GroupDescription: Private one-pass release verifier., VpcId: !Ref VpcId }
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: { GroupDescription: HTTPS from core tasks to required AWS endpoints., VpcId: !Ref VpcId }
+  ServerIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref ServiceSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  EndpointIngressFromService:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ServiceSecurityGroup }
+  EndpointIngressFromVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref VerifierSecurityGroup }
+  EcrApiEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.api', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+  EcrDkrEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ecr.dkr', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+  LogsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: { VpcId: !Ref VpcId, VpcEndpointType: Interface, ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs', PrivateDnsEnabled: true, SubnetIds: !Ref PrivateSubnetIds, SecurityGroupIds: [!Ref EndpointSecurityGroup] }
+  Namespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties: { Name: kanbien-core-platform.internal, Vpc: !Ref VpcId }
+  BootstrapServiceDiscovery:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: bootstrap-runtime
+      DnsConfig: { NamespaceId: !Ref Namespace, DnsRecords: [{ Type: A, TTL: 10 }] }
+      HealthCheckCustomConfig: { FailureThreshold: 1 }
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-task-execution
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: pull-image-and-write-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !GetAtt Repository.Arn }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub '${LogGroup.Arn}:log-stream:*' }
+  DeliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: github-kanbien-core-platform-delivery
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Federated: !Ref ExistingGitHubOidcProviderArn }
+            Action: 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals: { 'token.actions.githubusercontent.com:aud': sts.amazonaws.com }
+              StringLike: { 'token.actions.githubusercontent.com:sub': 'repo:gordonrose/entity-builder-harness:environment:kanbien-core-platform' }
+      Policies:
+        - PolicyName: publish-core-image
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !GetAtt Repository.Arn }
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: kanbien-core-platform-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: 100, Unit: USD }
+        CostFilters: { TagKeyValue: ['user:Target$kanbien-core-platform'] }
+      NotificationsWithSubscribers:
+        - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80, ThresholdType: PERCENTAGE }
+          Subscribers: [{ SubscriptionType: EMAIL, Address: !Ref CostAlertEmail }]
+
+Outputs:
+  RepositoryUri: { Value: !GetAtt Repository.RepositoryUri }
+  ClusterArn: { Value: !GetAtt Cluster.Arn }
+  LogGroupName: { Value: !Ref LogGroup }
+  TaskExecutionRoleArn: { Value: !GetAtt TaskExecutionRole.Arn }
+  ServiceSecurityGroupId: { Value: !Ref ServiceSecurityGroup }
+  VerifierSecurityGroupId: { Value: !Ref VerifierSecurityGroup }
+  ServiceDiscoveryArn: { Value: !GetAtt BootstrapServiceDiscovery.Arn }
