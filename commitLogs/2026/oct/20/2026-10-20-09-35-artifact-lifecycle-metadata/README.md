@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T12:52:48Z
-latest_commit_sha: 1520ef06
-chat_duration: 15409s (00:04:16:49)
+latest_commit_at_utc: 2026-10-20T13:05:05Z
+latest_commit_sha: e145ee66
+chat_duration: 16146s (00:04:29:06)
 estimated_chat_tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -183,6 +183,10 @@ Remaining unindexed paths:
 
 - Summary: Discovery coverage follow-up completed: 48 missed headers migrated; 1092 declared artifacts indexed and valid, including 1090 v3 and two intentional v2 examples. Three raw bootstrap scaffolds remain explicit exclusions with rendered-output validation. All implementation and public checks passed; changes remain unstaged and uncommitted.
   Durable evidence: See coverage-backfill.json for per-artifact repair/date evidence and coverage-validation.json for 153 checker assertions, index/helper/recognition/rulebook/public regression results, syntax checks and isolated staged commit gates. ADR 0039 records declaration-based discovery; all 48 bodies and identities preserved. No deployment code executed or real Git staging/commit/push performed.
+
+
+- Summary: Metadata coverage publication is ready after the approved main-integration recovery.
+  Durable evidence: Task commit 1520ef06; clean refresh merge 0e51f506; integration correction e145ee66. Main base 5189bada preserved, including all 26 incoming artifact bodies. Final inventory is 1106 artifacts: 1104 v3 and two intentional v2 examples; zero missing or duplicates. See coverage-main-integration.json for the one-off exception, provenance, 14-header no-op report, public acceptance and staged gates. The rehearsal worktree was removed by apply-rehearsed-refresh; original un-applied rehearsal 8ca9ec47 remains local review evidence. Next step: clean session checkpoint, eligibility verification from root, approved local merge and normal origin/main push.
 
 ## Activity Log
 
@@ -573,6 +577,35 @@ Decision: User approved a one-off recovery for incoming-main metadata failures d
 
 Rationale: Exception permits applying and committing the reviewed 14-header correction in the rehearsal worktree, running all required checks, then applying the tested refresh and completing the already approved main merge and remote push. Three incoming headers lack used_by; ordinary task gates reject preflight branches while refresh forbids applying failed checks. Patch SHA256 6999c46943d6ee6fbff1459de028f47b04eff7aa163348d773fe997a9df02d3a preserves bodies and identity. Record this as a one-off, not precedent; a durable preflight metadata-repair workflow is a possible follow-up. Original rehearsal 8ca9ec47 is retained as evidence and will be superseded by a fresh rehearsal including this authorization.
 
+
+### 2026-10-20T13:05:04Z - Commit recorded
+
+Commit: `0e51f506`
+
+Message: Merge main through rehearsed refresh
+
+Summary: Integrated main 5189bada without conflicts in a clean rehearsal. Preserved all 26 incoming artifact bodies; approved metadata-only recovery completed and tested before applying.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-20T13:05:05Z - Commit recorded
+
+Commit: `e145ee66`
+
+Message: fix(metadata): migrate headers introduced during main integration
+
+Summary: Under the explicitly approved one-off preflight exception, migrated 14 incoming headers, repaired three consumer references, refreshed recognition inventories and passed full metadata, coverage, staged gates, public acceptance and targeted deployment checks.
+
+ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+
+### 2026-10-20T13:06:00Z - Context hygiene
+
+Summary: Metadata coverage publication is ready after the approved main-integration recovery.
+
+Durable evidence: Task commit 1520ef06; clean refresh merge 0e51f506; integration correction e145ee66. Main base 5189bada preserved, including all 26 incoming artifact bodies. Final inventory is 1106 artifacts: 1104 v3 and two intentional v2 examples; zero missing or duplicates. See coverage-main-integration.json for the one-off exception, provenance, 14-header no-op report, public acceptance and staged gates. The rehearsal worktree was removed by apply-rehearsed-refresh; original un-applied rehearsal 8ca9ec47 remains local review evidence. Next step: clean session checkpoint, eligibility verification from root, approved local merge and normal origin/main push.
+
 ## Sub-Agent Activity
 
 
@@ -733,6 +766,20 @@ Summary: Implemented common leading-header discovery and strict historical repai
   Summary: Added shared declaration discovery, repaired and migrated 48 missed headers, installed independent index coverage checks and portable dependencies, regenerated recognition sources, and passed all required checks including 153 checker assertions and staged commit gates.
   ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
 
+
+- Commit: `0e51f506`
+  Time UTC: 2026-10-20T13:05:04Z
+  Message: Merge main through rehearsed refresh
+  Summary: Integrated main 5189bada without conflicts in a clean rehearsal. Preserved all 26 incoming artifact bodies; approved metadata-only recovery completed and tested before applying.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `e145ee66`
+  Time UTC: 2026-10-20T13:05:05Z
+  Message: fix(metadata): migrate headers introduced during main integration
+  Summary: Under the explicitly approved one-off preflight exception, migrated 14 incoming headers, repaired three consumer references, refreshed recognition inventories and passed full metadata, coverage, staged gates, public acceptance and targeted deployment checks.
+  ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -746,9 +793,9 @@ Reason: Declaration-based discovery and independent inventory coverage extend th
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T08:35:59Z
-Latest commit at UTC: 2026-10-20T12:52:48Z
-Latest commit SHA: 1520ef06
-Chat duration: 15409s (00:04:16:49)
+Latest commit at UTC: 2026-10-20T13:05:05Z
+Latest commit SHA: e145ee66
+Chat duration: 16146s (00:04:29:06)
 Estimated chat tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
