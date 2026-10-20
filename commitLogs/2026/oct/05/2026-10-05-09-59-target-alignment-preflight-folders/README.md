@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:16:57Z
-latest_commit_sha: e517670c
-chat_duration: 1333048s (15:10:17:28)
+latest_commit_at_utc: 2026-10-20T19:20:33Z
+latest_commit_sha: 2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec
+chat_duration: 1333264s (15:10:21:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1223,6 +1223,17 @@ Decision: Initial runtime deployment recognises CloudFormation REVIEW_IN_PROGRES
 
 Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the expected create change set, and continues to reject CREATE_COMPLETE or any update type.
 
+
+### 2026-10-20T19:20:33Z - Commit recorded
+
+Commit: `2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec`
+
+Message: fix(deploy): recognise initial review stack
+
+Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1440,6 +1451,13 @@ Rationale: The control accepts only absent or REVIEW_IN_PROGRESS stacks with the
   Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
   ADR impact: No new ADR; corrects reusable deployment-control interpretation.
 
+
+- Commit: `2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec`
+  Time UTC: 2026-10-20T19:20:33Z
+  Message: fix(deploy): recognise initial review stack
+  Summary: Recognised CloudFormation REVIEW_IN_PROGRESS as the only permitted initial change-set review stack, with regression coverage that rejects a real deployed runtime.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1453,9 +1471,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:16:57Z
-Latest commit SHA: e517670c
-Chat duration: 1333048s (15:10:17:28)
+Latest commit at UTC: 2026-10-20T19:20:33Z
+Latest commit SHA: 2928e1e956adc1cb8c81b3d0c9f92d4727d9fdec
+Chat duration: 1333264s (15:10:21:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
