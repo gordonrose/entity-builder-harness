@@ -224,11 +224,11 @@ def check_pipeline(root: Path) -> None:
     if not isinstance(pipelines, list) or len(pipelines) != 1 or not isinstance(pipelines[0], dict):
         raise DeclarationFailure("pipeline-record-missing")
     pipeline = pipelines[0]
-    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("state") != "declaration-only" or pipeline.get("executable_workflow") != "not-created" or pipeline.get("provider_identity") != "unresolved-e0-required" or pipeline.get("package_destination") != "unresolved-e0-required":
+    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml":
         raise DeclarationFailure("pipeline-record-invalid")
     if not non_empty(pipeline.get("owner")):
         raise DeclarationFailure("pipeline-unowned")
-    if pipeline.get("permitted_operations") != [] or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
+    if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != ["bootstrap-runtime"] or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
         raise DeclarationFailure("pipeline-authority-invalid")
 
 

@@ -1,0 +1,183 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v2
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
+#   version: 1
+#   status: draft
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [architecture, security, sre]
+#   kind: cloudformation-template
+#   purpose: Define the private immutable-digest ECS workload and one-shot verifier for the Kanbien core bootstrap scope.
+#   portability: { class: internal, targets: [] }
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Private immutable-digest ECS bootstrap runtime for kanbien-core-platform; no public ingress.
+
+Parameters:
+  ClusterArn:
+    Type: String
+    AllowedPattern: '^arn:aws:ecs:[a-z0-9-]+:[0-9]{12}:cluster/kanbien-core-platform$'
+  PrivateSubnetIds:
+    Type: 'List<AWS::EC2::Subnet::Id>'
+  ServiceSecurityGroupId:
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  VerifierSecurityGroupId:
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  ServiceDiscoveryArn:
+    Type: String
+    AllowedPattern: '^arn:aws:servicediscovery:[a-z0-9-]+:[0-9]{12}:service/srv-[a-z0-9]+$'
+  TaskExecutionRoleArn:
+    Type: String
+    AllowedPattern: '^arn:aws:iam::[0-9]{12}:role/kanbien-core-platform-task-execution$'
+  LogGroupName:
+    Type: String
+    Default: /aws/ecs/kanbien-core-platform
+    AllowedPattern: '^/aws/ecs/kanbien-core-platform$'
+  ImageRepositoryUri:
+    Type: String
+    AllowedPattern: '^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/kanbien-core-platform/core-server$'
+  ImageDigest:
+    Type: String
+    AllowedPattern: '^sha256:[a-f0-9]{64}$'
+  SourceRevision:
+    Type: String
+    AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+
+Resources:
+  BootstrapRuntimeTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-bootstrap-runtime
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: kanbien-core-server
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          User: node
+          ReadonlyRootFilesystem: true
+          LinuxParameters:
+            Capabilities:
+              Drop: [ALL]
+          PortMappings:
+            - ContainerPort: 3000
+              Protocol: tcp
+          Environment:
+            - Name: NODE_ENV
+              Value: production
+            - Name: HOST
+              Value: 0.0.0.0
+            - Name: PORT
+              Value: '3000'
+            - Name: PLATFORM_SOURCE_COMMIT_SHA
+              Value: !Ref SourceRevision
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - 'node -e "fetch(\"http://127.0.0.1:3000/readyz\").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))"'
+            Interval: 10
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: bootstrap-runtime
+
+  BootstrapRuntimeService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: kanbien-core-platform-bootstrap-runtime
+      Cluster: !Ref ClusterArn
+      DesiredCount: 1
+      LaunchType: FARGATE
+      PlatformVersion: '1.4.0'
+      EnableExecuteCommand: false
+      EnableECSManagedTags: true
+      PropagateTags: TASK_DEFINITION
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+          Subnets: !Ref PrivateSubnetIds
+      ServiceRegistries:
+        - RegistryArn: !Ref ServiceDiscoveryArn
+          ContainerName: kanbien-core-server
+          ContainerPort: 3000
+      TaskDefinition: !Ref BootstrapRuntimeTaskDefinition
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ReleaseVerifierTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-release-verifier
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+        - Name: private-release-verifier
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          User: node
+          ReadonlyRootFilesystem: true
+          LinuxParameters:
+            Capabilities:
+              Drop: [ALL]
+          Command:
+            - node
+            - -e
+            - |
+              const endpoint = process.env.KANBIEN_PRIVATE_VERIFICATION_URL;
+              const expected = process.env.KANBIEN_EXPECTED_SOURCE_REVISION;
+              fetch(endpoint)
+                .then(async (response) => {
+                  if (!response.ok) throw new Error("non_success_status");
+                  const body = await response.json();
+                  if (body?.release?.sourceCommitSha !== expected) throw new Error("release_identity_mismatch");
+                  console.log(JSON.stringify({ verdict: "accepted", code: "KANBIEN_CORE_RELEASE_VERIFIED" }));
+                })
+                .catch((error) => {
+                  console.error(JSON.stringify({ verdict: "rejected", code: "KANBIEN_CORE_RELEASE_VERIFICATION_FAILED", error_class: error instanceof Error ? error.name : "UnknownError" }));
+                  process.exitCode = 1;
+                });
+          Environment:
+            - Name: KANBIEN_PRIVATE_VERIFICATION_URL
+              Value: http://bootstrap-runtime.kanbien-core-platform.internal:3000/internal/release-verification
+            - Name: KANBIEN_EXPECTED_SOURCE_REVISION
+              Value: !Ref SourceRevision
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroupName
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: release-verifier
+
+Outputs:
+  BootstrapRuntimeServiceArn:
+    Value: !Ref BootstrapRuntimeService
+  BootstrapRuntimeTaskDefinitionArn:
+    Value: !Ref BootstrapRuntimeTaskDefinition
+  ReleaseVerifierTaskDefinitionArn:
+    Value: !Ref ReleaseVerifierTaskDefinition
+  ImmutableImageReference:
+    Value: !Sub '${ImageRepositoryUri}@${ImageDigest}'

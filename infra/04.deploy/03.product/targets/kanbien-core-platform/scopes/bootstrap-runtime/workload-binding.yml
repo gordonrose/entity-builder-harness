@@ -31,6 +31,13 @@ image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
 package_identity: runtime-bound-sha256
 provider_workload: unresolved-e0-required
 private_verifier: unresolved-e0-required
+proposed_provider_binding:
+  template: cloudformation/bootstrap-runtime.yml
+  workload_kind: ecs-fargate-service
+  immutable_image_reference: repository-at-sha256-digest-only
+  network_placement: selected-private-subnets-no-public-ip
+  workload_identity: execution-role-only-no-task-role
+  release_verifier: one-shot-private-ecs-task
 mutation:
   status: blocked
   allowed_operation: create-only

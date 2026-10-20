@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:33:20Z
-latest_commit_sha: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
-chat_duration: 1301631s (15:01:33:51)
+latest_commit_at_utc: 2026-10-20T11:40:36Z
+latest_commit_sha: 7720422a1fca3b267ebf6925cc29c1c5887fb979
+chat_duration: 1305667s (15:02:41:07)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -139,6 +139,14 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Completed E2a tag bootstrap and GitHub Environment guard
   Rationale: The ECR tag-bootstrap stack is CREATE_COMPLETE with no image or workload. GitHub Environment kanbien-core-platform now requires the repository owner and accepts only main deployments. Cost-tag activation remains pending AWS discovery.
 
+
+- Decision: Implemented E3/E4 repository controls while E2b propagates
+  Rationale: Added package custody receipt governance and a protected manual-only target image workflow; added a private immutable-digest runtime and verifier stack; hardened the E2 foundation. No E2c+ AWS resource was created.
+
+
+- Decision: Accepted temporary waiver of the target-specific budget activation gate
+  Rationale: User explicitly accepts only the delay in Target cost-allocation tag discovery. E2c-E7 may proceed with one task, no autoscaling, no NAT, no public ingress, no data services, and no new cost categories. The USD 100 Target-filtered budget must be activated and verified once AWS exposes the tag.
+
 ## Context Hygiene
 
 
@@ -237,6 +245,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: E2a created one empty immutable ECR repository under the approved target prefix; the account Target allocation tag is not yet discoverable by Cost Explorer. Foundation template was corrected locally to consume this repository rather than recreate it.
   Durable evidence: AWS stack kanbien-core-platform-tag-bootstrap; repo files infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml and docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+
+
+- Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer. E3/E4 are now repository-defined, static-validated controls awaiting guarded foundation creation and a real workflow run.
+  Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
 
 ## Activity Log
 
@@ -941,6 +953,49 @@ Summary: Recorded E2a creation evidence and corrected the E2c foundation to cons
 
 ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
 
+
+### 2026-10-20T10:52:01Z - Decision
+
+Decision: Implemented E3/E4 repository controls while E2b propagates
+
+Rationale: Added package custody receipt governance and a protected manual-only target image workflow; added a private immutable-digest runtime and verifier stack; hardened the E2 foundation. No E2c+ AWS resource was created.
+
+
+### 2026-10-20T10:52:01Z - Context hygiene
+
+Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer. E3/E4 are now repository-defined, static-validated controls awaiting guarded foundation creation and a real workflow run.
+
+Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
+
+
+### 2026-10-20T10:53:24Z - Commit recorded
+
+Commit: `7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa`
+
+Message: feat(deploy): add core platform custody and runtime controls
+
+Summary: Added target-bound package custody workflow and safe receipt validation, private immutable-digest runtime/verifier CloudFormation, and hardened foundation network and ECR controls. All local static, receipt, workflow, target declaration, whitespace and CloudFormation validation checks passed; E2c remains blocked by AWS Target cost-tag propagation.
+
+ADR impact: ADR 0003 remains the applicable private ECS target decision.
+
+
+### 2026-10-20T11:32:15Z - Decision
+
+Decision: Accepted temporary waiver of the target-specific budget activation gate
+
+Rationale: User explicitly accepts only the delay in Target cost-allocation tag discovery. E2c-E7 may proceed with one task, no autoscaling, no NAT, no public ingress, no data services, and no new cost categories. The USD 100 Target-filtered budget must be activated and verified once AWS exposes the tag.
+
+
+### 2026-10-20T11:40:36Z - Commit recorded
+
+Commit: `7720422a1fca3b267ebf6925cc29c1c5887fb979`
+
+Message: feat(deploy): create private core platform foundation
+
+Summary: Recorded temporary cost-budget waiver and corrected CloudFormation parameter validation after it rejected valid private VPC inputs. The approved kanbien-core-platform foundation stack is CREATE_COMPLETE; target-specific budget remains deferred until AWS exposes Target.
+
+ADR impact: ADR 0003 remains applicable.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1095,6 +1150,20 @@ ADR impact: ADR 0003 unchanged; execution evidence supports its phased private t
   Summary: Recorded E2a creation evidence and corrected the E2c foundation to consume the immutable ECR repository created by tag bootstrap instead of attempting a duplicate; added explicit Target tags to target-owned foundation resources.
   ADR impact: ADR 0003 unchanged; execution evidence supports its phased private target decision.
 
+
+- Commit: `7ea7371fd10ad2bcb3fd7b6c147b774fc75e99fa`
+  Time UTC: 2026-10-20T10:53:24Z
+  Message: feat(deploy): add core platform custody and runtime controls
+  Summary: Added target-bound package custody workflow and safe receipt validation, private immutable-digest runtime/verifier CloudFormation, and hardened foundation network and ECR controls. All local static, receipt, workflow, target declaration, whitespace and CloudFormation validation checks passed; E2c remains blocked by AWS Target cost-tag propagation.
+  ADR impact: ADR 0003 remains the applicable private ECS target decision.
+
+
+- Commit: `7720422a1fca3b267ebf6925cc29c1c5887fb979`
+  Time UTC: 2026-10-20T11:40:36Z
+  Message: feat(deploy): create private core platform foundation
+  Summary: Recorded temporary cost-budget waiver and corrected CloudFormation parameter validation after it rejected valid private VPC inputs. The approved kanbien-core-platform foundation stack is CREATE_COMPLETE; target-specific budget remains deferred until AWS exposes Target.
+  ADR impact: ADR 0003 remains applicable.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1108,9 +1177,9 @@ Reason: The controls implement the already-approved rehearsal boundary; they do 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T10:33:20Z
-Latest commit SHA: 60a59af366eea2ceed84ea83cd960e2a6d4a350a
-Chat duration: 1301631s (15:01:33:51)
+Latest commit at UTC: 2026-10-20T11:40:36Z
+Latest commit SHA: 7720422a1fca3b267ebf6925cc29c1c5887fb979
+Chat duration: 1305667s (15:02:41:07)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

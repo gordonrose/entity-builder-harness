@@ -32,6 +32,8 @@ program:
 workload:
   operation: create-only
   runtime_selection: unresolved-e0-required
+  runtime_template: cloudformation/bootstrap-runtime.yml
+  runtime_boundary: ecs-fargate-private-immutable-digest
   startup_access: foundation/technical-access.yml#workload-startup
   network: foundation/network.yml#private-verifier-route
 configuration:
@@ -42,9 +44,10 @@ configuration:
     - PORT
     - PLATFORM_SOURCE_COMMIT_SHA
   optional_names:
-    - PLATFORM_SERVER_CORS_ORIGIN
-    - PLATFORM_SERVER_CORS_ALLOWLIST
-    - PLATFORM_SERVER_HEALTH_EXPOSURE
+    - PLATFORM_CORS_ORIGIN
+    - PLATFORM_CORS_ALLOWLIST
+    - PLATFORM_HEALTH_LIVEZ_EXPOSURE
+    - PLATFORM_HEALTH_READYZ_EXPOSURE
   secret_names: []
 verification:
   liveness_path: /livez
@@ -53,6 +56,13 @@ verification:
   route_exposure: private-verifier-only
   status: unresolved-e0-required
   owner: platform-runtime
+  verifier:
+    type: one-shot-private-ecs-task
+    template: cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition
+    required_evidence:
+      - immutable-image-digest
+      - expected-source-revision
+      - private-release-verification-response
 dependencies:
   required: []
   optional: []
