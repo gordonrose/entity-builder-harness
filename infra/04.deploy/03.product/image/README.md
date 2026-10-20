@@ -70,7 +70,7 @@ The image sets:
 - `HOST=0.0.0.0`
 - `PORT=3000`
 
-The image runs as the base image's non-root `node` user. Packaged source files
+The image runs as the base image's declared non-root user. Packaged source files
 are root-owned and non-writable by the service user. The image smoke test runs
 with a read-only root filesystem, all capabilities dropped,
 `no-new-privileges`, and a bounded `/tmp` tmpfs.

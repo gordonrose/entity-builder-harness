@@ -65,7 +65,6 @@ Resources:
         - Name: kanbien-core-server
           Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
           Essential: true
-          User: node
           ReadonlyRootFilesystem: true
           LinuxParameters:
             Capabilities:
@@ -141,7 +140,6 @@ Resources:
         - Name: private-release-verifier
           Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
           Essential: true
-          User: node
           ReadonlyRootFilesystem: true
           LinuxParameters:
             Capabilities:

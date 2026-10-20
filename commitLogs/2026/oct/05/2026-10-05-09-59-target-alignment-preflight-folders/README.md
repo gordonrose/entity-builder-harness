@@ -219,6 +219,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
   Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
 
+
+- Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
+  Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
+
 ## Context Hygiene
 
 
@@ -1343,6 +1347,13 @@ ADR impact: No new ADR; corrects reusable deployment-control interpretation.
 Decision: Private immutable image pull also requires object-store layer retrieval, not only registry endpoints.
 
 Rationale: Declare and enforce TCP/443 egress to the provider-managed object-store prefix list for both workload and verifier security groups; broad internet egress remains prohibited.
+
+
+### 2026-10-20T20:32:24Z - Decision
+
+Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
+
+Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
 
 ## Sub-Agent Activity
 

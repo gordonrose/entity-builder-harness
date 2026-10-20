@@ -68,6 +68,7 @@ service_registry = re.search(r"ServiceRegistries:\n        - RegistryArn: !Ref S
 assert service_registry, "missing service-discovery registry binding"
 assert "ContainerName:" not in service_registry.group("body")
 assert "ContainerPort:" not in service_registry.group("body")
+assert "User:" not in template, "the task definition must preserve the image's declared non-root runtime identity"
 PY
 
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
