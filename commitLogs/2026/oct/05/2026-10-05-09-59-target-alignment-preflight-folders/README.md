@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T18:53:06Z
-latest_commit_sha: 139d26db
-chat_duration: 1331617s (15:09:53:37)
+latest_commit_at_utc: 2026-10-20T19:04:38Z
+latest_commit_sha: 8a0ffd8f
+chat_duration: 1332309s (15:10:05:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1113,6 +1113,17 @@ Decision: Alignment now recognises the stable successful CloudFormation lifecycl
 
 Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
 
+
+### 2026-10-20T19:04:38Z - Commit recorded
+
+Commit: `8a0ffd8f`
+
+Message: fix(deploy): accept stable foundation update state
+
+Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
+
+ADR impact: No new ADR; corrects the implementation of the approved alignment control.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1309,6 +1320,13 @@ Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new
   Summary: Prevented generated Python bytecode from being tracked in future deployment work.
   ADR impact: No ADR impact.
 
+
+- Commit: `8a0ffd8f`
+  Time UTC: 2026-10-20T19:04:38Z
+  Message: fix(deploy): accept stable foundation update state
+  Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
+  ADR impact: No new ADR; corrects the implementation of the approved alignment control.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1322,9 +1340,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T18:53:06Z
-Latest commit SHA: 139d26db
-Chat duration: 1331617s (15:09:53:37)
+Latest commit at UTC: 2026-10-20T19:04:38Z
+Latest commit SHA: 8a0ffd8f
+Chat duration: 1332309s (15:10:05:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
