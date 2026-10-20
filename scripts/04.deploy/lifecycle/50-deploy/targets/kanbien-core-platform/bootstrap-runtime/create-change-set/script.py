@@ -12,6 +12,11 @@
 #   kind: script
 #   purpose: Create one fixed, reviewable CloudFormation change set for the qualified first core runtime release.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.create-runtime-change-set.wrapper
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.sh
+#   - id: deploy.command.kanbien-core-platform.create-change-set.readme
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/README.md
 #   effects: [aws-mutation]
 """Fixed target change-set creation; no target or stack selector is accepted."""
 from __future__ import annotations
@@ -31,6 +36,7 @@ def aws(*parts: str) -> tuple[bool, object, str]:
         lowered = completed.stderr.lower()
         if "accessdenied" in lowered or "not authorized" in lowered: return False, None, "aws-access-denied"
         if "does not exist" in lowered: return False, None, "aws-resource-missing"
+        if "must match pattern" in lowered or "parameter validation failed" in lowered: return False, None, "aws-parameter-invalid"
         return False, None, "aws-command-failed"
     try: return True, json.loads(completed.stdout), "ok"
     except json.JSONDecodeError: return False, None, "aws-response-invalid"

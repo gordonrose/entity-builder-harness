@@ -39,7 +39,7 @@ Parameters:
     AllowedPattern: '^/aws/ecs/kanbien-core-platform$'
   ImageRepositoryUri:
     Type: String
-    AllowedPattern: '^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/kanbien-core-platform/core-server$'
+    AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/kanbien-core-platform/core-server$'
   ImageDigest:
     Type: String
     AllowedPattern: '^sha256:[a-f0-9]{64}$'

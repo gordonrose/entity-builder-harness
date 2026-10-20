@@ -56,4 +56,14 @@ expect_selector_rejected "$PREPARE"
 expect_selector_rejected "$DEPLOY"
 expect_selector_rejected "$VERIFY"
 
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml" <<'PY'
+import re
+import sys
+
+template = open(sys.argv[1], encoding="utf-8").read()
+match = re.search(r"ImageRepositoryUri:\n    Type: String\n    AllowedPattern: '([^']+)'", template)
+assert match, "missing image repository pattern"
+assert re.fullmatch(match.group(1), "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server")
+PY
+
 echo "Fixed core-platform target control tests passed."

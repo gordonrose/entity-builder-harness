@@ -73,6 +73,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The live alignment gate rejected a healthy foundation after an output-only stack update.
   Resolution: The AWS adapter recognised CREATE_COMPLETE but not UPDATE_COMPLETE, despite both being stable CloudFormation success states.
 
+
+- Raised: Runtime change-set creation failed before creating the stack because the template rejected the qualified ECR repository URI.
+  Resolution: The ImageRepositoryUri AllowedPattern used double escaping in YAML single quotes, which made the regex require literal backslashes.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -162,6 +166,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Alignment now recognises the stable successful CloudFormation lifecycle states explicitly.
   Rationale: The adapter accepts only CREATE_COMPLETE and UPDATE_COMPLETE; its new regression test rejects in-progress and rollback states.
+
+
+- Decision: Runtime template parameter patterns must be tested against a representative valid provider identifier.
+  Rationale: The fixed bootstrap-runtime smoke test now validates the exact ECR repository URI shape, and the change-set control maps provider parameter-pattern failures to aws-parameter-invalid without exposing values.
+
+
+- Decision: Cloud-mutating controls now have a standard metadata effect category.
+  Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
 
 ## Context Hygiene
 
@@ -1123,6 +1135,27 @@ Message: fix(deploy): accept stable foundation update state
 Summary: Accepted only stable successful CloudFormation states in AWS alignment and added a regression test; repaired metadata coverage for the related target-alignment controls.
 
 ADR impact: No new ADR; corrects the implementation of the approved alignment control.
+
+
+### 2026-10-20T19:10:05Z - Issue
+
+Raised: Runtime change-set creation failed before creating the stack because the template rejected the qualified ECR repository URI.
+
+Resolution: The ImageRepositoryUri AllowedPattern used double escaping in YAML single quotes, which made the regex require literal backslashes.
+
+
+### 2026-10-20T19:10:05Z - Decision
+
+Decision: Runtime template parameter patterns must be tested against a representative valid provider identifier.
+
+Rationale: The fixed bootstrap-runtime smoke test now validates the exact ECR repository URI shape, and the change-set control maps provider parameter-pattern failures to aws-parameter-invalid without exposing values.
+
+
+### 2026-10-20T19:11:43Z - Decision
+
+Decision: Cloud-mutating controls now have a standard metadata effect category.
+
+Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
 
 ## Sub-Agent Activity
 
