@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T22:10:46Z
-latest_commit_sha: 832e709a
-chat_duration: 1343477s (15:13:11:17)
+latest_commit_at_utc: 2026-10-20T22:19:51Z
+latest_commit_sha: 2d13367c
+chat_duration: 1344022s (15:13:20:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1421,6 +1421,17 @@ Decision: Promoted governed core-platform release controls to origin/main
 
 Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
 
+
+### 2026-10-20T22:19:51Z - Commit recorded
+
+Commit: `2d13367c`
+
+Message: chore(core-server): label bootstrap release
+
+Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
+
+ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1673,6 +1684,13 @@ Rationale: The isolated integration worktree at 8ed5c337 passed the release-cont
   Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
   ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
 
+
+- Commit: `2d13367c`
+  Time UTC: 2026-10-20T22:19:51Z
+  Message: chore(core-server): label bootstrap release
+  Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
+  ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1686,9 +1704,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T22:10:46Z
-Latest commit SHA: 832e709a
-Chat duration: 1343477s (15:13:11:17)
+Latest commit at UTC: 2026-10-20T22:19:51Z
+Latest commit SHA: 2d13367c
+Chat duration: 1344022s (15:13:20:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
