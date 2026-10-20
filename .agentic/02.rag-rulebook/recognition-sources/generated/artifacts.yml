@@ -3,28 +3,29 @@
 #   id: rag-rulebook.recognition-source.generated.artifacts
 #   version: 1
 #   status: active
-#   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
-#     - agentic
-#     - architecture
+#   - agentic
+#   - architecture
 #   kind: recognition-source
-#   purpose: Generated lookup source for exact artifact IDs, paths, schemas, rule IDs, and rule-pack IDs.
+#   purpose: Generated lookup source for exact artifact IDs, paths, schemas, rule IDs,
+#     and rule-pack IDs.
 #   portability:
 #     class: reusable
 #     targets:
-#       - llm-workbench
-#       - entity-builder
-#       - design-system-builder
+#     - llm-workbench
+#     - entity-builder
+#     - design-system-builder
 #   used_by:
-#     - id: rag-rulebook.script.generate-recognition-sources
-#       path: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
-#     - id: rag-rulebook.script.validate-recognition-sources
-#       path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
-#     - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
-#       path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#   - id: rag-rulebook.script.generate-recognition-sources
+#     path: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
+#   - id: rag-rulebook.script.validate-recognition-sources
+#     path: scripts/02.rag-rulebook/validate-recognition-sources/script.sh
+#   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
+#     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
+#   created_on: '2026-06-25'
+#   updated_on: '2026-10-20'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.artifacts
@@ -52,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1032
-  term_count: 2080
+  indexed_artifacts: 1035
+  term_count: 2086
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -9225,6 +9226,18 @@ terms:
   canonical_id: aws.architecture.adr.0002-select-cognito-for-platform-shell-auth
   evidence_path: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
   confidence_weight: 1
+- term: aws.architecture.adr.0003-private-ecs-bootstrap-target-kanbien-core-platform
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.architecture.adr.0003-private-ecs-bootstrap-target-kanbien-core-platform
+  evidence_path: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md
+  confidence_weight: 1
+- term: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.architecture.adr.0003-private-ecs-bootstrap-target-kanbien-core-platform
+  evidence_path: docs/aws/architecture/adrs/0003-private-ecs-bootstrap-target-for-kanbien-core-platform.md
+  confidence_weight: 1
 - term: aws.architecture.adr.readme
   category: artifact-id
   match_type: exact
@@ -9248,6 +9261,18 @@ terms:
   match_type: exact
   canonical_id: aws.inventory.kanbien-staging-platform-shell-target-inspection
   evidence_path: docs/aws/inventory/kanbien-staging-platform-shell-target-inspection.md
+  confidence_weight: 1
+- term: aws.plan.kanbien-core-platform-e1-foundation-change-set
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.plan.kanbien-core-platform-e1-foundation-change-set
+  evidence_path: docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+  confidence_weight: 1
+- term: docs/aws/kanbien-core-platform-e1-foundation-change-set.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.plan.kanbien-core-platform-e1-foundation-change-set
+  evidence_path: docs/aws/kanbien-core-platform-e1-foundation-change-set.md
   confidence_weight: 1
 - term: aws.plan.kanbien-core-platform-release-rehearsal
   category: artifact-id
@@ -9512,6 +9537,18 @@ terms:
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
   category: artifact-id

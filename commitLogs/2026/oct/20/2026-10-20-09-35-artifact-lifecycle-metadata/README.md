@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T10:36:56Z
-latest_commit_sha: f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb
-chat_duration: 7257s (00:02:00:57)
+latest_commit_at_utc: 2026-10-20T10:40:09Z
+latest_commit_sha: 78521ecbcf508bb5db4a2f0b86688f45b009cb6a
+chat_duration: 7450s (00:02:04:10)
 estimated_chat_tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -91,6 +91,10 @@ Plan artifact header lifecycle dates and supersession links
 - Decision: Commit and push the completed lifecycle migration to main.
   Rationale: User explicitly approved commit and push to main. Approval includes staging the reviewed task paths, required session checkpoint, non-rewriting integration refresh, merging into main and normal remote push. Preserve unrelated work and do not force push or delete branches.
 
+
+- Decision: Preserve current metadata coverage during integration.
+  Rationale: Main refresh added three covered documents and two infrastructure YAML templates. Migrated the three covered headers with creation evidence ca639258 on2026-10-20 and refreshed generated inventories. Existing checker/index exclude infra YAML; record this previously unindexed coverage gap for a separate governed scope change. Do not silently expand commit enforcement while publishing the reviewed indexed migration.
+
 ## Context Hygiene
 
 
@@ -101,6 +105,10 @@ Plan artifact header lifecycle dates and supersession links
 
 - Summary: Artifact lifecycle implementation and full authorized header migration are complete and uncommitted.
   Durable evidence: See backfill-validation.json for coverage and checks, backfill-agentic.json, backfill-scripts.json, backfill-docs-infra-ci.json, backfill-templates.json and backfill-generated.json for provenance. All ordinary migration bodies/IDs/versions/statuses preserved; necessary tooling/template fixes separately documented. Full metadata validation, 101 checker assertions, helper/bootstrap/consumer suites, 244 YAML files and deterministic prose checks pass. Only startup session bookkeeping remains staged; no task staging or commits. One pre-existing RAG reference warning remains unchanged.
+
+
+- Summary: Latest main is integrated and its covered headers are migrated.
+  Durable evidence: Clean rehearsed merge78521ecb preserves main34efea7e. Three incoming indexed docs keep body, IDs, versions and statuses; creation commit ca639258 is2026-10-20 UTC. Current index1042 artifacts:1040v3,2intentionalv2examples. Metadata and recognition validation passed;7sources,2376terms. See backfill-main-refresh.json and integration-validation.json. Infrastructure YAML is a known pre-existing coverage exclusion.
 
 ## Activity Log
 
@@ -304,6 +312,31 @@ Summary: Implemented lifecycle v3 dates and supersession links, migrated1037 ind
 
 ADR impact: docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md
 
+
+### 2026-10-20T10:40:09Z - Commit recorded
+
+Commit: `78521ecbcf508bb5db4a2f0b86688f45b009cb6a`
+
+Message: Merge main through rehearsed refresh
+
+Summary: Applied clean merge of main34efea7e after preflight metadata/index checks, incoming YAML validation, whitespace and clean-worktree checks. Preserved incoming deployment edits.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-20T10:40:15Z - Decision
+
+Decision: Preserve current metadata coverage during integration.
+
+Rationale: Main refresh added three covered documents and two infrastructure YAML templates. Migrated the three covered headers with creation evidence ca639258 on2026-10-20 and refreshed generated inventories. Existing checker/index exclude infra YAML; record this previously unindexed coverage gap for a separate governed scope change. Do not silently expand commit enforcement while publishing the reviewed indexed migration.
+
+
+### 2026-10-20T10:41:44Z - Context hygiene
+
+Summary: Latest main is integrated and its covered headers are migrated.
+
+Durable evidence: Clean rehearsed merge78521ecb preserves main34efea7e. Three incoming indexed docs keep body, IDs, versions and statuses; creation commit ca639258 is2026-10-20 UTC. Current index1042 artifacts:1040v3,2intentionalv2examples. Metadata and recognition validation passed;7sources,2376terms. See backfill-main-refresh.json and integration-validation.json. Infrastructure YAML is a known pre-existing coverage exclusion.
+
 ## Sub-Agent Activity
 
 
@@ -401,6 +434,13 @@ Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed he
   Summary: Implemented lifecycle v3 dates and supersession links, migrated1037 indexed artifacts, updated templates and consumers, and passed full metadata, regression, portability and commit gates.
   ADR impact: docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md
 
+
+- Commit: `78521ecbcf508bb5db4a2f0b86688f45b009cb6a`
+  Time UTC: 2026-10-20T10:40:09Z
+  Message: Merge main through rehearsed refresh
+  Summary: Applied clean merge of main34efea7e after preflight metadata/index checks, incoming YAML validation, whitespace and clean-worktree checks. Preserved incoming deployment edits.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -414,9 +454,9 @@ Reason: Versioned required dates, compatibility policy, nonmutating staged enfor
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T08:35:59Z
-Latest commit at UTC: 2026-10-20T10:36:56Z
-Latest commit SHA: f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb
-Chat duration: 7257s (00:02:00:57)
+Latest commit at UTC: 2026-10-20T10:40:09Z
+Latest commit SHA: 78521ecbcf508bb5db4a2f0b86688f45b009cb6a
+Chat duration: 7450s (00:02:04:10)
 Estimated chat tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
