@@ -161,6 +161,10 @@ Remaining unindexed paths:
 - Decision: User explicitly approves committing the metadata coverage follow-up, merging it to main, and pushing remote main.
   Rationale: Approval includes staging reviewed task paths, required session checkpoints, a non-rewriting refresh from latest main, necessary metadata integration fixes and normal origin/main push. Preserve concurrent deployment changes; no force push, history rewrite or branch deletion.
 
+
+- Decision: User approved a one-off recovery for incoming-main metadata failures during publication.
+  Rationale: Exception permits applying and committing the reviewed 14-header correction in the rehearsal worktree, running all required checks, then applying the tested refresh and completing the already approved main merge and remote push. Three incoming headers lack used_by; ordinary task gates reject preflight branches while refresh forbids applying failed checks. Patch SHA256 6999c46943d6ee6fbff1459de028f47b04eff7aa163348d773fe997a9df02d3a preserves bodies and identity. Record this as a one-off, not precedent; a durable preflight metadata-repair workflow is a possible follow-up. Original rehearsal 8ca9ec47 is retained as evidence and will be superseded by a fresh rehearsal including this authorization.
+
 ## Context Hygiene
 
 
@@ -561,6 +565,13 @@ Message: fix(metadata): discover declared artifacts across repository
 Summary: Added shared declaration discovery, repaired and migrated 48 missed headers, installed independent index coverage checks and portable dependencies, regenerated recognition sources, and passed all required checks including 153 checker assertions and staged commit gates.
 
 ADR impact: docs/01.harness/adrs/0039-discover-artifacts-by-declared-headers.md
+
+
+### 2026-10-20T13:00:07Z - Decision
+
+Decision: User approved a one-off recovery for incoming-main metadata failures during publication.
+
+Rationale: Exception permits applying and committing the reviewed 14-header correction in the rehearsal worktree, running all required checks, then applying the tested refresh and completing the already approved main merge and remote push. Three incoming headers lack used_by; ordinary task gates reject preflight branches while refresh forbids applying failed checks. Patch SHA256 6999c46943d6ee6fbff1459de028f47b04eff7aa163348d773fe997a9df02d3a preserves bodies and identity. Record this as a one-off, not precedent; a durable preflight metadata-repair workflow is a possible follow-up. Original rehearsal 8ca9ec47 is retained as evidence and will be superseded by a fresh rehearsal including this authorization.
 
 ## Sub-Agent Activity
 
