@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-10-20T08:35:59Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 2694071
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-20T10:36:56Z
+latest_commit_sha: f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb
+chat_duration: 7257s (00:02:00:57)
+estimated_chat_tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -293,6 +293,17 @@ Raised: Public-beta acceptance detected lifecycle export portability regressions
 
 Resolution: Preserved optional taxonomy loading and portable checker fixture targets, removed a source-only documentation dependency from the exported checklist, and added exported checker regression coverage. All16 public-beta checks now pass; see precommit-public-validation.json. Source exclusion policy remains unchanged.
 
+
+### 2026-10-20T10:36:56Z - Commit recorded
+
+Commit: `f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb`
+
+Message: feat(harness): track artifact lifecycle dates
+
+Summary: Implemented lifecycle v3 dates and supersession links, migrated1037 indexed artifacts, updated templates and consumers, and passed full metadata, regression, portability and commit gates.
+
+ADR impact: docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md
+
 ## Sub-Agent Activity
 
 
@@ -382,7 +393,13 @@ Summary: Migrated 4 bootstrap headers and added dynamic template dates; fixed he
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb`
+  Time UTC: 2026-10-20T10:36:56Z
+  Message: feat(harness): track artifact lifecycle dates
+  Summary: Implemented lifecycle v3 dates and supersession links, migrated1037 indexed artifacts, updated templates and consumers, and passed full metadata, regression, portability and commit gates.
+  ADR impact: docs/01.harness/adrs/0038-track-artifact-lifecycle-dates.md
 
 ## Main Refresh Conflicts
 
@@ -397,12 +414,12 @@ Reason: Versioned required dates, compatibility policy, nonmutating staged enfor
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T08:35:59Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-20T10:36:56Z
+Latest commit SHA: f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb
+Chat duration: 7257s (00:02:00:57)
+Estimated chat tokens: 673518 estimated from chat transcript bytes (2694071 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T09-07-17-01a15859-b802-7843-a8cf-0af9b4f9220a.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
