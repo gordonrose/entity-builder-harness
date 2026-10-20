@@ -166,6 +166,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: R4 adds a minimal core-server Dockerfile, image contract, package payload verifier, and smoke capability. The machine has Docker CLI but no daemon; no image was built or started.
   Durable evidence: Durable artifacts: infra/04.deploy/03.product/image/core-server/ and scripts/04.deploy/lifecycle/40-package/{build-core-server-image,smoke-test-core-server-image}/.
 
+
+- Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
+  Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -673,6 +677,13 @@ Message: feat(deploy): add core server image boundary
 Summary: Added the dedicated core-server image contract, minimal Dockerfile, payload verifier, and local smoke scripts. Static package proof passed; Docker build/run remains explicitly skipped because this environment has no running daemon.
 
 ADR impact: No ADR: implements approved package boundary; no registry, provider, or target was selected.
+
+
+### 2026-10-20T03:27:40Z - Context hygiene
+
+Summary: Refreshed the active chat branch from local and fetched origin/main through a governed rehearsal. The preflight cleanly merged the single incoming main commit; no conflicts or stash were used. R1-R4 focused checks passed in the preflight, with Docker runtime smoke still an explicit skip because no daemon is available.
+
+Durable evidence: Refresh source head: e5d13305; applied preflight merge: dedeeef0675f49a655ebbb9773e9f3ed78b83f69; temporary preflight worktree and branch were removed by the governed apply script.
 
 ## Sub-Agent Activity
 
