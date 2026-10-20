@@ -99,6 +99,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
   Rationale: The repository records the target’s scope, safe configuration shapes, technical-access intent, private verifier requirement, receipt and rollback requirements, and all E0 selection gaps. It blocks target mutation until live facts are inspected and an approved change set exists.
 
+
+- Decision: Adopt fixed target-bound R6 control surfaces
+  Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
 ## Context Hygiene
 
 
@@ -177,6 +181,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed from the accepted local-main merge through a clean rehearsal, then added R5’s static planned-target declarations. The target checker passes only repository-declaration completeness; live alignment remains not checked and all E0 facts remain unresolved blockers.
   Durable evidence: Durable artifacts: infra/04.deploy/03.product/targets/kanbien-core-platform/ and scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/.
+
+
+- Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider clients or external commands. They pass smoke tests, reject target override, and report unresolved E0 facts plus external_access_attempted false.
+  Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
 
 ## Activity Log
 
@@ -725,6 +733,27 @@ Summary: Added the planned-not-live-selected kanbien-core-platform target, boots
 
 ADR impact: No ADR: no AWS/provider selection or live resource decision was made.
 
+
+### 2026-10-20T03:46:06Z - Decision
+
+Decision: Adopt fixed target-bound R6 control surfaces
+
+Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
+
+### 2026-10-20T03:46:06Z - ADR disposition
+
+ADR needed: no
+
+Reason: The controls implement the already-approved rehearsal boundary; they do not select or mutate any provider resource.
+
+
+### 2026-10-20T03:46:06Z - Context hygiene
+
+Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider clients or external commands. They pass smoke tests, reject target override, and report unresolved E0 facts plus external_access_attempted false.
+
+Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -859,7 +888,7 @@ ADR impact: No ADR: no AWS/provider selection or live resource decision was made
 
 ADR needed: no
 ADR path:
-Reason: This is a fail-closed repository declaration; it does not choose an AWS account, region, runtime, network, role, registry, or provider resource.
+Reason: The controls implement the already-approved rehearsal boundary; they do not select or mutate any provider resource.
 
 ## Session Metrics
 
