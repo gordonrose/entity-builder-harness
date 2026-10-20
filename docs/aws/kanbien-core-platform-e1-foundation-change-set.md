@@ -163,6 +163,16 @@ be treated as a guard until E2a introduces the tag and E2b enables and verifies
 the account-level billing control. Enabling it is a separate approved billing
 setting mutation outside the foundation stack.
 
+## Temporary budget-activation waiver
+
+The target owner explicitly accepted a temporary waiver on 2026-10-20 because
+AWS has not yet exposed the newly attached `Target` tag to Cost Explorer. This
+waiver permits E2c--E7 to continue **without claiming that the USD 100 budget
+is active**. It does not permit a NAT gateway, public ingress, autoscaling,
+data service, new target category, or any resource outside this document. The
+first action after AWS exposes the tag is to activate and verify the exact
+USD 100 `Target=kanbien-core-platform` budget filter.
+
 The exact templates are at:
 
 ```text

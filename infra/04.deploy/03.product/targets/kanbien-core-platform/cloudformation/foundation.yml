@@ -16,21 +16,28 @@ Parameters:
   VpcId: { Type: 'AWS::EC2::VPC::Id' }
   VpcCidr:
     Type: String
-    AllowedPattern: '^(10|172|192)\\.[0-9]{1,3}\\.[0-9]{1,3}\\.0/[0-9]{1,2}$'
+    AllowedPattern: '^(10|172|192)\.[0-9]{1,3}\.[0-9]{1,3}\.0/[0-9]{1,2}$'
   PrivateSubnetIds: { Type: 'List<AWS::EC2::Subnet::Id>' }
   ExistingRepositoryArn:
     Type: String
     AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$'
   ExistingRepositoryUri:
     Type: String
-    AllowedPattern: '^[0-9]{12}\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com/kanbien-core-platform/core-server$'
+    AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/kanbien-core-platform/core-server$'
   ExistingGitHubOidcProviderArn:
     Type: String
     AllowedPattern: '^arn:aws:iam::[0-9]{12}:oidc-provider/token.actions.githubusercontent.com$'
   CostAlertEmail:
     Type: String
+    Default: ''
     NoEcho: true
-    AllowedPattern: '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'
+  EnableTargetBudget:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+
+Conditions:
+  CreateTargetBudget: !Equals [!Ref EnableTargetBudget, 'true']
 
 Resources:
   Cluster:
@@ -195,6 +202,7 @@ Resources:
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:CompleteLayerUpload, ecr:DescribeImageScanFindings, ecr:DescribeImages, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart], Resource: !Ref ExistingRepositoryArn }
   Budget:
     Type: AWS::Budgets::Budget
+    Condition: CreateTargetBudget
     Properties:
       Budget:
         BudgetName: kanbien-core-platform-monthly
