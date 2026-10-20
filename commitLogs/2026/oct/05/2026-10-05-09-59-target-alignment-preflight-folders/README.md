@@ -239,6 +239,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
   Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
 
+
+- Decision: Promoted governed core-platform release controls to origin/main
+  Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
+
 ## Context Hygiene
 
 
@@ -1409,6 +1413,13 @@ Message: feat(deploy): govern core platform release updates
 Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
 
 ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
+
+
+### 2026-10-20T22:14:04Z - Decision
+
+Decision: Promoted governed core-platform release controls to origin/main
+
+Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
 
 ## Sub-Agent Activity
 
