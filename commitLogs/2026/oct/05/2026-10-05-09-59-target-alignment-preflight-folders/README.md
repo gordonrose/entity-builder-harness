@@ -77,6 +77,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Runtime change-set creation failed before creating the stack because the template rejected the qualified ECR repository URI.
   Resolution: The ImageRepositoryUri AllowedPattern used double escaping in YAML single quotes, which made the regex require literal backslashes.
 
+
+- Raised: The deploy control rejected a reviewed initial change set because CloudFormation omitted ChangeSetType from its describe response.
+  Resolution: The stack was absent and the change set was CREATE_COMPLETE and AVAILABLE, but the control incorrectly required a field AWS did not return.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -174,6 +178,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Cloud-mutating controls now have a standard metadata effect category.
   Rationale: aws-mutation is added to the central metadata taxonomy, documented standard, and checker fallback; it distinguishes provider state changes from ordinary network reads.
+
+
+- Decision: Initial create review accepts an omitted ChangeSetType only with independent proof that the runtime stack is absent.
+  Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
 
 ## Context Hygiene
 
@@ -1167,6 +1175,20 @@ Message: fix(deploy): validate runtime provider parameters
 Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
 
 ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
+
+
+### 2026-10-20T19:16:03Z - Issue
+
+Raised: The deploy control rejected a reviewed initial change set because CloudFormation omitted ChangeSetType from its describe response.
+
+Resolution: The stack was absent and the change set was CREATE_COMPLETE and AVAILABLE, but the control incorrectly required a field AWS did not return.
+
+
+### 2026-10-20T19:16:03Z - Decision
+
+Decision: Initial create review accepts an omitted ChangeSetType only with independent proof that the runtime stack is absent.
+
+Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
 
 ## Sub-Agent Activity
 

@@ -66,4 +66,18 @@ assert match, "missing image repository pattern"
 assert re.fullmatch(match.group(1), "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server")
 PY
 
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py" <<'PY'
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("deploy_candidate", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, True)
+assert module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, True)
+assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, True)
+assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, False)
+PY
+
 echo "Fixed core-platform target control tests passed."
