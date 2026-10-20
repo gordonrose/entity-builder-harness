@@ -223,6 +223,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
   Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
 
+
+- Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
+  Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
+
 ## Context Hygiene
 
 
@@ -1354,6 +1358,13 @@ Rationale: Declare and enforce TCP/443 egress to the provider-managed object-sto
 Decision: The ECS task definition overrode the image runtime identity with a nonexistent node account.
 
 Rationale: Preserve the distroless image-declared nonroot account; regression checks reject all task-definition User overrides for this immutable core image.
+
+
+### 2026-10-20T20:40:28Z - Decision
+
+Decision: The running container logged successful server startup, but ECS health checks invoked node through PATH, which distroless does not provide.
+
+Rationale: Bind the health check to the image-declared /nodejs/bin/node executable and reject PATH-dependent health check commands in target controls.
 
 ## Sub-Agent Activity
 

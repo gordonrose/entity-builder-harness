@@ -84,7 +84,7 @@ Resources:
           HealthCheck:
             Command:
               - CMD-SHELL
-              - 'node -e "fetch(\"http://127.0.0.1:3000/readyz\").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))"'
+              - '/nodejs/bin/node -e "fetch(\"http://127.0.0.1:3000/readyz\").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))"'
             Interval: 10
             Timeout: 5
             Retries: 3

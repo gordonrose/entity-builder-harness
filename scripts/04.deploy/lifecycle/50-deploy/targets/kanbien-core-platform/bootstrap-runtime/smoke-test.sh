@@ -69,6 +69,8 @@ assert service_registry, "missing service-discovery registry binding"
 assert "ContainerName:" not in service_registry.group("body")
 assert "ContainerPort:" not in service_registry.group("body")
 assert "User:" not in template, "the task definition must preserve the image's declared non-root runtime identity"
+assert "/nodejs/bin/node -e" in template, "the ECS health check must use the distroless image's declared Node executable"
+assert "- 'node -e" not in template, "the ECS health check must not rely on PATH in the distroless image"
 PY
 
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
