@@ -392,6 +392,17 @@ task role?
 Answer: each has a different job. Separate narrow roles limit accidental and
 malicious access if one workload behaves incorrectly or is compromised.
 
+### Delivery-pipeline access also needs proof
+
+The delivery pipeline has a different keycard again. It needs only the actions
+required to build, publish, scan, or make the separately approved target
+change. A statement such as “this pipeline may publish an image” is not enough:
+the repository must map each workflow step to its provider action, resource
+class, actual provider policy, and proof. A static comparison catches a missing
+permission such as `BatchGetImage`; safe read-only probes catch a deployed role
+that no longer matches the reviewed policy. Neither proof grants a broader
+permission merely to make the check pass.
+
 ## 7. How Configuration Completeness Is Established
 
 There is no safe universal list of every setting every program needs. Instead,
@@ -969,6 +980,11 @@ Safe diagnostics should distinguish meaningful cases such as:
 They must also identify whether the failure occurred at startup, readiness,
 a real request, background work, target preflight, or deployment verification.
 
+This rule applies to the scripts that invoke tools as well as to the server.
+A script may hide successful Docker or provider output, but it must capture a
+failing child command and emit a stable code, bounded redacted output, and a
+next safe check. A bare CI exit code is not a safe diagnostic.
+
 ### Where the pieces live
 
 ```text
@@ -1328,6 +1344,17 @@ and safe drift-evidence status. It cannot deploy, alter resources, retrieve
 secret values, or expand its own permission. If it cannot safely establish a
 fact, the honest result is `insufficient-evidence`.
 
+### Provider propagation is a state, not a result
+
+Some provider facts take time after a request is accepted: a cost-allocation
+tag may need discovery and activation, an image scan may need completion, and
+a DNS or stack update may need propagation. The record therefore distinguishes
+`requested`, `waiting-on-provider`, `verified`, `expired`, and a narrowly
+approved temporary waiver. Waiting is not deployment success or worker
+completion. A waiver names only the one condition, its expiry, compensating
+controls, and follow-up owner; it does not excuse unrelated access or security
+gaps.
+
 ### How evidence moves forward
 
 ```text
@@ -1450,6 +1477,12 @@ approved source revision
 A tag such as `staging` is a convenient label that can later be moved. A digest
 identifies the exact image bytes that were tested. A target must select the
 digest, and promotion must transfer that same digest rather than rebuild it.
+
+The selected runtime base is part of this package decision. It is pinned by
+digest and subject to the same vulnerability policy as the assembled candidate.
+The ECR scan remains the independent proof for the published digest; a blocked
+result is a successful safety control, not permission to lower the policy or
+deploy the image.
 
 ### Custody is deliberately split
 
@@ -1877,6 +1910,32 @@ generic rules and report-only fixtures
 The final arrow is not automatic. A failed check, unclear declaration, or AWS
 mutation boundary stops the work for review. No diagnostic check creates AWS
 resources just to make itself pass.
+
+### Reusable controls are not target-specific patches
+
+A dependable deployment control has three small layers:
+
+```text
+generic validator
+→ checks a declaration and safe normalized evidence
+
+provider adapter
+→ understands one provider's policy format or safe read-only probe
+
+target wrapper
+→ fixes the selected target, role, repository, and other local choices
+```
+
+For example, a generic delivery-access validator should not know the name of
+Kanbien, ECR, a role, or a repository. The AWS adapter may understand how to
+read an AWS policy and make a harmless registry read. The Kanbien wrapper is
+the only layer that says which repository it is allowed to inspect. This keeps
+future providers and targets from copying a one-off script, while preventing a
+generic command from being redirected to an arbitrary destination.
+
+Provider-controlled delays—such as a tag becoming visible, a scan completing,
+or DNS settling—use a separate safe condition-evidence record. `waiting` means
+the provider has not yet supplied proof; it never means the work is complete.
 
 ## 23. Next Lesson Queue
 

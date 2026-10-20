@@ -1,0 +1,50 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.delivery-access-contract.v1
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-20"
+#   layer: 04.deploy
+#   domain: deployment.delivery-access
+#   disciplines:
+#   - agentic
+#   - security
+#   kind: schema
+#   purpose: Define a provider-neutral declaration of a delivery pipeline's required provider operations and safe proof paths.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.standards.delivery-access-coverage
+#     path: .agentic/04.deploy/standards/delivery-access-coverage.md
+#   - id: deploy.command.validate-delivery-access-contract
+#     path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
+schema: deploy/delivery-access-contract-schema/v1
+contract_schema: deploy/delivery-access-contract/v1
+required_fields:
+  - schema
+  - pipeline
+  - actor
+  - provider_policy_source
+  - workflow
+  - operations
+operation_required_fields:
+  - id
+  - workflow_step
+  - provider_action
+  - resource_class
+  - purpose
+  - proof
+safe_value_rules:
+  provider_action: provider action name only; never a credential or command line
+  resource_class: logical resource class or declared resource identifier; never an endpoint
+  proof: bounded safe diagnostic or named check only
+  workflow: repository-relative workflow path only
+prohibited_values:
+  - credentials
+  - account identifiers
+  - secret values
+  - endpoint URLs
+  - raw provider responses

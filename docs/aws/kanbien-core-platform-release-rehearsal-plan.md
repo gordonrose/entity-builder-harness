@@ -28,6 +28,9 @@
 
 ## Status and authority
 
+> This is explanatory target-specific reference material. The execution
+> authority is [the agentic bootstrap execution plan](../../.agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md).
+
 This is a **review-only AWS change plan**. It authorises no implementation,
 GitHub action, image publication, target creation, AWS mutation, secret read,
 or deployment. It prepares the bounded approval packet required by

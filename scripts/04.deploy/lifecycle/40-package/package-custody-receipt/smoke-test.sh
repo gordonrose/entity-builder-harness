@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.test.package-custody-receipt
-#   version: 1
+#   version: 2
 #   status: draft
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
@@ -19,7 +19,7 @@ ROOT="$(git rev-parse --show-toplevel)"; SCRIPT="$ROOT/scripts/04.deploy/lifecyc
 TEMP="$(mktemp -d)"; trap 'rm -rf "$TEMP"' EXIT
 python3 - "$TEMP/safe.json" <<'PY'
 import json,sys
-json.dump({"schema":"deploy/package-custody-receipt/v1","target":"example-target","environment_class":"private-bootstrap","provider_region_alias":"aws-eu-west-1","candidate_id":"example-candidate","package_contract_id":"example-image","program_id":"example-server","source_revision":"a"*40,"image_digest":"sha256:"+"b"*64,"release_identity":"source-a","checked_at":"2026-10-20T12:00:00Z","checks":{"runnable_program_contract":"passed","dependency_boundary":"passed","local_image_smoke":"passed","ecr_scan":"passed","sbom":"passed","provenance_attestation":"passed"},"verdict":"qualified","receipt_reference":"github-actions-run:12345"},open(sys.argv[1],"w"),sort_keys=True)
+json.dump({"schema":"deploy/package-custody-receipt/v1","target":"example-target","environment_class":"private-bootstrap","provider_region_alias":"aws-eu-west-1","candidate_id":"example-candidate","package_contract_id":"example-image","program_id":"example-server","source_revision":"a"*40,"image_digest":"sha256:"+"b"*64,"release_identity":"source-a","checked_at":"2026-10-20T12:00:00Z","checks":{"runnable_program_contract":"passed","dependency_boundary":"passed","delivery_access_static":"passed","delivery_access_live":"passed","local_image_smoke":"passed","ecr_scan":"passed","sbom":"passed","provenance_attestation":"passed"},"verdict":"qualified","receipt_reference":"github-actions-run:12345"},open(sys.argv[1],"w"),sort_keys=True)
 PY
 ARGS=(--expected-target example-target --expected-candidate example-candidate --expected-package-contract example-image --expected-program example-server --json)
 bash "$SCRIPT" --receipt "$TEMP/safe.json" "${ARGS[@]}" >/dev/null

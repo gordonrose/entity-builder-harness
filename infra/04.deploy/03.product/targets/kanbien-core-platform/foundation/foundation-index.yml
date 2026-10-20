@@ -38,6 +38,6 @@ resources:
     status: unresolved-e0-required
     owner: observability-owner
   - id: cost-guard
-    declaration: target-profile.yml#cost-guard
+    declaration: cost-control.yml
     status: unresolved-e0-required
     owner: cost-owner

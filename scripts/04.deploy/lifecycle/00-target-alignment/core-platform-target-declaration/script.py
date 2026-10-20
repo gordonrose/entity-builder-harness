@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v2
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 1
+#   version: 2
 #   status: draft
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
@@ -171,6 +171,21 @@ def check_foundation(root: Path) -> None:
     for intent in intents:
         if not isinstance(intent, dict) or intent.get("provider_identity") != "unresolved-e0-required" or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
+    cost = mapping(root / "foundation" / "cost-control.yml", "cost-control-unreadable")
+    waiver = required_mapping(cost, "waiver", "cost-control-invalid")
+    expected_controls = {"one-task-only", "no-autoscaling", "no-nat", "no-public-ingress", "no-data-services", "no-new-cost-category"}
+    if (
+        cost.get("schema") != "deploy/provider-condition-declaration/v1"
+        or cost.get("target") != TARGET
+        or cost.get("condition_id") != "target-cost-allocation-tag-active"
+        or cost.get("status") not in {"not-requested", "requested", "waiting-on-provider", "verified", "expired", "waived-by-approved-exception"}
+        or not non_empty(cost.get("owner"))
+        or not non_empty(cost.get("required_evidence"))
+        or cost.get("evidence_validator") != "scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh"
+        or set(waiver.get("compensating_controls", [])) != expected_controls
+        or not non_empty(waiver.get("follow_up_owner"))
+    ):
+        raise DeclarationFailure("cost-control-invalid")
 
 
 def check_scope(root: Path) -> None:
@@ -222,11 +237,11 @@ def check_pipeline(root: Path) -> None:
     if not isinstance(pipelines, list) or len(pipelines) != 1 or not isinstance(pipelines[0], dict):
         raise DeclarationFailure("pipeline-record-missing")
     pipeline = pipelines[0]
-    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml":
+    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("delivery_access_contract") != "core-server-package-custody.delivery-access.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml":
         raise DeclarationFailure("pipeline-record-invalid")
     if not non_empty(pipeline.get("owner")):
         raise DeclarationFailure("pipeline-unowned")
-    if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != ["bootstrap-runtime"] or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
+    if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != ["bootstrap-runtime"] or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
         raise DeclarationFailure("pipeline-authority-invalid")
 
 

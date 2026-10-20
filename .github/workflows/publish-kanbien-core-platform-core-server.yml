@@ -68,6 +68,7 @@ jobs:
           bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
           bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh --json
+          bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh --tag kanbien-core-server:publication
 
       - name: Configure target-scoped AWS credentials
@@ -75,6 +76,9 @@ jobs:
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Prove fixed delivery read access
+        run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -159,7 +163,7 @@ jobs:
             'program_id': 'kanbien-core-server', 'source_revision': os.environ['GITHUB_SHA'],
             'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
             'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','local_image_smoke':'passed','ecr_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
+            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','ecr_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
             'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
           }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
           PY

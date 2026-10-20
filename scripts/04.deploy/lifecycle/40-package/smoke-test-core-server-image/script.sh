@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.smoke-test-core-server-image
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-19"
 #   updated_on: "2026-10-20"
@@ -28,6 +28,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+source "$ROOT/scripts/04.deploy/shared/safe-command-diagnostics.sh"
 TAG="entity-builder-harness/04.deploy/kanbien-core-server:smoke"
 PORT="${CORE_SERVER_IMAGE_SMOKE_PORT:-39454}"
 ALLOW_SKIP=false
@@ -98,12 +99,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-bash scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh --tag "$TAG" >/dev/null
-docker run --detach --rm --name "$CONTAINER_NAME" \
+safe_command_diagnostic IMAGE_SMOKE_BUILD_FAILED 40-package \
+  'core-server image build did not complete' \
+  'inspect the bounded build diagnostic and image contract' -- \
+  bash scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh --tag "$TAG"
+safe_command_diagnostic IMAGE_SMOKE_CONTAINER_START_FAILED 40-package \
+  'core-server container did not start' \
+  'inspect the bounded container-start diagnostic and runtime command' -- \
+  docker run --detach --rm --name "$CONTAINER_NAME" \
   --publish "127.0.0.1:${PORT}:3000" \
   --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
   --cap-drop ALL --security-opt no-new-privileges \
-  "$TAG" >/dev/null
+  "$TAG"
 
 EXPECTED_REVISION="$(git rev-parse HEAD)"
 node - "$PORT" "$EXPECTED_REVISION" <<'NODE'

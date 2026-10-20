@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 32
+version: 33
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-20"
@@ -29,9 +29,11 @@ used_by:
 
 ## Status and Intent
 
-This is a review plan, not permission to implement, move, deploy, or inspect a
-cloud target. Each phase requires separate approval after its detailed design
-has been reviewed.
+This is the generic implementation plan. It is not permission to implement,
+move, deploy, or inspect a cloud target. Each phase requires separate approval
+after its detailed design has been reviewed. An approved target-specific packet
+must live under `.agentic/04.deploy/plans/execution/`; explanatory documents
+under `docs/` are not execution authority.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:
@@ -1283,6 +1285,8 @@ be safely inferred from the Dockerfile and TypeScript image configuration:
 - runtime assumptions such as user, port, health boundary, and immutable
   image identity requirement;
 - package-level verification command.
+- selected immutable runtime-base source and digest, vulnerability threshold,
+  scanner evidence requirement, and exception rule.
 
 The checker compares the contract with the Dockerfile,
 `platform/server/tsconfig.image.json`, runtime-payload verifier, and image
@@ -1292,7 +1296,7 @@ smoke test.
 payload, payload programs lacking proof, and an invalid default command.
 
 **Exit criterion:** the selected bootstrap program’s source, compiled output, Docker
-default command, and package smoke proof agree.
+default command, package smoke proof, and runtime-base policy agree.
 
 ### Phase 6 — Bind programs to target workloads
 
@@ -1341,6 +1345,67 @@ reference evidence only; it is not an implied binding for the new target.
 **Exit criterion:** no workload selects an unknown command; no declared
 runnable program is presented as deployed without an explicit binding.
 
+### Phase 6a — Qualify the delivery system
+
+**Question answered:** Can the exact package or deployment pipeline exercise
+only its declared provider access and preserve actionable safe evidence when it
+fails?
+
+For each active pipeline, add a delivery-access contract beside its pipeline
+record. The contract names every workflow step, provider action, bounded
+resource class, purpose, and proof. The provider template remains the actual
+policy authority. A static validator proves that the declared actions are
+covered by the named policy and that policy actions are justified by the
+contract. Required read-only actions additionally have a target-bound live
+probe; write actions remain statically checked until their separately approved
+package or target operation occurs.
+
+The implementation is deliberately three-layered: a provider-neutral validator
+accepts the contract, workflow and normalized policy-coverage report; a
+provider adapter reads the provider policy or performs its bounded safe probe;
+and a thin target wrapper supplies fixed target declarations. Generic validators
+must not contain target, provider service, role, repository, account, or
+endpoint decisions. Adapters must not choose a target. A target wrapper must
+reject free-form target or destination substitution.
+
+All consequential child commands in package, deploy, and run scripts use the
+safe-command diagnostic wrapper. A controlled failing-child fixture proves
+that diagnostics retain a stable code, bounded redacted output, and nonzero
+exit status. The package order is: select immutable base, build and smoke,
+publish to the declared destination, independently scan the published digest,
+then issue the custody receipt. A workload foundation or deployment may not
+rely on a candidate before that receipt is accepted.
+
+**Deliverable:** delivery-access schema and contracts, static policy/workflow
+validator with fixtures, target-bound read-only probes, shared safe-command
+wrapper with fixture, and package policy evidence in the custody receipt.
+
+**Exit criterion:** a removed IAM action, unknown workflow step, hidden child
+failure, rejected base/candidate scan, or absent proof fails closed before a
+workload foundation or deployment is attempted.
+
+### Phase 6b — Record provider-controlled waiting states
+
+**Question answered:** How does a pipeline distinguish a completed provider
+condition from a request that the provider has merely accepted?
+
+Every asynchronous provider condition has a safe evidence record with its
+condition ID, target, status, checked time, next safe check, evidence
+reference, and—when applicable—bounded waiver authority, expiry, compensating
+controls, and follow-up owner. A provider-neutral validator checks this shape;
+provider adapters collect the fact; target declarations name the exact
+condition and validator. A condition may be `waiting-on-provider` without
+blocking unrelated repository work, but it cannot be reported as verified or
+silently converted into packet completion.
+
+**Deliverable:** provider-condition evidence schema, generic validator and
+fixtures, target condition declarations, and target execution-packet state
+rules linked to the reusable operational-realization workflow.
+
+**Exit criterion:** provider propagation, scanning, or cost-tag discovery is
+reported truthfully as waiting, verified, expired, or narrowly waived; no
+delegated worker may report an incomplete external wait as completed work.
+
 ### Phase 7 — Assemble a repository-only chain checker
 
 **Question answered:** Is the declared source-to-target chain internally
@@ -1387,6 +1452,9 @@ tag; a promotion that rebuilds rather than transfers the approved digest; a
 package approval substituted for destination alignment or target approval; an
 unavailable required scan treated as successful; or an exception lacking its
 owner, expiry, evidence, or follow-up.
+It also reports a package or delivery route missing a delivery-access contract,
+static provider-policy coverage, required safe live read probe, or safe-command
+diagnostic proof.
 
 **Deliverable:** human-readable and machine-readable report modes, fixtures,
 and a smoke test. It remains repository-only and makes no AWS call.
@@ -1432,6 +1500,13 @@ The preflight consumes the chain-check result and safely confirms live facts.
 It is strictly read-only: detection never implies remediation, remediation
 never implies deployment, and only an approved delivery route may mutate a
 target.
+
+Provider-controlled asynchronous conditions are declared separately from
+ordinary target facts. Their evidence names `not-requested`, `requested`,
+`waiting-on-provider`, `verified`, `expired`, or
+`waived-by-approved-exception`, with owner, next safe recheck, expiry, and
+evidence reference. A waiver is limited to its named condition and cannot
+silently waive an unrelated security or access gate.
 
 The comparison keeps three distinct records:
 
@@ -1638,6 +1713,9 @@ consumer.
   controllers without a separately approved scope.
 - Do not treat a green static checker as proof of a live deployment; package,
   target-alignment, and run-stage proofs remain distinct.
+- Do not treat a provider request, workflow dispatch, or sub-agent phase report
+  as completion; use the named completion criterion and delegated execution
+  state standard.
 - Record unresolved contradictions as gaps rather than resolving them through
   undocumented assumptions.
 
@@ -1659,3 +1737,6 @@ release A establishes the first accepted baseline; a separately declared
 immutable release B is compared against that real baseline and verified; and a
 rejected B preserves the prior baseline rather than creating an automatic
 redeployment loop.
+The delivery route itself is also proven: its declared provider actions are
+covered by the deployed policy, its required read probes produce safe evidence,
+and its child-command failures retain bounded redacted diagnostics.

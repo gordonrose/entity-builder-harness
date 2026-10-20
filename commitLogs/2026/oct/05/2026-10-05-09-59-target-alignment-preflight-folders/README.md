@@ -147,6 +147,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Accepted temporary waiver of the target-specific budget activation gate
   Rationale: User explicitly accepts only the delay in Target cost-allocation tag discovery. E2c-E7 may proceed with one task, no autoscaling, no NAT, no public ingress, no data services, and no new cost categories. The USD 100 Target-filtered budget must be activated and verified once AWS exposes the tag.
 
+
+- Decision: Adopt reusable delivery-control layering
+  Rationale: Provider-neutral validators now consume contracts and safe normalized evidence; AWS adapters own policy parsing and ECR probes; fixed target wrappers provide Kanbien choices without permitting arbitrary substitution.
+
 ## Context Hygiene
 
 
@@ -249,6 +253,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: E2a is complete; E2b Target tag remains undiscoverable by Cost Explorer. E3/E4 are now repository-defined, static-validated controls awaiting guarded foundation creation and a real workflow run.
   Durable evidence: Target paths: infra/04.deploy/03.product/targets/kanbien-core-platform; package controls: .agentic/04.deploy and scripts/04.deploy/lifecycle/40-package; workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
+
+
+- Summary: Completed reusable delivery hardening package
+  Durable evidence: Durable controls: .agentic/04.deploy plans, standards, and schemas; target declarations under infra/04.deploy; generic validators and AWS adapters under scripts/04.deploy/lifecycle. Selected smoke, metadata, inventory, and whitespace checks passed. No AWS mutation occurred in this package.
 
 ## Activity Log
 
@@ -996,6 +1004,27 @@ Summary: Recorded temporary cost-budget waiver and corrected CloudFormation para
 
 ADR impact: ADR 0003 remains applicable.
 
+
+### 2026-10-20T17:12:54Z - Decision
+
+Decision: Adopt reusable delivery-control layering
+
+Rationale: Provider-neutral validators now consume contracts and safe normalized evidence; AWS adapters own policy parsing and ECR probes; fixed target wrappers provide Kanbien choices without permitting arbitrary substitution.
+
+
+### 2026-10-20T17:12:54Z - Context hygiene
+
+Summary: Completed reusable delivery hardening package
+
+Durable evidence: Durable controls: .agentic/04.deploy plans, standards, and schemas; target declarations under infra/04.deploy; generic validators and AWS adapters under scripts/04.deploy/lifecycle. Selected smoke, metadata, inventory, and whitespace checks passed. No AWS mutation occurred in this package.
+
+
+### 2026-10-20T17:12:54Z - ADR disposition
+
+ADR needed: no
+
+Reason: The generic validator/adapter/wrapper split is an implementation of the existing provider-neutral deployment architecture, not a new repository-wide architectural decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1172,7 +1201,7 @@ ADR impact: ADR 0003 remains applicable.
 
 ADR needed: no
 ADR path:
-Reason: The controls implement the already-approved rehearsal boundary; they do not select or mutate any provider resource.
+Reason: The generic validator/adapter/wrapper split is an implementation of the existing provider-neutral deployment architecture, not a new repository-wide architectural decision.
 
 ## Session Metrics
 

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v2
 id: deploy.schema.package-custody-receipt.v1.guide
-version: 1
+version: 2
 status: draft
 layer: 04.deploy
 domain: deployment.package-candidates
@@ -31,6 +31,12 @@ is a safe label such as `aws-eu-west-1`, not an account number or endpoint.
 `receipt_reference` is an opaque delivery-run identifier, not a URL. `checks`
 contains only named pass/fail verdicts; detailed scanner output stays in the
 delivery system and is not copied into repository evidence.
+
+`delivery_access_static` proves the workflow's declared provider actions are
+covered by the reviewed provider policy. `delivery_access_live` proves the
+assumed delivery identity completed its approved safe read probes. They are
+separate because a correct repository policy does not prove the deployed role
+is currently usable.
 
 Target-bound callers supply their expected target, candidate, package contract,
 and program when validating the receipt. A receipt that has a valid general
