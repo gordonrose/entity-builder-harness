@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T19:12:51Z
-latest_commit_sha: 5fd8014c
-chat_duration: 1332802s (15:10:13:22)
+latest_commit_at_utc: 2026-10-20T19:16:57Z
+latest_commit_sha: HEAD
+chat_duration: 1333048s (15:10:17:28)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1190,6 +1190,17 @@ Decision: Initial create review accepts an omitted ChangeSetType only with indep
 
 Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitted only when describe-stacks proves absence; it rejects update types and existing stacks.
 
+
+### 2026-10-20T19:16:57Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): verify initial change-set state
+
+Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
+
+ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1400,6 +1411,13 @@ Rationale: The deploy control accepts CREATE_COMPLETE with type CREATE or omitte
   Summary: Corrected the runtime ECR URI contract, added representative provider-identifier regression coverage, mapped parameter failures safely, and added aws-mutation to the shared metadata taxonomy.
   ADR impact: No new ADR; corrects reusable deployment and harness metadata controls.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-20T19:16:57Z
+  Message: fix(deploy): verify initial change-set state
+  Summary: Corrected initial change-set review to use stable AWS evidence when ChangeSetType is omitted, with regression coverage for absent versus existing runtime stacks.
+  ADR impact: No new ADR; corrects reusable deployment-control interpretation.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1413,9 +1431,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T19:12:51Z
-Latest commit SHA: 5fd8014c
-Chat duration: 1332802s (15:10:13:22)
+Latest commit at UTC: 2026-10-20T19:16:57Z
+Latest commit SHA: HEAD
+Chat duration: 1333048s (15:10:17:28)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
