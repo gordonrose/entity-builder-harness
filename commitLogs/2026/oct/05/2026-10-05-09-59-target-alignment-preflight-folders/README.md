@@ -45,6 +45,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Docker daemon unavailable for local core image smoke
   Resolution: Static payload and negative-fixture proof pass. The build and smoke scripts fail closed by default and only report an explicit skip with --allow-skip-without-engine; Docker runtime proof remains required before release qualification.
 
+
+- Raised: Core-server image command wrapper exited cleanly without starting the server
+  Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -185,6 +189,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: R6 adds target-bound prepare/deploy/verify entrypoints with no provider clients or external commands. They pass smoke tests, reject target override, and report unresolved E0 facts plus external_access_attempted false.
   Durable evidence: Durable controls: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/ and scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/.
+
+
+- Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
+  Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
 
 ## Activity Log
 
@@ -764,6 +772,20 @@ Message: feat(deploy): add core target control surfaces
 Summary: Added fixed prepare/deploy/verify control commands for kanbien-core-platform/bootstrap-runtime. They reject target overrides, validate static evidence, and fail closed with unresolved E0 facts before any external access.
 
 ADR impact: No ADR: no provider selection or target mutation occurred.
+
+
+### 2026-10-20T03:54:24Z - Issue
+
+Raised: Core-server image command wrapper exited cleanly without starting the server
+
+Resolution: The real Docker smoke exposed that the generated wrapper only required the compiled entrypoint. It now invokes runKanbienCoreServerMain; a new pre-Docker runtime command proof and real container smoke verify liveness, readiness, and safe release identity.
+
+
+### 2026-10-20T03:54:24Z - Context hygiene
+
+Summary: Docker became available during the full proof run. It built the local core image and exposed a start-command defect, which was repaired and confirmed by actual restricted container health/readiness/release-verification smoke.
+
+Durable evidence: Durable repair: scripts/04.deploy/lifecycle/40-package/build-core-server-image/prepare-runtime.mjs and smoke-test-core-server-image/runtime-command-test.mjs.
 
 ## Sub-Agent Activity
 
