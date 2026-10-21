@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.create-runtime-change-set
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -52,7 +52,7 @@ def receipt(path: Path) -> tuple[str, str] | None:
     data = json.loads(result.stdout); return data["image_digest"], data["source_revision"]
 
 def baseline() -> tuple[str, str] | None:
-    path = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml"
+    path = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml"
     try:
         record = yaml.safe_load(path.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError):
@@ -78,6 +78,8 @@ def main() -> int:
     if contract.returncode: return fail("release-contract-not-proven")
     alignment = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"), "--receipt", str(args.receipt), "--operation", args.operation, "--json"], capture_output=True, text=True)
     if alignment.returncode: return fail("runtime-update-alignment-not-proven")
+    cost = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh"), "--json"], capture_output=True, text=True)
+    if cost.returncode: return fail("cost-condition-not-proven")
     ok, foundation, code = aws("cloudformation", "describe-stacks", "--stack-name", FOUNDATION)
     if not ok: return fail(code)
     stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []
@@ -93,7 +95,7 @@ def main() -> int:
     ]
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
         json.dump(parameters, file); file.flush()
-        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "UPDATE", "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
+        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "UPDATE", "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
     if not ok: return fail(code)
     print(json.dumps({"schema":"deploy/runtime-change-set-report/v1", "target":"kanbien-core-platform", "stack":"kanbien-core-platform-bootstrap-runtime", "operation":args.operation, "change_set":change_set, "image_digest":digest, "source_revision":revision, "verdict":"created-awaiting-review", "findings":[]} , sort_keys=True)); return 0
 if __name__ == "__main__": sys.exit(main())

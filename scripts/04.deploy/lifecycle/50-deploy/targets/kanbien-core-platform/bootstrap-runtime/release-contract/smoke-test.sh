@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -36,8 +36,8 @@ expect() {
 "$CHECK" --root "$fixture" --json | grep -q '"verdict": "passed"'
 sed -i 's/USER nonroot/USER root/' "$fixture/infra/04.deploy/03.product/image/core-server/Dockerfile"
 expect image-command-contract-invalid sed -i 's/USER root/USER nonroot/' "$fixture/infra/04.deploy/03.product/image/core-server/Dockerfile"
-sed -i 's/- CMD$/- CMD-SHELL/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml"
-expect workload-health-command-invalid sed -i 's/- CMD-SHELL$/- CMD/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml"
-sed -i 's/            - -e/            - node/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml"
-expect verifier-entrypoint-contract-invalid sed -i 's/            - node/            - -e/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml"
+sed -i 's/- CMD$/- CMD-SHELL/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+expect workload-health-command-invalid sed -i 's/- CMD-SHELL$/- CMD/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+sed -i 's/            - -e/            - node/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+expect verifier-entrypoint-contract-invalid sed -i 's/            - node/            - -e/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
 echo 'Core-platform release-contract tests passed.'

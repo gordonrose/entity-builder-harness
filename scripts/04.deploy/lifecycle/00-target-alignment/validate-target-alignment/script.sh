@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -14,5 +14,8 @@ set -euo pipefail
 #   purpose: Provide a stable command entrypoint for provider-neutral target alignment validation.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only]
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
 ROOT="$(git rev-parse --show-toplevel)"
 exec python3 "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.py" "$@"

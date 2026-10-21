@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: '2026-10-20'
+#   updated_on: '2026-10-21'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.artifacts
@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1099
-  term_count: 2215
+  indexed_artifacts: 1156
+  term_count: 2331
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -2859,6 +2859,18 @@ terms:
   match_type: exact
   canonical_id: harness.standards.artifact-path-migrations
   evidence_path: .agentic/01.harness/standards/artifact-path-migrations.md
+  confidence_weight: 1
+- term: harness.standards.delegated-execution-state
+  category: artifact-id
+  match_type: exact
+  canonical_id: harness.standards.delegated-execution-state
+  evidence_path: .agentic/01.harness/standards/delegated-execution-state.md
+  confidence_weight: 1
+- term: .agentic/01.harness/standards/delegated-execution-state.md
+  category: file-path
+  match_type: exact
+  canonical_id: harness.standards.delegated-execution-state
+  evidence_path: .agentic/01.harness/standards/delegated-execution-state.md
   confidence_weight: 1
 - term: harness.standards.document-artifact-placement
   category: artifact-id
@@ -8326,6 +8338,186 @@ terms:
   canonical_id: platform.adapters.readme
   evidence_path: platform/adapters/README.md
   confidence_weight: 1
+- term: deploy.standards.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  confidence_weight: 1
+- term: deploy.workflow.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
+- term: deploy.schema.runnable-program-contract.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1.guide
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1.guide
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.runnable-program-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: runnable-program-contract.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.template.runnable-program-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.template.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.template.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  confidence_weight: 1
+- term: deploy.standards.runnable-program-candidates
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  confidence_weight: 1
+- term: deploy.workflow.runnable-program-candidates
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: deploy.schema.package-custody-receipt.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1.guide
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1.guide
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.package-custody-receipt.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: package-custody-receipt.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.standards.package-custody-and-promotion
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  confidence_weight: 1
+- term: deploy.workflow.package-custody-and-promotion
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
+- term: deploy.workflow.release-update-and-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: deploy.standards.accepted-release-and-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.accepted-release-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.accepted-release-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  confidence_weight: 1
+- term: deploy.workflow.verify-accept-or-restore-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
   match_type: exact
@@ -8350,6 +8542,18 @@ terms:
   canonical_id: deploy.lifecycle.readme
   evidence_path: .agentic/04.deploy/lifecycle/README.md
   confidence_weight: 1
+- term: deploy.plan.execution.kanbien-core-platform-bootstrap
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.execution.kanbien-core-platform-bootstrap
+  evidence_path: .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.execution.kanbien-core-platform-bootstrap
+  evidence_path: .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md
+  confidence_weight: 1
 - term: deploy.plan.implementation.platform-to-target-chain-control
   category: artifact-id
   match_type: exact
@@ -8373,6 +8577,18 @@ terms:
   match_type: exact
   canonical_id: deploy.plan.migration.aws-provider-neutral-transition
   evidence_path: .agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md
+  confidence_weight: 1
+- term: deploy.plan.migration.ordered-deployment-harness-and-target-layout
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.migration.ordered-deployment-harness-and-target-layout
+  evidence_path: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.migration.ordered-deployment-harness-and-target-layout
+  evidence_path: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md
   confidence_weight: 1
 - term: deploy.providers.readme
   category: artifact-id
@@ -8416,77 +8632,41 @@ terms:
   canonical_id: deploy.schema.declaration-contract.v1
   evidence_path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.package-custody-receipt.v1.guide
+- term: deploy.schema.delivery-access-contract.v1
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
+  canonical_id: deploy.schema.delivery-access-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/delivery-access-contract.v1.schema.yml
   confidence_weight: 1
-- term: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
+- term: .agentic/04.deploy/schemas/delivery-access-contract.v1.schema.yml
   category: file-path
   match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
+  canonical_id: deploy.schema.delivery-access-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/delivery-access-contract.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.package-custody-receipt.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  confidence_weight: 1
-- term: package-custody-receipt.v1.schema.yml
+- term: delivery-access-contract.v1.schema.yml
   category: schema-name
   match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+  canonical_id: deploy.schema.delivery-access-contract.v1
+  evidence_path: .agentic/04.deploy/schemas/delivery-access-contract.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.runnable-program-contract.v1.guide
+- term: deploy.schema.provider-condition-evidence.v1
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
+  canonical_id: deploy.schema.provider-condition-evidence.v1
+  evidence_path: .agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml
   confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
+- term: .agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml
   category: file-path
   match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
+  canonical_id: deploy.schema.provider-condition-evidence.v1
+  evidence_path: .agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.runnable-program-contract.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: runnable-program-contract.v1.schema.yml
+- term: provider-condition-evidence.v1.schema.yml
   category: schema-name
   match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: deploy.template.runnable-program-contract.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.template.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.template.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
+  canonical_id: deploy.schema.provider-condition-evidence.v1
+  evidence_path: .agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml
   confidence_weight: 1
 - term: deploy.standards.readme
   category: artifact-id
@@ -8512,6 +8692,30 @@ terms:
   canonical_id: deploy.standards.declaration-coverage
   evidence_path: .agentic/04.deploy/standards/declaration-coverage.md
   confidence_weight: 1
+- term: deploy.standards.delivery-access-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.delivery-access-coverage
+  evidence_path: .agentic/04.deploy/standards/delivery-access-coverage.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/delivery-access-coverage.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.delivery-access-coverage
+  evidence_path: .agentic/04.deploy/standards/delivery-access-coverage.md
+  confidence_weight: 1
+- term: deploy.standards.deployment-artifact-placement-and-naming
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.deployment-artifact-placement-and-naming
+  evidence_path: .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.deployment-artifact-placement-and-naming
+  evidence_path: .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+  confidence_weight: 1
 - term: deploy.standards.lifecycle-stage-ownership
   category: artifact-id
   match_type: exact
@@ -8524,41 +8728,41 @@ terms:
   canonical_id: deploy.standards.lifecycle-stage-ownership
   evidence_path: .agentic/04.deploy/standards/lifecycle-stage-ownership.md
   confidence_weight: 1
-- term: deploy.standards.package-custody-and-promotion
+- term: deploy.standards.package-qualification
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.standards.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/standards/package-custody-and-promotion.md
+  canonical_id: deploy.standards.package-qualification
+  evidence_path: .agentic/04.deploy/standards/package-qualification.md
   confidence_weight: 1
-- term: .agentic/04.deploy/standards/package-custody-and-promotion.md
+- term: .agentic/04.deploy/standards/package-qualification.md
   category: file-path
   match_type: exact
-  canonical_id: deploy.standards.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/standards/package-custody-and-promotion.md
+  canonical_id: deploy.standards.package-qualification
+  evidence_path: .agentic/04.deploy/standards/package-qualification.md
   confidence_weight: 1
-- term: deploy.standards.runnable-program-candidates
+- term: deploy.standards.provider-async-conditions
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.standards.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/standards/runnable-program-candidates.md
+  canonical_id: deploy.standards.provider-async-conditions
+  evidence_path: .agentic/04.deploy/standards/provider-async-conditions.md
   confidence_weight: 1
-- term: .agentic/04.deploy/standards/runnable-program-candidates.md
+- term: .agentic/04.deploy/standards/provider-async-conditions.md
   category: file-path
   match_type: exact
-  canonical_id: deploy.standards.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/standards/runnable-program-candidates.md
+  canonical_id: deploy.standards.provider-async-conditions
+  evidence_path: .agentic/04.deploy/standards/provider-async-conditions.md
   confidence_weight: 1
-- term: deploy.standards.target-alignment-preflight
+- term: deploy.standards.safe-command-diagnostics
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.standards.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  canonical_id: deploy.standards.safe-command-diagnostics
+  evidence_path: .agentic/04.deploy/standards/safe-command-diagnostics.md
   confidence_weight: 1
-- term: .agentic/04.deploy/standards/target-alignment-preflight.md
+- term: .agentic/04.deploy/standards/safe-command-diagnostics.md
   category: file-path
   match_type: exact
-  canonical_id: deploy.standards.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  canonical_id: deploy.standards.safe-command-diagnostics
+  evidence_path: .agentic/04.deploy/standards/safe-command-diagnostics.md
   confidence_weight: 1
 - term: deploy.workflows.readme
   category: artifact-id
@@ -8584,41 +8788,17 @@ terms:
   canonical_id: deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
   confidence_weight: 1
-- term: deploy.workflow.package-custody-and-promotion
+- term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
   confidence_weight: 1
-- term: .agentic/04.deploy/workflows/package-custody-and-promotion.md
+- term: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
   category: file-path
   match_type: exact
-  canonical_id: deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  confidence_weight: 1
-- term: deploy.workflow.runnable-program-candidates
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: deploy.workflow.target-alignment-preflight
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id
@@ -8895,6 +9075,18 @@ terms:
   match_type: exact
   canonical_id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
   evidence_path: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  evidence_path: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  evidence_path: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
   confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
@@ -9812,193 +10004,265 @@ terms:
   category: artifact-id
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/README.md
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/README.md
   confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/README.md
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/README.md
   category: file-path
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/tag-bootstrap.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/README.md
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/README.md
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/README.md
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/README.md
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/README.md
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/README.md
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
-  confidence_weight: 1
-- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
-  category: artifact-id
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml
-  confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml
-  category: file-path
-  match_type: exact
-  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/workload-binding.yml
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/README.md
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.target-profile
   category: artifact-id
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.target-profile
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
   confidence_weight: 1
-- term: infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
   category: file-path
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.target-profile
-  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/target-profile.yml
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/00-target/target-profile.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/cost-control.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/cost-control.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/cost-control.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-cost-allocation-tag
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-cost-allocation-tag
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-cost-allocation-tag
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/network.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/network.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.network
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/network.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.technical-access
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scopes.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.runtime-alignment
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.runtime-alignment
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/20-alignment/runtime-alignment-contract.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/20-alignment/runtime-alignment-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.runtime-alignment
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/20-alignment/runtime-alignment-contract.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/release-b-to-a-2026-10-21.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/release-b-to-a-2026-10-21.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/release-b-to-a-2026-10-21.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.bootstrap-runtime
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.foundation
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/tag-bootstrap.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/tag-bootstrap.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.tag-bootstrap
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/tag-bootstrap.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/README.md
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.readme
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/README.md
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.pipeline.core-server-package-custody.delivery-access
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipeline.core-server-package-custody.delivery-access
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipeline.core-server-package-custody.delivery-access
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien.staging.cloudformation.readme
   category: artifact-id
@@ -10504,6 +10768,54 @@ terms:
   canonical_id: deploy.script.declaration-coverage.readme
   evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
   confidence_weight: 1
+- term: deploy.adapter.aws.ecr-read-access
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.ecr-read-access
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.ecr-read-access
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
+  confidence_weight: 1
+- term: deploy.adapter.aws.runtime-alignment
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py
+  confidence_weight: 1
+- term: deploy.adapter.aws.runtime-alignment.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.runtime-alignment.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.runtime-alignment.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh
+  confidence_weight: 1
+- term: deploy.test.aws.runtime-alignment
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.aws.runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.aws.runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.script.target-alignment-preflight.readme
   category: artifact-id
   match_type: exact
@@ -10515,6 +10827,162 @@ terms:
   match_type: exact
   canonical_id: deploy.script.target-alignment-preflight.readme
   evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/target-alignment-preflight/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.inspect-runtime-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/inspect-runtime-alignment/script.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.validate-cost-condition
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.validate-cost-condition
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.validate-cost-condition
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.verify-delivery-role-access
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.verify-delivery-role-access
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.verify-delivery-role-access
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
+  confidence_weight: 1
+- term: deploy.script.validate-artifact-placement
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.script.validate-artifact-placement
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.script.validate-artifact-placement
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py
+  confidence_weight: 1
+- term: deploy.test.validate-artifact-placement
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-artifact-placement
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-artifact-placement
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.fixture.provider-condition-evidence.valid-waiting
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.provider-condition-evidence.valid-waiting
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/fixtures/valid-waiting.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/fixtures/valid-waiting.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.provider-condition-evidence.valid-waiting
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/fixtures/valid-waiting.yml
+  confidence_weight: 1
+- term: deploy.command.validate-provider-condition-evidence
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-provider-condition-evidence
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-provider-condition-evidence
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-provider-condition-evidence.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-provider-condition-evidence.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-provider-condition-evidence.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
+  confidence_weight: 1
+- term: deploy.test.validate-provider-condition-evidence
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-provider-condition-evidence
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-provider-condition-evidence
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.fixture.target-alignment-contract.example
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.target-alignment-contract.example
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/fixtures/contract.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/fixtures/contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.target-alignment-contract.example
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/fixtures/contract.yml
+  confidence_weight: 1
+- term: deploy.command.validate-target-alignment
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-target-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-target-alignment
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-target-alignment.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-target-alignment.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-target-alignment.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh
+  confidence_weight: 1
+- term: deploy.test.target-alignment-validation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.target-alignment-validation
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.target-alignment-validation
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh
   confidence_weight: 1
 - term: deploy.command.core-server-dependency-boundary.readme
   category: artifact-id
@@ -10744,6 +11212,18 @@ terms:
   canonical_id: deploy.command.package-custody-receipt-validation
   evidence_path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
   confidence_weight: 1
+- term: deploy.adapter.aws.iam-policy-coverage
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.adapter.aws.iam-policy-coverage
+  evidence_path: scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.adapter.aws.iam-policy-coverage
+  evidence_path: scripts/04.deploy/lifecycle/40-package/provider-adapters/aws/iam-policy-coverage/script.py
+  confidence_weight: 1
 - term: deploy.command.smoke-test-core-server-image.readme
   category: artifact-id
   match_type: exact
@@ -10828,6 +11308,18 @@ terms:
   canonical_id: deploy.test.kanbien-core-platform.core-server-package-custody
   evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/smoke-test.sh
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.core-server-package-custody.validate-delivery-access
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.core-server-package-custody.validate-delivery-access
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.core-server-package-custody.validate-delivery-access
+  evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.core-server-package-custody.validation
   category: artifact-id
   match_type: exact
@@ -10840,17 +11332,101 @@ terms:
   canonical_id: deploy.command.kanbien-core-platform.core-server-package-custody.validation
   evidence_path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py
   confidence_weight: 1
-- term: deploy.control.kanbien-core-platform.bootstrap-runtime
+- term: deploy.fixture.delivery-access-contract.sample-workflow
   category: artifact-id
   match_type: exact
-  canonical_id: deploy.control.kanbien-core-platform.bootstrap-runtime
-  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py
+  canonical_id: deploy.fixture.delivery-access-contract.sample-workflow
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/sample-workflow.yml
   confidence_weight: 1
-- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py
+- term: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/sample-workflow.yml
   category: file-path
   match_type: exact
-  canonical_id: deploy.control.kanbien-core-platform.bootstrap-runtime
-  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/control-surface.py
+  canonical_id: deploy.fixture.delivery-access-contract.sample-workflow
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/sample-workflow.yml
+  confidence_weight: 1
+- term: deploy.fixture.delivery-access-contract.valid
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.fixture.delivery-access-contract.valid
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/valid-contract.yml
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/valid-contract.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.fixture.delivery-access-contract.valid
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/fixtures/valid-contract.yml
+  confidence_weight: 1
+- term: deploy.command.validate-delivery-access-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-delivery-access-contract
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-delivery-access-contract
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-delivery-access-contract.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-delivery-access-contract.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-delivery-access-contract.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.sh
+  confidence_weight: 1
+- term: deploy.test.validate-delivery-access-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-delivery-access-contract
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-delivery-access-contract
+  evidence_path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.create-change-set.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-change-set.readme
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-change-set.readme
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.create-runtime-change-set
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-runtime-change-set
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-runtime-change-set
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.create-runtime-change-set.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-runtime-change-set.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.create-runtime-change-set.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.sh
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.deploy-candidate.readme
   category: artifact-id
@@ -10863,6 +11439,18 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.deploy-candidate.readme
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.execute-runtime-change-set
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.execute-runtime-change-set
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.execute-runtime-change-set
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.deploy-candidate
   category: artifact-id
@@ -10900,6 +11488,42 @@ terms:
   canonical_id: deploy.command.kanbien-core-platform.prepare-candidate
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.release-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.release-contract
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.release-contract
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.release-contract.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.release-contract.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.release-contract.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.release-contract
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.release-contract
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.release-contract
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.test.kanbien-core-platform.target-controls
   category: artifact-id
   match_type: exact
@@ -10911,6 +11535,42 @@ terms:
   match_type: exact
   canonical_id: deploy.test.kanbien-core-platform.target-controls
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.accept-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.accept-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.accept-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.accept-release.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.accept-release.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.accept-release.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.restore-accepted-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.restore-accepted-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.restore-accepted-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.verify-candidate.readme
   category: artifact-id
@@ -10935,6 +11595,18 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.verify-candidate
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.verify-runtime-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.verify-runtime-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.verify-runtime-release
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py
   confidence_weight: 1
 - term: deploy.script.operational-realization-gate.readme
   category: artifact-id
@@ -11607,6 +12279,30 @@ terms:
   match_type: exact
   canonical_id: deploy.script.run-platform-shell-worker-smoke.smoke-test
   evidence_path: scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.test.safe-command-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.safe-command-diagnostics
+  evidence_path: scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.safe-command-diagnostics
+  evidence_path: scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh
+  confidence_weight: 1
+- term: deploy.shared.safe-command-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.shared.safe-command-diagnostics
+  evidence_path: scripts/04.deploy/shared/safe-command-diagnostics.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/shared/safe-command-diagnostics.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.shared.safe-command-diagnostics
+  evidence_path: scripts/04.deploy/shared/safe-command-diagnostics.sh
   confidence_weight: 1
 - term: deploy.script.smoke-test-platform-shell-image.readme
   category: artifact-id

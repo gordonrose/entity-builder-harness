@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.verify-candidate
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -15,7 +15,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Verify the fixed core-platform immutable release through its private one-shot verifier.
+#   purpose: Verify the fixed core-platform immutable release through one private verifier task, or reuse its fresh completed evidence.
 #   portability:
 #     class: internal
 #     targets: []

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -133,7 +133,7 @@ def check_profile(profile: dict[str, Any]) -> None:
     if not isinstance(facts, list):
         raise DeclarationFailure("e0-fact-missing")
     found: set[str] = set()
-    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "accepted-release-retained-and-private-verified"}
+    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z", "accepted-release-retained-and-private-verified"}
     for fact in facts:
         if not isinstance(fact, dict) or not non_empty(fact.get("id")):
             raise DeclarationFailure("e0-fact-invalid")
@@ -150,7 +150,8 @@ def check_profile(profile: dict[str, Any]) -> None:
 
 
 def check_foundation(root: Path) -> None:
-    index = mapping(root / "foundation" / "foundation-index.yml", "foundation-index-unreadable")
+    foundation_root = root / "10-foundation"
+    index = mapping(foundation_root / "foundation-index.yml", "foundation-index-unreadable")
     if index.get("schema") != "deploy/target-foundation-index/v1" or index.get("target") != TARGET:
         raise DeclarationFailure("foundation-index-invalid")
     resources = index.get("resources")
@@ -159,22 +160,22 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation"}:
+        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
-    network = mapping(root / "foundation" / "network.yml", "network-declaration-unreadable")
+    network = mapping(foundation_root / "network.yml", "network-declaration-unreadable")
     route = required_mapping(network, "private_verifier_route", "private-verifier-missing")
     if network.get("public_ingress") != "prohibited" or route.get("status") != "established-e2c-fresh-e4-evidence-required" or route.get("permitted_caller") != "selected-private-verifier-only":
         raise DeclarationFailure("private-verifier-invalid")
-    access = mapping(root / "foundation" / "technical-access.yml", "technical-access-unreadable")
+    access = mapping(foundation_root / "technical-access.yml", "technical-access-unreadable")
     intents = access.get("access_intents")
     if not isinstance(intents, list) or {item.get("id") for item in intents if isinstance(item, dict)} != {"delivery-custody", "workload-startup"}:
         raise DeclarationFailure("technical-access-invalid")
     for intent in intents:
         if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
-    cost = mapping(root / "foundation" / "cost-control.yml", "cost-control-unreadable")
+    cost = mapping(foundation_root / "cost-control.yml", "cost-control-unreadable")
     waiver = required_mapping(cost, "waiver", "cost-control-invalid")
     expected_controls = {"one-task-only", "no-autoscaling", "no-nat", "no-public-ingress", "no-data-services", "no-new-cost-category"}
     if (
@@ -189,11 +190,27 @@ def check_foundation(root: Path) -> None:
         or not non_empty(waiver.get("follow_up_owner"))
     ):
         raise DeclarationFailure("cost-control-invalid")
+    if cost.get("status") == "waived-by-approved-exception":
+        if cost.get("evidence") != "evidence/target-cost-allocation-tag.yml":
+            raise DeclarationFailure("cost-control-evidence-invalid")
+        evidence = mapping(foundation_root / cost["evidence"], "cost-control-evidence-unreadable")
+        evidence_waiver = required_mapping(evidence, "waiver", "cost-control-evidence-invalid")
+        if (
+            evidence.get("schema") != "deploy/provider-condition-evidence/v1"
+            or evidence.get("condition_id") != "target-cost-allocation-tag-active"
+            or evidence.get("target") != TARGET
+            or evidence.get("status") != "waived-by-approved-exception"
+            or evidence_waiver.get("authority_reference") != waiver.get("current_authority_reference")
+            or evidence_waiver.get("expires_at") != waiver.get("current_expiry")
+            or set(evidence_waiver.get("compensating_controls", [])) != expected_controls
+            or evidence_waiver.get("follow_up_owner") != waiver.get("follow_up_owner")
+        ):
+            raise DeclarationFailure("cost-control-evidence-invalid")
 
 
 def check_scope(root: Path) -> None:
-    scope_root = root / "scopes" / "bootstrap-runtime"
-    contract = mapping(scope_root / "declaration-contract.yml", "scope-contract-unreadable")
+    scope_root = root / "20-scopes" / "bootstrap-runtime"
+    contract = mapping(scope_root / "00-declaration" / "declaration-contract.yml", "scope-contract-unreadable")
     if contract.get("schema") != "deploy/target-scope-contract/v1" or contract.get("target") != TARGET or contract.get("id") != "kanbien-core-platform-bootstrap-runtime":
         raise DeclarationFailure("scope-contract-invalid")
     if not non_empty(contract.get("owner")):
@@ -202,7 +219,7 @@ def check_scope(root: Path) -> None:
     if program.get("id") != "kanbien-core-server" or program.get("contract") != "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml" or program.get("image_contract") != "infra/04.deploy/03.product/image/core-server/image-contract.yml":
         raise DeclarationFailure("scope-program-invalid")
     workload = required_mapping(contract, "workload", "scope-workload-missing")
-    if workload.get("operation") != "controlled-update-or-restoration" or workload.get("runtime_selection") != "ecs-fargate-private-immutable-digest" or workload.get("startup_access") != "foundation/technical-access.yml#workload-startup" or workload.get("network") != "foundation/network.yml#private-verifier-route":
+    if workload.get("operation") != "controlled-update-or-restoration" or workload.get("runtime_selection") != "ecs-fargate-private-immutable-digest" or workload.get("startup_access") != "10-foundation/technical-access.yml#workload-startup" or workload.get("network") != "10-foundation/network.yml#private-verifier-route":
         raise DeclarationFailure("scope-workload-invalid")
     configuration = required_mapping(contract, "configuration", "scope-configuration-missing")
     if configuration.get("value_policy") != "names-and-shapes-only-no-values" or configuration.get("secret_names") != []:
@@ -226,17 +243,19 @@ def check_scope(root: Path) -> None:
     receipt_fields = receipt.get("safe_fields")
     if not isinstance(receipt_fields, list) or not receipt_fields or not set(receipt_fields).issubset(SAFE_RECEIPT_FIELDS):
         raise DeclarationFailure("receipt-declaration-invalid")
-    binding = mapping(scope_root / "workload-binding.yml", "workload-binding-unreadable")
+    binding = mapping(scope_root / "10-workload-binding" / "workload-binding.yml", "workload-binding-unreadable")
     mutation = required_mapping(binding, "mutation", "workload-binding-invalid")
     if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "healthy-runtime-accepted" or binding.get("provider_workload") != "fixed-ecs-fargate-runtime-stack-live-verified-fresh-alignment-required" or binding.get("private_verifier") != "fixed-one-shot-private-ecs-task-live-verified-fresh-alignment-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "update-or-restore-after-fresh-alignment-and-reviewed-change-set":
         raise DeclarationFailure("workload-binding-invalid")
 
 
 def check_accepted_release(root: Path) -> None:
-    record = mapping(root / "scopes" / "bootstrap-runtime" / "accepted-release.yml", "accepted-release-unreadable")
+    evidence_root = root / "20-scopes" / "bootstrap-runtime" / "30-release-evidence"
+    record = mapping(evidence_root / "accepted-release.yml", "accepted-release-unreadable")
     release = required_mapping(record, "release", "accepted-release-invalid")
     acceptance = required_mapping(record, "acceptance", "accepted-release-invalid")
     verification = required_mapping(release, "private_verification", "accepted-release-invalid")
+    cost_condition = required_mapping(record, "cost_condition", "accepted-release-invalid")
     if (
         record.get("schema") != "deploy/accepted-release/v1"
         or record.get("target") != TARGET
@@ -248,19 +267,40 @@ def check_accepted_release(root: Path) -> None:
         or verification.get("verdict") != "accepted"
         or verification.get("code") != "runtime-digest-and-private-verifier-accepted"
         or acceptance.get("retained_for_restoration") is not True
+        or cost_condition.get("condition_id") != "target-cost-allocation-tag-active"
+        or cost_condition.get("evidence") != "10-foundation/evidence/target-cost-allocation-tag.yml"
+        or not non_empty(cost_condition.get("disposition"))
     ):
         raise DeclarationFailure("accepted-release-invalid")
+    rehearsal_path = acceptance.get("last_rehearsal")
+    if not non_empty(rehearsal_path):
+        raise DeclarationFailure("accepted-release-rehearsal-missing")
+    rehearsal = mapping(evidence_root / rehearsal_path, "accepted-release-rehearsal-unreadable")
+    restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
+    restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
+    if (
+        rehearsal.get("schema") != "deploy/release-rehearsal-evidence/v1"
+        or rehearsal.get("target") != TARGET
+        or rehearsal.get("scope") != "bootstrap-runtime"
+        or rehearsal.get("status") != "restored-and-verified"
+        or restored.get("source_revision") != release.get("source_revision")
+        or restored.get("image_digest") != release.get("image_digest")
+        or restored.get("runtime_task_definition") != release.get("runtime_task_definition")
+        or restored.get("verifier_task_definition") != release.get("verifier_task_definition")
+        or restored_verification.get("code") != "runtime-digest-and-private-verifier-accepted"
+    ):
+        raise DeclarationFailure("accepted-release-rehearsal-invalid")
 
 
 def check_pipeline(root: Path) -> None:
-    catalogue = mapping(root / "pipelines" / "github-actions" / "pipeline-index.yml", "pipeline-index-unreadable")
+    catalogue = mapping(root / "40-package-custody" / "github-actions" / "pipeline-index.yml", "pipeline-index-unreadable")
     if catalogue.get("schema") != "deploy/pipeline-index/v1" or catalogue.get("target") != TARGET:
         raise DeclarationFailure("pipeline-index-invalid")
     pipelines = catalogue.get("pipelines")
     if not isinstance(pipelines, list) or len(pipelines) != 1 or not isinstance(pipelines[0], dict):
         raise DeclarationFailure("pipeline-record-missing")
     pipeline = pipelines[0]
-    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("delivery_access_contract") != "core-server-package-custody.delivery-access.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml":
+    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("delivery_access_contract") != "core-server-package-custody.delivery-access.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml":
         raise DeclarationFailure("pipeline-record-invalid")
     if not non_empty(pipeline.get("owner")):
         raise DeclarationFailure("pipeline-unowned")
@@ -276,7 +316,7 @@ def main() -> int:
     try:
         args = parse_args()
         root = Path(args.target_root) if args.target_root else Path(__file__).resolve().parents[5] / "infra/04.deploy/03.product/targets" / TARGET
-        profile = mapping(root / "target-profile.yml", "target-profile-unreadable")
+        profile = mapping(root / "00-target" / "target-profile.yml", "target-profile-unreadable")
         check_profile(profile)
         check_foundation(root)
         check_scope(root)

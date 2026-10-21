@@ -4,7 +4,7 @@ id: deploy.plan.execution.kanbien-core-platform-bootstrap
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -26,11 +26,15 @@ used_by:
 ## Authority and status
 
 This is a historical status tracker, not execution authority. The reusable
-procedure is `.agentic/04.deploy/workflows/release-update-and-recovery.md`; the
-fixed AWS procedure is `.agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md`.
+  procedure is `.agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md`
+  with verification and recovery in `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`; the
+fixed AWS procedure is
+`.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md`.
 A separate approved packet remains required for any AWS or GitHub mutation.
 
-Current execution status: `A accepted and running; normal UPDATE and restoration controls are being implemented before the B-to-A rehearsal.`
+Current execution status: `A accepted and running; a bounded B-to-A rehearsal
+has succeeded; the normal UPDATE and restoration controls are retained for the
+next governed core change.`
 
 ## Completion criterion
 

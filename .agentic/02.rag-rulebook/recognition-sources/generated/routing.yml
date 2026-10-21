@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: '2026-10-20'
+#   updated_on: '2026-10-21'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.routing
@@ -53,8 +53,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 130
-  workflow_files: 43
+  term_count: 134
+  workflow_files: 45
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -484,29 +484,41 @@ terms:
   canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
   evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
   confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.compare-declared-requirements-with-live-target
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.prove-runnable-program-builds
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.publish-immutable-package-with-custody
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.review-and-execute-target-update
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/declaration-coverage.md
   category: workflow-name
   match_type: exact
   canonical_id: 04.deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
@@ -670,6 +682,12 @@ terms:
   canonical_id: 00.chat.workflow.chat-upstream-reusable-lesson
   evidence_path: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
   confidence_weight: 1
+- term: compare-declared-requirements-with-live-target.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.compare-declared-requirements-with-live-target
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
 - term: continue-rulebook.workflow.md
   category: workflow-name
   match_type: exact
@@ -766,12 +784,6 @@ terms:
   canonical_id: 01.harness.workflow.operational-realization-gate
   evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
   confidence_weight: 1
-- term: package-custody-and-promotion.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  confidence_weight: 1
 - term: plan-aws-change.md
   category: workflow-name
   match_type: exact
@@ -784,11 +796,29 @@ terms:
   canonical_id: 03.product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
+- term: prove-runnable-program-builds.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.prove-runnable-program-builds
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: publish-immutable-package-with-custody.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.publish-immutable-package-with-custody
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
 - term: recover-transcript-draft.md
   category: workflow-name
   match_type: exact
   canonical_id: 00.chat.workflow.recover-transcript-draft
   evidence_path: .agentic/00.chat/workflows/recover-transcript-draft.md
+  confidence_weight: 1
+- term: review-and-execute-target-update.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.review-and-execute-target-update
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
   confidence_weight: 1
 - term: review-okf-source-material.md
   category: workflow-name
@@ -820,23 +850,17 @@ terms:
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
   confidence_weight: 1
-- term: runnable-program-candidates.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: target-alignment-preflight.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  confidence_weight: 1
 - term: untrusted-input-and-bounded-agent-safety.md
   category: workflow-name
   match_type: exact
   canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
   evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
+- term: verify-accept-or-restore-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
   confidence_weight: 1
 validation_rules:
 - Generated routing terms must retain evidence paths.

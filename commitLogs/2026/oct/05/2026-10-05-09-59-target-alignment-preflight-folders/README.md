@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T22:10:46Z
-latest_commit_sha: 832e709a
-chat_duration: 1343477s (15:13:11:17)
+latest_commit_at_utc: 2026-10-21T12:10:09Z
+latest_commit_sha: 66e5cb57
+chat_duration: 1393840s (16:03:10:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -96,6 +96,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
   Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
+
+
+- Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change set.
+  Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
+
+
+- Raised: A terminally interrupted restoration command could cause an agent to launch a second private verifier task despite the first verifier having already accepted.
+  Resolution: The verifier now reuses only current-deployment completed evidence with a successful exit and safe acceptance log; otherwise it blocks. The rehearsal evidence records the incident and remediation.
+
+
+- Raised: Generic harness migration ADR was missing before the first active generic move
+  Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
 
 ## Decisions Made
 
@@ -239,6 +251,46 @@ can you walk me through which part of my repo work on the following stages
 - Decision: The kanbien-core-platform bootstrap runtime deployed from the qualified immutable digest and its private verifier accepted the expected release identity.
   Rationale: Live evidence: ECS rollout completed with one healthy task; verifier reported runtime-digest-and-private-verifier-accepted after the verifier-only task-definition update.
 
+
+- Decision: Promoted governed core-platform release controls to origin/main
+  Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
+
+
+- Decision: Qualified Release B locally
+  Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
+
+
+- Decision: Reconciled Release B rehearsal evidence with restored accepted Release A.
+  Rationale: B remains a verified rehearsal candidate, while the accepted-release record names A's actual restored runtime and verifier task definitions; the static declaration gate checks the link.
+
+
+- Decision: Adopt placement-before-creation governance
+  Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
+
+
+- Decision: Adopt ordered deployment placement and naming migration
+  Rationale: The approved migration makes target declarations scanable in lifecycle order. Batch 2 moved only active kanbien-core-platform target declarations to 00-target, 10-foundation, 20-scopes, 30-provider-realization/aws, and 40-package-custody; all active consumers, fixtures, GitHub metadata, and generated recognition sources now use the canonical locations. Old paths have no active aliases or consumers.
+
+
+- Decision: Keep one AWS release workflow while making lifecycle sections explicit
+  Rationale: The AWS bootstrap-runtime procedure is one coherent release route, so splitting it would duplicate operational authority. It now lives at the planned target-and-scope deploy path and explicitly separates preconditions, 50-deploy update, 60-run verification, and 60-run restoration.
+
+
+- Decision: Move reusable target-alignment authority without creating empty schema artifacts
+  Rationale: The generic target-alignment workflow and standard now live in 00-target-alignment with names that say what they do. They remain singular reusable authority. The canonical layout's alignment schema is intentionally deferred because no such contract schema currently exists; creating one without a real consumer would create false governance.
+
+
+- Decision: Adopt lifecycle-first deployment authority paths
+  Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
+
+
+- Decision: Keep runnable-program contract material with the build phase
+  Rationale: The runnable workflow, standard, schema, template, and guide are one build capability: they prove a program's dependency boundary and command before package construction. They now live together under 20-build; package publication and deploy controls remain separate.
+
+
+- Decision: Keep package custody with the package phase
+  Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
+
 ## Context Hygiene
 
 
@@ -349,6 +401,38 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Refreshed chat branch from current local main before promotion
   Durable evidence: Preflight branch agentic/preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-09a8fc533584/20261020171513 merged cleanly; applied commit 0b7768e9aa3e5f3ff60c6ae1f7635b304fbb939a; temporary preflight worktree and branch were removed; no stash or conflicts; post-refresh delivery controls passed.
+
+
+- Summary: Recorded the approved short-lived cost-control waiver as target-local evidence and made it an executable pre-mutation gate; generic validation now rejects expired waivers.
+  Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
+
+
+- Summary: Release B publication run 39571727355 qualified digest sha256:721466…224ec2, deployed and privately verified. The target was restored to accepted A digest sha256:0992b…5d5d5 and private verification accepted.
+  Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
+
+
+- Summary: Created a deployment placement-and-naming standard, proposed-path validator, and migration plan; no active paths or cloud state changed.
+  Durable evidence: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md and .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+
+
+- Summary: Batch 2 target declaration migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
+
+
+- Summary: Batch 3 AWS workflow migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
+
+
+- Summary: Batch 4 generic target-alignment migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Both reusable alignment artifacts moved to lifecycle-first clear-action paths; declaration coverage, implementation-plan metadata, and script README consumers were updated. Generated recognition sources, both path-migration checks, metadata, and migration-helper smoke passed. No provider mutation occurred.
+
+
+- Summary: Runnable-program build-capability migration verification
+  Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
+
+
+- Summary: Package-custody migration verification
+  Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
 
 ## Activity Log
 
@@ -1410,6 +1494,274 @@ Summary: Recorded accepted release A; implemented update and restoration control
 
 ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
 
+
+### 2026-10-20T22:14:04Z - Decision
+
+Decision: Promoted governed core-platform release controls to origin/main
+
+Rationale: The isolated integration worktree at 8ed5c337 passed the release-control and metadata checks; origin/main was verified at that exact commit after a normal fast-forward push. The live B-to-A rehearsal remains blocked only by renewed cost-waiver authority and GitHub Environment approval.
+
+
+### 2026-10-20T22:19:51Z - Commit recorded
+
+Commit: `2d13367c`
+
+Message: chore(core-server): label bootstrap release
+
+Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
+
+ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
+
+
+### 2026-10-20T22:22:10Z - Decision
+
+Decision: Qualified Release B locally
+
+Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
+
+
+### 2026-10-21T08:40:59Z - Context hygiene
+
+Summary: Recorded the approved short-lived cost-control waiver as target-local evidence and made it an executable pre-mutation gate; generic validation now rejects expired waivers.
+
+Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
+
+
+### 2026-10-21T08:43:38Z - Commit recorded
+
+Commit: `2000f119`
+
+Message: fix(deploy): enforce core-platform cost waiver gate
+
+Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
+
+ADR impact: No ADR: this implements the existing release-control policy.
+
+
+### 2026-10-21T08:53:59Z - Issue
+
+Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change set.
+
+Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
+
+
+### 2026-10-21T08:54:40Z - Commit recorded
+
+Commit: `d2762553`
+
+Message: fix(deploy): accept proven AWS update change sets
+
+Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
+
+ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
+
+
+### 2026-10-21T09:19:42Z - Issue
+
+Raised: A terminally interrupted restoration command could cause an agent to launch a second private verifier task despite the first verifier having already accepted.
+
+Resolution: The verifier now reuses only current-deployment completed evidence with a successful exit and safe acceptance log; otherwise it blocks. The rehearsal evidence records the incident and remediation.
+
+
+### 2026-10-21T09:19:42Z - Decision
+
+Decision: Reconciled Release B rehearsal evidence with restored accepted Release A.
+
+Rationale: B remains a verified rehearsal candidate, while the accepted-release record names A's actual restored runtime and verifier task definitions; the static declaration gate checks the link.
+
+
+### 2026-10-21T09:19:42Z - Context hygiene
+
+Summary: Release B publication run 39571727355 qualified digest sha256:721466…224ec2, deployed and privately verified. The target was restored to accepted A digest sha256:0992b…5d5d5 and private verification accepted.
+
+Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
+
+
+### 2026-10-21T09:22:03Z - Commit recorded
+
+Commit: `3fcc0180`
+
+Message: fix(deploy): reuse completed verifier evidence
+
+Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
+
+ADR impact: No ADR: this strengthens the existing governed release-verification control.
+
+
+### 2026-10-21T11:32:07Z - Context hygiene
+
+Summary: Created a deployment placement-and-naming standard, proposed-path validator, and migration plan; no active paths or cloud state changed.
+
+Durable evidence: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md and .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+
+
+### 2026-10-21T11:32:07Z - Decision
+
+Decision: Adopt placement-before-creation governance
+
+Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
+
+
+### 2026-10-21T11:34:39Z - Commit recorded
+
+Commit: `b10fc32f`
+
+Message: feat(deploy): govern artifact placement and naming
+
+Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
+
+ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
+
+
+### 2026-10-21T11:47:10Z - Decision
+
+Decision: Adopt ordered deployment placement and naming migration
+
+Rationale: The approved migration makes target declarations scanable in lifecycle order. Batch 2 moved only active kanbien-core-platform target declarations to 00-target, 10-foundation, 20-scopes, 30-provider-realization/aws, and 40-package-custody; all active consumers, fixtures, GitHub metadata, and generated recognition sources now use the canonical locations. Old paths have no active aliases or consumers.
+
+
+### 2026-10-21T11:47:10Z - Context hygiene
+
+Summary: Batch 2 target declaration migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
+
+
+### 2026-10-21T11:48:26Z - Commit recorded
+
+Commit: `d5cb0c54`
+
+Message: refactor(deploy): order core platform target declarations
+
+Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:51:37Z - Decision
+
+Decision: Keep one AWS release workflow while making lifecycle sections explicit
+
+Rationale: The AWS bootstrap-runtime procedure is one coherent release route, so splitting it would duplicate operational authority. It now lives at the planned target-and-scope deploy path and explicitly separates preconditions, 50-deploy update, 60-run verification, and 60-run restoration.
+
+
+### 2026-10-21T11:51:37Z - Context hygiene
+
+Summary: Batch 3 AWS workflow migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
+
+
+### 2026-10-21T11:52:32Z - Commit recorded
+
+Commit: `5240b9a0`
+
+Message: refactor(deploy): route core AWS workflow by lifecycle
+
+Summary: Completed migration batch 3: rehomed the single AWS bootstrap-runtime release workflow to the lifecycle-first target/scope route, clarified deploy, verification, and restoration sections, updated consumers and generated recognition sources, and passed required metadata, path, target, package, release, and helper-smoke gates. No cloud or GitHub state changed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:55:24Z - Decision
+
+Decision: Move reusable target-alignment authority without creating empty schema artifacts
+
+Rationale: The generic target-alignment workflow and standard now live in 00-target-alignment with names that say what they do. They remain singular reusable authority. The canonical layout's alignment schema is intentionally deferred because no such contract schema currently exists; creating one without a real consumer would create false governance.
+
+
+### 2026-10-21T11:55:25Z - Context hygiene
+
+Summary: Batch 4 generic target-alignment migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Both reusable alignment artifacts moved to lifecycle-first clear-action paths; declaration coverage, implementation-plan metadata, and script README consumers were updated. Generated recognition sources, both path-migration checks, metadata, and migration-helper smoke passed. No provider mutation occurred.
+
+
+### 2026-10-21T11:56:22Z - Commit recorded
+
+Commit: `ab738224`
+
+Message: refactor(deploy): clarify target alignment harness
+
+Summary: Completed migration batch 4: moved reusable target-alignment workflow and standard into lifecycle-first clear-action paths, updated active consumers and generated recognition sources, passed both migration checks and required commit gates, and deliberately deferred a nonexistent alignment schema. No cloud or GitHub state changed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:58:51Z - Issue
+
+Raised: Generic harness migration ADR was missing before the first active generic move
+
+Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
+
+
+### 2026-10-21T11:58:51Z - Decision
+
+Decision: Adopt lifecycle-first deployment authority paths
+
+Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
+
+
+### 2026-10-21T11:59:54Z - Commit recorded
+
+Commit: `ee8d5746`
+
+Message: docs(deploy): record lifecycle-first path decision
+
+Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T12:05:24Z - Decision
+
+Decision: Keep runnable-program contract material with the build phase
+
+Rationale: The runnable workflow, standard, schema, template, and guide are one build capability: they prove a program's dependency boundary and command before package construction. They now live together under 20-build; package publication and deploy controls remain separate.
+
+
+### 2026-10-21T12:05:25Z - Context hygiene
+
+Summary: Runnable-program build-capability migration verification
+
+Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
+
+
+### 2026-10-21T12:06:20Z - Commit recorded
+
+Commit: `ac504bff`
+
+Message: refactor(deploy): group runnable program build controls
+
+Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T12:09:18Z - Decision
+
+Decision: Keep package custody with the package phase
+
+Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
+
+
+### 2026-10-21T12:09:18Z - Context hygiene
+
+Summary: Package-custody migration verification
+
+Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
+
+
+### 2026-10-21T12:10:09Z - Commit recorded
+
+Commit: `66e5cb57`
+
+Message: refactor(deploy): group package custody controls
+
+Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1662,6 +2014,83 @@ ADR impact: ADR not required: bounded release-control governance under existing 
   Summary: Recorded accepted release A; implemented update and restoration controls, cross-component release checks, and authoritative release workflows. Live B-to-A rehearsal remains gated on cost-waiver renewal and GitHub Environment approval.
   ADR impact: ADR not required: bounded release-control governance under existing deployment architecture.
 
+
+- Commit: `2d13367c`
+  Time UTC: 2026-10-20T22:19:51Z
+  Message: chore(core-server): label bootstrap release
+  Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
+  ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
+
+
+- Commit: `2000f119`
+  Time UTC: 2026-10-21T08:43:38Z
+  Message: fix(deploy): enforce core-platform cost waiver gate
+  Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
+  ADR impact: No ADR: this implements the existing release-control policy.
+
+
+- Commit: `d2762553`
+  Time UTC: 2026-10-21T08:54:40Z
+  Message: fix(deploy): accept proven AWS update change sets
+  Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
+  ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
+
+
+- Commit: `3fcc0180`
+  Time UTC: 2026-10-21T09:22:03Z
+  Message: fix(deploy): reuse completed verifier evidence
+  Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
+  ADR impact: No ADR: this strengthens the existing governed release-verification control.
+
+
+- Commit: `b10fc32f`
+  Time UTC: 2026-10-21T11:34:39Z
+  Message: feat(deploy): govern artifact placement and naming
+  Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
+  ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
+
+
+- Commit: `d5cb0c54`
+  Time UTC: 2026-10-21T11:48:26Z
+  Message: refactor(deploy): order core platform target declarations
+  Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `5240b9a0`
+  Time UTC: 2026-10-21T11:52:32Z
+  Message: refactor(deploy): route core AWS workflow by lifecycle
+  Summary: Completed migration batch 3: rehomed the single AWS bootstrap-runtime release workflow to the lifecycle-first target/scope route, clarified deploy, verification, and restoration sections, updated consumers and generated recognition sources, and passed required metadata, path, target, package, release, and helper-smoke gates. No cloud or GitHub state changed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `ab738224`
+  Time UTC: 2026-10-21T11:56:22Z
+  Message: refactor(deploy): clarify target alignment harness
+  Summary: Completed migration batch 4: moved reusable target-alignment workflow and standard into lifecycle-first clear-action paths, updated active consumers and generated recognition sources, passed both migration checks and required commit gates, and deliberately deferred a nonexistent alignment schema. No cloud or GitHub state changed.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `ee8d5746`
+  Time UTC: 2026-10-21T11:59:54Z
+  Message: docs(deploy): record lifecycle-first path decision
+  Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `ac504bff`
+  Time UTC: 2026-10-21T12:06:20Z
+  Message: refactor(deploy): group runnable program build controls
+  Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `66e5cb57`
+  Time UTC: 2026-10-21T12:10:09Z
+  Message: refactor(deploy): group package custody controls
+  Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1675,9 +2104,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T22:10:46Z
-Latest commit SHA: 832e709a
-Chat duration: 1343477s (15:13:11:17)
+Latest commit at UTC: 2026-10-21T12:10:09Z
+Latest commit SHA: 66e5cb57
+Chat duration: 1393840s (16:03:10:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

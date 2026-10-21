@@ -4,7 +4,7 @@ id: deploy.standards.lifecycle-stage-ownership
 version: 1
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.lifecycle
 disciplines:
@@ -27,6 +27,10 @@ used_by:
 
 ## Requirements
 
+- Before creating or moving a deployment artifact, use
+  `deployment-artifact-placement-and-naming.md` to choose its owner home,
+  phase, target/scope suffix when applicable, and clear name. Run its placement
+  validator for new canonical paths.
 - Assign each new deployment capability one primary lifecycle phase from the
   Deployment Lifecycle Map.
 - Place new lifecycle-owned scripts beneath that phase's future script home.

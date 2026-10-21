@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.target-controls
-#   version: 1
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -15,7 +15,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Prove fixed core-platform control commands reject target selection and fail closed without external access.
+#   purpose: Prove fixed core-platform controls fail closed, recognise AWS lifecycle responses, and safely record accepted releases using isolated files without external access.
 #   portability:
 #     class: internal
 #     targets: []
@@ -73,7 +73,114 @@ json.dump({"schema":"deploy/private-runtime-verification-report/v1","target":"ka
 PY
 "$ACCEPT" --receipt "$accepted_receipt" --verification-report "$accepted_verification" --json | grep -q '"verdict": "ready-to-record"'
 
-python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml" <<'PY'
+python3 - "$ROOT" "$accepted_receipt" "$accepted_verification" <<'PY'
+import contextlib
+import importlib.util
+import io
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+from unittest.mock import patch
+import yaml
+
+sys.dont_write_bytecode = True
+root = Path(sys.argv[1])
+receipt_path, verification_path = map(Path, sys.argv[2:])
+spec = importlib.util.spec_from_file_location("accept_release", root / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+real_record = module.RECORD
+baseline = real_record.read_bytes()
+candidate = json.loads(receipt_path.read_text())
+accepted = json.loads(verification_path.read_text())
+
+
+def invoke(write=True):
+    argv = ["accept-release", "--receipt", str(receipt_path), "--verification-report", str(verification_path), "--json"]
+    if write:
+        argv.append("--write")
+    output = io.StringIO()
+    with patch.object(sys, "argv", argv), contextlib.redirect_stdout(output):
+        status = module.main()
+    return status, json.loads(output.getvalue())
+
+
+def blocked(code):
+    before = module.RECORD.read_bytes()
+    status, report = invoke()
+    assert status == 1 and report["verdict"] == "blocked", report
+    assert report["findings"] == [{"code": code}], report
+    assert module.RECORD.read_bytes() == before, "failed acceptance changed the retained baseline"
+
+
+with tempfile.TemporaryDirectory() as directory:
+    # Exercise the real command and custody validator against a private record copy.
+    module.RECORD = Path(directory) / "accepted-release.yml"
+    module.RECORD.write_bytes(baseline)
+    module.RECORD.chmod(0o640)
+    status, report = invoke(write=False)
+    assert status == 0 and report["verdict"] == "ready-to-record", report
+    assert module.RECORD.read_bytes() == baseline
+    status, report = invoke()
+    assert status == 0 and report["verdict"] == "recorded", report
+    generated = module.RECORD.read_text()
+    record = yaml.safe_load(generated)
+    release = record["release"]
+    assert release["package_custody_reference"] == candidate["receipt_reference"]
+    for key in ("source_revision", "image_digest", "runtime_task_definition", "verifier_task_definition"):
+        assert release[key] == accepted["facts"][key], key
+    assert record["cost_condition"] == yaml.safe_load(baseline)["cost_condition"]
+    before_metadata = module.record_metadata(baseline.decode())
+    after_metadata = module.record_metadata(generated)
+    assert after_metadata["version"] == before_metadata["version"] + 1
+    assert after_metadata["created_on"] == before_metadata["created_on"]
+    assert after_metadata["updated_on"] == record["acceptance"]["accepted_at"][:10]
+    assert module.RECORD.stat().st_mode & 0o777 == 0o640
+    metadata_check = subprocess.run(
+        ["bash", str(root / "scripts/01.harness/check-artifact-metadata-headers.sh"), "--proposed"],
+        input=json.dumps({str(real_record.relative_to(root)): generated}), text=True, capture_output=True, cwd=root,
+    )
+    assert metadata_check.returncode == 0, metadata_check.stdout + metadata_check.stderr
+
+    for invalid in (None, [], "accepted", 0, False, {}, {**accepted, "schema": "other/v1"}, {**accepted, "target": "other"}):
+        verification_path.write_text(json.dumps(invalid))
+        blocked("private-verification-report-invalid")
+    verification_path.write_text("{")
+    blocked("private-verification-report-unreadable")
+    verification_path.write_text(json.dumps({**accepted, "facts": []}))
+    blocked("private-verification-not-accepted")
+    verification_path.write_text(json.dumps({**accepted, "facts": {**accepted["facts"], "image_digest": "sha256:" + "b" * 64}}))
+    blocked("accepted-release-identity-mismatch")
+    verification_path.write_text(json.dumps(accepted))
+    receipt_path.write_text(json.dumps({**candidate, "receipt_reference": "invalid"}))
+    blocked("package-custody-receipt-invalid")
+    receipt_path.write_text(json.dumps(candidate))
+
+    real_run = subprocess.run
+
+    def replace_original_after_validation(command, **kwargs):
+        assert command[command.index("--receipt") + 1] != str(receipt_path)
+        result = real_run(command, **kwargs)
+        receipt_path.write_text(json.dumps({**candidate, "receipt_reference": "invalid"}))
+        return result
+
+    with patch.object(module.subprocess, "run", side_effect=replace_original_after_validation):
+        assert module.receipt(receipt_path) == candidate, "recording must retain the exact validated receipt"
+    receipt_path.write_text(json.dumps(candidate))
+
+    for operation in ("fsync", "replace"):
+        with patch.object(module.os, operation, side_effect=OSError("simulated write failure")):
+            blocked("accepted-release-record-write-failed")
+        assert not list(Path(directory).glob(".accepted-release.yml.*.tmp")), "failed write left a temporary record"
+    module.RECORD.write_text("schema: invalid\n")
+    blocked("accepted-release-record-invalid")
+
+assert real_record.read_bytes() == baseline, "isolated acceptance tests touched the real baseline"
+PY
+
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml" <<'PY'
 import re
 import sys
 
@@ -95,7 +202,7 @@ assert "- -e" in verifier_command.group("body"), "the private verifier must pass
 assert "- node" not in verifier_command.group("body"), "the private verifier must not duplicate the distroless Node entrypoint"
 PY
 
-python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml" <<'PY'
 import re
 import sys
 
@@ -128,10 +235,31 @@ assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE",
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "CREATE_COMPLETE")
 assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_COMPLETE")
 assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "CREATE_COMPLETE")
+assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "UPDATE_COMPLETE")
 assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "UPDATE_COMPLETE")
+assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "REVIEW_IN_PROGRESS")
 assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_IN_PROGRESS")
 assert module.decoded_aws_response("") == {}
 assert module.decoded_aws_response('{"accepted": true}') == {"accepted": True}
+PY
+
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py" <<'PY'
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("verify_candidate", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+verifier = "arn:aws:ecs:eu-west-1:111122223333:task-definition/verifier:3"
+tasks = [
+    {"taskDefinitionArn": verifier, "stoppedAt": "2026-10-21T08:59:59Z", "taskArn": "arn:task/old"},
+    {"taskDefinitionArn": verifier, "stoppedAt": "2026-10-21T09:01:00Z", "taskArn": "arn:task/new"},
+]
+assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:00:00Z")["taskArn"] == "arn:task/new"
+assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:02:00Z") is None
+assert module.task_exited_successfully({"containers": [{"exitCode": 0}]})
+assert not module.task_exited_successfully({"containers": [{"exitCode": 1}]})
 PY
 
 echo "Fixed core-platform target control tests passed."

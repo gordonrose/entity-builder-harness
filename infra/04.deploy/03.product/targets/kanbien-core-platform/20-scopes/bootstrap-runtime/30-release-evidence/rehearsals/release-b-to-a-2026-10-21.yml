@@ -1,0 +1,54 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
+#   version: 1
+#   status: active
+#   created_on: "2026-10-21"
+#   updated_on: "2026-10-21"
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines:
+#   - security
+#   - sre
+#   kind: release-rehearsal-evidence
+#   purpose: Record the safe evidence for the bounded Release B update and restoration to accepted Release A.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml
+schema: deploy/release-rehearsal-evidence/v1
+target: kanbien-core-platform
+scope: bootstrap-runtime
+status: restored-and-verified
+authority_reference: chat-2026-10-05-release-b-rehearsal-authorization
+cost_condition:
+  evidence: ../../../../10-foundation/evidence/target-cost-allocation-tag.yml
+  disposition: temporary-waiver-active-until-2026-10-22T12-00-00Z
+release_b:
+  source_revision: 23e931e479292edef345af77e9c729f1f9e7e034
+  package_custody_reference: github-actions-run:39571727355
+  image_digest: sha256:72146686854150fa223c697a1d54387e325c322ef62c981399e244b633224ec2
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:9
+  verifier_task_definition: kanbien-core-platform-release-verifier:10
+  deployment_verdict: update-complete-and-service-healthy
+  private_verification:
+    verdict: accepted
+    code: runtime-digest-and-private-verifier-accepted
+    verified_at: "2026-10-21T09:01:14Z"
+restored_release_a:
+  source_revision: 1b56931d914d8f91162b30398967c150b1032e9b
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  verifier_task_definition: kanbien-core-platform-release-verifier:11
+  deployment_verdict: update-complete-and-service-healthy
+  private_verification:
+    verdict: accepted
+    code: runtime-digest-and-private-verifier-accepted
+    verified_at: "2026-10-21T09:07:58Z"
+verification_control:
+  duplicate_task_incident: identified-during-rehearsal
+  remediation: completed-verifier-evidence-is-reused-before-a-new-task-is-started
+  regression_proof: fixed-target-control-smoke-test-and-live-reuse-report
+current_state: accepted-release-a-restored-and-private-verified

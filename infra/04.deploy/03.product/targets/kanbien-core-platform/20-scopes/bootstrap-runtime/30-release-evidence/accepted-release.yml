@@ -1,0 +1,47 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
+#   version: 3
+#   status: active
+#   created_on: "2026-10-20"
+#   updated_on: "2026-10-21"
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [security, sre]
+#   kind: accepted-release-record
+#   purpose: Record the immutable package and live proof that form the retained bootstrap-runtime baseline.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/accepted-release/v1
+target: kanbien-core-platform
+scope: bootstrap-runtime
+status: accepted
+release:
+  source_revision: 1b56931d914d8f91162b30398967c150b1032e9b
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+  image_repository: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+  runtime_stack: kanbien-core-platform-bootstrap-runtime
+  service: kanbien-core-platform-bootstrap-runtime
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  verifier_task_definition: kanbien-core-platform-release-verifier:11
+  package_custody_reference: github-actions-run:39464882266
+  private_verification:
+    verdict: accepted
+    code: runtime-digest-and-private-verifier-accepted
+    verified_at: "2026-10-21T09:07:58Z"
+    evidence_reference: rehearsals/release-b-to-a-2026-10-21.yml
+acceptance:
+  accepted_at: "2026-10-20T21:15:49Z"
+  acceptance_checkpoint_commit: 8b9fbec76fd5d32aaa9ed11832b4f3cea3dded2a
+  deployment_evidence_commit: 794a9c46
+  retained_for_restoration: true
+  last_restored_at: "2026-10-21T09:07:58Z"
+  last_rehearsal: rehearsals/release-b-to-a-2026-10-21.yml
+cost_condition:
+  condition_id: target-cost-allocation-tag-active
+  provider_status: inactive
+  checked_at: "2026-10-21T08:29:00Z"
+  disposition: temporary-waiver-active-until-2026-10-22T12-00-00Z
+  evidence: 10-foundation/evidence/target-cost-allocation-tag.yml

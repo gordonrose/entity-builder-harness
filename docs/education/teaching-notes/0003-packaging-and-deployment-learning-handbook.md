@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 21
+  version: 22
   status: active
   created_on: "2026-10-07"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-21"
   layer: 05.education
   domain: education
   disciplines:
@@ -294,6 +294,17 @@ operational evidence store can replace or supplement that route only after its
 retention, access, independence, and bootstrap behaviour are reviewed.
 Application persistence is not automatically suitable: deployment evidence may
 be needed to prove that the persistence capability itself was safely deployed.
+
+### Reusing completed verification evidence
+
+A verification command can be repeated after a terminal interruption or a
+lost command response. It must not blindly start a second verifier task. For a
+given workload update, the control first looks for a completed verifier task
+with the matching workload revision and checks both its exit result and safe
+acceptance log code. It may reuse that evidence only when both agree. A failed
+or inconclusive completed task is a blocker, not permission to retry. This
+keeps a harmless verification mechanism from becoming duplicate operational
+work.
 
 Rollback always selects the recorded prior **immutable digest**, never a
 movable tag. It is complete only after the restored digest is running at the

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -13,6 +13,9 @@
 #   purpose: Validate safe normalized target-alignment evidence against a bounded declaration without provider access.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only]
+#   used_by:
+#   - id: deploy.command.validate-target-alignment.wrapper
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh
 """Provider-neutral, fail-closed target alignment validation."""
 from __future__ import annotations
 import argparse, json, sys

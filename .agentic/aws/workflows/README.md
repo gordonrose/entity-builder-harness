@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-21"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -29,5 +29,5 @@
   record the result.
 - `deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment of the
   RAG/rulebook MCP service after readiness proof and explicit approval.
-- `kanbien-core-platform-bootstrap-runtime-release.md` - govern fixed-target
+- [Review and execute ECS runtime update](../50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md) - govern fixed-target
   UPDATE, verification, accepted-release recording, and restoration.

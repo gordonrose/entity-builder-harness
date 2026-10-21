@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -15,7 +15,7 @@ set -euo pipefail
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-#     path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
+#     path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
 #   effects: [aws-mutation, writes-files]
 ROOT="$(git rev-parse --show-toplevel)"
 approved=""
@@ -26,7 +26,7 @@ while [ "$#" -gt 0 ]; do
     *) printf '%s\n' 'DIAGNOSTIC_CODE=RESTORE_ARGUMENTS_INVALID' >&2; exit 2 ;;
   esac
 done
-record="$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml"
+record="$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml"
 receipt="$(mktemp)"; trap 'rm -f "$receipt"' EXIT
 python3 - "$record" "$receipt" <<'PY'
 import json, sys, yaml

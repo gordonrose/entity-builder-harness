@@ -4,7 +4,7 @@ id: deploy.standards.provider-async-conditions
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.target-alignment
 disciplines:
@@ -19,7 +19,7 @@ portability:
   - entity-builder
 used_by:
 - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
-  path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/cost-control.yml
+  path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/cost-control.yml
 -->
 # Provider Asynchronous Conditions
 

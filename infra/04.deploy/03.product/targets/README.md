@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.readme
 version: 4
 status: active
 created_on: "2026-09-08"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: infra.observability
 disciplines:
@@ -30,7 +30,7 @@ settings into a second, drifting catalogue.
 | Target | Canonical policy | Current policy IDs | IaC implementation | Operator response |
 | --- | --- | --- | --- | --- |
 | Kanbien / staging | [target profile](kanbien/staging/target-profile.yml) | `alb-unhealthy-targets`, `alb-5xx-spike`, `ecs-running-count-mismatch`, `ecs-high-cpu`, `ecs-high-memory` | [foundation alerting](kanbien/staging/cloudformation/foundation/alerting.yml) and [service alarms](kanbien/staging/cloudformation/service.yml) | [staging alarm runbook](../../../../docs/aws/runbooks/platform-shell-staging-alarms.md) |
-| Kanbien core platform / planned | [target profile](kanbien-core-platform/target-profile.yml) | None selected | Not created; E0 provider inspection remains required | Not yet applicable; no live target exists |
+| Kanbien core platform / planned | [target profile](kanbien-core-platform/00-target/target-profile.yml) | None selected | Not created; E0 provider inspection remains required | Not yet applicable; no live target exists |
 
 When a target is added, add one row linking its `target-profile.yml`, its
 implementation source, and its runbook. Keep the policy values only in that

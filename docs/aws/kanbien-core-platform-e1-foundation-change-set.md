@@ -4,7 +4,7 @@
   version: 1
   status: draft
   created_on: "2026-10-20"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-21"
   layer: 04.deploy
   domain: deployment.bootstrap-runtime
   disciplines:
@@ -176,7 +176,7 @@ USD 100 `Target=kanbien-core-platform` budget filter.
 The exact templates are at:
 
 ```text
-infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/
+infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/
   foundation.yml
   bootstrap-runtime.yml
 ```
