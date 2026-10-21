@@ -1,0 +1,59 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-21
+#   version: 1
+#   status: active
+#   created_on: "2026-10-21"
+#   updated_on: "2026-10-21"
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [security, sre]
+#   kind: workload-recovery-rehearsal-evidence
+#   purpose: Record safe proof that ECS replaced a deliberately stopped accepted bootstrap workload and a post-replacement private verifier accepted the retained immutable release.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+schema: deploy/workload-recovery-rehearsal-evidence/v1
+target: kanbien-core-platform
+scope: bootstrap-runtime
+status: accepted
+authority_reference: chat-2026-10-21-live-health-recovery-rehearsal-authorization
+cost_condition:
+  evidence: ../../../../10-foundation/evidence/target-cost-allocation-tag.yml
+  disposition: temporary-waiver-active-until-2026-10-22T12-00-00Z
+accepted_release:
+  source_revision: 1b56931d914d8f91162b30398967c150b1032e9b
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+  package_custody_reference: github-actions-run:39464882266
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  verifier_task_definition: kanbien-core-platform-release-verifier:11
+rehearsal:
+  method: controlled-stop-one-accepted-ecs-task
+  original_task_suffix: 7372dba91464
+  original_task_stopped_at: "2026-10-21T15:55:42Z"
+  stop_reason: governed-accepted-workload-replacement-rehearsal
+  replacement_task_suffix: 64fb3a80c
+  replacement_started_at: "2026-10-21T15:55:55Z"
+  provider_result: ecs-replaced-stopped-task-and-service-returned-to-steady-state
+final_workload:
+  service_status: ACTIVE
+  desired_count: 1
+  running_count: 1
+  rollout_state: COMPLETED
+  health_status: HEALTHY
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+fresh_private_verification:
+  verifier_task_suffix: d72ba4f83bb5
+  verifier_started_at: "2026-10-21T15:56:19Z"
+  verifier_completed_at: "2026-10-21T15:56:42Z"
+  exit_code: 0
+  verdict: accepted
+  code: KANBIEN_CORE_RELEASE_VERIFIED
+proof_boundary:
+  proven: ecs-replaces-a-deliberately-stopped-accepted-dependency-free-task-and-private-verification-remains-fresh
+  not_proven:
+    - deliberate-application-readiness-failure-detection
+    - ecs-deployment-circuit-breaker-rollback
+    - dependency-bearing-workload-recovery

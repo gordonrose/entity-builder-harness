@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -30,15 +30,16 @@ release:
   private_verification:
     verdict: accepted
     code: runtime-digest-and-private-verifier-accepted
-    verified_at: "2026-10-21T09:07:58Z"
-    evidence_reference: rehearsals/release-b-to-a-2026-10-21.yml
+    verified_at: "2026-10-21T15:56:42Z"
+    evidence_reference: rehearsals/accepted-workload-replacement-2026-10-21.yml
 acceptance:
   accepted_at: "2026-10-20T21:15:49Z"
   acceptance_checkpoint_commit: 8b9fbec76fd5d32aaa9ed11832b4f3cea3dded2a
   deployment_evidence_commit: 794a9c46
   retained_for_restoration: true
   last_restored_at: "2026-10-21T09:07:58Z"
-  last_rehearsal: rehearsals/release-b-to-a-2026-10-21.yml
+  last_rehearsal: rehearsals/accepted-workload-replacement-2026-10-21.yml
+  last_workload_recovery_rehearsal: rehearsals/accepted-workload-replacement-2026-10-21.yml
 cost_condition:
   condition_id: target-cost-allocation-tag-active
   provider_status: inactive

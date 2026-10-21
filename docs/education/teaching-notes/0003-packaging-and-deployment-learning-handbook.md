@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 23
+  version: 24
   status: active
   created_on: "2026-10-07"
   updated_on: "2026-10-21"
@@ -1983,11 +1983,16 @@ readiness check; a private verifier confirmed the selected immutable release;
 and a later release B was restored to accepted release A with a fresh private
 verification.
 
-That does not mean every recovery question is solved. The route has not yet
-deliberately made readiness fail in AWS, observed ECS replace an unhealthy task,
-or proved an automatic deployment rollback caused by a health failure. Those
-are facts about the current proof boundary, not failures to be silently filled
-in by a successful HTTP response.
+The route has also now deliberately stopped its one accepted ECS task. ECS
+scheduled a different healthy task with the same accepted immutable task
+definition and image, and a private verifier completed after that replacement.
+This proves bounded orchestrator replacement, not merely an HTTP response.
+
+That still does not mean every recovery question is solved. The route has not
+yet deliberately made application readiness fail in AWS or proved an automatic
+deployment rollback caused by a health failure. Those are facts about the
+current proof boundary, not failures to be silently filled in by a successful
+HTTP response or a controlled task stop.
 
 The important design rule is that this cannot become a special core-server
 patch. Every future runnable scope needs the same kinds of answers, even though

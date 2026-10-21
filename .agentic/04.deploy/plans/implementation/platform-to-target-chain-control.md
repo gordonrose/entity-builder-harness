@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 38
+version: 39
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-21"
@@ -37,7 +37,9 @@ under `docs/` are not execution authority.
 
 **Execution update (2026-10-21):** the narrow `kanbien-core-platform`
 bootstrap-runtime slice has now proved accepted release A, one qualified and
-privately verified B update, and restoration plus private verification of A.
+privately verified B update, restoration plus private verification of A, and
+ECS replacement of one deliberately stopped accepted task followed by a fresh
+private verification of A.
 The source of factual target state is its target declaration and rehearsal
 evidence; reusable instructions are the release-update/recovery workflows and
 executable controls. This plan remains a tracker for the broader scopes not
@@ -71,18 +73,19 @@ recreate a prior provisional layout from this plan.
 
 ### Next Slice Investigation
 
-The immediate next implementation package is a reusable **health, failure, and
-recovery declaration** capability. It comes before persistence so health and
-recovery are not added as a one-off correction for whichever dependency scope
-happens to be built next.
+The reusable **health, failure, and recovery declaration** capability is now
+implemented and its first live fixture is proven. It comes before persistence
+so health and recovery are not added as a one-off correction for whichever
+dependency scope happens to be built next.
 
 The bootstrap runtime is the first honest fixture for this capability. It has
 proved local liveness and readiness endpoints, ECS readiness health, private
-meaningful-operation verification, and a controlled B-to-A restoration of
-known immutable releases. It has **not** proved a deliberate live readiness
-failure, provider replacement of an unhealthy task, or automatic deployment
-rollback caused by a health failure. The release record and future contracts
-must retain that boundary rather than imply that those tests occurred.
+meaningful-operation verification, a controlled B-to-A restoration of known
+immutable releases, and ECS replacement of a deliberately stopped accepted
+task with fresh private verification. It has **not** proved a deliberate live
+application-readiness failure or automatic deployment rollback caused by a
+health failure. The release record and future contracts must retain that
+boundary rather than imply that those tests occurred.
 
 The reusable capability must require every runnable scope to declare:
 
@@ -105,10 +108,10 @@ workflow routing, deterministic validator and fixtures, then apply it to the
 bootstrap-runtime scope. It must not perform AWS fault injection or alter the
 running target without separate execution authority.
 
-Its bounded implementation packet is
-`health-failure-and-recovery-declaration.md`. Complete that packet before
-selecting the persistence provider; its validator becomes part of the normal
-scope and release route, rather than a retrospective core-server test.
+The completed bounded implementation packet is
+`health-failure-and-recovery-declaration.md`. Its validator and controlled
+replacement route are now part of the normal scope and release path rather
+than a retrospective core-server test.
 
 Only after this package is in place is the next candidate a small
 **application persistence** slice. Its

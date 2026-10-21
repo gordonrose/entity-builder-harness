@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -292,19 +292,41 @@ def check_accepted_release(root: Path) -> None:
     if not non_empty(rehearsal_path):
         raise DeclarationFailure("accepted-release-rehearsal-missing")
     rehearsal = mapping(evidence_root / rehearsal_path, "accepted-release-rehearsal-unreadable")
-    restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
-    restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
-    if (
-        rehearsal.get("schema") != "deploy/release-rehearsal-evidence/v1"
-        or rehearsal.get("target") != TARGET
-        or rehearsal.get("scope") != "bootstrap-runtime"
-        or rehearsal.get("status") != "restored-and-verified"
-        or restored.get("source_revision") != release.get("source_revision")
-        or restored.get("image_digest") != release.get("image_digest")
-        or restored.get("runtime_task_definition") != release.get("runtime_task_definition")
-        or restored.get("verifier_task_definition") != release.get("verifier_task_definition")
-        or restored_verification.get("code") != "runtime-digest-and-private-verifier-accepted"
-    ):
+    if rehearsal.get("schema") == "deploy/release-rehearsal-evidence/v1":
+        restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
+        restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
+        valid = (
+            rehearsal.get("target") == TARGET
+            and rehearsal.get("scope") == "bootstrap-runtime"
+            and rehearsal.get("status") == "restored-and-verified"
+            and restored.get("source_revision") == release.get("source_revision")
+            and restored.get("image_digest") == release.get("image_digest")
+            and restored.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and restored.get("verifier_task_definition") == release.get("verifier_task_definition")
+            and restored_verification.get("code") == "runtime-digest-and-private-verifier-accepted"
+        )
+    elif rehearsal.get("schema") == "deploy/workload-recovery-rehearsal-evidence/v1":
+        accepted = required_mapping(rehearsal, "accepted_release", "accepted-release-rehearsal-invalid")
+        final = required_mapping(rehearsal, "final_workload", "accepted-release-rehearsal-invalid")
+        verified = required_mapping(rehearsal, "fresh_private_verification", "accepted-release-rehearsal-invalid")
+        valid = (
+            rehearsal.get("target") == TARGET
+            and rehearsal.get("scope") == "bootstrap-runtime"
+            and rehearsal.get("status") == "accepted"
+            and accepted.get("source_revision") == release.get("source_revision")
+            and accepted.get("image_digest") == release.get("image_digest")
+            and accepted.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and accepted.get("verifier_task_definition") == release.get("verifier_task_definition")
+            and final.get("image_digest") == release.get("image_digest")
+            and final.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and final.get("health_status") == "HEALTHY"
+            and verified.get("exit_code") == 0
+            and verified.get("verdict") == "accepted"
+            and verified.get("code") == "KANBIEN_CORE_RELEASE_VERIFIED"
+        )
+    else:
+        valid = False
+    if not valid:
         raise DeclarationFailure("accepted-release-rehearsal-invalid")
 
 

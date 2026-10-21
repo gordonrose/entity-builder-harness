@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-health-failure-and-recovery-declaration.implementation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-21"
 #   updated_on: "2026-10-21"
@@ -10,7 +10,7 @@
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
 #   kind: script
-#   purpose: Fail closed when an embedded scope health, safe-failure, recovery, or proof declaration is missing or unsafe.
+#   purpose: Fail closed when an embedded scope health, safe-failure, recovery, or proof declaration is missing, unsafe, or refers to absent passed evidence.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only]
 #   used_by:
@@ -95,7 +95,7 @@ def check_proof(value: Any, name: str, codes: list[str]) -> None:
                 codes.append(f"proof-live-recovery-{field}-missing")
 
 
-def validate(contract: dict[str, Any]) -> list[str]:
+def validate(contract: dict[str, Any], source_path: Path | None = None) -> list[str]:
     codes: list[str] = []
     declaration = mapping(contract.get("health_recovery"), "health-recovery-declaration-missing", codes)
     if declaration is None:
@@ -176,6 +176,10 @@ def validate(contract: dict[str, Any]) -> list[str]:
         check_proof(proof.get("local"), "local", codes)
         check_proof(proof.get("package"), "package", codes)
         check_proof(proof.get("live_recovery"), "live_recovery", codes)
+        live = proof.get("live_recovery")
+        if source_path is not None and isinstance(live, dict) and live.get("status") == "passed" and safe_path(live.get("evidence_reference")):
+            if not (source_path.parent / live["evidence_reference"]).is_file():
+                codes.append("proof-live-recovery-evidence-not-found")
     return list(dict.fromkeys(codes))
 
 
@@ -195,7 +199,7 @@ def main() -> int:
         try:
             contract = load_contract(args.scope_contract)
             contract_id = contract.get("id") if isinstance(contract.get("id"), str) else None
-            codes = validate(contract)
+            codes = validate(contract, args.scope_contract)
         except ValueError as error:
             contract_id = None
             codes = [str(error)]

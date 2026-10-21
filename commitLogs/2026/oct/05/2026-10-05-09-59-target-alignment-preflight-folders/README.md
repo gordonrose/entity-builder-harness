@@ -109,6 +109,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Generic harness migration ADR was missing before the first active generic move
   Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
 
+
+- Raised: Controlled replacement command returned no terminal report despite completing AWS actions
+  Resolution: Safe AWS inspection proved the original accepted task stopped at 15:55:42Z, ECS started and stabilised a healthy replacement at 15:55:55Z, and a fresh verifier completed successfully at 15:56:42Z. The outcome is recorded from provider facts; do not repeat the stop action.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -303,6 +307,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt controlled accepted-task replacement rehearsal
   Rationale: The fixed 60-run command validates the accepted baseline, target alignment and active cost exception; with --execute it stops only the one accepted task, proves same-definition ECS replacement, and demands post-stop private verification. It does not claim readiness-detector or circuit-breaker proof.
 
+
+- Decision: Accept live ECS replacement evidence with explicit proof boundary
+  Rationale: The bootstrap runtime now has passed live workload-recovery evidence. It proves ECS replacement of a deliberately stopped accepted dependency-free task and fresh private verification; it does not claim application-readiness-failure detection, circuit-breaker rollback, or dependency-bearing recovery.
+
 ## Context Hygiene
 
 
@@ -457,6 +465,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Current rehearsal control requires a fresh verifier boundary and does not mutate image, task definition, service configuration, network or IAM.
   Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+
+
+- Summary: Live target final state: one healthy replacement task on task definition :10 and digest sha256:0992…d5d5d5; verifier exited 0 with KANBIEN_CORE_RELEASE_VERIFIED.
+  Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
 
 ## Activity Log
 
@@ -1860,6 +1872,27 @@ Message: feat(aws): rehearse accepted workload replacement
 Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
 
 ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
+
+
+### 2026-10-21T16:02:45Z - Issue
+
+Raised: Controlled replacement command returned no terminal report despite completing AWS actions
+
+Resolution: Safe AWS inspection proved the original accepted task stopped at 15:55:42Z, ECS started and stabilised a healthy replacement at 15:55:55Z, and a fresh verifier completed successfully at 15:56:42Z. The outcome is recorded from provider facts; do not repeat the stop action.
+
+
+### 2026-10-21T16:02:45Z - Decision
+
+Decision: Accept live ECS replacement evidence with explicit proof boundary
+
+Rationale: The bootstrap runtime now has passed live workload-recovery evidence. It proves ECS replacement of a deliberately stopped accepted dependency-free task and fresh private verification; it does not claim application-readiness-failure detection, circuit-breaker rollback, or dependency-bearing recovery.
+
+
+### 2026-10-21T16:02:45Z - Context hygiene
+
+Summary: Live target final state: one healthy replacement task on task definition :10 and digest sha256:0992…d5d5d5; verifier exited 0 with KANBIEN_CORE_RELEASE_VERIFIED.
+
+Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
 
 ## Sub-Agent Activity
 

@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-health-failure-and-recovery-declaration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-21"
 #   updated_on: "2026-10-21"
@@ -31,9 +31,13 @@ expect() {
 }
 "$CHECK" --scope-contract "$CONTRACT" --json | grep -q '"verdict": "passed"'
 cp "$CONTRACT" "$fixture"
+expect proof-live-recovery-evidence-not-found
+cp "$CONTRACT" "$fixture"
 sed -i 's|path: /readyz|path: /livez|' "$fixture"
 expect liveness-and-readiness-not-distinct
 cp "$CONTRACT" "$fixture"
+sed -i 's/status: passed/status: deferred/' "$fixture"
+sed -i 's|      evidence_reference: .*|      reason: live-rehearsal-pending\n      owner: platform-runtime\n      follow_up: perform-approved-live-rehearsal\n      review_before: accepting-a-dependency-bearing-scope|' "$fixture"
 sed -i '/      owner: platform-runtime/d' "$fixture"
 expect proof-live-recovery-owner-missing
 cp "$CONTRACT" "$fixture"
