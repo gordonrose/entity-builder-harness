@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T09:22:03Z
-latest_commit_sha: 3fcc0180
-chat_duration: 1383754s (16:00:22:34)
+latest_commit_at_utc: 2026-10-21T11:34:39Z
+latest_commit_sha: b10fc32f
+chat_duration: 1391710s (16:02:35:10)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1553,6 +1553,17 @@ Decision: Adopt placement-before-creation governance
 
 Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
 
+
+### 2026-10-21T11:34:39Z - Commit recorded
+
+Commit: `b10fc32f`
+
+Message: feat(deploy): govern artifact placement and naming
+
+Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
+
+ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1833,6 +1844,13 @@ Rationale: Future deployment artifacts must choose infra, agentic, or scripts ow
   Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
   ADR impact: No ADR: this strengthens the existing governed release-verification control.
 
+
+- Commit: `b10fc32f`
+  Time UTC: 2026-10-21T11:34:39Z
+  Message: feat(deploy): govern artifact placement and naming
+  Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
+  ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1846,9 +1864,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T09:22:03Z
-Latest commit SHA: 3fcc0180
-Chat duration: 1383754s (16:00:22:34)
+Latest commit at UTC: 2026-10-21T11:34:39Z
+Latest commit SHA: b10fc32f
+Chat duration: 1391710s (16:02:35:10)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
