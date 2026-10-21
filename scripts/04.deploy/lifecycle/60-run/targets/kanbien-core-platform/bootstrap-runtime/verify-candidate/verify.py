@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.verify-runtime-release
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -10,7 +10,7 @@
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Verify the deployed immutable runtime through one fixed private release verifier, reusing its fresh completed evidence rather than launching a duplicate task.
+#   purpose: Verify the deployed immutable runtime through one fixed private release verifier, optionally requiring evidence created after a supplied safe time boundary.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.verify-candidate.wrapper
@@ -71,8 +71,9 @@ def task_exited_successfully(task):
  containers=task.get("containers",[]) if isinstance(task,dict) else []
  return bool(containers) and containers[0].get("exitCode") == 0
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--json",action="store_true");a,u=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--not-before");p.add_argument("--json",action="store_true");a,u=p.parse_known_args()
  if u or a.receipt is None:out("blocked","private-verification-arguments-invalid");return 1
+ if a.not_before is not None and timestamp(a.not_before) is None:out("blocked","private-verification-not-before-invalid");return 1
  c=candidate(a.receipt)
  if not c:out("blocked","package-custody-receipt-invalid");return 1
  ok, stack, code=aws("cloudformation","describe-stacks","--stack-name",RUNTIME)
@@ -103,7 +104,10 @@ def main():
   ok, described, code=aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*existing_arns)
   if not ok: out("blocked",code);return 1
   existing=described.get("tasks",[])
- prior=completed_verifier_after(existing, verifier, runtime_stack.get("LastUpdatedTime"))
+ # A caller may require evidence produced after a controlled recovery action.
+ # Otherwise the stack update time remains the safe reuse boundary.
+ reuse_boundary=a.not_before or runtime_stack.get("LastUpdatedTime")
+ prior=completed_verifier_after(existing, verifier, reuse_boundary)
  if prior:
   if not task_exited_successfully(prior): out("blocked","private-release-verification-failed");return 1
   accepted, code=verifier_log_accepts(prior)

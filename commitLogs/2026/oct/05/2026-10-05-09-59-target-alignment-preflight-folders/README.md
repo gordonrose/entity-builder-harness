@@ -299,6 +299,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Goal-authorized bounded live health/recovery rehearsal starts by committing the reusable health/failure/recovery declaration capability. The live exercise must prove final accepted immutable release health and private verification, and stops on identity, permission, cost, alignment, uncertainty, or wider-impact risk.
   Rationale: Goal objective in this chat; .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md; .agentic/04.deploy/60-run/.
 
+
+- Decision: Adopt controlled accepted-task replacement rehearsal
+  Rationale: The fixed 60-run command validates the accepted baseline, target alignment and active cost exception; with --execute it stops only the one accepted task, proves same-definition ECS replacement, and demands post-stop private verification. It does not claim readiness-detector or circuit-breaker proof.
+
 ## Context Hygiene
 
 
@@ -449,6 +453,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: The reusable health/failure/recovery package is implemented locally and has passed its validator, core declaration/release route regressions, package custody check, platform-server check, placement, metadata, and diff checks. It is not yet committed; a generated Python cache was removed.
   Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
+
+
+- Summary: Current rehearsal control requires a fresh verifier boundary and does not mutate image, task definition, service configuration, network or IAM.
+  Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
 
 ## Activity Log
 
@@ -1827,6 +1835,20 @@ Message: feat(deploy): require declared health recovery
 Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
 
 ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
+
+
+### 2026-10-21T15:52:15Z - Decision
+
+Decision: Adopt controlled accepted-task replacement rehearsal
+
+Rationale: The fixed 60-run command validates the accepted baseline, target alignment and active cost exception; with --execute it stops only the one accepted task, proves same-definition ECS replacement, and demands post-stop private verification. It does not claim readiness-detector or circuit-breaker proof.
+
+
+### 2026-10-21T15:52:15Z - Context hygiene
+
+Summary: Current rehearsal control requires a fresh verifier boundary and does not mutate image, task definition, service configuration, network or IAM.
+
+Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
 
 ## Sub-Agent Activity
 

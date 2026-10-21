@@ -55,6 +55,7 @@ expect_selector_rejected() {
 expect_failure RUNTIME_ALIGNMENT_RECEIPT_REQUIRED "$PREPARE" --json
 expect_failure package-custody-receipt-invalid "$DEPLOY" --receipt /tmp/missing-core-receipt.json --operation update --approved-change-set kanbien-core-platform-update-aaaaaaaaaaaa --json
 expect_failure package-custody-receipt-invalid "$VERIFY" --receipt /tmp/missing-core-receipt.json --json
+expect_failure private-verification-not-before-invalid "$VERIFY" --receipt /tmp/missing-core-receipt.json --not-before not-a-time --json
 expect_failure package-custody-receipt-invalid "$ACCEPT" --receipt /tmp/missing-core-receipt.json --verification-report /tmp/missing-verification-report.json --json
 expect_failure RESTORE_CHANGE_SET_NOT_APPROVED "$RESTORE" --approved-change-set kanbien-core-platform-restore-aaaaaaaaaaaa --json
 expect_selector_rejected "$PREPARE"
@@ -62,6 +63,7 @@ expect_selector_rejected "$DEPLOY"
 expect_selector_rejected "$VERIFY"
 "$RELEASE_CONTRACT" --json | grep -q '"verdict": "passed"'
 bash "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh"
+bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh"
 
 accepted_receipt="$(mktemp)"; accepted_verification="$(mktemp)"; trap 'rm -f "$accepted_receipt" "$accepted_verification"' EXIT
 python3 - "$accepted_receipt" "$accepted_verification" <<'PY'
