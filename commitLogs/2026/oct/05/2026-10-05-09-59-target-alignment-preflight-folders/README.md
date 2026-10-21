@@ -291,6 +291,14 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Keep package custody with the package phase
   Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
 
+
+- Decision: Implemented the reusable health, failure, and recovery declaration capability before persistence. The core bootstrap scope is its first fixture; local/package proof is passed and the unperformed live fault/replacement rehearsal is explicitly deferred with ownership and review boundary.
+  Rationale: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md and .agentic/04.deploy/60-run/ now govern the reusable requirement; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/ enforces it; the core target/release checks invoke it.
+
+
+- Decision: Goal-authorized bounded live health/recovery rehearsal starts by committing the reusable health/failure/recovery declaration capability. The live exercise must prove final accepted immutable release health and private verification, and stops on identity, permission, cost, alignment, uncertainty, or wider-impact risk.
+  Rationale: Goal objective in this chat; .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md; .agentic/04.deploy/60-run/.
+
 ## Context Hygiene
 
 
@@ -437,6 +445,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: The proven core bootstrap route is active and has normal health, private verification, immutable update, and B-to-A restoration evidence; it has not yet exercised deliberate live health failure, ECS unhealthy-task replacement, or automatic health-triggered rollback. The next package is a reusable health/failure/recovery contract before persistence.
   Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
+
+
+- Summary: The reusable health/failure/recovery package is implemented locally and has passed its validator, core declaration/release route regressions, package custody check, platform-server check, placement, metadata, and diff checks. It is not yet committed; a generated Python cache was removed.
+  Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
 
 ## Activity Log
 
@@ -1783,6 +1795,27 @@ Message: docs(deploy): record proven core release route
 Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
 
 ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
+
+
+### 2026-10-21T15:13:38Z - Decision
+
+Decision: Implemented the reusable health, failure, and recovery declaration capability before persistence. The core bootstrap scope is its first fixture; local/package proof is passed and the unperformed live fault/replacement rehearsal is explicitly deferred with ownership and review boundary.
+
+Rationale: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md and .agentic/04.deploy/60-run/ now govern the reusable requirement; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/ enforces it; the core target/release checks invoke it.
+
+
+### 2026-10-21T15:35:35Z - Decision
+
+Decision: Goal-authorized bounded live health/recovery rehearsal starts by committing the reusable health/failure/recovery declaration capability. The live exercise must prove final accepted immutable release health and private verification, and stops on identity, permission, cost, alignment, uncertainty, or wider-impact risk.
+
+Rationale: Goal objective in this chat; .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md; .agentic/04.deploy/60-run/.
+
+
+### 2026-10-21T15:35:35Z - Context hygiene
+
+Summary: The reusable health/failure/recovery package is implemented locally and has passed its validator, core declaration/release route regressions, package custody check, platform-server check, placement, metadata, and diff checks. It is not yet committed; a generated Python cache was removed.
+
+Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
 
 ## Sub-Agent Activity
 

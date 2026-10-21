@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.workflow.platform-runtime-implementation
-version: 2
+version: 3
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -53,6 +53,8 @@ execution remain governed by `.agentic/aws/` workflows.
 - The app-facing contract or dummy-app behavior being proven.
 - The local checks that prove the slice.
 - Any deployment-facing metadata produced by the slice.
+- The liveness, readiness, dependency-failure, and recovery behaviour affected
+  by the slice, if it can become a runnable deployment scope.
 
 ## Required First Move
 
@@ -146,7 +148,9 @@ Minimum expected checks by surface:
   importing app internals or target-specific deploy values.
 - Deployment-facing target profiles/manifests/config: schema or static
   validation, target profile validation, and local runtime smoke that consumes
-  the metadata.
+  the metadata. A new or changed runnable scope must also update and validate
+  its embedded health, failure, and recovery declaration under
+  `.agentic/04.deploy/60-run/`.
 
 If the required check does not exist yet, add the smallest governed check or
 record an explicit gap before treating the slice as complete.
@@ -163,6 +167,9 @@ Stop before editing or executing if:
 - Platform code would need to import app internals.
 - App internal structure would become part of a platform contract.
 - A check needed to prove the slice is missing and no gap has been recorded.
+- A runnable scope changes liveness, readiness, required dependency behaviour,
+  or recovery semantics without its canonical scope declaration and the
+  deterministic health/failure/recovery validation being updated.
 - Provider-specific issuer construction, claim names, environment keys, or
   adapter imports would land in `platform/security/**` or `platform/server/**`
   instead of a provider adapter and approved target composition root.

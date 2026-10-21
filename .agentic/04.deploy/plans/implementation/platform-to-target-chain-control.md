@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 37
+version: 38
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-21"
@@ -104,6 +104,11 @@ package should create only that minimal reusable standard, schema/template,
 workflow routing, deterministic validator and fixtures, then apply it to the
 bootstrap-runtime scope. It must not perform AWS fault injection or alter the
 running target without separate execution authority.
+
+Its bounded implementation packet is
+`health-failure-and-recovery-declaration.md`. Complete that packet before
+selecting the persistence provider; its validator becomes part of the normal
+scope and release route, rather than a retrospective core-server test.
 
 Only after this package is in place is the next candidate a small
 **application persistence** slice. Its

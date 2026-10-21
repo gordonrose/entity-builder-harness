@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 2
+version: 3
 status: active
 created_on: "2026-10-21"
 updated_on: "2026-10-21"
@@ -27,30 +27,36 @@ and the selected provider workflow for concrete commands and authority.
 
 ## Verify and Accept
 
-1. Confirm rollout and workload health before running the declared meaningful
+1. Validate the scope's health, failure, and recovery declaration through
+   `verify-health-failure-and-recovery.md`. Stop when its structure, safe
+   diagnostics, proof ownership, or recovery boundary is incomplete.
+2. Confirm rollout and workload health before running the declared meaningful
    operation verifier. Use the deployed candidate's receipt.
-2. Require the workload digest, application source identity and receipt to
+3. Require the workload digest, application source identity and receipt to
    agree. Process health alone is insufficient. Retain the safe report.
-3. For a normal accepted update, check acceptance readiness, then record it
+4. For a normal accepted update, check acceptance readiness, then record it
    under repository write authority. Retain prior release evidence for recovery;
    the image source revision is distinct from the evidence commit.
-4. For an approved update/restoration rehearsal, retain the original accepted
+5. For an approved update/restoration rehearsal, retain the original accepted
    baseline and record candidate proof separately. Continue with restoration;
    do not declare the candidate current after restoring the original release.
 
 ## Restore and Verify
 
-1. On rejected or unproved verification, keep the existing accepted baseline.
+1. Revalidate the scope's health, failure, and recovery declaration before
+   provider restoration steps; its immutable recovery rule must still match the
+   selected accepted baseline.
+2. On rejected or unproved verification, keep the existing accepted baseline.
    A failure alone does not authorize restoration.
-2. Select the retained immutable package and its receipt/evidence, preserving
+3. Select the retained immutable package and its receipt/evidence, preserving
    the original source revision. Do not rebuild earlier source or reuse the
    rejected candidate's receipt.
-3. Follow the provider's bounded restoration control for fresh alignment,
+4. Follow the provider's bounded restoration control for fresh alignment,
    condition checks and change review. Execute only under restoration authority.
-4. Privately verify the restored release. If the restoration wrapper includes
+5. Privately verify the restored release. If the restoration wrapper includes
    verification, observe that invocation's result; do not independently launch a
    second verifier because the wrapper's response was interrupted.
-5. Reconcile the accepted record with the actual restored workload identities
+6. Reconcile the accepted record with the actual restored workload identities
    and proof. Retain candidate and restoration evidence separately.
 
 ## Uncertain Results and Completion

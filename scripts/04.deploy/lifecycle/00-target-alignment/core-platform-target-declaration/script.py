@@ -2,8 +2,8 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 3
-#   status: draft
+#   version: 4
+#   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
 #   layer: 04.deploy
@@ -27,6 +27,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -230,6 +232,20 @@ def check_scope(root: Path) -> None:
     verification = required_mapping(contract, "verification", "scope-verification-missing")
     if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "accepted-baseline-private-verification-complete-and-required-after-every-mutation" or not non_empty(verification.get("owner")):
         raise DeclarationFailure("scope-verification-invalid")
+    validator = Path(__file__).resolve().parents[5] / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
+    health_check = subprocess.run(
+        [sys.executable, str(validator), "--scope-contract", str(scope_root / "00-declaration" / "declaration-contract.yml"), "--json"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if health_check.returncode != 0:
+        raise DeclarationFailure("health-recovery-declaration-invalid")
+    health_recovery = required_mapping(contract, "health_recovery", "health-recovery-declaration-invalid")
+    liveness = required_mapping(health_recovery, "liveness", "health-recovery-declaration-invalid")
+    readiness = required_mapping(health_recovery, "readiness", "health-recovery-declaration-invalid")
+    if liveness.get("path") != verification.get("liveness_path") or readiness.get("path") != verification.get("readiness_path"):
+        raise DeclarationFailure("health-recovery-verification-path-mismatch")
     dependencies = required_mapping(contract, "dependencies", "scope-dependencies-missing")
     if dependencies.get("required") != [] or dependencies.get("optional") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
         raise DeclarationFailure("scope-dependencies-invalid")

@@ -1,0 +1,57 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.template.health-failure-and-recovery-declaration.v1
+#   version: 1
+#   status: active
+#   created_on: "2026-10-21"
+#   updated_on: "2026-10-21"
+#   layer: 04.deploy
+#   domain: deployment.runtime-safety
+#   disciplines: [agentic, security, sre]
+#   kind: template
+#   purpose: Provide the embedded scope declaration shape for health, safe failure, recovery, and proof.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.workflow.verify-health-failure-and-recovery
+#     path: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
+health_recovery:
+  declaration_schema: deploy/health-failure-and-recovery-declaration/v1
+  liveness:
+    path: /replace-with-liveness-path
+    expected_status: 200
+  readiness:
+    path: /replace-with-readiness-path
+    expected_status: 200
+    depends_on:
+      - replace-with-required-dependency-id
+  startup_failure:
+    invalid_required_configuration:
+      result: process-exits
+      diagnostic_code: CONFIGURATION_INVALID
+  dependency_failures:
+    - dependency: replace-with-required-dependency-id
+      unavailable:
+        result: not-ready
+        diagnostic_code: DEPENDENCY_UNAVAILABLE
+  automatic_workload_recovery:
+    owner: replace-with-orchestrator-owner
+    unhealthy_workload: replace
+    prohibited_automatic_actions:
+      - replay-uncertain-operation
+  release_recovery:
+    strategy: restore-prior-accepted-immutable-release
+    automatic_restore: prohibited
+    verification: repeat-declared-health-and-meaningful-operation
+  proof:
+    local:
+      status: planned
+      command: scripts/04.deploy/lifecycle/replace-with-local-proof/script.sh
+    package:
+      status: planned
+      command: scripts/04.deploy/lifecycle/replace-with-package-proof/script.sh
+    live_recovery:
+      status: deferred
+      reason: replace-with-safe-reason
+      owner: replace-with-owner
+      follow_up: replace-with-next-proof
+      review_before: replace-with-scope-acceptance-boundary

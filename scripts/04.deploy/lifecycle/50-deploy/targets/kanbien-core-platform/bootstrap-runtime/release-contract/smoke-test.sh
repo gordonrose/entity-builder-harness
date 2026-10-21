@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.release-contract
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -40,4 +40,6 @@ sed -i 's/- CMD$/- CMD-SHELL/' "$fixture/infra/04.deploy/03.product/targets/kanb
 expect workload-health-command-invalid sed -i 's/- CMD-SHELL$/- CMD/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
 sed -i 's/            - -e/            - node/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
 expect verifier-entrypoint-contract-invalid sed -i 's/            - node/            - -e/' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+sed -i 's|path: /readyz|path: /declared-but-not-workload-readyz|' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml"
+expect workload-health-command-invalid sed -i 's|path: /declared-but-not-workload-readyz|path: /readyz|' "$fixture/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml"
 echo 'Core-platform release-contract tests passed.'

@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -63,6 +63,42 @@ verification:
       - immutable-image-digest
       - expected-source-revision
       - private-release-verification-response
+health_recovery:
+  declaration_schema: deploy/health-recovery-declaration/v1
+  liveness:
+    path: /livez
+    expected_status: 200
+  readiness:
+    path: /readyz
+    expected_status: 200
+    depends_on: []
+  startup_failure:
+    invalid_required_configuration:
+      result: process-exits
+      diagnostic_code: CONFIGURATION_REQUIRED_SETTING_MISSING
+  dependency_failures: []
+  automatic_workload_recovery:
+    owner: aws-ecs-service
+    unhealthy_workload: replace
+    prohibited_automatic_actions:
+      - replay-uncertain-operation
+  release_recovery:
+    strategy: restore-prior-accepted-immutable-release
+    automatic_restore: prohibited
+    verification: repeat-declared-health-and-meaningful-operation
+  proof:
+    local:
+      status: passed
+      command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+    package:
+      status: passed
+      command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+    live_recovery:
+      status: deferred
+      reason: live-readiness-failure-and-orchestrator-replacement-not-yet-rehearsed
+      owner: platform-runtime
+      follow_up: run-approved-live-health-failure-and-recovery-rehearsal
+      review_before: accepting-a-required-runtime-dependency-scope
 dependencies:
   required: []
   optional: []
