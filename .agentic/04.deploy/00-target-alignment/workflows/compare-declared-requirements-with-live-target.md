@@ -4,7 +4,7 @@ id: deploy.workflow.target-alignment-preflight
 version: 2
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.target-alignment
 disciplines:
@@ -19,11 +19,11 @@ portability:
   - entity-builder
 used_by:
 - id: deploy.standards.target-alignment-preflight
-  path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
 - id: deploy.plan.migration.aws-provider-neutral-transition
   path: .agentic/04.deploy/plans/migration/aws-provider-neutral-transition.md
 -->
-# Target Alignment Preflight
+# Compare Declared Requirements With Live Target
 
 ## Use When
 

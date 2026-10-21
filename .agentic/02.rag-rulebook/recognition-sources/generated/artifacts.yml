@@ -8338,6 +8338,30 @@ terms:
   canonical_id: platform.adapters.readme
   evidence_path: platform/adapters/README.md
   confidence_weight: 1
+- term: deploy.standards.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
+  confidence_weight: 1
+- term: deploy.workflow.target-alignment-preflight
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.target-alignment-preflight
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
   match_type: exact
@@ -8692,18 +8716,6 @@ terms:
   canonical_id: deploy.standards.safe-command-diagnostics
   evidence_path: .agentic/04.deploy/standards/safe-command-diagnostics.md
   confidence_weight: 1
-- term: deploy.standards.target-alignment-preflight
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.standards.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/standards/target-alignment-preflight.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.standards.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/standards/target-alignment-preflight.md
-  confidence_weight: 1
 - term: deploy.workflows.readme
   category: artifact-id
   match_type: exact
@@ -8763,18 +8775,6 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.runnable-program-candidates
   evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: deploy.workflow.target-alignment-preflight
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
 - term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   category: artifact-id

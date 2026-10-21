@@ -271,6 +271,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Keep one AWS release workflow while making lifecycle sections explicit
   Rationale: The AWS bootstrap-runtime procedure is one coherent release route, so splitting it would duplicate operational authority. It now lives at the planned target-and-scope deploy path and explicitly separates preconditions, 50-deploy update, 60-run verification, and 60-run restoration.
 
+
+- Decision: Move reusable target-alignment authority without creating empty schema artifacts
+  Rationale: The generic target-alignment workflow and standard now live in 00-target-alignment with names that say what they do. They remain singular reusable authority. The canonical layout's alignment schema is intentionally deferred because no such contract schema currently exists; creating one without a real consumer would create false governance.
+
 ## Context Hygiene
 
 
@@ -401,6 +405,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Batch 3 AWS workflow migration verification
   Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
+
+
+- Summary: Batch 4 generic target-alignment migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Both reusable alignment artifacts moved to lifecycle-first clear-action paths; declaration coverage, implementation-plan metadata, and script README consumers were updated. Generated recognition sources, both path-migration checks, metadata, and migration-helper smoke passed. No provider mutation occurred.
 
 ## Activity Log
 
@@ -1629,6 +1637,20 @@ Message: refactor(deploy): route core AWS workflow by lifecycle
 Summary: Completed migration batch 3: rehomed the single AWS bootstrap-runtime release workflow to the lifecycle-first target/scope route, clarified deploy, verification, and restoration sections, updated consumers and generated recognition sources, and passed required metadata, path, target, package, release, and helper-smoke gates. No cloud or GitHub state changed.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:55:24Z - Decision
+
+Decision: Move reusable target-alignment authority without creating empty schema artifacts
+
+Rationale: The generic target-alignment workflow and standard now live in 00-target-alignment with names that say what they do. They remain singular reusable authority. The canonical layout's alignment schema is intentionally deferred because no such contract schema currently exists; creating one without a real consumer would create false governance.
+
+
+### 2026-10-21T11:55:25Z - Context hygiene
+
+Summary: Batch 4 generic target-alignment migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Both reusable alignment artifacts moved to lifecycle-first clear-action paths; declaration coverage, implementation-plan metadata, and script README consumers were updated. Generated recognition sources, both path-migration checks, metadata, and migration-helper smoke passed. No provider mutation occurred.
 
 ## Sub-Agent Activity
 

@@ -23,7 +23,7 @@ used_by:
 - id: deploy.standards.declaration-coverage
   path: .agentic/04.deploy/standards/declaration-coverage.md
 - id: deploy.standards.target-alignment-preflight
-  path: .agentic/04.deploy/standards/target-alignment-preflight.md
+  path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
 -->
 # Platform-to-Target Chain Control Plan
 

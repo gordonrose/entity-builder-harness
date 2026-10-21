@@ -4,7 +4,7 @@ id: deploy.standards.target-alignment-preflight
 version: 1
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.target-alignment
 disciplines:
@@ -20,11 +20,11 @@ portability:
   - entity-builder
 used_by:
 - id: deploy.workflow.target-alignment-preflight
-  path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
 - id: deploy.script.target-alignment-preflight.readme
   path: scripts/04.deploy/lifecycle/00-target-alignment/target-alignment-preflight/README.md
 -->
-# Target Alignment Preflight Standard
+# Require Fresh, Safe Target Evidence
 
 ## Purpose
 

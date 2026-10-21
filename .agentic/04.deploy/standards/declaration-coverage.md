@@ -4,7 +4,7 @@ id: deploy.standards.declaration-coverage
 version: 1
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -22,7 +22,7 @@ used_by:
 - id: deploy.workflow.declaration-coverage
   path: .agentic/04.deploy/workflows/declaration-coverage.md
 - id: deploy.workflow.target-alignment-preflight
-  path: .agentic/04.deploy/workflows/target-alignment-preflight.md
+  path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
 - id: deploy.schema.declaration-contract.v1
   path: .agentic/04.deploy/schemas/declaration-contract.v1.schema.yml
 -->

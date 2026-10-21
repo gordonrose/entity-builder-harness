@@ -484,6 +484,12 @@ terms:
   canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
   evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
   confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.compare-declared-requirements-with-live-target
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/declaration-coverage.md
   category: workflow-name
   match_type: exact
@@ -507,12 +513,6 @@ terms:
   match_type: exact
   canonical_id: 04.deploy.workflow.runnable-program-candidates
   evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/target-alignment-preflight.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
@@ -676,6 +676,12 @@ terms:
   canonical_id: 00.chat.workflow.chat-upstream-reusable-lesson
   evidence_path: .agentic/00.chat/workflows/chat-upstream-reusable-lesson.md
   confidence_weight: 1
+- term: compare-declared-requirements-with-live-target.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.compare-declared-requirements-with-live-target
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
 - term: continue-rulebook.workflow.md
   category: workflow-name
   match_type: exact
@@ -837,12 +843,6 @@ terms:
   match_type: exact
   canonical_id: 04.deploy.workflow.runnable-program-candidates
   evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: target-alignment-preflight.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.target-alignment-preflight
-  evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
 - term: untrusted-input-and-bounded-agent-safety.md
   category: workflow-name
