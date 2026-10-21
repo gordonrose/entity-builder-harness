@@ -325,6 +325,9 @@ target remain independent of this repository-only path migration.
 
 ## ADR Disposition
 
-No new ADR is required for this first planning artifact. The later approved
-canonical provider-neutral layout and any public compatibility promise will
-require an ADR before the first active generic harness move.
+[ADR 0037: Use Lifecycle-First Deployment Authority Paths](../../../../docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md)
+accepts the canonical provider-neutral layout. It is the authority for the
+remaining generic-harness moves and records the corrective disposition for the
+first generic target-alignment move, which occurred before this required ADR
+was recorded. No public compatibility promise was made and no provider state
+changed during that move.

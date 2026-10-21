@@ -105,6 +105,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: A terminally interrupted restoration command could cause an agent to launch a second private verifier task despite the first verifier having already accepted.
   Resolution: The verifier now reuses only current-deployment completed evidence with a successful exit and safe acceptance log; otherwise it blocks. The rehearsal evidence records the incident and remediation.
 
+
+- Raised: Generic harness migration ADR was missing before the first active generic move
+  Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -274,6 +278,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Move reusable target-alignment authority without creating empty schema artifacts
   Rationale: The generic target-alignment workflow and standard now live in 00-target-alignment with names that say what they do. They remain singular reusable authority. The canonical layout's alignment schema is intentionally deferred because no such contract schema currently exists; creating one without a real consumer would create false governance.
+
+
+- Decision: Adopt lifecycle-first deployment authority paths
+  Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
 
 ## Context Hygiene
 
@@ -1662,6 +1670,20 @@ Message: refactor(deploy): clarify target alignment harness
 Summary: Completed migration batch 4: moved reusable target-alignment workflow and standard into lifecycle-first clear-action paths, updated active consumers and generated recognition sources, passed both migration checks and required commit gates, and deliberately deferred a nonexistent alignment schema. No cloud or GitHub state changed.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:58:51Z - Issue
+
+Raised: Generic harness migration ADR was missing before the first active generic move
+
+Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
+
+
+### 2026-10-21T11:58:51Z - Decision
+
+Decision: Adopt lifecycle-first deployment authority paths
+
+Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
 
 ## Sub-Agent Activity
 
