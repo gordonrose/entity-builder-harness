@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 33
+version: 34
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -34,6 +34,14 @@ move, deploy, or inspect a cloud target. Each phase requires separate approval
 after its detailed design has been reviewed. An approved target-specific packet
 must live under `.agentic/04.deploy/plans/execution/`; explanatory documents
 under `docs/` are not execution authority.
+
+**Execution update (2026-10-21):** the narrow `kanbien-core-platform`
+bootstrap-runtime slice has now proved accepted release A, one qualified and
+privately verified B update, and restoration plus private verification of A.
+The source of factual target state is its target declaration and rehearsal
+evidence; reusable instructions are the release-update/recovery workflows and
+executable controls. This plan remains a tracker for the broader scopes not
+yet implemented.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:

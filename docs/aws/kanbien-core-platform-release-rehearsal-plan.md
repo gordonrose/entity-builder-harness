@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: aws.plan.kanbien-core-platform-release-rehearsal
-  version: 2
-  status: draft
+  version: 3
+  status: active
   created_on: "2026-10-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-21"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -12,7 +12,7 @@
   - security
   - sre
   kind: deployment-change-plan
-  purpose: Define the review-only, bounded rehearsal that creates an isolated Kanbien core platform target, proves release A, then proves one safe update to release B.
+  purpose: Preserve the bounded rehearsal design and point to evidence that Release B was verified then restored to accepted Release A.
   portability:
     class: internal
     targets: []
@@ -42,6 +42,16 @@ images, candidate releases, and safe evidence remain under `.agentic`. This
 document is deliberately target-specific: it explains the proposed rehearsal
 for `kanbien-core-platform` and must not become a generic instruction source.
 
+### Execution disposition — 2026-10-21
+
+The bounded rehearsal has completed. The target was created as accepted release
+A; qualified release B was published, deployed, and privately verified; then A
+was deliberately restored and privately verified again. B was **not** accepted
+as the ongoing baseline. The authoritative live record is
+`infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml`;
+the separately retained rehearsal evidence is in its `rehearsals/` folder.
+Future changes use the routed harness workflows, not this historical plan.
+
 ## Objective
 
 Prove that the repository can safely complete one real image-update cycle for
@@ -53,7 +63,7 @@ absent target
   → retain A as the accepted rollback baseline
   → build one harmless release B update
   → deploy and verify B
-  → record safe evidence that B, rather than A, is running
+  → restore and verify retained A
 ```
 
 The rehearsal succeeds only when the same immutable image digest is locally
@@ -345,12 +355,12 @@ delete resources, or improvise a recovery path.
 
 ## Completion and handoff
 
-The rehearsal is complete only if B is accepted and the receipt proves the
-three-way identity match. The handoff records the accepted B digest, retained A
-rollback digest, target/stack identifiers, safe receipt references, known
-deferred concerns, cost/ownership review, and any work needed before the next
-scope—persistence, security, fuller observability, or product capability—is
-started.
+The rehearsal is complete when B is verified and the target is restored to A,
+with receipts proving the three-way identity match in both directions. The
+handoff records B’s qualified digest, the retained and restored A digest,
+target/stack identifiers, safe receipt references, known deferred concerns,
+cost/ownership review, and any work needed before the next scope—persistence,
+security, fuller observability, or product capability—is started.
 
 Otherwise it stops in its last safe state and reports the failed gate, safe
 evidence reference, and bounded next decision. It does not claim the target

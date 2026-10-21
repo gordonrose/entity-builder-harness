@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-version: 2
+version: 3
 status: draft
 created_on: "2026-10-20"
 updated_on: "2026-10-21"
@@ -36,7 +36,9 @@ Required sequence:
 4. Create a fixed UPDATE change set and review its task-definition/service-only
    resource boundary.
 5. Under explicit AWS authority, execute the exact approved change set.
-6. Run private verification using the same qualified receipt.
+6. Run private verification using the same qualified receipt. A repeated
+   verification command reuses only completed, accepted verifier evidence from
+   that runtime update; it must never create a duplicate verifier task.
 7. Record acceptance only after the verification report agrees with the receipt.
 8. On rejected candidate verification, use `restore-accepted-release` to
    prepare a reviewed restoration; execute only under explicit AWS authority,

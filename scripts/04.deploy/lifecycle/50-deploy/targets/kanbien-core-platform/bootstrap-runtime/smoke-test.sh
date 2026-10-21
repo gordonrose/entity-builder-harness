@@ -136,4 +136,23 @@ assert module.decoded_aws_response("") == {}
 assert module.decoded_aws_response('{"accepted": true}') == {"accepted": True}
 PY
 
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py" <<'PY'
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("verify_candidate", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+verifier = "arn:aws:ecs:eu-west-1:111122223333:task-definition/verifier:3"
+tasks = [
+    {"taskDefinitionArn": verifier, "stoppedAt": "2026-10-21T08:59:59Z", "taskArn": "arn:task/old"},
+    {"taskDefinitionArn": verifier, "stoppedAt": "2026-10-21T09:01:00Z", "taskArn": "arn:task/new"},
+]
+assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:00:00Z")["taskArn"] == "arn:task/new"
+assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:02:00Z") is None
+assert module.task_exited_successfully({"containers": [{"exitCode": 0}]})
+assert not module.task_exited_successfully({"containers": [{"exitCode": 1}]})
+PY
+
 echo "Fixed core-platform target control tests passed."

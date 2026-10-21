@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -24,19 +24,21 @@ release:
   image_repository: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
   runtime_stack: kanbien-core-platform-bootstrap-runtime
   service: kanbien-core-platform-bootstrap-runtime
-  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:8
-  verifier_task_definition: kanbien-core-platform-release-verifier:9
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  verifier_task_definition: kanbien-core-platform-release-verifier:11
   package_custody_reference: github-actions-run:39464882266
   private_verification:
     verdict: accepted
     code: runtime-digest-and-private-verifier-accepted
-    verified_at: "2026-10-20T21:15:49Z"
-    evidence_reference: commit-log:2026-10-05-target-alignment-preflight-folders
+    verified_at: "2026-10-21T09:07:58Z"
+    evidence_reference: rehearsals/release-b-to-a-2026-10-21.yml
 acceptance:
   accepted_at: "2026-10-20T21:15:49Z"
   acceptance_checkpoint_commit: 8b9fbec76fd5d32aaa9ed11832b4f3cea3dded2a
   deployment_evidence_commit: 794a9c46
   retained_for_restoration: true
+  last_restored_at: "2026-10-21T09:07:58Z"
+  last_rehearsal: rehearsals/release-b-to-a-2026-10-21.yml
 cost_condition:
   condition_id: target-cost-allocation-tag-active
   provider_status: inactive

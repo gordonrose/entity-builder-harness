@@ -4,7 +4,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 3
+#   version: 4
 #   status: draft
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -134,5 +134,18 @@ value["waiver"]["expires_at"] = "2026-10-23T12:00:00Z"
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
 expect_failure "cost-control-evidence-invalid" "$mismatched_evidence"
+
+missing_rehearsal="$(copy_fixture missing-rehearsal)"
+python3 - "$missing_rehearsal/scopes/bootstrap-runtime/accepted-release.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+path = Path(sys.argv[1])
+value = yaml.safe_load(path.read_text(encoding="utf-8"))
+value["acceptance"].pop("last_rehearsal")
+path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+PY
+expect_failure "accepted-release-rehearsal-missing" "$missing_rehearsal"
 
 echo "Core-platform target declaration tests passed."

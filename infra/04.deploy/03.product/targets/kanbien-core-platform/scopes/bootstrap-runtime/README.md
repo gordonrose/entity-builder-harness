@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.readme
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -38,3 +38,8 @@ accepts only the expected safe source revision response. `accepted-release.yml`
 records the retained immutable baseline. A candidate update cannot replace that
 record until private verification succeeds; restoration selects that exact
 retained digest rather than rebuilding old source.
+
+`rehearsals/` holds safe evidence for deliberate candidate-and-restoration
+exercises. A repeated verification command reuses a completed, accepted
+verifier task from the same runtime deployment; it does not start another
+task. An incomplete or rejected verifier task remains a blocker.

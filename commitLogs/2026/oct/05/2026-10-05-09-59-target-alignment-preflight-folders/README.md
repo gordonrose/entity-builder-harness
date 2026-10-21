@@ -101,6 +101,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change set.
   Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
 
+
+- Raised: A terminally interrupted restoration command could cause an agent to launch a second private verifier task despite the first verifier having already accepted.
+  Resolution: The verifier now reuses only current-deployment completed evidence with a successful exit and safe acceptance log; otherwise it blocks. The rehearsal evidence records the incident and remediation.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -251,6 +255,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Qualified Release B locally
   Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
 
+
+- Decision: Reconciled Release B rehearsal evidence with restored accepted Release A.
+  Rationale: B remains a verified rehearsal candidate, while the accepted-release record names A's actual restored runtime and verifier task definitions; the static declaration gate checks the link.
+
 ## Context Hygiene
 
 
@@ -365,6 +373,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Recorded the approved short-lived cost-control waiver as target-local evidence and made it an executable pre-mutation gate; generic validation now rejects expired waivers.
   Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
+
+
+- Summary: Release B publication run 39571727355 qualified digest sha256:721466…224ec2, deployed and privately verified. The target was restored to accepted A digest sha256:0992b…5d5d5 and private verification accepted.
+  Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
 
 ## Activity Log
 
@@ -1486,6 +1498,27 @@ Message: fix(deploy): accept proven AWS update change sets
 Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
 
 ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
+
+
+### 2026-10-21T09:19:42Z - Issue
+
+Raised: A terminally interrupted restoration command could cause an agent to launch a second private verifier task despite the first verifier having already accepted.
+
+Resolution: The verifier now reuses only current-deployment completed evidence with a successful exit and safe acceptance log; otherwise it blocks. The rehearsal evidence records the incident and remediation.
+
+
+### 2026-10-21T09:19:42Z - Decision
+
+Decision: Reconciled Release B rehearsal evidence with restored accepted Release A.
+
+Rationale: B remains a verified rehearsal candidate, while the accepted-release record names A's actual restored runtime and verifier task definitions; the static declaration gate checks the link.
+
+
+### 2026-10-21T09:19:42Z - Context hygiene
+
+Summary: Release B publication run 39571727355 qualified digest sha256:721466…224ec2, deployed and privately verified. The target was restored to accepted A digest sha256:0992b…5d5d5 and private verification accepted.
+
+Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
 
 ## Sub-Agent Activity
 

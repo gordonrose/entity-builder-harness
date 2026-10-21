@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -270,6 +270,24 @@ def check_accepted_release(root: Path) -> None:
         or not non_empty(cost_condition.get("disposition"))
     ):
         raise DeclarationFailure("accepted-release-invalid")
+    rehearsal_path = acceptance.get("last_rehearsal")
+    if not non_empty(rehearsal_path):
+        raise DeclarationFailure("accepted-release-rehearsal-missing")
+    rehearsal = mapping(root / "scopes" / "bootstrap-runtime" / rehearsal_path, "accepted-release-rehearsal-unreadable")
+    restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
+    restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
+    if (
+        rehearsal.get("schema") != "deploy/release-rehearsal-evidence/v1"
+        or rehearsal.get("target") != TARGET
+        or rehearsal.get("scope") != "bootstrap-runtime"
+        or rehearsal.get("status") != "restored-and-verified"
+        or restored.get("source_revision") != release.get("source_revision")
+        or restored.get("image_digest") != release.get("image_digest")
+        or restored.get("runtime_task_definition") != release.get("runtime_task_definition")
+        or restored.get("verifier_task_definition") != release.get("verifier_task_definition")
+        or restored_verification.get("code") != "runtime-digest-and-private-verifier-accepted"
+    ):
+        raise DeclarationFailure("accepted-release-rehearsal-invalid")
 
 
 def check_pipeline(root: Path) -> None:
