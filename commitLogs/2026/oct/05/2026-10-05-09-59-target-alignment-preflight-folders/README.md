@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T15:54:02Z
-latest_commit_sha: 585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb
-chat_duration: 1407273s (16:06:54:33)
+latest_commit_at_utc: 2026-10-21T16:03:59Z
+latest_commit_sha: 2a58ab882c12c7210e30d272721745da3adcaea2
+chat_duration: 1407870s (16:07:04:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1894,6 +1894,17 @@ Summary: Live target final state: one healthy replacement task on task definitio
 
 Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
 
+
+### 2026-10-21T16:03:59Z - Commit recorded
+
+Commit: `2a58ab882c12c7210e30d272721745da3adcaea2`
+
+Message: docs(deploy): record workload recovery rehearsal
+
+Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
+
+ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2244,6 +2255,13 @@ Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-plat
   Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
   ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
 
+
+- Commit: `2a58ab882c12c7210e30d272721745da3adcaea2`
+  Time UTC: 2026-10-21T16:03:59Z
+  Message: docs(deploy): record workload recovery rehearsal
+  Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
+  ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2257,9 +2275,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T15:54:02Z
-Latest commit SHA: 585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb
-Chat duration: 1407273s (16:06:54:33)
+Latest commit at UTC: 2026-10-21T16:03:59Z
+Latest commit SHA: 2a58ab882c12c7210e30d272721745da3adcaea2
+Chat duration: 1407870s (16:07:04:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
