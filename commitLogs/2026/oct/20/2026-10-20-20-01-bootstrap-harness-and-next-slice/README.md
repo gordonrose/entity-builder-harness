@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T13:34:27Z
-latest_commit_sha: fab0c8be
-chat_duration: 66790s (00:18:33:10)
+latest_commit_at_utc: 2026-10-21T13:36:11Z
+latest_commit_sha: 88a8418a
+chat_duration: 66894s (00:18:34:54)
 estimated_chat_tokens: 1061092 estimated from chat transcript bytes (4244368 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -94,6 +94,17 @@ Summary: Completed Deploy/Run authority, corrected fixed AWS commands, repaired 
 
 ADR impact: No new ADR; covered by ADR 0037.
 
+
+### 2026-10-21T13:36:11Z - Commit recorded
+
+Commit: `88a8418a`
+
+Message: Merge main through governed refresh rehearsal
+
+Summary: Applied a clean rehearsal of local main; tree identical to the committed task checkpoint. Bootstrap and recognition checks passed before apply; target declaration passed after apply. No conflicts, stash or remote push.
+
+ADR impact: No new ADR; branch integration only.
+
 ## Sub-Agent Activity
 
 - `existing_provider_path`: inspected existing controls, repaired acceptance
@@ -113,11 +124,33 @@ ADR impact: No new ADR; covered by ADR 0037.
   Summary: Completed Deploy/Run authority, corrected fixed AWS commands, repaired accepted-release writes with isolated regressions, and recorded persistence investigation. All relevant checks and commit gates passed.
   ADR impact: No new ADR; covered by ADR 0037.
 
+
+- Commit: `88a8418a`
+  Time UTC: 2026-10-21T13:36:11Z
+  Message: Merge main through governed refresh rehearsal
+  Summary: Applied a clean rehearsal of local main; tree identical to the committed task checkpoint. Bootstrap and recognition checks passed before apply; target declaration passed after apply. No conflicts, stash or remote push.
+  ADR impact: No new ADR; branch integration only.
+
 ## Main Refresh Conflicts
 
 - Approved integration used the other chat's local commit `3bfce6a8`, not main.
   Refresh classification found only current-session bookkeeping and no incoming
   overlap; fast-forward completed without conflicts.
+- 2026-10-21 local promotion: fetched remote refs successfully. Local main
+  `fbee1083` and this branch had unique commits. After the authorized task commit
+  `fab0c8be` and bookkeeping checkpoint `5a149aec`, classification was clean.
+  Rehearsal branch
+  `agentic/preflight/chat-2026-10-20-20-01-explain-the-deployment-har-5a149aece137/20261021133505`
+  in `/tmp/agentic-main-refresh-preflight/chat-2026-10-20-20-01-explain-the-deployment-har-5a149aece137-20261021133505`
+  merged local main without conflicts. Its merge `88a8418a` has exactly the same
+  file tree as `5a149aec`; bootstrap/release-contract tests and generated
+  recognition checks passed in that worktree. Governed apply fast-forwarded the
+  chat to `88a8418a` and removed its clean temporary branch/worktree. Post-apply
+  target declaration passed. Stash used: no. Conflict types: none.
+- The broad workspace report encountered an unavailable historical `/tmp`
+  worktree from another chat. The active worktree and root main were inspected
+  directly, and the target-specific promotion verifier identified only the
+  expected divergence. No unrelated worktrees or refs were repaired or removed.
 
 ## ADR Disposition
 
@@ -129,9 +162,9 @@ The next provider/resource choice has not been made by this task.
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T19:01:17Z
-Latest commit at UTC: 2026-10-21T13:34:27Z
-Latest commit SHA: fab0c8be
-Chat duration: 66790s (00:18:33:10)
+Latest commit at UTC: 2026-10-21T13:36:11Z
+Latest commit SHA: 88a8418a
+Chat duration: 66894s (00:18:34:54)
 Estimated chat tokens: 1061092 estimated from chat transcript bytes (4244368 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
