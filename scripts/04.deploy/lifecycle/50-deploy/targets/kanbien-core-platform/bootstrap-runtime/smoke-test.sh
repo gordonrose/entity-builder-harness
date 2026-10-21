@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.target-controls
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -15,7 +15,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Prove fixed core-platform control commands reject target selection and fail closed without external access.
+#   purpose: Prove fixed core-platform control commands reject target selection, recognise documented AWS lifecycle responses, and fail closed without external access.
 #   portability:
 #     class: internal
 #     targets: []
@@ -128,7 +128,9 @@ assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE",
 assert not module.initial_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "CREATE_COMPLETE")
 assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_COMPLETE")
 assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "CREATE_COMPLETE")
+assert module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "UPDATE_COMPLETE")
 assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "CREATE"}, "UPDATE_COMPLETE")
+assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE"}, "REVIEW_IN_PROGRESS")
 assert not module.update_change_set_is_reviewable({"Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE"}, "UPDATE_IN_PROGRESS")
 assert module.decoded_aws_response("") == {}
 assert module.decoded_aws_response('{"accepted": true}') == {"accepted": True}

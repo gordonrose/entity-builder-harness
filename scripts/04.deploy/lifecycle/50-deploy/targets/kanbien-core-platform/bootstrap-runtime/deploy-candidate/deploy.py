@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.execute-runtime-change-set
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -10,7 +10,7 @@
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Execute only the exact reviewed initial-runtime change set derived from a qualified immutable receipt.
+#   purpose: Execute only the exact reviewed update or restoration change set derived from a qualified immutable receipt.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.deploy-runtime-change-set.wrapper
@@ -48,10 +48,11 @@ def initial_change_set_is_reviewable(change, runtime_stack_status: str | None) -
         and reported_type in (None, "CREATE")
     )
 def update_change_set_is_reviewable(change, runtime_stack_status: str | None) -> bool:
+    """AWS may omit ChangeSetType for an existing-stack UPDATE response."""
     return (
         runtime_stack_status in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}
         and change.get("Status") == "CREATE_COMPLETE"
-        and change.get("ChangeSetType") == "UPDATE"
+        and change.get("ChangeSetType") in (None, "UPDATE")
     )
 def candidate(path: Path):
     validator=ROOT/"scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"

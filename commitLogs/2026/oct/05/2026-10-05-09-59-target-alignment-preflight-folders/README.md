@@ -97,6 +97,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: After correcting the Logs endpoint policy, task startup still failed because the task execution role had its own malformed log-stream ARN.
   Resolution: The endpoint and identity policies are evaluated independently; both must match the exact log-stream resource.
 
+
+- Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change set.
+  Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -1464,6 +1468,13 @@ Message: fix(deploy): enforce core-platform cost waiver gate
 Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
 
 ADR impact: No ADR: this implements the existing release-control policy.
+
+
+### 2026-10-21T08:53:59Z - Issue
+
+Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change set.
+
+Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
 
 ## Sub-Agent Activity
 
