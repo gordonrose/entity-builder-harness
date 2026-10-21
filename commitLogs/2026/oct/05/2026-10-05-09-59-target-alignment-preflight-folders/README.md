@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T14:57:37Z
-latest_commit_sha: 5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc
-chat_duration: 1403888s (16:05:58:08)
+latest_commit_at_utc: 2026-10-21T15:37:01Z
+latest_commit_sha: e559c8cee3b434978fd7abb8cb9f8d414f47cfbc
+chat_duration: 1406252s (16:06:37:32)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1817,6 +1817,17 @@ Summary: The reusable health/failure/recovery package is implemented locally and
 
 Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
 
+
+### 2026-10-21T15:37:01Z - Commit recorded
+
+Commit: `e559c8cee3b434978fd7abb8cb9f8d414f47cfbc`
+
+Message: feat(deploy): require declared health recovery
+
+Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
+
+ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2153,6 +2164,13 @@ Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run
   Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
   ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
 
+
+- Commit: `e559c8cee3b434978fd7abb8cb9f8d414f47cfbc`
+  Time UTC: 2026-10-21T15:37:01Z
+  Message: feat(deploy): require declared health recovery
+  Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
+  ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2166,9 +2184,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T14:57:37Z
-Latest commit SHA: 5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc
-Chat duration: 1403888s (16:05:58:08)
+Latest commit at UTC: 2026-10-21T15:37:01Z
+Latest commit SHA: e559c8cee3b434978fd7abb8cb9f8d414f47cfbc
+Chat duration: 1406252s (16:06:37:32)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
