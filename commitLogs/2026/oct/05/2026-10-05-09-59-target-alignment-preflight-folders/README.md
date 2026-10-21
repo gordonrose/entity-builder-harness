@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T08:43:38Z
-latest_commit_sha: 2000f119
-chat_duration: 1381449s (15:23:44:09)
+latest_commit_at_utc: 2026-10-21T08:54:40Z
+latest_commit_sha: d2762553
+chat_duration: 1382111s (15:23:55:11)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1476,6 +1476,17 @@ Raised: AWS omitted ChangeSetType from a reviewed existing-stack UPDATE change s
 
 Resolution: The deployment control now accepts that documented omission only with independent healthy-stack proof; smoke tests reject CREATE and non-stable lifecycle states.
 
+
+### 2026-10-21T08:54:40Z - Commit recorded
+
+Commit: `d2762553`
+
+Message: fix(deploy): accept proven AWS update change sets
+
+Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
+
+ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1742,6 +1753,13 @@ Resolution: The deployment control now accepts that documented omission only wit
   Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
   ADR impact: No ADR: this implements the existing release-control policy.
 
+
+- Commit: `d2762553`
+  Time UTC: 2026-10-21T08:54:40Z
+  Message: fix(deploy): accept proven AWS update change sets
+  Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
+  ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1755,9 +1773,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T08:43:38Z
-Latest commit SHA: 2000f119
-Chat duration: 1381449s (15:23:44:09)
+Latest commit at UTC: 2026-10-21T08:54:40Z
+Latest commit SHA: d2762553
+Chat duration: 1382111s (15:23:55:11)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
