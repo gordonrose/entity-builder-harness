@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-20T22:19:51Z
-latest_commit_sha: 2d13367c
-chat_duration: 1344022s (15:13:20:22)
+latest_commit_at_utc: 2026-10-21T08:43:38Z
+latest_commit_sha: 2000f119
+chat_duration: 1381449s (15:23:44:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1454,6 +1454,17 @@ Summary: Recorded the approved short-lived cost-control waiver as target-local e
 
 Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
 
+
+### 2026-10-21T08:43:38Z - Commit recorded
+
+Commit: `2000f119`
+
+Message: fix(deploy): enforce core-platform cost waiver gate
+
+Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
+
+ADR impact: No ADR: this implements the existing release-control policy.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1713,6 +1724,13 @@ Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocat
   Summary: Prepared harmless Release B by changing only the private bootstrap app display label. Declared source and dependency checks passed; the real image smoke will be rebuilt against this exact source revision before publication.
   ADR impact: ADR not required: bounded rehearsal-only source metadata change under the accepted release workflow.
 
+
+- Commit: `2000f119`
+  Time UTC: 2026-10-21T08:43:38Z
+  Message: fix(deploy): enforce core-platform cost waiver gate
+  Summary: Recorded the approved expiring cost waiver as target-local evidence and enforced its status and expiry before every core-platform runtime change-set creation or execution.
+  ADR impact: No ADR: this implements the existing release-control policy.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1726,9 +1744,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-20T22:19:51Z
-Latest commit SHA: 2d13367c
-Chat duration: 1344022s (15:13:20:22)
+Latest commit at UTC: 2026-10-21T08:43:38Z
+Latest commit SHA: 2000f119
+Chat duration: 1381449s (15:23:44:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
