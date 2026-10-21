@@ -4,7 +4,7 @@ id: deploy.schema.runnable-program-contract.v1.guide
 version: 1
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -20,7 +20,7 @@ portability:
   - entity-builder
 used_by:
 - id: deploy.schema.runnable-program-contract.v1
-  path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
+  path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
 -->
 # Runnable Program Contract v1 Guide
 

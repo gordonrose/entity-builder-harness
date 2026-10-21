@@ -137,6 +137,12 @@ the instruction is used; a plainly named file says what it does.
   20-build/
     workflows/
       prove-runnable-program-builds.md
+    standards/
+      require-runnable-program-contract.md
+    schemas/
+      runnable-program-contract.v1.schema.yml
+      runnable-program-contract.v1.template.yml
+      runnable-program-contract.v1.guide.md
 
   40-package/
     workflows/
@@ -246,6 +252,9 @@ are reviewed one by one against their true primary lifecycle phase:
 | `standards/target-alignment-preflight.md` | `00-target-alignment/standards/require-fresh-safe-target-evidence.md` | first batch candidate |
 | `workflows/runnable-program-candidates.md` | `20-build/workflows/prove-runnable-program-builds.md` | requires contract-consumer review |
 | `standards/runnable-program-candidates.md` | `20-build/standards/require-runnable-program-contract.md` | requires contract-consumer review |
+| `schemas/runnable-program-contract.v1.schema.yml` | `20-build/schemas/runnable-program-contract.v1.schema.yml` | requires contract-consumer review |
+| `schemas/runnable-program-contract.v1.template.yml` | `20-build/schemas/runnable-program-contract.v1.template.yml` | requires contract-consumer review |
+| `schemas/runnable-program-contract.v1.guide.md` | `20-build/schemas/runnable-program-contract.v1.guide.md` | requires contract-consumer review |
 | `workflows/package-custody-and-promotion.md` | `40-package/workflows/publish-immutable-package-with-custody.md` | requires pipeline-consumer review |
 | `standards/package-custody-and-promotion.md` | `40-package/standards/require-immutable-package-custody.md` | requires pipeline-consumer review |
 | `workflows/release-update-and-recovery.md` | split only if controls remain singular: `50-deploy/workflows/review-and-execute-target-update.md` and `60-run/workflows/restore-and-verify-accepted-release.md` | design decision after consumer review |

@@ -283,6 +283,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt lifecycle-first deployment authority paths
   Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
 
+
+- Decision: Keep runnable-program contract material with the build phase
+  Rationale: The runnable workflow, standard, schema, template, and guide are one build capability: they prove a program's dependency boundary and command before package construction. They now live together under 20-build; package publication and deploy controls remain separate.
+
 ## Context Hygiene
 
 
@@ -417,6 +421,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Batch 4 generic target-alignment migration verification
   Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Both reusable alignment artifacts moved to lifecycle-first clear-action paths; declaration coverage, implementation-plan metadata, and script README consumers were updated. Generated recognition sources, both path-migration checks, metadata, and migration-helper smoke passed. No provider mutation occurred.
+
+
+- Summary: Runnable-program build-capability migration verification
+  Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
 
 ## Activity Log
 
@@ -1695,6 +1703,20 @@ Message: docs(deploy): record lifecycle-first path decision
 Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T12:05:24Z - Decision
+
+Decision: Keep runnable-program contract material with the build phase
+
+Rationale: The runnable workflow, standard, schema, template, and guide are one build capability: they prove a program's dependency boundary and command before package construction. They now live together under 20-build; package publication and deploy controls remain separate.
+
+
+### 2026-10-21T12:05:25Z - Context hygiene
+
+Summary: Runnable-program build-capability migration verification
+
+Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
 
 ## Sub-Agent Activity
 

@@ -4,7 +4,7 @@ id: deploy.workflow.runnable-program-candidates
 version: 1
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -20,11 +20,11 @@ portability:
   - entity-builder
 used_by:
 - id: deploy.standards.runnable-program-candidates
-  path: .agentic/04.deploy/standards/runnable-program-candidates.md
+  path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
 - id: deploy.command.runnable-program-contract
   path: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
 -->
-# Runnable Program and Package Candidates
+# Prove Runnable Program Builds
 
 ## Use when
 

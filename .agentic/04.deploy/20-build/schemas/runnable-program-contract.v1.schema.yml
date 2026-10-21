@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -20,12 +20,12 @@
 #     - entity-builder
 #   used_by:
 #   - id: deploy.standards.runnable-program-candidates
-#     path: .agentic/04.deploy/standards/runnable-program-candidates.md
+#     path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
 #   - id: deploy.command.runnable-program-contract
 #     path: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
 schema: deploy/runnable-program-contract-schema/v1
 contract_schema: deploy/runnable-program-contract/v1
-companion_guide: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
+companion_guide: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
 required_top_level:
   - schema
   - id

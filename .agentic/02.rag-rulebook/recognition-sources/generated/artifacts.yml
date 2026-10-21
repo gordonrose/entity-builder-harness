@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1154
-  term_count: 2327
+  indexed_artifacts: 1155
+  term_count: 2329
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8362,6 +8362,72 @@ terms:
   canonical_id: deploy.workflow.target-alignment-preflight
   evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
   confidence_weight: 1
+- term: deploy.schema.runnable-program-contract.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1.guide
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1.guide
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.runnable-program-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: runnable-program-contract.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.template.runnable-program-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.template.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.template.runnable-program-contract.v1
+  evidence_path: .agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml
+  confidence_weight: 1
+- term: deploy.standards.runnable-program-candidates
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/standards/require-runnable-program-contract.md
+  confidence_weight: 1
+- term: deploy.workflow.runnable-program-candidates
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.runnable-program-candidates
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
   match_type: exact
@@ -8542,48 +8608,6 @@ terms:
   canonical_id: deploy.schema.provider-condition-evidence.v1
   evidence_path: .agentic/04.deploy/schemas/provider-condition-evidence.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.runnable-program-contract.v1.guide
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.guide.md
-  confidence_weight: 1
-- term: deploy.schema.runnable-program-contract.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: runnable-program-contract.v1.schema.yml
-  category: schema-name
-  match_type: exact
-  canonical_id: deploy.schema.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml
-  confidence_weight: 1
-- term: deploy.template.runnable-program-contract.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.template.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.template.runnable-program-contract.v1
-  evidence_path: .agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml
-  confidence_weight: 1
 - term: deploy.standards.readme
   category: artifact-id
   match_type: exact
@@ -8692,18 +8716,6 @@ terms:
   canonical_id: deploy.standards.provider-async-conditions
   evidence_path: .agentic/04.deploy/standards/provider-async-conditions.md
   confidence_weight: 1
-- term: deploy.standards.runnable-program-candidates
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.standards.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/standards/runnable-program-candidates.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/standards/runnable-program-candidates.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.standards.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/standards/runnable-program-candidates.md
-  confidence_weight: 1
 - term: deploy.standards.safe-command-diagnostics
   category: artifact-id
   match_type: exact
@@ -8763,18 +8775,6 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.release-update-and-recovery
   evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
-  confidence_weight: 1
-- term: deploy.workflow.runnable-program-candidates
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
   confidence_weight: 1
 - term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   category: artifact-id
@@ -9063,6 +9063,18 @@ terms:
   match_type: exact
   canonical_id: deploy.architecture.adr.0036-separate-active-drift-detection-from-github-reconciliation
   evidence_path: docs/04.deploy/adrs/0036-separate-active-drift-detection-from-github-reconciliation.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  evidence_path: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
+  evidence_path: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
   confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id

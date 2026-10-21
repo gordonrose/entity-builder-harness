@@ -490,6 +490,12 @@ terms:
   canonical_id: 04.deploy.workflow.compare-declared-requirements-with-live-target
   evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
   confidence_weight: 1
+- term: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.prove-runnable-program-builds
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/declaration-coverage.md
   category: workflow-name
   match_type: exact
@@ -507,12 +513,6 @@ terms:
   match_type: exact
   canonical_id: 04.deploy.workflow.release-update-and-recovery
   evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/runnable-program-candidates.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
@@ -796,6 +796,12 @@ terms:
   canonical_id: 03.product.workflow.platform-runtime-implementation
   evidence_path: .agentic/03.product/workflows/platform-runtime-implementation.md
   confidence_weight: 1
+- term: prove-runnable-program-builds.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.prove-runnable-program-builds
+  evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
 - term: recover-transcript-draft.md
   category: workflow-name
   match_type: exact
@@ -837,12 +843,6 @@ terms:
   match_type: exact
   canonical_id: 01.harness.workflow.run-review-board
   evidence_path: .agentic/01.harness/workflows/run-review-board.md
-  confidence_weight: 1
-- term: runnable-program-candidates.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.runnable-program-candidates
-  evidence_path: .agentic/04.deploy/workflows/runnable-program-candidates.md
   confidence_weight: 1
 - term: untrusted-input-and-bounded-agent-safety.md
   category: workflow-name

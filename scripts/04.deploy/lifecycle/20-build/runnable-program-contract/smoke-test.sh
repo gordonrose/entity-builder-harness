@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -63,8 +63,8 @@ from pathlib import Path
 import yaml
 
 for path in (
-    ".agentic/04.deploy/schemas/runnable-program-contract.v1.schema.yml",
-    ".agentic/04.deploy/schemas/runnable-program-contract.v1.template.yml",
+    ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml",
+    ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml",
     "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/fixtures/valid-contract.yml",
 ):
     if not isinstance(yaml.safe_load(Path(path).read_text(encoding="utf-8")), dict):

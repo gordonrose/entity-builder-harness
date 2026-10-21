@@ -4,7 +4,7 @@ id: deploy.command.core-server-dependency-boundary.readme
 version: 1
 status: draft
 created_on: "2026-10-19"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -18,7 +18,7 @@ portability:
   targets: []
 used_by:
 - id: deploy.workflow.runnable-program-candidates
-  path: .agentic/04.deploy/workflows/runnable-program-candidates.md
+  path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
 -->
 # Core Server Dependency Boundary
 
