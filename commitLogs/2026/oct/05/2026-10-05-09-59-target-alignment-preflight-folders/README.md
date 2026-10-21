@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T08:54:40Z
-latest_commit_sha: d2762553
-chat_duration: 1382111s (15:23:55:11)
+latest_commit_at_utc: 2026-10-21T09:22:03Z
+latest_commit_sha: 3fcc0180
+chat_duration: 1383754s (16:00:22:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1520,6 +1520,17 @@ Summary: Release B publication run 39571727355 qualified digest sha256:721466…
 
 Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
 
+
+### 2026-10-21T09:22:03Z - Commit recorded
+
+Commit: `3fcc0180`
+
+Message: fix(deploy): reuse completed verifier evidence
+
+Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
+
+ADR impact: No ADR: this strengthens the existing governed release-verification control.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1793,6 +1804,13 @@ Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-rele
   Summary: Accepted an omitted AWS ChangeSetType only for independently proven healthy existing stacks; the change remains bounded to task-definition and service updates.
   ADR impact: No ADR: this corrects adapter handling under the existing release-control architecture.
 
+
+- Commit: `3fcc0180`
+  Time UTC: 2026-10-21T09:22:03Z
+  Message: fix(deploy): reuse completed verifier evidence
+  Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
+  ADR impact: No ADR: this strengthens the existing governed release-verification control.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1806,9 +1824,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T08:54:40Z
-Latest commit SHA: d2762553
-Chat duration: 1382111s (15:23:55:11)
+Latest commit at UTC: 2026-10-21T09:22:03Z
+Latest commit SHA: 3fcc0180
+Chat duration: 1383754s (16:00:22:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
