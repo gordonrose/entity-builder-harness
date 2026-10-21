@@ -434,6 +434,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Package-custody migration verification
   Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
 
+
+- Summary: The proven core bootstrap route is active and has normal health, private verification, immutable update, and B-to-A restoration evidence; it has not yet exercised deliberate live health failure, ECS unhealthy-task replacement, or automatic health-triggered rollback. The next package is a reusable health/failure/recovery contract before persistence.
+  Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -1762,6 +1766,13 @@ Summary: Completed package-custody migration: workflow, standard, receipt schema
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-21T14:54:40Z - Context hygiene
+
+Summary: The proven core bootstrap route is active and has normal health, private verification, immutable update, and B-to-A restoration evidence; it has not yet exercised deliberate live health failure, ECS unhealthy-task replacement, or automatic health-triggered rollback. The next package is a reusable health/failure/recovery contract before persistence.
+
+Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2113,4 +2124,15 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
-- None recorded yet.
+- 2026-10-21: Refreshed this clean chat branch by rebasing it onto local `main`
+  (`c1ad31a0`) after fetching remote references. The branch moved from
+  `3bfce6a8` to `c1ad31a0`; Git reported no conflicts, no stash was used, and
+  the final comparison with local `main` is `0 behind, 0 ahead`. This was a
+  user-approved history rewrite; no task commit, merge to `main`, or remote
+  push occurred.
+- 2026-10-21: Promoted the proven `kanbien-core-platform/bootstrap-runtime`
+  route and its factual declarations from `draft` to `active`. The implementation
+  plan now routes readers to the adopted lifecycle-first tree and explicitly
+  treats its earlier provisional layout as historical context. Metadata, target
+  declaration, runnable-program, package-custody, release-contract, and fixed
+  target-control smoke checks passed. No cloud or GitHub mutation occurred.

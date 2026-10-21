@@ -4,8 +4,8 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.target-controls
-#   version: 3
-#   status: draft
+#   version: 4
+#   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
 #   layer: 04.deploy

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 35
+version: 37
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-21"
@@ -50,9 +50,63 @@ accepted-release writer has isolated coverage of actual writes and failed
 writes, not only a successful preview. Initial creation remains historical
 evidence; the update route does not authorize recreation of an absent target.
 
+### Canonical Current Core Route
+
+The proven `kanbien-core-platform/bootstrap-runtime` route is active. Its
+current facts live under
+`infra/04.deploy/03.product/targets/kanbien-core-platform/`; its reusable
+lifecycle authority lives in `.agentic/04.deploy/00-target-alignment/`,
+`20-build/`, `40-package/`, `50-deploy/`, and `60-run/`; and its fixed AWS
+procedure lives under `.agentic/aws/50-deploy/`. The lifecycle map is the
+entry point, and the target-specific scripts beneath
+`scripts/04.deploy/lifecycle/<phase>/targets/kanbien-core-platform/` are the
+executable route.
+
+The detailed design narrative below records decisions made before that route
+existed. It is historical context, not file-placement or execution authority.
+Where it names a provisional path, says the core target is planned, or
+conflicts with the current target tree, use the active placement standard,
+lifecycle map, target declaration, and fixed AWS procedure instead. Do not
+recreate a prior provisional layout from this plan.
+
 ### Next Slice Investigation
 
-The next candidate remains a small **application persistence** slice. Its
+The immediate next implementation package is a reusable **health, failure, and
+recovery declaration** capability. It comes before persistence so health and
+recovery are not added as a one-off correction for whichever dependency scope
+happens to be built next.
+
+The bootstrap runtime is the first honest fixture for this capability. It has
+proved local liveness and readiness endpoints, ECS readiness health, private
+meaningful-operation verification, and a controlled B-to-A restoration of
+known immutable releases. It has **not** proved a deliberate live readiness
+failure, provider replacement of an unhealthy task, or automatic deployment
+rollback caused by a health failure. The release record and future contracts
+must retain that boundary rather than imply that those tests occurred.
+
+The reusable capability must require every runnable scope to declare:
+
+- a liveness operation and a readiness operation, with the dependencies that
+  each readiness decision uses;
+- safe behaviour and safe diagnostic categories for invalid startup
+  configuration, dependency unavailability, and recovery;
+- whether an orchestrator may replace unhealthy work and which actions are
+  never safe to replay automatically;
+- an immutable prior-release restoration path and its verification; and
+- local, package, and live proof states, including an explicit owner,
+  follow-up, and review boundary whenever a live proof is deferred.
+
+The generic requirements and lifecycle routing belong in `.agentic/03.product/`
+and `.agentic/04.deploy/60-run/`; a target scope supplies its factual answers
+in its declaration contract; scripts validate deterministic structure and
+cross-field rules; and the release route invokes that validation. The first
+package should create only that minimal reusable standard, schema/template,
+workflow routing, deterministic validator and fixtures, then apply it to the
+bootstrap-runtime scope. It must not perform AWS fault injection or alter the
+running target without separate execution authority.
+
+Only after this package is in place is the next candidate a small
+**application persistence** slice. Its
 useful proof is a private synthetic record written once and retrieved after
 process/container replacement, with duplicate-create, invalid-input and
 dependency-failure behaviour checked. An image rollback must preserve data
@@ -76,9 +130,13 @@ provider, and review its resource/cost, network, least-privilege workload access
 configuration, failure and recovery requirements. Existing staging PostgreSQL
 decisions do not select a provider for `kanbien-core-platform`. DynamoDB and
 PostgreSQL are candidates to compare against that operation; neither is selected
-by this investigation. New data services are outside the bootstrap boundary
-and its existing cost waiver. Authentication, queues and full observability
-remain separate later concerns unless the selected operation requires them.
+by this investigation. Credential delivery follows the selected provider:
+DynamoDB normally uses the workload IAM role rather than an application secret,
+whereas PostgreSQL requires an explicit secure authentication supply route such
+as a secret reference or IAM database authentication. New data services are
+outside the bootstrap boundary and its existing cost waiver. Authentication,
+queues and full observability remain separate later concerns unless the
+selected operation requires them.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:
@@ -160,10 +218,9 @@ module not selected by a scope is not prematurely treated as a gap.
 ## Target Separation Decision
 
 The target identifier for the first controlled foundation build is
-`kanbien-core-platform`. Its planned repository location is
-`infra/04.deploy/03.product/targets/kanbien/core-platform/`, but that path is
-not created until the target-design package is separately approved. The target
-will have distinct declared workload names, infrastructure-stack names,
+`kanbien-core-platform`. Its active repository location is
+`infra/04.deploy/03.product/targets/kanbien-core-platform/`. The target has
+distinct declared workload names, infrastructure-stack names,
 identity/permission bindings, configuration and secret-reference namespace,
 network boundary, evidence route, package/delivery route, and rollback record.
 
@@ -171,7 +228,8 @@ It may later share an AWS account or region with `kanbien/staging` only through
 an explicit target declaration and isolation review; same-account placement is
 not assumed. Reuse of an existing ECR repository, role, secret, VPC, security
 group, log store, service, or pipeline requires the same explicit decision.
-Until then, the correct status is `planned`, not deployed or aligned.
+The accepted release and rehearsal evidence record its current runtime state;
+new scope or shared-resource decisions remain separately governed.
 
 `kanbien/staging` is retained as a **reference target**. A read-only inventory
 may learn from its existing public-server composition, but no foundation

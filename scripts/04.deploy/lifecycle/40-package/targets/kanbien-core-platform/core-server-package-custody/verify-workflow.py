@@ -2,8 +2,8 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.core-server-package-custody.validation
-#   version: 2
-#   status: draft
+#   version: 3
+#   status: active
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [architecture, security, sre]
@@ -12,7 +12,7 @@
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.core-server-package-custody
 #     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/script.sh

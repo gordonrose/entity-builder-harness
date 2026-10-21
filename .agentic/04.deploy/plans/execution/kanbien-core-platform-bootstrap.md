@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.execution.kanbien-core-platform-bootstrap
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
 updated_on: "2026-10-21"
@@ -35,6 +35,21 @@ A separate approved packet remains required for any AWS or GitHub mutation.
 Current execution status: `A accepted and running; a bounded B-to-A rehearsal
 has succeeded; the normal UPDATE and restoration controls are retained for the
 next governed core change.`
+
+## Known proof boundary
+
+The accepted bootstrap evidence proves local `/livez` and `/readyz`, ECS use
+of the declared readiness health check, private meaningful-operation
+verification, a qualified immutable update, and a bounded restoration of a
+known accepted immutable release. It does **not** prove a deliberately induced
+live readiness failure, replacement of an unhealthy task by ECS, or deployment
+circuit-breaker rollback caused by that failure.
+
+Those missing proofs are not a defect to hide in a core-server-specific script.
+They are the first fixture for the reusable health, failure, and recovery
+declaration capability tracked by the implementation plan. A live fault
+rehearsal requires a separately approved AWS execution packet after that
+capability exists.
 
 ## Completion criterion
 
