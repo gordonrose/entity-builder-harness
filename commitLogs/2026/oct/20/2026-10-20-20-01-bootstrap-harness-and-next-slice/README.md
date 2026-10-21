@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-20T19:01:17Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: codex
+transcript_path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl
+transcript_bytes: 4244368
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-21T13:34:27Z
+latest_commit_sha: fab0c8be
+chat_duration: 66790s (00:18:33:10)
+estimated_chat_tokens: 1061092 estimated from chat transcript bytes (4244368 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -83,6 +83,17 @@ Explain the deployment harness from local source to container image and running 
 
 Initial intent: Explain the deployment harness from local source to container image and running infrastructure
 
+
+### 2026-10-21T13:34:27Z - Commit recorded
+
+Commit: `fab0c8be`
+
+Message: fix(deploy): consolidate release workflows and repair acceptance recording
+
+Summary: Completed Deploy/Run authority, corrected fixed AWS commands, repaired accepted-release writes with isolated regressions, and recorded persistence investigation. All relevant checks and commit gates passed.
+
+ADR impact: No new ADR; covered by ADR 0037.
+
 ## Sub-Agent Activity
 
 - `existing_provider_path`: inspected existing controls, repaired acceptance
@@ -94,7 +105,13 @@ Initial intent: Explain the deployment harness from local source to container im
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `fab0c8be`
+  Time UTC: 2026-10-21T13:34:27Z
+  Message: fix(deploy): consolidate release workflows and repair acceptance recording
+  Summary: Completed Deploy/Run authority, corrected fixed AWS commands, repaired accepted-release writes with isolated regressions, and recorded persistence investigation. All relevant checks and commit gates passed.
+  ADR impact: No new ADR; covered by ADR 0037.
 
 ## Main Refresh Conflicts
 
@@ -112,12 +129,12 @@ The next provider/resource choice has not been made by this task.
 ## Session Metrics
 
 Raised at UTC: 2026-10-20T19:01:17Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-21T13:34:27Z
+Latest commit SHA: fab0c8be
+Chat duration: 66790s (00:18:33:10)
+Estimated chat tokens: 1061092 estimated from chat transcript bytes (4244368 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/20/rollout-2026-10-20T19-55-00-01a15aaa-b7cb-7cb2-9d0f-987942e87dfd.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
