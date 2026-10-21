@@ -267,6 +267,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt ordered deployment placement and naming migration
   Rationale: The approved migration makes target declarations scanable in lifecycle order. Batch 2 moved only active kanbien-core-platform target declarations to 00-target, 10-foundation, 20-scopes, 30-provider-realization/aws, and 40-package-custody; all active consumers, fixtures, GitHub metadata, and generated recognition sources now use the canonical locations. Old paths have no active aliases or consumers.
 
+
+- Decision: Keep one AWS release workflow while making lifecycle sections explicit
+  Rationale: The AWS bootstrap-runtime procedure is one coherent release route, so splitting it would duplicate operational authority. It now lives at the planned target-and-scope deploy path and explicitly separates preconditions, 50-deploy update, 60-run verification, and 60-run restoration.
+
 ## Context Hygiene
 
 
@@ -393,6 +397,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Batch 2 target declaration migration verification
   Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
+
+
+- Summary: Batch 3 AWS workflow migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
 
 ## Activity Log
 
@@ -1596,6 +1604,20 @@ Message: refactor(deploy): order core platform target declarations
 Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T11:51:37Z - Decision
+
+Decision: Keep one AWS release workflow while making lifecycle sections explicit
+
+Rationale: The AWS bootstrap-runtime procedure is one coherent release route, so splitting it would duplicate operational authority. It now lives at the planned target-and-scope deploy path and explicitly separates preconditions, 50-deploy update, 60-run verification, and 60-run restoration.
+
+
+### 2026-10-21T11:51:37Z - Context hygiene
+
+Summary: Batch 3 AWS workflow migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
 
 ## Sub-Agent Activity
 

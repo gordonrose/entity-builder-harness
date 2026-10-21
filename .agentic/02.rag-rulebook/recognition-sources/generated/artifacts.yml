@@ -8776,6 +8776,18 @@ terms:
   canonical_id: deploy.workflow.target-alignment-preflight
   evidence_path: .agentic/04.deploy/workflows/target-alignment-preflight.md
   confidence_weight: 1
+- term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
+  confidence_weight: 1
+- term: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
+  confidence_weight: 1
 - term: aws.readme
   category: artifact-id
   match_type: exact
@@ -8871,18 +8883,6 @@ terms:
   match_type: exact
   canonical_id: aws.workflows.inspect-aws-state
   evidence_path: .agentic/aws/workflows/inspect-aws-state.md
-  confidence_weight: 1
-- term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-  category: artifact-id
-  match_type: exact
-  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-  evidence_path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
-  confidence_weight: 1
-- term: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
-  category: file-path
-  match_type: exact
-  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-  evidence_path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
   confidence_weight: 1
 - term: aws.workflows.plan-aws-change
   category: artifact-id

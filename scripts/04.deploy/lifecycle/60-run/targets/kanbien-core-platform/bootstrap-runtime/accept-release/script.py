@@ -14,7 +14,7 @@
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-#     path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
+#     path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
 #   effects: [writes-files]
 from __future__ import annotations
 

@@ -9,38 +9,46 @@ layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines: [security, sre]
 kind: workflow
-purpose: Govern the fixed AWS update and restoration lifecycle for the kanbien-core-platform bootstrap runtime.
+purpose: Govern the fixed AWS update, verification, and restoration lifecycle for the kanbien-core-platform bootstrap runtime.
 portability: { class: internal, targets: [] }
 used_by:
 - id: deploy.workflow.release-update-and-recovery
   path: .agentic/04.deploy/workflows/release-update-and-recovery.md
 -->
-# Kanbien Core Platform Bootstrap Runtime Release
+# Review and Execute ECS Runtime Update
 
 Use this workflow only for the fixed `kanbien-core-platform` bootstrap-runtime
 scope. Follow the provider-neutral release-update-and-recovery workflow first.
 
-Required sequence:
+## Before Any Provider Mutation
 
-1. Run runnable-program, package-custody, image smoke, target declaration,
-   and release-contract checks.
-2. Before creating or executing a change set, run:
+Run the runnable-program, package-custody, image smoke, target declaration,
+and release-contract checks. Then run:
 
-   ```bash
-   bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh --json
-   ```
+```bash
+bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh --json
+```
 
-   It accepts only live verified cost evidence or an explicit, unexpired
-   target-local waiver with the declared compensating controls.
-3. Run `prepare-candidate` with a qualified receipt and `--operation update`.
-4. Create a fixed UPDATE change set and review its task-definition/service-only
+It accepts only live verified cost evidence or an explicit, unexpired
+target-local waiver with the declared compensating controls.
+
+## 50 Deploy: Prepare and Execute the Bounded Update
+
+1. Run `prepare-candidate` with a qualified receipt and `--operation update`.
+2. Create a fixed UPDATE change set and review its task-definition/service-only
    resource boundary.
-5. Under explicit AWS authority, execute the exact approved change set.
-6. Run private verification using the same qualified receipt. A repeated
+3. Under explicit AWS authority, execute the exact approved change set.
+
+## 60 Run: Verify and Accept the Candidate
+
+1. Run private verification using the same qualified receipt. A repeated
    verification command reuses only completed, accepted verifier evidence from
    that runtime update; it must never create a duplicate verifier task.
-7. Record acceptance only after the verification report agrees with the receipt.
-8. On rejected candidate verification, use `restore-accepted-release` to
+2. Record acceptance only after the verification report agrees with the receipt.
+
+## 60 Run: Restore a Rejected Candidate
+
+On rejected candidate verification, use `restore-accepted-release` to
    prepare a reviewed restoration; execute only under explicit AWS authority,
    then privately verify the retained release.
 
