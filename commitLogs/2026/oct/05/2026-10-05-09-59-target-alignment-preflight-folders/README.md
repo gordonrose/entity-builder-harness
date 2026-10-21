@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T12:06:20Z
-latest_commit_sha: ac504bff
-chat_duration: 1393611s (16:03:06:51)
+latest_commit_at_utc: 2026-10-21T12:10:09Z
+latest_commit_sha: 66e5cb57
+chat_duration: 1393840s (16:03:10:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1751,6 +1751,17 @@ Summary: Package-custody migration verification
 
 Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
 
+
+### 2026-10-21T12:10:09Z - Commit recorded
+
+Commit: `66e5cb57`
+
+Message: refactor(deploy): group package custody controls
+
+Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2073,6 +2084,13 @@ Durable evidence: Moved four package-custody authority artifacts into 40-package
   Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `66e5cb57`
+  Time UTC: 2026-10-21T12:10:09Z
+  Message: refactor(deploy): group package custody controls
+  Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2086,9 +2104,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T12:06:20Z
-Latest commit SHA: ac504bff
-Chat duration: 1393611s (16:03:06:51)
+Latest commit at UTC: 2026-10-21T12:10:09Z
+Latest commit SHA: 66e5cb57
+Chat duration: 1393840s (16:03:10:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
