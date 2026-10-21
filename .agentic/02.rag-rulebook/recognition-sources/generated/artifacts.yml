@@ -8428,6 +8428,60 @@ terms:
   canonical_id: deploy.workflow.runnable-program-candidates
   evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
   confidence_weight: 1
+- term: deploy.schema.package-custody-receipt.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1.guide
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1.guide
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.package-custody-receipt.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: package-custody-receipt.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.package-custody-receipt.v1
+  evidence_path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.standards.package-custody-and-promotion
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
+  confidence_weight: 1
+- term: deploy.workflow.package-custody-and-promotion
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.package-custody-and-promotion
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
   match_type: exact
@@ -8560,36 +8614,6 @@ terms:
   canonical_id: deploy.schema.delivery-access-contract.v1
   evidence_path: .agentic/04.deploy/schemas/delivery-access-contract.v1.schema.yml
   confidence_weight: 1
-- term: deploy.schema.package-custody-receipt.v1.guide
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1.guide
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
-  confidence_weight: 1
-- term: deploy.schema.package-custody-receipt.v1
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  confidence_weight: 1
-- term: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  confidence_weight: 1
-- term: package-custody-receipt.v1.schema.yml
-  category: schema-name
-  match_type: exact
-  canonical_id: deploy.schema.package-custody-receipt.v1
-  evidence_path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
-  confidence_weight: 1
 - term: deploy.schema.provider-condition-evidence.v1
   category: artifact-id
   match_type: exact
@@ -8680,18 +8704,6 @@ terms:
   canonical_id: deploy.standards.lifecycle-stage-ownership
   evidence_path: .agentic/04.deploy/standards/lifecycle-stage-ownership.md
   confidence_weight: 1
-- term: deploy.standards.package-custody-and-promotion
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.standards.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/standards/package-custody-and-promotion.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/standards/package-custody-and-promotion.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.standards.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/standards/package-custody-and-promotion.md
-  confidence_weight: 1
 - term: deploy.standards.package-qualification
   category: artifact-id
   match_type: exact
@@ -8751,18 +8763,6 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
-  confidence_weight: 1
-- term: deploy.workflow.package-custody-and-promotion
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
   confidence_weight: 1
 - term: deploy.workflow.release-update-and-recovery
   category: artifact-id

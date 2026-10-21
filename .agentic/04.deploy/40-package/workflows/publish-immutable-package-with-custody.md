@@ -18,13 +18,13 @@ portability:
     - entity-builder
 used_by:
   - id: deploy.standards.package-custody-and-promotion
-    path: .agentic/04.deploy/standards/package-custody-and-promotion.md
+    path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
   - id: deploy.schema.package-custody-receipt.v1
-    path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+    path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 -->
-# Package Custody and Promotion Workflow
+# Publish Immutable Package With Custody
 
 ## Use when
 

@@ -18,13 +18,13 @@ portability:
     - entity-builder
 used_by:
   - id: deploy.workflow.package-custody-and-promotion
-    path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
+    path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
   - id: deploy.schema.package-custody-receipt.v1
-    path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+    path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 -->
-# Package Custody and Promotion
+# Require Immutable Package Custody
 
 Package qualification, publication, and target promotion are separate
 decisions. A qualified image may be stored by immutable digest without being

@@ -496,17 +496,17 @@ terms:
   canonical_id: 04.deploy.workflow.prove-runnable-program-builds
   evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
   confidence_weight: 1
+- term: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.publish-immutable-package-with-custody
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/declaration-coverage.md
   category: workflow-name
   match_type: exact
   canonical_id: 04.deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
   confidence_weight: 1
 - term: .agentic/04.deploy/workflows/release-update-and-recovery.md
   category: workflow-name
@@ -778,12 +778,6 @@ terms:
   canonical_id: 01.harness.workflow.operational-realization-gate
   evidence_path: .agentic/01.harness/workflows/operational-realization-gate.md
   confidence_weight: 1
-- term: package-custody-and-promotion.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.package-custody-and-promotion
-  evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
-  confidence_weight: 1
 - term: plan-aws-change.md
   category: workflow-name
   match_type: exact
@@ -801,6 +795,12 @@ terms:
   match_type: exact
   canonical_id: 04.deploy.workflow.prove-runnable-program-builds
   evidence_path: .agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md
+  confidence_weight: 1
+- term: publish-immutable-package-with-custody.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.publish-immutable-package-with-custody
+  evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
   confidence_weight: 1
 - term: recover-transcript-draft.md
   category: workflow-name

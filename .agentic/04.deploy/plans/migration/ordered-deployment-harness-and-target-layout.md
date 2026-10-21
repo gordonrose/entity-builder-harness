@@ -257,6 +257,8 @@ are reviewed one by one against their true primary lifecycle phase:
 | `schemas/runnable-program-contract.v1.guide.md` | `20-build/schemas/runnable-program-contract.v1.guide.md` | requires contract-consumer review |
 | `workflows/package-custody-and-promotion.md` | `40-package/workflows/publish-immutable-package-with-custody.md` | requires pipeline-consumer review |
 | `standards/package-custody-and-promotion.md` | `40-package/standards/require-immutable-package-custody.md` | requires pipeline-consumer review |
+| `schemas/package-custody-receipt.v1.schema.yml` | `40-package/schemas/package-custody-receipt.v1.schema.yml` | requires pipeline-consumer review |
+| `schemas/package-custody-receipt.v1.guide.md` | `40-package/schemas/package-custody-receipt.v1.guide.md` | requires pipeline-consumer review |
 | `workflows/release-update-and-recovery.md` | split only if controls remain singular: `50-deploy/workflows/review-and-execute-target-update.md` and `60-run/workflows/restore-and-verify-accepted-release.md` | design decision after consumer review |
 | `standards/accepted-release-and-recovery.md` | `60-run/standards/retain-accepted-release-for-restoration.md` | requires recovery-consumer review |
 | `.agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md` | AWS target/scope route described above | provider-specific first batch candidate |

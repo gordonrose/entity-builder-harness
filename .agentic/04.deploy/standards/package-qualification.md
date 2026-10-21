@@ -4,7 +4,7 @@ id: deploy.standards.package-qualification
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -19,7 +19,7 @@ portability:
   - entity-builder
 used_by:
 - id: deploy.standards.package-custody-and-promotion
-  path: .agentic/04.deploy/standards/package-custody-and-promotion.md
+  path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
 -->
 # Package Qualification
 

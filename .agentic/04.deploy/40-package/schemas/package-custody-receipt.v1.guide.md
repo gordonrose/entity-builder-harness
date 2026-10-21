@@ -18,9 +18,9 @@ portability:
     - entity-builder
 used_by:
   - id: deploy.schema.package-custody-receipt.v1
-    path: .agentic/04.deploy/schemas/package-custody-receipt.v1.schema.yml
+    path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 -->
 # Package Custody Receipt v1 Guide
 

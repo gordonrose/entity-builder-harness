@@ -18,14 +18,14 @@
 #     - entity-builder
 #   used_by:
 #   - id: deploy.standards.package-custody-and-promotion
-#     path: .agentic/04.deploy/standards/package-custody-and-promotion.md
+#     path: .agentic/04.deploy/40-package/standards/require-immutable-package-custody.md
 #   - id: deploy.command.package-custody-receipt-validation
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 schema: deploy/package-custody-receipt-schema/v1
 receipt_schema: deploy/package-custody-receipt/v1
-companion_guide: .agentic/04.deploy/schemas/package-custody-receipt.v1.guide.md
+companion_guide: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.guide.md
 required_fields:
   - schema
   - target

@@ -287,6 +287,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Keep runnable-program contract material with the build phase
   Rationale: The runnable workflow, standard, schema, template, and guide are one build capability: they prove a program's dependency boundary and command before package construction. They now live together under 20-build; package publication and deploy controls remain separate.
 
+
+- Decision: Keep package custody with the package phase
+  Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
+
 ## Context Hygiene
 
 
@@ -425,6 +429,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Runnable-program build-capability migration verification
   Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
+
+
+- Summary: Package-custody migration verification
+  Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
 
 ## Activity Log
 
@@ -1728,6 +1736,20 @@ Message: refactor(deploy): group runnable program build controls
 Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-21T12:09:18Z - Decision
+
+Decision: Keep package custody with the package phase
+
+Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
+
+
+### 2026-10-21T12:09:18Z - Context hygiene
+
+Summary: Package-custody migration verification
+
+Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
 
 ## Sub-Agent Activity
 
