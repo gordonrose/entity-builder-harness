@@ -311,6 +311,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Accept live ECS replacement evidence with explicit proof boundary
   Rationale: The bootstrap runtime now has passed live workload-recovery evidence. It proves ECS replacement of a deliberately stopped accepted dependency-free task and fresh private verification; it does not claim application-readiness-failure detection, circuit-breaker rollback, or dependency-bearing recovery.
 
+
+- Decision: Complete bounded live workload recovery rehearsal
+  Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
+
 ## Context Hygiene
 
 
@@ -1904,6 +1908,13 @@ Message: docs(deploy): record workload recovery rehearsal
 Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
 
 ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
+
+
+### 2026-10-21T16:05:12Z - Decision
+
+Decision: Complete bounded live workload recovery rehearsal
+
+Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
 
 ## Sub-Agent Activity
 
