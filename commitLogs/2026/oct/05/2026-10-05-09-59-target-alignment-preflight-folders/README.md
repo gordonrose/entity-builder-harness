@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T12:10:09Z
-latest_commit_sha: 66e5cb57
-chat_duration: 1393840s (16:03:10:40)
+latest_commit_at_utc: 2026-10-21T14:57:37Z
+latest_commit_sha: 5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc
+chat_duration: 1403888s (16:05:58:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1773,6 +1773,17 @@ Summary: The proven core bootstrap route is active and has normal health, privat
 
 Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
 
+
+### 2026-10-21T14:57:37Z - Commit recorded
+
+Commit: `5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc`
+
+Message: docs(deploy): record proven core release route
+
+Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
+
+ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2102,6 +2113,13 @@ Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-cha
   Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc`
+  Time UTC: 2026-10-21T14:57:37Z
+  Message: docs(deploy): record proven core release route
+  Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
+  ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2115,9 +2133,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T12:10:09Z
-Latest commit SHA: 66e5cb57
-Chat duration: 1393840s (16:03:10:40)
+Latest commit at UTC: 2026-10-21T14:57:37Z
+Latest commit SHA: 5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc
+Chat duration: 1403888s (16:05:58:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
