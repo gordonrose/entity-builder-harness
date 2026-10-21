@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T11:34:39Z
-latest_commit_sha: b10fc32f
-chat_duration: 1391710s (16:02:35:10)
+latest_commit_at_utc: 2026-10-21T11:48:26Z
+latest_commit_sha: d5cb0c54
+chat_duration: 1392537s (16:02:48:57)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1586,6 +1586,17 @@ Summary: Batch 2 target declaration migration verification
 
 Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
 
+
+### 2026-10-21T11:48:26Z - Commit recorded
+
+Commit: `d5cb0c54`
+
+Message: refactor(deploy): order core platform target declarations
+
+Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1873,6 +1884,13 @@ Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migratio
   Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
   ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
 
+
+- Commit: `d5cb0c54`
+  Time UTC: 2026-10-21T11:48:26Z
+  Message: refactor(deploy): order core platform target declarations
+  Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1886,9 +1904,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T11:34:39Z
-Latest commit SHA: b10fc32f
-Chat duration: 1391710s (16:02:35:10)
+Latest commit at UTC: 2026-10-21T11:48:26Z
+Latest commit SHA: d5cb0c54
+Chat duration: 1392537s (16:02:48:57)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
