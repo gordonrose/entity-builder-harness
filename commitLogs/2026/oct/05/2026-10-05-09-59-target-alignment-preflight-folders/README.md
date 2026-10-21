@@ -259,6 +259,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Reconciled Release B rehearsal evidence with restored accepted Release A.
   Rationale: B remains a verified rehearsal candidate, while the accepted-release record names A's actual restored runtime and verifier task definitions; the static declaration gate checks the link.
 
+
+- Decision: Adopt placement-before-creation governance
+  Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
+
 ## Context Hygiene
 
 
@@ -377,6 +381,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Release B publication run 39571727355 qualified digest sha256:721466…224ec2, deployed and privately verified. The target was restored to accepted A digest sha256:0992b…5d5d5 and private verification accepted.
   Durable evidence: Authoritative target evidence: bootstrap-runtime/accepted-release.yml and rehearsals/release-b-to-a-2026-10-21.yml; reusable verifier rule in verify-candidate and AWS workflow.
+
+
+- Summary: Created a deployment placement-and-naming standard, proposed-path validator, and migration plan; no active paths or cloud state changed.
+  Durable evidence: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md and .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
 
 ## Activity Log
 
@@ -1530,6 +1538,20 @@ Message: fix(deploy): reuse completed verifier evidence
 Summary: Recorded the successful B-to-A rehearsal, reconciled the live accepted baseline, and made repeated private verification reuse current-deployment acceptance evidence instead of launching another task.
 
 ADR impact: No ADR: this strengthens the existing governed release-verification control.
+
+
+### 2026-10-21T11:32:07Z - Context hygiene
+
+Summary: Created a deployment placement-and-naming standard, proposed-path validator, and migration plan; no active paths or cloud state changed.
+
+Durable evidence: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md and .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+
+
+### 2026-10-21T11:32:07Z - Decision
+
+Decision: Adopt placement-before-creation governance
+
+Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
 
 ## Sub-Agent Activity
 

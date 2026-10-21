@@ -4,7 +4,7 @@ id: deploy.standards.readme
 version: 1
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -26,6 +26,10 @@ transition.
 
 Current standards:
 
+- `deployment-artifact-placement-and-naming.md`: decides whether new deployment
+  facts, instructions, or executable checks belong in `infra/`, `.agentic/`,
+  or `scripts/`, then requires a lifecycle-aware path and a clear action or
+  requirement name.
 - `runnable-program-candidates.md`: declares the reviewed source boundary for
   a runnable program, its package candidate, and safe qualification evidence.
 - `declaration-coverage.md`, `delivery-access-coverage.md`, and `package-qualification.md`: define declaration, delivery, and package evidence requirements.
