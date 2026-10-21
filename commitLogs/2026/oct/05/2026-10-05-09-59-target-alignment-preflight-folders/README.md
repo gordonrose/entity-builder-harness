@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T11:56:22Z
-latest_commit_sha: ab738224
-chat_duration: 1393013s (16:02:56:53)
+latest_commit_at_utc: 2026-10-21T11:59:54Z
+latest_commit_sha: ee8d5746
+chat_duration: 1393225s (16:03:00:25)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1685,6 +1685,17 @@ Decision: Adopt lifecycle-first deployment authority paths
 
 Rationale: ADR 0037 establishes the durable folder and naming rule: folders say when or where, filenames say what, and target/scope says what is affected. Generic authority stays singular; provider workflows and scripts remain lifecycle-first with binding where necessary.
 
+
+### 2026-10-21T11:59:54Z - Commit recorded
+
+Commit: `ee8d5746`
+
+Message: docs(deploy): record lifecycle-first path decision
+
+Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1993,6 +2004,13 @@ Rationale: ADR 0037 establishes the durable folder and naming rule: folders say 
   Summary: Completed migration batch 4: moved reusable target-alignment workflow and standard into lifecycle-first clear-action paths, updated active consumers and generated recognition sources, passed both migration checks and required commit gates, and deliberately deferred a nonexistent alignment schema. No cloud or GitHub state changed.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ee8d5746`
+  Time UTC: 2026-10-21T11:59:54Z
+  Message: docs(deploy): record lifecycle-first path decision
+  Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2006,9 +2024,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T11:56:22Z
-Latest commit SHA: ab738224
-Chat duration: 1393013s (16:02:56:53)
+Latest commit at UTC: 2026-10-21T11:59:54Z
+Latest commit SHA: ee8d5746
+Chat duration: 1393225s (16:03:00:25)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
