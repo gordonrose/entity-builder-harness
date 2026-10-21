@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T15:37:01Z
-latest_commit_sha: e559c8cee3b434978fd7abb8cb9f8d414f47cfbc
-chat_duration: 1406252s (16:06:37:32)
+latest_commit_at_utc: 2026-10-21T15:54:02Z
+latest_commit_sha: 585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb
+chat_duration: 1407273s (16:06:54:33)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1850,6 +1850,17 @@ Summary: Current rehearsal control requires a fresh verifier boundary and does n
 
 Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
 
+
+### 2026-10-21T15:54:02Z - Commit recorded
+
+Commit: `585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb`
+
+Message: feat(aws): rehearse accepted workload replacement
+
+Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
+
+ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2193,6 +2204,13 @@ Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/k
   Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
   ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
 
+
+- Commit: `585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb`
+  Time UTC: 2026-10-21T15:54:02Z
+  Message: feat(aws): rehearse accepted workload replacement
+  Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
+  ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2206,9 +2224,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T15:37:01Z
-Latest commit SHA: e559c8cee3b434978fd7abb8cb9f8d414f47cfbc
-Chat duration: 1406252s (16:06:37:32)
+Latest commit at UTC: 2026-10-21T15:54:02Z
+Latest commit SHA: 585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb
+Chat duration: 1407273s (16:06:54:33)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
