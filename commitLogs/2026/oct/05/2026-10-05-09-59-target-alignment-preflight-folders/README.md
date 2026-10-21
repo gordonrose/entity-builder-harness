@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T11:48:26Z
-latest_commit_sha: d5cb0c54
-chat_duration: 1392537s (16:02:48:57)
+latest_commit_at_utc: 2026-10-21T11:52:32Z
+latest_commit_sha: 5240b9a0
+chat_duration: 1392783s (16:02:53:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1619,6 +1619,17 @@ Summary: Batch 3 AWS workflow migration verification
 
 Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved the one AWS workflow only; active consumers and generated recognition sources now use its lifecycle-first target/scope path. Path-migration checker, target declaration, package custody, release-control, and migration-helper smoke tests passed. No AWS or GitHub mutation occurred.
 
+
+### 2026-10-21T11:52:32Z - Commit recorded
+
+Commit: `5240b9a0`
+
+Message: refactor(deploy): route core AWS workflow by lifecycle
+
+Summary: Completed migration batch 3: rehomed the single AWS bootstrap-runtime release workflow to the lifecycle-first target/scope route, clarified deploy, verification, and restoration sections, updated consumers and generated recognition sources, and passed required metadata, path, target, package, release, and helper-smoke gates. No cloud or GitHub state changed.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -1913,6 +1924,13 @@ Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migratio
   Summary: Completed migration batch 2: canonical target declaration hierarchy, updated active consumers and fixtures, refreshed recognition sources, and passed declaration, package-custody, release-control, metadata, migration, and repository commit gates. No cloud or GitHub state changed.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5240b9a0`
+  Time UTC: 2026-10-21T11:52:32Z
+  Message: refactor(deploy): route core AWS workflow by lifecycle
+  Summary: Completed migration batch 3: rehomed the single AWS bootstrap-runtime release workflow to the lifecycle-first target/scope route, clarified deploy, verification, and restoration sections, updated consumers and generated recognition sources, and passed required metadata, path, target, package, release, and helper-smoke gates. No cloud or GitHub state changed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -1926,9 +1944,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T11:48:26Z
-Latest commit SHA: d5cb0c54
-Chat duration: 1392537s (16:02:48:57)
+Latest commit at UTC: 2026-10-21T11:52:32Z
+Latest commit SHA: 5240b9a0
+Chat duration: 1392783s (16:02:53:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
