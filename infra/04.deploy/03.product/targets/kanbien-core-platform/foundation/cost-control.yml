@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -15,6 +15,9 @@
 #   portability:
 #     class: internal
 #     targets: []
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.validate-cost-condition
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh
 schema: deploy/provider-condition-declaration/v1
 target: kanbien-core-platform
 condition_id: target-cost-allocation-tag-active
@@ -22,12 +25,15 @@ owner: cost-owner
 required_evidence: provider-condition-evidence/v1
 evidence_validator: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
 required_for: target-filtered-monthly-budget
-status: waiting-on-provider
+status: waived-by-approved-exception
+evidence: evidence/target-cost-allocation-tag.yml
 next_safe_recheck: read-only-cost-explorer-tag-discovery
 expiry_policy: explicit-review-required-before-expiry
 waiver:
   permitted_only_with: explicit-approved-exception
   scope: target-cost-allocation-tag-active
+  current_authority_reference: chat-2026-10-05-release-b-rehearsal-authorization
+  current_expiry: "2026-10-22T12:00:00Z"
   compensating_controls:
     - one-task-only
     - no-autoscaling

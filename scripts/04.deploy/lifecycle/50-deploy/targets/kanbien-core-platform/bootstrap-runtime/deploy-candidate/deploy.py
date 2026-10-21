@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.execute-runtime-change-set
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -72,6 +72,9 @@ def main():
     expected = f"kanbien-core-platform-{args.operation}-{c['image_digest'][7:19]}"
     if args.approved_change_set != expected:
         report("blocked", "approved-change-set-does-not-match-qualified-digest"); return 1
+    cost = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh"), "--json"], capture_output=True, text=True)
+    if cost.returncode:
+        report("blocked", "cost-condition-not-proven"); return 1
     ok, change, code = aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", expected)
     if not ok:
         report("blocked", code); return 1

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.create-runtime-change-set
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -78,6 +78,8 @@ def main() -> int:
     if contract.returncode: return fail("release-contract-not-proven")
     alignment = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"), "--receipt", str(args.receipt), "--operation", args.operation, "--json"], capture_output=True, text=True)
     if alignment.returncode: return fail("runtime-update-alignment-not-proven")
+    cost = subprocess.run(["bash", str(ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh"), "--json"], capture_output=True, text=True)
+    if cost.returncode: return fail("cost-condition-not-proven")
     ok, foundation, code = aws("cloudformation", "describe-stacks", "--stack-name", FOUNDATION)
     if not ok: return fail(code)
     stacks = foundation.get("Stacks", []) if isinstance(foundation, dict) else []

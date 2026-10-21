@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -133,7 +133,7 @@ def check_profile(profile: dict[str, Any]) -> None:
     if not isinstance(facts, list):
         raise DeclarationFailure("e0-fact-missing")
     found: set[str] = set()
-    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "accepted-release-retained-and-private-verified"}
+    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z", "accepted-release-retained-and-private-verified"}
     for fact in facts:
         if not isinstance(fact, dict) or not non_empty(fact.get("id")):
             raise DeclarationFailure("e0-fact-invalid")
@@ -159,7 +159,7 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation"}:
+        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
@@ -189,6 +189,22 @@ def check_foundation(root: Path) -> None:
         or not non_empty(waiver.get("follow_up_owner"))
     ):
         raise DeclarationFailure("cost-control-invalid")
+    if cost.get("status") == "waived-by-approved-exception":
+        if cost.get("evidence") != "evidence/target-cost-allocation-tag.yml":
+            raise DeclarationFailure("cost-control-evidence-invalid")
+        evidence = mapping(root / "foundation" / cost["evidence"], "cost-control-evidence-unreadable")
+        evidence_waiver = required_mapping(evidence, "waiver", "cost-control-evidence-invalid")
+        if (
+            evidence.get("schema") != "deploy/provider-condition-evidence/v1"
+            or evidence.get("condition_id") != "target-cost-allocation-tag-active"
+            or evidence.get("target") != TARGET
+            or evidence.get("status") != "waived-by-approved-exception"
+            or evidence_waiver.get("authority_reference") != waiver.get("current_authority_reference")
+            or evidence_waiver.get("expires_at") != waiver.get("current_expiry")
+            or set(evidence_waiver.get("compensating_controls", [])) != expected_controls
+            or evidence_waiver.get("follow_up_owner") != waiver.get("follow_up_owner")
+        ):
+            raise DeclarationFailure("cost-control-evidence-invalid")
 
 
 def check_scope(root: Path) -> None:
@@ -237,6 +253,7 @@ def check_accepted_release(root: Path) -> None:
     release = required_mapping(record, "release", "accepted-release-invalid")
     acceptance = required_mapping(record, "acceptance", "accepted-release-invalid")
     verification = required_mapping(release, "private_verification", "accepted-release-invalid")
+    cost_condition = required_mapping(record, "cost_condition", "accepted-release-invalid")
     if (
         record.get("schema") != "deploy/accepted-release/v1"
         or record.get("target") != TARGET
@@ -248,6 +265,9 @@ def check_accepted_release(root: Path) -> None:
         or verification.get("verdict") != "accepted"
         or verification.get("code") != "runtime-digest-and-private-verifier-accepted"
         or acceptance.get("retained_for_restoration") is not True
+        or cost_condition.get("condition_id") != "target-cost-allocation-tag-active"
+        or cost_condition.get("evidence") != "foundation/evidence/target-cost-allocation-tag.yml"
+        or not non_empty(cost_condition.get("disposition"))
     ):
         raise DeclarationFailure("accepted-release-invalid")
 

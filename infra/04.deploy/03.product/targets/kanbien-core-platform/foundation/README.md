@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -35,6 +35,7 @@ the object store that serves image layers. The latter must be restricted to the
 provider-managed object-store prefix list, not widened to general internet
 egress.
 
-`cost-control.yml` remains unresolved: AWS currently exposes the `Target` tag
-as inactive. No update or restoration may mutate AWS until the tag is active or
-a fresh, explicit waiver is validated.
+`cost-control.yml` records that AWS currently exposes the `Target` tag as
+inactive. Its `evidence/` record holds the narrowly approved, expiring waiver
+for this rehearsal; no update or restoration may mutate AWS after that record
+expires unless fresh provider evidence or a new waiver replaces it.

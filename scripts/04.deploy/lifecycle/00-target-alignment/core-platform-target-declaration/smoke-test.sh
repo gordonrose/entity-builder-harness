@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -15,7 +15,7 @@ set -euo pipefail
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Prove the core-platform target declaration checker accepts its planned declaration and rejects unsafe claims.
+#   purpose: Prove the core-platform target declaration checker accepts its accepted declaration and rejects unsafe claims, including mismatched waiver evidence.
 #   portability:
 #     class: internal
 #     targets: []
@@ -81,7 +81,7 @@ value = yaml.safe_load(path.read_text(encoding="utf-8") )
 value["target_mutation"]["allowed_operation"] = "replace"
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
-expect_failure "target-mutation-not-create-only" "$replaced"
+expect_failure "target-mutation-not-controlled" "$replaced"
 
 unowned="$(copy_fixture unowned)"
 python3 - "$unowned/target-profile.yml" <<'PY'
@@ -121,5 +121,18 @@ value["waiver"]["compensating_controls"] = []
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
 expect_failure "cost-control-invalid" "$cost"
+
+mismatched_evidence="$(copy_fixture mismatched-cost-evidence)"
+python3 - "$mismatched_evidence/foundation/evidence/target-cost-allocation-tag.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+path = Path(sys.argv[1])
+value = yaml.safe_load(path.read_text(encoding="utf-8"))
+value["waiver"]["expires_at"] = "2026-10-23T12:00:00Z"
+path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+PY
+expect_failure "cost-control-evidence-invalid" "$mismatched_evidence"
 
 echo "Core-platform target declaration tests passed."

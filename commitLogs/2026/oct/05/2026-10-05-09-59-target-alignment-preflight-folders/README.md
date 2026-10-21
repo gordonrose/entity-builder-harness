@@ -358,6 +358,10 @@ can you walk me through which part of my repo work on the following stages
 - Summary: Refreshed chat branch from current local main before promotion
   Durable evidence: Preflight branch agentic/preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-09a8fc533584/20261020171513 merged cleanly; applied commit 0b7768e9aa3e5f3ff60c6ae1f7635b304fbb939a; temporary preflight worktree and branch were removed; no stash or conflicts; post-refresh delivery controls passed.
 
+
+- Summary: Recorded the approved short-lived cost-control waiver as target-local evidence and made it an executable pre-mutation gate; generic validation now rejects expired waivers.
+  Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
+
 ## Activity Log
 
 ### 2026-10-05T08:59:29Z - Session started
@@ -1442,6 +1446,13 @@ ADR impact: ADR not required: bounded rehearsal-only source metadata change unde
 Decision: Qualified Release B locally
 
 Rationale: The exact committed B revision ab80e2e1 passed runnable-program, dependency-boundary, release-contract, and real Docker liveness, readiness, and release-identity smoke checks. Publication remains a separate protected workflow and no AWS target mutation has occurred.
+
+
+### 2026-10-21T08:40:59Z - Context hygiene
+
+Summary: Recorded the approved short-lived cost-control waiver as target-local evidence and made it an executable pre-mutation gate; generic validation now rejects expired waivers.
+
+Durable evidence: Durable evidence is in foundation/evidence/target-cost-allocation-tag.yml, the fixed target cost-condition wrapper, static declaration test, and AWS release workflow.
 
 ## Sub-Agent Activity
 

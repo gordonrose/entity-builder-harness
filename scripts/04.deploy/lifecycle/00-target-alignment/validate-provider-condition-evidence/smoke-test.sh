@@ -3,16 +3,16 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-provider-condition-evidence
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
 #   - security
 #   kind: script
-#   purpose: Prove the generic provider-condition validator accepts safe waiting evidence and rejects an incomplete waiver.
+#   purpose: Prove the generic provider-condition validator accepts safe waiting evidence and rejects incomplete or expired waivers.
 #   portability:
 #     class: reusable
 #     targets:
@@ -45,4 +45,26 @@ if output="$(bash "$SCRIPT" --evidence "$TEMPORARY_DIRECTORY/invalid-waiver.yml"
   exit 1
 fi
 [[ "$output" == *'provider-condition-waiver-invalid'* ]]
+python3 - "$FIXTURE" "$TEMPORARY_DIRECTORY/valid-waiver.yml" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+value = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
+value["status"] = "waived-by-approved-exception"
+value["waiver"] = {
+    "authority_reference": "approved-change-001",
+    "reason_code": "provider-delay",
+    "expires_at": "2026-10-22T12:00:00Z",
+    "compensating_controls": ["one-task-only"],
+    "follow_up_owner": "cost-owner",
+}
+Path(sys.argv[2]).write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+PY
+bash "$SCRIPT" --evidence "$TEMPORARY_DIRECTORY/valid-waiver.yml" --required-status waived-by-approved-exception --at 2026-10-21T12:00:00Z --json >/dev/null
+if output="$(bash "$SCRIPT" --evidence "$TEMPORARY_DIRECTORY/valid-waiver.yml" --required-status waived-by-approved-exception --at 2026-10-22T12:00:00Z --json 2>&1)"; then
+  echo 'ERROR: validator accepted an expired waiver.' >&2
+  exit 1
+fi
+[[ "$output" == *'provider-condition-waiver-expired'* ]]
 echo 'Provider-condition evidence smoke test passed.'

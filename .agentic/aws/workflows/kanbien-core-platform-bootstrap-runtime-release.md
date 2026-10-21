@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines: [security, sre]
@@ -24,13 +24,21 @@ Required sequence:
 
 1. Run runnable-program, package-custody, image smoke, target declaration,
    and release-contract checks.
-2. Run `prepare-candidate` with a qualified receipt and `--operation update`.
-3. Create a fixed UPDATE change set and review its task-definition/service-only
+2. Before creating or executing a change set, run:
+
+   ```bash
+   bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/validate-cost-condition/script.sh --json
+   ```
+
+   It accepts only live verified cost evidence or an explicit, unexpired
+   target-local waiver with the declared compensating controls.
+3. Run `prepare-candidate` with a qualified receipt and `--operation update`.
+4. Create a fixed UPDATE change set and review its task-definition/service-only
    resource boundary.
-4. Under explicit AWS authority, execute the exact approved change set.
-5. Run private verification using the same qualified receipt.
-6. Record acceptance only after the verification report agrees with the receipt.
-7. On rejected candidate verification, use `restore-accepted-release` to
+5. Under explicit AWS authority, execute the exact approved change set.
+6. Run private verification using the same qualified receipt.
+7. Record acceptance only after the verification report agrees with the receipt.
+8. On rejected candidate verification, use `restore-accepted-release` to
    prepare a reviewed restoration; execute only under explicit AWS authority,
    then privately verify the retained release.
 
