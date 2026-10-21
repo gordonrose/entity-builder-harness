@@ -73,7 +73,7 @@ json.dump({"schema":"deploy/private-runtime-verification-report/v1","target":"ka
 PY
 "$ACCEPT" --receipt "$accepted_receipt" --verification-report "$accepted_verification" --json | grep -q '"verdict": "ready-to-record"'
 
-python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml" <<'PY'
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml" <<'PY'
 import re
 import sys
 
@@ -95,7 +95,7 @@ assert "- -e" in verifier_command.group("body"), "the private verifier must pass
 assert "- node" not in verifier_command.group("body"), "the private verifier must not duplicate the distroless Node entrypoint"
 PY
 
-python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml" <<'PY'
+python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml" <<'PY'
 import re
 import sys
 

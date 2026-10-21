@@ -27,7 +27,7 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 exec bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh" \
-  --evidence "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/evidence/target-cost-allocation-tag.yml" \
+  --evidence "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml" \
   --required-status verified \
   --required-status waived-by-approved-exception \
   "$@"

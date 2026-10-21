@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -15,10 +15,15 @@
 #   portability:
 #     class: internal
 #     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
+#   - id: deploy.script.core-server-package-custody.validate-delivery-access
+#     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh
 schema: deploy/delivery-access-contract/v1
 pipeline: core-server-package-custody
 actor: github-kanbien-core-platform-delivery
-provider_policy_source: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml#DeliveryRole
+provider_policy_source: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml#DeliveryRole
 workflow: .github/workflows/publish-kanbien-core-platform-core-server.yml
 operations:
   - { id: obtain-registry-token, workflow_step: Log in to Amazon ECR, provider_action: ecr:GetAuthorizationToken, resource_class: aws-ecr-registry-token, purpose: authenticate-to-declared-package-destination, proof: static-policy-coverage }

@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -18,7 +18,7 @@
 #     targets: []
 #   used_by:
 #   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/declaration-contract.yml
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
 schema: deploy/workload-binding/v1
 id: kanbien-core-platform-bootstrap-runtime-workload
 target: kanbien-core-platform
@@ -32,7 +32,7 @@ package_identity: runtime-bound-sha256
 provider_workload: fixed-ecs-fargate-runtime-stack-live-verified-fresh-alignment-required
 private_verifier: fixed-one-shot-private-ecs-task-live-verified-fresh-alignment-required
 proposed_provider_binding:
-  template: cloudformation/bootstrap-runtime.yml
+  template: 30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
   workload_kind: ecs-fargate-service
   immutable_image_reference: repository-at-sha256-digest-only
   network_placement: selected-private-subnets-no-public-ip

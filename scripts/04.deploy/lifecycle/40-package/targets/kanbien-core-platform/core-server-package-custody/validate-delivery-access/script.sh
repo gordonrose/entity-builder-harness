@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -29,8 +29,8 @@ if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--json" ]; }; then
 fi
 
 ROOT="$(git rev-parse --show-toplevel)"
-CONTRACT="infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/core-server-package-custody.delivery-access.yml"
-TEMPLATE="infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml"
+CONTRACT="infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/core-server-package-custody.delivery-access.yml"
+TEMPLATE="infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml"
 WORKFLOW=".github/workflows/publish-kanbien-core-platform-core-server.yml"
 POLICY_SOURCE="${TEMPLATE}#DeliveryRole"
 COVERAGE="$(mktemp)"

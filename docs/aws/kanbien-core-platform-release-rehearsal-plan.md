@@ -48,7 +48,7 @@ The bounded rehearsal has completed. The target was created as accepted release
 A; qualified release B was published, deployed, and privately verified; then A
 was deliberately restored and privately verified again. B was **not** accepted
 as the ongoing baseline. The authoritative live record is
-`infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml`;
+`infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml`;
 the separately retained rehearsal evidence is in its `rehearsals/` folder.
 Future changes use the routed harness workflows, not this historical plan.
 

@@ -263,6 +263,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt placement-before-creation governance
   Rationale: Future deployment artifacts must choose infra, agentic, or scripts ownership; name their lifecycle phase and clear purpose; validate new canonical proposed paths before addition or move. No ADR is needed yet because this sets a governed migration direction without changing the durable active namespace.
 
+
+- Decision: Adopt ordered deployment placement and naming migration
+  Rationale: The approved migration makes target declarations scanable in lifecycle order. Batch 2 moved only active kanbien-core-platform target declarations to 00-target, 10-foundation, 20-scopes, 30-provider-realization/aws, and 40-package-custody; all active consumers, fixtures, GitHub metadata, and generated recognition sources now use the canonical locations. Old paths have no active aliases or consumers.
+
 ## Context Hygiene
 
 
@@ -385,6 +389,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Created a deployment placement-and-naming standard, proposed-path validator, and migration plan; no active paths or cloud state changed.
   Durable evidence: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md and .agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md
+
+
+- Summary: Batch 2 target declaration migration verification
+  Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
 
 ## Activity Log
 
@@ -1563,6 +1571,20 @@ Message: feat(deploy): govern artifact placement and naming
 Summary: Added the deployment artifact placement-and-naming standard, proposed-path validator with regression proof, lifecycle ownership linkage, and the governed ordered-layout migration plan. No active paths or provider state changed.
 
 ADR impact: No ADR: the commit establishes a migration standard and plan, but does not change the active durable namespace or compatibility promise.
+
+
+### 2026-10-21T11:47:10Z - Decision
+
+Decision: Adopt ordered deployment placement and naming migration
+
+Rationale: The approved migration makes target declarations scanable in lifecycle order. Batch 2 moved only active kanbien-core-platform target declarations to 00-target, 10-foundation, 20-scopes, 30-provider-realization/aws, and 40-package-custody; all active consumers, fixtures, GitHub metadata, and generated recognition sources now use the canonical locations. Old paths have no active aliases or consumers.
+
+
+### 2026-10-21T11:47:10Z - Context hygiene
+
+Summary: Batch 2 target declaration migration verification
+
+Durable evidence: Durable migration authority: .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Validation passed: target declaration, package custody, and release contract smoke suites; all nine path-migration checks; generated recognition-source refresh and validation; staged metadata check. No cloud or GitHub mutation occurred. Next planned batch: AWS target workflow migration after consumer review.
 
 ## Sub-Agent Activity
 

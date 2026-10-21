@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -41,12 +41,12 @@ def check(root: Path) -> list[str]:
     codes: list[str] = []
     image = load_yaml(root / "infra/04.deploy/03.product/image/core-server/image-contract.yml")
     programs = load_yaml(root / "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml")
-    network = load_yaml(root / "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/network.yml")
-    access = load_yaml(root / "infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/technical-access.yml")
+    network = load_yaml(root / "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/network.yml")
+    access = load_yaml(root / "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/technical-access.yml")
     try:
         docker = (root / "infra/04.deploy/03.product/image/core-server/Dockerfile").read_text(encoding="utf-8")
-        template = (root / "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/bootstrap-runtime.yml").read_text(encoding="utf-8")
-        foundation = (root / "infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/foundation.yml").read_text(encoding="utf-8")
+        template = (root / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml").read_text(encoding="utf-8")
+        foundation = (root / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/foundation.yml").read_text(encoding="utf-8")
     except OSError:
         return ["release-contract-source-unreadable"]
     if not image or image.get("id") != "kanbien-core-server-image" or image.get("runtime", {}).get("user") != "nonroot":

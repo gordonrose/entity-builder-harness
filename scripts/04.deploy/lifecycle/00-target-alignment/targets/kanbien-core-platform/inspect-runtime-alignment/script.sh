@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -34,6 +34,6 @@ receipt_report="$(bash "$ROOT/scripts/04.deploy/lifecycle/40-package/package-cus
 digest="$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["image_digest"])' <<<"$receipt_report")"
 evidence="$(mktemp)"; trap 'rm -f "$evidence"' EXIT
 adapter_status=0
-bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh" --profile kanbien-dev --region eu-west-1 --account-id 337159794548 --repository kanbien-core-platform/core-server --image-digest "$digest" --foundation-stack kanbien-core-platform-foundation --runtime-stack kanbien-core-platform-bootstrap-runtime --cluster kanbien-core-platform --delivery-role github-kanbien-core-platform-delivery --execution-role kanbien-core-platform-task-execution --operation "$operation" --accepted-release "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/accepted-release.yml" --json >"$evidence" || adapter_status=$?
-bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh" --contract "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/scopes/bootstrap-runtime/runtime-alignment-contract.yml" --evidence "$evidence" --json || exit 1
+bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.sh" --profile kanbien-dev --region eu-west-1 --account-id 337159794548 --repository kanbien-core-platform/core-server --image-digest "$digest" --foundation-stack kanbien-core-platform-foundation --runtime-stack kanbien-core-platform-bootstrap-runtime --cluster kanbien-core-platform --delivery-role github-kanbien-core-platform-delivery --execution-role kanbien-core-platform-task-execution --operation "$operation" --accepted-release "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml" --json >"$evidence" || adapter_status=$?
+bash "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/script.sh" --contract "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/20-alignment/runtime-alignment-contract.yml" --evidence "$evidence" --json || exit 1
 exit "$adapter_status"

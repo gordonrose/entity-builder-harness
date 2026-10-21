@@ -18,7 +18,7 @@ portability:
   targets: []
 used_by:
 - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-  path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
+  path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
 -->
 # Foundation
 

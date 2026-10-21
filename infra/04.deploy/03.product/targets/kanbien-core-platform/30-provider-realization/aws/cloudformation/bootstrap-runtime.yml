@@ -10,10 +10,10 @@
 #   purpose: Define the private immutable-digest ECS workload and one-shot verifier for the Kanbien core bootstrap scope.
 #   portability: { class: internal, targets: [] }
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   used_by:
 #   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
-#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/cloudformation/README.md
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/README.md
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Private immutable-digest ECS bootstrap runtime for kanbien-core-platform; no public ingress.
 

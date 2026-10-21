@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -18,7 +18,7 @@
 #     targets: []
 #   used_by:
 #   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/foundation-index.yml
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
 schema: deploy/network-declaration/v1
 target: kanbien-core-platform
 status: established-e2c-fresh-e4-evidence-required

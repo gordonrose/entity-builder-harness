@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-ac
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -18,7 +18,7 @@ portability:
   targets: []
 used_by:
 - id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
-  path: infra/04.deploy/03.product/targets/kanbien-core-platform/pipelines/github-actions/pipeline-index.yml
+  path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
 -->
 # GitHub Actions Delivery Catalogue
 

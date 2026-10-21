@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -32,10 +32,10 @@ program:
 workload:
   operation: controlled-update-or-restoration
   runtime_selection: ecs-fargate-private-immutable-digest
-  runtime_template: cloudformation/bootstrap-runtime.yml
+  runtime_template: 30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
   runtime_boundary: ecs-fargate-private-immutable-digest
-  startup_access: foundation/technical-access.yml#workload-startup
-  network: foundation/network.yml#private-verifier-route
+  startup_access: 10-foundation/technical-access.yml#workload-startup
+  network: 10-foundation/network.yml#private-verifier-route
 configuration:
   value_policy: names-and-shapes-only-no-values
   required_names:
@@ -58,7 +58,7 @@ verification:
   owner: platform-runtime
   verifier:
     type: one-shot-private-ecs-task
-    template: cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition
+    template: 30-provider-realization/aws/cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition
     required_evidence:
       - immutable-image-digest
       - expected-source-revision

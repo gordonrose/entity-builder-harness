@@ -44,4 +44,4 @@ cost_condition:
   provider_status: inactive
   checked_at: "2026-10-21T08:29:00Z"
   disposition: temporary-waiver-active-until-2026-10-22T12-00-00Z
-  evidence: foundation/evidence/target-cost-allocation-tag.yml
+  evidence: 10-foundation/evidence/target-cost-allocation-tag.yml

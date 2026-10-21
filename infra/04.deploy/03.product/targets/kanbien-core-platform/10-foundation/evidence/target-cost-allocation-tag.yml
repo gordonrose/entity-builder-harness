@@ -17,7 +17,7 @@
 #     targets: []
 #   used_by:
 #   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
-#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/foundation/cost-control.yml
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/cost-control.yml
 #   - id: deploy.command.core-platform-target-declaration
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
 schema: deploy/provider-condition-evidence/v1

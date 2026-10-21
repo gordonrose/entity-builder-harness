@@ -4,7 +4,7 @@ id: infra.04-deploy.03-product.targets.kanbien-core-platform.readme
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -27,14 +27,15 @@ not proof that a future candidate is aligned: each mutation requires fresh
 alignment and the routed release workflow.
 
 `target-profile.yml` records the accepted-baseline state. The durable identity
-of that release lives in `scopes/bootstrap-runtime/accepted-release.yml`.
+of that release lives in
+`../20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml`.
 The static declaration checker proves the repository facts are complete; only
 fresh read-only provider evidence may report an update or restoration aligned.
 
-- `foundation/` owns shared target facilities and the outstanding cost condition.
-- `scopes/bootstrap-runtime/` owns the workload, private verifier, retained
+- `../10-foundation/` owns shared target facilities and the outstanding cost condition.
+- `../20-scopes/bootstrap-runtime/` owns the workload, private verifier, retained
   accepted release, safe configuration names, and excluded concerns.
-- `pipelines/github-actions/` records the package-publication route. It does
+- `../40-package-custody/github-actions/` records the package-publication route. It does
   not grant deployment authority.
 
 Do not place secrets, raw provider responses, or uncontrolled runtime facts in

@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: '2026-10-20'
+#   updated_on: '2026-10-21'
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.routing
@@ -53,8 +53,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 130
-  workflow_files: 43
+  term_count: 134
+  workflow_files: 45
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -496,6 +496,12 @@ terms:
   canonical_id: 04.deploy.workflow.package-custody-and-promotion
   evidence_path: .agentic/04.deploy/workflows/package-custody-and-promotion.md
   confidence_weight: 1
+- term: .agentic/04.deploy/workflows/release-update-and-recovery.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/runnable-program-candidates.md
   category: workflow-name
   match_type: exact
@@ -531,6 +537,12 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.inspect-aws-state
   evidence_path: .agentic/aws/workflows/inspect-aws-state.md
+  confidence_weight: 1
+- term: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/plan-aws-change.md
   category: workflow-name
@@ -748,6 +760,12 @@ terms:
   canonical_id: aws.workflow.inspect-aws-state
   evidence_path: .agentic/aws/workflows/inspect-aws-state.md
   confidence_weight: 1
+- term: kanbien-core-platform-bootstrap-runtime-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
+  evidence_path: .agentic/aws/workflows/kanbien-core-platform-bootstrap-runtime-release.md
+  confidence_weight: 1
 - term: migrate-artifact-paths.md
   category: workflow-name
   match_type: exact
@@ -789,6 +807,12 @@ terms:
   match_type: exact
   canonical_id: 00.chat.workflow.recover-transcript-draft
   evidence_path: .agentic/00.chat/workflows/recover-transcript-draft.md
+  confidence_weight: 1
+- term: release-update-and-recovery.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
   confidence_weight: 1
 - term: review-okf-source-material.md
   category: workflow-name

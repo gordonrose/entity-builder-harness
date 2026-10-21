@@ -32,11 +32,11 @@ resources:
     status: live-verified-fresh-alignment-required
     owner: deployment-platform
   - id: image-custody
-    declaration: target-profile.yml#image-custody-destination
+    declaration: ../00-target/target-profile.yml#image-custody-destination
     status: live-verified-fresh-alignment-required
     owner: deployment-platform
   - id: logging-destination
-    declaration: target-profile.yml#logging-destination
+    declaration: ../00-target/target-profile.yml#logging-destination
     status: live-verified-fresh-alignment-required
     owner: observability-owner
   - id: cost-guard

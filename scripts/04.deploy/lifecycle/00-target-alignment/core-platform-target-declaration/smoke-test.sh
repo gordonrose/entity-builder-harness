@@ -58,7 +58,7 @@ copy_fixture() {
 expect_pass "$SOURCE"
 
 missing="$(copy_fixture missing)"
-python3 - "$missing/target-profile.yml" <<'PY'
+python3 - "$missing/00-target/target-profile.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -71,7 +71,7 @@ PY
 expect_failure "e0-fact-missing" "$missing"
 
 replaced="$(copy_fixture replaced)"
-python3 - "$replaced/target-profile.yml" <<'PY'
+python3 - "$replaced/00-target/target-profile.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -84,7 +84,7 @@ PY
 expect_failure "target-mutation-not-controlled" "$replaced"
 
 unowned="$(copy_fixture unowned)"
-python3 - "$unowned/target-profile.yml" <<'PY'
+python3 - "$unowned/00-target/target-profile.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -97,7 +97,7 @@ PY
 expect_failure "e0-fact-unowned" "$unowned"
 
 ready="$(copy_fixture falsely-ready)"
-python3 - "$ready/target-profile.yml" <<'PY'
+python3 - "$ready/00-target/target-profile.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -110,7 +110,7 @@ PY
 expect_failure "live-alignment-state-invalid" "$ready"
 
 cost="$(copy_fixture invalid-cost-control)"
-python3 - "$cost/foundation/cost-control.yml" <<'PY'
+python3 - "$cost/10-foundation/cost-control.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -123,7 +123,7 @@ PY
 expect_failure "cost-control-invalid" "$cost"
 
 mismatched_evidence="$(copy_fixture mismatched-cost-evidence)"
-python3 - "$mismatched_evidence/foundation/evidence/target-cost-allocation-tag.yml" <<'PY'
+python3 - "$mismatched_evidence/10-foundation/evidence/target-cost-allocation-tag.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
@@ -136,7 +136,7 @@ PY
 expect_failure "cost-control-evidence-invalid" "$mismatched_evidence"
 
 missing_rehearsal="$(copy_fixture missing-rehearsal)"
-python3 - "$missing_rehearsal/scopes/bootstrap-runtime/accepted-release.yml" <<'PY'
+python3 - "$missing_rehearsal/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml" <<'PY'
 from pathlib import Path
 import sys
 import yaml
