@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T11:59:54Z
-latest_commit_sha: ee8d5746
-chat_duration: 1393225s (16:03:00:25)
+latest_commit_at_utc: 2026-10-21T12:06:20Z
+latest_commit_sha: ac504bff
+chat_duration: 1393611s (16:03:06:51)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1718,6 +1718,17 @@ Summary: Runnable-program build-capability migration verification
 
 Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/plans/migration/ordered-deployment-harness-and-target-layout.md. Moved five runnable-program authority artifacts into 20-build and updated all active consumers. Passed runnable-program and core dependency-boundary smoke suites, five path-migration checks, generated recognition-source validation, metadata, and migration-helper smoke. No provider action occurred.
 
+
+### 2026-10-21T12:06:20Z - Commit recorded
+
+Commit: `ac504bff`
+
+Message: refactor(deploy): group runnable program build controls
+
+Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2033,6 +2044,13 @@ Durable evidence: Durable migration authority: ADR 0037 and .agentic/04.deploy/p
   Summary: Corrected the migration governance gap with ADR 0037. It records the lifecycle-first authority-path decision, the no-cloud corrective disposition for the earlier generic move, and the rule governing remaining generic migrations. Runnable-program migration may now continue under this ADR.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ac504bff`
+  Time UTC: 2026-10-21T12:06:20Z
+  Message: refactor(deploy): group runnable program build controls
+  Summary: Completed the runnable-program migration: workflow, standard, schema, template, and guide now sit under 20-build with all consumers updated. Passed runnable-program and core dependency-boundary smoke suites, five migration checks, generated recognition-source validation, metadata, and commit gates. No cloud or GitHub action occurred.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2046,9 +2064,9 @@ Reason: The generic validator/adapter/wrapper split is an implementation of the 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T11:59:54Z
-Latest commit SHA: ee8d5746
-Chat duration: 1393225s (16:03:00:25)
+Latest commit at UTC: 2026-10-21T12:06:20Z
+Latest commit SHA: ac504bff
+Chat duration: 1393611s (16:03:06:51)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
