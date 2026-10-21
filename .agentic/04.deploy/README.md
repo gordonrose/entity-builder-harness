@@ -4,7 +4,7 @@ id: deploy.layer.readme
 version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -42,10 +42,9 @@ weaken or replace its approval gates.
 
 ## Source Of Truth
 
-- Provider-neutral workflows: `.agentic/04.deploy/workflows/`
-- Provider-neutral standards: `.agentic/04.deploy/standards/`
-- Deployment lifecycle map: `.agentic/04.deploy/lifecycle/`
-- Provider-neutral machine-readable contracts: `.agentic/04.deploy/schemas/`
+- Lifecycle workflows, standards and schemas: `.agentic/04.deploy/<phase>/`
+- [Current lifecycle routes](lifecycle/README.md): build, package, deploy and run entry points
+- Cross-phase and not-yet-migrated authority: `workflows/`, `standards/`, `schemas/`
 - Migration plans: `.agentic/04.deploy/plans/migration/`
 - Future provider adapters: `.agentic/04.deploy/providers/`
 - Current AWS-specific governance: `.agentic/aws/`

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.accept-release
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-21"
@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+import os
+from datetime import date, datetime, timezone
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import yaml
 
 ROOT = Path(__file__).resolve().parents[8]
@@ -36,11 +38,39 @@ def fail(code: str) -> int:
 
 def receipt(path: Path) -> dict | None:
     command = ROOT / "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
-    run = subprocess.run(["bash", str(command), "--receipt", str(path), "--expected-target", "kanbien-core-platform", "--expected-candidate", "kanbien-core-server-candidate", "--expected-package-contract", "kanbien-core-server-image", "--expected-program", "kanbien-core-server", "--json"], capture_output=True, text=True)
-    return json.loads(run.stdout) if run.returncode == 0 else None
+    try:
+        candidate = json.loads(path.read_text(encoding="utf-8"))
+        # Validate exactly the document retained for recording, even if the caller
+        # replaces the original receipt while the validator is running.
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as snapshot:
+            json.dump(candidate, snapshot)
+            snapshot.flush()
+            run = subprocess.run(["bash", str(command), "--receipt", snapshot.name, "--expected-target", "kanbien-core-platform", "--expected-candidate", "kanbien-core-server-candidate", "--expected-package-contract", "kanbien-core-server-image", "--expected-program", "kanbien-core-server", "--json"], capture_output=True, text=True)
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    return candidate if run.returncode == 0 and isinstance(candidate, dict) else None
 
 
-def render(candidate: dict, facts: dict, existing: dict) -> str:
+def record_metadata(text: str) -> dict:
+    lines = text.splitlines()
+    if not lines or lines[0] != "# agentic-artifact:":
+        raise ValueError("accepted release metadata missing")
+    header = []
+    for line in lines[1:]:
+        if not line.startswith("#"):
+            break
+        header.append(line[1:])
+    metadata = yaml.safe_load("\n".join(header))
+    if not isinstance(metadata, dict) or type(metadata.get("version")) is not int or metadata["version"] < 1:
+        raise ValueError("accepted release metadata invalid")
+    created_on = metadata.get("created_on")
+    if not isinstance(created_on, str):
+        raise ValueError("accepted release creation date invalid")
+    date.fromisoformat(created_on)
+    return metadata
+
+
+def render(candidate: dict, facts: dict, existing: dict, prior_metadata: dict) -> str:
     stamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     record = {
         "schema":"deploy/accepted-release/v1", "target":"kanbien-core-platform", "scope":"bootstrap-runtime", "status":"accepted",
@@ -48,8 +78,38 @@ def render(candidate: dict, facts: dict, existing: dict) -> str:
         "acceptance": {"accepted_at":stamp, "acceptance_checkpoint_commit":"pending-commit", "deployment_evidence_commit":"pending-commit", "retained_for_restoration":True},
         "cost_condition": existing.get("cost_condition", {}) if isinstance(existing, dict) else {},
     }
-    header = "# agentic-artifact:\n#   schema: agentic-artifact/v3\n#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release\n#   version: 1\n#   status: active\n#   layer: 04.deploy\n#   domain: deployment.bootstrap-runtime\n#   kind: accepted-release-record\n#   purpose: Record the immutable package and live proof that form the retained bootstrap-runtime baseline.\n"
+    metadata = {
+        "schema": "agentic-artifact/v3",
+        "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release",
+        "version": prior_metadata["version"] + 1,
+        "status": "active",
+        "created_on": prior_metadata["created_on"],
+        "updated_on": stamp[:10],
+        "layer": "04.deploy",
+        "domain": "deployment.bootstrap-runtime",
+        "disciplines": ["security", "sre"],
+        "kind": "accepted-release-record",
+        "purpose": "Record the immutable package and live proof that form the retained bootstrap-runtime baseline.",
+        "portability": {"class": "internal", "targets": []},
+        "used_by": [{"id": "deploy.command.core-platform-target-declaration", "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh"}],
+    }
+    header = "# agentic-artifact:\n" + "".join("#   " + line + "\n" for line in yaml.safe_dump(metadata, sort_keys=False).splitlines())
     return header + yaml.safe_dump(record, sort_keys=False)
+
+
+def write_record(text: str) -> None:
+    pending = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=RECORD.parent, prefix=f".{RECORD.name}.", suffix=".tmp", delete=False) as output:
+            pending = Path(output.name)
+            os.fchmod(output.fileno(), RECORD.stat().st_mode & 0o777)
+            output.write(text)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(pending, RECORD)
+    finally:
+        if pending is not None:
+            pending.unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -63,16 +123,25 @@ def main() -> int:
     candidate = receipt(args.receipt)
     if candidate is None: return fail("package-custody-receipt-invalid")
     try: verification = json.loads(args.verification_report.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError): return fail("private-verification-report-unreadable")
-    facts = verification.get("facts") if isinstance(verification, dict) else None
+    except (OSError, UnicodeError, json.JSONDecodeError): return fail("private-verification-report-unreadable")
+    if not isinstance(verification, dict) or verification.get("schema") != "deploy/private-runtime-verification-report/v1" or verification.get("target") != "kanbien-core-platform":
+        return fail("private-verification-report-invalid")
+    facts = verification.get("facts")
     if verification.get("verdict") != "accepted" or not isinstance(facts, dict) or verification.get("findings") != [{"code":"runtime-digest-and-private-verifier-accepted"}]: return fail("private-verification-not-accepted")
     if facts.get("source_revision") != candidate["source_revision"] or facts.get("image_digest") != candidate["image_digest"] or not all(isinstance(facts.get(key), str) and facts[key] for key in ("runtime_task_definition", "verifier_task_definition")):
         return fail("accepted-release-identity-mismatch")
-    try: existing = yaml.safe_load(RECORD.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError): existing = {}
+    try:
+        existing_text = RECORD.read_text(encoding="utf-8")
+        existing = yaml.safe_load(existing_text)
+        prior_metadata = record_metadata(existing_text)
+    except (OSError, UnicodeError, ValueError, yaml.YAMLError): return fail("accepted-release-record-invalid")
+    if not isinstance(existing, dict) or existing.get("schema") != "deploy/accepted-release/v1" or existing.get("target") != "kanbien-core-platform" or existing.get("scope") != "bootstrap-runtime" or existing.get("status") != "accepted":
+        return fail("accepted-release-record-invalid")
+    rendered = render(candidate, facts, existing, prior_metadata)
     if not args.write:
         print(json.dumps({"schema":"deploy/accepted-release-report/v1","target":"kanbien-core-platform","verdict":"ready-to-record","findings":[]})); return 0
-    RECORD.write_text(render(candidate, facts, existing if isinstance(existing, dict) else {}), encoding="utf-8")
+    try: write_record(rendered)
+    except OSError: return fail("accepted-release-record-write-failed")
     print(json.dumps({"schema":"deploy/accepted-release-report/v1","target":"kanbien-core-platform","verdict":"recorded","findings":[]})); return 0
 
 

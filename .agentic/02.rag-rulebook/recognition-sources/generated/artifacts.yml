@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1155
-  term_count: 2329
+  indexed_artifacts: 1156
+  term_count: 2331
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8482,6 +8482,42 @@ terms:
   canonical_id: deploy.workflow.package-custody-and-promotion
   evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
   confidence_weight: 1
+- term: deploy.workflow.release-update-and-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.release-update-and-recovery
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: deploy.standards.accepted-release-and-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.accepted-release-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.accepted-release-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md
+  confidence_weight: 1
+- term: deploy.workflow.verify-accept-or-restore-release
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
   match_type: exact
@@ -8644,18 +8680,6 @@ terms:
   canonical_id: deploy.standards.readme
   evidence_path: .agentic/04.deploy/standards/README.md
   confidence_weight: 1
-- term: deploy.standards.accepted-release-and-recovery
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.standards.accepted-release-and-recovery
-  evidence_path: .agentic/04.deploy/standards/accepted-release-and-recovery.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/standards/accepted-release-and-recovery.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.standards.accepted-release-and-recovery
-  evidence_path: .agentic/04.deploy/standards/accepted-release-and-recovery.md
-  confidence_weight: 1
 - term: deploy.standards.declaration-coverage
   category: artifact-id
   match_type: exact
@@ -8763,18 +8787,6 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
-  confidence_weight: 1
-- term: deploy.workflow.release-update-and-recovery
-  category: artifact-id
-  match_type: exact
-  canonical_id: deploy.workflow.release-update-and-recovery
-  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/release-update-and-recovery.md
-  category: file-path
-  match_type: exact
-  canonical_id: deploy.workflow.release-update-and-recovery
-  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
   confidence_weight: 1
 - term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   category: artifact-id

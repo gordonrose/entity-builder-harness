@@ -53,8 +53,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 132
-  workflow_files: 44
+  term_count: 134
+  workflow_files: 45
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -502,17 +502,23 @@ terms:
   canonical_id: 04.deploy.workflow.publish-immutable-package-with-custody
   evidence_path: .agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md
   confidence_weight: 1
+- term: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.review-and-execute-target-update
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/workflows/declaration-coverage.md
   category: workflow-name
   match_type: exact
   canonical_id: 04.deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
-  confidence_weight: 1
-- term: .agentic/04.deploy/workflows/release-update-and-recovery.md
-  category: workflow-name
-  match_type: exact
-  canonical_id: 04.deploy.workflow.release-update-and-recovery
-  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
@@ -808,11 +814,11 @@ terms:
   canonical_id: 00.chat.workflow.recover-transcript-draft
   evidence_path: .agentic/00.chat/workflows/recover-transcript-draft.md
   confidence_weight: 1
-- term: release-update-and-recovery.md
+- term: review-and-execute-target-update.md
   category: workflow-name
   match_type: exact
-  canonical_id: 04.deploy.workflow.release-update-and-recovery
-  evidence_path: .agentic/04.deploy/workflows/release-update-and-recovery.md
+  canonical_id: 04.deploy.workflow.review-and-execute-target-update
+  evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
   confidence_weight: 1
 - term: review-okf-source-material.md
   category: workflow-name
@@ -849,6 +855,12 @@ terms:
   match_type: exact
   canonical_id: 03.product.workflow.untrusted-input-and-bounded-agent-safety
   evidence_path: .agentic/03.product/workflows/untrusted-input-and-bounded-agent-safety.md
+  confidence_weight: 1
+- term: verify-accept-or-restore-release.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.verify-accept-or-restore-release
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
   confidence_weight: 1
 validation_rules:
 - Generated routing terms must retain evidence paths.

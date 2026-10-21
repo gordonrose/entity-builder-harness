@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -19,6 +19,9 @@
 #     - entity-builder
 #   effects:
 #   - read-only
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.core-server-package-custody.validate-delivery-access
+#     path: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/validate-delivery-access/script.sh
 
 from __future__ import annotations
 

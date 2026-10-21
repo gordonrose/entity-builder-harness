@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.accepted-release-and-recovery
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-21"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -13,9 +13,11 @@ purpose: Define immutable accepted-release custody and bounded restoration requi
 portability: { class: reusable, targets: [entity-builder] }
 used_by:
 - id: deploy.workflow.release-update-and-recovery
-  path: .agentic/04.deploy/workflows/release-update-and-recovery.md
+  path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+- id: deploy.workflow.verify-accept-or-restore-release
+  path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
 -->
-# Accepted Release and Recovery
+# Retain Accepted Release for Restoration
 
 An accepted release is not merely a qualified package. It is the exact qualified
 immutable package that has been verified running in one declared target.

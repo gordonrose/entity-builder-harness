@@ -265,6 +265,40 @@ are reviewed one by one against their true primary lifecycle phase:
 
 ## Reference Inventory and Compatibility
 
+### Final Deploy/Run Batch (2026-10-21)
+
+Consumer review selects a phase handoff: move the existing generic release
+workflow to `50-deploy/workflows/review-and-execute-target-update.md`, keeping
+its stable artifact ID; that workflow ends with a deployed candidate and links
+to `60-run/workflows/verify-accept-or-restore-release.md`. The latter alone owns
+verification, acceptance, and restoration sequencing. Move the accepted-release
+standard to `60-run/standards/retain-accepted-release-for-restoration.md`.
+Keep the existing AWS target workflow singular, with explicit Deploy/Run
+sections as permitted by ADR 0037.
+
+The path planner found nine full-path references to the old generic workflow
+and four to the old standard. Consumers are the generic standard/workflow,
+AWS route, current execution-plan route pointer, and generated recognition
+sources. Update the layer, lifecycle, workflow and standard indexes too:
+their bare filenames escaped the earlier full-path migrations. Disposition for
+both old paths is `retired`; no executable or external compatibility surface
+requires a wrapper. Preserve session history and this migration mapping.
+
+Validate with the per-batch checks below, both path-migration checks, and an
+active-reference audit of the earlier migrated paths. Restore this batch's
+path mapping if checks fail. The accepted-release write regression is a
+separate control repair tested against a temporary record; the real accepted
+baseline and rehearsal identities remain unchanged. Task changes remain
+uncommitted until separately authorized for commit.
+
+Repository validation completed for this batch: both retired-path checks pass,
+and an audit of 19 retired harness/target path patterns finds no remaining active
+references outside the migration mapping and session history. Active indexes
+and generated recognition sources now point to the selected Deploy/Run homes.
+The declaration, runnable-program, package-custody and bootstrap control suites
+pass. The broader programme and absent-target creation are not completed by
+this migration.
+
 The initial planner run found 236 references to the current
 `kanbien-core-platform` target path. Active references include:
 

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 34
+version: 35
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-21"
@@ -42,6 +42,43 @@ The source of factual target state is its target declaration and rehearsal
 evidence; reusable instructions are the release-update/recovery workflows and
 executable controls. This plan remains a tracker for the broader scopes not
 yet implemented.
+
+**Harness update (2026-10-21):** the current first-slice update route is indexed
+in `.agentic/04.deploy/lifecycle/README.md`. Deploy and Run now have separate
+lifecycle authority, with concrete commands in the fixed AWS workflow. The
+accepted-release writer has isolated coverage of actual writes and failed
+writes, not only a successful preview. Initial creation remains historical
+evidence; the update route does not authorize recreation of an absent target.
+
+### Next Slice Investigation
+
+The next candidate remains a small **application persistence** slice. Its
+useful proof is a private synthetic record written once and retrieved after
+process/container replacement, with duplicate-create, invalid-input and
+dependency-failure behaviour checked. An image rollback must preserve data
+compatibility. This is application data, not a new execution journal for the
+delivery harness; existing repository and delivery evidence serve that purpose.
+
+Repository evidence to use in the declaration/design review:
+
+- `packages/core/src/persistence/repository.ts` defines the generic repository
+  boundary; in-memory behaviour does not prove durable storage.
+- `platform/persistence/` and `platform/adapters/aws/persistence/` contain
+  outbox, lineage and processing contracts and DynamoDB/PostgreSQL adapters.
+  Their existence does not supply a generic core-record adapter automatically.
+- `apps/platform-smoke/src/persistence/acceptance.ts` and
+  `infra/04.deploy/03.product/entrypoints/kanbien-platform-persistence.ts` are
+  reference compositions. Do not import their broader staging concerns into
+  the bootstrap scope merely to obtain storage.
+
+Before implementation, declare the small record operation and proof, select the
+provider, and review its resource/cost, network, least-privilege workload access,
+configuration, failure and recovery requirements. Existing staging PostgreSQL
+decisions do not select a provider for `kanbien-core-platform`. DynamoDB and
+PostgreSQL are candidates to compare against that operation; neither is selected
+by this investigation. New data services are outside the bootstrap boundary
+and its existing cost waiver. Authentication, queues and full observability
+remain separate later concerns unless the selected operation requires them.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:

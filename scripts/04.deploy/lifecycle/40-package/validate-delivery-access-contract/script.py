@@ -5,7 +5,7 @@
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-21"
 #   layer: 04.deploy
 #   domain: deployment.delivery-access
 #   disciplines:
@@ -19,6 +19,9 @@
 #     - entity-builder
 #   effects:
 #   - read-only
+#   used_by:
+#   - id: deploy.command.validate-delivery-access-contract.wrapper
+#     path: scripts/04.deploy/lifecycle/40-package/validate-delivery-access-contract/script.sh
 
 from __future__ import annotations
 

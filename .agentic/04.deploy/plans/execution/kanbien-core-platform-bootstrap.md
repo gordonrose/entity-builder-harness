@@ -26,7 +26,8 @@ used_by:
 ## Authority and status
 
 This is a historical status tracker, not execution authority. The reusable
-procedure is `.agentic/04.deploy/workflows/release-update-and-recovery.md`; the
+  procedure is `.agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md`
+  with verification and recovery in `.agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md`; the
 fixed AWS procedure is
 `.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md`.
 A separate approved packet remains required for any AWS or GitHub mutation.

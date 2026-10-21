@@ -31,6 +31,13 @@ The verifier runs only after the fixed deployment command has accepted the
 matching reviewed change set. Before launching it, the command looks for a
 completed verifier task created by the current runtime update. It reuses that
 task only if its exit result and safe log code prove acceptance; otherwise a
-completed but inconclusive task is a blocker. This prevents a retried command
-from creating duplicate verification tasks. A failed check is a recorded
-blocker for diagnosis or explicit recovery.
+completed but inconclusive task is a blocker. This reuses completed proof; it
+does not provide protection for concurrent calls or an earlier verifier that
+is still pending/running. After an interrupted response, inspect the existing
+task through the governed AWS read route before any further invocation. The
+restoration wrapper already invokes verification; do not launch a separate
+verifier while that wrapper may still be active.
+
+The [AWS release workflow](../../../../../../../../.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md)
+owns that sequence. A failed check is a recorded blocker for diagnosis or
+explicit recovery.
