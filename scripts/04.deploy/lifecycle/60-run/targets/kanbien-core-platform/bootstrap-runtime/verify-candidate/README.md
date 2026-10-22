@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.kanbien-core-platform.verify-candidate.readme
-version: 2
-status: draft
+version: 4
+status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -37,6 +37,15 @@ is still pending/running. After an interrupted response, inspect the existing
 task through the governed AWS read route before any further invocation. The
 restoration wrapper already invokes verification; do not launch a separate
 verifier while that wrapper may still be active.
+
+The verifier controller reads the task completion deadline from the canonical
+scope declaration. A controller deadline is not proof that AWS stopped the
+task: if the task is still running or its final state cannot be read, the
+command blocks with a distinct uncertain-outcome diagnostic and does not stop,
+retry, or launch another verifier. Inspect that exact task through the governed
+AWS read route, then make a separately authorised recovery decision. A stopped
+task must also show a bounded provider-recorded duration, successful exit, and
+accepted safe log code.
 
 The [AWS release workflow](../../../../../../../../.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md)
 owns that sequence. A failed check is a recorded blocker for diagnosis or

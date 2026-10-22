@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.runnable-program-candidates
-version: 1
-status: draft
+version: 2
+status: active
 created_on: "2026-10-19"
 updated_on: "2026-10-21"
 layer: 04.deploy

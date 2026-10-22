@@ -1,0 +1,55 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.health-failure-and-recovery-declaration.v1
+#   version: 1
+#   status: active
+#   created_on: "2026-10-21"
+#   updated_on: "2026-10-21"
+#   layer: 04.deploy
+#   domain: deployment.runtime-safety
+#   disciplines: [agentic, security, sre]
+#   kind: schema
+#   purpose: Describe the provider-neutral health, safe-failure, recovery, and proof declaration embedded in a scope contract.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.validate-health-failure-and-recovery-declaration
+#     path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh
+schema: deploy/health-failure-and-recovery-declaration-schema/v1
+embedded_in: deploy/target-scope-contract/v1#health_recovery
+required_fields:
+  - declaration_schema
+  - liveness
+  - readiness
+  - startup_failure
+  - dependency_failures
+  - automatic_workload_recovery
+  - release_recovery
+  - proof
+safe_diagnostic_code_pattern: ^[A-Z][A-Z0-9_]{2,}$
+proof_statuses:
+  - passed
+  - planned
+  - deferred
+field_guide:
+  - path: liveness
+    what: A process-level operation that can answer without claiming that required work is usable.
+  - path: readiness
+    what: An operation that reports whether the scope may safely serve its declared work and names the dependencies it considers.
+  - path: startup_failure
+    what: The safe stop or not-ready outcome and diagnostic category when required startup configuration is invalid.
+  - path: dependency_failures[]
+    what: The safe behaviour for each required dependency becoming unavailable; empty only when no dependency is selected.
+  - path: automatic_workload_recovery
+    what: What the orchestrator may do to unhealthy work and which uncertain actions it must never replay.
+  - path: release_recovery
+    what: The immutable accepted-release restoration rule and post-restoration verification requirement.
+  - path: proof
+    what: The current local, package, and live-recovery evidence state.
+prohibitions:
+  - secret values
+  - credential values
+  - tokens
+  - connection strings
+  - raw provider responses
+  - personal data
+  - internal addresses

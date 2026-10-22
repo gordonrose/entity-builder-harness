@@ -1,0 +1,29 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-filtered-monthly-budget
+#   version: 2
+#   status: active
+#   created_on: "2026-10-22"
+#   updated_on: "2026-10-22"
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [security, sre]
+#   kind: provider-condition-evidence
+#   purpose: Record safe read-only evidence that the declared target-filtered monthly budget is active and matches its declared provider configuration.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.budget-control
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+schema: deploy/provider-condition-evidence/v1
+condition_id: target-filtered-monthly-budget-active
+target: kanbien-core-platform
+status: verified
+checked_at: "2026-10-22T20:21:54Z"
+next_check_after: "2026-11-21T20:21:54Z"
+evidence_reference: aws-budgets-describe-budget-verified-2026-10-22
+observed_configuration:
+  budget_type: COST
+  time_unit: MONTHLY
+  amount: 100
+  unit: USD
+  target_filter: user:Target$kanbien-core-platform

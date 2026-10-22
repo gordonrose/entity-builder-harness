@@ -1,0 +1,70 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.template.health-failure-and-recovery-declaration.v2
+#   version: 1
+#   status: active
+#   created_on: "2026-10-22"
+#   updated_on: "2026-10-22"
+#   layer: 04.deploy
+#   domain: deployment.runtime-safety
+#   disciplines: [agentic, security, sre]
+#   kind: template
+#   purpose: Provide a workload-type-aware scope declaration shape for health, safe failure, recovery, completion, and proof.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.workflow.verify-health-failure-and-recovery
+#     path: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
+health_recovery:
+  declaration_schema: deploy/health-failure-and-recovery-declaration/v2
+  workloads:
+    - id: replace-with-server-id
+      workload_type: long-running-server
+      binding: replace-with-server-binding-id
+      liveness: { path: /replace-with-liveness-path, expected_status: 200 }
+      readiness:
+        path: /replace-with-readiness-path
+        expected_status: 200
+        depends_on: [replace-with-required-dependency-id]
+      startup_failure:
+        invalid_required_configuration: { result: process-exits, diagnostic_code: CONFIGURATION_INVALID }
+      dependency_failures:
+        - dependency: replace-with-required-dependency-id
+          unavailable: { result: not-ready, diagnostic_code: DEPENDENCY_UNAVAILABLE }
+      automatic_workload_recovery:
+        owner: replace-with-orchestrator-owner
+        unhealthy_workload: replace
+        prohibited_automatic_actions: [replay-uncertain-operation]
+      release_recovery:
+        strategy: restore-prior-accepted-immutable-release
+        automatic_restore: prohibited
+        verification: repeat-declared-health-and-meaningful-operation
+      proof:
+        local: { status: planned, command: scripts/04.deploy/lifecycle/replace-with-local-proof/script.sh }
+        package: { status: planned, command: scripts/04.deploy/lifecycle/replace-with-package-proof/script.sh }
+        live_recovery:
+          status: deferred
+          reason: replace-with-safe-reason
+          owner: replace-with-owner
+          follow_up: replace-with-next-proof
+          review_before: replace-with-scope-acceptance-boundary
+    - id: replace-with-one-shot-task-id
+      workload_type: run-to-completion-task
+      binding: replace-with-task-binding-id
+      required_workloads: [replace-with-server-id]
+      not_applicable:
+        - concern: http-liveness
+          workload_type_basis: run-to-completion-task
+          scope_basis: completion-is-the-declared-meaningful-operation
+      completion:
+        deadline_seconds: 120
+        success: { exit_code: 0, result_code: TASK_ACCEPTED }
+        interruption: { policy: stop-and-escalate }
+        retry_policy: no-automatic-retries
+      proof:
+        local: { status: planned, command: scripts/04.deploy/lifecycle/replace-with-local-proof/script.sh }
+        package: { status: planned, command: scripts/04.deploy/lifecycle/replace-with-package-proof/script.sh }
+        completion:
+          status: planned
+          owner: replace-with-owner
+          follow_up: replace-with-completion-proof
+          review_before: replace-with-release-acceptance

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.target-alignment-preflight
-version: 2
-status: draft
+version: 3
+status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.target-alignment
 disciplines:
@@ -41,6 +41,8 @@ explicitly classified as non-deployable; record that classification instead.
 - a `covered` Declaration Coverage result and its bounded declaration contract;
 - declared local runtime, package, configuration-reference, and release-route
   requirements;
+- an explicit secret-dependency declaration, including only safe reference and
+  expected-field facts when a workload receives secret material;
 - allowed evidence age and drift policy; and
 - a provider adapter with a named read-only inspection authority.
 
@@ -52,7 +54,8 @@ explicitly classified as non-deployable; record that classification instead.
    selected, stop before implementation.
 3. Derive assertions only from the covered declaration contract and the
    dependencies affected by the proposed work.
-4. Validate the local declarations and record the source revision they describe.
+4. Validate the local declarations, including any secret-dependency contract,
+   and record the source revision they describe.
 5. Invoke the provider adapter's bounded read-only inspection. The generic
    workflow does not itself call a provider or grant provider authority.
 6. Compare every required assertion. Treat a mismatch, missing fact, unknown

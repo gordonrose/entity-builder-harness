@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 22
+  version: 24
   status: active
   created_on: "2026-10-07"
-  updated_on: "2026-10-21"
+  updated_on: "2026-10-22"
   layer: 05.education
   domain: education
   disciplines:
@@ -64,7 +64,9 @@ checks remain the evidence.
 19. [Defining a scope's responsibilities](#19-defining-a-scopes-responsibilities)
 20. [Package publication and custody](#20-package-publication-and-custody)
 21. [Foundation bootstrap and existing product work](#21-foundation-bootstrap-and-existing-product-work)
-22. [Next lesson queue](#22-next-lesson-queue)
+22. [From a runnable program to a proven package](#22-from-a-runnable-program-to-a-proven-package)
+23. [Health, failure, and recovery are reusable concerns](#23-health-failure-and-recovery-are-reusable-concerns)
+24. [Next lesson queue](#24-next-lesson-queue)
 
 ## 1. The Deployment Journey
 
@@ -1123,6 +1125,23 @@ replacement receives the new value, proves readiness, and then replaces the
 old task. A design may support safe live refresh, but that must be explicit and
 tested rather than assumed.
 
+### Secret declarations are not secret storage
+
+Before a workload uses a secret, its scope should declare the purpose, owner,
+authorised workloads, access class, target-neutral reference ID, expected field
+names, delivery mechanism, rotation behaviour, safe failure effect, and safe
+diagnostic codes. It must also name the retirement/revocation owner, policy,
+and condition. It must never declare a secret value, password, token,
+connection string, or provider secret address. A runtime credential and a
+migration credential are separate access classes: a long-running server must
+not quietly receive the credential that can alter database structure.
+
+Credential privilege and workload lifetime are different ideas. A one-shot
+verifier can have ordinary runtime access when it needs a limited dependency
+check; it does not thereby become a migration or administrative task. A
+completion-only task reports unsuccessful completion and safe result codes for
+credential failure rather than pretending to have HTTP readiness.
+
 ### Identity failures are distinct
 
 ```text
@@ -1145,6 +1164,61 @@ they never print a username, password, token, connection string, or secret
 value. A required dependency normally keeps the workload not-ready until it is
 safe, while an individual request must be rejected honestly if its required
 identity or permission is unavailable.
+
+### PostgreSQL startup, readiness, and access model
+
+For the first PostgreSQL persistence reference, the server must prove a real,
+safe dependency chain before it becomes ready:
+
+```text
+valid non-secret configuration
+→ injected runtime credential has the expected shape
+→ private TLS connection to PostgreSQL
+→ expected schema/version state exists
+→ runtime identity has the minimum declared access
+→ readiness is healthy
+```
+
+Liveness asks whether the process can respond. Readiness asks whether it can
+safely perform its required work. A temporary database outage therefore keeps
+the server live but not-ready, with bounded reconnection attempts. A missing
+required configuration value or malformed injected credential cannot heal
+without a target fix and should cause a safe startup exit instead.
+
+| Observed condition | Correct response | Safe diagnostic category |
+| --- | --- | --- |
+| Missing non-secret setting | Exit before accepting work | `PERSISTENCE_CONFIGURATION_INVALID` |
+| Secret unavailable or malformed | Exit before accepting work | `PERSISTENCE_SECRET_UNAVAILABLE` or `PERSISTENCE_SECRET_SHAPE_INVALID` |
+| Database unreachable after valid startup | Live but not-ready; bounded reconnect | `PERSISTENCE_DEPENDENCY_UNAVAILABLE` |
+| Credential rejected | Not-ready; correct or rotate target credential and replace workload | `PERSISTENCE_CREDENTIAL_REJECTED` |
+| Required database grant absent | Not-ready; correct least-privilege grant | `PERSISTENCE_ACCESS_DENIED` |
+
+A simple `SELECT 1` proves only that PostgreSQL responds. A meaningful
+readiness check also proves that the expected schema/version state is present
+and that the runtime identity can perform its minimum declared read-only access.
+The runtime identity must separately be proved unable to alter database
+structure.
+
+### Migration compatibility and recovery
+
+A migration task is a one-shot workload with a separate structural-change
+identity. The long-running server must never receive that identity. Safe first
+migrations use:
+
+```text
+expand
+→ deploy compatible server
+→ verify meaningful persistence behaviour
+→ contract later, after older servers are retired
+```
+
+For example, adding a nullable column is usually backward-compatible; deleting
+or renaming a column in the same release can make server-image restoration
+unsafe. A migration receipt records only safe facts: migration ID, candidate
+digest, schema version before/after, timestamps, result, compatibility class,
+and verification. A migration failure blocks release; it does not authorize an
+automatic retry, an image rollback that assumes database reversal, or an
+unguarded repair.
 
 ### Architecture intent
 
@@ -1973,7 +2047,50 @@ output-only reviewed foundation update, followed by fresh alignment—not an
 undeclared manual parameter. An expired local cloud login is also a blocked
 authentication condition, not proof that a cloud resource is absent.
 
-## 23. Next Lesson Queue
+## 23. Health, Failure, and Recovery Are Reusable Concerns
+
+The core server has now proved a narrow but useful release route. Locally, the
+image answered both `/livez` and `/readyz`. In AWS, ECS used the declared
+readiness check; a private verifier confirmed the selected immutable release;
+and a later release B was restored to accepted release A with a fresh private
+verification.
+
+The route has also now deliberately stopped its one accepted ECS task. ECS
+scheduled a different healthy task with the same accepted immutable task
+definition and image, and a private verifier completed after that replacement.
+This proves bounded orchestrator replacement, not merely an HTTP response.
+
+That still does not mean every recovery question is solved. The route has not
+yet deliberately made application readiness fail in AWS or proved an automatic
+deployment rollback caused by a health failure. Those are facts about the
+current proof boundary, not failures to be silently filled in by a successful
+HTTP response or a controlled task stop.
+
+The important design rule is that this cannot become a special core-server
+patch. Every future runnable scope needs the same kinds of answers, even though
+their answers differ:
+
+| Concern | Dependency-free core server | Future persistence scope |
+| --- | --- | --- |
+| Liveness | Can the process answer? | Can the process answer? |
+| Readiness | Is startup configuration valid? | Is startup configuration valid and can the required database be used safely? |
+| Failure behaviour | Missing required setting: do not start | Database unavailable: do not claim ready or retry an uncertain write blindly |
+| Task recovery | The orchestrator may replace an unhealthy task | The orchestrator may replace a task, but must not replay a possibly completed write |
+| Release recovery | Restore the prior immutable image and verify it | Restore only with data-compatibility and recovery proof |
+
+So the harness will own the generic questions, required declaration fields,
+validation rules, and proof categories. Each scope will own its concrete
+endpoint, dependency list, safe diagnostic codes, and evidence. A declared
+deferment must name its owner, follow-up, and review boundary; it is visible
+work, not a hidden claim of coverage.
+
+Persistence also illustrates why secrets are a consequence of a provider
+choice rather than an automatic feature. DynamoDB normally uses the task role
+and its IAM permission. PostgreSQL normally needs a reviewed credential supply
+route such as a secret reference or IAM database authentication. Both still
+need configuration, networking, least privilege, failure behaviour, and proof.
+
+## 24. Next Lesson Queue
 
 Continue this handbook incrementally with:
 

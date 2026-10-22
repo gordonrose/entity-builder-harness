@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-version: 4
-status: draft
+version: 5
+status: active
 created_on: "2026-10-20"
 updated_on: "2026-10-21"
 layer: 04.deploy

@@ -1,8 +1,8 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.package-custody-and-promotion
-version: 1
-status: draft
+version: 2
+status: active
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:

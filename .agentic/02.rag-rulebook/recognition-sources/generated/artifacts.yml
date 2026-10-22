@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1157
-  term_count: 2333
+  indexed_artifacts: 1207
+  term_count: 2436
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8350,6 +8350,48 @@ terms:
   canonical_id: platform.adapters.readme
   evidence_path: platform/adapters/README.md
   confidence_weight: 1
+- term: deploy.schema.secret-dependency-contract.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1.guide
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1.guide
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.secret-dependency-contract.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.schema.yml
+  confidence_weight: 1
+- term: secret-dependency-contract.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.schema.secret-dependency-contract.v1.template
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1.template
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.template.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.secret-dependency-contract.v1.template
+  evidence_path: .agentic/04.deploy/00-target-alignment/schemas/secret-dependency-contract.v1.template.yml
+  confidence_weight: 1
 - term: deploy.standards.target-alignment-preflight
   category: artifact-id
   match_type: exact
@@ -8362,6 +8404,18 @@ terms:
   canonical_id: deploy.standards.target-alignment-preflight
   evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-fresh-safe-target-evidence.md
   confidence_weight: 1
+- term: deploy.standard.require-secret-dependency-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standard.require-secret-dependency-declaration
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-secret-dependency-declaration.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/standards/require-secret-dependency-declaration.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standard.require-secret-dependency-declaration
+  evidence_path: .agentic/04.deploy/00-target-alignment/standards/require-secret-dependency-declaration.md
+  confidence_weight: 1
 - term: deploy.workflow.target-alignment-preflight
   category: artifact-id
   match_type: exact
@@ -8373,6 +8427,18 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.target-alignment-preflight
   evidence_path: .agentic/04.deploy/00-target-alignment/workflows/compare-declared-requirements-with-live-target.md
+  confidence_weight: 1
+- term: deploy.workflow.declare-secret-dependency
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.declare-secret-dependency
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/declare-secret-dependency.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/00-target-alignment/workflows/declare-secret-dependency.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.declare-secret-dependency
+  evidence_path: .agentic/04.deploy/00-target-alignment/workflows/declare-secret-dependency.md
   confidence_weight: 1
 - term: deploy.schema.runnable-program-contract.v1.guide
   category: artifact-id
@@ -8506,6 +8572,102 @@ terms:
   canonical_id: deploy.workflow.release-update-and-recovery
   evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
   confidence_weight: 1
+- term: deploy.schema.health-failure-and-recovery-declaration.v1.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v1.guide
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v1.guide
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.guide.md
+  confidence_weight: 1
+- term: deploy.schema.health-failure-and-recovery-declaration.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v1
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v1
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.schema.yml
+  confidence_weight: 1
+- term: health-failure-and-recovery-declaration.v1.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v1
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.schema.yml
+  confidence_weight: 1
+- term: deploy.template.health-failure-and-recovery-declaration.v1
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.template.health-failure-and-recovery-declaration.v1
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.template.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.template.health-failure-and-recovery-declaration.v1
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v1.template.yml
+  confidence_weight: 1
+- term: deploy.schema.health-failure-and-recovery-declaration.v2.guide
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v2.guide
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.guide.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.guide.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v2.guide
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.guide.md
+  confidence_weight: 1
+- term: deploy.schema.health-failure-and-recovery-declaration.v2
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v2
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v2
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml
+  confidence_weight: 1
+- term: health-failure-and-recovery-declaration.v2.schema.yml
+  category: schema-name
+  match_type: exact
+  canonical_id: deploy.schema.health-failure-and-recovery-declaration.v2
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml
+  confidence_weight: 1
+- term: deploy.template.health-failure-and-recovery-declaration.v2
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.template.health-failure-and-recovery-declaration.v2
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.template.yml
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.template.yml
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.template.health-failure-and-recovery-declaration.v2
+  evidence_path: .agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.template.yml
+  confidence_weight: 1
+- term: deploy.standards.health-failure-and-recovery-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.standards.health-failure-and-recovery-declaration
+  evidence_path: .agentic/04.deploy/60-run/standards/require-health-failure-and-recovery-declaration.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/standards/require-health-failure-and-recovery-declaration.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.standards.health-failure-and-recovery-declaration
+  evidence_path: .agentic/04.deploy/60-run/standards/require-health-failure-and-recovery-declaration.md
+  confidence_weight: 1
 - term: deploy.standards.accepted-release-and-recovery
   category: artifact-id
   match_type: exact
@@ -8529,6 +8691,18 @@ terms:
   match_type: exact
   canonical_id: deploy.workflow.verify-accept-or-restore-release
   evidence_path: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
+  confidence_weight: 1
+- term: deploy.workflow.verify-health-failure-and-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.workflow.verify-health-failure-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.workflow.verify-health-failure-and-recovery
+  evidence_path: .agentic/04.deploy/60-run/workflows/verify-health-failure-and-recovery.md
   confidence_weight: 1
 - term: deploy.layer.readme
   category: artifact-id
@@ -8565,6 +8739,18 @@ terms:
   match_type: exact
   canonical_id: deploy.plan.execution.kanbien-core-platform-bootstrap
   evidence_path: .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md
+  confidence_weight: 1
+- term: deploy.plan.implementation.health-failure-and-recovery-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.plan.implementation.health-failure-and-recovery-declaration
+  evidence_path: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.plan.implementation.health-failure-and-recovery-declaration
+  evidence_path: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md
   confidence_weight: 1
 - term: deploy.plan.implementation.platform-to-target-chain-control
   category: artifact-id
@@ -8800,6 +8986,18 @@ terms:
   canonical_id: deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
   confidence_weight: 1
+- term: aws.workflow.kanbien-core-platform.provision-target-budget
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.provision-target-budget
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/provision-target-budget.md
+  confidence_weight: 1
+- term: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/provision-target-budget.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.provision-target-budget
+  evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/10-foundation/provision-target-budget.md
+  confidence_weight: 1
 - term: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   category: artifact-id
   match_type: exact
@@ -8811,6 +9009,30 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
   evidence_path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md
+  confidence_weight: 1
+- term: aws.workflow.kanbien-core-platform.bootstrap-runtime.rehearse-accepted-workload-replacement
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.bootstrap-runtime.rehearse-accepted-workload-replacement
+  evidence_path: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md
+  confidence_weight: 1
+- term: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.bootstrap-runtime.rehearse-accepted-workload-replacement
+  evidence_path: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md
+  confidence_weight: 1
+- term: aws.workflow.kanbien-core-platform.bootstrap-runtime.private-verifier-fault-rehearsal
+  category: artifact-id
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.bootstrap-runtime.private-verifier-fault-rehearsal
+  evidence_path: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-private-verifier-fault.md
+  confidence_weight: 1
+- term: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-private-verifier-fault.md
+  category: file-path
+  match_type: exact
+  canonical_id: aws.workflow.kanbien-core-platform.bootstrap-runtime.private-verifier-fault-rehearsal
+  evidence_path: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-private-verifier-fault.md
   confidence_weight: 1
 - term: aws.readme
   category: artifact-id
@@ -9099,6 +9321,18 @@ terms:
   match_type: exact
   canonical_id: deploy.architecture.adr.0037-use-lifecycle-first-deployment-authority-paths
   evidence_path: docs/04.deploy/adrs/0037-use-lifecycle-first-deployment-authority-paths.md
+  confidence_weight: 1
+- term: deploy.architecture.adr.0041-select-postgresql-for-core-platform-persistence-proof
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0041-select-postgresql-for-core-platform-persistence-proof
+  evidence_path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+  confidence_weight: 1
+- term: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.architecture.adr.0041-select-postgresql-for-core-platform-persistence-proof
+  evidence_path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
   confidence_weight: 1
 - term: deploy.adrs.readme
   category: artifact-id
@@ -10048,6 +10282,18 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
   evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/README.md
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.budget-control
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.budget-control
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.budget-control
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml
+  confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
   category: artifact-id
   match_type: exact
@@ -10071,6 +10317,18 @@ terms:
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-cost-allocation-tag
   evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-cost-allocation-tag.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-filtered-monthly-budget
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-filtered-monthly-budget
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-filtered-monthly-budget.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-filtered-monthly-budget.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-filtered-monthly-budget
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/evidence/target-filtered-monthly-budget.yml
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
   category: artifact-id
@@ -10180,6 +10438,30 @@ terms:
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.accepted-release
   evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml
   confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-21
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-21
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-21
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-22
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-22
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-22
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml
+  confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
   category: artifact-id
   match_type: exact
@@ -10191,6 +10473,18 @@ terms:
   match_type: exact
   canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.release-b-to-a-2026-10-21
   evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/release-b-to-a-2026-10-21.yml
+  confidence_weight: 1
+- term: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-health-inventory
+  category: artifact-id
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-health-inventory
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml
+  confidence_weight: 1
+- term: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml
+  category: file-path
+  match_type: exact
+  canonical_id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-health-inventory
+  evidence_path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml
   confidence_weight: 1
 - term: infra.04-deploy.03-product.targets.kanbien-core-platform.cloudformation.readme
   category: artifact-id
@@ -10948,6 +11242,66 @@ terms:
   canonical_id: deploy.test.validate-provider-condition-evidence
   evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/smoke-test.sh
   confidence_weight: 1
+- term: deploy.command.validate-secret-dependency-declaration.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration.readme
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/README.md
+  confidence_weight: 1
+- term: deploy.command.validate-secret-dependency-declaration.implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration.implementation
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration.implementation
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-secret-dependency-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-secret-dependency-declaration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh
+  confidence_weight: 1
+- term: deploy.test.validate-secret-dependency-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-secret-dependency-declaration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-secret-dependency-declaration
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.py
+  confidence_weight: 1
+- term: deploy.test.validate-secret-dependency-declaration.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-secret-dependency-declaration.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-secret-dependency-declaration.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.fixture.target-alignment-contract.example
   category: artifact-id
   match_type: exact
@@ -11548,6 +11902,54 @@ terms:
   canonical_id: deploy.test.kanbien-core-platform.target-controls
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.provision-target-budget.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget.readme
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget.readme
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.provision-target-budget
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.provision-target-budget.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.provision-target-budget.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.provision-target-budget
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.provision-target-budget
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.provision-target-budget
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.accept-release
   category: artifact-id
   match_type: exact
@@ -11571,6 +11973,102 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.accept-release.wrapper
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-accepted-workload-replacement
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-accepted-workload-replacement
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-accepted-workload-replacement
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-accepted-workload-replacement
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/README.md
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-private-verifier-fault
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-private-verifier-fault
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-private-verifier-fault
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-private-verifier-fault
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.restore-accepted-release
   category: artifact-id
@@ -11619,6 +12117,126 @@ terms:
   match_type: exact
   canonical_id: deploy.command.kanbien-core-platform.verify-runtime-release
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py
+  confidence_weight: 1
+- term: deploy.command.validate-active-workload-health-recovery.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/README.md
+  confidence_weight: 1
+- term: deploy.command.validate-active-workload-health-recovery.implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-active-workload-health-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-active-workload-health-recovery
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+  confidence_weight: 1
+- term: deploy.test.validate-active-workload-health-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-active-workload-health-recovery
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-active-workload-health-recovery
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.py
+  confidence_weight: 1
+- term: deploy.test.validate-active-workload-health-recovery.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-active-workload-health-recovery.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-active-workload-health-recovery.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.validate-health-failure-and-recovery-declaration.readme
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/README.md
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/README.md
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration.readme
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/README.md
+  confidence_weight: 1
+- term: deploy.command.validate-health-failure-and-recovery-declaration.implementation
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration.implementation
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py
+  confidence_weight: 1
+- term: deploy.command.validate-health-failure-and-recovery-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.validate-health-failure-and-recovery-declaration
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh
+  confidence_weight: 1
+- term: deploy.test.validate-health-failure-and-recovery-declaration.fixtures
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-health-failure-and-recovery-declaration.fixtures
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-health-failure-and-recovery-declaration.fixtures
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.py
+  confidence_weight: 1
+- term: deploy.test.validate-health-failure-and-recovery-declaration
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.validate-health-failure-and-recovery-declaration
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.validate-health-failure-and-recovery-declaration
+  evidence_path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh
   confidence_weight: 1
 - term: deploy.script.operational-realization-gate.readme
   category: artifact-id

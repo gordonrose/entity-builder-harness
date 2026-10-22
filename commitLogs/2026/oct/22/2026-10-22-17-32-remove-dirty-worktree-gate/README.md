@@ -8,10 +8,10 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-22T16:32:18Z
-transcript_provider: 
-transcript_path: 
-transcript_bytes: 
-transcript_source: 
+transcript_provider:
+transcript_path:
+transcript_bytes:
+transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:

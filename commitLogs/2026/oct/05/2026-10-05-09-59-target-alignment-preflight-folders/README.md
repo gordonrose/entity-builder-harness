@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T12:10:09Z
-latest_commit_sha: 66e5cb57
-chat_duration: 1393840s (16:03:10:40)
+latest_commit_at_utc: 2026-10-22T22:26:46Z
+latest_commit_sha: bca7af432d405f666b281ad990defe8a69205503
+chat_duration: 1517237s (17:13:27:17)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -108,6 +108,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Generic harness migration ADR was missing before the first active generic move
   Resolution: Resolution: added ADR 0037 to make the lifecycle-first placement decision explicit, record the prior target-alignment move as a no-cloud, no-public-compatibility corrective case, and govern all remaining generic-harness moves. Runnable-program migration remains paused until this ADR is committed.
+
+
+- Raised: Controlled replacement command returned no terminal report despite completing AWS actions
+  Resolution: Safe AWS inspection proved the original accepted task stopped at 15:55:42Z, ECS started and stabilised a healthy replacement at 15:55:55Z, and a fresh verifier completed successfully at 15:56:42Z. The outcome is recorded from provider facts; do not repeat the stop action.
+
+
+- Raised: Budget provisioning change-set initially rolled back
+  Resolution: The Foundation CostAlertEmail parameter was blank; the new bounded provisioning route now requires an operation-only alert address, recognises stable rollback completion, and verifies AWS monetary values numerically.
+
+
+- Raised: Closed the secret-declaration review findings.
+  Resolution: Workload-aware failures and startup-only rotation are enforced; unsafe values beneath non-string keys are scanned; malformed access classes return structured results; shared runtime server/worker credentials pass without permitting migration/admin access or mixed failure families.
 
 ## Decisions Made
 
@@ -291,6 +303,34 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Keep package custody with the package phase
   Rationale: The package workflow, standard, receipt schema, and guide now live under 40-package. They govern immutable package qualification and publication only; target selection, deployment, verification, and restoration remain later target-bound controls.
 
+
+- Decision: Implemented the reusable health, failure, and recovery declaration capability before persistence. The core bootstrap scope is its first fixture; local/package proof is passed and the unperformed live fault/replacement rehearsal is explicitly deferred with ownership and review boundary.
+  Rationale: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md and .agentic/04.deploy/60-run/ now govern the reusable requirement; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/ enforces it; the core target/release checks invoke it.
+
+
+- Decision: Goal-authorized bounded live health/recovery rehearsal starts by committing the reusable health/failure/recovery declaration capability. The live exercise must prove final accepted immutable release health and private verification, and stops on identity, permission, cost, alignment, uncertainty, or wider-impact risk.
+  Rationale: Goal objective in this chat; .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md; .agentic/04.deploy/60-run/.
+
+
+- Decision: Adopt controlled accepted-task replacement rehearsal
+  Rationale: The fixed 60-run command validates the accepted baseline, target alignment and active cost exception; with --execute it stops only the one accepted task, proves same-definition ECS replacement, and demands post-stop private verification. It does not claim readiness-detector or circuit-breaker proof.
+
+
+- Decision: Accept live ECS replacement evidence with explicit proof boundary
+  Rationale: The bootstrap runtime now has passed live workload-recovery evidence. It proves ECS replacement of a deliberately stopped accepted dependency-free task and fresh private verification; it does not claim application-readiness-failure detection, circuit-breaker rollback, or dependency-bearing recovery.
+
+
+- Decision: Complete bounded live workload recovery rehearsal
+  Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
+
+
+- Decision: Select PostgreSQL as the first kanbien-core-platform persistence reference
+  Rationale: The existing provider-neutral persistence contracts and AWS PostgreSQL adapter can be composed through a new isolated target scope; legacy staging persistence is not inherited.
+
+
+- Decision: User authorised commit, merge to main, and remote push of the completed secret-management work.
+  Rationale: Preserve the existing recovery commits and current main history through governed non-rewriting refresh; no cloud execution or credential access.
+
 ## Context Hygiene
 
 
@@ -433,6 +473,30 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Package-custody migration verification
   Durable evidence: Moved four package-custody authority artifacts into 40-package, updated active target pipeline and declaration checker consumers, refreshed recognition sources, and passed package-custody receipt, target package workflow, target declaration, four path-migration, and metadata checks. No provider action occurred.
+
+
+- Summary: The proven core bootstrap route is active and has normal health, private verification, immutable update, and B-to-A restoration evidence; it has not yet exercised deliberate live health failure, ECS unhealthy-task replacement, or automatic health-triggered rollback. The next package is a reusable health/failure/recovery contract before persistence.
+  Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
+
+
+- Summary: The reusable health/failure/recovery package is implemented locally and has passed its validator, core declaration/release route regressions, package custody check, platform-server check, placement, metadata, and diff checks. It is not yet committed; a generated Python cache was removed.
+  Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
+
+
+- Summary: Current rehearsal control requires a fresh verifier boundary and does not mutate image, task definition, service configuration, network or IAM.
+  Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+
+
+- Summary: Live target final state: one healthy replacement task on task definition :10 and digest sha256:0992…d5d5d5; verifier exited 0 with KANBIEN_CORE_RELEASE_VERIFIED.
+  Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+
+
+- Summary: Accepted bootstrap evidence remains valid; the foundation now has a verified USD 100 monthly target-filtered budget and the normal cost gate passes.
+  Durable evidence: Budget declaration/evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/; governed provisioner: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/; live AWS evidence checked 2026-10-22T20:21:54Z.
+
+
+- Summary: Carry forward the portable secret contract and executable inventory enforcement, with synthetic regression evidence.
+  Durable evidence: Four regression suites, actual target/release gates, metadata and whitespace checks passed. Provider references, IAM, target isolation, secret delivery and live rotation remain PostgreSQL work; no new CI result or cloud proof is claimed.
 
 ## Activity Log
 
@@ -1762,6 +1826,240 @@ Summary: Completed package-custody migration: workflow, standard, receipt schema
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-21T14:54:40Z - Context hygiene
+
+Summary: The proven core bootstrap route is active and has normal health, private verification, immutable update, and B-to-A restoration evidence; it has not yet exercised deliberate live health failure, ECS unhealthy-task replacement, or automatic health-triggered rollback. The next package is a reusable health/failure/recovery contract before persistence.
+
+Durable evidence: .agentic/04.deploy/plans/implementation/platform-to-target-chain-control.md; .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md; docs/education/teaching-notes/0003-packaging-and-deployment-learning-handbook.md; infra/04.deploy/03.product/targets/kanbien-core-platform/
+
+
+### 2026-10-21T14:57:37Z - Commit recorded
+
+Commit: `5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc`
+
+Message: docs(deploy): record proven core release route
+
+Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
+
+ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
+
+
+### 2026-10-21T15:13:38Z - Decision
+
+Decision: Implemented the reusable health, failure, and recovery declaration capability before persistence. The core bootstrap scope is its first fixture; local/package proof is passed and the unperformed live fault/replacement rehearsal is explicitly deferred with ownership and review boundary.
+
+Rationale: .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md and .agentic/04.deploy/60-run/ now govern the reusable requirement; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/ enforces it; the core target/release checks invoke it.
+
+
+### 2026-10-21T15:35:35Z - Decision
+
+Decision: Goal-authorized bounded live health/recovery rehearsal starts by committing the reusable health/failure/recovery declaration capability. The live exercise must prove final accepted immutable release health and private verification, and stops on identity, permission, cost, alignment, uncertainty, or wider-impact risk.
+
+Rationale: Goal objective in this chat; .agentic/04.deploy/plans/implementation/health-failure-and-recovery-declaration.md; .agentic/04.deploy/60-run/.
+
+
+### 2026-10-21T15:35:35Z - Context hygiene
+
+Summary: The reusable health/failure/recovery package is implemented locally and has passed its validator, core declaration/release route regressions, package custody check, platform-server check, placement, metadata, and diff checks. It is not yet committed; a generated Python cache was removed.
+
+Durable evidence: .agentic/04.deploy/60-run/; scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/; infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/.
+
+
+### 2026-10-21T15:37:01Z - Commit recorded
+
+Commit: `e559c8cee3b434978fd7abb8cb9f8d414f47cfbc`
+
+Message: feat(deploy): require declared health recovery
+
+Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
+
+ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
+
+
+### 2026-10-21T15:52:15Z - Decision
+
+Decision: Adopt controlled accepted-task replacement rehearsal
+
+Rationale: The fixed 60-run command validates the accepted baseline, target alignment and active cost exception; with --execute it stops only the one accepted task, proves same-definition ECS replacement, and demands post-stop private verification. It does not claim readiness-detector or circuit-breaker proof.
+
+
+### 2026-10-21T15:52:15Z - Context hygiene
+
+Summary: Current rehearsal control requires a fresh verifier boundary and does not mutate image, task definition, service configuration, network or IAM.
+
+Durable evidence: AWS-specific workflow: .agentic/aws/60-run/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/rehearse-accepted-workload-replacement.md; command: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/script.sh
+
+
+### 2026-10-21T15:54:02Z - Commit recorded
+
+Commit: `585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb`
+
+Message: feat(aws): rehearse accepted workload replacement
+
+Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
+
+ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
+
+
+### 2026-10-21T16:02:45Z - Issue
+
+Raised: Controlled replacement command returned no terminal report despite completing AWS actions
+
+Resolution: Safe AWS inspection proved the original accepted task stopped at 15:55:42Z, ECS started and stabilised a healthy replacement at 15:55:55Z, and a fresh verifier completed successfully at 15:56:42Z. The outcome is recorded from provider facts; do not repeat the stop action.
+
+
+### 2026-10-21T16:02:45Z - Decision
+
+Decision: Accept live ECS replacement evidence with explicit proof boundary
+
+Rationale: The bootstrap runtime now has passed live workload-recovery evidence. It proves ECS replacement of a deliberately stopped accepted dependency-free task and fresh private verification; it does not claim application-readiness-failure detection, circuit-breaker rollback, or dependency-bearing recovery.
+
+
+### 2026-10-21T16:02:45Z - Context hygiene
+
+Summary: Live target final state: one healthy replacement task on task definition :10 and digest sha256:0992…d5d5d5; verifier exited 0 with KANBIEN_CORE_RELEASE_VERIFIED.
+
+Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+
+
+### 2026-10-21T16:03:59Z - Commit recorded
+
+Commit: `2a58ab882c12c7210e30d272721745da3adcaea2`
+
+Message: docs(deploy): record workload recovery rehearsal
+
+Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
+
+ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
+
+
+### 2026-10-21T16:05:12Z - Decision
+
+Decision: Complete bounded live workload recovery rehearsal
+
+Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
+
+
+### 2026-10-22T20:29:18Z - Issue
+
+Raised: Budget provisioning change-set initially rolled back
+
+Resolution: The Foundation CostAlertEmail parameter was blank; the new bounded provisioning route now requires an operation-only alert address, recognises stable rollback completion, and verifies AWS monetary values numerically.
+
+
+### 2026-10-22T20:29:19Z - Decision
+
+Decision: Select PostgreSQL as the first kanbien-core-platform persistence reference
+
+Rationale: The existing provider-neutral persistence contracts and AWS PostgreSQL adapter can be composed through a new isolated target scope; legacy staging persistence is not inherited.
+
+
+### 2026-10-22T20:29:19Z - Context hygiene
+
+Summary: Accepted bootstrap evidence remains valid; the foundation now has a verified USD 100 monthly target-filtered budget and the normal cost gate passes.
+
+Durable evidence: Budget declaration/evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/; governed provisioner: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/; live AWS evidence checked 2026-10-22T20:21:54Z.
+
+
+### 2026-10-22T20:29:20Z - ADR disposition
+
+ADR needed: no
+
+Reason: The budget bootstrap route is a bounded operational control under the existing deployment architecture, not a new durable architecture decision.
+
+
+### 2026-10-22T20:33:24Z - Commit summary
+
+Commit: Add workload-aware recovery and target budget controls
+
+Summary: Adds typed workload health and recovery validation, provider-evidence freshness checks, release rehearsal controls, and a governed 00 target-budget provisioning path with recorded live budget evidence. PostgreSQL is selected as the first future persistence reference; no persistence infrastructure has been created.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-22T20:39:44Z - Commit recorded
+
+Commit: `4021fbf2`
+
+Message: feat(deploy): govern workload recovery and target budget
+
+Summary: Adds workload-aware health and recovery contracts, active-workload validation, evidence freshness enforcement, bounded rehearsal controls, and verified 00 target-budget governance. PostgreSQL is selected as the next persistence reference; no persistence infrastructure is created.
+
+ADR impact: not-needed: bounded operational controls follow existing deployment architecture
+
+
+### 2026-10-22T22:20:13Z - Decision
+
+Decision: User authorised commit, merge to main, and remote push of the completed secret-management work.
+
+Rationale: Preserve the existing recovery commits and current main history through governed non-rewriting refresh; no cloud execution or credential access.
+
+
+### 2026-10-22T22:20:14Z - Issue
+
+Raised: Closed the secret-declaration review findings.
+
+Resolution: Workload-aware failures and startup-only rotation are enforced; unsafe values beneath non-string keys are scanned; malformed access classes return structured results; shared runtime server/worker credentials pass without permitting migration/admin access or mixed failure families.
+
+
+### 2026-10-22T22:20:14Z - Context hygiene
+
+Summary: Carry forward the portable secret contract and executable inventory enforcement, with synthetic regression evidence.
+
+Durable evidence: Four regression suites, actual target/release gates, metadata and whitespace checks passed. Provider references, IAM, target isolation, secret delivery and live rotation remain PostgreSQL work; no new CI result or cloud proof is claimed.
+
+
+### 2026-10-22T22:20:14Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+
+Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
+
+
+### 2026-10-22T22:20:14Z - Commit summary
+
+Commit: feat(deploy): govern workload secret dependencies
+
+Summary: Add portable secret declarations, workload-aware validation and inventory enforcement; include corrective regressions and PostgreSQL preparation guidance.
+
+ADR impact: ADR 0041 records the existing PostgreSQL reference selection.
+
+
+### 2026-10-22T22:22:12Z - Commit recorded
+
+Commit: `6ada7e35`
+
+Message: feat(deploy): govern workload secret dependencies
+
+Summary: Implemented portable secret declarations, inventory enforcement and type-aware failure contracts; closed all reviewed validator defects with synthetic regressions. Required commit and recognition gates passed; included PostgreSQL preparation guidance without provider execution.
+
+ADR impact: ADR 0041 records the PostgreSQL reference selection for kanbien-core-platform.
+
+
+### 2026-10-22T22:25:56Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `generated-artifact-conflict`
+
+Mode: deterministic
+
+Action: Regenerated recognition outputs from combined source metadata and retained authored changes from both branches. Trimmed four empty metadata-field trailing spaces in the incoming Oct22 session log for staged whitespace validation.
+
+
+### 2026-10-22T22:26:46Z - Commit recorded
+
+Commit: `bca7af432d405f666b281ad990defe8a69205503`
+
+Message: Merge main through governed refresh rehearsal
+
+Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
+
+ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2091,26 +2389,106 @@ ADR impact: covered by session ADR disposition
   Summary: Completed package-custody migration: workflow, standard, receipt schema, and guide now sit under 40-package with target pipeline and checker consumers updated. Passed package receipt, package workflow, target declaration, migration, generated-index, metadata, and commit gates. No cloud or GitHub action occurred.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5c29a0a3a2c81f7b3b70fa155f4b62f8449bc8fc`
+  Time UTC: 2026-10-21T14:57:37Z
+  Message: docs(deploy): record proven core release route
+  Summary: Activated the proven core route metadata, documented the normal health/update/restoration evidence and its deliberate-failure proof boundary, and updated the generic plan and teaching handbook before the reusable health/recovery package.
+  ADR impact: No ADR: this records and routes existing architecture without changing the durable deployment architecture.
+
+
+- Commit: `e559c8cee3b434978fd7abb8cb9f8d414f47cfbc`
+  Time UTC: 2026-10-21T15:37:01Z
+  Message: feat(deploy): require declared health recovery
+  Summary: Added reusable Run-stage health/failure/recovery declarations and validation, wired them into product, target alignment, and release controls, and recorded the core scope's truthful live-recovery proof boundary.
+  ADR impact: No ADR: this implements the existing lifecycle-first placement decision and documented implementation packet.
+
+
+- Commit: `585bd3456cb85d95b24b85b862a3f5e7d3e9b3bb`
+  Time UTC: 2026-10-21T15:54:02Z
+  Message: feat(aws): rehearse accepted workload replacement
+  Summary: Added a fixed, target-bound 60-run control that proves ECS replaces one deliberately stopped accepted task and requires private verifier evidence newer than the stop boundary. Static declaration, release, placement, metadata, and target-control checks passed.
+  ADR impact: No ADR: this extends the existing lifecycle-first release and recovery control.
+
+
+- Commit: `2a58ab882c12c7210e30d272721745da3adcaea2`
+  Time UTC: 2026-10-21T16:03:59Z
+  Message: docs(deploy): record workload recovery rehearsal
+  Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
+  ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
+
+
+- Commit: Add workload-aware recovery and target budget controls
+  Summary: Adds typed workload health and recovery validation, provider-evidence freshness checks, release rehearsal controls, and a governed 00 target-budget provisioning path with recorded live budget evidence. PostgreSQL is selected as the first future persistence reference; no persistence infrastructure has been created.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `4021fbf2`
+  Time UTC: 2026-10-22T20:39:44Z
+  Message: feat(deploy): govern workload recovery and target budget
+  Summary: Adds workload-aware health and recovery contracts, active-workload validation, evidence freshness enforcement, bounded rehearsal controls, and verified 00 target-budget governance. PostgreSQL is selected as the next persistence reference; no persistence infrastructure is created.
+  ADR impact: not-needed: bounded operational controls follow existing deployment architecture
+
+
+- Commit: feat(deploy): govern workload secret dependencies
+  Summary: Add portable secret declarations, workload-aware validation and inventory enforcement; include corrective regressions and PostgreSQL preparation guidance.
+  ADR impact: ADR 0041 records the existing PostgreSQL reference selection.
+
+
+- Commit: `6ada7e35`
+  Time UTC: 2026-10-22T22:22:12Z
+  Message: feat(deploy): govern workload secret dependencies
+  Summary: Implemented portable secret declarations, inventory enforcement and type-aware failure contracts; closed all reviewed validator defects with synthetic regressions. Required commit and recognition gates passed; included PostgreSQL preparation guidance without provider execution.
+  ADR impact: ADR 0041 records the PostgreSQL reference selection for kanbien-core-platform.
+
+
+- Commit: `bca7af432d405f666b281ad990defe8a69205503`
+  Time UTC: 2026-10-22T22:26:46Z
+  Message: Merge main through governed refresh rehearsal
+  Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
+  ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
+
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `generated-artifact-conflict`
+  Mode: deterministic
+  Reason: Generator-owned recognition index. The classifier fell back to normal-repo-conflict; file metadata and the governed generator establish reproducible generated output.
+  Action: Regenerated recognition outputs from combined source metadata and retained authored changes from both branches. Trimmed four empty metadata-field trailing spaces in the incoming Oct22 session log for staged whitespace validation.
+  Preflight branch: `agentic/preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-57bd4c6fdbdb/20261022222226`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-57bd4c6fdbdb-20261022222226`
+  Files changed by resolution: Generated artifact index; this session conflict audit; incoming Oct22 log whitespace only.
+  Checks: Secret, active inventory, target declaration and release-contract suites passed. Recognition freshness/validity and repository commit extension passed; staged whitespace rechecked after empty-field normalization.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: The generic validator/adapter/wrapper split is an implementation of the existing provider-neutral deployment architecture, not a new repository-wide architectural decision.
+ADR needed: yes
+ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
 
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T12:10:09Z
-Latest commit SHA: 66e5cb57
-Chat duration: 1393840s (16:03:10:40)
+Latest commit at UTC: 2026-10-22T22:26:46Z
+Latest commit SHA: bca7af432d405f666b281ad990defe8a69205503
+Chat duration: 1517237s (17:13:27:17)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
-- None recorded yet.
+- 2026-10-21: Refreshed this clean chat branch by rebasing it onto local `main`
+  (`c1ad31a0`) after fetching remote references. The branch moved from
+  `3bfce6a8` to `c1ad31a0`; Git reported no conflicts, no stash was used, and
+  the final comparison with local `main` is `0 behind, 0 ahead`. This was a
+  user-approved history rewrite; no task commit, merge to `main`, or remote
+  push occurred.
+- 2026-10-21: Promoted the proven `kanbien-core-platform/bootstrap-runtime`
+  route and its factual declarations from `draft` to `active`. The implementation
+  plan now routes readers to the adopted lifecycle-first tree and explicitly
+  treats its earlier provisional layout as historical context. Metadata, target
+  declaration, runnable-program, package-custody, release-contract, and fixed
+  target-control smoke checks passed. No cloud or GitHub mutation occurred.

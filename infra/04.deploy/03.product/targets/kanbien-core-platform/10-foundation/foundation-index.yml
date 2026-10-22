@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
-#   version: 2
-#   status: draft
+#   version: 5
+#   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -41,5 +41,9 @@ resources:
     owner: observability-owner
   - id: cost-guard
     declaration: cost-control.yml
-    status: temporary-waiver-active-until-2026-10-22T12-00-00Z
+    status: cost-control-verified-fresh-alignment-required
+    owner: cost-owner
+  - id: target-budget
+    declaration: budget-control.yml
+    status: live-verified-fresh-alignment-required
     owner: cost-owner

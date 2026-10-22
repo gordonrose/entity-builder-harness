@@ -2,17 +2,17 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-provider-condition-evidence
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
 #   - security
 #   - sre
 #   kind: script
-#   purpose: Validate safe, provider-neutral evidence for a provider-controlled asynchronous condition, including an explicit waiver's status and expiry.
+#   purpose: Validate safe, provider-neutral evidence for a provider-controlled asynchronous condition, including freshness, validity boundaries, and an explicit waiver's expiry.
 #   portability:
 #     class: reusable
 #     targets:
@@ -85,8 +85,19 @@ def main() -> int:
         codes.append("provider-condition-status-invalid")
     if args.required_status and evidence.get("status") not in set(args.required_status):
         codes.append("provider-condition-status-not-accepted")
-    if not timestamp(evidence.get("checked_at")) or not timestamp(evidence.get("next_check_after")):
+    checked_at = evidence.get("checked_at")
+    validity_boundary = evidence.get("next_check_after")
+    if not timestamp(checked_at) or not timestamp(validity_boundary):
         codes.append("provider-condition-timestamp-invalid")
+    else:
+        checked = parsed_timestamp(checked_at)
+        boundary = parsed_timestamp(validity_boundary)
+        if checked > now:
+            codes.append("provider-condition-observation-in-future")
+        if boundary <= checked:
+            codes.append("provider-condition-validity-window-invalid")
+        elif evidence.get("status") == "verified" and now >= boundary:
+            codes.append("provider-condition-evidence-stale")
     for field in ("condition_id", "target", "evidence_reference"):
         if not safe_string(evidence.get(field)):
             codes.append("provider-condition-evidence-unsafe")

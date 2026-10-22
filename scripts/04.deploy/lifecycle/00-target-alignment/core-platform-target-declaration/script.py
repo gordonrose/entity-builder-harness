@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 3
-#   status: draft
+#   version: 7
+#   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -27,6 +27,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
+import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +46,8 @@ REQUIRED_E0_FACTS = {
     "image-custody-destination",
     "private-verifier-placement",
     "logging-destination",
-    "cost-guard",
+    "cost-allocation-tag",
+    "target-budget",
     "delivery-identity",
     "workload-startup-identity",
     "rollback-custody",
@@ -70,7 +75,7 @@ SAFE_RECEIPT_FIELDS = {
     "verification_verdict",
     "receipt_reference",
 }
-SAFE_CONFIG_NAME = __import__("re").compile(r"^[A-Z][A-Z0-9_]*$")
+SAFE_CONFIG_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 
 class DeclarationFailure(Exception):
@@ -107,6 +112,31 @@ def non_empty(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
+def timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def provider_resource_types(template: Path) -> dict[str, str]:
+    try:
+        text = template.read_text(encoding="utf-8")
+    except OSError:
+        raise DeclarationFailure("provider-runtime-template-unreadable") from None
+    return {
+        match.group("id"): match.group("type")
+        for match in re.finditer(
+            r"^  (?P<id>[A-Za-z][A-Za-z0-9]+):\n    Type: (?P<type>AWS::[A-Za-z0-9:]+)$",
+            text,
+            re.MULTILINE,
+        )
+    }
+
+
 def required_mapping(document: dict[str, Any], key: str, code: str) -> dict[str, Any]:
     value = document.get(key)
     if not isinstance(value, dict):
@@ -133,7 +163,7 @@ def check_profile(profile: dict[str, Any]) -> None:
     if not isinstance(facts, list):
         raise DeclarationFailure("e0-fact-missing")
     found: set[str] = set()
-    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z", "accepted-release-retained-and-private-verified"}
+    allowed_fact_statuses = {"live-verified-fresh-alignment-required", "selected-and-live-verified", "inactive-tag-waiver-renewal-required-before-mutation", "cost-control-waiver-active", "cost-control-verified-fresh-alignment-required", "target-budget-provisioning-required-before-mutation", "accepted-release-retained-and-private-verified"}
     for fact in facts:
         if not isinstance(fact, dict) or not non_empty(fact.get("id")):
             raise DeclarationFailure("e0-fact-invalid")
@@ -160,7 +190,7 @@ def check_foundation(root: Path) -> None:
     for item in resources:
         if not isinstance(item, dict) or not non_empty(item.get("id")) or not non_empty(item.get("declaration")):
             raise DeclarationFailure("foundation-resource-invalid")
-        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "temporary-waiver-active-until-2026-10-22T12-00-00Z"}:
+        if item.get("status") not in {"live-verified-fresh-alignment-required", "inactive-tag-waiver-renewal-required-before-mutation", "cost-control-waiver-active", "cost-control-verified-fresh-alignment-required", "target-budget-provisioning-required-before-mutation"}:
             raise DeclarationFailure("foundation-resource-status-invalid")
         if not non_empty(item.get("owner")):
             raise DeclarationFailure("foundation-resource-unowned")
@@ -176,7 +206,6 @@ def check_foundation(root: Path) -> None:
         if not isinstance(intent, dict) or not isinstance(intent.get("provider_identity"), str) or not intent["provider_identity"].endswith("fresh-e4-evidence-required") or not non_empty(intent.get("owner")):
             raise DeclarationFailure("technical-access-invalid")
     cost = mapping(foundation_root / "cost-control.yml", "cost-control-unreadable")
-    waiver = required_mapping(cost, "waiver", "cost-control-invalid")
     expected_controls = {"one-task-only", "no-autoscaling", "no-nat", "no-public-ingress", "no-data-services", "no-new-cost-category"}
     if (
         cost.get("schema") != "deploy/provider-condition-declaration/v1"
@@ -186,20 +215,24 @@ def check_foundation(root: Path) -> None:
         or not non_empty(cost.get("owner"))
         or not non_empty(cost.get("required_evidence"))
         or cost.get("evidence_validator") != "scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh"
-        or set(waiver.get("compensating_controls", [])) != expected_controls
-        or not non_empty(waiver.get("follow_up_owner"))
+        or cost.get("evidence") != "evidence/target-cost-allocation-tag.yml"
     ):
         raise DeclarationFailure("cost-control-invalid")
+    evidence = mapping(foundation_root / cost["evidence"], "cost-control-evidence-unreadable")
+    if (
+        evidence.get("schema") != "deploy/provider-condition-evidence/v1"
+        or evidence.get("condition_id") != "target-cost-allocation-tag-active"
+        or evidence.get("target") != TARGET
+        or evidence.get("status") != cost.get("status")
+        or (cost.get("status") != "waived-by-approved-exception" and ("waiver" in cost or "waiver" in evidence))
+    ):
+        raise DeclarationFailure("cost-control-evidence-invalid")
     if cost.get("status") == "waived-by-approved-exception":
-        if cost.get("evidence") != "evidence/target-cost-allocation-tag.yml":
-            raise DeclarationFailure("cost-control-evidence-invalid")
-        evidence = mapping(foundation_root / cost["evidence"], "cost-control-evidence-unreadable")
+        waiver = required_mapping(cost, "waiver", "cost-control-invalid")
         evidence_waiver = required_mapping(evidence, "waiver", "cost-control-evidence-invalid")
         if (
-            evidence.get("schema") != "deploy/provider-condition-evidence/v1"
-            or evidence.get("condition_id") != "target-cost-allocation-tag-active"
-            or evidence.get("target") != TARGET
-            or evidence.get("status") != "waived-by-approved-exception"
+            set(waiver.get("compensating_controls", [])) != expected_controls
+            or not non_empty(waiver.get("follow_up_owner"))
             or evidence_waiver.get("authority_reference") != waiver.get("current_authority_reference")
             or evidence_waiver.get("expires_at") != waiver.get("current_expiry")
             or set(evidence_waiver.get("compensating_controls", [])) != expected_controls
@@ -210,6 +243,13 @@ def check_foundation(root: Path) -> None:
 
 def check_scope(root: Path) -> None:
     scope_root = root / "20-scopes" / "bootstrap-runtime"
+    inventory = Path(__file__).resolve().parents[5] / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py"
+    inventory_check = subprocess.run(
+        [sys.executable, str(inventory), "--target-root", str(root / "20-scopes"), "--json"],
+        capture_output=True, check=False, text=True,
+    )
+    if inventory_check.returncode != 0:
+        raise DeclarationFailure("active-workload-health-recovery-inventory-invalid")
     contract = mapping(scope_root / "00-declaration" / "declaration-contract.yml", "scope-contract-unreadable")
     if contract.get("schema") != "deploy/target-scope-contract/v1" or contract.get("target") != TARGET or contract.get("id") != "kanbien-core-platform-bootstrap-runtime":
         raise DeclarationFailure("scope-contract-invalid")
@@ -230,6 +270,52 @@ def check_scope(root: Path) -> None:
     verification = required_mapping(contract, "verification", "scope-verification-missing")
     if verification.get("route_exposure") != "private-verifier-only" or verification.get("status") != "accepted-baseline-private-verification-complete-and-required-after-every-mutation" or not non_empty(verification.get("owner")):
         raise DeclarationFailure("scope-verification-invalid")
+    binding_path = scope_root / "10-workload-binding" / "workload-binding.yml"
+    binding = mapping(binding_path, "workload-binding-unreadable")
+    validator = Path(__file__).resolve().parents[5] / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
+    health_check = subprocess.run(
+        [sys.executable, str(validator), "--scope-contract", str(scope_root / "00-declaration" / "declaration-contract.yml"), "--workload-binding", str(binding_path), "--json"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if health_check.returncode != 0:
+        raise DeclarationFailure("health-recovery-declaration-invalid")
+    health_recovery = required_mapping(contract, "health_recovery", "health-recovery-declaration-invalid")
+    workloads = health_recovery.get("workloads", [])
+    server = next((item for item in workloads if isinstance(item, dict) and item.get("id") == "core-server"), None)
+    verifier_workload = next((item for item in workloads if isinstance(item, dict) and item.get("id") == "private-release-verifier"), None)
+    liveness = required_mapping(server, "liveness", "health-recovery-declaration-invalid")
+    readiness = required_mapping(server, "readiness", "health-recovery-declaration-invalid")
+    if liveness.get("path") != verification.get("liveness_path") or readiness.get("path") != verification.get("readiness_path"):
+        raise DeclarationFailure("health-recovery-verification-path-mismatch")
+    verifier_completion = required_mapping(verifier_workload, "completion", "health-recovery-declaration-invalid")
+    success = required_mapping(verifier_completion, "success", "health-recovery-declaration-invalid")
+    completion = required_mapping(required_mapping(verifier_workload, "proof", "health-recovery-declaration-invalid"), "completion", "health-recovery-declaration-invalid")
+    evidence_reference = completion.get("evidence_reference")
+    if not non_empty(evidence_reference):
+        raise DeclarationFailure("verifier-completion-evidence-invalid")
+    rehearsal = mapping(scope_root / "00-declaration" / evidence_reference, "verifier-completion-evidence-unreadable")
+    verification_evidence = required_mapping(rehearsal, "fresh_private_verification", "verifier-completion-evidence-invalid")
+    rehearsal = required_mapping(rehearsal, "rehearsal", "verifier-completion-evidence-invalid")
+    boundary = timestamp(rehearsal.get("original_task_stopped_at"))
+    started = timestamp(verification_evidence.get("verifier_started_at"))
+    completed = timestamp(verification_evidence.get("verifier_completed_at"))
+    if (
+        completion.get("exit_code") != success.get("exit_code")
+        or completion.get("result_code") != success.get("result_code")
+        or completion.get("exit_code") != verification_evidence.get("exit_code")
+        or completion.get("result_code") != verification_evidence.get("code")
+        or completion.get("fresh_after") != rehearsal.get("original_task_stopped_at")
+        or completion.get("observed_at") != verification_evidence.get("verifier_completed_at")
+        or boundary is None
+        or started is None
+        or completed is None
+        or completed < boundary
+        or completed < started
+        or (completed - started).total_seconds() > verifier_completion.get("deadline_seconds", 0)
+    ):
+        raise DeclarationFailure("verifier-completion-evidence-invalid")
     dependencies = required_mapping(contract, "dependencies", "scope-dependencies-missing")
     if dependencies.get("required") != [] or dependencies.get("optional") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
         raise DeclarationFailure("scope-dependencies-invalid")
@@ -243,10 +329,56 @@ def check_scope(root: Path) -> None:
     receipt_fields = receipt.get("safe_fields")
     if not isinstance(receipt_fields, list) or not receipt_fields or not set(receipt_fields).issubset(SAFE_RECEIPT_FIELDS):
         raise DeclarationFailure("receipt-declaration-invalid")
-    binding = mapping(scope_root / "10-workload-binding" / "workload-binding.yml", "workload-binding-unreadable")
     mutation = required_mapping(binding, "mutation", "workload-binding-invalid")
-    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "healthy-runtime-accepted" or binding.get("provider_workload") != "fixed-ecs-fargate-runtime-stack-live-verified-fresh-alignment-required" or binding.get("private_verifier") != "fixed-one-shot-private-ecs-task-live-verified-fresh-alignment-required" or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "update-or-restore-after-fresh-alignment-and-reviewed-change-set":
+    expected_workloads = {("core-server-service", "long-running-server", "service"), ("private-release-verifier-task", "run-to-completion-task", "task")}
+    actual_workloads = {(item.get("id"), item.get("workload_type"), item.get("runtime_class")) for item in binding.get("workloads", []) if isinstance(item, dict)}
+    provider_binding = required_mapping(binding, "proposed_provider_binding", "workload-binding-invalid")
+    if provider_binding.get("template") != "30-provider-realization/aws/cloudformation/bootstrap-runtime.yml":
         raise DeclarationFailure("workload-binding-invalid")
+    template_path = root / provider_binding["template"]
+    provider_types = provider_resource_types(template_path)
+    expected_provider_resources = {
+        "core-server-service": ("BootstrapRuntimeService", "AWS::ECS::Service"),
+        "private-release-verifier-task": ("ReleaseVerifierTaskDefinition", "AWS::ECS::TaskDefinition"),
+    }
+    provider_resources = {
+        item.get("id"): (item.get("provider_reference"), provider_types.get(item.get("provider_reference")))
+        for item in binding.get("workloads", [])
+        if isinstance(item, dict)
+    }
+    if binding.get("target") != TARGET or binding.get("program_id") != "kanbien-core-server" or binding.get("status") != "healthy-runtime-accepted" or actual_workloads != expected_workloads or mutation.get("status") != "blocked" or mutation.get("allowed_operation") != "update-or-restore-after-fresh-alignment-and-reviewed-change-set":
+        raise DeclarationFailure("workload-binding-invalid")
+    if provider_resources != expected_provider_resources:
+        raise DeclarationFailure("workload-provider-reference-invalid")
+    expected_execution = {
+        "core-server-service": {
+            "kind": "compiled-entrypoint",
+            "source_reference": "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts",
+            "command_description": "node artifacts/kanbien-core-server.main.js",
+        },
+        "private-release-verifier-task": {
+            "kind": "inline-command",
+            "source_reference": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition.private-release-verifier.command",
+            "command_description": "node -e private release verification request",
+        },
+    }
+    executions = {
+        item.get("id"): item.get("execution")
+        for item in binding.get("workloads", [])
+        if isinstance(item, dict)
+    }
+    try:
+        template_text = template_path.read_text(encoding="utf-8")
+    except OSError:
+        raise DeclarationFailure("workload-execution-source-invalid") from None
+    repo_root = Path(__file__).resolve().parents[5]
+    if (
+        executions != expected_execution
+        or "artifacts/kanbien-core-server.main.js" not in (repo_root / "infra/04.deploy/03.product/image/core-server/image-contract.yml").read_text(encoding="utf-8")
+        or "KANBIEN_CORE_RELEASE_VERIFIED" not in template_text
+        or "KANBIEN_CORE_RELEASE_VERIFICATION_FAILED" not in template_text
+    ):
+        raise DeclarationFailure("workload-execution-source-invalid")
 
 
 def check_accepted_release(root: Path) -> None:
@@ -276,20 +408,60 @@ def check_accepted_release(root: Path) -> None:
     if not non_empty(rehearsal_path):
         raise DeclarationFailure("accepted-release-rehearsal-missing")
     rehearsal = mapping(evidence_root / rehearsal_path, "accepted-release-rehearsal-unreadable")
-    restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
-    restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
+    if rehearsal.get("schema") == "deploy/release-rehearsal-evidence/v1":
+        restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
+        restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
+        valid = (
+            rehearsal.get("target") == TARGET
+            and rehearsal.get("scope") == "bootstrap-runtime"
+            and rehearsal.get("status") == "restored-and-verified"
+            and restored.get("source_revision") == release.get("source_revision")
+            and restored.get("image_digest") == release.get("image_digest")
+            and restored.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and restored.get("verifier_task_definition") == release.get("verifier_task_definition")
+            and restored_verification.get("code") == "runtime-digest-and-private-verifier-accepted"
+        )
+    elif rehearsal.get("schema") == "deploy/workload-recovery-rehearsal-evidence/v1":
+        accepted = required_mapping(rehearsal, "accepted_release", "accepted-release-rehearsal-invalid")
+        final = required_mapping(rehearsal, "final_workload", "accepted-release-rehearsal-invalid")
+        verified = required_mapping(rehearsal, "fresh_private_verification", "accepted-release-rehearsal-invalid")
+        valid = (
+            rehearsal.get("target") == TARGET
+            and rehearsal.get("scope") == "bootstrap-runtime"
+            and rehearsal.get("status") == "accepted"
+            and accepted.get("source_revision") == release.get("source_revision")
+            and accepted.get("image_digest") == release.get("image_digest")
+            and accepted.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and accepted.get("verifier_task_definition") == release.get("verifier_task_definition")
+            and final.get("image_digest") == release.get("image_digest")
+            and final.get("runtime_task_definition") == release.get("runtime_task_definition")
+            and final.get("health_status") == "HEALTHY"
+            and verified.get("exit_code") == 0
+            and verified.get("verdict") == "accepted"
+            and verified.get("code") == "KANBIEN_CORE_RELEASE_VERIFIED"
+        )
+    else:
+        valid = False
+    if not valid:
+        raise DeclarationFailure("accepted-release-rehearsal-invalid")
+    restoration_path = acceptance.get("last_restoration_rehearsal")
+    if not non_empty(restoration_path):
+        raise DeclarationFailure("accepted-release-restoration-rehearsal-missing")
+    restoration = mapping(evidence_root / restoration_path, "accepted-release-restoration-rehearsal-unreadable")
+    restored = required_mapping(restoration, "restored_release_a", "accepted-release-restoration-rehearsal-invalid")
+    restored_verification = required_mapping(restored, "private_verification", "accepted-release-restoration-rehearsal-invalid")
     if (
-        rehearsal.get("schema") != "deploy/release-rehearsal-evidence/v1"
-        or rehearsal.get("target") != TARGET
-        or rehearsal.get("scope") != "bootstrap-runtime"
-        or rehearsal.get("status") != "restored-and-verified"
+        restoration.get("schema") != "deploy/release-rehearsal-evidence/v1"
+        or restoration.get("target") != TARGET
+        or restoration.get("scope") != "bootstrap-runtime"
+        or restoration.get("status") != "restored-and-verified"
         or restored.get("source_revision") != release.get("source_revision")
         or restored.get("image_digest") != release.get("image_digest")
         or restored.get("runtime_task_definition") != release.get("runtime_task_definition")
         or restored.get("verifier_task_definition") != release.get("verifier_task_definition")
         or restored_verification.get("code") != "runtime-digest-and-private-verifier-accepted"
     ):
-        raise DeclarationFailure("accepted-release-rehearsal-invalid")
+        raise DeclarationFailure("accepted-release-restoration-rehearsal-invalid")
 
 
 def check_pipeline(root: Path) -> None:

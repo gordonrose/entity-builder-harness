@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.readme
-version: 2
-status: draft
+version: 4
+status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines:
@@ -35,7 +35,14 @@ the object store that serves image layers. The latter must be restricted to the
 provider-managed object-store prefix list, not widened to general internet
 egress.
 
-`cost-control.yml` records that AWS currently exposes the `Target` tag as
-inactive. Its `evidence/` record holds the narrowly approved, expiring waiver
-for this rehearsal; no update or restoration may mutate AWS after that record
-expires unless fresh provider evidence or a new waiver replaces it.
+`cost-control.yml` records fresh provider evidence that the `Target` tag is
+active for cost allocation. Its `evidence/` record is refreshed before a
+budget or target-governance change; a future inactive state would require a
+new explicit waiver rather than silently relying on this verification.
+
+`budget-control.yml` is deliberately separate. Tag activation only lets AWS
+use `Target` as a cost-allocation dimension; it does not create a budget.
+The current evidence records a verified target-filtered monthly budget. The
+target-mutation cost gate requires both this evidence and fresh tag evidence
+before later mutations, then checks the budget's name, limit, period and
+target filter again through the governed provider route.

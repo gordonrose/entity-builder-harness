@@ -2,24 +2,25 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.verify-runtime-release
-#   version: 2
-#   status: draft
+#   version: 5
+#   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Verify the deployed immutable runtime through one fixed private release verifier, reusing its fresh completed evidence rather than launching a duplicate task.
+#   purpose: Verify the deployed immutable runtime through one fixed private release verifier, optionally requiring evidence created after a supplied safe time boundary.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.verify-candidate.wrapper
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh
 #   effects: [aws-mutation]
 from __future__ import annotations
-import argparse, json, subprocess, sys
+import argparse, json, subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
+import yaml
 
 ROOT=Path(__file__).resolve().parents[8]
 PROFILE, REGION = "kanbien-dev", "eu-west-1"
@@ -31,6 +32,7 @@ def aws(*p: str):
  try:return True,json.loads(r.stdout),"ok"
  except json.JSONDecodeError:return False,None,"aws-response-invalid"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
+SCOPE_CONTRACT = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml"
 
 def out(verdict,*codes,facts=None):
  report={"schema":"deploy/private-runtime-verification-report/v1","target":"kanbien-core-platform","verdict":verdict,"findings":[{"code":c} for c in codes]}
@@ -45,6 +47,52 @@ def timestamp(value):
  if not isinstance(value, str): return None
  try: return datetime.fromisoformat(value.replace("Z", "+00:00"))
  except ValueError: return None
+
+
+def verifier_completion_deadline():
+ try:
+  contract=yaml.safe_load(SCOPE_CONTRACT.read_text(encoding="utf-8"))
+ except (OSError, yaml.YAMLError): return None
+ if not isinstance(contract,dict): return None
+ workloads=contract.get("health_recovery",{}).get("workloads",[])
+ verifier=next((item for item in workloads if isinstance(item,dict) and item.get("id")=="private-release-verifier"),None)
+ deadline=verifier.get("completion",{}).get("deadline_seconds") if isinstance(verifier,dict) else None
+ return deadline if isinstance(deadline,int) and deadline>0 else None
+
+
+def verifier_duration_seconds(task):
+ started=timestamp(task.get("startedAt")) if isinstance(task,dict) else None
+ stopped=timestamp(task.get("stoppedAt")) if isinstance(task,dict) else None
+ if started is None or stopped is None or stopped < started: return None
+ return int((stopped-started).total_seconds())
+
+
+def completed_within_deadline(task, deadline_seconds):
+ duration=verifier_duration_seconds(task)
+ if duration is None: return False, "private-verifier-duration-unavailable"
+ if duration>deadline_seconds: return False, "private-verifier-completion-deadline-exceeded"
+ return True, "ok"
+
+
+def wait_for_verifier_stop(task_arn, deadline_seconds, inspect_task, *, monotonic=time.monotonic, sleep=time.sleep, poll_seconds=5):
+ """Wait only to the declared controller deadline; never retry an uncertain task."""
+ started=monotonic()
+ latest=None
+ while True:
+  state, task=inspect_task(task_arn)
+  if state != "ok" or not isinstance(task,dict): return "uncertain", None
+  latest=task
+  if task.get("lastStatus")=="STOPPED": return "stopped", task
+  remaining=deadline_seconds-(monotonic()-started)
+  if remaining<=0: return "still-running", latest
+  sleep(min(poll_seconds, remaining))
+
+
+def inspect_verifier_task(task_arn):
+ ok, described, code=aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",task_arn)
+ tasks=described.get("tasks",[]) if ok else []
+ if not ok or len(tasks)!=1: return code if not ok else "task-not-returned", None
+ return "ok", tasks[0]
 
 def completed_verifier_after(tasks, verifier, not_before):
  """Return the latest verifier task created by this deployment, if any."""
@@ -71,10 +119,13 @@ def task_exited_successfully(task):
  containers=task.get("containers",[]) if isinstance(task,dict) else []
  return bool(containers) and containers[0].get("exitCode") == 0
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--json",action="store_true");a,u=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--not-before");p.add_argument("--json",action="store_true");a,u=p.parse_known_args()
  if u or a.receipt is None:out("blocked","private-verification-arguments-invalid");return 1
+ if a.not_before is not None and timestamp(a.not_before) is None:out("blocked","private-verification-not-before-invalid");return 1
  c=candidate(a.receipt)
  if not c:out("blocked","package-custody-receipt-invalid");return 1
+ deadline=verifier_completion_deadline()
+ if deadline is None:out("blocked","private-verifier-deadline-contract-invalid");return 1
  ok, stack, code=aws("cloudformation","describe-stacks","--stack-name",RUNTIME)
  if not ok:out("blocked",code);return 1
  runtime_stack=stack.get("Stacks",[{}])[0]
@@ -103,23 +154,29 @@ def main():
   ok, described, code=aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*existing_arns)
   if not ok: out("blocked",code);return 1
   existing=described.get("tasks",[])
- prior=completed_verifier_after(existing, verifier, runtime_stack.get("LastUpdatedTime"))
+ # A caller may require evidence produced after a controlled recovery action.
+ # Otherwise the stack update time remains the safe reuse boundary.
+ reuse_boundary=a.not_before or runtime_stack.get("LastUpdatedTime")
+ prior=completed_verifier_after(existing, verifier, reuse_boundary)
  if prior:
+  within, code=completed_within_deadline(prior, deadline)
+  if not within: out("blocked",code);return 1
   if not task_exited_successfully(prior): out("blocked","private-release-verification-failed");return 1
   accepted, code=verifier_log_accepts(prior)
   if not accepted: out("blocked",code);return 1
-  out("accepted","runtime-digest-and-private-verifier-accepted",facts={"source_revision":c["source_revision"],"image_digest":c["image_digest"],"runtime_task_definition":taskdef,"verifier_task_definition":verifier,"verification_mode":"reused-completed-private-task"});return 0
+  out("accepted","runtime-digest-and-private-verifier-accepted",facts={"source_revision":c["source_revision"],"image_digest":c["image_digest"],"runtime_task_definition":taskdef,"verifier_task_definition":verifier,"verification_mode":"reused-completed-private-task","completion_deadline_seconds":deadline,"completion_duration_seconds":verifier_duration_seconds(prior)});return 0
  network=f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{sg}],assignPublicIp=DISABLED}}"
  ok, run, code=aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",verifier,"--launch-type","FARGATE","--count","1","--network-configuration",network)
  tasks=run.get("tasks",[]) if ok else []
  if not ok or len(tasks)!=1 or not tasks[0].get("taskArn"):out("blocked",code if not ok else "private-verifier-not-started");return 1
  arn=tasks[0]["taskArn"]
- waited=subprocess.run(["aws","ecs","wait","tasks-stopped","--cluster",CLUSTER,"--tasks",arn,"--profile",PROFILE,"--region",REGION],capture_output=True,text=True)
- if waited.returncode:out("blocked","private-verifier-not-stopped");return 1
- ok, finished, code=aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",arn)
- completed=finished.get("tasks",[{}])[0] if ok else {}
- if not ok or not task_exited_successfully(completed):out("blocked","private-release-verification-failed");return 1
+ state, completed=wait_for_verifier_stop(arn, deadline, inspect_verifier_task)
+ if state=="still-running":out("blocked","private-verifier-controller-deadline-remote-task-still-running");return 1
+ if state!="stopped":out("blocked","private-verifier-controller-deadline-remote-task-uncertain");return 1
+ within, code=completed_within_deadline(completed, deadline)
+ if not within:out("blocked",code);return 1
+ if not task_exited_successfully(completed):out("blocked","private-release-verification-failed");return 1
  accepted, code=verifier_log_accepts(completed)
  if not accepted:out("blocked",code);return 1
- out("accepted","runtime-digest-and-private-verifier-accepted",facts={"source_revision":c["source_revision"],"image_digest":c["image_digest"],"runtime_task_definition":taskdef,"verifier_task_definition":verifier,"verification_mode":"fresh-private-task"});return 0
+ out("accepted","runtime-digest-and-private-verifier-accepted",facts={"source_revision":c["source_revision"],"image_digest":c["image_digest"],"runtime_task_definition":taskdef,"verifier_task_definition":verifier,"verification_mode":"fresh-private-task","completion_deadline_seconds":deadline,"completion_duration_seconds":verifier_duration_seconds(completed)});return 0
 if __name__=="__main__":sys.exit(main())

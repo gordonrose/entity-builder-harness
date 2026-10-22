@@ -1,17 +1,17 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.evidence.target-cost-allocation-tag
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
 #   - security
 #   - sre
 #   kind: provider-condition-evidence
-#   purpose: Record the approved, temporary exception for the inactive target cost-allocation tag without exposing billing or account data.
+#   purpose: Record fresh safe provider evidence that the Target cost-allocation tag is active without exposing billing or account data.
 #   portability:
 #     class: internal
 #     targets: []
@@ -23,19 +23,7 @@
 schema: deploy/provider-condition-evidence/v1
 condition_id: target-cost-allocation-tag-active
 target: kanbien-core-platform
-status: waived-by-approved-exception
-checked_at: "2026-10-21T08:29:00Z"
-next_check_after: "2026-10-22T12:00:00Z"
-evidence_reference: aws-cost-explorer-target-tag-inactive-2026-10-21
-waiver:
-  authority_reference: chat-2026-10-05-release-b-rehearsal-authorization
-  reason_code: target-cost-allocation-tag-inactive
-  expires_at: "2026-10-22T12:00:00Z"
-  compensating_controls:
-    - one-task-only
-    - no-autoscaling
-    - no-nat
-    - no-public-ingress
-    - no-data-services
-    - no-new-cost-category
-  follow_up_owner: cost-owner
+status: verified
+checked_at: "2026-10-22T18:31:00Z"
+next_check_after: "2026-11-21T18:31:00Z"
+evidence_reference: aws-cost-explorer-target-tag-active-2026-10-22

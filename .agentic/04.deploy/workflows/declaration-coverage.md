@@ -4,7 +4,7 @@ id: deploy.workflow.declaration-coverage
 version: 2
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -47,6 +47,9 @@ dependency, or release safety property.
    configuration shape, infrastructure definitions, and release controls.
 3. For each requirement, create or update a declaration-contract entry with
    the complete chain required by the Declaration Coverage Standard.
+   When a workload needs injected secret material, also follow
+   `00-target-alignment/workflows/declare-secret-dependency.md`; record an
+   explicit empty secret-dependency list when it does not.
 <!-- deterministic-check: allow reason="A future declaration-contract checker can verify referenced paths and commands; until it exists, a reviewer must assess the selected scope and expectation meaning." -->
 4. Confirm that all referenced local declarations and proof commands exist and
    that the expected value or shape is non-secret and unambiguous.

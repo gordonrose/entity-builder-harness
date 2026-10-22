@@ -1,0 +1,102 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.health-failure-and-recovery-declaration.v2
+#   version: 2
+#   status: active
+#   created_on: "2026-10-22"
+#   updated_on: "2026-10-22"
+#   layer: 04.deploy
+#   domain: deployment.runtime-safety
+#   disciplines: [agentic, security, sre]
+#   kind: schema
+#   purpose: Describe individual workload-type-aware health, completion, recovery, and proof declarations embedded in a scope contract.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.validate-health-failure-and-recovery-declaration
+#     path: scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh
+schema: deploy/health-failure-and-recovery-declaration-schema/v2
+embedded_in: deploy/target-scope-contract/v1#health_recovery
+required_fields:
+  - declaration_schema
+  - workloads
+workload_types:
+  long-running-server:
+    requires:
+      - liveness
+      - readiness
+      - startup_failure
+      - dependency_failures
+      - automatic_workload_recovery
+      - release_recovery
+      - proof.local
+      - proof.package
+      - proof.live_recovery
+  continuous-worker:
+    requires:
+      - startup_failure
+      - dependency_failures
+      - progress_health
+      - shutdown
+      - interrupted_work
+      - automatic_workload_recovery
+      - release_recovery
+      - proof.local
+      - proof.package
+      - proof.live_recovery
+  run-to-completion-task:
+    requires:
+      - completion.deadline_seconds
+      - completion.success.exit_code
+      - completion.success.result_code
+      - completion.interruption
+      - completion.retry_policy
+      - required_workloads
+      - proof.local
+      - proof.package
+      - proof.completion
+proof_statuses: [passed, planned, deferred]
+safe_diagnostic_code_pattern: ^[A-Z][A-Z0-9_]{2,}$
+completion_evidence:
+  passed_requires:
+    - evidence_reference
+    - exit_code
+    - result_code
+    - fresh_after
+    - observed_at
+  target_mapping_requires:
+    - declared-success-matches-recorded-exit-and-result
+    - actual-evidence-boundary-matches-fresh-after
+    - actual-duration-is-within-declared-deadline
+scope_inventory:
+  active_entry_requires:
+    - canonical-own-declaration-path
+    - canonical-own-binding-path
+    - matching-target
+    - matching-scope
+workload_binding:
+  each_workload_requires:
+    - execution.kind
+    - execution.source_reference
+    - execution.command_description
+  execution_kinds: [compiled-entrypoint, inline-command]
+not_applicable:
+  required_fields: [concern, workload_type_basis, scope_basis]
+  constraint: concern-must-be-inapplicable-to-the-declared-workload-type
+legacy_exceptions:
+  required_fields:
+    - legacy_workload
+    - reason
+    - owner
+    - replacement_path
+    - review_condition
+    - retirement_condition
+  status: retiring-reference-only
+  prohibition: active-new-framework-scopes-must-not-use-legacy-exceptions
+prohibitions:
+  - secret values
+  - credential values
+  - tokens
+  - connection strings
+  - raw provider responses
+  - personal data
+  - internal addresses
