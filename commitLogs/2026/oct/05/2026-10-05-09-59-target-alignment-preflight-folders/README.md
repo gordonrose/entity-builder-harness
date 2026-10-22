@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-22T22:22:12Z
-latest_commit_sha: 6ada7e35
-chat_duration: 1516963s (17:13:22:43)
+latest_commit_at_utc: 2026-10-22T22:26:46Z
+latest_commit_sha: bca7af432d405f666b281ad990defe8a69205503
+chat_duration: 1517237s (17:13:27:17)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2049,6 +2049,17 @@ Mode: deterministic
 
 Action: Regenerated recognition outputs from combined source metadata and retained authored changes from both branches. Trimmed four empty metadata-field trailing spaces in the incoming Oct22 session log for staged whitespace validation.
 
+
+### 2026-10-22T22:26:46Z - Commit recorded
+
+Commit: `bca7af432d405f666b281ad990defe8a69205503`
+
+Message: Merge main through governed refresh rehearsal
+
+Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
+
+ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2430,6 +2441,13 @@ Action: Regenerated recognition outputs from combined source metadata and retain
   Summary: Implemented portable secret declarations, inventory enforcement and type-aware failure contracts; closed all reviewed validator defects with synthetic regressions. Required commit and recognition gates passed; included PostgreSQL preparation guidance without provider execution.
   ADR impact: ADR 0041 records the PostgreSQL reference selection for kanbien-core-platform.
 
+
+- Commit: `bca7af432d405f666b281ad990defe8a69205503`
+  Time UTC: 2026-10-22T22:26:46Z
+  Message: Merge main through governed refresh rehearsal
+  Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
+  ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
+
 ## Main Refresh Conflicts
 
 
@@ -2453,9 +2471,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-22T22:22:12Z
-Latest commit SHA: 6ada7e35
-Chat duration: 1516963s (17:13:22:43)
+Latest commit at UTC: 2026-10-22T22:26:46Z
+Latest commit SHA: bca7af432d405f666b281ad990defe8a69205503
+Chat duration: 1517237s (17:13:27:17)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
