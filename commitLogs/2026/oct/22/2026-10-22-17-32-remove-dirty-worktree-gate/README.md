@@ -40,7 +40,10 @@ explain dirty worktree gate purpose and removal
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: Global workspace inventory encountered an unrelated stale registration
+  Resolution: report-chat-workspaces exited 2 because the registered /tmp/agentic-chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-04-21-47-continue-the-preparation-covered-by-the-existing-approval-pr-2734701323 path is absent. No cleanup or mutation of unrelated worktrees occurred. The target-specific local promotion verifier passed State: eligible with this chat 2 ahead and 0 behind main; current root and chat worktrees are clean. Required implementation and commit checks passed.
 
 ## Decisions Made
 
@@ -220,6 +223,13 @@ Message: fix(harness): replace blanket dirty-worktree confirmation
 Summary: Replace blanket confirmation with existing-change inspection and preservation guidance; retain operation-specific safeguards; cover dirty text/JSON startup; supersede ADR 0005 and align local workflows and retrieval metadata. Public-beta and commit readiness gates passed.
 
 ADR impact: ADR 0040 accepted; ADR 0005 superseded with v3 lifecycle references.
+
+
+### 2026-10-22T16:54:54Z - Issue
+
+Raised: Global workspace inventory encountered an unrelated stale registration
+
+Resolution: report-chat-workspaces exited 2 because the registered /tmp/agentic-chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-04-21-47-continue-the-preparation-covered-by-the-existing-approval-pr-2734701323 path is absent. No cleanup or mutation of unrelated worktrees occurred. The target-specific local promotion verifier passed State: eligible with this chat 2 ahead and 0 behind main; current root and chat worktrees are clean. Required implementation and commit checks passed.
 
 ## Sub-Agent Activity
 
