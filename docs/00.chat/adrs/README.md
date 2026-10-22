@@ -4,7 +4,7 @@ id: chat.adrs.readme
 version: 1
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 00.chat
 domain: architecture
 disciplines:
@@ -34,6 +34,10 @@ Use this root for chat-owned ADR history. Agent-facing chat workflows and
 checklists stay under `.agentic/00.chat/`; public workbench documentation stays
 under `docs/00.chat/`; generated or per-chat session logs stay under
 `commitLogs/`.
+
+- [0040: Treat worktree dirt as context](0040-treat-worktree-dirt-as-context.md)
+  replaces blanket dirty-worktree confirmation while retaining operation-specific
+  safeguards.
 
 The old prototype ADR pointers have been retired. Use this owner-aligned ADR
 root directly for chat-owned decision history.

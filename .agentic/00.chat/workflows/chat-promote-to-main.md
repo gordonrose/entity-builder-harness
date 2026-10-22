@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-22"
   layer: 00.chat
   domain: local-merge
   disciplines:
@@ -36,21 +36,14 @@ feature branches owned by their chat worktrees. Integration into `main` is an
 
 ## Required Gates
 
-Before merging, rebasing, staging, committing, pushing, deleting branches, or
-discarding work, run:
+Follow the [existing-change guidance](chat-start.md#existing-changes) for
+inspection and authorized task edits. Before merging, run the readiness verifier
+in Intake and satisfy the Promotion Policy below. Its checks for clean root and
+chat worktrees remain required for convergence.
 
-```bash
-bash scripts/00.chat/worktree/dirty-worktree-check/script.sh
-```
-
-<!-- deterministic-check: allow reason="workflow defines the exact blocked response around the dirty-worktree gate output" -->
-If dirty, respond exactly:
-
-```txt
-Blocked: dirty worktree. Confirm proceed? Layer: chat. Mode: <mode>. Workflow: .agentic/00.chat/workflows/chat-promote-to-main.md
-```
-
-Do not change branches or edit files while blocked.
+Staging and committing follow `.agentic/00.chat/workflows/chat-commit.md`;
+refresh and cleanup follow their own workflows. Keep each operation's approval
+and preservation requirements.
 
 ## Intake
 

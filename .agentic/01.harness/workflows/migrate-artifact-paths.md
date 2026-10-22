@@ -4,7 +4,7 @@ id: harness.workflows.migrate-artifact-paths
 version: 1
 status: active
 created_on: "2026-06-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 01.harness
 domain: migration
 disciplines:
@@ -41,11 +41,9 @@ place where a harness-built plan lives.
 
 ## Required Gates
 
-Run the active workflow dirty-worktree gate before editing:
-
-```bash
-bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
-```
+Follow [existing-change handling](../../00.chat/workflows/chat-start.md#existing-changes)
+before editing. Preserve unrelated work and resolve concrete conflicts or unclear
+ownership; dirty status alone does not require confirmation.
 
 ## Step 1: Read The Standard
 
