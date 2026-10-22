@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#   version: 4
+#   version: 7
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -22,6 +22,7 @@
 schema: deploy/target-scope-contract/v1
 id: kanbien-core-platform-bootstrap-runtime
 target: kanbien-core-platform
+scope: bootstrap-runtime
 status: healthy-runtime-accepted
 owner: platform-runtime
 program:
@@ -64,38 +65,59 @@ verification:
       - expected-source-revision
       - private-release-verification-response
 health_recovery:
-  declaration_schema: deploy/health-recovery-declaration/v1
-  liveness:
-    path: /livez
-    expected_status: 200
-  readiness:
-    path: /readyz
-    expected_status: 200
-    depends_on: []
-  startup_failure:
-    invalid_required_configuration:
-      result: process-exits
-      diagnostic_code: CONFIGURATION_REQUIRED_SETTING_MISSING
-  dependency_failures: []
-  automatic_workload_recovery:
-    owner: aws-ecs-service
-    unhealthy_workload: replace
-    prohibited_automatic_actions:
-      - replay-uncertain-operation
-  release_recovery:
-    strategy: restore-prior-accepted-immutable-release
-    automatic_restore: prohibited
-    verification: repeat-declared-health-and-meaningful-operation
-  proof:
-    local:
-      status: passed
-      command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
-    package:
-      status: passed
-      command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
-    live_recovery:
-      status: passed
-      evidence_reference: ../30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+  declaration_schema: deploy/health-failure-and-recovery-declaration/v2
+  workloads:
+    - id: core-server
+      workload_type: long-running-server
+      binding: core-server-service
+      liveness: { path: /livez, expected_status: 200 }
+      readiness: { path: /readyz, expected_status: 200, depends_on: [] }
+      startup_failure:
+        invalid_required_configuration: { result: process-exits, diagnostic_code: CONFIGURATION_REQUIRED_SETTING_MISSING }
+      dependency_failures: []
+      automatic_workload_recovery:
+        owner: aws-ecs-service
+        unhealthy_workload: replace
+        prohibited_automatic_actions: [replay-uncertain-operation]
+      release_recovery:
+        strategy: restore-prior-accepted-immutable-release
+        automatic_restore: prohibited
+        verification: repeat-declared-health-and-meaningful-operation
+      proof:
+        local: { status: passed, command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh }
+        package: { status: passed, command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh }
+        live_recovery:
+          status: passed
+          evidence_reference: ../30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml
+    - id: private-release-verifier
+      workload_type: run-to-completion-task
+      binding: private-release-verifier-task
+      required_workloads: [core-server]
+      not_applicable:
+        - concern: http-liveness
+          workload_type_basis: run-to-completion-task
+          scope_basis: private-release-verification-is-completion-based
+        - concern: http-readiness
+          workload_type_basis: run-to-completion-task
+          scope_basis: private-release-verification-is-completion-based
+        - concern: automatic-replacement
+          workload_type_basis: run-to-completion-task
+          scope_basis: task-interruption-is-governed-by-stop-and-escalate
+      completion:
+        deadline_seconds: 120
+        success: { exit_code: 0, result_code: KANBIEN_CORE_RELEASE_VERIFIED }
+        interruption: { policy: stop-and-escalate }
+        retry_policy: no-automatic-retries
+      proof:
+        local: { status: passed, command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh }
+        package: { status: passed, command: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh }
+        completion:
+          status: passed
+          evidence_reference: ../30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-22.yml
+          exit_code: 0
+          result_code: KANBIEN_CORE_RELEASE_VERIFIED
+          fresh_after: "2026-10-22T18:40:03Z"
+          observed_at: "2026-10-22T18:41:22Z"
 dependencies:
   required: []
   optional: []

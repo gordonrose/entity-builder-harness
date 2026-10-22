@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -78,7 +78,7 @@ def task_suffix(task):
 def preflight(release, receipt_path):
     for command, code in ((["bash", str(COST), "--json"], "cost-condition-not-approved"), (["bash", str(ALIGNMENT), "--receipt", str(receipt_path), "--operation", "restore", "--json"], "target-alignment-not-approved")):
         result=subprocess.run(command, capture_output=True, text=True, cwd=ROOT)
-        if result.returncode: return code
+        if result.returncode: return None, code
     task, code=current_workload(release)
     return (task, "ok") if task else (None, code)
 

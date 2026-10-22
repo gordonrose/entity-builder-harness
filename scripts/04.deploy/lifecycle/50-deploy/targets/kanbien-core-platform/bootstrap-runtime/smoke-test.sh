@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.target-controls
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -64,6 +64,7 @@ expect_selector_rejected "$VERIFY"
 "$RELEASE_CONTRACT" --json | grep -q '"verdict": "passed"'
 bash "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/smoke-test.sh"
 bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh"
+bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh"
 
 accepted_receipt="$(mktemp)"; accepted_verification="$(mktemp)"; trap 'rm -f "$accepted_receipt" "$accepted_verification"' EXIT
 python3 - "$accepted_receipt" "$accepted_verification" <<'PY'
@@ -262,6 +263,19 @@ assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:00:00Z")[
 assert module.completed_verifier_after(tasks, verifier, "2026-10-21T09:02:00Z") is None
 assert module.task_exited_successfully({"containers": [{"exitCode": 0}]})
 assert not module.task_exited_successfully({"containers": [{"exitCode": 1}]})
+assert module.verifier_completion_deadline() == 120
+assert module.completed_within_deadline({"startedAt": "2026-10-21T09:00:00Z", "stoppedAt": "2026-10-21T09:01:59Z"}, 120) == (True, "ok")
+assert module.completed_within_deadline({"startedAt": "2026-10-21T09:00:00Z", "stoppedAt": "2026-10-21T09:02:01Z"}, 120) == (False, "private-verifier-completion-deadline-exceeded")
+assert module.completed_within_deadline({"lastStatus": "STOPPED"}, 120) == (False, "private-verifier-duration-unavailable")
+assert module.verifier_duration_seconds({"startedAt": "2026-10-21T09:00:00Z", "stoppedAt": "2026-10-21T09:01:59Z"}) == 119
+
+def running(_):
+    return "ok", {"lastStatus": "RUNNING"}
+
+clock = iter([0, 121])
+assert module.wait_for_verifier_stop("arn:task/pending", 120, running, monotonic=lambda: next(clock), sleep=lambda _: None) == ("still-running", {"lastStatus": "RUNNING"})
+assert module.wait_for_verifier_stop("arn:task/unknown", 120, lambda _: ("aws-command-failed", None), monotonic=lambda: 0, sleep=lambda _: None) == ("uncertain", None)
+assert module.wait_for_verifier_stop("arn:task/stopped", 120, lambda _: ("ok", {"lastStatus": "STOPPED"}), monotonic=lambda: 0, sleep=lambda _: None) == ("stopped", {"lastStatus": "STOPPED"})
 PY
 
 echo "Fixed core-platform target control tests passed."

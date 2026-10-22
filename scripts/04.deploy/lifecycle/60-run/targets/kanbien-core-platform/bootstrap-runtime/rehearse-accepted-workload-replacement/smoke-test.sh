@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -27,7 +27,14 @@ fi
 python3 - "$COMMAND" <<'PY'
 import importlib.util, sys
 from pathlib import Path
+from unittest.mock import patch
 spec=importlib.util.spec_from_file_location("rehearsal", Path(sys.argv[1]).with_name("script.py"))
 module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 assert module.task_suffix({"taskArn":"arn:aws:ecs:region:account:task/cluster/0123456789abcdef"}) == "456789abcdef"
+class Failed:
+    returncode = 1
+    stdout = ""
+    stderr = ""
+with patch.object(module.subprocess, "run", return_value=Failed()):
+    assert module.preflight({}, Path("/tmp/accepted-receipt.json")) == (None, "cost-condition-not-approved")
 PY

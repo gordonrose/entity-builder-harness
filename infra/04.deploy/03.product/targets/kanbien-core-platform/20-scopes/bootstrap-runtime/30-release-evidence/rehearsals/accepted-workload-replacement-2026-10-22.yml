@@ -1,0 +1,82 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.rehearsal.accepted-workload-replacement-2026-10-22
+#   version: 1
+#   status: active
+#   created_on: "2026-10-22"
+#   updated_on: "2026-10-22"
+#   layer: 04.deploy
+#   domain: deployment.bootstrap-runtime
+#   disciplines: [security, sre]
+#   kind: workload-recovery-rehearsal-evidence
+#   purpose: Record safe proof that ECS replaced one deliberately stopped accepted bootstrap workload and fresh private verification accepted the retained immutable release.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+schema: deploy/workload-recovery-rehearsal-evidence/v1
+target: kanbien-core-platform
+scope: bootstrap-runtime
+status: accepted
+authority_reference: chat-2026-10-22-bounded-live-rehearsal-authorization
+cost_condition:
+  evidence: ../../../../10-foundation/evidence/target-cost-allocation-tag.yml
+  disposition: verified-fresh-alignment-required
+accepted_release:
+  source_revision: 1b56931d914d8f91162b30398967c150b1032e9b
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+  package_custody_reference: github-actions-run:39464882266
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  verifier_task_definition: kanbien-core-platform-release-verifier:11
+rehearsal:
+  method: controlled-stop-one-accepted-ecs-task
+  original_task_suffix: 63f64fb3a80c
+  original_task_stopped_at: "2026-10-22T18:40:03Z"
+  stop_reason: governed-accepted-workload-replacement-rehearsal
+  replacement_task_suffix: a46c92f1a003
+  replacement_started_at: "2026-10-22T18:40:14Z"
+  provider_result: ecs-replaced-stopped-task-and-service-returned-to-steady-state
+final_workload:
+  service_status: ACTIVE
+  desired_count: 1
+  running_count: 1
+  rollout_state: COMPLETED
+  health_status: HEALTHY
+  runtime_task_definition: kanbien-core-platform-bootstrap-runtime:10
+  image_digest: sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5
+fresh_private_verification:
+  verifier_task_suffix: 75b1c234
+  verifier_started_at: "2026-10-22T18:40:57Z"
+  verifier_completed_at: "2026-10-22T18:41:22Z"
+  exit_code: 0
+  verdict: accepted
+  code: KANBIEN_CORE_RELEASE_VERIFIED
+controlled_verifier_faults:
+  expected_source_mismatch:
+    fixture_task_suffix: 9b12a71e22df
+    verifier_task_definition: kanbien-core-platform-release-verifier:11
+    started_at: "2026-10-22T18:42:40Z"
+    stopped_at: "2026-10-22T18:43:03Z"
+    exit_code: 1
+    verdict: rejected
+    code: KANBIEN_CORE_RELEASE_VERIFICATION_FAILED
+    accepted_service_unchanged: true
+  controller_deadline:
+    fixture_task_suffix: f7381fc27e2d
+    verifier_task_definition: kanbien-core-platform-release-verifier:11
+    started_at: "2026-10-22T18:46:18Z"
+    controller_observed_at: "2026-10-22T18:48:20Z"
+    remote_task_status_at_deadline: RUNNING
+    cleanup_stopped_at: "2026-10-22T18:48:54Z"
+    cleanup_reason: governed-controller-deadline-fixture-cleanup
+    accepted_service_unchanged: true
+proof_boundary:
+  proven:
+    - ecs-replaces-a-deliberately-stopped-accepted-dependency-free-task
+    - private-verification-remains-fresh-after-the-replacement
+    - fixed-source-mismatch-verifier-rejects-without-changing-the-accepted-service
+    - controller-deadline-can-identify-and-clean-up-one-still-running-verifier-fixture-without-changing-the-accepted-service
+  not_proven:
+    - deliberate-application-readiness-failure-detection
+    - ecs-deployment-circuit-breaker-rollback
+    - dependency-bearing-workload-recovery

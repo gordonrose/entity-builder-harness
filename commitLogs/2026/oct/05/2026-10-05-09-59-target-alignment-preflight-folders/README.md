@@ -113,6 +113,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Controlled replacement command returned no terminal report despite completing AWS actions
   Resolution: Safe AWS inspection proved the original accepted task stopped at 15:55:42Z, ECS started and stabilised a healthy replacement at 15:55:55Z, and a fresh verifier completed successfully at 15:56:42Z. The outcome is recorded from provider facts; do not repeat the stop action.
 
+
+- Raised: Budget provisioning change-set initially rolled back
+  Resolution: The Foundation CostAlertEmail parameter was blank; the new bounded provisioning route now requires an operation-only alert address, recognises stable rollback completion, and verifies AWS monetary values numerically.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -315,6 +319,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Complete bounded live workload recovery rehearsal
   Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
 
+
+- Decision: Select PostgreSQL as the first kanbien-core-platform persistence reference
+  Rationale: The existing provider-neutral persistence contracts and AWS PostgreSQL adapter can be composed through a new isolated target scope; legacy staging persistence is not inherited.
+
 ## Context Hygiene
 
 
@@ -473,6 +481,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Live target final state: one healthy replacement task on task definition :10 and digest sha256:0992…d5d5d5; verifier exited 0 with KANBIEN_CORE_RELEASE_VERIFIED.
   Durable evidence: Evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/30-release-evidence/rehearsals/accepted-workload-replacement-2026-10-21.yml
+
+
+- Summary: Accepted bootstrap evidence remains valid; the foundation now has a verified USD 100 monthly target-filtered budget and the normal cost gate passes.
+  Durable evidence: Budget declaration/evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/; governed provisioner: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/; live AWS evidence checked 2026-10-22T20:21:54Z.
 
 ## Activity Log
 
@@ -1916,6 +1928,43 @@ Decision: Complete bounded live workload recovery rehearsal
 
 Rationale: Final audit confirmed account 337159794548, active service desired/running 1, completed rollout on task definition kanbien-core-platform-bootstrap-runtime:10, healthy /readyz-backed container digest sha256:0992b48fdd66bb53c08d621e871b2e8975f40b8e6bbaa62816803f755d55d5d5, and fresh verifier exit 0 with KANBIEN_CORE_RELEASE_VERIFIED. Proof remains bounded: readiness-failure and circuit-breaker rollback were not rehearsed.
 
+
+### 2026-10-22T20:29:18Z - Issue
+
+Raised: Budget provisioning change-set initially rolled back
+
+Resolution: The Foundation CostAlertEmail parameter was blank; the new bounded provisioning route now requires an operation-only alert address, recognises stable rollback completion, and verifies AWS monetary values numerically.
+
+
+### 2026-10-22T20:29:19Z - Decision
+
+Decision: Select PostgreSQL as the first kanbien-core-platform persistence reference
+
+Rationale: The existing provider-neutral persistence contracts and AWS PostgreSQL adapter can be composed through a new isolated target scope; legacy staging persistence is not inherited.
+
+
+### 2026-10-22T20:29:19Z - Context hygiene
+
+Summary: Accepted bootstrap evidence remains valid; the foundation now has a verified USD 100 monthly target-filtered budget and the normal cost gate passes.
+
+Durable evidence: Budget declaration/evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/; governed provisioner: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/; live AWS evidence checked 2026-10-22T20:21:54Z.
+
+
+### 2026-10-22T20:29:20Z - ADR disposition
+
+ADR needed: no
+
+Reason: The budget bootstrap route is a bounded operational control under the existing deployment architecture, not a new durable architecture decision.
+
+
+### 2026-10-22T20:33:24Z - Commit summary
+
+Commit: Add workload-aware recovery and target budget controls
+
+Summary: Adds typed workload health and recovery validation, provider-evidence freshness checks, release rehearsal controls, and a governed 00 target-budget provisioning path with recorded live budget evidence. PostgreSQL is selected as the first future persistence reference; no persistence infrastructure has been created.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2273,6 +2322,11 @@ Rationale: Final audit confirmed account 337159794548, active service desired/ru
   Summary: Recorded the live controlled-stop ECS replacement outcome, advanced the scope proof to passed, required passed proof evidence to exist, taught the remaining proof boundary, and validated both restoration and replacement evidence against the accepted release.
   ADR impact: No ADR: this is evidence-driven completion of the existing health/recovery design.
 
+
+- Commit: Add workload-aware recovery and target budget controls
+  Summary: Adds typed workload health and recovery validation, provider-evidence freshness checks, release rehearsal controls, and a governed 00 target-budget provisioning path with recorded live budget evidence. PostgreSQL is selected as the first future persistence reference; no persistence infrastructure has been created.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2281,7 +2335,7 @@ Rationale: Final audit confirmed account 337159794548, active service desired/ru
 
 ADR needed: no
 ADR path:
-Reason: The generic validator/adapter/wrapper split is an implementation of the existing provider-neutral deployment architecture, not a new repository-wide architectural decision.
+Reason: The budget bootstrap route is a bounded operational control under the existing deployment architecture, not a new durable architecture decision.
 
 ## Session Metrics
 

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.validate-health-failure-and-recovery-declaration.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [agentic, security, sre]
@@ -21,10 +21,14 @@ Run this read-only command against a scope declaration contract:
 
 ```bash
 bash scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.sh \
-  --scope-contract infra/04.deploy/03.product/targets/<target>/20-scopes/<scope>/00-declaration/declaration-contract.yml
+  --scope-contract infra/04.deploy/03.product/targets/<target>/20-scopes/<scope>/00-declaration/declaration-contract.yml \
+  --workload-binding infra/04.deploy/03.product/targets/<target>/20-scopes/<scope>/10-workload-binding/workload-binding.yml
 ```
 
 It checks the reusable declaration shape only. It does not call a provider,
 execute a health endpoint, make a workload unhealthy, or accept a release.
-The scope-specific route decides when its passed declaration and its named
-proof commands are required.
+It distinguishes long-running servers, continuous workers, and
+run-to-completion tasks. A task needs a bounded successful completion proof;
+it is not required to invent HTTP liveness or readiness endpoints. The target
+scope inventory route decides which active scopes must be checked so an agent
+cannot simply forget to invoke this command for a new workload.

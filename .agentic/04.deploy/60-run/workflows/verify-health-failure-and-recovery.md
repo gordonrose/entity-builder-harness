@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-health-failure-and-recovery
-version: 1
+version: 3
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -29,8 +29,11 @@ provider or target commands.
 
 1. Locate the canonical scope declaration; do not construct a parallel health
    record in a plan, README, or provider template.
-2. Validate its `health_recovery` block. Stop on an absent or malformed
-   declaration.
+2. Validate every workload's type-aware `health_recovery` entry, binding, and
+   source/command trace. A shared image is not proof that two workloads execute
+   the same code.
+   Stop on an absent, malformed, or mismatched declaration. Validate the target
+   scope-health inventory so a new active workload cannot be omitted.
 3. Run the declared local and package proof commands when their status is
    `planned` or when their relevant behavior changed. A passed record does not
    excuse a stale proof after that behavior changes.
@@ -41,6 +44,13 @@ provider or target commands.
 5. Before live verification or restoration, confirm that the deployed operation
    and recovery path match the declaration. Record only safe verdicts and
    evidence references.
+
+For a passed one-shot completion proof, validate through the selected provider
+mapping that the recorded exit/result matches the declared success criteria,
+the actual evidence boundary matches `fresh_after`, and the recorded duration
+is within the declared deadline. A task that was merely submitted, an older
+accepted result, or two self-declared timestamps do not prove the current
+operation.
 
 ## Stop conditions
 

@@ -1,17 +1,17 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.cost-control
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
 #   - security
 #   - sre
 #   kind: provider-condition-declaration
-#   purpose: Declare the target cost-control condition and the narrow temporary waiver model without claiming provider propagation has completed.
+#   purpose: Declare the target cost-control condition after fresh provider evidence confirms the required tag is active.
 #   portability:
 #     class: internal
 #     targets: []
@@ -25,20 +25,6 @@ owner: cost-owner
 required_evidence: provider-condition-evidence/v1
 evidence_validator: scripts/04.deploy/lifecycle/00-target-alignment/validate-provider-condition-evidence/script.sh
 required_for: target-filtered-monthly-budget
-status: waived-by-approved-exception
+status: verified
 evidence: evidence/target-cost-allocation-tag.yml
-next_safe_recheck: read-only-cost-explorer-tag-discovery
-expiry_policy: explicit-review-required-before-expiry
-waiver:
-  permitted_only_with: explicit-approved-exception
-  scope: target-cost-allocation-tag-active
-  current_authority_reference: chat-2026-10-05-release-b-rehearsal-authorization
-  current_expiry: "2026-10-22T12:00:00Z"
-  compensating_controls:
-    - one-task-only
-    - no-autoscaling
-    - no-nat
-    - no-public-ingress
-    - no-data-services
-    - no-new-cost-category
-  follow_up_owner: cost-owner
+next_safe_recheck: read-only-cost-explorer-tag-status-before-next-budget-or-target-governance-change

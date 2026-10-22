@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -30,7 +30,23 @@ program_id: kanbien-core-server
 image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
 package_identity: runtime-bound-sha256
 provider_workload: fixed-ecs-fargate-runtime-stack-live-verified-fresh-alignment-required
-private_verifier: fixed-one-shot-private-ecs-task-live-verified-fresh-alignment-required
+workloads:
+  - id: core-server-service
+    workload_type: long-running-server
+    runtime_class: service
+    provider_reference: BootstrapRuntimeService
+    execution:
+      kind: compiled-entrypoint
+      source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+      command_description: node artifacts/kanbien-core-server.main.js
+  - id: private-release-verifier-task
+    workload_type: run-to-completion-task
+    runtime_class: task
+    provider_reference: ReleaseVerifierTaskDefinition
+    execution:
+      kind: inline-command
+      source_reference: infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml#ReleaseVerifierTaskDefinition.private-release-verifier.command
+      command_description: node -e private release verification request
 proposed_provider_binding:
   template: 30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
   workload_kind: ecs-fargate-service

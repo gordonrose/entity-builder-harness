@@ -4,7 +4,7 @@ id: deploy.plan.implementation.platform-to-target-chain-control
 version: 39
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-22"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -87,10 +87,13 @@ application-readiness failure or automatic deployment rollback caused by a
 health failure. The release record and future contracts must retain that
 boundary rather than imply that those tests occurred.
 
-The reusable capability must require every runnable scope to declare:
+The reusable capability must require every runnable scope to declare the
+health or completion model applicable to its workload type:
 
-- a liveness operation and a readiness operation, with the dependencies that
-  each readiness decision uses;
+- long-running servers declare liveness, readiness, dependency effects, and
+  replacement behaviour;
+- run-to-completion tasks declare completion, deadline, exit/result,
+  interruption, and retry behaviour; and
 - safe behaviour and safe diagnostic categories for invalid startup
   configuration, dependency unavailability, and recovery;
 - whether an orchestrator may replace unhealthy work and which actions are

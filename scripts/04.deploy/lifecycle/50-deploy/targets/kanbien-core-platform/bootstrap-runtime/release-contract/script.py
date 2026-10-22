@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.release-contract
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-22"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -56,8 +56,27 @@ def check(root: Path) -> list[str]:
     if not image or image.get("id") != "kanbien-core-server-image" or image.get("runtime", {}).get("user") != "nonroot":
         codes.append("image-runtime-identity-invalid")
     validator = ROOT / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
+    inventory_validator = ROOT / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py"
+    target_declaration_validator = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py"
+    binding_path = root / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml"
+    inventory_check = subprocess.run(
+        [sys.executable, str(inventory_validator), "--target-root", str(root / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes"), "--json"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if inventory_check.returncode != 0:
+        codes.append("active-workload-health-recovery-inventory-invalid")
+    target_declaration_check = subprocess.run(
+        [sys.executable, str(target_declaration_validator), "--target-root", str(root / "infra/04.deploy/03.product/targets/kanbien-core-platform"), "--json"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if target_declaration_check.returncode != 0:
+        codes.append("target-declaration-invalid")
     health_check = subprocess.run(
-        [sys.executable, str(validator), "--scope-contract", str(scope_contract), "--json"],
+        [sys.executable, str(validator), "--scope-contract", str(scope_contract), "--workload-binding", str(binding_path), "--json"],
         capture_output=True,
         check=False,
         text=True,
@@ -66,10 +85,13 @@ def check(root: Path) -> list[str]:
         codes.append("health-recovery-contract-invalid")
     health_recovery = (scope or {}).get("health_recovery")
     verification = (scope or {}).get("verification")
-    liveness_path = health_recovery.get("liveness", {}).get("path") if isinstance(health_recovery, dict) else None
-    readiness_path = health_recovery.get("readiness", {}).get("path") if isinstance(health_recovery, dict) else None
+    workloads = health_recovery.get("workloads", []) if isinstance(health_recovery, dict) else []
+    server = next((item for item in workloads if isinstance(item, dict) and item.get("id") == "core-server"), None)
+    verifier_workload = next((item for item in workloads if isinstance(item, dict) and item.get("id") == "private-release-verifier"), None)
+    liveness_path = server.get("liveness", {}).get("path") if isinstance(server, dict) else None
+    readiness_path = server.get("readiness", {}).get("path") if isinstance(server, dict) else None
     verifier_path = verification.get("release_verification_path") if isinstance(verification, dict) else None
-    if not isinstance(liveness_path, str) or not isinstance(readiness_path, str) or not isinstance(verifier_path, str):
+    if not isinstance(liveness_path, str) or not isinstance(readiness_path, str) or not isinstance(verifier_path, str) or not isinstance(verifier_workload, dict):
         codes.append("health-recovery-route-declaration-invalid")
     if "USER nonroot" not in docker or 'CMD ["artifacts/kanbien-core-server.main.js"]' not in docker:
         codes.append("image-command-contract-invalid")
