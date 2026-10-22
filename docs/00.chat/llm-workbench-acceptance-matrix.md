@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-07-03"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-22"
   layer: 00.chat
   domain: portability
   disciplines:
@@ -28,6 +28,7 @@ This matrix maps the public-beta contract to the artifacts that enforce it.
 | Invariant | Primary Artifacts | Required Proof |
 | --- | --- | --- |
 | No durable chat classification | `chat-start.md`, `start-chat-session`, portability validator | Startup metadata has no whole-chat `layer`, `mode`, or `workflow` fields. |
+| Existing work is preserved without blanket confirmation | `chat-start.md`, startup smoke test, portability validator | Dirty-source text and JSON startup preserve staged, unstaged, and untracked changes, create an isolated chat, and emit informational status without a blanket stop. |
 | Standalone public export | Bootstrap planner, artifact metadata checker, portability validator | Generated public repo and installed target omit source-only trees/scripts and pass `check-headers --all`. |
 | No source-specific generic gates | `prepare-chat-session-before-commit`, before-commit checklist, portability validator | Generic chat surfaces do not hard-code RAG/rulebook gates; optional gates use neutral hooks. |
 | Provider-neutral transcript metrics | `record-chat-commit`, transcript scripts, startup templates | Missing transcript metrics are portable by default; Codex discovery is opt-in adapter behavior. |

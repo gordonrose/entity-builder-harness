@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1206
-  term_count: 2434
+  indexed_artifacts: 1207
+  term_count: 2436
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -465,6 +465,18 @@ terms:
   match_type: exact
   canonical_id: chat.architecture.adr.0037-resolve-append-only-plan-index-conflicts-deterministically
   evidence_path: docs/00.chat/adrs/0037-resolve-append-only-plan-index-conflicts-deterministically.md
+  confidence_weight: 1
+- term: chat.adr.0040-treat-worktree-dirt-as-context
+  category: artifact-id
+  match_type: exact
+  canonical_id: chat.adr.0040-treat-worktree-dirt-as-context
+  evidence_path: docs/00.chat/adrs/0040-treat-worktree-dirt-as-context.md
+  confidence_weight: 1
+- term: docs/00.chat/adrs/0040-treat-worktree-dirt-as-context.md
+  category: file-path
+  match_type: exact
+  canonical_id: chat.adr.0040-treat-worktree-dirt-as-context
+  evidence_path: docs/00.chat/adrs/0040-treat-worktree-dirt-as-context.md
   confidence_weight: 1
 - term: chat.adrs.readme
   category: artifact-id

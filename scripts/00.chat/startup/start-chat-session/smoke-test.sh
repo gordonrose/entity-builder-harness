@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-22"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -237,5 +237,79 @@ fi
 if grep -q 'query the RAG/rulebook runtime' "$TMP_ROOT/chat-worktree-session-clipboard.out"; then
   fail "first prompt assumes a RAG/rulebook runtime exists"
 fi
+
+# Starting an isolated chat must preserve staged, unstaged, and untracked source
+# work without carrying a confirmation gate into either startup handoff format.
+printf 'staged source work\n' >> "$REPO/README.md"
+git -C "$REPO" add README.md
+printf 'unstaged source work\n' >> "$REPO/README.md"
+printf 'untracked source work\n' > "$REPO/unrelated.txt"
+git -C "$REPO" diff --binary > "$TMP_ROOT/source-unstaged.before"
+git -C "$REPO" diff --cached --binary > "$TMP_ROOT/source-staged.before"
+git -C "$REPO" status --porcelain > "$TMP_ROOT/source-status.before"
+cp "$REPO/unrelated.txt" "$TMP_ROOT/source-untracked.before"
+
+for handoff in text json; do
+  startup_args=()
+  if [ "$handoff" = "json" ]; then
+    startup_args+=(--json)
+  fi
+  AGENTIC_CHAT_WORKTREE_ROOT="$TMP_ROOT/worktrees" \
+  CHAT_CLEANUP_EMPTY_BRANCHES=skip \
+  CHAT_COPY_PROMPT=skip \
+  CHAT_OPEN_WORKTREE_WINDOW=skip \
+    bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
+      bash scripts/00.chat/startup/start-chat-session/script.sh \
+      "${startup_args[@]}" "dirty source $handoff handoff" \
+      > "$TMP_ROOT/dirty-$handoff.out"
+
+  if [ "$handoff" = "json" ]; then
+    node - "$TMP_ROOT/dirty-json.out" > "$TMP_ROOT/dirty-json.prompt" <<'NODE'
+const fs = require('node:fs');
+const packet = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+if (packet.bootstrap_worktree_status !== 'dirty') {
+  throw new Error('JSON startup lost the informational source-worktree status');
+}
+if (!fs.existsSync(packet.chat_worktree + '/' + packet.session_log)) {
+  throw new Error('JSON startup did not create the declared chat session');
+}
+process.stdout.write(packet.first_prompt);
+NODE
+    prompt_file="$TMP_ROOT/dirty-json.prompt"
+  else
+    prompt_file="$TMP_ROOT/dirty-text.out"
+  fi
+
+  grep -q '^Bootstrap worktree status: dirty$' "$prompt_file" \
+    || fail "$handoff startup lost the informational source-worktree status"
+  if grep -q 'Blocked: dirty worktree\|Before that response, do not read workflows' "$prompt_file"; then
+    fail "$handoff startup still blocks on unrelated source work"
+  fi
+  grep -q 'chat-start.md#existing-changes' "$prompt_file" \
+    || fail "$handoff startup does not route existing work to the preservation policy"
+
+  git -C "$REPO" diff --binary > "$TMP_ROOT/source-unstaged.after"
+  git -C "$REPO" diff --cached --binary > "$TMP_ROOT/source-staged.after"
+  git -C "$REPO" status --porcelain > "$TMP_ROOT/source-status.after"
+  for snapshot in unstaged staged status; do
+    cmp "$TMP_ROOT/source-$snapshot.before" "$TMP_ROOT/source-$snapshot.after" \
+      || fail "$handoff startup changed source $snapshot state"
+  done
+  cmp "$TMP_ROOT/source-untracked.before" "$REPO/unrelated.txt" \
+    || fail "$handoff startup changed untracked source work"
+  [ "$(git -C "$REPO" branch --show-current)" = "main" ] \
+    || fail "$handoff startup changed the source branch"
+
+  dirty_chat_branch="$(git -C "$REPO" branch --format='%(refname:short)' --list "chat/*dirty-source-$handoff-handoff")"
+  dirty_worktree="$(git -C "$REPO" worktree list --porcelain | awk \
+    -v branch="refs/heads/$dirty_chat_branch" \
+    '/^worktree / { path = substr($0, 10) } /^branch / && substr($0, 8) == branch { print path }')"
+  [ -n "$dirty_worktree" ] && [ "$dirty_worktree" != "$REPO" ] \
+    || fail "$handoff startup did not isolate the new chat"
+  [ "$(cat "$dirty_worktree/README.md")" = "base" ] \
+    || fail "$handoff startup imported tracked source work"
+  [ ! -e "$dirty_worktree/unrelated.txt" ] \
+    || fail "$handoff startup imported untracked source work"
+done
 
 echo "chat worktree session smoke test passed."

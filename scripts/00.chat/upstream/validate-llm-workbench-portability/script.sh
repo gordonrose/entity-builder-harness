@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-07-03"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-22"
 #   layer: 00.chat
 #   domain: validation
 #   disciplines:
@@ -229,6 +229,8 @@ require_grep 'CHAT_TRANSCRIPT_PROVIDER' "$WORKBENCH_REPO/docs/workflows.md"
     > "$TMP_ROOT/public-contract-check.out"
   bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all \
     > "$TMP_ROOT/public-check-headers-all.out"
+  bash scripts/00.chat/startup/start-chat-session/smoke-test.sh \
+    > "$TMP_ROOT/public-start-chat-session-smoke.out"
   bash scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh \
     > "$TMP_ROOT/public-check-headers-smoke.out"
   bash scripts/00.chat/session-log/record-chat-commit/smoke-test.sh \

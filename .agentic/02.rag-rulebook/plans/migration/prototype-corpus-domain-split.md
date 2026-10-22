@@ -4,7 +4,7 @@ id: rag-rulebook.migration-plan.prototype-corpus-domain-split
 version: 1
 status: active
 created_on: "2026-08-31"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 02.rag-rulebook
 domain: corpus
 disciplines:
@@ -476,10 +476,12 @@ compatibility until active references are updated.
 
 ## Required Checks
 
+Follow [existing-change handling](../../../00.chat/workflows/chat-start.md#existing-changes)
+before editing; dirty status alone does not require confirmation.
+
 At minimum, each execution slice should run:
 
 ```bash
-bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
 bash scripts/00.chat/worktree/check-write-location/script.sh
 bash scripts/01.harness/smoke-test-artifact-path-migration.sh
 bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all

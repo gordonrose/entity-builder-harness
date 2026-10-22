@@ -4,7 +4,7 @@ id: shared.workflows.change-shared-process
 version: 1
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 06.shared
 domain: process
 disciplines:
@@ -31,23 +31,10 @@ deployment, release, or context-preservation process.
 
 Chat lifecycle changes belong to `.agentic/00.chat/`.
 
-## Required Gates
+## Existing Changes
 
-Before editing files:
-
-```bash
-bash scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
-```
-
-`bookkeeping-only` is acceptable after explicit write permission for the chat.
-<!-- deterministic-check: allow reason="workflow defines exact blocked response around dirty-worktree gate output" -->
-If dirty, respond exactly:
-
-```txt
-Blocked: dirty worktree. Confirm proceed? Layer: shared. Mode: <mode>. Workflow: .agentic/shared/workflows/change-shared-process.md
-```
-
-Do not edit files while blocked.
+Follow the [existing-change guidance](../../00.chat/workflows/chat-start.md#existing-changes)
+before editing. Uncommitted work alone does not require another confirmation.
 
 ## Rules
 

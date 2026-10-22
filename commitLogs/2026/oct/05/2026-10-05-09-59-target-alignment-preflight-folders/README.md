@@ -2038,6 +2038,17 @@ Summary: Implemented portable secret declarations, inventory enforcement and typ
 
 ADR impact: ADR 0041 records the PostgreSQL reference selection for kanbien-core-platform.
 
+
+### 2026-10-22T22:25:56Z - Main refresh conflict recorded
+
+Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+
+Type: `generated-artifact-conflict`
+
+Mode: deterministic
+
+Action: Regenerated recognition outputs from combined source metadata and retained authored changes from both branches. Trimmed four empty metadata-field trailing spaces in the incoming Oct22 session log for staged whitespace validation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2421,7 +2432,17 @@ ADR impact: ADR 0041 records the PostgreSQL reference selection for kanbien-core
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml`
+  Type: `generated-artifact-conflict`
+  Mode: deterministic
+  Reason: Generator-owned recognition index. The classifier fell back to normal-repo-conflict; file metadata and the governed generator establish reproducible generated output.
+  Action: Regenerated recognition outputs from combined source metadata and retained authored changes from both branches. Trimmed four empty metadata-field trailing spaces in the incoming Oct22 session log for staged whitespace validation.
+  Preflight branch: `agentic/preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-57bd4c6fdbdb/20261022222226`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-05-09-59-can-you-walk-me-through-wh-57bd4c6fdbdb-20261022222226`
+  Files changed by resolution: Generated artifact index; this session conflict audit; incoming Oct22 log whitespace only.
+  Checks: Secret, active inventory, target declaration and release-contract suites passed. Recognition freshness/validity and repository commit extension passed; staged whitespace rechecked after empty-field normalization.
 
 ## ADR Disposition
 
