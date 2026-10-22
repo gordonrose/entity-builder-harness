@@ -139,15 +139,50 @@ Repository evidence to use in the declaration/design review:
 Before implementation, declare the small record operation and proof, select the
 provider, and review its resource/cost, network, least-privilege workload access,
 configuration, failure and recovery requirements. Existing staging PostgreSQL
-decisions do not select a provider for `kanbien-core-platform`. DynamoDB and
-PostgreSQL are candidates to compare against that operation; neither is selected
-by this investigation. Credential delivery follows the selected provider:
-DynamoDB normally uses the workload IAM role rather than an application secret,
-whereas PostgreSQL requires an explicit secure authentication supply route such
-as a secret reference or IAM database authentication. New data services are
+decisions do not select a provider for `kanbien-core-platform`. PostgreSQL is
+the selected first persistence reference for `kanbien-core-platform`, but that
+decision does not authorise a database, secret, role, or deployment. Credential
+delivery follows the selected provider:
+PostgreSQL requires an explicit secure authentication supply route such as a
+secret reference or IAM database authentication. New data services are
 outside the bootstrap boundary and its existing cost waiver. Authentication,
 queues and full observability remain separate later concerns unless the
 selected operation requires them.
+
+The target-specific selection is recorded in
+[ADR 0041](../../../../docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md).
+
+### PostgreSQL Reference Safety Model
+
+Before any PostgreSQL target mutation, the first implementation packet must
+establish these provider-neutral decisions:
+
+1. **Scope and proof:** one small synthetic persistence operation, proved by a
+   write once and retrieval after workload replacement; it must not become a
+   delivery execution journal.
+2. **Secret and identity separation:** separate runtime and migration credential
+   purposes. The server receives only its runtime credential; a separately
+   declared one-shot migration task receives the structural-change credential.
+   The implemented Secret Dependency Contract owns the non-secret declaration;
+   later provider work maps its references to concrete secret-store and role
+   policy facts.
+3. **Startup and readiness:** invalid configuration or malformed injected
+   credential causes a safe startup exit. A reachable-but-unavailable database
+   keeps the process live but not ready, with bounded reconnect attempts.
+   Credential rejection or required database permission denial also prevents
+   readiness and requires a target correction, not an image rollback.
+4. **Least privilege:** readiness must prove secure connection, expected
+   schema/version state, and minimum runtime access. The runtime credential
+   must be proved unable to perform migration-style structural operations.
+5. **Migration compatibility:** use expand → deploy → verify → later contract.
+   Each receipt records safe identity, before/after schema version, immutable
+   candidate, timestamps, result, compatibility class, and verification. A
+   failed migration blocks server release; structural work is never blindly
+   retried or assumed reversible.
+6. **Still required before live PostgreSQL work:** network/TLS relationship,
+   provider access mappings, backup/restore and deletion protection, safe
+   observability/alerts, local integration proof, and a separately approved
+   live creation/update/recovery rehearsal.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:
@@ -799,6 +834,15 @@ duplicate them or store a private address, certificate, or secret value.
 Before a scope can claim workload identity, access, or dependency
 authentication is governed, the harness must provide a Workload Identity and
 Access Artifact Set:
+
+**Implemented first slice (2026-10-22):** the provider-neutral Secret
+Dependency Contract now requires each active scope to declare either an empty
+secret-dependency list or a safe credential reference, authorised workloads,
+access class, delivery, rotation and retirement, failure behaviour, and diagnostics. The
+active-scope inventory invokes its validator automatically. This does not
+replace the broader Workload Identity and Access Artifact Set below: provider
+role policy, application authentication, and target-alignment provider reads
+remain separate work.
 
 ```text
 .agentic/04.deploy/

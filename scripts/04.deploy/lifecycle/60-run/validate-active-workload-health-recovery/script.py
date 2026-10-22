@@ -31,6 +31,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[5]
 VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
+SECRET_VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh"
 SCOPE_ID = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -123,6 +124,14 @@ def main():
                 )
                 if result.returncode:
                     codes.append("active-scope-health-recovery-invalid")
+                secret_result = subprocess.run(
+                    [str(SECRET_VALIDATOR), "--scope-contract", str(contract), "--json"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if secret_result.returncode:
+                    codes.append("active-scope-secret-dependency-invalid")
             if len(active_ids) != len(set(active_ids)):
                 codes.append("active-scope-entry-invalid")
             discovered = discovered_scope_ids(args.target_root)

@@ -4,7 +4,7 @@
   version: 24
   status: active
   created_on: "2026-10-07"
-  updated_on: "2026-10-21"
+  updated_on: "2026-10-22"
   layer: 05.education
   domain: education
   disciplines:
@@ -1125,6 +1125,23 @@ replacement receives the new value, proves readiness, and then replaces the
 old task. A design may support safe live refresh, but that must be explicit and
 tested rather than assumed.
 
+### Secret declarations are not secret storage
+
+Before a workload uses a secret, its scope should declare the purpose, owner,
+authorised workloads, access class, target-neutral reference ID, expected field
+names, delivery mechanism, rotation behaviour, safe failure effect, and safe
+diagnostic codes. It must also name the retirement/revocation owner, policy,
+and condition. It must never declare a secret value, password, token,
+connection string, or provider secret address. A runtime credential and a
+migration credential are separate access classes: a long-running server must
+not quietly receive the credential that can alter database structure.
+
+Credential privilege and workload lifetime are different ideas. A one-shot
+verifier can have ordinary runtime access when it needs a limited dependency
+check; it does not thereby become a migration or administrative task. A
+completion-only task reports unsuccessful completion and safe result codes for
+credential failure rather than pretending to have HTTP readiness.
+
 ### Identity failures are distinct
 
 ```text
@@ -1147,6 +1164,61 @@ they never print a username, password, token, connection string, or secret
 value. A required dependency normally keeps the workload not-ready until it is
 safe, while an individual request must be rejected honestly if its required
 identity or permission is unavailable.
+
+### PostgreSQL startup, readiness, and access model
+
+For the first PostgreSQL persistence reference, the server must prove a real,
+safe dependency chain before it becomes ready:
+
+```text
+valid non-secret configuration
+→ injected runtime credential has the expected shape
+→ private TLS connection to PostgreSQL
+→ expected schema/version state exists
+→ runtime identity has the minimum declared access
+→ readiness is healthy
+```
+
+Liveness asks whether the process can respond. Readiness asks whether it can
+safely perform its required work. A temporary database outage therefore keeps
+the server live but not-ready, with bounded reconnection attempts. A missing
+required configuration value or malformed injected credential cannot heal
+without a target fix and should cause a safe startup exit instead.
+
+| Observed condition | Correct response | Safe diagnostic category |
+| --- | --- | --- |
+| Missing non-secret setting | Exit before accepting work | `PERSISTENCE_CONFIGURATION_INVALID` |
+| Secret unavailable or malformed | Exit before accepting work | `PERSISTENCE_SECRET_UNAVAILABLE` or `PERSISTENCE_SECRET_SHAPE_INVALID` |
+| Database unreachable after valid startup | Live but not-ready; bounded reconnect | `PERSISTENCE_DEPENDENCY_UNAVAILABLE` |
+| Credential rejected | Not-ready; correct or rotate target credential and replace workload | `PERSISTENCE_CREDENTIAL_REJECTED` |
+| Required database grant absent | Not-ready; correct least-privilege grant | `PERSISTENCE_ACCESS_DENIED` |
+
+A simple `SELECT 1` proves only that PostgreSQL responds. A meaningful
+readiness check also proves that the expected schema/version state is present
+and that the runtime identity can perform its minimum declared read-only access.
+The runtime identity must separately be proved unable to alter database
+structure.
+
+### Migration compatibility and recovery
+
+A migration task is a one-shot workload with a separate structural-change
+identity. The long-running server must never receive that identity. Safe first
+migrations use:
+
+```text
+expand
+→ deploy compatible server
+→ verify meaningful persistence behaviour
+→ contract later, after older servers are retired
+```
+
+For example, adding a nullable column is usually backward-compatible; deleting
+or renaming a column in the same release can make server-image restoration
+unsafe. A migration receipt records only safe facts: migration ID, candidate
+digest, schema version before/after, timestamps, result, compatibility class,
+and verification. A migration failure blocks release; it does not authorize an
+automatic retry, an image rollback that assumes database reversal, or an
+unguarded repair.
 
 ### Architecture intent
 

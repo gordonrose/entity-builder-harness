@@ -117,6 +117,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Budget provisioning change-set initially rolled back
   Resolution: The Foundation CostAlertEmail parameter was blank; the new bounded provisioning route now requires an operation-only alert address, recognises stable rollback completion, and verifies AWS monetary values numerically.
 
+
+- Raised: Closed the secret-declaration review findings.
+  Resolution: Workload-aware failures and startup-only rotation are enforced; unsafe values beneath non-string keys are scanned; malformed access classes return structured results; shared runtime server/worker credentials pass without permitting migration/admin access or mixed failure families.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -323,6 +327,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Select PostgreSQL as the first kanbien-core-platform persistence reference
   Rationale: The existing provider-neutral persistence contracts and AWS PostgreSQL adapter can be composed through a new isolated target scope; legacy staging persistence is not inherited.
 
+
+- Decision: User authorised commit, merge to main, and remote push of the completed secret-management work.
+  Rationale: Preserve the existing recovery commits and current main history through governed non-rewriting refresh; no cloud execution or credential access.
+
 ## Context Hygiene
 
 
@@ -485,6 +493,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Accepted bootstrap evidence remains valid; the foundation now has a verified USD 100 monthly target-filtered budget and the normal cost gate passes.
   Durable evidence: Budget declaration/evidence: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/; governed provisioner: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/; live AWS evidence checked 2026-10-22T20:21:54Z.
+
+
+- Summary: Carry forward the portable secret contract and executable inventory enforcement, with synthetic regression evidence.
+  Durable evidence: Four regression suites, actual target/release gates, metadata and whitespace checks passed. Provider references, IAM, target isolation, secret delivery and live rotation remain PostgreSQL work; no new CI result or cloud proof is claimed.
 
 ## Activity Log
 
@@ -1976,6 +1988,45 @@ Summary: Adds workload-aware health and recovery contracts, active-workload vali
 
 ADR impact: not-needed: bounded operational controls follow existing deployment architecture
 
+
+### 2026-10-22T22:20:13Z - Decision
+
+Decision: User authorised commit, merge to main, and remote push of the completed secret-management work.
+
+Rationale: Preserve the existing recovery commits and current main history through governed non-rewriting refresh; no cloud execution or credential access.
+
+
+### 2026-10-22T22:20:14Z - Issue
+
+Raised: Closed the secret-declaration review findings.
+
+Resolution: Workload-aware failures and startup-only rotation are enforced; unsafe values beneath non-string keys are scanned; malformed access classes return structured results; shared runtime server/worker credentials pass without permitting migration/admin access or mixed failure families.
+
+
+### 2026-10-22T22:20:14Z - Context hygiene
+
+Summary: Carry forward the portable secret contract and executable inventory enforcement, with synthetic regression evidence.
+
+Durable evidence: Four regression suites, actual target/release gates, metadata and whitespace checks passed. Provider references, IAM, target isolation, secret delivery and live rotation remain PostgreSQL work; no new CI result or cloud proof is claimed.
+
+
+### 2026-10-22T22:20:14Z - ADR disposition
+
+ADR needed: yes
+
+ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+
+Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
+
+
+### 2026-10-22T22:20:14Z - Commit summary
+
+Commit: feat(deploy): govern workload secret dependencies
+
+Summary: Add portable secret declarations, workload-aware validation and inventory enforcement; include corrective regressions and PostgreSQL preparation guidance.
+
+ADR impact: ADR 0041 records the existing PostgreSQL reference selection.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2345,15 +2396,20 @@ ADR impact: not-needed: bounded operational controls follow existing deployment 
   Summary: Adds workload-aware health and recovery contracts, active-workload validation, evidence freshness enforcement, bounded rehearsal controls, and verified 00 target-budget governance. PostgreSQL is selected as the next persistence reference; no persistence infrastructure is created.
   ADR impact: not-needed: bounded operational controls follow existing deployment architecture
 
+
+- Commit: feat(deploy): govern workload secret dependencies
+  Summary: Add portable secret declarations, workload-aware validation and inventory enforcement; include corrective regressions and PostgreSQL preparation guidance.
+  ADR impact: ADR 0041 records the existing PostgreSQL reference selection.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
 
 ## ADR Disposition
 
-ADR needed: no
-ADR path:
-Reason: The budget bootstrap route is a bounded operational control under the existing deployment architecture, not a new durable architecture decision.
+ADR needed: yes
+ADR path: docs/04.deploy/adrs/0041-select-postgresql-for-core-platform-persistence-proof.md
+Reason: Record the PostgreSQL selection already stated in the programme for this target; staging ADR 0033 does not cover it. Resource design and live authority remain deferred.
 
 ## Session Metrics
 

@@ -20,8 +20,8 @@ used_by:
 Run this read-only command at a target's `20-scopes` directory. It checks that
 every candidate active new-framework scope directory is listed, requires its
 own canonical declaration and binding files, checks their target/scope
-identities, invokes the generic workload-type validator, and permits legacy
-exceptions only for named retiring reference workloads.
+identities, invokes the generic workload-type and secret-dependency validators,
+and permits legacy exceptions only for named retiring reference workloads.
 
 ```bash
 bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh \

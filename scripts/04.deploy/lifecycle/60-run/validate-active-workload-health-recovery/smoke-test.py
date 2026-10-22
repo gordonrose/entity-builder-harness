@@ -126,6 +126,14 @@ def main() -> int:
         write(index_path, misidentified)
         expect_failure(target_root, "active-scope-identity-mismatch")
 
+        missing_secret_declaration = copy.deepcopy(valid)
+        contract_path = target_root / "bootstrap-runtime" / "00-declaration" / "declaration-contract.yml"
+        contract = index(contract_path)
+        contract["configuration"].pop("secret_dependencies")
+        write(contract_path, contract)
+        write(index_path, missing_secret_declaration)
+        expect_failure(target_root, "active-scope-secret-dependency-invalid")
+
     print("Active workload health/recovery inventory tests passed.")
     return 0
 

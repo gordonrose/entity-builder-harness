@@ -50,6 +50,7 @@ configuration:
     - PLATFORM_HEALTH_LIVEZ_EXPOSURE
     - PLATFORM_HEALTH_READYZ_EXPOSURE
   secret_names: []
+  secret_dependencies: []
 verification:
   liveness_path: /livez
   readiness_path: /readyz
