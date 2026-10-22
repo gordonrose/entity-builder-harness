@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-21T16:03:59Z
-latest_commit_sha: 2a58ab882c12c7210e30d272721745da3adcaea2
-chat_duration: 1407870s (16:07:04:30)
+latest_commit_at_utc: 2026-10-22T20:39:44Z
+latest_commit_sha: 4021fbf2
+chat_duration: 1510815s (17:11:40:15)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -1965,6 +1965,17 @@ Summary: Adds typed workload health and recovery validation, provider-evidence f
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-22T20:39:44Z - Commit recorded
+
+Commit: `4021fbf2`
+
+Message: feat(deploy): govern workload recovery and target budget
+
+Summary: Adds workload-aware health and recovery contracts, active-workload validation, evidence freshness enforcement, bounded rehearsal controls, and verified 00 target-budget governance. PostgreSQL is selected as the next persistence reference; no persistence infrastructure is created.
+
+ADR impact: not-needed: bounded operational controls follow existing deployment architecture
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2327,6 +2338,13 @@ ADR impact: covered by session ADR disposition
   Summary: Adds typed workload health and recovery validation, provider-evidence freshness checks, release rehearsal controls, and a governed 00 target-budget provisioning path with recorded live budget evidence. PostgreSQL is selected as the first future persistence reference; no persistence infrastructure has been created.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `4021fbf2`
+  Time UTC: 2026-10-22T20:39:44Z
+  Message: feat(deploy): govern workload recovery and target budget
+  Summary: Adds workload-aware health and recovery contracts, active-workload validation, evidence freshness enforcement, bounded rehearsal controls, and verified 00 target-budget governance. PostgreSQL is selected as the next persistence reference; no persistence infrastructure is created.
+  ADR impact: not-needed: bounded operational controls follow existing deployment architecture
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -2340,9 +2358,9 @@ Reason: The budget bootstrap route is a bounded operational control under the ex
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-21T16:03:59Z
-Latest commit SHA: 2a58ab882c12c7210e30d272721745da3adcaea2
-Chat duration: 1407870s (16:07:04:30)
+Latest commit at UTC: 2026-10-22T20:39:44Z
+Latest commit SHA: 4021fbf2
+Chat duration: 1510815s (17:11:40:15)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
