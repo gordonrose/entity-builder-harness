@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-22"
   layer: 00.chat
   domain: startup
   disciplines:
@@ -78,7 +78,9 @@ chat startup metadata.
 The startup script always builds a first prompt. That prompt is a portable
 session packet for terminal-based startup: it contains the task, session log,
 chat worktree, chat lifecycle workflow, latest context-packet continuity fields,
-and dirty-worktree stop response.
+and informational bootstrap worktree status. Existing changes follow the
+preservation guidance in `chat-start.md#existing-changes`; they do not trigger a
+blanket confirmation.
 
 `CHAT_COPY_PROMPT` only controls how that terminal packet is handed to a human:
 copy it to the clipboard, or print it in the terminal. It is a terminal
@@ -122,11 +124,10 @@ to present or pass the session packet in their own way.
 
 4. Capture the starting worktree state.
 
-   Startup records whether the current worktree was clean, `bookkeeping-only`,
-   or dirty. `bookkeeping-only` means the current chat session log is the only
-   changed path, so the first prompt permits ongoing work without another
-   confirmation. Any other dirty state still tells the next agent to stop and
-   ask for confirmation before doing more discovery.
+   Startup records whether the source worktree was clean, `bookkeeping-only`,
+   or dirty. This status is informational. It describes the source checkout,
+   not the new chat worktree, and does not require confirmation before discovery
+   or authorized work. Existing source changes stay in place.
 
 5. Create the branch and chat-owned worktree.
 
@@ -155,8 +156,8 @@ to present or pass the session packet in their own way.
 
    The prompt is the bridge from startup automation into the next agent turn. It
   names the task, session log, worktree, chat lifecycle workflow, context-packet
-  continuity fields, startup bootstrap boundary, and the dirty-worktree stop
-  response. Terminal startup can copy or print it. IDE and app integrations
+  continuity fields, startup bootstrap boundary, and informational source-worktree
+  status. Terminal startup can copy or print it. IDE and app integrations
   should treat those fields as structured startup data rather than depending on
   clipboard behavior.
 

@@ -4,7 +4,7 @@ id: harness.workflows.change-harness
 version: 1
 status: active
 created_on: "2026-06-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -29,10 +29,6 @@ name: change-harness
 layer: harness
 purpose: Govern changes to AGENTS.md, CLAUDE.md, .agentic structure, routing, workflows, skills, agents, gates, adapters, and instruction/token rules.
 
-required_gates:
-  - id: dirty_worktree
-    script: scripts/00.chat/worktree/dirty-worktree-check/script.sh --allow-session-bookkeeping
-
 rules:
   - Keep AGENTS.md as a router only.
   - Consult .agentic/01.harness/standards/agentic-artifact-standards.md before adding or changing harness artifacts.
@@ -42,7 +38,7 @@ rules:
   - Prefer scripts over prose where checks can be deterministic.
   - Do not duplicate rules across AGENTS.md, workflows, skills, and gates.
   - Update relevant indexes when adding or moving harness files.
-  - Treat dirty worktree output of `bookkeeping-only` as acceptable after explicit write permission for the chat.
+  - Follow existing-change handling in `.agentic/00.chat/workflows/chat-start.md#existing-changes`; dirty status alone is not a blocker.
   - Stop if ownership of the rule is unclear.
 
 blocked_response_format: "Blocked: <reason>. Confirm proceed? Layer: harness. Mode: <mode>. Workflow: .agentic/01.harness/workflows/change-harness.md."

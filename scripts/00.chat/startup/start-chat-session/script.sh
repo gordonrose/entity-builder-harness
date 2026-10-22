@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-22"
 #   layer: 00.chat
 #   domain: startup
 #   disciplines:
@@ -251,14 +251,8 @@ Latest context packet id:
 Latest context packet routing summary:
 Bootstrap worktree status: ${WORKTREE_STATUS}
 
-If Bootstrap worktree status is dirty, reply exactly:
-Blocked: dirty worktree. Confirm proceed?
-
-Before that response, do not read workflows or run git status/dirty checks.
-
-If Bootstrap worktree status is bookkeeping-only, its changes are limited to the
-current session log. Treat that as safe ongoing work and do not ask for
-permission solely for that condition.
+Bootstrap worktree status is informational; existing changes alone do not require confirmation.
+For preservation and overlap handling, follow .agentic/00.chat/workflows/chat-start.md#existing-changes.
 
 Governed startup bootstrap has already created this chat branch, worktree, and session log.
 Default mode after startup bootstrap: read-only until I grant write permission in this chat.

@@ -2,9 +2,13 @@
 schema: agentic-artifact/v3
 id: harness.adr.0005-preserve-bootstrap-dirty-worktree-before-workflow-loading
 version: 1
-status: active
+status: superseded
 created_on: "2026-06-15"
-updated_on: "2026-10-20"
+updated_on: "2026-10-22"
+superseded_on: "2026-10-22"
+superseded_by:
+  - id: chat.adr.0040-treat-worktree-dirt-as-context
+    path: "docs/00.chat/adrs/0040-treat-worktree-dirt-as-context.md"
 layer: 00.chat
 domain: architecture
 disciplines:
@@ -23,7 +27,9 @@ used_by:
 
 # 0005 Preserve Bootstrap Dirty Worktree Before Workflow Loading
 
-Status: accepted
+> Superseded by [chat.adr.0040-treat-worktree-dirt-as-context](0040-treat-worktree-dirt-as-context.md).
+
+Status: superseded by ADR 0040 on 2026-10-22
 Date: 2026-06-16
 
 ## Context

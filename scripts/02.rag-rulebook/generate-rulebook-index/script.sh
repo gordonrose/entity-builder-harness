@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 4
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-22"
 #   layer: 02.rag-rulebook
 #   domain: indexing
 #   disciplines:
@@ -494,10 +494,10 @@ SUPPORTING_SOURCE_ENTRIES = (
         "source_type": "source",
         "retrieval_profile": {
             "retrieval_roles": ["chat-dirty-worktree-check"],
-            "answers_questions_about": ["how dirty worktrees block chat actions"],
+            "answers_questions_about": ["how worktree changes are classified for operation-specific checks"],
             "produces": ["dirty worktree status"],
             "consumes": ["git worktree state"],
-            "validates": ["clean worktree precondition"],
+            "validates": ["worktree cleanliness and session bookkeeping scope"],
         },
     },
     {

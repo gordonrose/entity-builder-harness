@@ -19,6 +19,12 @@ available as the local integration console.
 This lets a chat branch do real work without blocking other chats or mixing
 unrelated changes.
 
+Uncommitted changes are expected while a task is in progress. A blanket dirty
+worktree confirmation cannot distinguish that authorized work from unrelated
+changes, and source-worktree changes remain separate from a newly created chat.
+The harness therefore uses inspection and preservation guidance for task edits,
+with specific readiness checks at merge, refresh, and cleanup boundaries.
+
 ## Governed Script
 
 A governed script is a helper command that has a known path, metadata, and
