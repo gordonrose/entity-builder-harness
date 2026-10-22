@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-22T16:32:18Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-22T16:53:54Z
+latest_commit_sha: 9b55c7fa
+chat_duration: 1296s (00:00:21:36)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -210,6 +210,17 @@ Decision: Complete authorized downstream commit and main publication
 
 Rationale: User explicitly authorized committing, merging to main, pushing the remote, and publishing the upstream package. This downstream phase stages only the reviewed task paths and current session log. Fetch confirmed clean local main c1ad31a0 is 20 commits ahead of origin/main 2734194f with no incoming commits; publishing main includes its existing accepted ancestry. No force push, branch deletion, history rewrite, or unrelated work is planned.
 
+
+### 2026-10-22T16:53:54Z - Commit recorded
+
+Commit: `9b55c7fa`
+
+Message: fix(harness): replace blanket dirty-worktree confirmation
+
+Summary: Replace blanket confirmation with existing-change inspection and preservation guidance; retain operation-specific safeguards; cover dirty text/JSON startup; supersede ADR 0005 and align local workflows and retrieval metadata. Public-beta and commit readiness gates passed.
+
+ADR impact: ADR 0040 accepted; ADR 0005 superseded with v3 lifecycle references.
+
 ## Sub-Agent Activity
 
 
@@ -229,7 +240,13 @@ Summary: Upstream implemented and tested by delegate; parent integrated reviewed
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `9b55c7fa`
+  Time UTC: 2026-10-22T16:53:54Z
+  Message: fix(harness): replace blanket dirty-worktree confirmation
+  Summary: Replace blanket confirmation with existing-change inspection and preservation guidance; retain operation-specific safeguards; cover dirty text/JSON startup; supersede ADR 0005 and align local workflows and retrieval metadata. Public-beta and commit readiness gates passed.
+  ADR impact: ADR 0040 accepted; ADR 0005 superseded with v3 lifecycle references.
 
 ## Main Refresh Conflicts
 
@@ -244,12 +261,12 @@ Reason: Accepted replacement policy supersedes ADR 0005; original ADR retained w
 ## Session Metrics
 
 Raised at UTC: 2026-10-22T16:32:18Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-22T16:53:54Z
+Latest commit SHA: 9b55c7fa
+Chat duration: 1296s (00:00:21:36)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
