@@ -66,5 +66,6 @@ rehearsal are evidence; they are not standing permission to recreate resources
 or expand the dependency-free bootstrap boundary.
 
 The [implementation programme](../plans/implementation/platform-to-target-chain-control.md)
-tracks further scope work. Its planned persistence foundation is not yet an
-approved provider/resource choice for this target.
+tracks further scope work. `core-server-persistence` now has a separately
+qualified package and a target-bound AWS candidate-creation route; it is not
+yet an accepted runtime and does not supersede the retained bootstrap release.

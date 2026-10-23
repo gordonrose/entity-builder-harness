@@ -4,12 +4,16 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
 #   kind: cloudformation-template
 #   purpose: Define the private PostgreSQL persistence candidate, its three isolated ECS workload identities, and its native RDS recovery controls.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.create-core-server-persistence-change-set
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Private PostgreSQL persistence candidate for kanbien-core-platform; no public database or ingress.
 
@@ -327,3 +331,4 @@ Outputs:
   CoreServerPersistenceMigrationTaskDefinitionArn: { Value: !Ref CoreServerPersistenceMigrationTaskDefinition }
   CoreServerPersistenceVerifierTaskDefinitionArn: { Value: !Ref CoreServerPersistenceVerifierTaskDefinition }
   PersistenceServiceDiscoveryArn: { Value: !GetAtt PersistenceServiceDiscovery.Arn }
+  PersistenceMigrationSecurityGroupId: { Value: !Ref MigrationSecurityGroup }
