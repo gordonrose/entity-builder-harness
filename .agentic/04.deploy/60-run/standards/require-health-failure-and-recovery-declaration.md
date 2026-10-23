@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.health-failure-and-recovery-declaration
-version: 8
+version: 9
 status: active
 created_on: "2026-10-21"
 updated_on: "2026-10-23"
@@ -43,6 +43,13 @@ must say which declared dependencies readiness considers, how invalid startup
 configuration and unavailable dependencies behave, and which safe diagnostic
 code category is emitted. A dependency-free scope explicitly declares an empty
 dependency-failure list; it does not omit the concern.
+
+Every new-framework scope also declares whether persistence diagnostics are
+inapplicable or, for a required persistence dependency, supplies the complete
+workload-aware mapping required by
+`require-persistence-diagnostic-mapping.md`. That mapping controls safe
+diagnostic code, consequence, retry boundary, and next check; it does not
+replace health/recovery or provider-specific proof.
 
 A long-running server must also declare its health-signal mapping: the signal
 the provider uses for replacement, the readiness consequence for candidate

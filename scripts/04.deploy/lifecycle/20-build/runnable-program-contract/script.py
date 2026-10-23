@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -183,14 +183,23 @@ def validate_candidates(document: dict[str, Any], images: dict[str, dict[str, An
 
 
 def validate_evidence(document: dict[str, Any], candidates: dict[str, dict[str, Any]]) -> None:
-    verification = document.get("candidate_verification")
-    if not isinstance(verification, dict) or verification.get("candidate") not in candidates:
+    declared = document.get("candidate_verifications")
+    verifications = declared if isinstance(declared, list) else [document.get("candidate_verification")]
+    if not verifications or not all(isinstance(item, dict) for item in verifications):
         raise ContractFailure("candidate-verification-invalid")
-    fields = verification.get("required_evidence_fields")
-    if not isinstance(fields, list) or not fields or not all(isinstance(field, str) for field in fields):
-        raise ContractFailure("evidence-fields-invalid")
-    if len(fields) != len(set(fields)) or not set(fields).issubset(SAFE_EVIDENCE_FIELDS):
-        raise ContractFailure("evidence-field-unsafe")
+    verified: set[str] = set()
+    for verification in verifications:
+        candidate = verification.get("candidate")
+        if candidate not in candidates or candidate in verified:
+            raise ContractFailure("candidate-verification-invalid")
+        verified.add(candidate)
+        fields = verification.get("required_evidence_fields")
+        if not isinstance(fields, list) or not fields or not all(isinstance(field, str) for field in fields):
+            raise ContractFailure("evidence-fields-invalid")
+        if len(fields) != len(set(fields)) or not set(fields).issubset(SAFE_EVIDENCE_FIELDS):
+            raise ContractFailure("evidence-field-unsafe")
+    if verified != set(candidates):
+        raise ContractFailure("candidate-verification-invalid")
 
 
 def validate(document: dict[str, Any]) -> str:

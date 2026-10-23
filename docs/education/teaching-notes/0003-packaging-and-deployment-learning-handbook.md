@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 31
+  version: 35
   status: active
   created_on: "2026-10-07"
   updated_on: "2026-10-23"
@@ -1002,7 +1002,7 @@ next safe check. A bare CI exit code is not a safe diagnostic.
 
 ```text
 shared diagnostic contract and redaction rules
-  → future `.agentic/06.shared/` governance and shared product contracts
+  → `.agentic/shared/standards/require-safe-diagnostic-record.md`
 
 module and provider-adapter mappings
   → product implementation and tests
@@ -1016,6 +1016,38 @@ expected dependency behaviour and proof
 actual runtime events
   → approved operational logging, not Git
 ```
+
+### Current reusable diagnostic control
+
+The repository now has a local, provider-neutral persistence diagnostic
+control. It is intentionally smaller than an observability system:
+
+```text
+shared safe-record boundary
+  → controlled persistence taxonomy
+  → scope workload mapping
+  → deterministic validator and synthetic negative fixtures
+  → active-scope inventory and the kanbien-core-platform declaration/release gates
+```
+
+Every new-framework scope classifies `dependencies.persistence` and must state
+either that persistence is explicitly inapplicable—with an empty
+classification and no migration or server-mediated use—or provide mappings for
+every persistence-aware workload. The controlled codes cover transport, trust,
+credential rejection, runtime permission denial, capacity, schema
+incompatibility, timeout, uncertain outcome, and an unclassified
+stop-and-escalate fallback. A record has only approved fields, a controlled
+summary, and a controlled next check: this is stronger than pattern matching
+for unsafe text, but runtime adapter tests are still needed to prove raw errors
+cannot reach emitted diagnostics. A server's temporary transport outage maps
+to readiness and bounded reconnect rather than provider replacement; a trust
+failure maps to readiness plus target correction; a writing server's uncertain
+request requires reconciliation before retry; a migration timeout or uncertain
+outcome blocks release and requires fresh state observation.
+
+This is structural proof only. It does not prove that a PostgreSQL driver
+emits a code, a provider grant works, a target route exists, or a live fault
+was rehearsed. Those are later adapter, target, and live-proof obligations.
 
 The dependency contract declares what observation is required. A later
 observability scope supplies the actual log transport, metric storage,
@@ -2177,6 +2209,35 @@ deployment rollback caused by a health failure. Those are facts about the
 current proof boundary, not failures to be silently filled in by a successful
 HTTP response or a controlled task stop.
 
+### A successor scope is not an inherited deployment
+
+The next planned scope is `core-server-persistence`. It is a **successor** to
+the accepted, dependency-free `bootstrap-runtime` scope, not a folder into
+which we silently add a database. This distinction keeps the first proven
+server route available while a dependency-bearing route is being designed and
+tested.
+
+```text
+bootstrap-runtime (active, accepted, dependency-free)
+        │
+        └── core-server-persistence (defined now; candidate only after checks)
+                 ├── long-running core server
+                 ├── one-shot migration task
+                 └── one-shot server-mediated persistence verifier
+```
+
+There is no automatic inheritance between the two scopes. A later persistence
+scope deliberately reuses generic harness rules, but it has to declare and
+prove its own program/image dependency closure, configuration, workload
+bindings, readiness semantics, and release evidence. The bootstrap image does
+not acquire PostgreSQL code merely because the later scope exists.
+
+The lifecycle index therefore stays unchanged until the later scope has
+canonical declarations, local/package proof, and a release route. Only then
+may it enter as a `candidate` with `bootstrap-runtime` as its active
+predecessor. If it fails, the baseline remains active; when it is accepted,
+the lifecycle transition is a separate recorded release action.
+
 The important design rule is that this cannot become a special core-server
 patch. Every future runnable scope needs the same kinds of answers, even though
 their answers differ:
@@ -2201,15 +2262,37 @@ and its IAM permission. PostgreSQL normally needs a reviewed credential supply
 route such as a secret reference or IAM database authentication. Both still
 need configuration, networking, least privilege, failure behaviour, and proof.
 
+### Compose the server before selecting a provider
+
+The first implementation step for the successor is deliberately smaller than
+the PostgreSQL scope. It adds a separate target-composition factory,
+`kanbien-core-server-persistence.app.ts`, which accepts an injected
+provider-neutral persistence runtime. A local fake proves the important
+behaviour without a database: the process stays live during a dependency
+outage, readiness reports not-ready, the server returns only a safe
+not-confirmed acceptance result, and clean shutdown closes the dependency.
+
+The composition also retains the bootstrap release-verification route. This
+matters because a persistence-capable replacement must still identify the
+release it is running; adding a dependency must not remove an existing release
+control by accident.
+
+This factory is not a deployable `main.ts` and does not choose PostgreSQL. The
+later `main.ts` will be the explicit target-level seam that constructs the
+reviewed adapter from a governed configuration and credential reference. That
+separation lets us test server behaviour now without pretending that a fake is
+a database, that a provider is portable, or that local proof is live evidence.
+
 ## 24. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
-1. design the planned `kanbien-core-platform` bootstrap target: absent baseline,
-   release A, controlled update B, private verifier route, safe receipt, and
-   recovery path—without creating AWS resources;
-2. complete the read-only reference inventory for the existing public staging
-   server and identify only explicit migration candidates;
-3. additional foundation and product scopes: persistence, security,
-   observability, worker/queue, relay, PostgreSQL, identity/access, and public
-   ingress.
+1. select and locally prove the reviewed PostgreSQL adapter and image boundary
+   without changing the accepted bootstrap image;
+2. define and validate the `core-server-persistence` candidate contract,
+   including private TLS/network, secret-reference, migration, server-mediated
+   verifier, capacity, diagnostic, cleanup, and recovery facts;
+3. prepare a separately reviewed PostgreSQL execution packet only after the
+   candidate has local/package and release-route proof; and
+4. later add foundation and product scopes for observability, worker/queue,
+   relay, identity/access, and public ingress.

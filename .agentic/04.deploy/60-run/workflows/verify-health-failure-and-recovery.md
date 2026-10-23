@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-health-failure-and-recovery
-version: 7
+version: 8
 status: active
 created_on: "2026-10-21"
 updated_on: "2026-10-23"
@@ -34,6 +34,10 @@ provider or target commands.
    that two workloads execute the same code. For a dependency-bearing server,
    stop if the provider replacement signal is dependency readiness rather than
    process liveness. Stop on an absent, malformed, or mismatched declaration.
+   When a scope declares a required persistence dependency, validate its
+   persistence diagnostic mapping: controlled provider-neutral codes only,
+   workload-appropriate consequence, and an unclassified stop-and-escalate
+   fallback. This declaration check does not replace adapter or live proof.
    Validate the target scope lifecycle inventory so no new-framework scope is
    omitted and no two active scopes claim the same workload identity.
 3. Run the declared local and package proof commands when their status is

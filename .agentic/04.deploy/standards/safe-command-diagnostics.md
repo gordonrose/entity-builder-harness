@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.safe-command-diagnostics
-version: 1
-status: draft
+version: 2
+status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.diagnostics
 disciplines:
@@ -22,6 +22,11 @@ used_by:
   path: scripts/04.deploy/shared/safe-command-diagnostics.sh
 -->
 # Safe Command Diagnostics
+
+This is the deployment-script application of the shared
+`require-safe-diagnostic-record.md` standard. It governs child-command output;
+it does not replace the scope-level persistence diagnostic mapping or runtime
+adapter mapping required for a dependency-bearing workload.
 
 A lifecycle script may keep successful child-command output quiet. It must not
 turn a child failure into an unexplained exit code.

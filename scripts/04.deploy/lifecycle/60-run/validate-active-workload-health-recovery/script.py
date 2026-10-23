@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-active-workload-health-recovery.implementation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-22"
 #   updated_on: "2026-10-23"
@@ -32,6 +32,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[5]
 VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py"
 SECRET_VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh"
+PERSISTENCE_DIAGNOSTIC_VALIDATOR = ROOT / "scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh"
 SCOPE_ID = re.compile(r"^[a-z][a-z0-9-]*$")
 LIFECYCLE_STATES = frozenset({"active", "candidate", "accepted-historical"})
 
@@ -160,6 +161,14 @@ def main():
                 )
                 if secret_result.returncode:
                     codes.append("scope-lifecycle-secret-dependency-invalid")
+                diagnostic_result = subprocess.run(
+                    [str(PERSISTENCE_DIAGNOSTIC_VALIDATOR), "--scope-contract", str(contract), "--workload-binding", str(binding), "--json"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if diagnostic_result.returncode:
+                    codes.append("scope-lifecycle-persistence-diagnostics-invalid")
 
             active_owners: dict[str, str] = {}
             for scope_id, item in indexed.items():

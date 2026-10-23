@@ -1,0 +1,160 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [architecture, security, sre]
+#   kind: deployment-scope-contract
+#   purpose: Declare the candidate PostgreSQL-backed core-server scope without superseding the accepted bootstrap runtime.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.validate-active-workload-health-recovery
+#     path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+schema: deploy/target-scope-contract/v1
+id: kanbien-core-platform-core-server-persistence
+target: kanbien-core-platform
+scope: core-server-persistence
+status: candidate-not-live
+owner: persistence-platform
+program:
+  id: kanbien-core-server-persistence
+  contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+  image_contract: infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml
+  local_proof: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+workload:
+  operation: controlled-candidate-deployment
+  runtime_selection: ecs-fargate-private-immutable-digest
+  runtime_template: 30-provider-realization/aws/cloudformation/core-server-persistence.yml
+  runtime_boundary: ecs-fargate-private-postgresql-tls
+  startup_access: 10-foundation/technical-access.yml#workload-startup
+  network: 10-foundation/network.yml#private-verifier-route
+configuration:
+  value_policy: names-and-shapes-only-no-values
+  required_names: [NODE_ENV, HOST, PORT, PLATFORM_SOURCE_COMMIT_SHA, PERSISTENCE_POSTGRES_HOST, PERSISTENCE_POSTGRES_PORT, PERSISTENCE_POSTGRES_DATABASE, PERSISTENCE_POSTGRES_SCHEMA, PERSISTENCE_RUNTIME_SECRET_REFERENCE, PERSISTENCE_MIGRATION_SECRET_REFERENCE, PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS, PERSISTENCE_POSTGRES_CA_PATH]
+  optional_names: []
+  secret_names: [PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS]
+  secret_dependencies:
+    - id: postgresql-runtime-credentials
+      dependency: postgresql
+      purpose: runtime-dml-access
+      owner: persistence-platform
+      authorised_workloads: [core-server]
+      access_class: runtime
+      injection_name: PERSISTENCE_RUNTIME_CREDENTIALS
+      target_reference_id: postgresql-runtime-credentials
+      expected_fields: [username, password]
+      delivery: { method: target-secret-store-injection, phase: workload-startup }
+      access_grant: { owner: persistence-platform, policy: target-bound-runtime-secret-access, privilege_boundary: declared-access-class-boundary-not-effective-privilege-proof, proof_requirement: provider-binding-and-effective-access-observation-required }
+      rotation: { owner: persistence-platform, policy: coordinated-replacement-required, application_behavior: replacement-required, completed_task_behavior: no-replay }
+      revocation: { owner: persistence-platform, policy: urgent-revocation, condition: credential-compromise-or-retirement, workload_effect: block-new-start-and-stop-active-authorised-workloads, proof_requirement: delivery-and-dependency-access-denied-observation-required }
+      retirement: { owner: persistence-platform, policy: retire-after-scope-replacement, condition: successor-accepted-and-revocation-proved }
+      failure_behaviour: { startup: { unavailable: process-exits, invalid_shape: process-exits }, readiness: { unavailable: block-readiness, invalid_shape: block-readiness } }
+      safe_diagnostics: { unavailable: PERSISTENCE_RUNTIME_SECRET_UNAVAILABLE, invalid_shape: PERSISTENCE_RUNTIME_SECRET_INVALID, credential_rejected: PERSISTENCE_RUNTIME_CREDENTIAL_REJECTED, access_denied: PERSISTENCE_RUNTIME_ACCESS_DENIED }
+    - id: postgresql-migration-credentials
+      dependency: postgresql
+      purpose: migration-structural-access
+      owner: persistence-platform
+      authorised_workloads: [persistence-migration]
+      access_class: migration
+      injection_name: PERSISTENCE_MIGRATION_CREDENTIALS
+      target_reference_id: postgresql-migration-credentials
+      expected_fields: [username, password]
+      delivery: { method: target-secret-store-injection, phase: workload-startup }
+      access_grant: { owner: persistence-platform, policy: target-bound-migration-secret-access, privilege_boundary: declared-access-class-boundary-not-effective-privilege-proof, proof_requirement: provider-binding-and-effective-access-observation-required }
+      rotation: { owner: persistence-platform, policy: coordinated-replacement-required, application_behavior: replacement-required, completed_task_behavior: no-replay }
+      revocation: { owner: persistence-platform, policy: urgent-revocation, condition: credential-compromise-or-retirement, workload_effect: block-new-start-and-stop-active-authorised-workloads, proof_requirement: delivery-and-dependency-access-denied-observation-required }
+      retirement: { owner: persistence-platform, policy: retire-after-scope-replacement, condition: successor-accepted-and-revocation-proved }
+      failure_behaviour: { completion: { unavailable: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_MIGRATION_SECRET_UNAVAILABLE }, invalid_shape: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_MIGRATION_SECRET_INVALID } } }
+      safe_diagnostics: { unavailable: PERSISTENCE_MIGRATION_SECRET_UNAVAILABLE, invalid_shape: PERSISTENCE_MIGRATION_SECRET_INVALID, credential_rejected: PERSISTENCE_MIGRATION_CREDENTIAL_REJECTED, access_denied: PERSISTENCE_MIGRATION_ACCESS_DENIED }
+dependencies:
+  required: [postgresql]
+  optional: []
+  persistence: [postgresql]
+  excluded: [public-ingress, product-application, queues-and-workers, full-observability-delivery]
+persistence_diagnostics:
+  declaration_schema: deploy/persistence-diagnostic-mapping/v1
+  status: declared
+  dependency: { id: postgresql, required: true }
+  workloads:
+    - id: core-server
+      mappings: &server_mappings
+        - { code: persistence.transport-unavailable, stage: readiness, effect: not-ready, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable", next_check: inspect-declared-target-alignment-evidence }
+        - { code: persistence.trust-validation-failed, stage: startup, effect: not-ready, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed", next_check: inspect-governed-scope-configuration }
+        - { code: persistence.credential-rejected, stage: readiness, effect: not-ready, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected", next_check: collect-governed-provider-observation }
+        - { code: persistence.runtime-permission-denied, stage: request, effect: stop-and-escalate, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied", next_check: collect-governed-provider-observation }
+        - { code: persistence.capacity-exhausted, stage: request, effect: bounded-reconnect, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted", next_check: collect-governed-provider-observation }
+        - { code: persistence.schema-incompatible, stage: readiness, effect: not-ready, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.operation-timed-out, stage: request, effect: request-uncertain-reconcile-before-retry, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.outcome-uncertain, stage: request, effect: request-uncertain-reconcile-before-retry, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.unclassified-failure, stage: request, effect: stop-and-escalate, retryability: stop-and-escalate, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure", next_check: collect-governed-provider-observation }
+    - id: private-release-verifier
+      mappings: &task_mappings
+        - { code: persistence.transport-unavailable, stage: request, effect: failed-completion, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable", next_check: inspect-declared-target-alignment-evidence }
+        - { code: persistence.trust-validation-failed, stage: startup, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed", next_check: inspect-governed-scope-configuration }
+        - { code: persistence.credential-rejected, stage: request, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected", next_check: collect-governed-provider-observation }
+        - { code: persistence.runtime-permission-denied, stage: request, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied", next_check: collect-governed-provider-observation }
+        - { code: persistence.capacity-exhausted, stage: request, effect: failed-completion, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted", next_check: collect-governed-provider-observation }
+        - { code: persistence.schema-incompatible, stage: request, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.operation-timed-out, stage: request, effect: failed-completion, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.outcome-uncertain, stage: request, effect: failed-completion, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.unclassified-failure, stage: request, effect: stop-and-escalate, retryability: stop-and-escalate, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure", next_check: collect-governed-provider-observation }
+    - id: persistence-migration
+      mappings:
+        - { code: persistence.transport-unavailable, stage: migration, effect: failed-completion, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable", next_check: inspect-declared-target-alignment-evidence }
+        - { code: persistence.trust-validation-failed, stage: startup, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.trust-validation-failed", next_check: inspect-governed-scope-configuration }
+        - { code: persistence.credential-rejected, stage: migration, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.credential-rejected", next_check: collect-governed-provider-observation }
+        - { code: persistence.runtime-permission-denied, stage: migration, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.runtime-permission-denied", next_check: collect-governed-provider-observation }
+        - { code: persistence.capacity-exhausted, stage: migration, effect: failed-completion, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.capacity-exhausted", next_check: collect-governed-provider-observation }
+        - { code: persistence.schema-incompatible, stage: migration, effect: failed-completion, retryability: target-correction-required, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.schema-incompatible", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.operation-timed-out, stage: migration, effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.outcome-uncertain, stage: migration, effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.unclassified-failure, stage: migration, effect: stop-and-escalate, retryability: stop-and-escalate, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure", next_check: collect-governed-provider-observation }
+health_recovery:
+  declaration_schema: deploy/health-failure-and-recovery-declaration/v2
+  workloads:
+    - id: core-server
+      workload_type: long-running-server
+      binding: core-server-service
+      persistence_writes: true
+      liveness: { path: /livez, expected_status: 200 }
+      readiness: { path: /readyz, expected_status: 200, depends_on: [postgresql] }
+      health_signal_mapping: { provider_replacement_signal: liveness, dependency_readiness_effect: block-candidate-acceptance, candidate_acceptance_signals: [liveness, readiness] }
+      startup_failure: { invalid_required_configuration: { result: process-exits, diagnostic_code: CONFIGURATION_REQUIRED_SETTING_MISSING } }
+      dependency_failures: [{ dependency: postgresql, unavailable: { result: not-ready, diagnostic_code: PERSISTENCE_DEPENDENCY_UNAVAILABLE } }]
+      automatic_workload_recovery: { owner: aws-ecs-service, unhealthy_workload: replace, prohibited_automatic_actions: [replay-uncertain-operation] }
+      release_recovery: { strategy: restore-prior-accepted-immutable-release, automatic_restore: prohibited, verification: repeat-declared-health-and-meaningful-operation }
+      proof: { local: { status: passed, command: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh }, package: { status: planned, command: scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh, owner: persistence-platform, follow_up: qualify-actual-driver-image, review_before: candidate-deployment }, live_recovery: { status: planned, owner: persistence-platform, follow_up: execute-governed-persistence-recovery-rehearsals, review_before: scope-acceptance } }
+    - id: private-release-verifier
+      workload_type: run-to-completion-task
+      binding: private-release-verifier-task
+      persistence_writes: false
+      required_workloads: [core-server]
+      completion: { deadline_seconds: 120, success: { exit_code: 0, result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED }, interruption: { policy: stop-and-escalate }, retry_policy: no-automatic-retries }
+      server_mediated_dependency_proof: { dependency: postgresql, target_workload: core-server, route_access: private-application-route-only, direct_dependency_credentials: prohibited, direct_dependency_network: prohibited, direct_dependency_connection_limit: 0, proof_steps: [create-and-commit-synthetic-record-through-target-workload, replace-target-workload, read-original-record-through-replacement-workload], acceptance_record: { identity: stable-synthetic-acceptance-record, equivalent_repeat: return-original-record-without-duplicate, concurrent_create: exactly-one-record-preserve-original-facts, conflicting_reuse: reject-conflict-preserve-original-facts, lost_response_after_commit: reconcile-original-record-before-retry }, cleanup: { owner: persistence-platform, retention: until-replacement-and-restore-proof-accepted, abandoned_verifier_policy: retain-for-governed-cleanup, route: server-mediated-governed-cleanup, outcome: delete-synthetic-record-only-after-retention } }
+      proof: { local: { status: passed, command: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh }, package: { status: planned, command: scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh, owner: persistence-platform, follow_up: qualify-actual-driver-image, review_before: candidate-deployment }, completion: { status: planned, owner: persistence-platform, follow_up: execute-private-verifier-after-server-replacement, review_before: scope-acceptance } }
+    - id: persistence-migration
+      workload_type: run-to-completion-task
+      binding: persistence-migration-task
+      persistence_writes: false
+      required_workloads: []
+      completion: { deadline_seconds: 300, success: { exit_code: 0, result_code: PERSISTENCE_MIGRATION_APPLIED }, interruption: { policy: stop-and-escalate }, retry_policy: no-automatic-retries }
+      migration_execution: { dependency: postgresql, credential_access_class: migration, manifest: { ordering: strictly-ascending-immutable-identifiers, checksum: required-before-execution }, executor: exactly-one, lock_wait_seconds: 30, execution_timeout_seconds: 240, transaction_boundary: per-migration-atomic-where-supported, interruption_policy: do-not-retry-uncertain-outcome, unknown_outcome_policy: block-release-require-fresh-state-observation, compatibility_strategy: expand-deploy-verify-contract-later, replay_handling: { already_applied_checksum_match: no-op-record-accepted-state, checksum_mismatch: block-release-require-fresh-state-observation, concurrent_executor: reject-before-apply } }
+      proof: { local: { status: passed, command: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh }, package: { status: planned, command: scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh, owner: persistence-platform, follow_up: qualify-actual-driver-image, review_before: candidate-deployment }, completion: { status: planned, owner: persistence-platform, follow_up: execute-governed-migration-task, review_before: candidate-deployment } }
+  persistence_recovery:
+    server_replacement: { verifier_workload: private-release-verifier, outcome: original-record-survives-server-replacement, proof_requirement: required-before-persistence-scope-acceptance }
+    image_rollback: { predecessor: persistence-capable-accepted-release, schema_compatibility: required, database_reversal: prohibited, proof_requirement: required-before-persistence-scope-acceptance }
+    isolated_database_restore: { restore_target: new-isolated-database, verification: isolated-application-reads-known-synthetic-record, source_mutation: prohibited, proof_requirement: required-before-persistence-scope-acceptance }
+receipt:
+  status: qualified-receipt-required-before-candidate-deployment
+  owner: deployment-platform
+  safe_fields: [target, environment_class, provider_region_alias, program_id, image_contract_id, source_revision, image_digest, release_identity, checked_at, health_verdict, verification_verdict, receipt_reference]
+rollback:
+  status: retain-bootstrap-and-prior-persistence-immutable-release
+  owner: deployment-platform
+  strategy: retain-prior-immutable-digest
+  maximum_automatic_retries: 0
+excludes: [public-ingress, product-application, queues-and-workers, full-observability-delivery]

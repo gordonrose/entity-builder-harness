@@ -1,0 +1,32 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.template.persistence-diagnostic-mapping.v1
+#   version: 2
+#   status: active
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.persistence-diagnostics
+#   disciplines: [security, sre, agentic]
+#   kind: template
+#   purpose: Illustrate a safe embedded persistence diagnostic record shape; a declared scope must complete every controlled mapping before validation passes.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.workflow.declare-persistence-diagnostic-mapping
+#     path: .agentic/04.deploy/60-run/workflows/declare-persistence-diagnostic-mapping.md
+persistence_diagnostics:
+  # The enclosing scope must also declare dependencies.persistence containing
+  # replace-with-logical-persistence-dependency-id.
+  declaration_schema: deploy/persistence-diagnostic-mapping/v1
+  status: declared
+  dependency: { id: replace-with-logical-persistence-dependency-id, required: true }
+  workloads:
+    - id: replace-with-server-workload-id
+      mappings:
+        - { code: persistence.transport-unavailable, stage: readiness, effect: not-ready, retryability: bounded-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.transport-unavailable", next_check: inspect-declared-target-alignment-evidence }
+        - { code: persistence.unclassified-failure, stage: readiness, effect: stop-and-escalate, retryability: stop-and-escalate, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure", next_check: collect-governed-provider-observation }
+    - id: replace-with-completion-workload-id
+      mappings:
+        - { code: persistence.operation-timed-out, stage: migration, effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.operation-timed-out", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.outcome-uncertain, stage: migration, effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.outcome-uncertain", next_check: observe-persistence-state-before-replay }
+        - { code: persistence.unclassified-failure, stage: migration, effect: stop-and-escalate, retryability: stop-and-escalate, safe_summary: "PERSISTENCE_DIAGNOSTIC_OBSERVED:persistence.unclassified-failure", next_check: collect-governed-provider-observation }

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.validate-active-workload-health-recovery.readme
-version: 3
+version: 4
 status: active
 created_on: "2026-10-22"
 updated_on: "2026-10-23"
@@ -20,8 +20,9 @@ used_by:
 Run this read-only command at a target's `20-scopes` directory. It inventories
 every new-framework scope directory and requires each scope to declare its
 lifecycle (`active`, `candidate`, or `accepted-historical`), canonical
-declaration and binding files, and workload ownership. It validates health and
-secret declarations for every indexed scope, prevents two active scopes from
+declaration and binding files, and workload ownership. It validates health,
+secret, and persistence-diagnostic declarations for every indexed scope,
+prevents two active scopes from
 owning the same bound workload, and verifies governed predecessor/successor
 links for candidate and historical scopes. It permits legacy exceptions only
 for named retiring reference workloads.
