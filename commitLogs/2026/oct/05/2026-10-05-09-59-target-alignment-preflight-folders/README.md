@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:52:03Z
-latest_commit_sha: 94272a0d
-chat_duration: 1601554s (18:12:52:34)
+latest_commit_at_utc: 2026-10-23T21:58:32Z
+latest_commit_sha: 74756f9b
+chat_duration: 1601943s (18:12:59:03)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2462,6 +2462,28 @@ Summary: Rebased task commit: the fixed route control awaits the existing bounde
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:58:24Z - Commit recorded
+
+Commit: `ea645943`
+
+Message: feat(deploy): govern persistence server replacement
+
+Summary: Adds a fixed target-scoped replacement rehearsal that records the old/new server task and requires a separate fresh private read proof.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-23T21:58:32Z - Commit recorded
+
+Commit: `74756f9b`
+
+Message: feat(deploy): govern persistence server replacement
+
+Summary: Rebased task commit: fixed target-scoped server replacement with a required subsequent read proof.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3039,6 +3061,20 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased task commit: the fixed route control awaits the existing bounded change set becoming reviewable and never creates a duplicate.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ea645943`
+  Time UTC: 2026-10-23T21:58:24Z
+  Message: feat(deploy): govern persistence server replacement
+  Summary: Adds a fixed target-scoped replacement rehearsal that records the old/new server task and requires a separate fresh private read proof.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `74756f9b`
+  Time UTC: 2026-10-23T21:58:32Z
+  Message: feat(deploy): govern persistence server replacement
+  Summary: Rebased task commit: fixed target-scoped server replacement with a required subsequent read proof.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3062,9 +3098,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:52:03Z
-Latest commit SHA: 94272a0d
-Chat duration: 1601554s (18:12:52:34)
+Latest commit at UTC: 2026-10-23T21:58:32Z
+Latest commit SHA: 74756f9b
+Chat duration: 1601943s (18:12:59:03)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

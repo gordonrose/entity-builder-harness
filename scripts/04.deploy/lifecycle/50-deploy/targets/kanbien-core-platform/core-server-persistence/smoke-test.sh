@@ -24,6 +24,7 @@ DEPLOY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platfor
 RETIRE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh"
 MIGRATE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh"
 VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh"
+REPLACE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh"
 ROUTE_UPDATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
@@ -34,6 +35,7 @@ expect_failure persistence-failed-candidate-retirement-arguments-invalid "$RETIR
 expect_failure persistence-migration-arguments-invalid "$MIGRATE" --target staging --json
 expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --target staging --json
 expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mode arbitrary --json
+expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, sys
@@ -70,6 +72,14 @@ prepare = Prepare()
 with patch.object(module.time, "sleep"):
     observed, code = module.reviewed_change_set(prepare, name, "CREATE_COMPLETE", "sha256:" + "a" * 64, "a" * 40)
 assert observed == change and code == "ok" and prepare.calls == 2
+PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("replacement", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+healthy = {"status":"ACTIVE", "desiredCount":1, "runningCount":1, "taskDefinition":"arn:task-definition/current", "deployments":[{"status":"PRIMARY", "rolloutState":"COMPLETED"}]}
+assert module.healthy_service(healthy)
+assert not module.healthy_service({**healthy, "runningCount": 0})
+assert not module.healthy_service({**healthy, "deployments": [{"status":"PRIMARY", "rolloutState":"IN_PROGRESS"}]})
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py" <<'PY'
 import importlib.util, sys

@@ -103,6 +103,21 @@ compatible release rollback, and isolated database restore rehearsals are
 implemented and their evidence is recorded. Initial creation, a successful
 migration, and a private create/read proof establish a candidate only.
 
+## Controlled Server Replacement
+
+After `create` has retained the synthetic record, replace exactly the current
+healthy candidate server task. This command cannot select another target,
+service, or task. It requires a matching qualified receipt and live target
+budget, records the original and replacement task identities, and stops if ECS
+does not restore one distinct healthy task using the unchanged candidate task
+definition. It does not create or read a record itself: follow it with a fresh
+private `read` verifier so the data-survival evidence is explicit.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$receipt" --json > "$replacement_report"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > "$replacement_read_report"
+```
+
 ## Failed Creation Cleanup
 
 An initial candidate that never reaches acceptance may roll back until RDS
