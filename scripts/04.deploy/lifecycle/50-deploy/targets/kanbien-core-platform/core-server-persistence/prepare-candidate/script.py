@@ -43,7 +43,10 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
             return False, None, "aws-resource-missing"
         return False, None, "aws-command-failed"
     try:
-        return True, json.loads(result.stdout), "ok"
+        # AWS accepts several mutation requests with no response body. The
+        # caller must reconcile the named provider operation, never retry an
+        # acknowledged operation because an empty success body was misread.
+        return True, {} if not result.stdout.strip() else json.loads(result.stdout), "ok"
     except json.JSONDecodeError:
         return False, None, "aws-response-invalid"
 

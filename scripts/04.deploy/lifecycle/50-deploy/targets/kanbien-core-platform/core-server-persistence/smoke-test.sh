@@ -32,6 +32,7 @@ expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --ta
 expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mode arbitrary --json
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, sys
+from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
@@ -39,6 +40,13 @@ assert module.reviewable(valid, "REVIEW_IN_PROGRESS", "kanbien-core-platform-per
 assert not module.reviewable({**valid, "Changes":[{"ResourceChange":{"ResourceType":"AWS::S3::Bucket"}}]}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable(valid, "CREATE_COMPLETE", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable({**valid, "Parameters": []}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
+prepare = module.controls()
+class Result:
+    returncode = 0
+    stdout = ""
+    stderr = ""
+with patch.object(prepare.subprocess, "run", return_value=Result()):
+    assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
 PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
 import sys
