@@ -75,9 +75,18 @@ function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
 }
 
 function runtimeCredentialsFromEnvironment(env: NodeJS.ProcessEnv) {
-  const username = requiredEnvironment(env, "PERSISTENCE_RUNTIME_USERNAME");
-  const password = requiredEnvironment(env, "PERSISTENCE_RUNTIME_PASSWORD");
-  return username === undefined || password === undefined ? undefined : { username, password };
+  return credentialObject(env["PERSISTENCE_RUNTIME_CREDENTIALS"]);
+}
+
+function credentialObject(value: unknown): { readonly username: string; readonly password: string } | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined;
+    const username = (parsed as { readonly username?: unknown }).username;
+    const password = (parsed as { readonly password?: unknown }).password;
+    return typeof username === "string" && username.trim() !== "" && typeof password === "string" && password.length > 0 ? { username, password } : undefined;
+  } catch { return undefined; }
 }
 
 function certificateAuthorityFromEnvironment(env: NodeJS.ProcessEnv): string | undefined {

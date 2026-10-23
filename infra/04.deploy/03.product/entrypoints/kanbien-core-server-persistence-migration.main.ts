@@ -27,11 +27,10 @@ import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-
 
 export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = configurationFromEnvironment(env);
-  const username = text(env, "PERSISTENCE_MIGRATION_USERNAME");
-  const password = text(env, "PERSISTENCE_MIGRATION_PASSWORD");
+  const credentials = credentialObject(env["PERSISTENCE_MIGRATION_CREDENTIALS"]);
   const certificateAuthority = certificateAuthorityFromEnvironment(env);
-  if (configuration === undefined || username === undefined || password === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
-  const pool = createNodePostgreSqlConnectionPool(configuration, { username, password, certificateAuthority });
+  if (configuration === undefined || credentials === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
+  const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
   try {
     const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(configuration.schema);
     const result = await createPostgreSqlMigrationRunner(configuration, { pool }, "core-server-persistence-v1").apply({
@@ -50,5 +49,6 @@ function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
 }
 function certificateAuthorityFromEnvironment(env: NodeJS.ProcessEnv): string | undefined { const path = text(env, "PERSISTENCE_POSTGRES_CA_PATH"); try { return path?.startsWith("/app/assets/") ? readFileSync(path, "utf8") : undefined; } catch { return undefined; } }
 function text(env: NodeJS.ProcessEnv, key: string): string | undefined { const value = env[key]; return typeof value === "string" && value.trim() !== "" && value.trim() === value ? value : undefined; }
+function credentialObject(value: unknown): { readonly username: string; readonly password: string } | undefined { try { const parsed: unknown = typeof value === "string" ? JSON.parse(value) : undefined; if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined; const username = (parsed as { username?: unknown }).username, password = (parsed as { password?: unknown }).password; return typeof username === "string" && username.trim() !== "" && typeof password === "string" && password.length > 0 ? { username, password } : undefined; } catch { return undefined; } }
 function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
 if (typeof require !== "undefined" && require.main === module) void runKanbienCoreServerPersistenceMigration();

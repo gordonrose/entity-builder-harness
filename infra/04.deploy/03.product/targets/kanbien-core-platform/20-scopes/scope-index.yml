@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-lifecycle-inventory
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-22"
 #   updated_on: "2026-10-23"
@@ -24,4 +24,13 @@ scopes:
     workload_ownership:
       - core-server-service
       - private-release-verifier-task
+  - id: core-server-persistence
+    lifecycle: candidate
+    predecessor: bootstrap-runtime
+    declaration: core-server-persistence/00-declaration/declaration-contract.yml
+    workload_binding: core-server-persistence/10-workload-binding/workload-binding.yml
+    workload_ownership:
+      - core-server-service
+      - private-release-verifier-task
+      - persistence-migration-task
 legacy_exceptions: []
