@@ -34,9 +34,9 @@ workload:
   network: 10-foundation/network.yml#private-verifier-route
 configuration:
   value_policy: names-and-shapes-only-no-values
-  required_names: [NODE_ENV, HOST, PORT, PLATFORM_SOURCE_COMMIT_SHA, PERSISTENCE_POSTGRES_HOST, PERSISTENCE_POSTGRES_PORT, PERSISTENCE_POSTGRES_DATABASE, PERSISTENCE_POSTGRES_SCHEMA, PERSISTENCE_RUNTIME_SECRET_REFERENCE, PERSISTENCE_MIGRATION_SECRET_REFERENCE, PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS, PERSISTENCE_POSTGRES_CA_PATH]
+  required_names: [NODE_ENV, HOST, PORT, PLATFORM_SOURCE_COMMIT_SHA, PERSISTENCE_POSTGRES_HOST, PERSISTENCE_POSTGRES_PORT, PERSISTENCE_POSTGRES_DATABASE, PERSISTENCE_POSTGRES_SCHEMA, PERSISTENCE_RUNTIME_SECRET_REFERENCE, PERSISTENCE_MIGRATION_SECRET_REFERENCE, PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS, PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS, PERSISTENCE_POSTGRES_CA_PATH]
   optional_names: []
-  secret_names: [PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS]
+  secret_names: [PERSISTENCE_RUNTIME_CREDENTIALS, PERSISTENCE_MIGRATION_CREDENTIALS, PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS]
   secret_dependencies:
     - id: postgresql-runtime-credentials
       dependency: postgresql
@@ -70,6 +70,22 @@ configuration:
       retirement: { owner: persistence-platform, policy: retire-after-scope-replacement, condition: successor-accepted-and-revocation-proved }
       failure_behaviour: { completion: { unavailable: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_MIGRATION_SECRET_UNAVAILABLE }, invalid_shape: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_MIGRATION_SECRET_INVALID } } }
       safe_diagnostics: { unavailable: PERSISTENCE_MIGRATION_SECRET_UNAVAILABLE, invalid_shape: PERSISTENCE_MIGRATION_SECRET_INVALID, credential_rejected: PERSISTENCE_MIGRATION_CREDENTIAL_REJECTED, access_denied: PERSISTENCE_MIGRATION_ACCESS_DENIED }
+    - id: postgresql-runtime-principal-bootstrap
+      dependency: postgresql
+      purpose: migration-initialises-and-rotates-separate-runtime-principal
+      owner: persistence-platform
+      authorised_workloads: [persistence-migration]
+      access_class: migration
+      injection_name: PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS
+      target_reference_id: postgresql-runtime-principal-bootstrap
+      expected_fields: [username, password]
+      delivery: { method: target-secret-store-injection, phase: workload-startup }
+      access_grant: { owner: persistence-platform, policy: migration-only-runtime-principal-bootstrap-reference, privilege_boundary: declared-access-class-boundary-not-effective-privilege-proof, proof_requirement: provider-binding-and-effective-access-observation-required }
+      rotation: { owner: persistence-platform, policy: coordinate-runtime-secret-version-with-migration-and-server-replacement, application_behavior: replacement-required, completed_task_behavior: no-replay }
+      revocation: { owner: persistence-platform, policy: urgent-revocation, condition: credential-compromise-or-retirement, workload_effect: block-new-start-and-stop-active-authorised-workloads, proof_requirement: delivery-and-dependency-access-denied-observation-required }
+      retirement: { owner: persistence-platform, policy: retire-after-scope-replacement, condition: successor-accepted-and-revocation-proved }
+      failure_behaviour: { completion: { unavailable: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_RUNTIME_BOOTSTRAP_SECRET_UNAVAILABLE }, invalid_shape: { outcome: unsuccessful-completion, diagnostic_code: PERSISTENCE_RUNTIME_BOOTSTRAP_SECRET_INVALID } } }
+      safe_diagnostics: { unavailable: PERSISTENCE_RUNTIME_BOOTSTRAP_SECRET_UNAVAILABLE, invalid_shape: PERSISTENCE_RUNTIME_BOOTSTRAP_SECRET_INVALID, credential_rejected: PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIAL_REJECTED, access_denied: PERSISTENCE_RUNTIME_BOOTSTRAP_ACCESS_DENIED }
 dependencies:
   required: [postgresql]
   optional: []

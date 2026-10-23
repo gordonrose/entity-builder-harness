@@ -33,6 +33,8 @@ COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persi
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
 RUN npm ci --ignore-scripts \

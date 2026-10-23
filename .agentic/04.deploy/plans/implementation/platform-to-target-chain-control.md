@@ -232,7 +232,7 @@ establish these provider-neutral decisions:
 
 ### Core-Server Persistence Definition Packet
 
-**Status: defined successor, not yet a candidate scope.**
+**Status: candidate declared; provider implementation and live proof in progress.**
 
 `core-server-persistence` is the next intended scope identity. It will succeed
 the active, dependency-free `bootstrap-runtime` scope for the core server; it
@@ -242,7 +242,7 @@ the bootstrap scope is therefore not inherited automatically by the future
 persistence scope: each scope declares, packages, and proves its own selected
 program, dependencies, workload bindings, and release evidence.
 
-When it is ready to become a candidate, the scope will own the successor
+The candidate owns the successor
 `core-server-service` workload and declare two additional one-shot workloads:
 a structural `persistence-migration` task and a private,
 server-mediated `persistence-verifier` task. The server will use the selected
@@ -252,12 +252,13 @@ credential. The verifier has neither a database credential nor a direct
 database network path: it proves persistence only through the server's private
 route.
 
-Do **not** create `20-scopes/core-server-persistence/` or add it to
-`scope-index.yml` yet. The scope-lifecycle workflow requires a successor to
-be a valid `candidate`, with canonical declarations, local/package proof, a
-release route, an active predecessor, and overlapping workload ownership.
-Creating an incomplete directory or index entry would turn an honest design
-state into a failing, misleading candidate.
+The canonical candidate exists at
+`20-scopes/core-server-persistence/` and is indexed as the governed successor
+to `bootstrap-runtime`. Its declarations, workload binding, composition proof,
+secret dependency contract, health/recovery contract, and diagnostic mapping
+pass their local gates. The accepted bootstrap remains live and is the recovery
+route until the persistence candidate has a complete package, provider, and
+live-evidence chain.
 
 The bounded repository sequence is:
 
@@ -284,10 +285,12 @@ The bounded repository sequence is:
    replacement, compatible rollback, and isolated restore proof. Acceptance
    promotes the candidate; failure leaves `bootstrap-runtime` active.
 
-This packet deliberately leaves provider resources, credentials, AWS secret
-references, database grants, PostgreSQL data, and live deployment outside the
-current authorization. It is the bridge from reusable harness rules to a
-truthful candidate, not an implied cloud operation.
+The execution packet now authorises the bounded target implementation only:
+private RDS PostgreSQL, target-specific Secrets Manager references, isolated
+ECS execution identities, private endpoint/network mapping, native RDS
+backups, and the required live proof/recovery exercises. It does not broaden
+authority to staging, public ingress, unrelated workloads, or a new cost
+waiver.
 
 **Local composition update (2026-10-23):**
 `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts`
@@ -305,10 +308,10 @@ reviewed PostgreSQL adapter.
 
 ### Core-Server Persistence Requirements-to-Control Matrix
 
-`core-server-persistence` is a future successor to the dependency-free
-`bootstrap-runtime` scope. The following matrix is the required design and
-implementation join before a PostgreSQL target mutation is proposed. It does
-not itself create a scope, provider resource, secret, role, or deployment.
+`core-server-persistence` is the declared candidate successor to the
+dependency-free `bootstrap-runtime` scope. The following matrix remains the
+acceptance join: passing local declarations does not promote the candidate or
+substitute for package, provider, and live recovery proof.
 
 | Requirement | Declaration and governing instruction | Deterministic enforcement required | Target or live proof required |
 | --- | --- | --- | --- |
@@ -331,9 +334,13 @@ binding is accepted.
 **Current implementation status (2026-10-23):** the reusable lifecycle
 inventory schema, standard, workflow, validator, regression fixtures, and
 existing `kanbien-core-platform` target/release gate routing are implemented.
-The current index records only `bootstrap-runtime` as active. No
-`core-server-persistence` directory, candidate/successor transition, provider
-resource, secret, role, or deployment route is created by this control.
+The index records `bootstrap-runtime` as the accepted active baseline and
+`core-server-persistence` as its not-live candidate. The candidate has a real
+PostgreSQL composition, migration and verifier programs, an image package
+boundary, and a target-specific provider template. Its first hosted image
+publication exposed an OCI-index scan-routing defect; the workflow now resolves
+and scans the actual AMD64 runnable manifest. No candidate database, secret,
+role, or workload has yet been created, and no live evidence is claimed.
 
 The reusable health-signal mapping rule is also implemented: every
 long-running server declares the provider replacement signal, readiness effect,

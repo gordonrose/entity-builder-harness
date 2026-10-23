@@ -60,11 +60,18 @@ jobs:
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - name: Require clean ECR scan
+        id: scan
         run: |
           set -euo pipefail
-          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}"
-          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
-          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
+          # Docker publishes an OCI index with provenance alongside the amd64
+          # image manifest. ECR Basic scans the runnable child manifest, not
+          # the index selected by ECS, so resolve that child explicitly.
+          scan_digest="$(aws ecr batch-get-image --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="${{ steps.image.outputs.digest }}" --accepted-media-types application/vnd.oci.image.index.v1+json --query 'images[0].imageManifest' --output text | python3 -c 'import json, sys; manifests = json.load(sys.stdin).get("manifests", []); candidates = [item.get("digest") for item in manifests if item.get("mediaType") == "application/vnd.oci.image.manifest.v1+json" and item.get("platform") == {"architecture": "amd64", "os": "linux"}]; assert len(candidates) == 1; print(candidates[0])')"
+          [[ "$scan_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest"
+          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
+          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
           test "${critical:-0}" = 0 && test "${high:-0}" = 0
+          echo "scan_digest=$scan_digest" >> "$GITHUB_OUTPUT"
       - name: Record immutable result
-        run: echo "persistence digest=${{ steps.image.outputs.digest }} source=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+        run: echo "persistence image_digest=${{ steps.image.outputs.digest }} scanned_amd64_manifest=${{ steps.scan.outputs.scan_digest }} source=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

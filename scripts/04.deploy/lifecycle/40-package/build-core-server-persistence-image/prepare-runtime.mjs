@@ -17,9 +17,17 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path, { join, relative } from "node:path";
 const compiledRoot = parseCompiledRoot(process.argv.slice(2));
+for (const entrypoint of [
+  "kanbien-core-server-persistence.main.js",
+  "kanbien-core-server-persistence-verifier.main.js",
+  "kanbien-core-server-persistence-migration.main.js",
+]) {
+  const compiledEntrypoint = join(compiledRoot, "infra/04.deploy/03.product/entrypoints", entrypoint);
+  if (!existsSync(compiledEntrypoint)) throw new Error(`Required compiled entrypoint is missing: ${entrypoint}`);
+}
 const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events", "i18n", "logging", "monitoring", "persistence", "queues", "shared", "tenancy", "validation"];
 const packages = {
   "@kanbien/core": { ".": "packages/core/src/index.js", ...Object.fromEntries(coreModules.map((name) => [`./${name}`, `packages/core/src/${name}/index.js`])) },
