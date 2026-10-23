@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-22T22:26:46Z
-latest_commit_sha: bca7af432d405f666b281ad990defe8a69205503
-chat_duration: 1517237s (17:13:27:17)
+latest_commit_at_utc: 2026-10-23T16:12:47Z
+latest_commit_sha: 13fe5145
+chat_duration: 1581198s (18:07:13:18)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2093,6 +2093,17 @@ Summary: Implemented reusable persistence-safety harness controls and corrective
 
 Durable evidence: .agentic/04.deploy/00-target-alignment, .agentic/04.deploy/60-run, scripts/04.deploy/lifecycle, implementation plan, teaching handbook, and focused smoke/gate output.
 
+
+### 2026-10-23T16:12:47Z - Commit recorded
+
+Commit: `13fe5145`
+
+Message: feat(deploy): govern persistence safety declarations
+
+Summary: Adds reusable scope lifecycle, workload ownership, health/recovery, migration safety and credential lifecycle declaration controls; corrects secret-validation fail-closed behaviour; and records PostgreSQL persistence prerequisites.
+
+ADR impact: No new ADR; extends the existing deployment implementation plan and generic harness controls.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2481,6 +2492,13 @@ Durable evidence: .agentic/04.deploy/00-target-alignment, .agentic/04.deploy/60-
   Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
   ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
 
+
+- Commit: `13fe5145`
+  Time UTC: 2026-10-23T16:12:47Z
+  Message: feat(deploy): govern persistence safety declarations
+  Summary: Adds reusable scope lifecycle, workload ownership, health/recovery, migration safety and credential lifecycle declaration controls; corrects secret-validation fail-closed behaviour; and records PostgreSQL persistence prerequisites.
+  ADR impact: No new ADR; extends the existing deployment implementation plan and generic harness controls.
+
 ## Main Refresh Conflicts
 
 
@@ -2504,9 +2522,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-22T22:26:46Z
-Latest commit SHA: bca7af432d405f666b281ad990defe8a69205503
-Chat duration: 1517237s (17:13:27:17)
+Latest commit at UTC: 2026-10-23T16:12:47Z
+Latest commit SHA: 13fe5145
+Chat duration: 1581198s (18:07:13:18)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
