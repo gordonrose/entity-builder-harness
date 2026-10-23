@@ -55,11 +55,21 @@ with patch.object(prepare.subprocess, "run", return_value=Result()):
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py" <<'PY'
 import importlib.util, sys
+from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("route_update", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-route-update-" + "a" * 12
 change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
 assert module.route_update_reviewable(change, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 assert not module.route_update_reviewable({**change, "Changes":[{"ResourceChange":{"Action":"Modify","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
+class Prepare:
+    def __init__(self): self.calls = 0
+    def aws(self, *parts):
+        self.calls += 1
+        return True, ({**change, "Changes": []} if self.calls == 1 else change), "ok"
+prepare = Prepare()
+with patch.object(module.time, "sleep"):
+    observed, code = module.reviewed_change_set(prepare, name, "CREATE_COMPLETE", "sha256:" + "a" * 64, "a" * 40)
+assert observed == change and code == "ok" and prepare.calls == 2
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py" <<'PY'
 import importlib.util, sys

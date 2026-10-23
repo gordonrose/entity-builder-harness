@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:48:41Z
-latest_commit_sha: 6cd61e15
-chat_duration: 1601352s (18:12:49:12)
+latest_commit_at_utc: 2026-10-23T21:52:03Z
+latest_commit_sha: 94272a0d
+chat_duration: 1601554s (18:12:52:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2440,6 +2440,28 @@ Summary: Rebased task commit: constrained reviewed CloudFormation UPDATE route a
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:51:55Z - Commit recorded
+
+Commit: `c7a84aa0`
+
+Message: fix(deploy): reconcile verifier route change sets
+
+Summary: Makes the bounded verifier route correction reuse its deterministic change set and await CloudFormation review visibility rather than rejecting a normal propagation gap.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-23T21:52:03Z - Commit recorded
+
+Commit: `94272a0d`
+
+Message: fix(deploy): reconcile verifier route change sets
+
+Summary: Rebased task commit: the fixed route control awaits the existing bounded change set becoming reviewable and never creates a duplicate.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3003,6 +3025,20 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased task commit: constrained reviewed CloudFormation UPDATE route allowing only the verifier-to-server egress security-group rule.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c7a84aa0`
+  Time UTC: 2026-10-23T21:51:55Z
+  Message: fix(deploy): reconcile verifier route change sets
+  Summary: Makes the bounded verifier route correction reuse its deterministic change set and await CloudFormation review visibility rather than rejecting a normal propagation gap.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `94272a0d`
+  Time UTC: 2026-10-23T21:52:03Z
+  Message: fix(deploy): reconcile verifier route change sets
+  Summary: Rebased task commit: the fixed route control awaits the existing bounded change set becoming reviewable and never creates a duplicate.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3026,9 +3062,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:48:41Z
-Latest commit SHA: 6cd61e15
-Chat duration: 1601352s (18:12:49:12)
+Latest commit at UTC: 2026-10-23T21:52:03Z
+Latest commit SHA: 94272a0d
+Chat duration: 1601554s (18:12:52:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
