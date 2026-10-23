@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:58:32Z
-latest_commit_sha: 74756f9b
-chat_duration: 1601943s (18:12:59:03)
+latest_commit_at_utc: 2026-10-23T22:00:46Z
+latest_commit_sha: d47f1fd2
+chat_duration: 1602077s (18:13:01:17)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2484,6 +2484,17 @@ Summary: Rebased task commit: fixed target-scoped server replacement with a requ
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:00:46Z - Commit recorded
+
+Commit: `d47f1fd2`
+
+Message: fix(deploy): reconcile persistence replacements
+
+Summary: Adds a no-replay reconciliation route for a replacement controller interrupted after it stopped the original task.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3075,6 +3086,13 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased task commit: fixed target-scoped server replacement with a required subsequent read proof.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `d47f1fd2`
+  Time UTC: 2026-10-23T22:00:46Z
+  Message: fix(deploy): reconcile persistence replacements
+  Summary: Adds a no-replay reconciliation route for a replacement controller interrupted after it stopped the original task.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3098,9 +3116,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:58:32Z
-Latest commit SHA: 74756f9b
-Chat duration: 1601943s (18:12:59:03)
+Latest commit at UTC: 2026-10-23T22:00:46Z
+Latest commit SHA: d47f1fd2
+Chat duration: 1602077s (18:13:01:17)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
