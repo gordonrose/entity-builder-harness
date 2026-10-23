@@ -65,10 +65,20 @@ const persistenceProfileName = requiredPlatformName(
  */
 export interface KanbienCorePersistenceRuntime {
   readonly readiness: () => Promise<"ready" | "not-ready">;
-  readonly createAcceptanceRecord: () => Promise<"created" | "already-exists" | "unavailable" | "uncertain">;
-  readonly readAcceptanceRecord: () => Promise<"found" | "not-found" | "unavailable">;
+  readonly createAcceptanceRecord: (record: KanbienPersistenceAcceptanceRecord) => Promise<"created" | "already-exists" | "conflict" | "unavailable" | "uncertain">;
+  readonly readAcceptanceRecord: (recordId: string) => Promise<KanbienPersistenceAcceptanceReadResult>;
+  readonly deleteAcceptanceRecord: (recordId: string) => Promise<"deleted" | "not-found" | "unavailable" | "uncertain">;
   readonly close: () => Promise<void>;
 }
+
+export interface KanbienPersistenceAcceptanceRecord {
+  readonly id: string;
+  readonly factDigest: string;
+}
+
+export type KanbienPersistenceAcceptanceReadResult =
+  | { readonly outcome: "found"; readonly record: KanbienPersistenceAcceptanceRecord }
+  | { readonly outcome: "not-found" | "unavailable" };
 
 const persistenceProfile: PlatformCapabilityObservabilityProfile = {
   name: persistenceProfileName,
@@ -141,7 +151,11 @@ export function createKanbienCoreServerPersistenceApp(
         auth: { kind: "public" },
         observability: { kind: "profile", profile: persistenceProfileName },
         handler: {
-          handle: async () => createAcceptanceResponse(await persistence.createAcceptanceRecord()),
+          handle: async (request) => {
+            const record = acceptanceRecordFromBody(request.body);
+            if (record === undefined) return invalidAcceptanceRequestResponse();
+            return createAcceptanceResponse(await persistence.createAcceptanceRecord(record));
+          },
         },
       });
       registry.registerRoute({
@@ -151,7 +165,25 @@ export function createKanbienCoreServerPersistenceApp(
         auth: { kind: "public" },
         observability: { kind: "profile", profile: persistenceProfileName },
         handler: {
-          handle: async () => readAcceptanceResponse(await persistence.readAcceptanceRecord(), releaseIdentity),
+          handle: async (request) => {
+            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"]);
+            if (recordId === undefined) return invalidAcceptanceRequestResponse();
+            return readAcceptanceResponse(await persistence.readAcceptanceRecord(recordId), releaseIdentity);
+          },
+        },
+      });
+      registry.registerRoute({
+        name: requiredPlatformName(platformRouteName("kanbien-core-server.persistence.acceptance.delete")),
+        method: "DELETE",
+        path: "/internal/persistence-acceptance",
+        auth: { kind: "public" },
+        observability: { kind: "profile", profile: persistenceProfileName },
+        handler: {
+          handle: async (request) => {
+            const recordId = acceptanceRecordIdFromQuery(request.query["record_id"]);
+            if (recordId === undefined) return invalidAcceptanceRequestResponse();
+            return deleteAcceptanceResponse(await persistence.deleteAcceptanceRecord(recordId));
+          },
         },
       });
     },
@@ -171,6 +203,7 @@ async function persistenceHealthStatus(
 function createAcceptanceResponse(outcome: Awaited<ReturnType<KanbienCorePersistenceRuntime["createAcceptanceRecord"]>>) {
   if (outcome === "created") return { status: 201, body: { outcome } };
   if (outcome === "already-exists") return { status: 200, body: { outcome } };
+  if (outcome === "conflict") return { status: 409, body: { outcome }, observability: { errorClass: "persistence_record_conflict" } };
   return {
     status: 503,
     body: { outcome: "not-confirmed" },
@@ -182,13 +215,54 @@ function readAcceptanceResponse(
   outcome: Awaited<ReturnType<KanbienCorePersistenceRuntime["readAcceptanceRecord"]>>,
   releaseIdentity: PlatformReleaseIdentity,
 ) {
-  if (outcome === "found") return { status: 200, body: { outcome, release: releaseIdentity } };
-  if (outcome === "not-found") return { status: 404, body: { outcome } };
+  if (outcome.outcome === "found") return { status: 200, body: { outcome: outcome.outcome, record: outcome.record, release: releaseIdentity } };
+  if (outcome.outcome === "not-found") return { status: 404, body: { outcome: outcome.outcome } };
   return {
     status: 503,
     body: { outcome: "not-confirmed" },
     observability: { errorClass: "persistence_unavailable" },
   };
+}
+
+function deleteAcceptanceResponse(outcome: Awaited<ReturnType<KanbienCorePersistenceRuntime["deleteAcceptanceRecord"]>>) {
+  if (outcome === "deleted") return { status: 200, body: { outcome } };
+  if (outcome === "not-found") return { status: 404, body: { outcome } };
+  return {
+    status: 503,
+    body: { outcome: "not-confirmed" },
+    observability: { errorClass: outcome === "uncertain" ? "persistence_outcome_uncertain" : "persistence_unavailable" },
+  };
+}
+
+function invalidAcceptanceRequestResponse() {
+  return {
+    status: 400,
+    body: { outcome: "invalid-request" },
+    observability: { errorClass: "persistence_acceptance_request_invalid" },
+  };
+}
+
+function acceptanceRecordFromBody(value: unknown): KanbienPersistenceAcceptanceRecord | undefined {
+  if (!isRecord(value)) return undefined;
+  const id = value["record_id"];
+  const factDigest = value["fact_digest"];
+  return isAcceptanceRecordValue(id) && isFactDigest(factDigest) ? { id, factDigest } : undefined;
+}
+
+function acceptanceRecordIdFromQuery(value: string | readonly string[] | undefined): string | undefined {
+  return typeof value === "string" && isAcceptanceRecordValue(value) ? value : undefined;
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isAcceptanceRecordValue(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z0-9][a-z0-9-]{7,95}$/.test(value);
+}
+
+function isFactDigest(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 }
 
 function requiredPlatformName<T>(result: { readonly ok: true; readonly value: T } | { readonly ok: false }): T {

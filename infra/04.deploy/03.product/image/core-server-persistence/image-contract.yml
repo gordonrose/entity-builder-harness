@@ -1,0 +1,45 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.image.core-server-persistence.contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [architecture, security, sre]
+#   kind: manifest
+#   purpose: Declare the immutable PostgreSQL-backed core-server candidate image boundary.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
+#     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+schema: deploy/core-server-image-contract/v1
+id: kanbien-core-server-persistence-image
+version: 1
+runnable_program_contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+program_id: kanbien-core-server-persistence
+compiled_entrypoint: artifacts/kanbien-core-server-persistence.main.js
+command: [artifacts/kanbien-core-server-persistence.main.js]
+runtime:
+  user: nonroot
+  non_secret_defaults:
+    NODE_ENV: production
+    HOST: 0.0.0.0
+    PORT: "3000"
+    PLATFORM_SOURCE_COMMIT_SHA: build-argument
+    PERSISTENCE_POSTGRES_CA_PATH: /app/assets/rds-eu-west-1-bundle.crt
+runtime_base:
+  reference: gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
+  vulnerability_policy:
+    blocked_severities: [CRITICAL, HIGH]
+    required_evidence: published-ecr-scan
+    exception: explicit-approved-package-exception-only
+health:
+  liveness_path: /livez
+  readiness_path: /readyz
+  release_verification_path: /internal/release-verification
+  proof: external-container-smoke-with-disposable-postgresql
+payload:
+  allowed_program: kanbien-core-server-persistence
+  required_dependency_ids: [platform-persistence, platform-adapter-aws-postgresql, postgresql]

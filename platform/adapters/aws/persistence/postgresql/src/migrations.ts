@@ -37,7 +37,18 @@ export function createPostgreSqlMigrationRunner(
         return invalidMigration("Migration manifest schema must equal the reviewed adapter configuration schema.");
       }
       if (!validManifest(manifest)) return invalidMigration("Migration manifest identifiers, checksums, or statement list are invalid.");
-      return withPostgreSqlTransaction(options, async (client) => applyManifest(client, manifest, toolVersion));
+      return withPostgreSqlTransaction(options, async (client) => {
+        // The advisory lock is scoped to this transaction. A stopped or failed
+        // migration releases it, while a competing executor waits only for the
+        // reviewed bounded lock timeout below. Never replay after a timeout
+        // without first observing the migration-history state.
+        await client.query({ text: "SET LOCAL lock_timeout = '5000ms'" });
+        await client.query({
+          text: "SELECT pg_advisory_xact_lock(hashtext($1))",
+          values: [`kanbien-postgresql-migration:${manifest.schema}`],
+        });
+        return applyManifest(client, manifest, toolVersion);
+      });
     },
   };
 }

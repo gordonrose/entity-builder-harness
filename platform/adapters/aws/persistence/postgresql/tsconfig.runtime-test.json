@@ -15,6 +15,12 @@
       ],
       "@kanbien/platform-persistence": [
         "platform/persistence/src/index.ts"
+      ],
+      "@kanbien/platform-contracts": [
+        "platform/contracts/src/index.ts"
+      ],
+      "@kanbien/platform-observability": [
+        "platform/observability/src/index.ts"
       ]
     }
   }

@@ -68,6 +68,8 @@ for (const [packageName, exportsMap] of Object.entries(packages)) {
 const program = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.js")));
 const serverMain = await import(pathToFileUrl(join(buildOutput, "platform/server/src/main.js")));
 const releaseIdentity = { sourceCommitSha: "local-persistence-composition-proof-2026.10.23" };
+const recordId = "core-persistence-acceptance-0001";
+const factDigest = "a".repeat(64);
 
 await proveUnavailableDependency();
 await proveAvailableDependency();
@@ -80,7 +82,7 @@ async function proveUnavailableDependency() {
   try {
     assertStatus(await request(started.handle.port, "GET", "/livez"), 200, "liveness must remain live while persistence is unavailable");
     assertStatus(await request(started.handle.port, "GET", "/readyz"), 503, "readiness must report the unavailable persistence dependency");
-    assertJson(await request(started.handle.port, "POST", "/internal/persistence-acceptance"), 503, { outcome: "not-confirmed" }, "unavailable persistence must return only a controlled outcome");
+    assertJson(await request(started.handle.port, "POST", "/internal/persistence-acceptance", acceptanceRequest()), 503, { outcome: "not-confirmed" }, "unavailable persistence must return only a controlled outcome");
   } finally {
     await started.close();
   }
@@ -94,8 +96,10 @@ async function proveAvailableDependency() {
     assertStatus(await request(started.handle.port, "GET", "/livez"), 200, "liveness must be live when persistence is ready");
     assertStatus(await request(started.handle.port, "GET", "/readyz"), 200, "readiness must be ready when persistence is ready");
     assertJson(await request(started.handle.port, "GET", "/internal/release-verification"), 200, { release: releaseIdentity }, "candidate must retain bootstrap release verification");
-    assertJson(await request(started.handle.port, "POST", "/internal/persistence-acceptance"), 201, { outcome: "created" }, "server-mediated acceptance create must expose a stable result");
-    assertJson(await request(started.handle.port, "GET", "/internal/persistence-acceptance"), 200, { outcome: "found", release: releaseIdentity }, "server-mediated acceptance read must expose only a stable result and release identity");
+    assertJson(await request(started.handle.port, "POST", "/internal/persistence-acceptance", acceptanceRequest()), 201, { outcome: "created" }, "server-mediated acceptance create must expose a stable result");
+    assertJson(await request(started.handle.port, "GET", `/internal/persistence-acceptance?record_id=${recordId}`), 200, { outcome: "found", record: { id: recordId, factDigest }, release: releaseIdentity }, "server-mediated acceptance read must expose only a stable result and release identity");
+    assertJson(await request(started.handle.port, "DELETE", `/internal/persistence-acceptance?record_id=${recordId}`), 200, { outcome: "deleted" }, "server-mediated cleanup must be explicit and bounded");
+    assertJson(await request(started.handle.port, "POST", "/internal/persistence-acceptance", {}), 400, { outcome: "invalid-request" }, "invalid persistence requests must not reach the runtime");
     assertStatus(await request(started.handle.port, "GET", "/smoke/product"), 404, "composition must not mount product functionality");
   } finally {
     await started.close();
@@ -116,26 +120,38 @@ async function start(persistence) {
   return started.value;
 }
 
+function acceptanceRequest() {
+  return { record_id: recordId, fact_digest: factDigest };
+}
+
 function fakePersistence({ readiness, create, read }) {
   return {
     closed: false,
     readiness: async () => readiness,
     createAcceptanceRecord: async () => create,
-    readAcceptanceRecord: async () => read,
+    readAcceptanceRecord: async () => read === "found" ? { outcome: "found", record: { id: recordId, factDigest } } : { outcome: read },
+    deleteAcceptanceRecord: async () => "deleted",
     close: async function close() { this.closed = true; },
   };
 }
 
-function request(port, method, path) {
+function request(port, method, path, jsonBody) {
   return new Promise((resolve, reject) => {
-    const requestHandle = httpRequest({ host: "127.0.0.1", port, path, method }, (response) => {
+    const body = jsonBody === undefined ? undefined : JSON.stringify(jsonBody);
+    const requestHandle = httpRequest({
+      host: "127.0.0.1",
+      port,
+      path,
+      method,
+      headers: body === undefined ? undefined : { "content-type": "application/json", "content-length": Buffer.byteLength(body) },
+    }, (response) => {
       let body = "";
       response.setEncoding("utf8");
       response.on("data", (chunk) => { body += chunk; });
       response.on("end", () => resolve({ status: response.statusCode, body }));
     });
     requestHandle.on("error", reject);
-    requestHandle.end();
+    requestHandle.end(body);
   });
 }
 

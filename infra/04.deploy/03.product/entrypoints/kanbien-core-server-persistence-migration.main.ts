@@ -1,0 +1,54 @@
+// agentic-artifact:
+//   schema: agentic-artifact/v3
+//   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-migration
+//   version: 1
+//   status: draft
+//   created_on: "2026-10-23"
+//   updated_on: "2026-10-23"
+//   layer: 04.deploy
+//   domain: deployment.core-server-persistence
+//   disciplines: [security, sre]
+//   kind: code
+//   purpose: Apply the reviewed, checksummed persistence migration manifest with the isolated migration credential.
+//   portability: { class: internal, targets: [kanbien-core-platform] }
+//   used_by:
+//   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
+//     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
+
+import { readFileSync } from "node:fs";
+import {
+  createNodePostgreSqlConnectionPool,
+  createPostgreSqlMigrationRunner,
+  postgreSqlMigrationChecksum,
+  postgreSqlPersistenceConfiguration,
+  postgreSqlPersistenceFoundationMigration,
+} from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
+
+export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  const configuration = configurationFromEnvironment(env);
+  const username = text(env, "PERSISTENCE_MIGRATION_USERNAME");
+  const password = text(env, "PERSISTENCE_MIGRATION_PASSWORD");
+  const certificateAuthority = certificateAuthorityFromEnvironment(env);
+  if (configuration === undefined || username === undefined || password === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
+  const pool = createNodePostgreSqlConnectionPool(configuration, { username, password, certificateAuthority });
+  try {
+    const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(configuration.schema);
+    const result = await createPostgreSqlMigrationRunner(configuration, { pool }, "core-server-persistence-v1").apply({
+      schema: configuration.schema,
+      migrations: [postgreSqlPersistenceFoundationMigration(configuration.schema), { ...acceptance, checksum: postgreSqlMigrationChecksum(acceptance.statements) }],
+    });
+    if (!result.ok) return rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED");
+    console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_MIGRATION_APPLIED" }));
+  } catch { rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED"); } finally { await pool.end(); }
+}
+function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
+  const host = text(env, "PERSISTENCE_POSTGRES_HOST"), database = text(env, "PERSISTENCE_POSTGRES_DATABASE"), schema = text(env, "PERSISTENCE_POSTGRES_SCHEMA"), reference = text(env, "PERSISTENCE_MIGRATION_SECRET_REFERENCE"), port = text(env, "PERSISTENCE_POSTGRES_PORT");
+  if (host === undefined || database === undefined || schema === undefined || reference === undefined || port === undefined || !/^\d+$/.test(port)) return undefined;
+  const checked = postgreSqlPersistenceConfiguration({ host, database, schema, runtimeCredentialSecretReference: reference, port: Number(port), maximumPoolSize: 1, connectionTimeoutMs: 5_000, idleTimeoutMs: 10_000, statementTimeoutMs: 240_000, tls: { mode: "verify-full", certificateAuthoritySource: "injected" } });
+  return checked.ok ? checked.value : undefined;
+}
+function certificateAuthorityFromEnvironment(env: NodeJS.ProcessEnv): string | undefined { const path = text(env, "PERSISTENCE_POSTGRES_CA_PATH"); try { return path?.startsWith("/app/assets/") ? readFileSync(path, "utf8") : undefined; } catch { return undefined; } }
+function text(env: NodeJS.ProcessEnv, key: string): string | undefined { const value = env[key]; return typeof value === "string" && value.trim() !== "" && value.trim() === value ? value : undefined; }
+function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
+if (typeof require !== "undefined" && require.main === module) void runKanbienCoreServerPersistenceMigration();
