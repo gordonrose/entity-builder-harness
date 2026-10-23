@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:46:42Z
-latest_commit_sha: f8a320c0
-chat_duration: 1604833s (18:13:47:13)
+latest_commit_at_utc: 2026-10-23T22:47:20Z
+latest_commit_sha: 140e42c3
+chat_duration: 1604871s (18:13:47:51)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2583,6 +2583,17 @@ Summary: Rebased onto current main; exact bounded restoration-surface task commi
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:47:20Z - Commit recorded
+
+Commit: `140e42c3`
+
+Message: govern restoration surface command wrapper
+
+Summary: Added the required artifact header after the governed runner correctly rejected the wrapper.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3237,6 +3248,13 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased onto current main; exact bounded restoration-surface task commit is f8a320c0.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `140e42c3`
+  Time UTC: 2026-10-23T22:47:20Z
+  Message: govern restoration surface command wrapper
+  Summary: Added the required artifact header after the governed runner correctly rejected the wrapper.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3260,9 +3278,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:46:42Z
-Latest commit SHA: f8a320c0
-Chat duration: 1604833s (18:13:47:13)
+Latest commit at UTC: 2026-10-23T22:47:20Z
+Latest commit SHA: 140e42c3
+Chat duration: 1604871s (18:13:47:51)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
