@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:42:00Z
-latest_commit_sha: 001014b6
-chat_duration: 1604551s (18:13:42:31)
+latest_commit_at_utc: 2026-10-23T22:42:31Z
+latest_commit_sha: 2772a57e
+chat_duration: 1604582s (18:13:43:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2550,6 +2550,17 @@ Summary: Added a qualified restore-verifier image entrypoint, isolated restored-
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:42:31Z - Commit recorded
+
+Commit: `2772a57e`
+
+Message: govern isolated persistence restore proof
+
+Summary: Rebased onto current origin/main; restore-verifier task commit now resolves to 2772a57e.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3183,6 +3194,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added a qualified restore-verifier image entrypoint, isolated restored-database network surface, workload declarations, recovery rehearsal control, and shared-runtime-secret validation rule; local and Docker PostgreSQL/TLS checks pass.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `2772a57e`
+  Time UTC: 2026-10-23T22:42:31Z
+  Message: govern isolated persistence restore proof
+  Summary: Rebased onto current origin/main; restore-verifier task commit now resolves to 2772a57e.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3206,9 +3224,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:42:00Z
-Latest commit SHA: 001014b6
-Chat duration: 1604551s (18:13:42:31)
+Latest commit at UTC: 2026-10-23T22:42:31Z
+Latest commit SHA: 2772a57e
+Chat duration: 1604582s (18:13:43:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
