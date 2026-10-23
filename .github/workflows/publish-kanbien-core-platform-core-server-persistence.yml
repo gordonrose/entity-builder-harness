@@ -46,6 +46,7 @@ jobs:
           bash scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --json
           bash scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --workload-binding infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml --json
           bash scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh --tag kanbien-core-server-persistence:qualification
+          bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh --tag kanbien-core-server-persistence:qualification --port 39455
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
       - uses: aws-actions/amazon-ecr-login@v2
