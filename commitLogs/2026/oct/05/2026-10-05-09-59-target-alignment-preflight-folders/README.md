@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:43:39Z
-latest_commit_sha: 0259d4c09210ae45a4f1c6e13c6648bc9c5f5b53
-chat_duration: 1601050s (18:12:44:10)
+latest_commit_at_utc: 2026-10-23T21:43:48Z
+latest_commit_sha: a1d6de9a7f97f0755864b72d53488c2602bc9160
+chat_duration: 1601059s (18:12:44:19)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2407,6 +2407,17 @@ Summary: Added the explicit verifier-to-current-server egress rule and a no-repl
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:43:48Z - Commit recorded
+
+Commit: `a1d6de9a7f97f0755864b72d53488c2602bc9160`
+
+Message: fix(deploy): connect private persistence verifier
+
+Summary: Rebased task commit adds explicit verifier-to-current-server egress and no-replay verifier reconciliation after the safe route failure.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2949,6 +2960,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added the explicit verifier-to-current-server egress rule and a no-replay verifier reconciliation route after the first verifier safely exposed the missing route.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `a1d6de9a7f97f0755864b72d53488c2602bc9160`
+  Time UTC: 2026-10-23T21:43:48Z
+  Message: fix(deploy): connect private persistence verifier
+  Summary: Rebased task commit adds explicit verifier-to-current-server egress and no-replay verifier reconciliation after the safe route failure.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2972,9 +2990,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:43:39Z
-Latest commit SHA: 0259d4c09210ae45a4f1c6e13c6648bc9c5f5b53
-Chat duration: 1601050s (18:12:44:10)
+Latest commit at UTC: 2026-10-23T21:43:48Z
+Latest commit SHA: a1d6de9a7f97f0755864b72d53488c2602bc9160
+Chat duration: 1601059s (18:12:44:19)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
