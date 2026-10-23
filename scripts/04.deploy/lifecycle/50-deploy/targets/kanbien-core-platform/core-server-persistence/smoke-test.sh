@@ -75,6 +75,19 @@ unlocked = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "PubliclyA
 with patch.object(module, "aws", return_value=(True, unlocked, "ok")):
     assert module.protected_target_database_after_unlock() == (True, "ok")
 PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py" <<'PY'
+import importlib.util, sys
+
+spec = importlib.util.spec_from_file_location("migration", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+arn = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "a" * 32
+definition = "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:2"
+task = {"taskArn": arn, "taskDefinitionArn": definition, "lastStatus": "STOPPED"}
+assert module.current_reconciliation_task(task, arn, definition) == "ok"
+assert module.current_reconciliation_task({**task, "lastStatus": "RUNNING"}, arn, definition) == "persistence-migration-reconciliation-task-not-terminal"
+assert module.current_reconciliation_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "persistence-migration-reconciliation-task-not-current"
+assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "a" * 32, definition) == "persistence-migration-reconciliation-task-identity-invalid"
+PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
 import sys
 template = open(sys.argv[1], encoding="utf-8").read()

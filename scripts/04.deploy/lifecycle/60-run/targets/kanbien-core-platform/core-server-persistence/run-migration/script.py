@@ -14,6 +14,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[8]
 PROFILE, REGION, CLUSTER = "kanbien-dev", "eu-west-1", "kanbien-core-platform"
+ACCOUNT = "337159794548"
 STACK, FOUNDATION = "kanbien-core-platform-core-server-persistence", "kanbien-core-platform-foundation"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 
@@ -81,6 +82,18 @@ def task_exit(task: dict[str, object]) -> bool:
     return isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) and type(containers[0].get("exitCode")) is int and containers[0].get("exitCode") == 0
 
 
+def current_reconciliation_task(task: dict[str, object], requested_arn: str, task_definition: str) -> str:
+    """Reject a replay unless the supplied task is this deployment's terminal task."""
+    expected_prefix = f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/"
+    if not requested_arn.startswith(expected_prefix):
+        return "persistence-migration-reconciliation-task-identity-invalid"
+    if task.get("taskArn") != requested_arn or task.get("taskDefinitionArn") != task_definition:
+        return "persistence-migration-reconciliation-task-not-current"
+    if task.get("lastStatus") != "STOPPED":
+        return "persistence-migration-reconciliation-task-not-terminal"
+    return "ok"
+
+
 def migration_log_accepted(task: dict[str, object]) -> tuple[bool, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
@@ -95,11 +108,27 @@ def migration_log_accepted(task: dict[str, object]) -> tuple[bool, str]:
     return False, "persistence-migration-not-confirmed"
 
 
+def accepted_completion(task: dict[str, object], seconds: int) -> int:
+    observed_duration = duration(task)
+    if observed_duration is None:
+        return report("blocked", "persistence-migration-duration-unavailable")
+    if observed_duration > seconds:
+        return report("blocked", "persistence-migration-completion-deadline-exceeded")
+    if not task_exit(task):
+        return report("blocked", "persistence-migration-unsuccessful-completion")
+    accepted, code = migration_log_accepted(task)
+    if not accepted:
+        return report("blocked", code)
+    arn = task.get("taskArn")
+    return report("accepted", "persistence-migration-applied", facts={"migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--reconcile-task")
     args, unknown = parser.parse_known_args()
-    if unknown:
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)):
         return report("blocked", "persistence-migration-arguments-invalid")
     seconds = deadline()
     if seconds is None:
@@ -114,6 +143,16 @@ def main() -> int:
     subnets = foundation.get("PrivateSubnetIds")
     if not all(isinstance(value, str) and value for value in (task_definition, security_group, subnets)):
         return report("blocked", "persistence-migration-network-or-task-definition-unavailable")
+    if args.reconcile_task is not None:
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.reconcile_task)
+        listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
+        if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
+            return report("blocked", "persistence-migration-controller-observation-uncertain")
+        task = listed[0]
+        code = current_reconciliation_task(task, args.reconcile_task, task_definition)
+        if code != "ok":
+            return report("blocked", code)
+        return accepted_completion(task, seconds)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network)
     tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
@@ -133,17 +172,7 @@ def main() -> int:
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
         return report("blocked", "persistence-migration-controller-deadline-remote-task-still-running")
-    observed_duration = duration(current)
-    if observed_duration is None:
-        return report("blocked", "persistence-migration-duration-unavailable")
-    if observed_duration > seconds:
-        return report("blocked", "persistence-migration-completion-deadline-exceeded")
-    if not task_exit(current):
-        return report("blocked", "persistence-migration-unsuccessful-completion")
-    accepted, code = migration_log_accepted(current)
-    if not accepted:
-        return report("blocked", code)
-    return report("accepted", "persistence-migration-applied", facts={"migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+    return accepted_completion(current, seconds)
 
 
 if __name__ == "__main__":

@@ -67,6 +67,17 @@ automatically.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --json > "$migration_report"
 ```
 
+If the controller is interrupted after submitting a task, do **not** invoke the
+no-argument command again. Reconcile only the exact already-submitted task.
+The control accepts it only when its task ARN belongs to this target cluster,
+its task definition matches the current candidate, it is terminal, it exited
+successfully within the declared deadline, and its safe acceptance log is
+present. Otherwise it blocks and release acceptance remains blocked.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --reconcile-task "$migration_task_arn" --json > "$migration_report"
+```
+
 Then run the fixed private verifier through the service. It has no database
 credential and no database network route. `create` proves a meaningful server
 write/read path; `read` proves retained data after a controlled server
