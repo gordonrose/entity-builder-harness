@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply only the reviewed verifier-to-current-server route correction."""
 from __future__ import annotations
-import argparse, importlib.util, json, subprocess, tempfile
+import argparse, importlib.util, json, subprocess, tempfile, time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[8]
@@ -25,6 +25,25 @@ def route_update_reviewable(change: object, stack_status: object, name: str, dig
     changes = [item.get("ResourceChange", {}) for item in change.get("Changes", []) if isinstance(item, dict)]
     return len(changes) == 1 and changes[0].get("Action") == "Add" and changes[0].get("ResourceType") == "AWS::EC2::SecurityGroupEgress" and changes[0].get("LogicalResourceId") == "VerifierEgressToServer"
 
+def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: str, revision: str) -> tuple[dict | None, str]:
+    """Await the named, already-created change set becoming fully reviewable.
+
+    CloudFormation can briefly report CREATE_COMPLETE before the `Changes`
+    collection is visible. The fixed name makes this reconciliation idempotent:
+    it can only ever inspect and, later, execute the one bounded correction.
+    """
+    last_code = "persistence-private-route-update-not-reviewable"
+    for attempt in range(6):
+        ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+        if not ok:
+            return None, code
+        if route_update_reviewable(change, stack_status, name, digest, revision):
+            return change, "ok"
+        last_code = "persistence-private-route-update-not-reviewable"
+        if attempt < 5:
+            time.sleep(2)
+    return None, last_code
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path); parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
@@ -46,12 +65,15 @@ def main() -> int:
     digest, revision = receipt["image_digest"], receipt["source_revision"]
     name = f"kanbien-core-platform-persistence-route-update-{digest[7:19]}"
     parameters = [{"ParameterKey": key, "ParameterValue": value} for key, value in (("VpcId", infrastructure["VpcId"]), ("VpcCidr", infrastructure["VpcCidr"]), ("PrivateSubnetIds", infrastructure["PrivateSubnetIds"]), ("ClusterArn", infrastructure["ClusterArn"]), ("NamespaceId", infrastructure["NamespaceId"]), ("EndpointSecurityGroupId", infrastructure["EndpointSecurityGroupId"]), ("S3ArtifactPrefixListId", infrastructure["S3ArtifactPrefixListId"]), ("VerifierSecurityGroupId", infrastructure["VerifierSecurityGroupId"]), ("LogGroupName", infrastructure["LogGroupName"]), ("ImageRepositoryArn", "arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"), ("ImageRepositoryUri", foundation["RepositoryUri"]), ("ImageDigest", digest), ("SourceRevision", revision))]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
-        json.dump(parameters, file); file.flush()
-        ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
-    if not ok: return report("blocked", code)
-    ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
-    if not ok or not route_update_reviewable(change, status, name, digest, revision): return report("blocked", code if not ok else "persistence-private-route-update-not-reviewable")
+    ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok:
+        if code != "aws-resource-missing": return report("blocked", code)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
+            json.dump(parameters, file); file.flush()
+            ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
+        if not ok: return report("blocked", code)
+    change, code = reviewed_change_set(prepare, name, status, digest, revision)
+    if change is None: return report("blocked", code)
     ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok: return report("blocked", code)
     waited = subprocess.run(["aws","cloudformation","wait","stack-update-complete","--stack-name",STACK,"--profile",prepare.PROFILE,"--region",prepare.REGION], capture_output=True, text=True)
