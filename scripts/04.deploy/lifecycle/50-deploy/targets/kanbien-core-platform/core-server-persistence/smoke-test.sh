@@ -59,5 +59,8 @@ assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-
 verifier = template[template.index("VerifierExecutionRole:"):template.index("Outputs:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template
+for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
+    expected = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
+    assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
 PY
 echo 'Core-server-persistence fixed target controls passed.'

@@ -118,11 +118,16 @@ def infrastructure_parameters(outputs: dict[str, str]) -> tuple[dict[str, str] |
     group_sets = {tuple(item.get("Groups", [{}])[0].get("GroupId") for _ in [0]) for item in selected if isinstance(item.get("Groups"), list) and len(item["Groups"]) == 1 and isinstance(item["Groups"][0], dict)}
     if len(group_sets) != 1 or len(next(iter(group_sets))) != 1 or not next(iter(group_sets))[0]:
         return None, "persistence-endpoint-security-group-unavailable"
+    ok, prefix_lists, code = aws("ec2", "describe-managed-prefix-lists", "--filters", f"Name=prefix-list-name,Values=com.amazonaws.{REGION}.s3")
+    lists = prefix_lists.get("PrefixLists") if ok and isinstance(prefix_lists, dict) else None
+    prefix_ids = [item.get("PrefixListId") for item in lists or [] if isinstance(item, dict) and isinstance(item.get("PrefixListId"), str)]
+    if len(prefix_ids) != 1:
+        return None, code if not ok else "persistence-artifact-object-store-route-unavailable"
     return {
         "VpcId": outputs["VpcId"], "VpcCidr": cidr, "PrivateSubnetIds": outputs["PrivateSubnetIds"],
         "ClusterArn": outputs["ClusterArn"], "NamespaceId": namespace,
         "EndpointSecurityGroupId": next(iter(group_sets))[0], "VerifierSecurityGroupId": outputs["VerifierSecurityGroupId"],
-        "LogGroupName": outputs["LogGroupName"],
+        "S3ArtifactPrefixListId": prefix_ids[0], "LogGroupName": outputs["LogGroupName"],
     }, "ok"
 
 
