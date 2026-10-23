@@ -1,0 +1,34 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.template.scope-lifecycle-inventory.v1
+#   version: 1
+#   status: active
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.scope-lifecycle
+#   disciplines: [agentic, security, sre]
+#   kind: template
+#   purpose: Provide a safe target-local lifecycle inventory shape for new-framework scopes.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.workflow.govern-scope-lifecycle
+#     path: .agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md
+schema: deploy/scope-lifecycle-inventory/v1
+target: replace-with-target
+scopes:
+  - id: replace-with-active-scope
+    lifecycle: active
+    declaration: replace-with-active-scope/00-declaration/declaration-contract.yml
+    workload_binding: replace-with-active-scope/10-workload-binding/workload-binding.yml
+    workload_ownership: [replace-with-bound-workload-id]
+
+  # Add only when an accepted scope is being succeeded. It is not active and
+  # cannot accept a release until the governed transition is complete.
+  - id: replace-with-candidate-scope
+    lifecycle: candidate
+    predecessor: replace-with-active-scope
+    declaration: replace-with-candidate-scope/00-declaration/declaration-contract.yml
+    workload_binding: replace-with-candidate-scope/10-workload-binding/workload-binding.yml
+    workload_ownership: [replace-with-bound-workload-id]
+legacy_exceptions: []

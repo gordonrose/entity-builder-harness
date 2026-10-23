@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 39
+version: 47
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-22"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -157,32 +157,173 @@ The target-specific selection is recorded in
 Before any PostgreSQL target mutation, the first implementation packet must
 establish these provider-neutral decisions:
 
-1. **Scope and proof:** one small synthetic persistence operation, proved by a
-   write once and retrieval after workload replacement; it must not become a
-   delivery execution journal.
+1. **Scope and proof:** one small synthetic persistence operation, proved by
+   committing a record, replacing the original server task, then retrieving
+   the same original facts through the replacement server. A missing record
+   is a failure; the verifier must not silently recreate it during the read.
+   The operation must not become a delivery execution journal.
 2. **Secret and identity separation:** separate runtime and migration credential
    purposes. The server receives only its runtime credential; a separately
    declared one-shot migration task receives the structural-change credential.
    The implemented Secret Dependency Contract owns the non-secret declaration;
-   later provider work maps its references to concrete secret-store and role
-   policy facts.
+   later provider work maps its references to concrete secret-store, role,
+   grant, rotation-owner, and task-replacement facts. Startup injection does
+   not refresh a running task. The PostgreSQL design must specify its rotation
+   strategy and permitted interruption; coordinate the database credential,
+   secret version, and replacement tasks; recover from partial failure; never
+   replay an active or completed one-shot task automatically; and accept the
+   rotation only after a replacement task makes a fresh connection and performs
+   its meaningful operation. It must not assume uninterrupted rotation or an
+   alternating-user design without a reviewed need.
 3. **Startup and readiness:** invalid configuration or malformed injected
    credential causes a safe startup exit. A reachable-but-unavailable database
    keeps the process live but not ready, with bounded reconnect attempts.
+   The provider binding must separately map process liveness, dependency
+   readiness, candidate acceptance, and service-replacement behaviour. A
+   dependency readiness failure must not accidentally trigger an ECS
+   replacement loop merely because a container health check calls the same
+   endpoint.
    Credential rejection or required database permission denial also prevents
    readiness and requires a target correction, not an image rollback.
 4. **Least privilege:** readiness must prove secure connection, expected
    schema/version state, and minimum runtime access. The runtime credential
    must be proved unable to perform migration-style structural operations.
-5. **Migration compatibility:** use expand → deploy → verify → later contract.
-   Each receipt records safe identity, before/after schema version, immutable
-   candidate, timestamps, result, compatibility class, and verification. A
-   failed migration blocks server release; structural work is never blindly
+5. **Migration compatibility and execution:** use expand → deploy → verify →
+   later contract. Additive change is a strategy, not proof of compatibility
+   or safe execution. The contract must state one executor at a time, bounded
+   migration and lock waits, transaction behaviour, interruption handling,
+   and the safe response when completion is uncertain. Each receipt records
+   safe identity, before/after schema version, immutable candidate,
+   timestamps, result, compatibility class, and verification. A failed or
+   uncertain migration blocks server release; structural work is never blindly
    retried or assumed reversible.
+   Initial role setup cannot pre-grant tables, sequences, and functions that a
+   later migration creates. The provider design must name object ownership and
+   either configure default privileges for the actual creating role or apply
+   the necessary runtime grants within each migration. Acceptance must prove
+   the runtime identity can perform its intended operation and cannot perform
+   prohibited structural operations; privileged bootstrap access stays outside
+   the application server.
 6. **Still required before live PostgreSQL work:** network/TLS relationship,
    provider access mappings, backup/restore and deletion protection, safe
    observability/alerts, local integration proof, and a separately approved
-   live creation/update/recovery rehearsal.
+   live creation/update/recovery rehearsal. The initial scope uses RDS-native
+   automated backups, retention, controlled manual snapshots, and restore
+   proof; it does **not** introduce AWS Backup. A restore proof restores a
+   recovery point containing a known synthetic record to a new isolated
+   database, then reads that record through an isolated application. It is
+   distinct from server replacement and image rollback. AWS Backup remains a
+   future foundation capability requiring its own policy, retention/copy,
+   cost, access, restore, and cross-account/region design review before
+   adoption.
+7. **Diagnostic-control package:** before an agent may create, update,
+   retire, restore, or roll back a PostgreSQL dependency, implement and route
+   the reusable diagnostic contract described below. `platform/persistence`
+   owns only provider-neutral persistence outcomes; the selected provider
+   adapter translates RDS/PostgreSQL driver and provider responses into those
+   outcomes. The existing adapter home is
+   `platform/adapters/aws/persistence/postgresql/`; a later naming migration
+   requires its own compatibility plan and must not create a competing second
+   adapter. The scope declaration records the workload consequence and safe
+   proof; target controls record provider-operation evidence. No layer may
+   expose a hostname, connection string, credential, certificate body, raw
+   provider response, personal data, or a guessed infrastructure cause merely
+   to make a failure actionable.
+
+### Core-Server Persistence Requirements-to-Control Matrix
+
+`core-server-persistence` is a future successor to the dependency-free
+`bootstrap-runtime` scope. The following matrix is the required design and
+implementation join before a PostgreSQL target mutation is proposed. It does
+not itself create a scope, provider resource, secret, role, or deployment.
+
+| Requirement | Declaration and governing instruction | Deterministic enforcement required | Target or live proof required |
+| --- | --- | --- | --- |
+| **Scope succession and exclusive ownership** | The scope index declares lifecycle state (`active`, `accepted-historical`, or a governed candidate state), predecessor/successor, and the canonical workload identities each active scope owns. The scope-lifecycle workflow governs activation, reversion, and retirement. | The active-scope inventory discovers all candidate scope directories, rejects undeclared state, requires canonical files, and rejects two active scopes claiming the same server workload. It permits historical bootstrap evidence without treating it as active. | Candidate activation proves the persistence scope owns the core server; reversion restores bootstrap only through its existing dependency-free route and records why the successor was not accepted. |
+| **Three workload types** | The persistence scope declares: a long-running `core-server`, a one-shot `persistence-migration`, and a one-shot private `persistence-verifier`. Each has its own health/completion, identity, timeout, and retry facts. | The workload-aware health/recovery validator rejects missing, mismatched, or copied workload declarations and bindings. | The server proves readiness; migration and verifier prove meaningful completion, deadline, exit/result, and safe evidence. |
+| **Verifier is server-mediated** | The verifier declares private route access only. It has no PostgreSQL secret, database role, or direct database connection allowance. | The declaration and secret-dependency checks reject a verifier credential for its tested dependency, a direct route claim, or a non-zero direct dependency connection allowance. A later capacity check governs server/migration totals. | The verifier creates and commits one synthetic record through the server, replacement occurs, and the replacement server reads the original facts without recreating it. |
+| **Runtime capacity and outage behaviour** | The scope records maximum steady and overlap server tasks, per-server pool limit, migration allowance, database reserve, connection/pool/statement timeouts, retry/backoff, and uncertain-write treatment. | A capacity validator proves the sum remains within declared database capacity and rejects unbounded settings. A provider-binding check requires an explicit mapping of liveness, readiness, candidate acceptance, and replacement signals. | A controlled database-outage rehearsal proves the server does not claim ready, recovers through bounded retry after dependency recovery, and is not repeatedly replaced solely because dependency readiness is unavailable. |
+| **Credentials and grants** | Secret dependency declarations record separate runtime and migration purposes, accountable grant owner/policy, a declared access-class boundary, rotation owner/policy, no replay of completed tasks after rotation, revocation owner/policy/condition, and retirement route. Provider bindings later name the actual issuer, role, grant, and supply route. | Validators reject malformed/mismatched credential declarations, missing grant/revocation ownership, value-bearing artifacts, unsupported live refresh, replay-after-rotation, or revocation that does not block new starts and stop active authorised workloads. They do not prove an executable provider policy or effective database privilege. | Target proof shows the correct task receives the correct reference; permitted runtime operation and prohibited structural operation prove effective privilege. Rotation proof covers credential/secret/replacement coordination, partial failure recovery, and fresh meaningful operation. Revocation proof covers both new access and existing sessions. |
+| **Migration execution and compatibility** | The migration declaration records ordered/checksummed changes, one-executor discipline, bounded lock and execution waits, transaction boundary, interruption/unknown-outcome handling, compatibility with the accepted persistence-capable release, and explicit replay handling: checksum-matching no-op, checksum-mismatch release block, and concurrent-executor rejection. | The reusable declaration fixtures reject unsafe replay handling. The PostgreSQL slice must additionally cover its real concurrent-executor rejection, lock timeout, interruption/unknown outcome, checksum mismatch, and incompatible candidate behaviour. | The migration task runs once with a bounded result; the deployed candidate and prior persistence-capable release prove the declared compatibility claim. |
+| **Synthetic data and cleanup** | The scope records stable acceptance-record identity, equivalent repeat returning the original record without duplicate, concurrent create preserving exactly one fact set, conflicting reuse rejection without overwrite, lost-response-after-commit reconciliation before retry, retention through replacement and restore acceptance, cleanup actor, server-mediated cleanup route, and abandoned-verifier cleanup route. | The reusable declaration fixtures reject unsafe retry, duplicate, overwrite, premature cleanup, and direct-dependency cleanup claims. The PostgreSQL slice must prove one original record/fact set survives every declared retry case and reject silent recreation in its real verifier. | Live proof retains the record through replacement and restore proof, then records governed cleanup. |
+| **Replacement, rollback, and restoration are separate** | Recovery declarations name three separate operations: server task replacement, image rollback, and database restoration. Image rollback compatibility is claimed only between persistence-capable releases; dependency-free bootstrap does not prove it. | Release-contract checks reject a conflated recovery claim or rollback evidence that lacks the required compatible release identity. | Replacement proves durable record survival; rollback proves the prior persistence-capable image can operate against resulting schema/data; isolated restore proves a known recovery-point record can be read through an isolated application. |
+| **Acceptance evidence chain** | The release contract binds candidate source/image identity, migration result/schema version, task definition, readiness, server-mediated verifier result, and accepted-release record. | Release and target-declaration gates reject missing, contradictory, stale, or cross-candidate evidence. | One candidate has a complete matching evidence chain before it becomes accepted. |
+
+The existing `bootstrap-runtime` health wiring is not a template for the
+persistence scope: it currently uses `/readyz` as its ECS container health
+check because it is dependency-free. The persistence scope must select and
+prove its distinct liveness/readiness/replacement mapping before a provider
+binding is accepted.
+
+**Current implementation status (2026-10-23):** the reusable lifecycle
+inventory schema, standard, workflow, validator, regression fixtures, and
+existing `kanbien-core-platform` target/release gate routing are implemented.
+The current index records only `bootstrap-runtime` as active. No
+`core-server-persistence` directory, candidate/successor transition, provider
+resource, secret, role, or deployment route is created by this control.
+
+The reusable health-signal mapping rule is also implemented: every
+long-running server declares the provider replacement signal, readiness effect,
+and candidate-acceptance signals, and its workload binding must repeat that
+mapping. A dependency-bearing server is rejected unless replacement follows
+liveness. The accepted dependency-free bootstrap accurately records its
+existing readiness-based ECS replacement mapping with a bounded
+dependency-free basis; its CloudFormation and live runtime are unchanged. A
+future provider-specific control must verify the persistence scope's selected
+runtime realization actually implements its liveness mapping before candidate
+acceptance.
+
+The reusable server-mediated verifier proof contract and secret-dependency
+link are also implemented. A completion verifier may declare a tested required
+dependency only through a private application route; it is rejected if it
+claims a direct credential, network path, or non-zero direct connection limit.
+The secret validator links each credential to a declared dependency and rejects
+that verifier receiving a credential for the dependency it tests. This remains
+declaration-level coverage: no persistence verifier, provider route mapping,
+database credential, synthetic record, or live replacement proof has yet been
+created.
+
+The reusable migration-execution declaration and matching secret check are
+also implemented. A structural-change task must name its required dependency,
+matching migration credential class, ordered/checksummed manifest,
+single-executor rule, bounded lock/execution waits, transaction boundary,
+non-retry interruption rule, fresh-observation requirement for uncertain
+outcomes, and expand/deploy/verify/contract-later compatibility strategy.
+This validates intended behaviour locally; it does not run a migration, prove a
+provider lock, or establish a PostgreSQL schema/release compatibility claim.
+
+The reusable three-part persistence-recovery contract is now also implemented
+for every scope that declares migration execution. It requires a named
+server-mediated verifier for retained-data replacement proof; image restoration
+only to a persistence-capable accepted predecessor with schema compatibility
+and no database reversal; and source-safe recovery-point restoration to a new
+isolated database verified by an isolated application. The contract records
+required-before-acceptance proof boundaries, not fictitious live evidence. A
+later release-evidence control must bind actual candidate identities and proof
+records before a persistence scope is accepted.
+
+The reusable idempotency and cleanup contract is now also implemented for a
+server-mediated verifier and migration task. A verifier must reconcile a
+stable synthetic acceptance record rather than create duplicates or overwrite
+facts when retries race, identifiers conflict, or a response is lost after a
+commit. It retains that record through the replacement and restore acceptance
+boundary, then removes only that synthetic record through a governed
+server-mediated cleanup path. A migration declares checksum-matching no-op,
+checksum-mismatch release block, and pre-apply concurrent-executor rejection.
+These are declaration-level controls and regression fixtures only: no
+PostgreSQL verifier, migration lock, synthetic record, or cleanup has been run
+yet.
+
+The reusable credential operational-lifecycle contract is now also implemented.
+Every secret dependency names an accountable grant owner/policy and a declared
+access-class boundary, makes rotation replacement/new-start only and forbids
+replaying completed tasks, and requires an independent revocation route that
+blocks new starts, stops active authorised workloads, and later proves both
+new access and existing sessions are denied. These are local declaration and
+structural checks only: a policy label does not prove actual provider or
+database privilege. PostgreSQL roles, AWS secret references, target grants,
+rotation coordination/partial-failure recovery, session termination, and live
+revocation evidence remain future persistence-scope and provider-binding work.
 
 The goal is to make the following relationship explicit and mechanically
 checkable:
@@ -547,6 +688,61 @@ is explicitly `required`, `deferred`, or `not-required`; `deferred` records an
 owner and follow-up path and prevents a claim of complete observability. This
 is a declaration of required evidence, not a second definition of the log,
 metric, dashboard, or alert implementation.
+
+### Persistence Diagnostic-Control Package
+
+The first PostgreSQL scope is the proving fixture for a reusable diagnostic
+capability, not an exception to it. Before its provider resources, credentials,
+or deployment may be authorised, establish the following controls.
+
+1. **One active shared contract:** promote the current draft safe-command
+   guidance into an active, provider-neutral diagnostic contract under the
+   owning shared/deploy governance boundary. It defines a stable code, logical
+   dependency and scope, lifecycle stage, safe summary, retryability, bounded
+   next check, prohibited data classes, and evidence/reference rules. It must
+   state plainly that pattern-based redaction is not general secret or PII
+   detection.
+2. **One controlled taxonomy:** define provider-neutral persistence outcomes
+   such as unavailable transport, invalid trust, rejected credential, denied
+   runtime permission, exhausted capacity, and incompatible schema. Codes name
+   the observed class, not `RDS`, an endpoint, a secret, or an assumed broken
+   security rule. The taxonomy assigns an owner and allowed lifecycle stages;
+   a code cannot be introduced only as unstructured log prose.
+3. **Correct implementation boundary:** `platform/persistence` exposes the
+   neutral result and its typed safe context. The existing
+   `platform/adapters/aws/persistence/postgresql/` adapter maps PostgreSQL
+   driver/RDS facts to that result when selected by target composition. Apps
+   and `kanbien-core-server` consume only the neutral interface. No PostgreSQL
+   or AWS interpretation enters the generic persistence capability.
+4. **Scope and lifecycle consequence:** the PostgreSQL scope declares which
+   neutral code can occur during configuration/startup, readiness, normal
+   request handling, migration, candidate deployment/update, controlled
+   retirement, recovery, server rollback, and data restoration. It links each
+   code to a safe workload result such as startup exit, not-ready, bounded
+   retry, failed completion, or stop-and-escalate. Server-image rollback and
+   database restoration remain distinct operations with separately declared
+   compatibility and evidence requirements.
+5. **Governed target operations:** create/update checks, change-set/release
+   verification, teardown/retirement checks, restoration checks, and rollback
+   checks emit only the shared diagnostic record. Teardown is never inferred
+   from an application error: it requires the declared retention, backup,
+   deletion-protection, ownership, and explicit execution authority. A failed
+   or uncertain provider operation stops at its declared safe next check; it
+   cannot retry a migration, replay an uncertain write, or delete a resource
+   automatically.
+6. **Mechanical proof:** synthetic fixtures exercise every taxonomy category,
+   redaction boundary, and provider-adapter mapping without real credentials.
+   <!-- deterministic-check: allow reason="the persistence diagnostic package and its package/deploy/run gates are planned future implementation, not an existing executable assertion" -->
+   Package/deploy/run gates verify that an active persistence scope has the
+   diagnostic mapping, applicable workload behaviour, and local proof before
+   any target mutation. A separately approved live rehearsal later proves the
+   selected target's create, update, controlled failure, restoration, and
+   rollback paths; local diagnostics never substitute for that proof.
+
+The initial PostgreSQL persistence packet may defer log transport, metrics,
+dashboards, alert routing, and retention to the observability slice. It may
+not defer typed safe diagnostic results, their workload consequences, their
+redaction tests, or the deploy/update/retire/recover/rollback gate connection.
 
 ## Concern Control Matrix
 

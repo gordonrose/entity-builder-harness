@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.health-failure-and-recovery-declaration
-version: 2
+version: 8
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-22"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -44,6 +44,46 @@ configuration and unavailable dependencies behave, and which safe diagnostic
 code category is emitted. A dependency-free scope explicitly declares an empty
 dependency-failure list; it does not omit the concern.
 
+A long-running server must also declare its health-signal mapping: the signal
+the provider uses for replacement, the readiness consequence for candidate
+acceptance, and the two signals required to accept a candidate. A
+dependency-bearing server may be replaced for process liveness, not merely
+because a dependency is temporarily unavailable. The workload binding repeats
+this mapping so the selected provider realization can be checked against it.
+A dependency-free transitional workload using readiness for replacement must
+say so explicitly and explain why; that exception never carries into a
+dependency-bearing successor.
+
+A run-to-completion verifier that proves a dependency through a server must
+declare `server_mediated_dependency_proof`. It gets private application-route
+access, not a dependency credential, database role, direct dependency network
+path, or connection allocation. Its record creation, replacement read, and
+governed cleanup are part of the declared completion proof—not an unbounded
+test procedure hidden in a provider script. The declaration also fixes safe
+repeat behaviour: equivalent and post-commit-lost-response attempts reconcile
+the original record, concurrent creation preserves one fact set, conflicting
+reuse is rejected without overwrite, and cleanup stays server-mediated until
+the replacement and restore proof boundary is accepted.
+
+A run-to-completion task that changes dependency structure must declare
+`migration_execution`: one executor, bounded lock and execution waits, an
+ordered immutable/checksummed manifest, transaction boundary, an interruption
+policy that never retries an uncertain outcome automatically, and a release
+block pending fresh state observation. It must also state that a
+checksum-matching rerun is a recorded no-op, a checksum mismatch blocks the
+release, and a concurrent executor is rejected before apply. Its compatibility
+strategy is expand → deploy → verify → contract later. The supported secret
+contract also requires a matching `migration` credential for that task and
+dependency.
+
+Any scope that declares migration execution also declares three separate
+`persistence_recovery` requirements before it can be accepted: server
+replacement retaining the original record through a named server-mediated
+verifier, restoration only to a prior persistence-capable accepted image that
+is compatible with the resulting schema, and recovery-point restoration to a
+new isolated database verified by an isolated application. Database reversal is
+not an image rollback, and a restore rehearsal must not mutate its source.
+
 It must also name the orchestrator decision for an unhealthy workload, prohibit
 automatic replay of uncertain work, retain an immutable accepted release for
 restoration, and require verification after restoration. Automatic task
@@ -57,12 +97,13 @@ the behaviour has occurred. A scope with a required dependency must not be
 accepted as dependency-ready until its applicable live failure proof is
 completed or separately approved as a documented exception.
 
-Retiring legacy infrastructure may be recorded only in the target's
-scope-health inventory, with its workload identity, reason, accountable owner,
+Retiring legacy infrastructure may be recorded only in the target's scope
+lifecycle inventory, with its workload identity, reason, accountable owner,
 replacement path, review condition, and retirement condition. It is not an
-exception route for an active new-framework scope or a newly created workload.
-The inventory itself is validated before target alignment and release controls
-can pass.
+exception route for an indexed new-framework scope or a newly created
+workload. The lifecycle inventory also requires exactly one active scope to
+own each workload identity and is validated before target alignment and
+release controls can pass.
 
 Declarations and evidence contain safe identifiers, paths, verdicts, and
 opaque references only. They must not record secrets, credentials, connection

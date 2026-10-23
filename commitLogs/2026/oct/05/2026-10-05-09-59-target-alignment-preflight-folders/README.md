@@ -121,6 +121,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Closed the secret-declaration review findings.
   Resolution: Workload-aware failures and startup-only rotation are enforced; unsafe values beneath non-string keys are scanned; malformed access classes return structured results; shared runtime server/worker credentials pass without permitting migration/admin access or mixed failure families.
 
+
+- Raised: Malformed migration credential cross-check could raise TypeError
+  Resolution: Validator now cross-checks only structurally valid credential entries; null, boolean, and numeric authorised_workloads fixtures produce structured failures.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -331,6 +335,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: User authorised commit, merge to main, and remote push of the completed secret-management work.
   Rationale: Preserve the existing recovery commits and current main history through governed non-rewriting refresh; no cloud execution or credential access.
 
+
+- Decision: Adopt reusable persistence-safety declaration controls
+  Rationale: Before defining the PostgreSQL scope, add reusable lifecycle ownership, workload-aware health/recovery, server-mediated verifier, migration, recovery, idempotency/cleanup, and credential lifecycle controls; distinguish local declaration checks from provider and live proof.
+
 ## Context Hygiene
 
 
@@ -497,6 +505,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Carry forward the portable secret contract and executable inventory enforcement, with synthetic regression evidence.
   Durable evidence: Four regression suites, actual target/release gates, metadata and whitespace checks passed. Provider references, IAM, target isolation, secret delivery and live rotation remain PostgreSQL work; no new CI result or cloud proof is claimed.
+
+
+- Summary: Implemented reusable persistence-safety harness controls and corrective credential lifecycle pass; live PostgreSQL/AWS work remains unstarted.
+  Durable evidence: .agentic/04.deploy/00-target-alignment, .agentic/04.deploy/60-run, scripts/04.deploy/lifecycle, implementation plan, teaching handbook, and focused smoke/gate output.
 
 ## Activity Log
 
@@ -2059,6 +2071,27 @@ Message: Merge main through governed refresh rehearsal
 Summary: Applied the tested non-rewriting refresh from main. Regenerated the sole conflicting generated artifact index, recorded its audit, and retained both branches authored changes. Four regression suites, recognition validation and repository commit gates passed in preflight; target and release gates passed again after apply. No stash or cloud action used.
 
 ADR impact: No new architectural decision; refresh preserves ADR0041 and main governance.
+
+
+### 2026-10-23T16:08:09Z - Decision
+
+Decision: Adopt reusable persistence-safety declaration controls
+
+Rationale: Before defining the PostgreSQL scope, add reusable lifecycle ownership, workload-aware health/recovery, server-mediated verifier, migration, recovery, idempotency/cleanup, and credential lifecycle controls; distinguish local declaration checks from provider and live proof.
+
+
+### 2026-10-23T16:08:10Z - Issue
+
+Raised: Malformed migration credential cross-check could raise TypeError
+
+Resolution: Validator now cross-checks only structurally valid credential entries; null, boolean, and numeric authorised_workloads fixtures produce structured failures.
+
+
+### 2026-10-23T16:08:10Z - Context hygiene
+
+Summary: Implemented reusable persistence-safety harness controls and corrective credential lifecycle pass; live PostgreSQL/AWS work remains unstarted.
+
+Durable evidence: .agentic/04.deploy/00-target-alignment, .agentic/04.deploy/60-run, scripts/04.deploy/lifecycle, implementation plan, teaching handbook, and focused smoke/gate output.
 
 ## Sub-Agent Activity
 

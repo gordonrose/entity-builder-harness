@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-secret-dependency-declaration.implementation
-#   version: 1
+#   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -84,17 +84,23 @@ def text_list(value: Any) -> list[str] | None:
     return value
 
 
-def invalid_entry(entry: Any, workload_types: dict[str, str]) -> str | None:
+def invalid_entry(entry: Any, workload_types: dict[str, str], declared_dependencies: set[str]) -> str | None:
     required = {
-        "id", "purpose", "owner", "authorised_workloads", "access_class",
+        "id", "dependency", "purpose", "owner", "authorised_workloads", "access_class",
         "injection_name", "target_reference_id", "expected_fields", "delivery",
-        "rotation", "retirement", "failure_behaviour", "safe_diagnostics",
+        "access_grant", "rotation", "revocation", "retirement",
+        "failure_behaviour", "safe_diagnostics",
     }
     if not isinstance(entry, dict) or set(entry) != required:
         return "secret-dependency-fields-invalid"
-    if not all(text(entry[key]) for key in ("id", "purpose", "owner", "injection_name", "target_reference_id")):
+    if not all(text(entry[key]) for key in ("id", "dependency", "purpose", "owner", "injection_name", "target_reference_id")):
         return "secret-dependency-fields-invalid"
-    if IDENTIFIER.fullmatch(entry["id"]) is None or IDENTIFIER.fullmatch(entry["target_reference_id"]) is None:
+    if (
+        IDENTIFIER.fullmatch(entry["id"]) is None
+        or IDENTIFIER.fullmatch(entry["dependency"]) is None
+        or IDENTIFIER.fullmatch(entry["target_reference_id"]) is None
+        or entry["dependency"] not in declared_dependencies
+    ):
         return "secret-dependency-reference-invalid"
     if CONFIG_NAME.fullmatch(entry["injection_name"]) is None:
         return "secret-dependency-injection-name-invalid"
@@ -112,11 +118,38 @@ def invalid_entry(entry: Any, workload_types: dict[str, str]) -> str | None:
     fields = text_list(entry["expected_fields"])
     if fields is None or not fields or len(fields) != len(set(fields)) or any(FIELD_NAME.fullmatch(field) is None for field in fields):
         return "secret-dependency-expected-fields-invalid"
-    delivery, rotation, retirement, failure, diagnostics = entry["delivery"], entry["rotation"], entry["retirement"], entry["failure_behaviour"], entry["safe_diagnostics"]
+    delivery, access_grant, rotation, revocation, retirement, failure, diagnostics = (
+        entry["delivery"], entry["access_grant"], entry["rotation"], entry["revocation"],
+        entry["retirement"], entry["failure_behaviour"], entry["safe_diagnostics"],
+    )
     if not isinstance(delivery, dict) or delivery != {"method": "target-secret-store-injection", "phase": "workload-startup"}:
         return "secret-dependency-delivery-invalid"
-    if not isinstance(rotation, dict) or set(rotation) != {"owner", "policy", "application_behavior"} or not text(rotation.get("owner")) or not text(rotation.get("policy")) or rotation.get("application_behavior") != "replacement-required":
+    if (
+        not isinstance(access_grant, dict)
+        or set(access_grant) != {"owner", "policy", "privilege_boundary", "proof_requirement"}
+        or not text(access_grant.get("owner"))
+        or not text(access_grant.get("policy"))
+        or access_grant.get("privilege_boundary") != "declared-access-class-boundary-not-effective-privilege-proof"
+        or access_grant.get("proof_requirement") != "provider-binding-and-effective-access-observation-required"
+    ):
+        return "secret-dependency-access-grant-invalid"
+    if (
+        not isinstance(rotation, dict)
+        or set(rotation) != {"owner", "policy", "application_behavior", "completed_task_behavior"}
+        or not text(rotation.get("owner"))
+        or not text(rotation.get("policy"))
+        or rotation.get("application_behavior") != "replacement-required"
+        or rotation.get("completed_task_behavior") != "no-replay"
+    ):
         return "secret-dependency-rotation-invalid"
+    if (
+        not isinstance(revocation, dict)
+        or set(revocation) != {"owner", "policy", "condition", "workload_effect", "proof_requirement"}
+        or any(not text(revocation.get(key)) for key in ("owner", "policy", "condition"))
+        or revocation.get("workload_effect") != "block-new-start-and-stop-active-authorised-workloads"
+        or revocation.get("proof_requirement") != "delivery-and-dependency-access-denied-observation-required"
+    ):
+        return "secret-dependency-revocation-invalid"
     if not isinstance(retirement, dict) or set(retirement) != {"owner", "policy", "condition"} or any(not text(retirement.get(key)) for key in ("owner", "policy", "condition")):
         return "secret-dependency-retirement-invalid"
     if not isinstance(diagnostics, dict) or set(diagnostics) != {"unavailable", "invalid_shape", "credential_rejected", "access_denied"} or any(not isinstance(value, str) or DIAGNOSTIC.fullmatch(value) is None for value in diagnostics.values()):
@@ -169,6 +202,33 @@ def main() -> int:
                 for item in health["workloads"]
                 if isinstance(item, dict) and text(item.get("id")) and text(item.get("workload_type"))
             }
+            dependencies = document.get("dependencies")
+            required_dependencies = dependencies.get("required") if isinstance(dependencies, dict) else None
+            optional_dependencies = dependencies.get("optional") if isinstance(dependencies, dict) else None
+            if (
+                not isinstance(required_dependencies, list)
+                or not isinstance(optional_dependencies, list)
+                or not all(text(item) for item in [*required_dependencies, *optional_dependencies])
+            ):
+                codes.append("secret-dependency-scope-dependencies-invalid")
+                required_dependencies, optional_dependencies = [], []
+            declared_dependencies = set(required_dependencies) | set(optional_dependencies)
+            server_mediated_verifiers = {
+                item.get("id"): item["server_mediated_dependency_proof"].get("dependency")
+                for item in health["workloads"]
+                if isinstance(item, dict)
+                and text(item.get("id"))
+                and isinstance(item.get("server_mediated_dependency_proof"), dict)
+                and text(item["server_mediated_dependency_proof"].get("dependency"))
+            }
+            migration_executors = {
+                item.get("id"): item["migration_execution"].get("dependency")
+                for item in health["workloads"]
+                if isinstance(item, dict)
+                and text(item.get("id"))
+                and isinstance(item.get("migration_execution"), dict)
+                and text(item["migration_execution"].get("dependency"))
+            }
             entries = configuration["secret_dependencies"]
             names = text_list(configuration["secret_names"])
             if names is None or len(names) != len(set(names)) or any(CONFIG_NAME.fullmatch(name) is None for name in names):
@@ -176,18 +236,33 @@ def main() -> int:
             entry_ids: set[str] = set()
             reference_ids: set[str] = set()
             injection_names: set[str] = set()
+            valid_entries: list[dict[str, Any]] = []
             for entry in entries:
-                code = invalid_entry(entry, workload_types)
+                code = invalid_entry(entry, workload_types, declared_dependencies)
                 if code:
                     codes.append(code)
                     continue
+                valid_entries.append(entry)
                 entry_ids.add(entry["id"])
                 reference_ids.add(entry["target_reference_id"])
                 injection_names.add(entry["injection_name"])
+                if any(
+                    verifier_dependency == entry["dependency"] and verifier_id in entry["authorised_workloads"]
+                    for verifier_id, verifier_dependency in server_mediated_verifiers.items()
+                ):
+                    codes.append("server-mediated-verifier-direct-secret-prohibited")
             if len(entry_ids) != len(entries) or len(reference_ids) != len(entries) or len(injection_names) != len(entries):
                 codes.append("secret-dependency-identity-duplicate")
             if names is None or set(names) != injection_names:
                 codes.append("secret-dependency-names-mismatch")
+            for workload_id, dependency in migration_executors.items():
+                if not any(
+                    entry.get("access_class") == "migration"
+                    and entry.get("dependency") == dependency
+                    and workload_id in entry.get("authorised_workloads", [])
+                    for entry in valid_entries
+                ):
+                    codes.append("migration-executor-credential-missing")
     report = {
         "schema": "deploy/secret-dependency-declaration-report/v1",
         "scope_contract": str(args.scope_contract),

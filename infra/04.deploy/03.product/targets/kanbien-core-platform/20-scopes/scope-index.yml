@@ -1,23 +1,27 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
-#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-health-inventory
-#   version: 1
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-lifecycle-inventory
+#   version: 2
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
 #   kind: scope-index
-#   purpose: Inventory active new-framework workload scopes and explicit legacy exceptions for health, failure, and recovery validation.
+#   purpose: Inventory new-framework scope lifecycle and exclusive active workload ownership for health, failure, and recovery validation.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.validate-active-workload-health-recovery
 #     path: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
-schema: deploy/scope-health-inventory/v1
+schema: deploy/scope-lifecycle-inventory/v1
 target: kanbien-core-platform
-active_scopes:
+scopes:
   - id: bootstrap-runtime
+    lifecycle: active
     declaration: bootstrap-runtime/00-declaration/declaration-contract.yml
     workload_binding: bootstrap-runtime/10-workload-binding/workload-binding.yml
+    workload_ownership:
+      - core-server-service
+      - private-release-verifier-task
 legacy_exceptions: []

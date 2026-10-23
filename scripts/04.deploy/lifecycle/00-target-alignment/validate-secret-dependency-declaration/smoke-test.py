@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-secret-dependency-declaration
-#   version: 1
+#   version: 4
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -73,10 +73,11 @@ def completion_failure() -> dict[str, Any]:
     }
 
 
-def secret_entry(identifier: str, access_class: str, authorised_workloads: list[str], failure: dict[str, Any]) -> dict[str, Any]:
+def secret_entry(identifier: str, access_class: str, authorised_workloads: list[str], failure: dict[str, Any], dependency: str = "persistence") -> dict[str, Any]:
     injection = f"{identifier.upper().replace('-', '_')}_SECRET_JSON"
     return {
         "id": identifier,
+        "dependency": dependency,
         "purpose": "authenticate-declared-workload-to-declared-dependency",
         "owner": "persistence-platform",
         "authorised_workloads": authorised_workloads,
@@ -85,7 +86,9 @@ def secret_entry(identifier: str, access_class: str, authorised_workloads: list[
         "target_reference_id": identifier,
         "expected_fields": ["username", "password"],
         "delivery": {"method": "target-secret-store-injection", "phase": "workload-startup"},
-        "rotation": {"owner": "persistence-platform", "policy": "governed-rotation", "application_behavior": "replacement-required"},
+        "access_grant": {"owner": "persistence-platform", "policy": "governed-access-grant", "privilege_boundary": "declared-access-class-boundary-not-effective-privilege-proof", "proof_requirement": "provider-binding-and-effective-access-observation-required"},
+        "rotation": {"owner": "persistence-platform", "policy": "governed-rotation", "application_behavior": "replacement-required", "completed_task_behavior": "no-replay"},
+        "revocation": {"owner": "persistence-platform", "policy": "governed-revocation", "condition": "workload-retirement-or-security-incident", "workload_effect": "block-new-start-and-stop-active-authorised-workloads", "proof_requirement": "delivery-and-dependency-access-denied-observation-required"},
         "retirement": {"owner": "persistence-platform", "policy": "governed-revocation-and-removal", "condition": "after-dependent-workload-retirement"},
         "failure_behaviour": failure,
         "safe_diagnostics": {"unavailable": "DEPENDENCY_SECRET_UNAVAILABLE", "invalid_shape": "DEPENDENCY_SECRET_SHAPE_INVALID", "credential_rejected": "DEPENDENCY_CREDENTIAL_REJECTED", "access_denied": "DEPENDENCY_ACCESS_DENIED"},
@@ -97,6 +100,7 @@ def scope_with(baseline: dict[str, Any], workloads: list[dict[str, str]], entrie
     value["health_recovery"]["workloads"] = workloads
     value["configuration"]["secret_dependencies"] = entries
     value["configuration"]["secret_names"] = [entry["injection_name"] for entry in entries]
+    value["dependencies"] = {"required": sorted({entry["dependency"] for entry in entries}), "optional": []}
     return value
 
 
@@ -112,6 +116,7 @@ def main() -> int:
         template_scope = copy.deepcopy(baseline)
         template_scope["configuration"] = template["configuration"]
         template_scope["health_recovery"]["workloads"] = [workload("example-server", "long-running-server")]
+        template_scope["dependencies"] = {"required": ["example-dependency"], "optional": []}
         expect_pass(template_scope, directory, "template")
 
         runtime_task = scope_with(
@@ -120,6 +125,54 @@ def main() -> int:
             [secret_entry("verifier-runtime-credential", "runtime", ["persistence-verifier"], completion_failure())],
         )
         expect_pass(runtime_task, directory, "runtime-task")
+
+        mediated_verifier = scope_with(
+            baseline,
+            [
+                workload("core-server", "long-running-server"),
+                workload("persistence-verifier", "run-to-completion-task"),
+            ],
+            [secret_entry("verifier-runtime-credential", "runtime", ["persistence-verifier"], completion_failure())],
+        )
+        mediated_verifier["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"] = {"dependency": "persistence"}
+        expect_failure(mediated_verifier, "server-mediated-verifier-direct-secret-prohibited", directory)
+
+        server_runtime = copy.deepcopy(mediated_verifier)
+        server_runtime["configuration"]["secret_dependencies"][0]["authorised_workloads"] = ["core-server"]
+        server_runtime["configuration"]["secret_dependencies"][0]["failure_behaviour"] = server_failure()
+        expect_pass(server_runtime, directory, "server-runtime-with-mediated-verifier")
+
+        migration_executor = scope_with(
+            baseline,
+            [workload("persistence-migration", "run-to-completion-task")],
+            [secret_entry("migration-credential", "migration", ["persistence-migration"], completion_failure())],
+        )
+        migration_executor["health_recovery"]["workloads"][0]["migration_execution"] = {"dependency": "persistence"}
+        expect_pass(migration_executor, directory, "migration-executor-credential")
+
+        migration_without_credential = copy.deepcopy(migration_executor)
+        migration_without_credential["configuration"]["secret_dependencies"] = []
+        migration_without_credential["configuration"]["secret_names"] = []
+        expect_failure(migration_without_credential, "migration-executor-credential-missing", directory)
+
+        migration_wrong_dependency = copy.deepcopy(migration_executor)
+        migration_wrong_dependency["dependencies"] = {"required": ["persistence", "other-persistence"], "optional": []}
+        migration_wrong_dependency["configuration"]["secret_dependencies"][0]["dependency"] = "other-persistence"
+        expect_failure(migration_wrong_dependency, "migration-executor-credential-missing", directory)
+
+        migration_wrong_workload = copy.deepcopy(migration_executor)
+        migration_wrong_workload["health_recovery"]["workloads"].append(workload("other-migration", "run-to-completion-task"))
+        migration_wrong_workload["configuration"]["secret_dependencies"][0]["authorised_workloads"] = ["other-migration"]
+        expect_failure(migration_wrong_workload, "migration-executor-credential-missing", directory)
+
+        migration_wrong_access_class = copy.deepcopy(migration_executor)
+        migration_wrong_access_class["configuration"]["secret_dependencies"][0]["access_class"] = "runtime"
+        expect_failure(migration_wrong_access_class, "migration-executor-credential-missing", directory)
+
+        for malformed_workloads_value in (None, True, 7):
+            malformed_migration_credential = copy.deepcopy(migration_executor)
+            malformed_migration_credential["configuration"]["secret_dependencies"][0]["authorised_workloads"] = malformed_workloads_value
+            expect_failure(malformed_migration_credential, "secret-dependency-workload-invalid", directory)
 
         shared_runtime = scope_with(
             baseline,
@@ -149,6 +202,9 @@ def main() -> int:
         missing = copy.deepcopy(baseline)
         missing["configuration"].pop("secret_dependencies")
         expect_failure(missing, "secret-dependency-declaration-missing", directory)
+        undeclared_dependency = copy.deepcopy(runtime_task)
+        undeclared_dependency["configuration"]["secret_dependencies"][0]["dependency"] = "unknown-dependency"
+        expect_failure(undeclared_dependency, "secret-dependency-reference-invalid", directory)
         mismatch = copy.deepcopy(baseline)
         mismatch["configuration"]["secret_names"] = ["EXAMPLE_RUNTIME_SECRET_JSON"]
         expect_failure(mismatch, "secret-dependency-names-mismatch", directory)
@@ -168,6 +224,21 @@ def main() -> int:
         unsupported_refresh = copy.deepcopy(runtime_task)
         unsupported_refresh["configuration"]["secret_dependencies"][0]["rotation"]["application_behavior"] = "live-refresh-proven"
         expect_failure(unsupported_refresh, "secret-dependency-rotation-invalid", directory)
+        replay_after_rotation = copy.deepcopy(runtime_task)
+        replay_after_rotation["configuration"]["secret_dependencies"][0]["rotation"]["completed_task_behavior"] = "replay-completed-task"
+        expect_failure(replay_after_rotation, "secret-dependency-rotation-invalid", directory)
+        missing_access_grant = copy.deepcopy(runtime_task)
+        del missing_access_grant["configuration"]["secret_dependencies"][0]["access_grant"]
+        expect_failure(missing_access_grant, "secret-dependency-fields-invalid", directory)
+        excessive_access_grant = copy.deepcopy(runtime_task)
+        excessive_access_grant["configuration"]["secret_dependencies"][0]["access_grant"]["privilege_boundary"] = "effective-least-privilege-proven"
+        expect_failure(excessive_access_grant, "secret-dependency-access-grant-invalid", directory)
+        revocation_without_stop = copy.deepcopy(runtime_task)
+        revocation_without_stop["configuration"]["secret_dependencies"][0]["revocation"]["workload_effect"] = "allow-existing-workloads"
+        expect_failure(revocation_without_stop, "secret-dependency-revocation-invalid", directory)
+        revocation_without_proof = copy.deepcopy(runtime_task)
+        revocation_without_proof["configuration"]["secret_dependencies"][0]["revocation"]["proof_requirement"] = "not-required"
+        expect_failure(revocation_without_proof, "secret-dependency-revocation-invalid", directory)
         unsafe_purpose = copy.deepcopy(runtime_task)
         unsafe_purpose["configuration"]["secret_dependencies"][0]["purpose"] = "use postgresql://synthetic-user:synthetic-password@database.example/test"
         expect_failure(unsafe_purpose, "secret-dependency-unsafe-value-or-reference", directory)
