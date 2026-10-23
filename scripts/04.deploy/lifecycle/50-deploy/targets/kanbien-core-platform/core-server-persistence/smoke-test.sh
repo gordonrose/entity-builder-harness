@@ -11,7 +11,7 @@ set -euo pipefail
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Prove the persistence creation and run controls reject selectors, unqualified receipts, unsuitable change sets, and unsafe verifier use without contacting AWS.
+#   purpose: Prove the persistence creation, failed-candidate retirement, and run controls reject selectors, unqualified receipts, unsuitable change sets, and unsafe verifier use without contacting AWS.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
@@ -21,12 +21,15 @@ ROOT="$(git rev-parse --show-toplevel)"
 PREPARE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh"
 CREATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh"
 DEPLOY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh"
+RETIRE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh"
 MIGRATE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh"
 VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
 expect_failure package-custody-receipt-invalid "$CREATE" --receipt /tmp/missing-persistence-receipt.json --json
 expect_failure package-custody-receipt-invalid "$DEPLOY" --receipt /tmp/missing-persistence-receipt.json --approved-change-set unexpected --json
+expect_failure persistence-failed-candidate-retirement-arguments-invalid "$RETIRE" --approved-failed-stack staging --json
+expect_failure persistence-failed-candidate-retirement-arguments-invalid "$RETIRE" --json
 expect_failure persistence-migration-arguments-invalid "$MIGRATE" --target staging --json
 expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --target staging --json
 expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mode arbitrary --json
@@ -47,6 +50,30 @@ class Result:
     stderr = ""
 with patch.object(prepare.subprocess, "run", return_value=Result()):
     assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
+PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py" <<'PY'
+import importlib.util, sys
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location("candidate_retirement", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+
+assert module.STACK == "kanbien-core-platform-core-server-persistence"
+assert module.DATABASE == "kanbien-core-platform-persistence"
+
+with patch.object(module, "aws", return_value=(True, {"Stacks": [{"StackStatus": "CREATE_COMPLETE"}]}, "ok")):
+    assert module.failed_candidate_database() == (False, "persistence-failed-candidate-stack-not-retirable")
+
+with patch.object(module, "aws", return_value=(True, {"services": [{"desiredCount": 1, "runningCount": 0, "pendingCount": 0}]}, "ok")):
+    assert module.no_active_service() == (False, "persistence-failed-candidate-service-still-active")
+
+database = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "PubliclyAccessible": False, "DeletionProtection": True, "DBInstanceArn": "arn:aws:rds:eu-west-1:337159794548:db:kanbien-core-platform-persistence"}]}
+with patch.object(module, "aws", side_effect=[(True, database, "ok"), (True, {"TagList": [{"Key": "Target", "Value": "staging"}]}, "ok")]):
+    assert module.protected_target_database() == (False, "persistence-failed-candidate-database-target-mismatch")
+
+unlocked = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "PubliclyAccessible": False, "DeletionProtection": False}]}
+with patch.object(module, "aws", return_value=(True, unlocked, "ok")):
+    assert module.protected_target_database_after_unlock() == (True, "ok")
 PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
 import sys

@@ -6,6 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -13,6 +14,9 @@ set -euo pipefail
 #   purpose: Prove the packaged persistence candidate against disposable TLS PostgreSQL without using a target credential or provider resource.
 #   portability: { class: internal, targets: [] }
 #   effects: [network, writes-files]
+#   used_by:
+#   - id: deploy.pipeline.kanbien-core-platform.core-server-persistence-package-custody
+#     path: .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
 
 ROOT="$(git rev-parse --show-toplevel)"
 TAG="kanbien-core-server-persistence:qualification"

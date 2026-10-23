@@ -81,3 +81,22 @@ Do not call this candidate accepted until the separate replacement, schema
 compatible release rollback, and isolated database restore rehearsals are
 implemented and their evidence is recorded. Initial creation, a successful
 migration, and a private create/read proof establish a candidate only.
+
+## Failed Creation Cleanup
+
+An initial candidate that never reaches acceptance may roll back until RDS
+deletion protection stops CloudFormation. Do not manually remove resources or
+reuse the failed stack. Once the named stack is `ROLLBACK_FAILED`, the database
+is the exact target-tagged candidate instance, and the candidate service has
+zero desired, running and pending tasks, the fixed cleanup command first
+removes deletion protection from that failed candidate only, then deletes the
+stack. CloudFormation retains its final native snapshot under the template's
+snapshot policy; do not discard it as part of this control.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh --approved-failed-stack kanbien-core-platform-core-server-persistence --json
+```
+
+If the control cannot prove the failed state, exact target tag, quiesced
+service, protected database, post-unlock observation, or stack deletion, it
+blocks without substituting a manual cleanup procedure.
