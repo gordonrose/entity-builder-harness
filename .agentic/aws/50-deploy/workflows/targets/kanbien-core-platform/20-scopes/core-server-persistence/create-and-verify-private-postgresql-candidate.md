@@ -118,6 +118,19 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > "$replacement_read_report"
 ```
 
+## Qualified Persistence Image Transition
+
+The only governed route for a persistence-capable image update or rollback is
+receipt-bound and permits CloudFormation to alter only ECS task definitions and
+the candidate service. It rejects database, secret, role, network, or target
+changes. `rollback` requires an earlier qualified persistence receipt; the
+dependency-free bootstrap image is never an eligible persistence rollback.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --json
+```
+
 ## Failed Creation Cleanup
 
 An initial candidate that never reaches acceptance may roll back until RDS
