@@ -38,6 +38,18 @@ can you walk me through which part of my repo work on the following stages
 
 - None recorded yet.
 
+## Current Execution Authority
+
+- 2026-10-23: The user granted standing authority for the bounded
+  `kanbien-core-platform/core-server-persistence` slice: local implementation,
+  target-scoped AWS PostgreSQL/secrets/IAM/network/logging/native-backup
+  configuration, image publication, governed deployment and recovery
+  rehearsals, cleanup of synthetic exercise data/resources, and normal
+  commit/integration/push. The ceiling remains the existing USD 100 monthly
+  target budget; do not touch staging, add a waiver, or use unrelated
+  resources. Technical gates and protected GitHub Environment approval remain
+  mandatory.
+
 ## Issues Raised
 
 

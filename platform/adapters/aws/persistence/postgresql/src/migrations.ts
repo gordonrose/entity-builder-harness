@@ -42,7 +42,7 @@ export function createPostgreSqlMigrationRunner(
         // migration releases it, while a competing executor waits only for the
         // reviewed bounded lock timeout below. Never replay after a timeout
         // without first observing the migration-history state.
-        await client.query({ text: "SET LOCAL lock_timeout = '5000ms'" });
+        await client.query({ text: "SET LOCAL lock_timeout = '30000ms'" });
         await client.query({
           text: "SELECT pg_advisory_xact_lock(hashtext($1))",
           values: [`kanbien-postgresql-migration:${manifest.schema}`],

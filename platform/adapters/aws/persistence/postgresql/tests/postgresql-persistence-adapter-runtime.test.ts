@@ -165,6 +165,8 @@ async function main(): Promise<void> {
   const migrationRunner = createPostgreSqlMigrationRunner(configuration, { pool: recordingPool(migrationQueries) }, "adapter-v1");
   const migrationResult = await migrationRunner.apply({ schema: configuration.schema, migrations: [migration] });
   equal(migrationResult.ok, true);
+  equal(migrationQueries.some((query) => query.text === "SET LOCAL lock_timeout = '30000ms'"), true);
+  equal(migrationQueries.some((query) => query.text === "SELECT pg_advisory_xact_lock(hashtext($1))"), true);
   equal(migrationQueries.some((query) => query.text.includes("tool_version")), true);
   const checksumMismatchQueries: PostgreSqlStatement[] = [];
   const checksumMismatch = await createPostgreSqlMigrationRunner(
