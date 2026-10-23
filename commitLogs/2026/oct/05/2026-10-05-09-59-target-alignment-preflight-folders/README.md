@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T16:12:47Z
-latest_commit_sha: 13fe5145
-chat_duration: 1581198s (18:07:13:18)
+latest_commit_at_utc: 2026-10-23T19:22:16Z
+latest_commit_sha: bbf19a21
+chat_duration: 1592567s (18:10:22:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2164,6 +2164,50 @@ Summary: Persistence slice baseline established
 
 Durable evidence: Fresh AWS identity is account 337159794548 in eu-west-1; bootstrap-runtime is ACTIVE with desired/running one on task definition revision 10; no target RDS instance or Secrets Manager secret exists; target budget kanbien-core-platform-monthly is USD 100 filtered by Target=kanbien-core-platform with USD 0.7839062758 estimated spend through 2026-10-23. Local diagnostics, lifecycle inventory, health/recovery, secret-dependency, target declaration, release contract, and persistence-composition checks passed.
 
+
+### 2026-10-23T18:40:35Z - Commit recorded
+
+Commit: `39f8bbc4d07a044cd5285836f4ca0842d16d85c9`
+
+Message: feat(deploy): add persistence composition controls
+
+Summary: Adds reusable persistence diagnostic enforcement, lifecycle and secret/recovery controls, and a fake-backed provider-neutral persistence-capable core-server composition. No PostgreSQL resource, secret, adapter binding, image, or target mutation is included.
+
+ADR impact: No ADR: this checkpoint applies the already-recorded PostgreSQL selection without selecting a provider binding or changing deployed architecture.
+
+
+### 2026-10-23T18:57:57Z - Commit recorded
+
+Commit: `9149d30d`
+
+Message: feat(deploy): add persistence candidate programs
+
+Summary: Added the candidate server, server-mediated verifier, migration executable, PostgreSQL binding, migration lock, image definition, and local composition checks.
+
+ADR impact: none
+
+
+### 2026-10-23T19:02:47Z - Commit recorded
+
+Commit: `f6cd5fbe`
+
+Message: feat(deploy): declare persistence candidate scope
+
+Summary: Registered core-server-persistence as a validated candidate successor with separate runtime and migration credentials, a server-mediated verifier boundary, diagnostics, recovery declarations, and a local image-build command.
+
+ADR impact: none
+
+
+### 2026-10-23T19:22:16Z - Commit recorded
+
+Commit: `bbf19a21`
+
+Message: feat(deploy): add hosted persistence image qualification
+
+Summary: Added the protected-main GitHub Actions route for real Docker qualification, immutable persistence candidate publication, and ECR scan enforcement; corrected the image dependency closure.
+
+ADR impact: none
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2559,6 +2603,34 @@ Durable evidence: Fresh AWS identity is account 337159794548 in eu-west-1; boots
   Summary: Adds reusable scope lifecycle, workload ownership, health/recovery, migration safety and credential lifecycle declaration controls; corrects secret-validation fail-closed behaviour; and records PostgreSQL persistence prerequisites.
   ADR impact: No new ADR; extends the existing deployment implementation plan and generic harness controls.
 
+
+- Commit: `39f8bbc4d07a044cd5285836f4ca0842d16d85c9`
+  Time UTC: 2026-10-23T18:40:35Z
+  Message: feat(deploy): add persistence composition controls
+  Summary: Adds reusable persistence diagnostic enforcement, lifecycle and secret/recovery controls, and a fake-backed provider-neutral persistence-capable core-server composition. No PostgreSQL resource, secret, adapter binding, image, or target mutation is included.
+  ADR impact: No ADR: this checkpoint applies the already-recorded PostgreSQL selection without selecting a provider binding or changing deployed architecture.
+
+
+- Commit: `9149d30d`
+  Time UTC: 2026-10-23T18:57:57Z
+  Message: feat(deploy): add persistence candidate programs
+  Summary: Added the candidate server, server-mediated verifier, migration executable, PostgreSQL binding, migration lock, image definition, and local composition checks.
+  ADR impact: none
+
+
+- Commit: `f6cd5fbe`
+  Time UTC: 2026-10-23T19:02:47Z
+  Message: feat(deploy): declare persistence candidate scope
+  Summary: Registered core-server-persistence as a validated candidate successor with separate runtime and migration credentials, a server-mediated verifier boundary, diagnostics, recovery declarations, and a local image-build command.
+  ADR impact: none
+
+
+- Commit: `bbf19a21`
+  Time UTC: 2026-10-23T19:22:16Z
+  Message: feat(deploy): add hosted persistence image qualification
+  Summary: Added the protected-main GitHub Actions route for real Docker qualification, immutable persistence candidate publication, and ECR scan enforcement; corrected the image dependency closure.
+  ADR impact: none
+
 ## Main Refresh Conflicts
 
 
@@ -2582,9 +2654,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T16:12:47Z
-Latest commit SHA: 13fe5145
-Chat duration: 1581198s (18:07:13:18)
+Latest commit at UTC: 2026-10-23T19:22:16Z
+Latest commit SHA: bbf19a21
+Chat duration: 1592567s (18:10:22:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
