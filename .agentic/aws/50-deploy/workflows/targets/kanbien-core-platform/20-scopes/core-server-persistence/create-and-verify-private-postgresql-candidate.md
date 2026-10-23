@@ -121,3 +121,16 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 If the control cannot prove the failed state, exact target tag, quiesced
 service, protected database, post-unlock observation, or stack deletion, it
 blocks without substituting a manual cleanup procedure.
+
+## Bounded Private Verifier Route Correction
+
+When a completed migration and healthy server prove that only the private
+verifier-to-server route is absent, this fixed update control may apply one
+reviewed addition: `VerifierEgressToServer`. It requires the current healthy
+candidate, receipt, budget, package gates, and an UPDATE change set containing
+only that one rule; it cannot update the image, database, credentials, target,
+or any other resource.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh --receipt "$receipt" --json
+```

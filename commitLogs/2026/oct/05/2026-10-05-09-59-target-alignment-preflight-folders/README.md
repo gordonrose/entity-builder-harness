@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:43:48Z
-latest_commit_sha: a1d6de9a7f97f0755864b72d53488c2602bc9160
-chat_duration: 1601059s (18:12:44:19)
+latest_commit_at_utc: 2026-10-23T21:48:41Z
+latest_commit_sha: 6cd61e15
+chat_duration: 1601352s (18:12:49:12)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2418,6 +2418,28 @@ Summary: Rebased task commit adds explicit verifier-to-current-server egress and
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:48:23Z - Commit recorded
+
+Commit: `ae4ea090`
+
+Message: fix(deploy): govern private verifier route updates
+
+Summary: Adds a constrained reviewed CloudFormation UPDATE route allowing only the current verifier-to-server egress security-group rule, with focused smoke coverage.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-23T21:48:41Z - Commit recorded
+
+Commit: `6cd61e15`
+
+Message: fix(deploy): govern private verifier route updates
+
+Summary: Rebased task commit: constrained reviewed CloudFormation UPDATE route allowing only the verifier-to-server egress security-group rule.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2967,6 +2989,20 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased task commit adds explicit verifier-to-current-server egress and no-replay verifier reconciliation after the safe route failure.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `ae4ea090`
+  Time UTC: 2026-10-23T21:48:23Z
+  Message: fix(deploy): govern private verifier route updates
+  Summary: Adds a constrained reviewed CloudFormation UPDATE route allowing only the current verifier-to-server egress security-group rule, with focused smoke coverage.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `6cd61e15`
+  Time UTC: 2026-10-23T21:48:41Z
+  Message: fix(deploy): govern private verifier route updates
+  Summary: Rebased task commit: constrained reviewed CloudFormation UPDATE route allowing only the verifier-to-server egress security-group rule.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2990,9 +3026,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:43:48Z
-Latest commit SHA: a1d6de9a7f97f0755864b72d53488c2602bc9160
-Chat duration: 1601059s (18:12:44:19)
+Latest commit at UTC: 2026-10-23T21:48:41Z
+Latest commit SHA: 6cd61e15
+Chat duration: 1601352s (18:12:49:12)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
