@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T19:22:16Z
-latest_commit_sha: bbf19a21
-chat_duration: 1592567s (18:10:22:47)
+latest_commit_at_utc: 2026-10-23T19:36:23Z
+latest_commit_sha: b4abc8cd
+chat_duration: 1593414s (18:10:36:54)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2220,6 +2220,17 @@ Summary: Added the protected-main GitHub Actions route for real Docker qualifica
 
 ADR impact: none
 
+
+### 2026-10-23T19:36:23Z - Commit recorded
+
+Commit: `b4abc8cd`
+
+Message: feat(deploy): add persistence provider candidate controls
+
+Summary: Added the private PostgreSQL candidate template, migration/runtime-principal contract, package closure checks, and OCI-child-manifest scan gate.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2643,6 +2654,13 @@ ADR impact: none
   Summary: Added the protected-main GitHub Actions route for real Docker qualification, immutable persistence candidate publication, and ECR scan enforcement; corrected the image dependency closure.
   ADR impact: none
 
+
+- Commit: `b4abc8cd`
+  Time UTC: 2026-10-23T19:36:23Z
+  Message: feat(deploy): add persistence provider candidate controls
+  Summary: Added the private PostgreSQL candidate template, migration/runtime-principal contract, package closure checks, and OCI-child-manifest scan gate.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2666,9 +2684,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T19:22:16Z
-Latest commit SHA: bbf19a21
-Chat duration: 1592567s (18:10:22:47)
+Latest commit at UTC: 2026-10-23T19:36:23Z
+Latest commit SHA: b4abc8cd
+Chat duration: 1593414s (18:10:36:54)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
