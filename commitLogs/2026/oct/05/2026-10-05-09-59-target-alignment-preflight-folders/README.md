@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T21:16:33Z
-latest_commit_sha: 253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39
-chat_duration: 1599424s (18:12:17:04)
+latest_commit_at_utc: 2026-10-23T21:39:37Z
+latest_commit_sha: 284df87b8e02b84a5b72478002e94e46079ed7cd
+chat_duration: 1600808s (18:12:40:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2374,6 +2374,17 @@ Summary: Corrected rebased task SHA: fixed failed-candidate retirement control, 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:39:37Z - Commit recorded
+
+Commit: `284df87b8e02b84a5b72478002e94e46079ed7cd`
+
+Message: fix(deploy): reconcile interrupted persistence migrations
+
+Summary: Added a current-deployment, no-replay reconciliation route for an interrupted migration controller and regression coverage for identity and terminal-state refusal.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2895,6 +2906,13 @@ ADR impact: covered by session ADR disposition
   Summary: Corrected rebased task SHA: fixed failed-candidate retirement control, target package metadata repair, and regression coverage.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `284df87b8e02b84a5b72478002e94e46079ed7cd`
+  Time UTC: 2026-10-23T21:39:37Z
+  Message: fix(deploy): reconcile interrupted persistence migrations
+  Summary: Added a current-deployment, no-replay reconciliation route for an interrupted migration controller and regression coverage for identity and terminal-state refusal.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2918,9 +2936,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T21:16:33Z
-Latest commit SHA: 253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39
-Chat duration: 1599424s (18:12:17:04)
+Latest commit at UTC: 2026-10-23T21:39:37Z
+Latest commit SHA: 284df87b8e02b84a5b72478002e94e46079ed7cd
+Chat duration: 1600808s (18:12:40:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
