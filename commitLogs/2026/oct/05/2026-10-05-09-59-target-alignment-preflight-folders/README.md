@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T19:52:09Z
-latest_commit_sha: 6132d8af8aca00b876cab1b79403da4fd82410a6
-chat_duration: 1594360s (18:10:52:40)
+latest_commit_at_utc: 2026-10-23T20:07:58Z
+latest_commit_sha: HEAD
+chat_duration: 1595309s (18:11:08:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2275,6 +2275,17 @@ Summary: Allows the declared bounded 240-second migration statement timeout whil
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T20:07:58Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): govern persistence image qualification
+
+Summary: Repairs the real TLS PostgreSQL package smoke and adds an enforced persistence-candidate package-custody route with delivery-access proof, scan, SBOM, provenance, and receipt.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2733,6 +2744,13 @@ ADR impact: covered by session ADR disposition
   Summary: Allows the declared bounded 240-second migration statement timeout while retaining one-minute connection and idle limits; adds acceptance and rejection regression coverage.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-23T20:07:58Z
+  Message: fix(deploy): govern persistence image qualification
+  Summary: Repairs the real TLS PostgreSQL package smoke and adds an enforced persistence-candidate package-custody route with delivery-access proof, scan, SBOM, provenance, and receipt.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2756,9 +2774,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T19:52:09Z
-Latest commit SHA: 6132d8af8aca00b876cab1b79403da4fd82410a6
-Chat duration: 1594360s (18:10:52:40)
+Latest commit at UTC: 2026-10-23T20:07:58Z
+Latest commit SHA: HEAD
+Chat duration: 1595309s (18:11:08:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
