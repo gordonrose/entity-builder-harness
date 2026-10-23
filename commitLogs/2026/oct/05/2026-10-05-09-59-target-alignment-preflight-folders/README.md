@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:00:46Z
-latest_commit_sha: d47f1fd2
-chat_duration: 1602077s (18:13:01:17)
+latest_commit_at_utc: 2026-10-23T22:00:55Z
+latest_commit_sha: b9f30372
+chat_duration: 1602086s (18:13:01:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2495,6 +2495,17 @@ Summary: Adds a no-replay reconciliation route for a replacement controller inte
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:00:55Z - Commit recorded
+
+Commit: `b9f30372`
+
+Message: fix(deploy): reconcile persistence replacements
+
+Summary: Rebased task commit: reconciles only an exact stopped task with the governed replacement reason and a distinct healthy replacement.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3093,6 +3104,13 @@ ADR impact: covered by session ADR disposition
   Summary: Adds a no-replay reconciliation route for a replacement controller interrupted after it stopped the original task.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `b9f30372`
+  Time UTC: 2026-10-23T22:00:55Z
+  Message: fix(deploy): reconcile persistence replacements
+  Summary: Rebased task commit: reconciles only an exact stopped task with the governed replacement reason and a distinct healthy replacement.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3116,9 +3134,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:00:46Z
-Latest commit SHA: d47f1fd2
-Chat duration: 1602077s (18:13:01:17)
+Latest commit at UTC: 2026-10-23T22:00:55Z
+Latest commit SHA: b9f30372
+Chat duration: 1602086s (18:13:01:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
