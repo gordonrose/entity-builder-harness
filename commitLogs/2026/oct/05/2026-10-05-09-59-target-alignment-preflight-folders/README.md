@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:09:28Z
-latest_commit_sha: 5dced535
-chat_duration: 1602599s (18:13:09:59)
+latest_commit_at_utc: 2026-10-23T22:24:21Z
+latest_commit_sha: dae6f542
+chat_duration: 1603492s (18:13:24:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2517,6 +2517,17 @@ Summary: Adds a receipt-bound UPDATE/rollback route that permits only persistenc
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:24:21Z - Commit recorded
+
+Commit: `dae6f542`
+
+Message: feat(deploy): govern persistence recovery points
+
+Summary: Adds a fixed target-bound encrypted recovery-point snapshot command with live service, database and budget checks.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3129,6 +3140,13 @@ ADR impact: covered by session ADR disposition
   Summary: Adds a receipt-bound UPDATE/rollback route that permits only persistence ECS task-definition and service changes.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `dae6f542`
+  Time UTC: 2026-10-23T22:24:21Z
+  Message: feat(deploy): govern persistence recovery points
+  Summary: Adds a fixed target-bound encrypted recovery-point snapshot command with live service, database and budget checks.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3152,9 +3170,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:09:28Z
-Latest commit SHA: 5dced535
-Chat duration: 1602599s (18:13:09:59)
+Latest commit at UTC: 2026-10-23T22:24:21Z
+Latest commit SHA: dae6f542
+Chat duration: 1603492s (18:13:24:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
