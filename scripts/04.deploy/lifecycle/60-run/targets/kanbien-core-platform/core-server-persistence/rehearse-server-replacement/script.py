@@ -96,9 +96,21 @@ def replacement_task(prepare: object, original_arn: str, definition: str, deadli
     return None, "persistence-replacement-not-healthy"
 
 
+def reconciled_original(prepare: object, arn: str) -> tuple[dict | None, str]:
+    if not arn.startswith(f"arn:aws:ecs:{prepare.REGION}:{prepare.ACCOUNT}:task/{CLUSTER}/"):
+        return None, "persistence-replacement-reconciliation-task-identity-invalid"
+    ok, described, code = prepare.aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", arn)
+    tasks = described.get("tasks") if ok and isinstance(described, dict) else None
+    task = tasks[0] if isinstance(tasks, list) and len(tasks) == 1 else None
+    if not isinstance(task, dict) or task.get("lastStatus") != "STOPPED" or task.get("stoppedReason") != "governed core-server-persistence replacement rehearsal":
+        return None, code if not ok else "persistence-replacement-reconciliation-original-invalid"
+    return task, "ok"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--reconcile-original-task")
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.receipt is None:
@@ -109,6 +121,16 @@ def main() -> int:
     if receipt is None or not create.package_gates(args.receipt) or not prepare.live_budget()[0]:
         return report("blocked", "persistence-replacement-preconditions-not-proven")
     original, code, definition = current_task(prepare)
+    if args.reconcile_original_task:
+        stopped, code = reconciled_original(prepare, args.reconcile_original_task)
+        if stopped is None or definition is None or original is None:
+            return report("blocked", code)
+        if original.get("taskArn") == args.reconcile_original_task or stopped.get("taskDefinitionArn") != definition:
+            return report("blocked", "persistence-replacement-reconciliation-replacement-invalid")
+        stopped_at = stopped.get("stoppedAt")
+        if not isinstance(stopped_at, str):
+            return report("blocked", "persistence-replacement-reconciliation-original-invalid")
+        return report("replaced", "persistence-server-replaced-read-proof-required", facts={"candidate_image_digest": receipt["image_digest"], "source_revision": receipt["source_revision"], "runtime_task_definition": definition, "original_task": args.reconcile_original_task, "replacement_task": original["taskArn"], "recovery_boundary": stopped_at})
     if original is None or definition is None:
         return report("blocked", code)
     original_arn = original.get("taskArn")
