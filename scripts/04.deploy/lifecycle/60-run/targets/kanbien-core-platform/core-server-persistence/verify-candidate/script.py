@@ -14,6 +14,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[8]
 PROFILE, REGION, CLUSTER = "kanbien-dev", "eu-west-1", "kanbien-core-platform"
+ACCOUNT = "337159794548"
 STACK, FOUNDATION = "kanbien-core-platform-core-server-persistence", "kanbien-core-platform-foundation"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 RECORD_ID, FACT = "core-persistence-acceptance-v1", "kanbien-core-persistence-acceptance-v1"
@@ -76,6 +77,18 @@ def exited_zero(task: dict[str, object]) -> bool:
     return isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) and type(containers[0].get("exitCode")) is int and containers[0].get("exitCode") == 0
 
 
+def current_reconciliation_task(task: dict[str, object], requested_arn: str, task_definition: str) -> str:
+    """Permit evidence recovery only for this deployment's terminal verifier task."""
+    expected_prefix = f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/"
+    if not requested_arn.startswith(expected_prefix):
+        return "private-persistence-verifier-reconciliation-task-identity-invalid"
+    if task.get("taskArn") != requested_arn or task.get("taskDefinitionArn") != task_definition:
+        return "private-persistence-verifier-reconciliation-task-not-current"
+    if task.get("lastStatus") != "STOPPED":
+        return "private-persistence-verifier-reconciliation-task-not-terminal"
+    return "ok"
+
+
 def log_accepted(task: dict[str, object], expected: str) -> tuple[bool, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
@@ -98,9 +111,25 @@ def no_direct_database_credential(task_definition: str) -> bool:
     return not container.get("secrets") and not any(isinstance(name, str) and name.startswith("PERSISTENCE_POSTGRES") for name in names)
 
 
+def accepted_completion(task: dict[str, object], seconds: int, mode: str) -> int:
+    observed_duration = duration(task)
+    if observed_duration is None:
+        return report("blocked", "private-persistence-verifier-duration-unavailable")
+    if observed_duration > seconds:
+        return report("blocked", "private-persistence-verifier-completion-deadline-exceeded")
+    if not exited_zero(task):
+        return report("blocked", "private-persistence-verifier-unsuccessful-completion")
+    accepted, code = log_accepted(task, SUCCESS[mode])
+    if not accepted:
+        return report("blocked", code)
+    arn = task.get("taskArn")
+    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--mode")
+    parser.add_argument("--reconcile-task")
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.mode not in SUCCESS:
@@ -120,6 +149,16 @@ def main() -> int:
         return report("blocked", "private-persistence-verifier-network-or-task-definition-unavailable")
     if not no_direct_database_credential(task_definition):
         return report("blocked", "private-persistence-verifier-isolation-not-proven")
+    if args.reconcile_task is not None:
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.reconcile_task)
+        listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
+        if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
+            return report("blocked", "private-persistence-verifier-controller-observation-uncertain")
+        task = listed[0]
+        code = current_reconciliation_task(task, args.reconcile_task, task_definition)
+        if code != "ok":
+            return report("blocked", code)
+        return accepted_completion(task, seconds, args.mode)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "private-persistence-verifier", "environment": [
         {"name": "PERSISTENCE_VERIFIER_MODE", "value": args.mode},
@@ -144,17 +183,7 @@ def main() -> int:
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
         return report("blocked", "private-persistence-verifier-controller-deadline-remote-task-still-running")
-    observed_duration = duration(current)
-    if observed_duration is None:
-        return report("blocked", "private-persistence-verifier-duration-unavailable")
-    if observed_duration > seconds:
-        return report("blocked", "private-persistence-verifier-completion-deadline-exceeded")
-    if not exited_zero(current):
-        return report("blocked", "private-persistence-verifier-unsuccessful-completion")
-    accepted, code = log_accepted(current, SUCCESS[args.mode])
-    if not accepted:
-        return report("blocked", code)
-    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": args.mode, "verifier_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+    return accepted_completion(current, seconds, args.mode)
 
 
 if __name__ == "__main__":

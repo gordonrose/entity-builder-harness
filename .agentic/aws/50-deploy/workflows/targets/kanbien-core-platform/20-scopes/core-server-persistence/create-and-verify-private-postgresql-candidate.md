@@ -88,6 +88,16 @@ removal of the synthetic record.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode create --json > "$create_report"
 ```
 
+If the verifier controller is interrupted after task submission, do **not** run
+another verifier blindly. Reconcile the exact task only. The command requires
+the current verifier task definition, terminal status, successful completion
+within the declared deadline, no direct database credential, and the expected
+mode-specific safe acceptance log.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode create --reconcile-task "$verifier_task_arn" --json > "$create_report"
+```
+
 Do not call this candidate accepted until the separate replacement, schema
 compatible release rollback, and isolated database restore rehearsals are
 implemented and their evidence is recorded. Initial creation, a successful
