@@ -1,0 +1,70 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: github.workflow.publish-kanbien-core-platform-core-server-persistence
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [architecture, security, sre]
+#   kind: ci-workflow
+#   purpose: Hosted Docker qualification, scanning, and immutable publication of the persistence candidate without deployment.
+#   portability: { class: internal, targets: [] }
+#   effects: [network]
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.contract
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml
+name: Publish Kanbien Core Platform Core Server Persistence
+on: { workflow_dispatch: {} }
+permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+concurrency: { group: kanbien-core-platform-core-server-persistence-publication, cancel-in-progress: false }
+env:
+  AWS_REGION: eu-west-1
+  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
+  ECR_REPOSITORY: kanbien-core-platform/core-server
+  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+jobs:
+  qualify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: kanbien-core-platform
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Enforce protected main source
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Qualify declarations and actual candidate payload
+        run: |
+          bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
+          bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+          bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh --target-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes --json
+          bash scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --json
+          bash scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --workload-binding infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml --json
+          bash scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh --tag kanbien-core-server-persistence:qualification
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish immutable image
+        id: image
+        run: |
+          set -euo pipefail
+          tag="persistence-${GITHUB_SHA::12}-run${GITHUB_RUN_ID}"
+          docker tag kanbien-core-server-persistence:qualification "$ECR_URI:$tag"
+          docker push "$ECR_URI:$tag"
+          digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$tag" --query 'imageDetails[0].imageDigest' --output text)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - name: Require clean ECR scan
+        run: |
+          set -euo pipefail
+          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}"
+          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
+          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
+          test "${critical:-0}" = 0 && test "${high:-0}" = 0
+      - name: Record immutable result
+        run: echo "persistence digest=${{ steps.image.outputs.digest }} source=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
