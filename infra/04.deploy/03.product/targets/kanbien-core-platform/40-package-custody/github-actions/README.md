@@ -27,8 +27,9 @@ fits the controlled delivery model. The executable definition is the fixed
 workflow in `.github/workflows/`; this record does not duplicate its steps or
 create deployment authority.
 
-`core-server-package-custody` is manual-dispatch only, requires the protected
-`kanbien-core-platform` GitHub Environment, accepts only `main`, and may build,
-scan, attest, publish one immutable image, and retain a safe receipt. It may
-not create, select, update, verify, restart, or roll back a workload. Those
-remain separate target-bound deploy and run controls.
+`core-server-package-custody` and
+`core-server-persistence-package-custody` are manual-dispatch only, require
+the protected `kanbien-core-platform` GitHub Environment, accept only `main`,
+and may build, scan, attest, publish one immutable image, and retain a safe
+receipt. They may not create, select, update, verify, restart, or roll back a
+workload. Those remain separate target-bound deploy and run controls.

@@ -167,7 +167,7 @@ health_recovery:
 receipt:
   status: qualified-receipt-required-before-candidate-deployment
   owner: deployment-platform
-  safe_fields: [target, environment_class, provider_region_alias, program_id, image_contract_id, source_revision, image_digest, release_identity, checked_at, health_verdict, verification_verdict, receipt_reference]
+  safe_fields: [target, environment_class, provider_region_alias, candidate_id, package_contract_id, program_id, source_revision, image_digest, release_identity, checked_at, receipt_reference]
 rollback:
   status: retain-bootstrap-and-prior-persistence-immutable-release
   owner: deployment-platform
