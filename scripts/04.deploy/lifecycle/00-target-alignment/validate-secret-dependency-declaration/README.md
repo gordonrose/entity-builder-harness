@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.validate-secret-dependency-declaration.readme
-version: 1
+version: 3
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-22"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -31,3 +31,12 @@ Every active new-framework scope is checked through the active-workload
 inventory gate. A future persistence scope must run this command directly
 during declaration coverage and will be checked again when it enters that
 target's active scope inventory.
+
+Each credential identifies the declared dependency it serves. A
+server-mediated verifier cannot receive a credential for its tested dependency,
+and a declared migration executor must receive a matching `migration`-class
+credential. These are portable declaration checks; provider reference
+resolution, executable policies, effective database grants, session
+termination, and live rotation/revocation proof remain later target-alignment
+and provider-binding work. In particular, an `access_grant` owner/policy is
+accountability and declared intent, not evidence of effective least privilege.

@@ -3,15 +3,15 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-active-workload-health-recovery.wrapper
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
 #   kind: script
-#   purpose: Run the active workload health/recovery inventory fixtures.
+#   purpose: Run the scope lifecycle, workload health/recovery, and ownership inventory fixtures.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only, writes-files]
 #   used_by:

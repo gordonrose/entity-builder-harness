@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-platform-target-declaration
-#   version: 6
+#   version: 7
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -262,10 +262,12 @@ import yaml
 
 path = Path(sys.argv[1])
 value = yaml.safe_load(path.read_text(encoding="utf-8"))
-value["active_scopes"].append({
+value["scopes"].append({
     "id": "binding-only",
+    "lifecycle": "active",
     "declaration": "binding-only/00-declaration/declaration-contract.yml",
     "workload_binding": "binding-only/10-workload-binding/workload-binding.yml",
+    "workload_ownership": ["core-server-service", "private-release-verifier-task"],
 })
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY

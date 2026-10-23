@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-health-failure-and-recovery
-version: 3
+version: 7
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-22"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -29,17 +29,26 @@ provider or target commands.
 
 1. Locate the canonical scope declaration; do not construct a parallel health
    record in a plan, README, or provider template.
-2. Validate every workload's type-aware `health_recovery` entry, binding, and
-   source/command trace. A shared image is not proof that two workloads execute
-   the same code.
-   Stop on an absent, malformed, or mismatched declaration. Validate the target
-   scope-health inventory so a new active workload cannot be omitted.
+2. Validate every workload's type-aware `health_recovery` entry, binding,
+   health-signal mapping, and source/command trace. A shared image is not proof
+   that two workloads execute the same code. For a dependency-bearing server,
+   stop if the provider replacement signal is dependency readiness rather than
+   process liveness. Stop on an absent, malformed, or mismatched declaration.
+   Validate the target scope lifecycle inventory so no new-framework scope is
+   omitted and no two active scopes claim the same workload identity.
 3. Run the declared local and package proof commands when their status is
    `planned` or when their relevant behavior changed. A passed record does not
    excuse a stale proof after that behavior changes.
 4. Before accepting a dependency-bearing scope, require applicable live failure
    proof or a separately reviewed exception. Do not treat a generic endpoint
    response as that proof.
+   If migration execution is declared, require all three persistence recovery
+   proof requirements: retained data after replacement, compatible image
+   restoration, and isolated database restoration. Do not let evidence for one
+   operation substitute for either of the others. Before accepting verifier or
+   migration evidence, confirm the declared repeat, concurrent, conflicting,
+   lost-response, and cleanup/replay behaviours were covered by the applicable
+   local and package proof; do not infer them from one successful execution.
 <!-- deterministic-check: allow reason="the target-specific release and verification controls perform the provider reads; this workflow routes the required human decision" -->
 5. Before live verification or restoration, confirm that the deployed operation
    and recovery path match the declaration. Record only safe verdicts and
@@ -58,3 +67,9 @@ Stop rather than guess when liveness and readiness are indistinguishable,
 selected dependencies are absent from readiness/failure behaviour, a diagnostic
 would disclose sensitive data, uncertain work could be replayed automatically,
 or a deferred live proof lacks an owner, follow-up, and review boundary.
+Also stop when migration execution lacks one of its separate persistence
+recovery requirements, when an image rollback claims database reversal, or
+when a restore would alter its source database. Also stop when a verifier could
+silently recreate or overwrite its acceptance record, clean up before the
+declared retention boundary, or when a migration could replay a checksum
+mismatch or race another executor.

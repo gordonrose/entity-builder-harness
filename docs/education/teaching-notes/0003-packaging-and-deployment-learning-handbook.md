@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 24
+  version: 31
   status: active
   created_on: "2026-10-07"
-  updated_on: "2026-10-22"
+  updated_on: "2026-10-23"
   layer: 05.education
   domain: education
   disciplines:
@@ -1130,17 +1130,37 @@ tested rather than assumed.
 Before a workload uses a secret, its scope should declare the purpose, owner,
 authorised workloads, access class, target-neutral reference ID, expected field
 names, delivery mechanism, rotation behaviour, safe failure effect, and safe
-diagnostic codes. It must also name the retirement/revocation owner, policy,
-and condition. It must never declare a secret value, password, token,
-connection string, or provider secret address. A runtime credential and a
-migration credential are separate access classes: a long-running server must
-not quietly receive the credential that can alter database structure.
+diagnostic codes. It must also name the accountable declared access-class grant
+owner/policy, rotation, revocation, and retirement ownership. It must never
+declare a secret value, password, token, connection string, or provider secret
+address. A runtime credential and a migration credential are separate access
+classes: a long-running server must not quietly receive the credential that can
+alter database structure.
 
 Credential privilege and workload lifetime are different ideas. A one-shot
 verifier can have ordinary runtime access when it needs a limited dependency
 check; it does not thereby become a migration or administrative task. A
 completion-only task reports unsuccessful completion and safe result codes for
 credential failure rather than pretending to have HTTP readiness.
+
+Grant, rotation, and revocation answer different questions. The grant owner and
+policy label declare intended accountability and access-class boundary; neither
+proves that an executable provider policy or database grant is least-privilege.
+That needs later provider binding plus permitted and prohibited operation
+evidence. Rotation starts a replacement task with the current credential; it
+never authorises replaying a completed task. The PostgreSQL design must cover
+the credential/secret/replacement order, permitted interruption, partial
+failure recovery, and acceptance only after the replacement performs a fresh
+meaningful operation. Revocation blocks new starts, stops active authorised
+workloads, and later proves both credential delivery and dependency access are
+denied for new attempts and established sessions. Changing a password or
+blocking secret retrieval alone does not establish that. A stopped migration
+has an uncertain outcome: release acceptance remains blocked pending fresh
+state observation, and blind replay remains prohibited. Planned retirement
+follows its declared replacement condition; urgent revocation takes the
+immediate containment route. The future PostgreSQL scope will map these
+portable facts to real database grants, secret references, and provider
+observations.
 
 ### Identity failures are distinct
 
@@ -1219,6 +1239,97 @@ digest, schema version before/after, timestamps, result, compatibility class,
 and verification. A migration failure blocks release; it does not authorize an
 automatic retry, an image rollback that assumes database reversal, or an
 unguarded repair.
+
+### Persistence proof: do not conflate three recovery questions
+
+The first persistence verifier must prove durable state, not merely that one
+process could write and read in memory. Its minimum successful path is:
+
+```text
+create and commit a synthetic record through the server
+→ replace that server task
+→ read the same original facts through the replacement server
+→ retain the record long enough for the declared recovery proof
+→ perform governed cleanup
+```
+
+The verifier has private application-route access only. It does **not** need a
+database credential or a direct database connection; its requests use the
+server's existing bounded pool. A safe repeat must specify equivalent retry,
+concurrent create, conflicting identifier reuse, and a response lost after the
+database committed. In every case, the governing result preserves one record
+and its original facts rather than silently recreating a missing record.
+
+The harness now supports this as an explicit verifier contract. A
+run-to-completion verifier may name a required dependency and target server,
+but only when it declares private application-route access, no direct
+credential, no direct network path, and a zero direct-connection limit. It
+must declare the create/commit → replacement → original-read sequence, stable
+acceptance-record behaviour for repeats/races/conflicts/lost responses, and
+governed server-mediated cleanup after the replacement-and-restore retention
+boundary. Each secret declaration now identifies the dependency it serves,
+which lets the validator reject a verifier receiving a credential for the same
+dependency it is supposed to test through the server.
+
+Three similar-looking operations answer different questions:
+
+| Proof | What success demonstrates |
+| --- | --- |
+| Server replacement | The stored record survives loss of the original server process. |
+| Image rollback | A prior **persistence-capable** image can operate against the resulting schema and data. A dependency-free bootstrap image cannot prove this. |
+| Database restoration | A recovery point containing a known record can be restored to a new isolated database and read through an isolated application. |
+
+Liveness, dependency readiness, candidate acceptance, and service replacement
+also require separate declarations. A container health check that calls a
+database-dependent readiness endpoint can create a replacement loop during a
+database outage. The persistence target must instead declare and prove a
+mapping in which a temporary outage prevents readiness, bounded recovery is
+safe, and replacement occurs only for the intended process-health condition.
+
+The harness now records that mapping on every long-running server. It names
+the provider replacement signal, confirms that dependency readiness blocks
+candidate acceptance, and requires both liveness and readiness before a
+candidate can be accepted. A dependency-bearing server is rejected if it uses
+readiness for provider replacement. The existing dependency-free bootstrap is
+recorded honestly as a transitional exception: ECS currently checks `/readyz`,
+which is safe only because that scope has no required dependencies. This is not
+a reusable persistence setting, and a later provider-specific check must prove
+that the persistence runtime actually follows its declared liveness mapping.
+
+Finally, additive migration does not itself prove safe execution. A migration
+contract must specify one executor at a time, bounded lock and execution waits,
+transaction boundaries, interruption handling, and the response to an unknown
+completion outcome. A checksum identifies a migration; it does not determine
+whether an interrupted operation committed.
+
+The harness now requires those facts whenever a one-shot task declares
+`migration_execution`. It requires exactly one executor, a positive lock wait
+and execution timeout within the task deadline, an immutable/checksummed
+manifest, per-migration atomicity where supported, no automatic retry after an
+uncertain interruption, and a release block until fresh state observation. The
+task must also declare a checksum-matching rerun as a recorded no-op, a
+checksum mismatch as a release block, and a concurrent executor as rejected
+before apply. It must also have a matching migration-class secret for its
+declared dependency. These are local declaration protections; the future
+PostgreSQL slice still has to prove its actual lock, transaction, schema, and
+compatible release behaviour.
+
+Database grants also evolve with the schema. Initial PostgreSQL role setup
+cannot grant access to tables, sequences, or functions that do not exist yet.
+The persistence design must name the creating role and object ownership, then
+either configure default privileges for that actual creator or apply narrowly
+reviewed runtime grants with each migration. Acceptance proves both sides:
+the runtime role can complete its intended operation and cannot perform the
+prohibited structural operation. Bootstrap-level privilege stays outside the
+long-running application server.
+
+The harness now also records the three proof boundaries that follow a
+migration: durable data surviving server replacement through the declared
+verifier; restoration of a prior persistence-capable image that remains
+compatible with the resulting schema; and recovery-point restoration to a new
+isolated database read through an isolated application. They are intentionally
+not interchangeable. At this stage they are acceptance requirements only—no
+live database restore, rollback, or replacement evidence has been invented.
 
 ### Architecture intent
 

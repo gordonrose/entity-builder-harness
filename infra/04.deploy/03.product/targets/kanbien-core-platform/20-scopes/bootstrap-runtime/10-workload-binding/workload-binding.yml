@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.binding
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -35,6 +35,11 @@ workloads:
     workload_type: long-running-server
     runtime_class: service
     provider_reference: BootstrapRuntimeService
+    health_signal_mapping:
+      provider_replacement_signal: readiness
+      dependency_readiness_effect: block-candidate-acceptance
+      candidate_acceptance_signals: [liveness, readiness]
+      dependency_free_replacement_basis: accepted-bootstrap-has-no-required-dependency
     execution:
       kind: compiled-entrypoint
       source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts

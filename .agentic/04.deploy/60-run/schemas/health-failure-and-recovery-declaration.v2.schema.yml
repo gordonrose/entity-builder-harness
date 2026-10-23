@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.health-failure-and-recovery-declaration.v2
-#   version: 2
+#   version: 8
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -24,6 +24,7 @@ workload_types:
     requires:
       - liveness
       - readiness
+      - health_signal_mapping
       - startup_failure
       - dependency_failures
       - automatic_workload_recovery
@@ -68,17 +69,114 @@ completion_evidence:
     - actual-evidence-boundary-matches-fresh-after
     - actual-duration-is-within-declared-deadline
 scope_inventory:
-  active_entry_requires:
+  lifecycle_entry_requires:
+    - lifecycle
     - canonical-own-declaration-path
     - canonical-own-binding-path
     - matching-target
     - matching-scope
+    - workload-ownership-matches-binding
+  lifecycle_states: [active, candidate, accepted-historical]
+  active_ownership: exactly-one-active-scope-per-bound-workload
 workload_binding:
   each_workload_requires:
     - execution.kind
     - execution.source_reference
     - execution.command_description
   execution_kinds: [compiled-entrypoint, inline-command]
+health_signal_mapping:
+  long_running_server_requires:
+    - provider_replacement_signal
+    - dependency_readiness_effect
+    - candidate_acceptance_signals
+  provider_replacement_signals: [liveness, readiness]
+  dependency_readiness_effect: block-candidate-acceptance
+  candidate_acceptance_signals: [liveness, readiness]
+  dependency_bearing_constraint: provider-replacement-signal-must-be-liveness
+  dependency_free_readiness_replacement:
+    requires: dependency_free_replacement_basis
+    status: transitional-only
+  provider_binding_constraint: workload-binding-health-signal-mapping-must-match
+server_mediated_dependency_proof:
+  applies_to: run-to-completion-task
+  required_fields:
+    - dependency
+    - target_workload
+    - route_access
+    - direct_dependency_credentials
+    - direct_dependency_network
+    - direct_dependency_connection_limit
+    - proof_steps
+    - acceptance_record
+    - cleanup
+  route_access: private-application-route-only
+  direct_dependency_credentials: prohibited
+  direct_dependency_network: prohibited
+  direct_dependency_connection_limit: 0
+  proof_steps:
+    - create-and-commit-synthetic-record-through-target-workload
+    - replace-target-workload
+    - read-original-record-through-replacement-workload
+  acceptance_record:
+    required_fields:
+      - identity
+      - equivalent_repeat
+      - concurrent_create
+      - conflicting_reuse
+      - lost_response_after_commit
+    identity: stable-synthetic-acceptance-record
+    equivalent_repeat: return-original-record-without-duplicate
+    concurrent_create: exactly-one-record-preserve-original-facts
+    conflicting_reuse: reject-conflict-preserve-original-facts
+    lost_response_after_commit: reconcile-original-record-before-retry
+  cleanup_required_fields: [owner, retention, abandoned_verifier_policy, route, outcome]
+  cleanup:
+    retention: until-replacement-and-restore-proof-accepted
+    abandoned_verifier_policy: retain-for-governed-cleanup
+    route: server-mediated-governed-cleanup
+    outcome: delete-synthetic-record-only-after-retention
+migration_execution:
+  applies_to: run-to-completion-task
+  required_fields:
+    - dependency
+    - credential_access_class
+    - manifest
+    - executor
+    - lock_wait_seconds
+    - execution_timeout_seconds
+    - transaction_boundary
+    - interruption_policy
+    - unknown_outcome_policy
+    - compatibility_strategy
+    - replay_handling
+  credential_access_class: migration
+  manifest: { ordering: strictly-ascending-immutable-identifiers, checksum: required-before-execution }
+  executor: exactly-one
+  transaction_boundary: per-migration-atomic-where-supported
+  interruption_policy: do-not-retry-uncertain-outcome
+  unknown_outcome_policy: block-release-require-fresh-state-observation
+  compatibility_strategy: expand-deploy-verify-contract-later
+  replay_handling:
+    required_fields: [already_applied_checksum_match, checksum_mismatch, concurrent_executor]
+    already_applied_checksum_match: no-op-record-accepted-state
+    checksum_mismatch: block-release-require-fresh-state-observation
+    concurrent_executor: reject-before-apply
+persistence_recovery:
+  required_when: migration_execution-is-declared
+  server_replacement:
+    required_fields: [verifier_workload, outcome, proof_requirement]
+    outcome: original-record-survives-server-replacement
+  image_rollback:
+    required_fields: [predecessor, schema_compatibility, database_reversal, proof_requirement]
+    predecessor: persistence-capable-accepted-release
+    schema_compatibility: required
+    database_reversal: prohibited
+  isolated_database_restore:
+    required_fields: [restore_target, verification, source_mutation, proof_requirement]
+    restore_target: new-isolated-database
+    verification: isolated-application-reads-known-synthetic-record
+    source_mutation: prohibited
+  proof_requirement: required-before-persistence-scope-acceptance
 not_applicable:
   required_fields: [concern, workload_type_basis, scope_basis]
   constraint: concern-must-be-inapplicable-to-the-declared-workload-type
