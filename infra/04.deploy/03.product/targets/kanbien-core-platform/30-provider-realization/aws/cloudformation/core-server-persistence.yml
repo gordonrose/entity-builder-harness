@@ -30,6 +30,7 @@ Parameters:
   ImageRepositoryArn: { Type: String, AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$' }
   ImageRepositoryUri: { Type: String, AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/kanbien-core-platform/core-server$' }
   ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
+  RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   SourceRevision: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' }
 
 Resources:
@@ -395,7 +396,7 @@ Resources:
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
         - Name: persistence-restoration-verifier
-          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Image: !Sub '${ImageRepositoryUri}@${RestoreVerifierImageDigest}'
           Essential: true
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
