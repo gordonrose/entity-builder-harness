@@ -234,7 +234,6 @@ def main() -> int:
             if names is None or len(names) != len(set(names)) or any(CONFIG_NAME.fullmatch(name) is None for name in names):
                 codes.append("secret-dependency-names-invalid")
             entry_ids: set[str] = set()
-            reference_ids: set[str] = set()
             injection_names: set[str] = set()
             valid_entries: list[dict[str, Any]] = []
             for entry in entries:
@@ -244,15 +243,31 @@ def main() -> int:
                     continue
                 valid_entries.append(entry)
                 entry_ids.add(entry["id"])
-                reference_ids.add(entry["target_reference_id"])
                 injection_names.add(entry["injection_name"])
                 if any(
                     verifier_dependency == entry["dependency"] and verifier_id in entry["authorised_workloads"]
                     for verifier_id, verifier_dependency in server_mediated_verifiers.items()
                 ):
                     codes.append("server-mediated-verifier-direct-secret-prohibited")
-            if len(entry_ids) != len(entries) or len(reference_ids) != len(entries) or len(injection_names) != len(entries):
+            if len(entry_ids) != len(entries) or len(injection_names) != len(entries):
                 codes.append("secret-dependency-identity-duplicate")
+            reference_entries: dict[str, list[dict[str, Any]]] = {}
+            for entry in valid_entries:
+                reference_entries.setdefault(entry["target_reference_id"], []).append(entry)
+            for shared in reference_entries.values():
+                if len(shared) < 2:
+                    continue
+                first = shared[0]
+                workload_sets = [set(entry["authorised_workloads"]) for entry in shared]
+                same_runtime_shape = all(
+                    entry["access_class"] == "runtime"
+                    and entry["dependency"] == first["dependency"]
+                    and entry["expected_fields"] == first["expected_fields"]
+                    for entry in shared
+                )
+                disjoint_workloads = all(not left.intersection(right) for index, left in enumerate(workload_sets) for right in workload_sets[index + 1:])
+                if not same_runtime_shape or not disjoint_workloads:
+                    codes.append("secret-dependency-shared-reference-invalid")
             if names is None or set(names) != injection_names:
                 codes.append("secret-dependency-names-mismatch")
             for workload_id, dependency in migration_executors.items():

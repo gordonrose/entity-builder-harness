@@ -61,6 +61,20 @@ Resources:
       VpcId: !Ref VpcId
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
+  RestorationVerifierSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: One-shot verifier restricted to a temporary restored PostgreSQL database.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  RestoredDatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Temporary restored PostgreSQL database reachable only by the restoration verifier.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
   ServerDnsUdpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
@@ -91,12 +105,30 @@ Resources:
   MigrationDatabaseEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }
+  RestorationVerifierDnsUdpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  RestorationVerifierDnsTcpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  RestorationVerifierEndpointEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+  RestorationVerifierArtifactObjectStoreEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+  RestorationVerifierRestoredDatabaseEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref RestoredDatabaseSecurityGroup }
   DatabaseIngressFromServer:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref DatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref ServerSecurityGroup }
   DatabaseIngressFromMigration:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref DatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  RestoredDatabaseIngressFromRestorationVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref RestoredDatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref RestorationVerifierSecurityGroup }
   ServerIngressFromVerifier:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroupId }
@@ -109,6 +141,9 @@ Resources:
   EndpointIngressFromMigration:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  EndpointIngressFromRestorationVerifier:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref RestorationVerifierSecurityGroup }
 
   MigrationCredentialsSecret:
     Type: AWS::SecretsManager::Secret
@@ -227,6 +262,22 @@ Resources:
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
+  RestorationVerifierExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-restoration-verifier-execution
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: pull-log-and-read-runtime-secret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
+              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref RuntimeCredentialsSecret }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
   CoreServerPersistenceTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -331,6 +382,32 @@ Resources:
           Environment: [{ Name: PERSISTENCE_VERIFIER_MODE, Value: create }, { Name: KANBIEN_PRIVATE_PERSISTENCE_URL, Value: http://core-server-persistence.kanbien-core-platform.internal:3000 }]
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-verifier } }
 
+  CoreServerPersistenceRestorationVerifierTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-persistence-restoration-verifier
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt RestorationVerifierExecutionRole.Arn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      ContainerDefinitions:
+        - Name: persistence-restoration-verifier
+          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-core-server-persistence-restore-verifier.main.js]
+          Environment:
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
+            - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
+          Secrets: [{ Name: PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }]
+          LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-restoration-verifier } }
+
 Outputs:
   PersistenceDatabaseEndpoint: { Value: !GetAtt PersistenceDatabase.Endpoint.Address }
   PersistenceDatabaseIdentifier: { Value: !Ref PersistenceDatabase }
@@ -340,5 +417,8 @@ Outputs:
   CoreServerPersistenceTaskDefinitionArn: { Value: !Ref CoreServerPersistenceTaskDefinition }
   CoreServerPersistenceMigrationTaskDefinitionArn: { Value: !Ref CoreServerPersistenceMigrationTaskDefinition }
   CoreServerPersistenceVerifierTaskDefinitionArn: { Value: !Ref CoreServerPersistenceVerifierTaskDefinition }
+  CoreServerPersistenceRestorationVerifierTaskDefinitionArn: { Value: !Ref CoreServerPersistenceRestorationVerifierTaskDefinition }
   PersistenceServiceDiscoveryArn: { Value: !GetAtt PersistenceServiceDiscovery.Arn }
   PersistenceMigrationSecurityGroupId: { Value: !Ref MigrationSecurityGroup }
+  PersistenceRestorationVerifierSecurityGroupId: { Value: !Ref RestorationVerifierSecurityGroup }
+  PersistenceRestoredDatabaseSecurityGroupId: { Value: !Ref RestoredDatabaseSecurityGroup }

@@ -55,5 +55,11 @@ await wait('/livez', (response, body) => response.status === 200 && body.status 
 const created = await fetch(`${base}/internal/persistence-acceptance`, { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify({record_id:id, fact_digest:fact}) }); if (created.status !== 201 || (await created.json()).outcome !== 'created') throw new Error('persistence-create-not-confirmed');
 const read = await fetch(`${base}/internal/persistence-acceptance?record_id=${id}`); const body = await read.json(); if (read.status !== 200 || body?.record?.id !== id || body?.record?.factDigest !== fact) throw new Error('persistence-read-not-confirmed');
 NODE
+restore_digest="$(node -e 'process.stdout.write("f".repeat(64))')"
+if ! restore_output="$(docker run --rm "${common[@]}" -e "PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS=$runtime" -e PERSISTENCE_RUNTIME_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-runtime -e PERSISTENCE_ACCEPTANCE_RECORD_ID=core-persistence-package-smoke-0001 -e "PERSISTENCE_ACCEPTANCE_FACT_DIGEST=$restore_digest" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js 2>&1)"; then
+  printf '%s\n' "$restore_output" >&2
+  exit 1
+fi
+printf '%s\n' "$restore_output" | grep -F '"code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"' >/dev/null
 docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("CREATE TABLE platform.runtime_must_not_create (id text)").then(()=>{process.exitCode=1}).catch(()=>{}).finally(()=>pool.end());'
 echo 'Core-server persistence image PostgreSQL/TLS/package smoke test passed.'

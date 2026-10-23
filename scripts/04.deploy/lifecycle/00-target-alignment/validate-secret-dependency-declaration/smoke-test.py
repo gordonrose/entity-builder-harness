@@ -180,6 +180,19 @@ def main() -> int:
             [secret_entry("shared-runtime-credential", "runtime", ["core-server", "core-worker"], server_failure())],
         )
         expect_pass(shared_runtime, directory, "shared-server-worker-runtime")
+        shared_runtime_across_lifecycles = scope_with(
+            baseline,
+            [workload("core-server", "long-running-server"), workload("restoration-verifier", "run-to-completion-task")],
+            [
+                secret_entry("server-runtime-credential", "runtime", ["core-server"], server_failure()),
+                secret_entry("restoration-runtime-credential", "runtime", ["restoration-verifier"], completion_failure()),
+            ],
+        )
+        shared_runtime_across_lifecycles["configuration"]["secret_dependencies"][1]["target_reference_id"] = "server-runtime-credential"
+        expect_pass(shared_runtime_across_lifecycles, directory, "shared-runtime-reference-across-workload-lifecycles")
+        invalid_shared_reference = copy.deepcopy(shared_runtime_across_lifecycles)
+        invalid_shared_reference["configuration"]["secret_dependencies"][1]["access_class"] = "migration"
+        expect_failure(invalid_shared_reference, "secret-dependency-shared-reference-invalid", directory)
         for access_class in ("migration", "administrative"):
             privileged_shared = copy.deepcopy(shared_runtime)
             privileged_shared["configuration"]["secret_dependencies"][0]["access_class"] = access_class
