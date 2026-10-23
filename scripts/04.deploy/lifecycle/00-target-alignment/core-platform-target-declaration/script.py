@@ -469,15 +469,23 @@ def check_pipeline(root: Path) -> None:
     if catalogue.get("schema") != "deploy/pipeline-index/v1" or catalogue.get("target") != TARGET:
         raise DeclarationFailure("pipeline-index-invalid")
     pipelines = catalogue.get("pipelines")
-    if not isinstance(pipelines, list) or len(pipelines) != 1 or not isinstance(pipelines[0], dict):
+    if not isinstance(pipelines, list) or len(pipelines) != 2 or not all(isinstance(pipeline, dict) for pipeline in pipelines):
         raise DeclarationFailure("pipeline-record-missing")
-    pipeline = pipelines[0]
-    if pipeline.get("id") != "core-server-package-custody" or pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != ".github/workflows/publish-kanbien-core-platform-core-server.yml" or pipeline.get("delivery_access_contract") != "core-server-package-custody.delivery-access.yml" or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml":
-        raise DeclarationFailure("pipeline-record-invalid")
-    if not non_empty(pipeline.get("owner")):
-        raise DeclarationFailure("pipeline-unowned")
-    if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != ["bootstrap-runtime"] or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
-        raise DeclarationFailure("pipeline-authority-invalid")
+    expected = {
+        "core-server-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server.yml", "core-server-package-custody.delivery-access.yml", "bootstrap-runtime"),
+        "core-server-persistence-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence"),
+    }
+    indexed = {pipeline.get("id"): pipeline for pipeline in pipelines}
+    if set(indexed) != set(expected):
+        raise DeclarationFailure("pipeline-record-missing")
+    for pipeline_id, (workflow, access_contract, scope) in expected.items():
+        pipeline = indexed[pipeline_id]
+        if pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != workflow or pipeline.get("delivery_access_contract") != access_contract or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml":
+            raise DeclarationFailure("pipeline-record-invalid")
+        if not non_empty(pipeline.get("owner")):
+            raise DeclarationFailure("pipeline-unowned")
+        if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != [scope] or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
+            raise DeclarationFailure("pipeline-authority-invalid")
 
 
 def report(verdict: str, codes: tuple[str, ...]) -> str:

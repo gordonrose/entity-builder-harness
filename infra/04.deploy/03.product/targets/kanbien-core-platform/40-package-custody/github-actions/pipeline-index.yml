@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -56,4 +56,22 @@ pipelines:
       - provenance-attestation
       - immutable-digest
       - custody-receipt
+    deployment_boundary: target-bound-deploy-capability-not-this-pipeline
+  - id: core-server-persistence-package-custody
+    type: package-publication
+    owner: persistence-platform
+    state: active
+    executable_workflow: .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    delivery_access_contract: core-server-persistence-package-custody.delivery-access.yml
+    trigger: workflow_dispatch
+    permitted_source_ref: refs/heads/main
+    approval: github-environment:kanbien-core-platform
+    provider_identity: github-kanbien-core-platform-delivery
+    package_destination: kanbien-core-platform/core-server
+    provider_region_alias: aws-eu-west-1
+    permitted_operations: [qualify-local-image, publish-immutable-image, vulnerability-scan, sbom, provenance-attestation, write-safe-package-custody-receipt]
+    outputs: [immutable-image-digest, package-custody-receipt]
+    used_by_scopes: [core-server-persistence]
+    receipt_contract: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
+    required_proofs: [local-image-qualification, delivery-access-coverage, vulnerability-scan, sbom, provenance-attestation, immutable-digest, custody-receipt]
     deployment_boundary: target-bound-deploy-capability-not-this-pipeline

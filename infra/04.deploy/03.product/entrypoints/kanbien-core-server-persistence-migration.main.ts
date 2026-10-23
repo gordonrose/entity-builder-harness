@@ -33,13 +33,15 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
   const certificateAuthority = certificateAuthorityFromEnvironment(env);
   if (configuration === undefined || credentials === undefined || runtimeCredentials === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
+  let stage: "migration" | "runtime-access" = "migration";
   try {
     const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(configuration.schema);
     const result = await createPostgreSqlMigrationRunner(configuration, { pool }, "core-server-persistence-v1").apply({
       schema: configuration.schema,
       migrations: [postgreSqlPersistenceFoundationMigration(configuration.schema), { ...acceptance, checksum: postgreSqlMigrationChecksum(acceptance.statements) }],
     });
-    if (!result.ok) return rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED");
+    if (!result.ok) return rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage, migrationFailureClass(result.error));
+    stage = "runtime-access";
     await provisionRuntimeAccess(pool, {
       database: configuration.database,
       schema: configuration.schema,
@@ -47,7 +49,7 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
       runtimeCredentials,
     });
     console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_MIGRATION_APPLIED" }));
-  } catch { rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED"); } finally { await pool.end(); }
+  } catch { rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage); } finally { await pool.end(); }
 }
 function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
   const host = text(env, "PERSISTENCE_POSTGRES_HOST"), database = text(env, "PERSISTENCE_POSTGRES_DATABASE"), schema = text(env, "PERSISTENCE_POSTGRES_SCHEMA"), reference = text(env, "PERSISTENCE_MIGRATION_SECRET_REFERENCE"), port = text(env, "PERSISTENCE_POSTGRES_PORT");
@@ -104,5 +106,15 @@ function quotedLiteral(value: string): string {
   if (value.length === 0 || value.includes("\u0000")) throw new TypeError("PERSISTENCE_CREDENTIAL_INVALID");
   return `'${value.replaceAll("'", "''")}'`;
 }
-function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
+function rejected(code: string, stage?: "migration" | "runtime-access", failureClass?: string): void {
+  console.error(JSON.stringify({ verdict: "rejected", code, ...(stage === undefined ? {} : { stage }), ...(failureClass === undefined ? {} : { provider_failure_class: failureClass }) }));
+  process.exitCode = 1;
+}
+
+function migrationFailureClass(error: { readonly params?: Readonly<Record<string, unknown>> }): string | undefined {
+  const value = error.params?.["provider_failure_class"];
+  return typeof value === "string" && /^(access_denied|conflict|constraint|resource_not_found|timeout|transaction_rolled_back|transport|validation|unknown)$/.test(value)
+    ? value
+    : undefined;
+}
 if (typeof require !== "undefined" && require.main === module) void runKanbienCoreServerPersistenceMigration();
