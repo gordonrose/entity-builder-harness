@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:42:31Z
-latest_commit_sha: 2772a57e
-chat_duration: 1604582s (18:13:43:02)
+latest_commit_at_utc: 2026-10-23T22:46:34Z
+latest_commit_sha: d424ec82
+chat_duration: 1604825s (18:13:47:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2561,6 +2561,17 @@ Summary: Rebased onto current origin/main; restore-verifier task commit now reso
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:46:34Z - Commit recorded
+
+Commit: `d424ec82`
+
+Message: bound persistence restoration surface update
+
+Summary: Added a restore-specific image parameter and change-set control that permits only new isolated restoration verifier resources; it cannot modify the live ECS service or existing task definitions.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3201,6 +3212,13 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased onto current origin/main; restore-verifier task commit now resolves to 2772a57e.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `d424ec82`
+  Time UTC: 2026-10-23T22:46:34Z
+  Message: bound persistence restoration surface update
+  Summary: Added a restore-specific image parameter and change-set control that permits only new isolated restoration verifier resources; it cannot modify the live ECS service or existing task definitions.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3224,9 +3242,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:42:31Z
-Latest commit SHA: 2772a57e
-Chat duration: 1604582s (18:13:43:02)
+Latest commit at UTC: 2026-10-23T22:46:34Z
+Latest commit SHA: d424ec82
+Chat duration: 1604825s (18:13:47:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
