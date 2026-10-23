@@ -88,6 +88,19 @@ assert module.current_reconciliation_task({**task, "lastStatus": "RUNNING"}, arn
 assert module.current_reconciliation_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "persistence-migration-reconciliation-task-not-current"
 assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "a" * 32, definition) == "persistence-migration-reconciliation-task-identity-invalid"
 PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py" <<'PY'
+import importlib.util, sys
+
+spec = importlib.util.spec_from_file_location("verifier", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+arn = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "b" * 32
+definition = "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:2"
+task = {"taskArn": arn, "taskDefinitionArn": definition, "lastStatus": "STOPPED"}
+assert module.current_reconciliation_task(task, arn, definition) == "ok"
+assert module.current_reconciliation_task({**task, "lastStatus": "RUNNING"}, arn, definition) == "private-persistence-verifier-reconciliation-task-not-terminal"
+assert module.current_reconciliation_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "private-persistence-verifier-reconciliation-task-not-current"
+assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "b" * 32, definition) == "private-persistence-verifier-reconciliation-task-identity-invalid"
+PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
 import sys
 template = open(sys.argv[1], encoding="utf-8").read()
@@ -102,5 +115,6 @@ assert "DatabaseIngressFromVerifier" not in template
 for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
     expected = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
     assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
+assert "GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup" in template, "the private verifier must have explicit egress to the candidate server"
 PY
 echo 'Core-server-persistence fixed target controls passed.'

@@ -100,6 +100,9 @@ Resources:
   ServerIngressFromVerifier:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroupId }
+  VerifierEgressToServer:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup }
   EndpointIngressFromServer:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ServerSecurityGroup }
