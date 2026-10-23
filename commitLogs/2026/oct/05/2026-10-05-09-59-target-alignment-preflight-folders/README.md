@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:00:55Z
-latest_commit_sha: b9f30372
-chat_duration: 1602086s (18:13:01:26)
+latest_commit_at_utc: 2026-10-23T22:09:28Z
+latest_commit_sha: 5dced535
+chat_duration: 1602599s (18:13:09:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2506,6 +2506,17 @@ Summary: Rebased task commit: reconciles only an exact stopped task with the gov
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T22:09:28Z - Commit recorded
+
+Commit: `5dced535`
+
+Message: feat(deploy): govern persistence release transitions
+
+Summary: Adds a receipt-bound UPDATE/rollback route that permits only persistence ECS task-definition and service changes.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3111,6 +3122,13 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased task commit: reconciles only an exact stopped task with the governed replacement reason and a distinct healthy replacement.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5dced535`
+  Time UTC: 2026-10-23T22:09:28Z
+  Message: feat(deploy): govern persistence release transitions
+  Summary: Adds a receipt-bound UPDATE/rollback route that permits only persistence ECS task-definition and service changes.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3134,9 +3152,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:00:55Z
-Latest commit SHA: b9f30372
-Chat duration: 1602086s (18:13:01:26)
+Latest commit at UTC: 2026-10-23T22:09:28Z
+Latest commit SHA: 5dced535
+Chat duration: 1602599s (18:13:09:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
