@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T20:08:12Z
-latest_commit_sha: 52601cd98c8dacdecfafc78bd09328d24c24c3a8
-chat_duration: 1595323s (18:11:08:43)
+latest_commit_at_utc: 2026-10-23T20:27:30Z
+latest_commit_sha: d8ff3f8c0f5fdf6421e0245391ad5c74135447d5
+chat_duration: 1596481s (18:11:28:01)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2297,6 +2297,17 @@ Summary: Repairs the real TLS PostgreSQL package smoke and adds an enforced pers
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T20:27:30Z - Commit recorded
+
+Commit: `d8ff3f8c0f5fdf6421e0245391ad5c74135447d5`
+
+Message: feat(deploy): govern persistence candidate creation
+
+Summary: Added a fixed, target-bound persistence candidate route: live preflight, reviewable CloudFormation creation, one-shot migration, and server-mediated verification; local gates and live read-only preflight pass.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2769,6 +2780,13 @@ ADR impact: covered by session ADR disposition
   Summary: Repairs the real TLS PostgreSQL package smoke and adds an enforced persistence-candidate package-custody route with delivery-access proof, scan, SBOM, provenance, and receipt.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `d8ff3f8c0f5fdf6421e0245391ad5c74135447d5`
+  Time UTC: 2026-10-23T20:27:30Z
+  Message: feat(deploy): govern persistence candidate creation
+  Summary: Added a fixed, target-bound persistence candidate route: live preflight, reviewable CloudFormation creation, one-shot migration, and server-mediated verification; local gates and live read-only preflight pass.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2792,9 +2810,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T20:08:12Z
-Latest commit SHA: 52601cd98c8dacdecfafc78bd09328d24c24c3a8
-Chat duration: 1595323s (18:11:08:43)
+Latest commit at UTC: 2026-10-23T20:27:30Z
+Latest commit SHA: d8ff3f8c0f5fdf6421e0245391ad5c74135447d5
+Chat duration: 1596481s (18:11:28:01)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
