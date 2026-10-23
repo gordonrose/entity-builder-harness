@@ -26,10 +26,13 @@ candidate has completed its governed migration, verification and recovery work.
 
 Use the exact qualified persistence package-custody receipt. It must identify
 the target, persistence candidate, image contract and runnable program. The
-target’s live USD 100 budget, existing private foundation, immutable ECR image
-and private ECR/Logs startup endpoints must all be re-observed immediately
-before a stack mutation. A failed or interrupted observation blocks creation;
-it does not permit a substitute route.
+target’s live USD 100 budget, existing private foundation, immutable ECR image,
+private ECR/Logs startup endpoints, and the region’s managed S3 artifact prefix
+list must all be re-observed immediately before a stack mutation. The new
+server and migration groups must allow that prefix list: ECR resolves image
+layers to private S3 retrieval, so endpoint access alone is insufficient. A
+failed or interrupted observation blocks creation; it does not permit a
+substitute route.
 
 ## Creation
 

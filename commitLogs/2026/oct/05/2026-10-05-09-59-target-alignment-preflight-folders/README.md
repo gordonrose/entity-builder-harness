@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T20:30:31Z
-latest_commit_sha: 0645e298789fb7cfd3f36ecea06f496b7f5cf3c3
-chat_duration: 1596662s (18:11:31:02)
+latest_commit_at_utc: 2026-10-23T20:47:24Z
+latest_commit_sha: f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c
+chat_duration: 1597675s (18:11:47:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2330,6 +2330,17 @@ Summary: Updated the shared persistence AWS response decoder and regression suit
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T20:47:24Z - Commit recorded
+
+Commit: `f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c`
+
+Message: fix(deploy): allow private persistence image layers
+
+Summary: Captured the live candidate image-pull failure and added the managed S3 artifact prefix-list preflight, CloudFormation parameter, server/migration egress rules, and regression proof alongside existing ECR endpoint controls.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2823,6 +2834,13 @@ ADR impact: covered by session ADR disposition
   Summary: Updated the shared persistence AWS response decoder and regression suite so an empty successful CloudFormation acknowledgement is reconciled through its named operation instead of treated as a reason to retry.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c`
+  Time UTC: 2026-10-23T20:47:24Z
+  Message: fix(deploy): allow private persistence image layers
+  Summary: Captured the live candidate image-pull failure and added the managed S3 artifact prefix-list preflight, CloudFormation parameter, server/migration egress rules, and regression proof alongside existing ECR endpoint controls.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2846,9 +2864,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T20:30:31Z
-Latest commit SHA: 0645e298789fb7cfd3f36ecea06f496b7f5cf3c3
-Chat duration: 1596662s (18:11:31:02)
+Latest commit at UTC: 2026-10-23T20:47:24Z
+Latest commit SHA: f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c
+Chat duration: 1597675s (18:11:47:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

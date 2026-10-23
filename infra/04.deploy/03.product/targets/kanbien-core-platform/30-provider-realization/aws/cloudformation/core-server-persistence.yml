@@ -24,6 +24,7 @@ Parameters:
   ClusterArn: { Type: String, AllowedPattern: '^arn:aws:ecs:[a-z0-9-]+:[0-9]{12}:cluster/kanbien-core-platform$' }
   NamespaceId: { Type: String, AllowedPattern: '^ns-[a-z0-9]+$' }
   EndpointSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
+  S3ArtifactPrefixListId: { Type: String, AllowedPattern: '^pl-[a-z0-9]+$' }
   VerifierSecurityGroupId: { Type: 'AWS::EC2::SecurityGroup::Id' }
   LogGroupName: { Type: String, AllowedPattern: '^/aws/ecs/kanbien-core-platform$' }
   ImageRepositoryArn: { Type: String, AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$' }
@@ -69,6 +70,9 @@ Resources:
   ServerEndpointEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+  ServerArtifactObjectStoreEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
   ServerDatabaseEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }
@@ -81,6 +85,9 @@ Resources:
   MigrationEndpointEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+  MigrationArtifactObjectStoreEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
   MigrationDatabaseEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }

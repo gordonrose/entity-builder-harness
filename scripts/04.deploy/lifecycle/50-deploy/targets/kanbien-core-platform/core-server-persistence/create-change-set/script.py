@@ -82,6 +82,7 @@ def main() -> int:
         {"ParameterKey": "ClusterArn", "ParameterValue": infrastructure["ClusterArn"]},
         {"ParameterKey": "NamespaceId", "ParameterValue": infrastructure["NamespaceId"]},
         {"ParameterKey": "EndpointSecurityGroupId", "ParameterValue": infrastructure["EndpointSecurityGroupId"]},
+        {"ParameterKey": "S3ArtifactPrefixListId", "ParameterValue": infrastructure["S3ArtifactPrefixListId"]},
         {"ParameterKey": "VerifierSecurityGroupId", "ParameterValue": infrastructure["VerifierSecurityGroupId"]},
         {"ParameterKey": "LogGroupName", "ParameterValue": infrastructure["LogGroupName"]},
         {"ParameterKey": "ImageRepositoryArn", "ParameterValue": f"arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"},
