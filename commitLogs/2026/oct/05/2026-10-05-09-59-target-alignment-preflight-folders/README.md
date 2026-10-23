@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T19:44:52Z
-latest_commit_sha: d9262f46
-chat_duration: 1593923s (18:10:45:23)
+latest_commit_at_utc: 2026-10-23T19:47:16Z
+latest_commit_sha: c0815790
+chat_duration: 1594067s (18:10:47:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2253,6 +2253,17 @@ Summary: Added the hosted disposable TLS PostgreSQL package qualification for mi
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T19:47:16Z - Commit recorded
+
+Commit: `c0815790`
+
+Message: fix(deploy): complete postgres driver image closure
+
+Summary: Added pg-int8 and a build-stage require check after hosted TLS package qualification exposed the missing transitive dependency.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2697,6 +2708,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added the hosted disposable TLS PostgreSQL package qualification for migration, runtime DML, readiness, and runtime DDL denial.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c0815790`
+  Time UTC: 2026-10-23T19:47:16Z
+  Message: fix(deploy): complete postgres driver image closure
+  Summary: Added pg-int8 and a build-stage require check after hosted TLS package qualification exposed the missing transitive dependency.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2720,9 +2738,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T19:44:52Z
-Latest commit SHA: d9262f46
-Chat duration: 1593923s (18:10:45:23)
+Latest commit at UTC: 2026-10-23T19:47:16Z
+Latest commit SHA: c0815790
+Chat duration: 1594067s (18:10:47:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
