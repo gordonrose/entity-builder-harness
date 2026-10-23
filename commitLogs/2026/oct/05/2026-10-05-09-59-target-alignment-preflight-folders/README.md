@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T20:27:30Z
-latest_commit_sha: d8ff3f8c0f5fdf6421e0245391ad5c74135447d5
-chat_duration: 1596481s (18:11:28:01)
+latest_commit_at_utc: 2026-10-23T20:28:31Z
+latest_commit_sha: 9225b536adec6a9273d37fa59413b545eb524681
+chat_duration: 1596542s (18:11:29:02)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2308,6 +2308,17 @@ Summary: Added a fixed, target-bound persistence candidate route: live preflight
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T20:28:31Z - Commit recorded
+
+Commit: `9225b536adec6a9273d37fa59413b545eb524681`
+
+Message: fix(deploy): wire persistence inventory gate
+
+Summary: Corrected the candidate creation route so its automatic active-scope inventory gate receives the canonical scope-root path; the focused gate and target-control smoke pass.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2787,6 +2798,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added a fixed, target-bound persistence candidate route: live preflight, reviewable CloudFormation creation, one-shot migration, and server-mediated verification; local gates and live read-only preflight pass.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `9225b536adec6a9273d37fa59413b545eb524681`
+  Time UTC: 2026-10-23T20:28:31Z
+  Message: fix(deploy): wire persistence inventory gate
+  Summary: Corrected the candidate creation route so its automatic active-scope inventory gate receives the canonical scope-root path; the focused gate and target-control smoke pass.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2810,9 +2828,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T20:27:30Z
-Latest commit SHA: d8ff3f8c0f5fdf6421e0245391ad5c74135447d5
-Chat duration: 1596481s (18:11:28:01)
+Latest commit at UTC: 2026-10-23T20:28:31Z
+Latest commit SHA: 9225b536adec6a9273d37fa59413b545eb524681
+Chat duration: 1596542s (18:11:29:02)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

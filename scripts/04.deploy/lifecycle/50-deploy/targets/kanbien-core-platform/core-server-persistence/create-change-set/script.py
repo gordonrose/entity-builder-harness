@@ -37,7 +37,7 @@ def package_gates(receipt: Path) -> bool:
         ["bash", str(ROOT / "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/script.sh"), "--json"],
         ["bash", str(ROOT / "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/validate-delivery-access/script.sh"), "--json"],
         ["python3", str(ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py"), "--json"],
-        ["bash", str(ROOT / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"), "--json"],
+        ["bash", str(ROOT / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"), "--target-root", str(ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes"), "--json"],
         ["bash", str(ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.sh"), "--scope-contract", str(ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"), "--json"],
         ["bash", str(ROOT / "scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh"), "--scope-contract", str(ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"), "--workload-binding", str(ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml"), "--json"],
     ]
