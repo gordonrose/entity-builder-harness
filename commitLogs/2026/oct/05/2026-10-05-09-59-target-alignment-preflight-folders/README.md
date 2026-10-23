@@ -125,6 +125,18 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Malformed migration credential cross-check could raise TypeError
   Resolution: Validator now cross-checks only structurally valid credential entries; null, boolean, and numeric authorised_workloads fixtures produce structured failures.
 
+
+- Raised: Persistence failures had generic diagnostic primitives but no scope-level, workload-aware declaration or automatic inventory enforcement.
+  Resolution: Added a provider-neutral controlled diagnostic taxonomy, safe-record standard, declaration workflow, validator, regression fixtures, and active-scope inventory routing. The dependency-free bootstrap scope truthfully records persistence diagnostics as not applicable. No PostgreSQL provider operation, runtime adapter mapping, or live diagnostic observation was asserted.
+
+
+- Raised: The initial persistence diagnostic validator accepted false non-applicability, unsafe free-form record fields, incorrect migration timeout handling, and malformed enum values.
+  Resolution: The corrective pass adds explicit `dependencies.persistence` classification tied to migration/server-mediated use, closed diagnostic records with controlled summaries and next checks, write-aware server uncertainty, separate transport/trust treatment, migration timeout release blocking, and structured malformed-input findings. Regression fixtures reproduce every finding; provider translation and live proof remain deferred.
+
+
+- Raised: A scope could still declare `persistence_writes: true` while claiming persistence diagnostics were not applicable.
+  Resolution: A declared persistence write is now authoritative workload usage for the not-applicable cross-check. It blocks that verdict without being mistaken for a dependency identifier in an otherwise valid declared scope; a focused regression fixture proves the rule.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -174,6 +186,18 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt a dedicated local core-server image boundary
   Rationale: The image is built from an explicit minimal source closure, runs as node with one command, and package proof rejects forbidden compiled dependencies before any target or registry operation. A missing Docker daemon records a skip rather than a false image-success claim.
+
+
+- Decision: Adopt controlled persistence diagnostic mappings for dependency-bearing scopes
+  Rationale: A target scope must explicitly exclude persistence or declare a complete safe mapping for every indexed workload. The mapping ties a stable, provider-neutral diagnostic code to applicable lifecycle stage, workload effect, retryability, safe summary, and next check; active scope inventory rejects omission. Provider-specific classification and live proof remain the responsibility of the later selected adapter and target scope.
+
+
+- Decision: Make persistence diagnostic applicability and record shape explicit
+  Rationale: Dependency identifiers are not a safe type system. Scopes classify persistence dependencies directly and the validator cross-checks actual migration/server-mediated usage. Closed record fields and controlled messages prevent repository-level mappings from becoming a carrier for raw provider detail; runtime adapter tests still prove emitted-error containment.
+
+
+- Decision: Define core-server-persistence as a gated successor, not an in-place bootstrap extension
+  Rationale: The accepted dependency-free bootstrap runtime must remain available while a persistence-capable program, declarations, package proof, and release route are built. The future scope will become a candidate only when those prerequisites exist; it then follows the existing lifecycle transition and cannot inherit undeclared dependencies or live authority from bootstrap-runtime.
 
 
 - Decision: Adopt the planned-not-live-selected kanbien-core-platform target declaration
@@ -338,6 +362,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt reusable persistence-safety declaration controls
   Rationale: Before defining the PostgreSQL scope, add reusable lifecycle ownership, workload-aware health/recovery, server-mediated verifier, migration, recovery, idempotency/cleanup, and credential lifecycle controls; distinguish local declaration checks from provider and live proof.
+
+
+- Decision: Authorize end-to-end core-server-persistence execution
+  Rationale: The user supplied standing authorization for the bounded kanbien-core-platform persistence slice: repository and target changes, AWS provisioning, publication, deployment, live recovery proofs, commits, integration with main, and push. The work remains limited to this target, the USD 100 monthly ceiling, and existing protected gates.
 
 ## Context Hygiene
 
@@ -509,6 +537,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Implemented reusable persistence-safety harness controls and corrective credential lifecycle pass; live PostgreSQL/AWS work remains unstarted.
   Durable evidence: .agentic/04.deploy/00-target-alignment, .agentic/04.deploy/60-run, scripts/04.deploy/lifecycle, implementation plan, teaching handbook, and focused smoke/gate output.
+
+
+- Summary: Persistence slice baseline established
+  Durable evidence: Fresh AWS identity is account 337159794548 in eu-west-1; bootstrap-runtime is ACTIVE with desired/running one on task definition revision 10; no target RDS instance or Secrets Manager secret exists; target budget kanbien-core-platform-monthly is USD 100 filtered by Target=kanbien-core-platform with USD 0.7839062758 estimated spend through 2026-10-23. Local diagnostics, lifecycle inventory, health/recovery, secret-dependency, target declaration, release contract, and persistence-composition checks passed.
 
 ## Activity Log
 
@@ -2103,6 +2135,34 @@ Message: feat(deploy): govern persistence safety declarations
 Summary: Adds reusable scope lifecycle, workload ownership, health/recovery, migration safety and credential lifecycle declaration controls; corrects secret-validation fail-closed behaviour; and records PostgreSQL persistence prerequisites.
 
 ADR impact: No new ADR; extends the existing deployment implementation plan and generic harness controls.
+
+
+### 2026-10-23T18:23:13Z - Decision
+
+Decision: Establish a provider-neutral persistence-capable server composition before selecting PostgreSQL.
+
+Rationale: The new target-composition factory injects an abstract persistence runtime and is proved with a local fake. It preserves release verification, separates process liveness from dependency readiness, exposes only controlled server-mediated acceptance outcomes, and closes the injected runtime during shutdown. It does not create a `core-server-persistence` scope, choose an adapter, read a secret, build an image, or change a target.
+
+
+### 2026-10-23T18:23:13Z - Context hygiene
+
+Summary: Local composition proof passed for both unavailable and ready dependency states.
+
+Durable evidence: `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts` and `scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/`. The remaining next step is reviewed PostgreSQL adapter selection and composition; no cloud or target mutation occurred.
+
+
+### 2026-10-23T18:38:58Z - Decision
+
+Decision: Authorize end-to-end core-server-persistence execution
+
+Rationale: The user supplied standing authorization for the bounded kanbien-core-platform persistence slice: repository and target changes, AWS provisioning, publication, deployment, live recovery proofs, commits, integration with main, and push. The work remains limited to this target, the USD 100 monthly ceiling, and existing protected gates.
+
+
+### 2026-10-23T18:38:58Z - Context hygiene
+
+Summary: Persistence slice baseline established
+
+Durable evidence: Fresh AWS identity is account 337159794548 in eu-west-1; bootstrap-runtime is ACTIVE with desired/running one on task definition revision 10; no target RDS instance or Secrets Manager secret exists; target budget kanbien-core-platform-monthly is USD 100 filtered by Target=kanbien-core-platform with USD 0.7839062758 estimated spend through 2026-10-23. Local diagnostics, lifecycle inventory, health/recovery, secret-dependency, target declaration, release contract, and persistence-composition checks passed.
 
 ## Sub-Agent Activity
 

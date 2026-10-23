@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 47
+version: 51
 status: draft
 created_on: "2026-10-06"
 updated_on: "2026-10-23"
@@ -229,6 +229,79 @@ establish these provider-neutral decisions:
    expose a hostname, connection string, credential, certificate body, raw
    provider response, personal data, or a guessed infrastructure cause merely
    to make a failure actionable.
+
+### Core-Server Persistence Definition Packet
+
+**Status: defined successor, not yet a candidate scope.**
+
+`core-server-persistence` is the next intended scope identity. It will succeed
+the active, dependency-free `bootstrap-runtime` scope for the core server; it
+does not extend that scope in place. `bootstrap-runtime` remains the accepted
+baseline until a separately proved candidate has been accepted. A change to
+the bootstrap scope is therefore not inherited automatically by the future
+persistence scope: each scope declares, packages, and proves its own selected
+program, dependencies, workload bindings, and release evidence.
+
+When it is ready to become a candidate, the scope will own the successor
+`core-server-service` workload and declare two additional one-shot workloads:
+a structural `persistence-migration` task and a private,
+server-mediated `persistence-verifier` task. The server will use the selected
+provider through the provider-neutral persistence boundary and selected
+PostgreSQL adapter. The migration task may receive a constrained structural
+credential. The verifier has neither a database credential nor a direct
+database network path: it proves persistence only through the server's private
+route.
+
+Do **not** create `20-scopes/core-server-persistence/` or add it to
+`scope-index.yml` yet. The scope-lifecycle workflow requires a successor to
+be a valid `candidate`, with canonical declarations, local/package proof, a
+release route, an active predecessor, and overlapping workload ownership.
+Creating an incomplete directory or index entry would turn an honest design
+state into a failing, misleading candidate.
+
+The bounded repository sequence is:
+
+1. Define and test the persistence-capable runnable-program and image
+   boundary. The first local composition step injects only a provider-neutral
+   persistence runtime and proves the server's dependency boundary with a
+   fake. A later, explicit composition step selects the PostgreSQL adapter;
+   neither step may pull the adapter into the accepted dependency-free
+   bootstrap image by accident.
+2. Add the candidate's canonical declaration, workload binding, configuration,
+   secret-reference, migration, diagnostic, capacity, cleanup, and recovery
+   facts. Reuse the implemented generic controls, but add only the missing
+   provider-neutral checks needed to validate these facts locally.
+3. Define the provider binding without mutation: private network/TLS
+   relationship, resource/role/secret-reference mapping, runtime capacity,
+   RDS-native backup and restore boundary, and safe target-alignment evidence.
+   This maps references and responsibilities; it does not create a database,
+   secret, grant, role, or network rule.
+4. Once the declaration and package/release checks exist and pass, add the
+   successor as a lifecycle `candidate` against `bootstrap-runtime` and run
+   the existing inventory, target-declaration, and release gates.
+5. Only then prepare a separately reviewed execution packet for target
+   creation, a safe migration, server startup, server-mediated verification,
+   replacement, compatible rollback, and isolated restore proof. Acceptance
+   promotes the candidate; failure leaves `bootstrap-runtime` active.
+
+This packet deliberately leaves provider resources, credentials, AWS secret
+references, database grants, PostgreSQL data, and live deployment outside the
+current authorization. It is the bridge from reusable harness rules to a
+truthful candidate, not an implied cloud operation.
+
+**Local composition update (2026-10-23):**
+`infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts`
+now composes a persistence-capable successor server using an injected
+`KanbienCorePersistenceRuntime`. Its controlled local proof at
+`scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/`
+uses a fake runtime to prove that liveness remains available while dependency
+readiness is unavailable, readiness becomes healthy only when the dependency
+is ready, server-mediated acceptance returns stable safe outcomes, the
+bootstrap release-verification operation remains present, and shutdown closes
+the dependency. This is not an executable `main.ts`, image, scope candidate,
+adapter selection, secret route, PostgreSQL connection, or target mutation.
+The later `main.ts` is the only place that may select and construct the
+reviewed PostgreSQL adapter.
 
 ### Core-Server Persistence Requirements-to-Control Matrix
 
@@ -730,19 +803,41 @@ or deployment may be authorised, establish the following controls.
    or uncertain provider operation stops at its declared safe next check; it
    cannot retry a migration, replay an uncertain write, or delete a resource
    automatically.
-6. **Mechanical proof:** synthetic fixtures exercise every taxonomy category,
-   redaction boundary, and provider-adapter mapping without real credentials.
-   <!-- deterministic-check: allow reason="the persistence diagnostic package and its package/deploy/run gates are planned future implementation, not an existing executable assertion" -->
-   Package/deploy/run gates verify that an active persistence scope has the
-   diagnostic mapping, applicable workload behaviour, and local proof before
-   any target mutation. A separately approved live rehearsal later proves the
-   selected target's create, update, controlled failure, restoration, and
-   rollback paths; local diagnostics never substitute for that proof.
+6. **Mechanical proof:** synthetic fixtures exercise every controlled taxonomy
+   category, closed record shape, and controlled safe-message boundary without
+   real credentials. The active
+   scope inventory rejects an omitted or unsafe persistence diagnostic mapping
+   before the fixed target declaration or release-contract gate can pass. When
+   a provider adapter is selected, its package tests must add mapping fixtures
+   from representative provider/driver observations to the controlled codes.
+   A separately approved live rehearsal later proves the selected target's
+   create, update, controlled failure, restoration, and rollback paths; local
+   diagnostics never substitute for that proof.
 
 The initial PostgreSQL persistence packet may defer log transport, metrics,
 dashboards, alert routing, and retention to the observability slice. It may
 not defer typed safe diagnostic results, their workload consequences, their
 redaction tests, or the deploy/update/retire/recover/rollback gate connection.
+
+**Implementation update (2026-10-23):** the shared safe-diagnostic-record
+standard, controlled persistence taxonomy, scope mapping schema, standard,
+workflow, local validator, regression fixtures, and active-scope inventory
+routing are now implemented. Every indexed new-framework scope classifies its
+`dependencies.persistence`; it may claim `persistence_diagnostics:
+not-applicable` only with an empty classification, explicit exclusion, and no
+migration or server-mediated persistence use. A declared scope supplies a
+complete workload-aware mapping with closed record fields and controlled
+summary/next-check values. A writing server includes uncertain-write
+reconciliation; a migration timeout or uncertain outcome blocks release and
+requires fresh state observation. The fixed `kanbien-core-platform`
+target-declaration and release-contract routes invoke that inventory, so an
+active or candidate local scope cannot omit the check.
+The dependency-free bootstrap accurately records `not-applicable`; no
+PostgreSQL scope, runtime adapter mapping, provider operation, or live
+diagnostic evidence has been added. `packages/core/diagnostics` and the
+existing PostgreSQL adapter already provide generic descriptors and private
+provider-failure classification, but the selected persistence slice must still
+prove its actual mapping to the controlled codes before acceptance.
 
 ## Concern Control Matrix
 

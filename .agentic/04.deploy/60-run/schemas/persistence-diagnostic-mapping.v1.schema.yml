@@ -1,0 +1,79 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.persistence-diagnostic-mapping.v1
+#   version: 3
+#   status: active
+#   created_on: "2026-10-23"
+#   updated_on: "2026-10-23"
+#   layer: 04.deploy
+#   domain: deployment.persistence-diagnostics
+#   disciplines: [security, sre, agentic]
+#   kind: schema
+#   purpose: Describe provider-neutral persistence diagnostic mappings embedded in a target scope contract.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.validate-persistence-diagnostic-mapping
+#     path: scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/script.sh
+schema: deploy/persistence-diagnostic-mapping-schema/v1
+embedded_in: deploy/target-scope-contract/v1#persistence_diagnostics
+statuses: [not-applicable, declared]
+not_applicable:
+  required_fields: [status, reason]
+  constraint: scope-must-explicitly-exclude-persistence-and-declare-no-persistence-dependency-migration-mediated-proof-or-write-usage
+declared:
+  required_fields: [declaration_schema, status, dependency, workloads]
+  declaration_schema: deploy/persistence-diagnostic-mapping/v1
+  dependency:
+    required_fields: [id, required]
+    required: true
+  dependency_classification:
+    location: dependencies.persistence
+    constraint: nonempty-subset-of-dependencies.required-containing-the-mapped-dependency
+    workload_usage_constraint: migration-and-server-mediated-dependency-use-must-reference-a-classified-persistence-dependency
+  diagnostic_record:
+    required_fields: [code, stage, effect, retryability, safe_summary, next_check]
+    additional_fields: prohibited
+    code_pattern: ^persistence\\.[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)*$
+    stages: [configuration, startup, readiness, request, migration, candidate-deployment, update, retirement, recovery, image-rollback, database-restore]
+    retryability: [bounded-retry, target-correction-required, no-automatic-retry, stop-and-escalate]
+    safe_summary: PERSISTENCE_DIAGNOSTIC_OBSERVED:<controlled-code>
+    next_check: [inspect-declared-target-alignment-evidence, inspect-governed-scope-configuration, observe-persistence-state-before-replay, collect-governed-provider-observation]
+  codes:
+    - persistence.transport-unavailable
+    - persistence.trust-validation-failed
+    - persistence.credential-rejected
+    - persistence.runtime-permission-denied
+    - persistence.capacity-exhausted
+    - persistence.schema-incompatible
+    - persistence.operation-timed-out
+    - persistence.outcome-uncertain
+    - persistence.unclassified-failure
+workload_rules:
+  long-running-server:
+    persistence_writes: required-boolean
+    required_codes_when_writing: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
+    required_codes_when_read_only: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.unclassified-failure]
+    allowed_effects: [startup-exit, not-ready, bounded-reconnect, request-uncertain-reconcile-before-retry, stop-and-escalate]
+    prohibited_effects: [failed-completion, block-release-require-fresh-state-observation]
+    required_mapping: dependency-outage-must-not-change-liveness-or-trigger-provider-replacement
+    transport_unavailable: { effect: [not-ready, bounded-reconnect], retryability: bounded-retry }
+    trust_validation_failed: { effect: not-ready, retryability: target-correction-required }
+    outcome_uncertain_when_writing: { effect: request-uncertain-reconcile-before-retry, retryability: no-automatic-retry }
+  continuous-worker:
+    required_codes: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
+    allowed_effects: [bounded-retry, stop-and-escalate, failed-completion]
+  run-to-completion-task:
+    required_codes: [persistence.transport-unavailable, persistence.trust-validation-failed, persistence.credential-rejected, persistence.runtime-permission-denied, persistence.capacity-exhausted, persistence.schema-incompatible, persistence.operation-timed-out, persistence.outcome-uncertain, persistence.unclassified-failure]
+    allowed_effects: [failed-completion, block-release-require-fresh-state-observation, stop-and-escalate]
+    prohibited_effects: [not-ready, bounded-reconnect]
+  migration_execution:
+    operation_timed_out: { effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, next_check: observe-persistence-state-before-replay }
+    outcome_uncertain: { effect: block-release-require-fresh-state-observation, retryability: no-automatic-retry, next_check: observe-persistence-state-before-replay }
+unknown_fallback:
+  required_code: persistence.unclassified-failure
+  retryability: stop-and-escalate
+  effect: stop-and-escalate
+provider_boundary:
+  adapter: maps-provider-facts-to-neutral-codes
+  generic-platform: must-not-name-provider-or-expose-provider-detail
+  target-declaration: records-safe-consequence-and-proof-only

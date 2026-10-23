@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 7
+#   version: 8
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-23"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -317,7 +317,7 @@ def check_scope(root: Path) -> None:
     ):
         raise DeclarationFailure("verifier-completion-evidence-invalid")
     dependencies = required_mapping(contract, "dependencies", "scope-dependencies-missing")
-    if dependencies.get("required") != [] or dependencies.get("optional") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
+    if dependencies.get("required") != [] or dependencies.get("optional") != [] or dependencies.get("persistence") != [] or set(dependencies.get("excluded", [])) != {"persistence", "queue", "product-application", "provider-adapter"}:
         raise DeclarationFailure("scope-dependencies-invalid")
     if set(contract.get("excludes", [])) != REQUIRED_EXCLUSIONS:
         raise DeclarationFailure("scope-exclusions-invalid")

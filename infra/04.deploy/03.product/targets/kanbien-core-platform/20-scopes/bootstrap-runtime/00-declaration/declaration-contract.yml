@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#   version: 8
+#   version: 10
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-23"
@@ -51,6 +51,9 @@ configuration:
     - PLATFORM_HEALTH_READYZ_EXPOSURE
   secret_names: []
   secret_dependencies: []
+persistence_diagnostics:
+  status: not-applicable
+  reason: bootstrap-runtime explicitly excludes persistence and has no required persistence dependency
 verification:
   liveness_path: /livez
   readiness_path: /readyz
@@ -127,6 +130,7 @@ health_recovery:
 dependencies:
   required: []
   optional: []
+  persistence: []
   excluded:
     - persistence
     - queue
