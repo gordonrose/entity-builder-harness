@@ -4,7 +4,7 @@ id: harness.standard.artifact-metadata
 version: 3
 status: active
 created_on: "2026-06-24"
-updated_on: "2026-10-20"
+updated_on: "2026-10-23"
 layer: 01.harness
 domain: metadata
 disciplines:
@@ -130,8 +130,11 @@ the report retains the prior last-commit date as evidence. Work in focused batch
 A malformed historical v2 header may be repaired during migration. HEAD
 comparison may recover only an unambiguous top-level v2 schema, stable ID and
 legacy status; current and proposed headers still require full validation.
-Ambiguous history and malformed v3 baselines remain errors. This narrow legacy
-recovery must not bypass immutable v3 dates or allow stale migration dates.
+Ambiguous history and malformed v3 baselines remain errors, except for one
+bounded repair: an existing v3 header that omitted `created_on` may add it only
+when it exactly matches the artifact's earliest recorded Git history date. An existing
+creation date remains immutable. This narrow recovery must not bypass immutable
+v3 dates or allow stale migration dates.
 
 After content edits, run the helper for the affected v3 files. Creation dates
 remain fixed. No-op runs must not rewrite files or advance dates. The helper's

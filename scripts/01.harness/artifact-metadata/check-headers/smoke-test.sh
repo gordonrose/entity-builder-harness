@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-23"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -507,8 +507,28 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-check-") as temp:
     git(root, "add", "--", "notes/old.txt")
     check(root, "--staged", error="missing or non-regular")
 
+    # A historical v3 artifact missing only its creation date can receive the
+    # date evidenced by its first Git history entry, but no arbitrary date.
+    reset(root)
+    missing_creation = "other/v3-missing-creation.data"
+    no_creation = payload(id="test.v3-missing-creation", updated_on=YESTERDAY)
+    no_creation.pop("created_on")
+    write(root, missing_creation, no_creation)
+    git(root, "add", "--", missing_creation)
+    git(root, "commit", "-qm", "Malformed v3 missing creation date")
+    repaired_creation = payload(id="test.v3-missing-creation", created_on=TODAY, updated_on=TODAY)
+    write(root, missing_creation, repaired_creation)
+    git(root, "add", "--", missing_creation)
+    check(root, "--staged")
+    write(root, missing_creation, dict(repaired_creation, created_on="2024-01-02"))
+    git(root, "add", "--", missing_creation)
+    check(root, "--staged", error="created_on is immutable")
+    git(root, "reset", "--hard", "HEAD^")
+    git(root, "clean", "-fd")
+
     # A repaired legacy v2 header may have malformed historical YAML. Its
-    # explicit identity is recoverable; ambiguous or v3 history is not waived.
+    # explicit identity is recoverable; malformed v3 remains protected except
+    # for a missing creation date that exactly matches its Git addition date.
     reset(root)
     legacy_path = "other/malformed-legacy.data"
     legacy_fields = payload(schema="agentic-artifact/v2", id="test.legacy-repair")

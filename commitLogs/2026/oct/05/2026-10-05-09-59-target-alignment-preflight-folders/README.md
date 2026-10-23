@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T20:47:24Z
-latest_commit_sha: f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c
-chat_duration: 1597675s (18:11:47:55)
+latest_commit_at_utc: 2026-10-23T21:16:33Z
+latest_commit_sha: 253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39
+chat_duration: 1599424s (18:12:17:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2341,6 +2341,39 @@ Summary: Captured the live candidate image-pull failure and added the managed S3
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-23T21:15:53Z - Commit recorded
+
+Commit: `6c6d9ecaa18706675a2348f1af0950c82e08aaf6`
+
+Message: fix(deploy): govern failed persistence candidate retirement
+
+Summary: Added a fixed failed-candidate retirement control, repaired target package metadata gating, and preserved final snapshot retention before retrying the persistence candidate.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-23T21:16:12Z - Commit recorded
+
+Commit: `253b4eace9d59b80cf36d231fcf0517cbbfa4ea4`
+
+Message: fix(deploy): govern failed persistence candidate retirement
+
+Summary: Rebased task commit onto origin/main; adds the fixed failed-candidate retirement control, target package metadata repair, and regression coverage.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-23T21:16:33Z - Commit recorded
+
+Commit: `253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39`
+
+Message: fix(deploy): govern failed persistence candidate retirement
+
+Summary: Corrected rebased task SHA: fixed failed-candidate retirement control, target package metadata repair, and regression coverage.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -2841,6 +2874,27 @@ ADR impact: covered by session ADR disposition
   Summary: Captured the live candidate image-pull failure and added the managed S3 artifact prefix-list preflight, CloudFormation parameter, server/migration egress rules, and regression proof alongside existing ECR endpoint controls.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `6c6d9ecaa18706675a2348f1af0950c82e08aaf6`
+  Time UTC: 2026-10-23T21:15:53Z
+  Message: fix(deploy): govern failed persistence candidate retirement
+  Summary: Added a fixed failed-candidate retirement control, repaired target package metadata gating, and preserved final snapshot retention before retrying the persistence candidate.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `253b4eace9d59b80cf36d231fcf0517cbbfa4ea4`
+  Time UTC: 2026-10-23T21:16:12Z
+  Message: fix(deploy): govern failed persistence candidate retirement
+  Summary: Rebased task commit onto origin/main; adds the fixed failed-candidate retirement control, target package metadata repair, and regression coverage.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39`
+  Time UTC: 2026-10-23T21:16:33Z
+  Message: fix(deploy): govern failed persistence candidate retirement
+  Summary: Corrected rebased task SHA: fixed failed-candidate retirement control, target package metadata repair, and regression coverage.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -2864,9 +2918,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T20:47:24Z
-Latest commit SHA: f9baa91fc7afaf28c52e4cb3a42e0180f6efbb0c
-Chat duration: 1597675s (18:11:47:55)
+Latest commit at UTC: 2026-10-23T21:16:33Z
+Latest commit SHA: 253b4eacf463f2e3fd52f3c7f0a2ed6ce225bb39
+Chat duration: 1599424s (18:12:17:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

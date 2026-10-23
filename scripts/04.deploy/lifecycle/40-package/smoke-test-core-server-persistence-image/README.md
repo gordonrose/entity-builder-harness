@@ -3,12 +3,17 @@ schema: agentic-artifact/v3
 id: deploy.command.smoke-test-core-server-persistence-image.readme
 version: 1
 status: draft
+created_on: "2026-10-23"
+updated_on: "2026-10-23"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
 kind: capability-readme
 purpose: Explain the disposable TLS PostgreSQL package qualification for the persistence candidate.
 portability: { class: internal, targets: [] }
+used_by:
+  - id: deploy.command.smoke-test-core-server-persistence-image
+    path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh
 -->
 # Persistence Image Package Smoke
 

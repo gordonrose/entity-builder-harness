@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-23"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -298,6 +298,21 @@ def head_text(path: str) -> str | None:
     try:
         return result.stdout.decode("utf-8")
     except UnicodeError:
+        return None
+
+
+def recorded_addition_date(path: str) -> str | None:
+    """Return the earliest tracked path history date for a v3 creation repair."""
+    result = subprocess.run(
+        ["git", "log", "--follow", "--format=%cI", "--reverse", "--", path],
+        check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    dates = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if not dates:
+        return None
+    try:
+        return dt.datetime.fromisoformat(dates[0]).astimezone(dt.timezone.utc).date().isoformat()
+    except ValueError:
         return None
 
 
@@ -642,7 +657,11 @@ def validate_staged_maintenance(path: str, change: tuple[str, str], parsed: dict
         return False  # Grandfather only files which already had no header in HEAD.
     if new_v3:
         if old_v3 and current.get("created_on") != old.get("created_on"):
-            raise CheckError(f"created_on is immutable after v3 adoption: {path}")
+            # Early v3 artifacts were occasionally committed without a
+            # creation date. Permit a one-time repair only when repository
+            # history provides one unambiguous, matching addition date.
+            if old.get("created_on") is not None or current.get("created_on") != recorded_addition_date(source if status == "R" else path):
+                raise CheckError(f"created_on is immutable after v3 adoption: {path}")
         if status == "R" and old.get("id") and current.get("id") != old["id"]:
             raise CheckError(f"artifact id must be preserved across a rename: {path}")
         if old_v3:
