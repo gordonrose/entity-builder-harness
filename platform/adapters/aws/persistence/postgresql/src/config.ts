@@ -41,9 +41,13 @@ export function postgreSqlPersistenceConfiguration(
   for (const [path, value] of [
     ["connectionTimeoutMs", input.connectionTimeoutMs],
     ["idleTimeoutMs", input.idleTimeoutMs],
-    ["statementTimeoutMs", input.statementTimeoutMs],
   ] as const) {
     if (!Number.isInteger(value) || value < 100 || value > 60_000) return invalid(path, "Timeout must be an integer between 100 and 60000 milliseconds.");
+  }
+  // A migration may need longer than an ordinary request, but it must remain
+  // bounded. The persistence scope declares a 240-second migration deadline.
+  if (!Number.isInteger(input.statementTimeoutMs) || input.statementTimeoutMs < 100 || input.statementTimeoutMs > 300_000) {
+    return invalid("statementTimeoutMs", "Statement timeout must be an integer between 100 and 300000 milliseconds.");
   }
   if (input.tls.mode !== "verify-full" || input.tls.certificateAuthoritySource !== "injected") {
     return invalid("tls", "TLS must use injected certificate authority material and verify the server identity.");

@@ -62,6 +62,18 @@ async function main(): Promise<void> {
   equal(invalid.ok, false);
   if (!invalid.ok) equal(JSON.stringify(invalid.error).includes(rejectedSecret), false);
 
+  const migrationDeadline = postgreSqlPersistenceConfiguration({
+    ...configuration,
+    statementTimeoutMs: 240_000,
+  });
+  equal(migrationDeadline.ok, true);
+  const excessiveStatementDeadline = postgreSqlPersistenceConfiguration({
+    ...configuration,
+    statementTimeoutMs: 300_001,
+  });
+  equal(excessiveStatementDeadline.ok, false);
+  if (!excessiveStatementDeadline.ok) equal(excessiveStatementDeadline.error.details.path, "statementTimeoutMs");
+
   equal(postgreSqlPersistenceProviderFailureClass({ code: "23505" }), "conflict");
   equal(postgreSqlPersistenceProviderFailureClass({ code: "ECONNREFUSED" }), "transport");
   deepEqual(
