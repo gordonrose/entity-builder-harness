@@ -24,6 +24,7 @@ for (const entrypoint of [
   "kanbien-core-server-persistence.main.js",
   "kanbien-core-server-persistence-verifier.main.js",
   "kanbien-core-server-persistence-migration.main.js",
+  "kanbien-core-server-persistence-restore-verifier.main.js",
 ]) {
   const compiledEntrypoint = join(compiledRoot, "infra/04.deploy/03.product/entrypoints", entrypoint);
   if (!existsSync(compiledEntrypoint)) throw new Error(`Required compiled entrypoint is missing: ${entrypoint}`);
@@ -53,6 +54,10 @@ writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-verifier.main.
 writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-migration.main.js"), [
   'const { runKanbienCoreServerPersistenceMigration } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.js");',
   "void runKanbienCoreServerPersistenceMigration().catch(() => { process.exitCode = 1; });", "",
+].join("\n"));
+writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-restore-verifier.main.js"), [
+  'const { runKanbienCoreServerPersistenceRestoreVerifier } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js");',
+  "void runKanbienCoreServerPersistenceRestoreVerifier();",
 ].join("\n"));
 function parseCompiledRoot(args) { if (args.length !== 2 || args[0] !== "--compiled-root" || args[1].length === 0) throw new Error("Usage: prepare-runtime.mjs --compiled-root <compiled-output-directory>"); return args[1]; }
 function writePackageShim(packageName, exportsMap) {

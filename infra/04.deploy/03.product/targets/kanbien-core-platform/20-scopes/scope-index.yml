@@ -33,4 +33,5 @@ scopes:
       - core-server-service
       - private-release-verifier-task
       - persistence-migration-task
+      - persistence-restoration-verifier-task
 legacy_exceptions: []

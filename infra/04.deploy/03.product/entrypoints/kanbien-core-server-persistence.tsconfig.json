@@ -34,6 +34,7 @@
     "./kanbien-core-server-persistence.main.ts",
     "./kanbien-core-server-persistence-verifier.main.ts",
     "./kanbien-core-server-persistence-migration.main.ts",
+    "./kanbien-core-server-persistence-restore-verifier.main.ts",
     "../../../../packages/core/src/**/*.ts",
     "../../../../platform/config/src/**/*.ts",
     "../../../../platform/contracts/src/**/*.ts",

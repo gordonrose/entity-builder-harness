@@ -103,6 +103,32 @@ compatible release rollback, and isolated database restore rehearsals are
 implemented and their evidence is recorded. Initial creation, a successful
 migration, and a private create/read proof establish a candidate only.
 
+## Isolated Native Database Restore
+
+Create one named encrypted recovery point after the retained synthetic record
+and release/replacement evidence exist. The recovery point is native RDS
+evidence, not a source-database mutation. The restoration route derives its
+temporary database identifier from that snapshot; it restores it in the same
+private subnets but with a distinct security group. Its one-shot verifier gets
+the ordinary runtime credential and can reach only the restored copy, never
+the source database. A controller interruption is reconciled by repeating the
+same operation and snapshot identifier; the command never chooses a new
+snapshot, target, database, or task identity.
+
+```bash
+snapshot=kanbien-core-platform-persistence-recovery-YYYYMMDD
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --json
+# Re-observe until the same named temporary database is ready, then:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation verify --snapshot-id "$snapshot" --json
+# Retire only that derived temporary database after the evidence is retained:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
+```
+
+The restore verifier requires a qualified image containing its reviewed
+entrypoint and the corresponding provider control surface. Until both are
+live, the operation blocks; it does not repurpose the normal server-mediated
+verifier or direct the migration task at a restored database.
+
 ## Controlled Server Replacement
 
 After `create` has retained the synthetic record, replace exactly the current
