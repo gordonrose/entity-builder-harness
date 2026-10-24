@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-24"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -23,7 +23,9 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[8]
 DATABASE="kanbien-core-platform-persistence"
 CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"
-PATTERN=re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}$")
+# A bounded suffix allows a fresh point after a retained record is created later
+# on the same day; it is not free-form target or resource selection.
+PATTERN=re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
 def emit(verdict,*codes,facts=None):

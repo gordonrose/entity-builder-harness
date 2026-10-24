@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[8]
 DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"; STACK="kanbien-core-platform-core-server-persistence"; FOUNDATION="kanbien-core-platform-foundation"; LOG_GROUP="/aws/ecs/kanbien-core-platform"
-SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
+SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
 def emit(verdict,*codes,facts=None):
@@ -24,7 +24,7 @@ def snapshot(m,identifier):
  ok,d,c=m.aws("rds","describe-db-snapshots","--db-snapshot-identifier",identifier); xs=d.get("DBSnapshots") if ok and isinstance(d,dict) else None
  return (xs[0],"ok") if isinstance(xs,list) and len(xs)==1 and isinstance(xs[0],dict) else (None,c if not ok else "persistence-recovery-point-unavailable")
 def restore_id(snapshot_id):
- x=SNAPSHOT.fullmatch(snapshot_id); return f"kanbien-core-platform-persistence-restore-{x.group('day')}" if x else None
+ x=SNAPSHOT.fullmatch(snapshot_id); return f"kanbien-core-platform-persistence-restore-{x.group('day')}{x.group('suffix') or ''}" if x else None
 def source(m):
  if not m.live_budget()[0]:return None,"target-budget-live-configuration-invalid"
  v,c=db(m,DATABASE)

@@ -116,7 +116,7 @@ same operation and snapshot identifier; the command never chooses a new
 snapshot, target, database, or task identity.
 
 ```bash
-snapshot=kanbien-core-platform-persistence-recovery-YYYYMMDD
+snapshot=kanbien-core-platform-persistence-recovery-YYYYMMDD-<bounded-rehearsal-suffix>
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --json
 # Re-observe until the same named temporary database is ready, then:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation verify --snapshot-id "$snapshot" --json
