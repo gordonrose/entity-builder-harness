@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T11:27:11Z
-latest_commit_sha: f10d6cd2
-chat_duration: 1650462s (19:02:27:42)
+latest_commit_at_utc: 2026-10-24T13:58:38Z
+latest_commit_sha: 5942afe2
+chat_duration: 1659549s (19:04:59:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2768,6 +2768,17 @@ Summary: Added a receipt-governed migration-task operation that verifies runtime
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-24T13:58:38Z - Commit recorded
+
+Commit: `5942afe2`
+
+Message: fix(deploy): fail closed on persistence revocation
+
+Summary: Added fail-closed runtime-session termination evidence, bounded fresh restore naming, and target-bound acceptance evidence collection.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3484,6 +3495,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added a receipt-governed migration-task operation that verifies runtime DML succeeds and PostgreSQL rejects structural DDL in rolled-back transactions.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5942afe2`
+  Time UTC: 2026-10-24T13:58:38Z
+  Message: fix(deploy): fail closed on persistence revocation
+  Summary: Added fail-closed runtime-session termination evidence, bounded fresh restore naming, and target-bound acceptance evidence collection.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3507,9 +3525,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T11:27:11Z
-Latest commit SHA: f10d6cd2
-Chat duration: 1650462s (19:02:27:42)
+Latest commit at UTC: 2026-10-24T13:58:38Z
+Latest commit SHA: 5942afe2
+Chat duration: 1659549s (19:04:59:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
