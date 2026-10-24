@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T10:28:16Z
-latest_commit_sha: 427847f6
-chat_duration: 1646927s (19:01:28:47)
+latest_commit_at_utc: 2026-10-24T10:57:38Z
+latest_commit_sha: f3d89cd5
+chat_duration: 1648689s (19:01:58:09)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2746,6 +2746,17 @@ Summary: Bound persistence observer commands and corrected verifier-role smoke-t
 
 ADR impact: No ADR: bounded controller and regression correction.
 
+
+### 2026-10-24T10:57:38Z - Commit recorded
+
+Commit: `f3d89cd5`
+
+Message: fix(deploy): bound credential recovery continuation
+
+Summary: Adds a non-replaying recovery-secret boundary and bounded AWS observer handling for persistence lifecycle controllers.
+
+ADR impact: No ADR: repairs governed continuation and observer behavior.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3448,6 +3459,13 @@ ADR impact: No ADR: bounded controller and regression correction.
   Summary: Bound persistence observer commands and corrected verifier-role smoke-test boundary.
   ADR impact: No ADR: bounded controller and regression correction.
 
+
+- Commit: `f3d89cd5`
+  Time UTC: 2026-10-24T10:57:38Z
+  Message: fix(deploy): bound credential recovery continuation
+  Summary: Adds a non-replaying recovery-secret boundary and bounded AWS observer handling for persistence lifecycle controllers.
+  ADR impact: No ADR: repairs governed continuation and observer behavior.
+
 ## Main Refresh Conflicts
 
 
@@ -3471,9 +3489,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T10:28:16Z
-Latest commit SHA: 427847f6
-Chat duration: 1646927s (19:01:28:47)
+Latest commit at UTC: 2026-10-24T10:57:38Z
+Latest commit SHA: f3d89cd5
+Chat duration: 1648689s (19:01:58:09)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
