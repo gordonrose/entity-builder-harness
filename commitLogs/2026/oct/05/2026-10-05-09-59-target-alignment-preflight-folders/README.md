@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T09:51:39Z
-latest_commit_sha: adc9c83655f4da156b785c506b8b70e58d608d25
-chat_duration: 1644730s (19:00:52:10)
+latest_commit_at_utc: 2026-10-24T09:58:17Z
+latest_commit_sha: aee8bad27be41aa90dfb627a20a42fb4464e5ef2
+chat_duration: 1645128s (19:00:58:48)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2713,6 +2713,17 @@ Raised: The persistence release transition omitted the required RestoreVerifierI
 
 Resolution: Both clean-create and update controllers now bind the restoration verifier to the same qualified immutable persistence image digest as the server.
 
+
+### 2026-10-24T09:58:17Z - Commit recorded
+
+Commit: `aee8bad27be41aa90dfb627a20a42fb4464e5ef2`
+
+Message: fix(deploy): bind persistence restore verifier digest
+
+Summary: Corrects the clean-create and healthy-stack update release controls to provide the template-required RestoreVerifierImageDigest from the same qualified immutable candidate digest; Python compile and pre-commit gates passed.
+
+ADR impact: No ADR: repairs an existing target-template/controller contract.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3400,6 +3411,13 @@ Resolution: Both clean-create and update controllers now bind the restoration ve
   Summary: Adds governed runtime credential rotation/revocation rehearsal, server health verification, migration operation controls, lower-case ECS verifier isolation parsing, local package proof, and reusable pg idle-client error handling. Adapter, composition, package, harness, target and release-contract gates passed locally.
   ADR impact: No ADR: applies existing persistence lifecycle and recovery decisions.
 
+
+- Commit: `aee8bad27be41aa90dfb627a20a42fb4464e5ef2`
+  Time UTC: 2026-10-24T09:58:17Z
+  Message: fix(deploy): bind persistence restore verifier digest
+  Summary: Corrects the clean-create and healthy-stack update release controls to provide the template-required RestoreVerifierImageDigest from the same qualified immutable candidate digest; Python compile and pre-commit gates passed.
+  ADR impact: No ADR: repairs an existing target-template/controller contract.
+
 ## Main Refresh Conflicts
 
 
@@ -3423,9 +3441,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T09:51:39Z
-Latest commit SHA: adc9c83655f4da156b785c506b8b70e58d608d25
-Chat duration: 1644730s (19:00:52:10)
+Latest commit at UTC: 2026-10-24T09:58:17Z
+Latest commit SHA: aee8bad27be41aa90dfb627a20a42fb4464e5ef2
+Chat duration: 1645128s (19:00:58:48)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
