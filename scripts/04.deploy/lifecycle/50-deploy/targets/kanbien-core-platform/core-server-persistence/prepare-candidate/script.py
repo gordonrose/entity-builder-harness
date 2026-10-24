@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from decimal import Decimal, InvalidOperation
@@ -42,7 +43,7 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
                 "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS),
                 "--profile", PROFILE, "--region", REGION, "--output", "json",
             ],
-            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS,
+            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS, env={**os.environ, "AWS_PAGER": ""},
         )
     except subprocess.TimeoutExpired:
         # A lost provider response is never permission to repeat an operation.

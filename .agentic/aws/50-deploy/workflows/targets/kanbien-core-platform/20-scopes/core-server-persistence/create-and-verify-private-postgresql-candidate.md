@@ -177,6 +177,15 @@ revocation migration.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-after-revocation --json
 ```
 
+If the provider observer itself is interrupted after the denied-state proof,
+the following explicit boundary may advance exactly one secret version. Its
+`prepared` verdict requires the next action to be the matching `rotate`
+migration reconciliation; never invoke it again as a retry.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-secret --json
+```
+
 This command creates no new persistent AWS resource.  It never prints or
 records a credential value: only secret-version identifiers, task identities,
 and the bounded verifier/migration verdicts may become evidence.

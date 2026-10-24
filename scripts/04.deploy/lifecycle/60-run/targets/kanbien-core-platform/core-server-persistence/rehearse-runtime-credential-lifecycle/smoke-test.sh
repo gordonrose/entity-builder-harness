@@ -50,6 +50,13 @@ module.rotate_and_replace = lambda *_args: calls.append(("rotate",)) or ("v2", "
 assert module.healthy("health-unready")
 assert not any(call == ("migrate", "revoke") for call in calls)
 
+# The continuation's first precondition is denied readiness, not healthy
+# readiness: requiring the latter would prevent recovery from ever starting.
+source = open(sys.argv[1], encoding="utf-8").read()
+assert 'args.operation in {"recover-after-revocation", "recover-secret"}' in source
+assert '"recover-secret"' in source
+assert 'persistence-runtime-credential-secret-advanced-migration-required' in source
+
 class Fixture:
     def __init__(self, response): self.response = response
     def aws(self, *_args): return True, self.response, "ok"
