@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T09:17:50Z
-latest_commit_sha: HEAD
-chat_duration: 1642701s (19:00:18:21)
+latest_commit_at_utc: 2026-10-24T09:51:39Z
+latest_commit_sha: adc9c83655f4da156b785c506b8b70e58d608d25
+chat_duration: 1644730s (19:00:52:10)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2691,6 +2691,17 @@ Summary: The current packet adds governed runtime credential rotation/revocation
 
 Durable evidence: Durable source: core-server-persistence entrypoints, lifecycle controls, adapter connection test, package smoke; generated local evidence is not a release receipt.
 
+
+### 2026-10-24T09:51:39Z - Commit recorded
+
+Commit: `adc9c83655f4da156b785c506b8b70e58d608d25`
+
+Message: feat(deploy): rehearse persistence credential lifecycle
+
+Summary: Adds governed runtime credential rotation/revocation rehearsal, server health verification, migration operation controls, lower-case ECS verifier isolation parsing, local package proof, and reusable pg idle-client error handling. Adapter, composition, package, harness, target and release-contract gates passed locally.
+
+ADR impact: No ADR: applies existing persistence lifecycle and recovery decisions.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3371,6 +3382,13 @@ Durable evidence: Durable source: core-server-persistence entrypoints, lifecycle
   Summary: Derive the isolated restore verifier ECS identity from the restored database resource, preventing historical tasks from a prior restore of the same snapshot from blocking reconciliation.
   ADR impact: No ADR: this is a bounded controller identity correction.
 
+
+- Commit: `adc9c83655f4da156b785c506b8b70e58d608d25`
+  Time UTC: 2026-10-24T09:51:39Z
+  Message: feat(deploy): rehearse persistence credential lifecycle
+  Summary: Adds governed runtime credential rotation/revocation rehearsal, server health verification, migration operation controls, lower-case ECS verifier isolation parsing, local package proof, and reusable pg idle-client error handling. Adapter, composition, package, harness, target and release-contract gates passed locally.
+  ADR impact: No ADR: applies existing persistence lifecycle and recovery decisions.
+
 ## Main Refresh Conflicts
 
 
@@ -3394,9 +3412,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T09:17:50Z
-Latest commit SHA: HEAD
-Chat duration: 1642701s (19:00:18:21)
+Latest commit at UTC: 2026-10-24T09:51:39Z
+Latest commit SHA: adc9c83655f4da156b785c506b8b70e58d608d25
+Chat duration: 1644730s (19:00:52:10)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
