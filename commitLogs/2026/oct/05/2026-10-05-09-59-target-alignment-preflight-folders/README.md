@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T13:58:38Z
-latest_commit_sha: 5942afe2
-chat_duration: 1659549s (19:04:59:09)
+latest_commit_at_utc: 2026-10-24T16:05:00Z
+latest_commit_sha: 21d02a53
+chat_duration: 1667131s (19:07:05:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2787,6 +2787,17 @@ Summary: Added fail-closed runtime-session termination evidence, bounded fresh r
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-24T16:05:00Z - Commit recorded
+
+Commit: `21d02a53`
+
+Message: feat(deploy): retain persistence acceptance proofs
+
+Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
+
+ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3515,6 +3526,13 @@ ADR impact: covered by session ADR disposition
   Summary: Record durable persistence proof receipts, collect accepted release evidence without depending on aged ECS tasks, and promote core-server-persistence to the active scope.
   ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
 
+
+- Commit: `21d02a53`
+  Time UTC: 2026-10-24T16:05:00Z
+  Message: feat(deploy): retain persistence acceptance proofs
+  Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
+  ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
 ## Main Refresh Conflicts
 
 
@@ -3538,9 +3556,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T13:58:38Z
-Latest commit SHA: 5942afe2
-Chat duration: 1659549s (19:04:59:09)
+Latest commit at UTC: 2026-10-24T16:05:00Z
+Latest commit SHA: 21d02a53
+Chat duration: 1667131s (19:07:05:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
