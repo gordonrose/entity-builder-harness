@@ -88,6 +88,11 @@ def main() -> int:
         {"ParameterKey": "ImageRepositoryArn", "ParameterValue": f"arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"},
         {"ParameterKey": "ImageRepositoryUri", "ParameterValue": outputs["RepositoryUri"]},
         {"ParameterKey": "ImageDigest", "ParameterValue": digest},
+        # The qualified persistence image contains the isolated restore
+        # verifier entrypoint as well as the server. Keep both task
+        # definitions bound to the same immutable candidate on a clean
+        # CREATE, rather than relying on an undeclared template default.
+        {"ParameterKey": "RestoreVerifierImageDigest", "ParameterValue": digest},
         {"ParameterKey": "SourceRevision", "ParameterValue": revision},
     ]
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as parameter_file:

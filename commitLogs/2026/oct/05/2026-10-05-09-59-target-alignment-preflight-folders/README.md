@@ -161,6 +161,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Credential revocation terminated an idle PostgreSQL pool client and crashed the local server instead of leaving it live but not ready.
   Resolution: The reusable PostgreSQL pool adapter now consumes idle-client provider errors without logging raw provider detail; the next readiness probe reports the governed state. Adapter, composition, TLS package, harness, target, and release gates passed.
 
+
+- Raised: The persistence release transition omitted the required RestoreVerifierImageDigest CloudFormation parameter, so AWS rejected change-set creation before any update.
+  Resolution: Both clean-create and update controllers now bind the restoration verifier to the same qualified immutable persistence image digest as the server.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -2701,6 +2705,13 @@ Message: feat(deploy): rehearse persistence credential lifecycle
 Summary: Adds governed runtime credential rotation/revocation rehearsal, server health verification, migration operation controls, lower-case ECS verifier isolation parsing, local package proof, and reusable pg idle-client error handling. Adapter, composition, package, harness, target and release-contract gates passed locally.
 
 ADR impact: No ADR: applies existing persistence lifecycle and recovery decisions.
+
+
+### 2026-10-24T09:57:26Z - Issue
+
+Raised: The persistence release transition omitted the required RestoreVerifierImageDigest CloudFormation parameter, so AWS rejected change-set creation before any update.
+
+Resolution: Both clean-create and update controllers now bind the restoration verifier to the same qualified immutable persistence image digest as the server.
 
 ## Sub-Agent Activity
 

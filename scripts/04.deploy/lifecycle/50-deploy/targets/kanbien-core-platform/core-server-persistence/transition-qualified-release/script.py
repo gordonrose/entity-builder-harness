@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-24"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -62,7 +62,7 @@ def main():
     if infra is None or not prepare.candidate_image(receipt)[0]: return emit("blocked","persistence-release-transition-alignment-not-proven")
     digest,revision=receipt["image_digest"],receipt["source_revision"]
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
-    parameters=[{"ParameterKey":k,"ParameterValue":v} for k,v in (("VpcId",infra["VpcId"]),("VpcCidr",infra["VpcCidr"]),("PrivateSubnetIds",infra["PrivateSubnetIds"]),("ClusterArn",infra["ClusterArn"]),("NamespaceId",infra["NamespaceId"]),("EndpointSecurityGroupId",infra["EndpointSecurityGroupId"]),("S3ArtifactPrefixListId",infra["S3ArtifactPrefixListId"]),("VerifierSecurityGroupId",infra["VerifierSecurityGroupId"]),("LogGroupName",infra["LogGroupName"]),("ImageRepositoryArn","arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"),("ImageRepositoryUri",outputs["RepositoryUri"]),("ImageDigest",digest),("SourceRevision",revision))]
+    parameters=[{"ParameterKey":k,"ParameterValue":v} for k,v in (("VpcId",infra["VpcId"]),("VpcCidr",infra["VpcCidr"]),("PrivateSubnetIds",infra["PrivateSubnetIds"]),("ClusterArn",infra["ClusterArn"]),("NamespaceId",infra["NamespaceId"]),("EndpointSecurityGroupId",infra["EndpointSecurityGroupId"]),("S3ArtifactPrefixListId",infra["S3ArtifactPrefixListId"]),("VerifierSecurityGroupId",infra["VerifierSecurityGroupId"]),("LogGroupName",infra["LogGroupName"]),("ImageRepositoryArn","arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"),("ImageRepositoryUri",outputs["RepositoryUri"]),("ImageDigest",digest),("RestoreVerifierImageDigest",digest),("SourceRevision",revision))]
     ok,_,code=prepare.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
     if not ok:
         if code!="aws-resource-missing": return emit("blocked",code)
