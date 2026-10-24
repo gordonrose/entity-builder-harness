@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-24"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -40,7 +40,7 @@ expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
-import importlib.util, sys
+import importlib.util, subprocess, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
@@ -56,6 +56,8 @@ class Result:
     stderr = ""
 with patch.object(prepare.subprocess, "run", return_value=Result()):
     assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
+with patch.object(prepare.subprocess, "run", side_effect=subprocess.TimeoutExpired(["aws"], 30)):
+    assert prepare.aws("cloudformation", "describe-stacks") == (False, None, "aws-command-timeout")
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py" <<'PY'
 import importlib.util, sys
@@ -141,7 +143,7 @@ assert "DeletionProtection: true" in template
 assert "BackupRetentionPeriod: 7" in template
 assert "PERSISTENCE_POSTGRES_CA_PATH=/app/assets/rds-eu-west-1-bundle.crt" not in template
 assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-secret runtime default"
-verifier = template[template.index("VerifierExecutionRole:"):template.index("Outputs:")]
+verifier = template[template.index("VerifierExecutionRole:"):template.index("RestorationVerifierExecutionRole:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template
 for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):

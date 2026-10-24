@@ -23,6 +23,7 @@ SCRIPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/c
 
 python3 -B - "$SCRIPT" <<'PY'
 import importlib.util
+import subprocess
 import sys
 
 spec = importlib.util.spec_from_file_location("credential_lifecycle", sys.argv[1])
@@ -32,6 +33,13 @@ spec.loader.exec_module(module)
 
 assert module.last_report('{"verdict":"accepted"}\n') == {"verdict": "accepted"}
 assert module.last_report("not-json") is None
+
+original = module.subprocess.run
+try:
+    module.subprocess.run = lambda *_args, **_kwargs: (_ for _ in ()).throw(subprocess.TimeoutExpired(["bash"], 180))
+    assert module.child("synthetic") is None
+finally:
+    module.subprocess.run = original
 
 class Fixture:
     def __init__(self, response): self.response = response

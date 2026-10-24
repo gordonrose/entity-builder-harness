@@ -37,7 +37,12 @@ def last_report(stdout: str) -> dict[str, Any] | None:
     return None
 
 def child(path: str, *args: str) -> dict[str, Any] | None:
-    completed = subprocess.run(["bash", str(ROOT / path), *args], cwd=ROOT, capture_output=True, text=True)
+    try:
+        completed = subprocess.run(["bash", str(ROOT / path), *args], cwd=ROOT, capture_output=True, text=True, timeout=180)
+    except subprocess.TimeoutExpired:
+        # A child controller may already have submitted a task.  Stop safely;
+        # the target workflow requires reconciliation of that exact task.
+        return None
     body = last_report(completed.stdout)
     return body if completed.returncode == 0 and isinstance(body, dict) else None
 

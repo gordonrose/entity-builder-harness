@@ -17,10 +17,19 @@ PROFILE, REGION, CLUSTER = "kanbien-dev", "eu-west-1", "kanbien-core-platform"
 ACCOUNT = "337159794548"
 STACK, FOUNDATION = "kanbien-core-platform-core-server-persistence", "kanbien-core-platform-foundation"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
+AWS_CONNECT_TIMEOUT_SECONDS = 5
+AWS_READ_TIMEOUT_SECONDS = 20
+AWS_PROCESS_TIMEOUT_SECONDS = 30
 
 
 def aws(*parts: str):
-    result = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True)
+    try:
+        result = subprocess.run(
+            ["aws", *parts, "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS), "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS), "--profile", PROFILE, "--region", REGION, "--output", "json"],
+            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        return False, None, "aws-command-timeout"
     if result.returncode:
         lowered = result.stderr.lower()
         if "accessdenied" in lowered or "not authorized" in lowered:

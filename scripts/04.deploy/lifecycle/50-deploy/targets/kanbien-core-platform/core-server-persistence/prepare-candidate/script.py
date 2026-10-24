@@ -28,13 +28,26 @@ INTERFACE_SERVICES = {
     f"com.amazonaws.{REGION}.ecr.api",
     f"com.amazonaws.{REGION}.logs",
 }
+AWS_CONNECT_TIMEOUT_SECONDS = 5
+AWS_READ_TIMEOUT_SECONDS = 20
+AWS_PROCESS_TIMEOUT_SECONDS = 30
 
 
 def aws(*parts: str) -> tuple[bool, Any, str]:
-    result = subprocess.run(
-        ["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"],
-        capture_output=True, text=True,
-    )
+    try:
+        result = subprocess.run(
+            [
+                "aws", *parts,
+                "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS),
+                "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS),
+                "--profile", PROFILE, "--region", REGION, "--output", "json",
+            ],
+            capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        # A lost provider response is never permission to repeat an operation.
+        # Callers must reconcile the named target state before another mutation.
+        return False, None, "aws-command-timeout"
     if result.returncode:
         lowered = result.stderr.lower()
         if "accessdenied" in lowered or "not authorized" in lowered:
