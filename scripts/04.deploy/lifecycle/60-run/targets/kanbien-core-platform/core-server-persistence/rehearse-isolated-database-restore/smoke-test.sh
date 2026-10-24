@@ -67,5 +67,11 @@ class TaskListFixture:
 tasks = TaskListFixture()
 assert module.verifier_tasks(tasks, "synthetic-start") == (["task-1"], "ok")
 assert [call[-1] for call in tasks.calls] == ["RUNNING", "STOPPED"]
+
+first_restore = {"DbiResourceId": "db-RESTORE-A"}
+second_restore = {"DbiResourceId": "db-RESTORE-B"}
+assert module.restore_run_identity(first_restore) != module.restore_run_identity(second_restore)
+assert module.restore_run_identity(first_restore).startswith("kanbien-restore-")
+assert module.restore_run_identity({}) is None
 print("isolated persistence restore verifier task-definition checks passed")
 PY

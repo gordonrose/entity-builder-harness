@@ -80,6 +80,12 @@ def verifier_tasks(m,started):
   if not all(isinstance(x,str) for x in xs):return None,"persistence-restoration-verifier-task-list-invalid"
   arns.extend(xs)
  return list(dict.fromkeys(arns)),"ok"
+def restore_run_identity(restored):
+ # A snapshot can be restored more than once.  The ECS started-by value must
+ # identify this particular isolated database incarnation, not merely the
+ # snapshot date, otherwise historical verifier tasks block a clean rerun.
+ resource=restored.get("DbiResourceId") if isinstance(restored,dict) else None
+ return f"kanbien-restore-{hashlib.sha256(resource.encode()).hexdigest()[:16]}" if isinstance(resource,str) and resource else None
 def verify(m,sid,rid):
  src,c=source(m); ctl,cc=controls(m); restored,rc=db(m,rid)
  if src is None:return emit("blocked",c)
@@ -87,7 +93,9 @@ def verify(m,sid,rid):
  if restored is None or not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked",rc if restored is None else "persistence-restored-database-posture-invalid")
  endpoint=restored.get("Endpoint",{}).get("Address") if isinstance(restored.get("Endpoint"),dict) else None; td=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
- started=f"kanbien-restore-{sid.rsplit('-',1)[-1]}"; arns,c=verifier_tasks(m,started)
+ started=restore_run_identity(restored)
+ if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
+ arns,c=verifier_tasks(m,started)
  if arns is None:return emit("blocked",c)
  if arns:
   ok,d,c=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*arns); xs=[x for x in d.get("tasks",[]) if isinstance(x,dict) and x.get("taskDefinitionArn")==td] if ok and isinstance(d,dict) else []
