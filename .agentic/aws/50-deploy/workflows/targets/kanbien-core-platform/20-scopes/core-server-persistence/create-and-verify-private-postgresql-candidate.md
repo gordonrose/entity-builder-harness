@@ -167,6 +167,16 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation revoke-and-recover --json
 ```
 
+If the independently reconciled revocation task and its live-but-not-ready
+proof have already completed but the controller was interrupted before it could
+perform recovery, use the continuation below. It first re-proves denied
+readiness, then performs only fresh credential recovery; it never replays the
+revocation migration.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-after-revocation --json
+```
+
 This command creates no new persistent AWS resource.  It never prints or
 records a credential value: only secret-version identifiers, task identities,
 and the bounded verifier/migration verdicts may become evidence.

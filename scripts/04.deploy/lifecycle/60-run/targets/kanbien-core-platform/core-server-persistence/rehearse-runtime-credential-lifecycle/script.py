@@ -103,7 +103,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path); parser.add_argument("--operation"); parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
-    if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
+    if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover", "recover-after-revocation"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
     create = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)
@@ -116,6 +116,14 @@ def main() -> int:
     if args.operation == "rotate":
         version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
         return report("accepted", "persistence-runtime-credential-rotation-proved", facts={"prior_secret_version": prior_version, "replacement_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "replacement_secret_version": version})
+    if args.operation == "recover-after-revocation":
+        # This continuation is intentionally distinct from revoke-and-recover:
+        # it may only follow freshly proved denied readiness and must never
+        # replay the destructive revocation migration.
+        if not healthy("health-unready"):
+            return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-proven", facts={"prior_secret_version": prior_version})
+        version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
+        return report("accepted", "persistence-runtime-credential-recovery-proved", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
     if not migrate("revoke"): return report("blocked", "persistence-credential-lifecycle-revocation-not-confirmed", facts={"prior_secret_version": prior_version})
     if not replace(args.receipt) or not healthy("health-unready"): return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-confirmed", facts={"prior_secret_version": prior_version})
     version, code = rotate_and_replace(prepare, secret_arn, args.receipt)

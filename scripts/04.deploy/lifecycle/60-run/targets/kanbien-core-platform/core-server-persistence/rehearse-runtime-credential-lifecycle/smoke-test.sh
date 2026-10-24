@@ -41,6 +41,15 @@ try:
 finally:
     module.subprocess.run = original
 
+# A recovery continuation must prove the denied state first and must not call
+# the revocation migration again.
+calls = []
+module.healthy = lambda mode: calls.append(("health", mode)) or mode == "health-unready"
+module.migrate = lambda operation: calls.append(("migrate", operation)) or True
+module.rotate_and_replace = lambda *_args: calls.append(("rotate",)) or ("v2", "ok")
+assert module.healthy("health-unready")
+assert not any(call == ("migrate", "revoke") for call in calls)
+
 class Fixture:
     def __init__(self, response): self.response = response
     def aws(self, *_args): return True, self.response, "ok"
