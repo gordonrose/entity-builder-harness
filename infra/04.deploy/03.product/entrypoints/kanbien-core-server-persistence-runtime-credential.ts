@@ -17,10 +17,14 @@
 
 import type { PostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 
-export type RuntimeCredentialOperation = "apply" | "rotate" | "revoke";
+export type RuntimeCredentialOperation = "apply" | "rotate" | "revoke" | "prove-effective-privilege";
 
 export function runtimeCredentialOperation(value: unknown): RuntimeCredentialOperation | undefined {
-  return value === undefined || value === "apply" ? "apply" : value === "rotate" || value === "revoke" ? value : undefined;
+  return value === undefined || value === "apply"
+    ? "apply"
+    : value === "rotate" || value === "revoke" || value === "prove-effective-privilege"
+      ? value
+      : undefined;
 }
 
 /**

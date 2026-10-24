@@ -47,6 +47,9 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
     if (operation === "revoke") {
       await revokeRuntimeAccess(pool, runtimeCredentials.username);
       console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED" }));
+    } else if (operation === "prove-effective-privilege") {
+      await proveRuntimePrivilege(configuration, runtimeCredentials, certificateAuthority);
+      console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN" }));
     } else {
       await provisionRuntimeAccess(pool, {
         database: configuration.database,
@@ -57,6 +60,49 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
       console.log(JSON.stringify({ verdict: "accepted", code: operation === "rotate" ? "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED" : "PERSISTENCE_MIGRATION_APPLIED" }));
     }
   } catch { rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage); } finally { await pool.end(); }
+}
+
+/**
+ * This is a live, credential-bound least-privilege observation.  It uses the
+ * ordinary runtime credential on a separate connection, proves a permitted
+ * DML transaction, and requires PostgreSQL to reject structural DDL.  Both
+ * transactions are rolled back so the proof leaves no probe data or table.
+ */
+async function proveRuntimePrivilege(
+  configuration: ReturnType<typeof configurationFromEnvironment> & {},
+  credentials: { readonly username: string; readonly password: string },
+  certificateAuthority: string,
+): Promise<void> {
+  const runtimePool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
+  const table = `"${configuration.schema}"."core_server_persistence_acceptance"`;
+  const client = await runtimePool.connect();
+  try {
+    await client.query({ text: "BEGIN" });
+    await client.query({ text: `INSERT INTO ${table} (record_id, fact_digest) VALUES ($1, $2) ON CONFLICT (record_id) DO NOTHING`, values: ["core-persistence-privilege-probe", "0".repeat(64)] });
+    const read = await client.query<{ readonly record_id: string }>({ text: `SELECT record_id FROM ${table} WHERE record_id = $1`, values: ["core-persistence-privilege-probe"] });
+    if (read.rows.length !== 1) throw new Error("PERSISTENCE_RUNTIME_DML_NOT_CONFIRMED");
+    await client.query({ text: "ROLLBACK" });
+
+    await client.query({ text: "BEGIN" });
+    try {
+      await client.query({ text: `CREATE TABLE "${configuration.schema}"."runtime_privilege_probe_must_reject" (id text)` });
+    } catch (error) {
+      await client.query({ text: "ROLLBACK" });
+      if (providerCode(error) === "42501") return;
+      throw new Error("PERSISTENCE_RUNTIME_DDL_REJECTION_NOT_CONFIRMED");
+    }
+    await client.query({ text: "ROLLBACK" });
+    throw new Error("PERSISTENCE_RUNTIME_DDL_UNEXPECTEDLY_PERMITTED");
+  } finally {
+    client.release();
+    await runtimePool.end();
+  }
+}
+
+function providerCode(value: unknown): string | undefined {
+  return typeof value === "object" && value !== null && typeof (value as { readonly code?: unknown }).code === "string"
+    ? (value as { readonly code: string }).code
+    : undefined;
 }
 function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
   const host = text(env, "PERSISTENCE_POSTGRES_HOST"), database = text(env, "PERSISTENCE_POSTGRES_DATABASE"), schema = text(env, "PERSISTENCE_POSTGRES_SCHEMA"), reference = text(env, "PERSISTENCE_MIGRATION_SECRET_REFERENCE"), port = text(env, "PERSISTENCE_POSTGRES_PORT");
