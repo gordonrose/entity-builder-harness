@@ -49,6 +49,15 @@ export function createNodePostgreSqlConnectionPool(
 }
 
 export function nodePoolAdapter(pool: Pool): PostgreSqlConnectionPool {
+  // `pg` emits an error when an idle client is terminated by PostgreSQL (for
+  // example after urgent runtime-credential revocation). Without an error
+  // listener Node treats that provider event as unhandled and terminates the
+  // server. The next readiness query is still allowed to fail safely and
+  // report not-ready; this listener only preserves the process boundary.
+  // Deliberately do not log the provider error here: its message can contain
+  // provider-controlled detail and diagnostics are emitted by the owning
+  // runtime through its safe diagnostic policy.
+  pool.on("error", () => undefined);
   return {
     query: async (statement) => nodeQuery(pool, statement),
     connect: async () => nodeClientAdapter(await pool.connect()),

@@ -157,6 +157,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Bound restore verifier identity to database incarnation
   Resolution: A fresh restore from the same snapshot correctly exposed that a snapshot-date-only ECS started-by value collides with historical tasks. The restore controller now derives a bounded identity from the restored RDS DbiResourceId, so only tasks for the current isolated database incarnation are reconciled.
 
+
+- Raised: Credential revocation terminated an idle PostgreSQL pool client and crashed the local server instead of leaving it live but not ready.
+  Resolution: The reusable PostgreSQL pool adapter now consumes idle-client provider errors without logging raw provider detail; the next readiness probe reports the governed state. Adapter, composition, TLS package, harness, target, and release gates passed.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -569,6 +573,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Preserve recovery controller identity evidence
   Durable evidence: Current restore DbiResourceId is db-7AQ3CU3PEWLSGTNPUMPKEFODM4. Earlier restore-verifier task history remains intentionally excluded by the corrected incarnation-bound started-by identity. The test proves task lookup includes stopped tasks and restore incarnations receive distinct identities.
+
+
+- Summary: The current packet adds governed runtime credential rotation/revocation operations, verifier health modes and package/live-controller coverage. The local Docker PostgreSQL/TLS proof initially exposed unhandled pg idle-client errors on revoke; the reusable adapter now handles that boundary and all relevant local gates pass.
+  Durable evidence: Durable source: core-server-persistence entrypoints, lifecycle controls, adapter connection test, package smoke; generated local evidence is not a release receipt.
 
 ## Activity Log
 
@@ -2668,6 +2676,20 @@ Message: fix(deploy): isolate restore verifier task identity
 Summary: Derive the isolated restore verifier ECS identity from the restored database resource, preventing historical tasks from a prior restore of the same snapshot from blocking reconciliation.
 
 ADR impact: No ADR: this is a bounded controller identity correction.
+
+
+### 2026-10-24T09:50:40Z - Issue
+
+Raised: Credential revocation terminated an idle PostgreSQL pool client and crashed the local server instead of leaving it live but not ready.
+
+Resolution: The reusable PostgreSQL pool adapter now consumes idle-client provider errors without logging raw provider detail; the next readiness probe reports the governed state. Adapter, composition, TLS package, harness, target, and release gates passed.
+
+
+### 2026-10-24T09:50:40Z - Context hygiene
+
+Summary: The current packet adds governed runtime credential rotation/revocation operations, verifier health modes and package/live-controller coverage. The local Docker PostgreSQL/TLS proof initially exposed unhandled pg idle-client errors on revoke; the reusable adapter now handles that boundary and all relevant local gates pass.
+
+Durable evidence: Durable source: core-server-persistence entrypoints, lifecycle controls, adapter connection test, package smoke; generated local evidence is not a release receipt.
 
 ## Sub-Agent Activity
 

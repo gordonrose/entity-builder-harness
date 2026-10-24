@@ -1,5 +1,5 @@
 import { deepEqual, equal, match } from "node:assert/strict";
-import type { QueryResult, QueryResultRow } from "pg";
+import { Pool, type QueryResult, type QueryResultRow } from "pg";
 import {
   causationId,
   isoDateTimeFromDate,
@@ -32,6 +32,7 @@ import {
   type PostgreSqlStatement,
   type PostgreSqlTransactionalClient,
 } from "../src/index";
+import { nodePoolAdapter } from "../src/connection";
 import {
   postgreSqlPersistenceOperationError,
   postgreSqlPersistenceProviderFailureClass,
@@ -80,6 +81,20 @@ async function main(): Promise<void> {
     postgreSqlPersistenceOperationError("claim_outbox", { code: "57014" }).params,
     { operation: "claim_outbox", provider_failure_class: "timeout" },
   );
+
+  // An idle connection can be terminated by PostgreSQL after credential
+  // revocation. The adapter must retain the server process so a later
+  // readiness query can produce the governed not-ready result.
+  const revokedIdlePool = new Pool({
+    host: "127.0.0.1",
+    port: 1,
+    database: "unused",
+    user: "unused",
+    password: "synthetic",
+  });
+  nodePoolAdapter(revokedIdlePool);
+  revokedIdlePool.emit("error", Object.assign(new Error("synthetic provider message"), { code: "57P01" }));
+  await revokedIdlePool.end();
 
   const at = (seconds: number) => isoDateTimeFromDate(new Date(Date.parse("2026-09-26T12:00:00.000Z") + (seconds * 1_000)));
   const subject = recordReference({

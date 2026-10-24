@@ -5,7 +5,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-23"
+//   updated_on: "2026-10-24"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -67,12 +67,16 @@ for (const [packageName, exportsMap] of Object.entries(packages)) {
 
 const program = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.js")));
 const serverMain = await import(pathToFileUrl(join(buildOutput, "platform/server/src/main.js")));
+const verifier = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.js")));
+const migration = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.js")));
 const releaseIdentity = { sourceCommitSha: "local-persistence-composition-proof-2026.10.23" };
 const recordId = "core-persistence-acceptance-0001";
 const factDigest = "a".repeat(64);
 
 await proveUnavailableDependency();
 await proveAvailableDependency();
+await proveHealthVerifierModes();
+await proveRuntimeCredentialRevocationOperation();
 
 console.log("Core-server persistence composition local runtime proof passed.");
 
@@ -105,6 +109,43 @@ async function proveAvailableDependency() {
     await started.close();
   }
   if (!fake.closed) throw new Error("Core-server shutdown did not close the injected persistence runtime.");
+}
+
+async function proveHealthVerifierModes() {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url) => ({ status: String(url).endsWith("/livez") ? 200 : 503, ok: String(url).endsWith("/livez"), json: async () => undefined });
+    const unready = await captureConsole(() => verifier.runKanbienCoreServerPersistenceVerifier({
+      PERSISTENCE_VERIFIER_MODE: "health-unready",
+      KANBIEN_PRIVATE_PERSISTENCE_URL: "http://core-server-persistence.kanbien-core-platform.internal:3000",
+    }));
+    if (!unready.output.includes("KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY") || unready.exitCode !== 0) throw new Error("Health verifier did not prove live-but-not-ready safely.");
+    globalThis.fetch = async () => ({ status: 200, ok: true, json: async () => undefined });
+    const ready = await captureConsole(() => verifier.runKanbienCoreServerPersistenceVerifier({
+      PERSISTENCE_VERIFIER_MODE: "health-ready",
+      KANBIEN_PRIVATE_PERSISTENCE_URL: "http://core-server-persistence.kanbien-core-platform.internal:3000",
+    }));
+    if (!ready.output.includes("KANBIEN_CORE_PERSISTENCE_HEALTHY") || ready.exitCode !== 0) throw new Error("Health verifier did not prove recovered readiness safely.");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+async function proveRuntimeCredentialRevocationOperation() {
+  if (migration.runtimeCredentialOperation(undefined) !== "apply" || migration.runtimeCredentialOperation("rotate") !== "rotate" || migration.runtimeCredentialOperation("revoke") !== "revoke" || migration.runtimeCredentialOperation("unsafe") !== undefined) throw new Error("Migration credential operation parsing is not fail-closed.");
+  const queries = [];
+  await migration.revokeRuntimeAccess({ query: async (statement) => { queries.push(statement); return { rows: [] }; } }, "core_runtime");
+  if (queries.length !== 2 || !queries[0].text.includes('ALTER ROLE "core_runtime" NOLOGIN') || !queries[1].text.includes("pg_terminate_backend") || JSON.stringify(queries).includes("password")) throw new Error("Runtime credential revocation did not use the bounded no-login and session-termination sequence.");
+}
+
+async function captureConsole(run) {
+  const originalLog = console.log, originalError = console.error, originalExitCode = process.exitCode;
+  const records = [];
+  console.log = (...values) => records.push(values.join(" "));
+  console.error = (...values) => records.push(values.join(" "));
+  process.exitCode = undefined;
+  try { await run(); return { output: records.join("\n"), exitCode: process.exitCode ?? 0 }; }
+  finally { console.log = originalLog; console.error = originalError; process.exitCode = originalExitCode; }
 }
 
 async function start(persistence) {

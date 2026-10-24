@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-23"
+//   updated_on: "2026-10-24"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -25,13 +25,15 @@ import {
   type PostgreSqlConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
+import { revokeRuntimeAccess, runtimeCredentialOperation } from "./kanbien-core-server-persistence-runtime-credential";
 
 export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = configurationFromEnvironment(env);
   const credentials = credentialObject(env["PERSISTENCE_MIGRATION_CREDENTIALS"]);
   const runtimeCredentials = credentialObject(env["PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS"]);
   const certificateAuthority = certificateAuthorityFromEnvironment(env);
-  if (configuration === undefined || credentials === undefined || runtimeCredentials === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
+  const operation = runtimeCredentialOperation(env["PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION"]);
+  if (configuration === undefined || credentials === undefined || runtimeCredentials === undefined || certificateAuthority === undefined || operation === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
   let stage: "migration" | "runtime-access" = "migration";
   try {
@@ -42,13 +44,18 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
     });
     if (!result.ok) return rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage, migrationFailureClass(result.error));
     stage = "runtime-access";
-    await provisionRuntimeAccess(pool, {
-      database: configuration.database,
-      schema: configuration.schema,
-      migrationUsername: credentials.username,
-      runtimeCredentials,
-    });
-    console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_MIGRATION_APPLIED" }));
+    if (operation === "revoke") {
+      await revokeRuntimeAccess(pool, runtimeCredentials.username);
+      console.log(JSON.stringify({ verdict: "accepted", code: "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED" }));
+    } else {
+      await provisionRuntimeAccess(pool, {
+        database: configuration.database,
+        schema: configuration.schema,
+        migrationUsername: credentials.username,
+        runtimeCredentials,
+      });
+      console.log(JSON.stringify({ verdict: "accepted", code: operation === "rotate" ? "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED" : "PERSISTENCE_MIGRATION_APPLIED" }));
+    }
   } catch { rejected("PERSISTENCE_MIGRATION_NOT_CONFIRMED", stage); } finally { await pool.end(); }
 }
 function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
@@ -96,6 +103,7 @@ async function provisionRuntimeAccess(
   await pool.query({ text: `ALTER DEFAULT PRIVILEGES FOR ROLE ${migrationUsername} IN SCHEMA ${schema} GRANT USAGE, SELECT ON SEQUENCES TO ${runtimeUsername}` });
   await pool.query({ text: `ALTER DEFAULT PRIVILEGES FOR ROLE ${migrationUsername} IN SCHEMA ${schema} GRANT EXECUTE ON FUNCTIONS TO ${runtimeUsername}` });
 }
+
 
 function quotedIdentifier(value: string): string {
   if (!/^[a-z_][a-z0-9_]{0,62}$/.test(value)) throw new TypeError("PERSISTENCE_ROLE_IDENTIFIER_INVALID");

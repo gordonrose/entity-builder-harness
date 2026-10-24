@@ -94,7 +94,14 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
     return "ok"
 
 
-def migration_log_accepted(task: dict[str, object]) -> tuple[bool, str]:
+SUCCESS = {
+    "apply": "PERSISTENCE_MIGRATION_APPLIED",
+    "rotate": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
+    "revoke": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
+}
+
+
+def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[bool, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
         return False, "persistence-migration-evidence-unavailable"
@@ -103,12 +110,13 @@ def migration_log_accepted(task: dict[str, object]) -> tuple[bool, str]:
     if not ok:
         return False, code
     messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)] if isinstance(events, dict) else []
-    if any(isinstance(message, str) and '"verdict":"accepted"' in message and '"code":"PERSISTENCE_MIGRATION_APPLIED"' in message for message in messages):
+    expected = SUCCESS[operation]
+    if any(isinstance(message, str) and '"verdict":"accepted"' in message and f'"code":"{expected}"' in message for message in messages):
         return True, "ok"
     return False, "persistence-migration-not-confirmed"
 
 
-def accepted_completion(task: dict[str, object], seconds: int) -> int:
+def accepted_completion(task: dict[str, object], seconds: int, operation: str) -> int:
     observed_duration = duration(task)
     if observed_duration is None:
         return report("blocked", "persistence-migration-duration-unavailable")
@@ -116,19 +124,20 @@ def accepted_completion(task: dict[str, object], seconds: int) -> int:
         return report("blocked", "persistence-migration-completion-deadline-exceeded")
     if not task_exit(task):
         return report("blocked", "persistence-migration-unsuccessful-completion")
-    accepted, code = migration_log_accepted(task)
+    accepted, code = migration_log_accepted(task, operation)
     if not accepted:
         return report("blocked", code)
     arn = task.get("taskArn")
-    return report("accepted", "persistence-migration-applied", facts={"migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--reconcile-task")
+    parser.add_argument("--runtime-credential-operation", default="apply")
     args, unknown = parser.parse_known_args()
-    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)):
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or args.runtime_credential_operation not in SUCCESS:
         return report("blocked", "persistence-migration-arguments-invalid")
     seconds = deadline()
     if seconds is None:
@@ -152,9 +161,10 @@ def main() -> int:
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
             return report("blocked", code)
-        return accepted_completion(task, seconds)
+        return accepted_completion(task, seconds, args.runtime_credential_operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
-    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network)
+    overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION", "value": args.runtime_credential_operation}]}]})
+    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network, "--overrides", overrides)
     tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
     if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
         return report("blocked", code if not ok else "persistence-migration-not-started")
@@ -172,7 +182,7 @@ def main() -> int:
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
         return report("blocked", "persistence-migration-controller-deadline-remote-task-still-running")
-    return accepted_completion(current, seconds)
+    return accepted_completion(current, seconds, args.runtime_credential_operation)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,13 @@ ACCOUNT = "337159794548"
 STACK, FOUNDATION = "kanbien-core-platform-core-server-persistence", "kanbien-core-platform-foundation"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 RECORD_ID, FACT = "core-persistence-acceptance-v1", "kanbien-core-persistence-acceptance-v1"
-SUCCESS = {"create": "KANBIEN_CORE_PERSISTENCE_RECORD_ACCEPTED", "read": "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "cleanup": "KANBIEN_CORE_PERSISTENCE_RECORD_CLEANED_UP"}
+SUCCESS = {
+    "create": "KANBIEN_CORE_PERSISTENCE_RECORD_ACCEPTED",
+    "read": "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED",
+    "cleanup": "KANBIEN_CORE_PERSISTENCE_RECORD_CLEANED_UP",
+    "health-ready": "KANBIEN_CORE_PERSISTENCE_HEALTHY",
+    "health-unready": "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY",
+}
 
 
 def aws(*parts: str):
@@ -107,7 +113,10 @@ def no_direct_database_credential(task_definition: str) -> bool:
     if len(containers) != 1 or not isinstance(containers[0], dict):
         return False
     container = containers[0]
-    names = {item.get("Name") for item in container.get("environment", []) if isinstance(item, dict)}
+    # ECS describes environment fields as lower-case ``name``.  A
+    # credential-bearing verifier definition must never pass this check just
+    # because the controller read the provider response with the wrong case.
+    names = {item.get("name") for item in container.get("environment", []) if isinstance(item, dict)}
     return not container.get("secrets") and not any(isinstance(name, str) and name.startswith("PERSISTENCE_POSTGRES") for name in names)
 
 

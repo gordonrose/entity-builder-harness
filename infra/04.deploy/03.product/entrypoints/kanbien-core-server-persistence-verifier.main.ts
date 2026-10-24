@@ -4,7 +4,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-23"
+//   updated_on: "2026-10-24"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -22,7 +22,9 @@ export async function runKanbienCoreServerPersistenceVerifier(env: NodeJS.Proces
   const baseUrl = env["KANBIEN_PRIVATE_PERSISTENCE_URL"];
   const recordId = env["PERSISTENCE_ACCEPTANCE_RECORD_ID"];
   const fact = env["PERSISTENCE_ACCEPTANCE_FACT"];
-  if (!isMode(mode) || !isPrivateBaseUrl(baseUrl) || !isRecordId(recordId) || typeof fact !== "string" || fact.length < 1 || fact.length > 256) return rejected("VERIFIER_CONFIGURATION_INVALID");
+  if (!isMode(mode) || !isPrivateBaseUrl(baseUrl)) return rejected("VERIFIER_CONFIGURATION_INVALID");
+  if (mode === "health-ready" || mode === "health-unready") return verifyHealth(baseUrl, mode);
+  if (!isRecordId(recordId) || typeof fact !== "string" || fact.length < 1 || fact.length > 256) return rejected("VERIFIER_CONFIGURATION_INVALID");
   const factDigest = createHash("sha256").update(fact).digest("hex");
   try {
     const create = mode === "create";
@@ -41,9 +43,28 @@ export async function runKanbienCoreServerPersistenceVerifier(env: NodeJS.Proces
   }
 }
 
+/**
+ * The verifier remains credential-free and server-mediated.  These probes
+ * deliberately observe only HTTP status: liveness must remain true through a
+ * dependency outage, while readiness tracks the PostgreSQL dependency.
+ */
+async function verifyHealth(baseUrl: string, mode: "health-ready" | "health-unready"): Promise<void> {
+  try {
+    const [live, ready] = await Promise.all([
+      fetch(`${baseUrl}/livez`, { signal: AbortSignal.timeout(30_000) }),
+      fetch(`${baseUrl}/readyz`, { signal: AbortSignal.timeout(30_000) }),
+    ]);
+    if (mode === "health-ready" && live.status === 200 && ready.status === 200) return accepted("KANBIEN_CORE_PERSISTENCE_HEALTHY");
+    if (mode === "health-unready" && live.status === 200 && !ready.ok) return accepted("KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY");
+    return rejected("KANBIEN_CORE_PERSISTENCE_HEALTH_VERIFICATION_REJECTED");
+  } catch {
+    return rejected("KANBIEN_CORE_PERSISTENCE_HEALTH_VERIFICATION_UNAVAILABLE");
+  }
+}
+
 function accepted(code: string): void { console.log(JSON.stringify({ verdict: "accepted", code })); }
 function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
-function isMode(value: unknown): value is "create" | "read" | "cleanup" { return value === "create" || value === "read" || value === "cleanup"; }
+function isMode(value: unknown): value is "create" | "read" | "cleanup" | "health-ready" | "health-unready" { return value === "create" || value === "read" || value === "cleanup" || value === "health-ready" || value === "health-unready"; }
 function isPrivateBaseUrl(value: unknown): value is string { return typeof value === "string" && /^http:\/\/[a-z0-9-]+\.kanbien-core-platform\.internal:3000$/.test(value); }
 function isRecordId(value: unknown): value is string { return typeof value === "string" && /^core-persistence-[a-z0-9-]{8,80}$/.test(value); }
 function hasOutcome(value: unknown, outcomes: readonly string[]): boolean { return typeof value === "object" && value !== null && "outcome" in value && outcomes.includes((value as { outcome?: unknown }).outcome as string); }

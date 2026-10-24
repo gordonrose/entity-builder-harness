@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 version: 1
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-10-24"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -143,6 +143,33 @@ private `read` verifier so the data-survival evidence is explicit.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$receipt" --json > "$replacement_report"
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > "$replacement_read_report"
 ```
+
+## Runtime Credential Rotation and Urgent Revocation
+
+The migration credential remains the recovery identity.  The server receives
+only the runtime secret and never refreshes it in place: a successful runtime
+credential rotation writes a new secret version, uses the migration task to
+apply the matching database role password, replaces the server task, then
+requires both ready health and a meaningful retained-record read.  If the
+migration outcome is uncertain after the secret advances, this route blocks;
+it never blindly restores a secret version or replays a completed migration.
+
+Urgent revocation is a separate, bounded exercise.  The migration task first
+sets the runtime role to `NOLOGIN` and terminates sessions for that role.  ECS
+then starts a replacement carrying the now-denied version; it must remain live
+but not ready.  Recovery writes a new runtime secret version, applies the
+matching role password through the migration identity, replaces the server,
+and repeats ready/read proof.  No completed verifier or migration is replayed
+merely because a credential changed.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation rotate --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation revoke-and-recover --json
+```
+
+This command creates no new persistent AWS resource.  It never prints or
+records a credential value: only secret-version identifiers, task identities,
+and the bounded verifier/migration verdicts may become evidence.
 
 ## Qualified Persistence Image Transition
 
