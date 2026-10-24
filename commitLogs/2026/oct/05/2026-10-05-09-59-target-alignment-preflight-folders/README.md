@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T09:04:27Z
-latest_commit_sha: 14798019
-chat_duration: 1641898s (19:00:04:58)
+latest_commit_at_utc: 2026-10-24T09:17:50Z
+latest_commit_sha: HEAD
+chat_duration: 1642701s (19:00:18:21)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -152,6 +152,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Corrected isolated restore verifier reconciliation
   Resolution: Live restore check exposed two controller defects before acceptance: ECS task-definition fields are lower-case and list-tasks defaults to running tasks. The controller now parses the actual AWS response and searches running plus stopped tasks before submitting any verifier. Two read-only verifier attempts already exist for the current restored copy, so it will be cleaned up and repeated from the immutable snapshot after this correction is recorded.
+
+
+- Raised: Bound restore verifier identity to database incarnation
+  Resolution: A fresh restore from the same snapshot correctly exposed that a snapshot-date-only ECS started-by value collides with historical tasks. The restore controller now derives a bounded identity from the restored RDS DbiResourceId, so only tasks for the current isolated database incarnation are reconciled.
 
 ## Decisions Made
 
@@ -561,6 +565,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Keep only the durable recovery evidence
   Durable evidence: RDS restore kanbien-core-platform-persistence-restore-20261023 became available, passed the governed restore posture check, and the first verifier task 559dcbbd4be74a9893d62f0ecf4f5e1a exited 0. A controller defect submitted a second read-only verifier attempt because stopped tasks were omitted. The harness correction and smoke test are the durable source; raw AWS task output need not be retained.
+
+
+- Summary: Preserve recovery controller identity evidence
+  Durable evidence: Current restore DbiResourceId is db-7AQ3CU3PEWLSGTNPUMPKEFODM4. Earlier restore-verifier task history remains intentionally excluded by the corrected incarnation-bound started-by identity. The test proves task lookup includes stopped tasks and restore incarnations receive distinct identities.
 
 ## Activity Log
 
@@ -2636,6 +2644,31 @@ Summary: Rebased restore-controller task commit from 14798019 onto origin/main; 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-24T09:17:13Z - Issue
+
+Raised: Bound restore verifier identity to database incarnation
+
+Resolution: A fresh restore from the same snapshot correctly exposed that a snapshot-date-only ECS started-by value collides with historical tasks. The restore controller now derives a bounded identity from the restored RDS DbiResourceId, so only tasks for the current isolated database incarnation are reconciled.
+
+
+### 2026-10-24T09:17:13Z - Context hygiene
+
+Summary: Preserve recovery controller identity evidence
+
+Durable evidence: Current restore DbiResourceId is db-7AQ3CU3PEWLSGTNPUMPKEFODM4. Earlier restore-verifier task history remains intentionally excluded by the corrected incarnation-bound started-by identity. The test proves task lookup includes stopped tasks and restore incarnations receive distinct identities.
+
+
+### 2026-10-24T09:17:50Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): isolate restore verifier task identity
+
+Summary: Derive the isolated restore verifier ECS identity from the restored database resource, preventing historical tasks from a prior restore of the same snapshot from blocking reconciliation.
+
+ADR impact: No ADR: this is a bounded controller identity correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3309,6 +3342,13 @@ ADR impact: covered by session ADR disposition
   Summary: Rebased restore-controller task commit from 14798019 onto origin/main; current durable task SHA is e3c7a09e.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-24T09:17:50Z
+  Message: fix(deploy): isolate restore verifier task identity
+  Summary: Derive the isolated restore verifier ECS identity from the restored database resource, preventing historical tasks from a prior restore of the same snapshot from blocking reconciliation.
+  ADR impact: No ADR: this is a bounded controller identity correction.
+
 ## Main Refresh Conflicts
 
 
@@ -3332,9 +3372,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T09:04:27Z
-Latest commit SHA: 14798019
-Chat duration: 1641898s (19:00:04:58)
+Latest commit at UTC: 2026-10-24T09:17:50Z
+Latest commit SHA: HEAD
+Chat duration: 1642701s (19:00:18:21)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
