@@ -57,7 +57,10 @@ def restore(m,sid,rid):
 def task_def_valid(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None
  if not isinstance(cs,list) or len(cs)!=1 or not isinstance(cs[0],dict):return False
- c=cs[0]; env={x.get("Name"):x.get("Value") for x in c.get("environment",[]) if isinstance(x,dict)}; secrets={x.get("Name") for x in c.get("secrets",[]) if isinstance(x,dict)}
+ # ECS describes task-definition environment and secret fields as lower-case
+ # ``name``/``value``/``valueFrom``.  Keep this parser deliberately narrow:
+ # only the exact verifier shape may reach an isolated restored database.
+ c=cs[0]; env={x.get("name"):x.get("value") for x in c.get("environment",[]) if isinstance(x,dict)}; secrets={x.get("name") for x in c.get("secrets",[]) if isinstance(x,dict)}
  return c.get("name")=="persistence-restoration-verifier" and c.get("command")==["artifacts/kanbien-core-server-persistence-restore-verifier.main.js"] and secrets=={"PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS"} and "PERSISTENCE_POSTGRES_HOST" not in env and env.get("PERSISTENCE_POSTGRES_DATABASE")=="kanbienpersistence" and env.get("PERSISTENCE_POSTGRES_SCHEMA")=="platform"
 def task_duration(task):
  try:
@@ -66,6 +69,17 @@ def task_duration(task):
 def accepted_log(m,arn):
  tid=arn.rsplit("/",1)[-1]; ok,d,_=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head"); xs=d.get("events") if ok and isinstance(d,dict) else []
  return isinstance(xs,list) and any(isinstance(x,dict) and isinstance(x.get("message"),str) and '"verdict":"accepted"' in x["message"] and '"code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"' in x["message"] for x in xs)
+def verifier_tasks(m,started):
+ # ECS defaults list-tasks to RUNNING.  A recovery verifier normally has
+ # already stopped by the time its controller reconciles, so consult both
+ # states before deciding whether a new task is allowed.
+ arns=[]
+ for desired in ("RUNNING","STOPPED"):
+  ok,d,c=m.aws("ecs","list-tasks","--cluster",CLUSTER,"--started-by",started,"--desired-status",desired); xs=d.get("taskArns") if ok and isinstance(d,dict) else None
+  if not isinstance(xs,list):return None,c
+  if not all(isinstance(x,str) for x in xs):return None,"persistence-restoration-verifier-task-list-invalid"
+  arns.extend(xs)
+ return list(dict.fromkeys(arns)),"ok"
 def verify(m,sid,rid):
  src,c=source(m); ctl,cc=controls(m); restored,rc=db(m,rid)
  if src is None:return emit("blocked",c)
@@ -73,8 +87,8 @@ def verify(m,sid,rid):
  if restored is None or not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked",rc if restored is None else "persistence-restored-database-posture-invalid")
  endpoint=restored.get("Endpoint",{}).get("Address") if isinstance(restored.get("Endpoint"),dict) else None; td=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
- started=f"kanbien-restore-{sid.rsplit('-',1)[-1]}"; ok,d,c=m.aws("ecs","list-tasks","--cluster",CLUSTER,"--started-by",started); arns=d.get("taskArns") if ok and isinstance(d,dict) else None
- if not isinstance(arns,list):return emit("blocked",c)
+ started=f"kanbien-restore-{sid.rsplit('-',1)[-1]}"; arns,c=verifier_tasks(m,started)
+ if arns is None:return emit("blocked",c)
  if arns:
   ok,d,c=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*arns); xs=[x for x in d.get("tasks",[]) if isinstance(x,dict) and x.get("taskDefinitionArn")==td] if ok and isinstance(d,dict) else []
   if len(xs)!=1:return emit("blocked","persistence-restoration-verifier-task-identity-ambiguous")
