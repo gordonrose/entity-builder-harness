@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T10:27:48Z
-latest_commit_sha: --commit
-chat_duration: 1646899s (19:01:28:19)
+latest_commit_at_utc: 2026-10-24T10:28:16Z
+latest_commit_sha: 427847f6
+chat_duration: 1646927s (19:01:28:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2735,6 +2735,17 @@ Summary: --summary
 
 ADR impact: Bound persistence observer commands and corrected verifier-role smoke-test boundary.
 
+
+### 2026-10-24T10:28:16Z - Commit recorded
+
+Commit: `427847f6`
+
+Message: fix(deploy): bound persistence controller observations
+
+Summary: Bound persistence observer commands and corrected verifier-role smoke-test boundary.
+
+ADR impact: No ADR: bounded controller and regression correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3430,11 +3441,12 @@ ADR impact: Bound persistence observer commands and corrected verifier-role smok
   ADR impact: No ADR: repairs an existing target-template/controller contract.
 
 
-- Commit: `--commit`
-  Time UTC: 2026-10-24T10:27:48Z
-  Message: 427847f6
-  Summary: --summary
-  ADR impact: Bound persistence observer commands and corrected verifier-role smoke-test boundary.
+
+- Commit: `427847f6`
+  Time UTC: 2026-10-24T10:28:16Z
+  Message: fix(deploy): bound persistence controller observations
+  Summary: Bound persistence observer commands and corrected verifier-role smoke-test boundary.
+  ADR impact: No ADR: bounded controller and regression correction.
 
 ## Main Refresh Conflicts
 
@@ -3459,9 +3471,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T10:27:48Z
-Latest commit SHA: --commit
-Chat duration: 1646899s (19:01:28:19)
+Latest commit at UTC: 2026-10-24T10:28:16Z
+Latest commit SHA: 427847f6
+Chat duration: 1646927s (19:01:28:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
