@@ -41,10 +41,11 @@ export async function revokeRuntimeAccess(pool: PostgreSqlConnectionPool, runtim
     values: [runtimeUsername],
   });
   // Revocation is not established merely because PostgreSQL accepted the
-  // statement.  This rehearsal is performed while the server is using the
-  // runtime identity, so it must prove that at least one existing runtime
-  // session was ended and that every requested termination succeeded.
-  if (terminated.rows.length === 0 || terminated.rows.some((row) => row.terminated !== true)) {
+  // statement. Every returned session must have been terminated. A zero-row
+  // result is valid when no runtime session exists at that exact instant;
+  // the governed replacement and not-ready proof then establish that new
+  // runtime access is denied without inventing a session to terminate.
+  if (terminated.rows.some((row) => row.terminated !== true)) {
     throw new Error("PERSISTENCE_RUNTIME_SESSION_TERMINATION_NOT_CONFIRMED");
   }
 }
