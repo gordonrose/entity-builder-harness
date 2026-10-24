@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-23T22:47:20Z
-latest_commit_sha: 140e42c3
-chat_duration: 1604871s (18:13:47:51)
+latest_commit_at_utc: 2026-10-24T09:04:27Z
+latest_commit_sha: 14798019
+chat_duration: 1641898s (19:00:04:58)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -148,6 +148,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: A scope could still declare `persistence_writes: true` while claiming persistence diagnostics were not applicable.
   Resolution: A declared persistence write is now authoritative workload usage for the not-applicable cross-check. It blocks that verdict without being mistaken for a dependency identifier in an otherwise valid declared scope; a focused regression fixture proves the rule.
+
+
+- Raised: Corrected isolated restore verifier reconciliation
+  Resolution: Live restore check exposed two controller defects before acceptance: ECS task-definition fields are lower-case and list-tasks defaults to running tasks. The controller now parses the actual AWS response and searches running plus stopped tasks before submitting any verifier. Two read-only verifier attempts already exist for the current restored copy, so it will be cleaned up and repeated from the immutable snapshot after this correction is recorded.
 
 ## Decisions Made
 
@@ -553,6 +557,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Persistence slice baseline established
   Durable evidence: Fresh AWS identity is account 337159794548 in eu-west-1; bootstrap-runtime is ACTIVE with desired/running one on task definition revision 10; no target RDS instance or Secrets Manager secret exists; target budget kanbien-core-platform-monthly is USD 100 filtered by Target=kanbien-core-platform with USD 0.7839062758 estimated spend through 2026-10-23. Local diagnostics, lifecycle inventory, health/recovery, secret-dependency, target declaration, release contract, and persistence-composition checks passed.
+
+
+- Summary: Keep only the durable recovery evidence
+  Durable evidence: RDS restore kanbien-core-platform-persistence-restore-20261023 became available, passed the governed restore posture check, and the first verifier task 559dcbbd4be74a9893d62f0ecf4f5e1a exited 0. A controller defect submitted a second read-only verifier attempt because stopped tasks were omitted. The harness correction and smoke test are the durable source; raw AWS task output need not be retained.
 
 ## Activity Log
 
@@ -2594,6 +2602,31 @@ Summary: Added the required artifact header after the governed runner correctly 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-24T09:01:27Z - Issue
+
+Raised: Corrected isolated restore verifier reconciliation
+
+Resolution: Live restore check exposed two controller defects before acceptance: ECS task-definition fields are lower-case and list-tasks defaults to running tasks. The controller now parses the actual AWS response and searches running plus stopped tasks before submitting any verifier. Two read-only verifier attempts already exist for the current restored copy, so it will be cleaned up and repeated from the immutable snapshot after this correction is recorded.
+
+
+### 2026-10-24T09:01:28Z - Context hygiene
+
+Summary: Keep only the durable recovery evidence
+
+Durable evidence: RDS restore kanbien-core-platform-persistence-restore-20261023 became available, passed the governed restore posture check, and the first verifier task 559dcbbd4be74a9893d62f0ecf4f5e1a exited 0. A controller defect submitted a second read-only verifier attempt because stopped tasks were omitted. The harness correction and smoke test are the durable source; raw AWS task output need not be retained.
+
+
+### 2026-10-24T09:04:27Z - Commit recorded
+
+Commit: `14798019`
+
+Message: fix(deploy): reconcile stopped restore verifiers
+
+Summary: Correct the isolated restore controller to validate AWS lower-case task-definition fields and reconcile stopped verifier tasks before submitting another; add focused regression coverage.
+
+ADR impact: No ADR: this repairs an existing control's AWS response parsing and reconciliation behavior without changing the architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3255,6 +3288,13 @@ ADR impact: covered by session ADR disposition
   Summary: Added the required artifact header after the governed runner correctly rejected the wrapper.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `14798019`
+  Time UTC: 2026-10-24T09:04:27Z
+  Message: fix(deploy): reconcile stopped restore verifiers
+  Summary: Correct the isolated restore controller to validate AWS lower-case task-definition fields and reconcile stopped verifier tasks before submitting another; add focused regression coverage.
+  ADR impact: No ADR: this repairs an existing control's AWS response parsing and reconciliation behavior without changing the architecture.
+
 ## Main Refresh Conflicts
 
 
@@ -3278,9 +3318,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-23T22:47:20Z
-Latest commit SHA: 140e42c3
-Chat duration: 1604871s (18:13:47:51)
+Latest commit at UTC: 2026-10-24T09:04:27Z
+Latest commit SHA: 14798019
+Chat duration: 1641898s (19:00:04:58)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
