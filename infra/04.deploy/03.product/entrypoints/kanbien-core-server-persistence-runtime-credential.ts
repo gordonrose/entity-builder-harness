@@ -37,7 +37,7 @@ export async function revokeRuntimeAccess(pool: PostgreSqlConnectionPool, runtim
   const role = quotedIdentifier(runtimeUsername);
   await pool.query({ text: `ALTER ROLE ${role} NOLOGIN` });
   const terminated = await pool.query<{ readonly terminated: boolean }>({
-    text: "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = $1 AND pid <> pg_backend_pid()",
+    text: "SELECT pg_terminate_backend(pid) AS terminated FROM pg_stat_activity WHERE usename = $1 AND pid <> pg_backend_pid()",
     values: [runtimeUsername],
   });
   // Revocation is not established merely because PostgreSQL accepted the

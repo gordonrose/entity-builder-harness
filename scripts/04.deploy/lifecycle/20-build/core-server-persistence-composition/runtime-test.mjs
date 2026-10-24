@@ -135,7 +135,7 @@ async function proveRuntimeCredentialRevocationOperation() {
   if (migration.runtimeCredentialOperation(undefined) !== "apply" || migration.runtimeCredentialOperation("rotate") !== "rotate" || migration.runtimeCredentialOperation("revoke") !== "revoke" || migration.runtimeCredentialOperation("prove-effective-privilege") !== "prove-effective-privilege" || migration.runtimeCredentialOperation("unsafe") !== undefined) throw new Error("Migration credential operation parsing is not fail-closed.");
   const queries = [];
   await migration.revokeRuntimeAccess({ query: async (statement) => { queries.push(statement); return { rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: true }] : [] }; } }, "core_runtime");
-  if (queries.length !== 2 || !queries[0].text.includes('ALTER ROLE "core_runtime" NOLOGIN') || !queries[1].text.includes("pg_terminate_backend") || JSON.stringify(queries).includes("password")) throw new Error("Runtime credential revocation did not use the bounded no-login and session-termination sequence.");
+  if (queries.length !== 2 || !queries[0].text.includes('ALTER ROLE "core_runtime" NOLOGIN') || !queries[1].text.includes("pg_terminate_backend(pid) AS terminated") || JSON.stringify(queries).includes("password")) throw new Error("Runtime credential revocation did not use the bounded no-login and session-termination sequence.");
   await migration.revokeRuntimeAccess({ query: async () => ({ rows: [] }) }, "core_runtime");
   await migration.revokeRuntimeAccess({ query: async (statement) => ({ rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: false }] : [] }) }, "core_runtime").then(() => { throw new Error("Runtime credential revocation accepted an unconfirmed termination."); }, () => undefined);
 }
