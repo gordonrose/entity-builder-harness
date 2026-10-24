@@ -2627,6 +2627,15 @@ Summary: Correct the isolated restore controller to validate AWS lower-case task
 
 ADR impact: No ADR: this repairs an existing control's AWS response parsing and reconciliation behavior without changing the architecture.
 
+
+### 2026-10-24T09:04:58Z - Commit summary
+
+Commit: e3c7a09e
+
+Summary: Rebased restore-controller task commit from 14798019 onto origin/main; current durable task SHA is e3c7a09e.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3294,6 +3303,11 @@ ADR impact: No ADR: this repairs an existing control's AWS response parsing and 
   Message: fix(deploy): reconcile stopped restore verifiers
   Summary: Correct the isolated restore controller to validate AWS lower-case task-definition fields and reconcile stopped verifier tasks before submitting another; add focused regression coverage.
   ADR impact: No ADR: this repairs an existing control's AWS response parsing and reconciliation behavior without changing the architecture.
+
+
+- Commit: e3c7a09e
+  Summary: Rebased restore-controller task commit from 14798019 onto origin/main; current durable task SHA is e3c7a09e.
+  ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
 
