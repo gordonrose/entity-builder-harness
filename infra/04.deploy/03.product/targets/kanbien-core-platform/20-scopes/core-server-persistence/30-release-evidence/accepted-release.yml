@@ -1,0 +1,218 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.accepted-release
+#   version: 1
+#   status: active
+#   created_on: '2026-10-24'
+#   updated_on: '2026-10-24'
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines:
+#   - security
+#   - sre
+#   kind: accepted-release-record
+#   purpose: Record the qualified persistence release and AWS-observed proof set accepted
+#     for core-server-persistence.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+schema: deploy/persistence-accepted-release/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: accepted
+release:
+  source_revision: e6b430e07556b6fce8a0dbb0870aa3b24446e246
+  image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+  image_repository: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+  package_custody_reference: github-actions-run:40101116277
+  runtime_stack: kanbien-core-platform-core-server-persistence
+  service: kanbien-core-platform-core-server-persistence
+  runtime_task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:17
+  verifier_task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17
+  migration_task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:17
+  restoration_verifier_task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-restoration-verifier:14
+acceptance:
+  accepted_at: '2026-10-24T15:56:49.247844Z'
+  collector: collect-acceptance-evidence
+  retained_for_restoration: true
+  rollback_release:
+    source_revision: 8cd872e8b2326db2d8c5e3993ce09400cbd9f06f
+    image_digest: sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3
+    package_custody_reference: github-actions-run:40083666260
+provider_observation:
+  current_service:
+    service: kanbien-core-platform-core-server-persistence
+    task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:17
+    running_task: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/4cb702b1b3534783b5590e46d9effddb
+  database:
+    database: kanbien-core-platform-persistence
+    snapshot: kanbien-core-platform-persistence-recovery-20261024-r3
+    restored_database: kanbien-core-platform-persistence-restore-20261024-r3
+    restore_cleanup: confirmed-absent
+  proofs:
+    migration-apply:
+      name: migration-apply
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/6ac40437365f4a72b1d86cc42a664a83
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:38:53.897000+00:00'
+      stopped_at: '2026-10-24T14:39:17.234000+00:00'
+      duration_seconds: 23
+      result_code: PERSISTENCE_MIGRATION_APPLIED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/migration-apply-6ac40437365f4a72b1d86cc42a664a83.json
+    effective-privilege:
+      name: effective-privilege
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/146005aa85914d0fb5fa20419fe2d5a6
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:17
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:39:00.305000+00:00'
+      stopped_at: '2026-10-24T15:39:23.795000+00:00'
+      duration_seconds: 23
+      result_code: PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/migration-prove-effective-privilege-146005aa85914d0fb5fa20419fe2d5a6.json
+    server-replacement:
+      name: server-replacement
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a9330aaed6c7455bbbea8a2ef0d88f41
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:17
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:04:20.576000+00:00'
+      stopped_at: '2026-10-24T15:42:53.971000+00:00'
+      duration_seconds: 2313
+      result_code: PERSISTENCE_SERVER_REPLACED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/server-replacement-controlled-replacement-a9330aaed6c7455bbbea8a2ef0d88f41.json
+    server-replacement-read:
+      name: server-replacement-read
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/f3cdb62184944e70a01b41fe5db70cd5
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:43:32.701000+00:00'
+      stopped_at: '2026-10-24T15:43:55.855000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-f3cdb62184944e70a01b41fe5db70cd5.json
+    credential-rotation:
+      name: credential-rotation
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a833f35c831e4e2dbbb068209a837bdd
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:44:06.114000+00:00'
+      stopped_at: '2026-10-24T14:44:29.603000+00:00'
+      duration_seconds: 23
+      result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/migration-rotate-a833f35c831e4e2dbbb068209a837bdd.json
+    credential-revocation:
+      name: credential-revocation
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/192e4984ca9a4ce881abd54535cbac43
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:48:45.999000+00:00'
+      stopped_at: '2026-10-24T14:49:09.680000+00:00'
+      duration_seconds: 23
+      result_code: PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/migration-revoke-192e4984ca9a4ce881abd54535cbac43.json
+    credential-revocation-unready:
+      name: credential-revocation-unready
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/62bc118778774b8fadc5a3bbd10da2cd
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:50:25.685000+00:00'
+      stopped_at: '2026-10-24T14:50:49.605000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-unready-62bc118778774b8fadc5a3bbd10da2cd.json
+    credential-recovery:
+      name: credential-recovery
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/c8175d80890943e79a531a7b4ff90ebe
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:51:17.076000+00:00'
+      stopped_at: '2026-10-24T14:51:41.713000+00:00'
+      duration_seconds: 24
+      result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/migration-rotate-c8175d80890943e79a531a7b4ff90ebe.json
+    credential-recovery-health:
+      name: credential-recovery-health
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/dc13be96567a4e83b9440ad7517594ef
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:53:05.791000+00:00'
+      stopped_at: '2026-10-24T14:53:30.243000+00:00'
+      duration_seconds: 24
+      result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-dc13be96567a4e83b9440ad7517594ef.json
+    credential-recovery-read:
+      name: credential-recovery-read
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/2416246ee7d24598bb425264394c5b96
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:15
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T14:55:58.008000+00:00'
+      stopped_at: '2026-10-24T14:56:21.246000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-2416246ee7d24598bb425264394c5b96.json
+    rollback-b-health:
+      name: rollback-b-health
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/9d213a2d0ab64aeca97a3da653955b84
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:16
+      image_digest: sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3
+      started_at: '2026-10-24T15:01:41.290000+00:00'
+      stopped_at: '2026-10-24T15:02:05.434000+00:00'
+      duration_seconds: 24
+      result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-9d213a2d0ab64aeca97a3da653955b84.json
+    rollback-b-read:
+      name: rollback-b-read
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/fe532f15cc1c48ba84f94dea541605c9
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:16
+      image_digest: sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3
+      started_at: '2026-10-24T15:02:37.398000+00:00'
+      stopped_at: '2026-10-24T15:03:00.765000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-fe532f15cc1c48ba84f94dea541605c9.json
+    rollback-final-health:
+      name: rollback-final-health
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/62caf945a9ab488f9abfdcb4c04483e4
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:08:09.569000+00:00'
+      stopped_at: '2026-10-24T15:08:33.193000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-ready-62caf945a9ab488f9abfdcb4c04483e4.json
+    rollback-final-read:
+      name: rollback-final-read
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d5a667ac742c4ef5b12b66b8f81d7aca
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:17
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:09:01.705000+00:00'
+      stopped_at: '2026-10-24T15:09:25.139000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-read-d5a667ac742c4ef5b12b66b8f81d7aca.json
+    isolated-restore:
+      name: isolated-restore
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/5ad2253bbae4400094046c745a32a8d8
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-restoration-verifier:14
+      image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+      started_at: '2026-10-24T15:22:19.053000+00:00'
+      stopped_at: '2026-10-24T15:22:42.602000+00:00'
+      duration_seconds: 23
+      result_code: KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED
+      receipt: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/restore-isolated-restore-5ad2253bbae4400094046c745a32a8d8.json
+  server_replacement:
+    original_task:
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/a9330aaed6c7455bbbea8a2ef0d88f41
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:17
+      started_at: '2026-10-24T15:04:20.576000Z'
+      stopped_at: '2026-10-24T15:42:53.971000Z'
+      stopped_reason: governed core-server-persistence replacement rehearsal
+    replacement_task:
+      task_arn: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/4cb702b1b3534783b5590e46d9effddb
+      task_definition: arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:17
+      started_at: '2026-10-24T15:42:59.186000Z'
+      stopped_at: null
+      stopped_reason: null

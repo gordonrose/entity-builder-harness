@@ -58,6 +58,26 @@ retry, or submit another change set merely because a client response was lost.
 
 ## Run Proof
 
+### Durable completed-proof receipts
+
+Each successful migration, private verifier, controlled replacement, and
+isolated-restore verifier writes an allowlisted machine-readable receipt under
+the scope's `30-release-evidence/proof-receipts/` directory before it reports
+success.  A receipt contains only target/scope identity, proof operation,
+terminal task/task-definition/image identity, timestamps, exit state, safe
+result code, bounded non-secret context, controller provenance, and a
+canonical payload digest.  It never contains a secret, connection string,
+provider error text, or unbounded diagnostic payload.
+
+Acceptance consumes those validated receipts for completed historical tasks,
+so normal ECS stopped-task expiry does not erase already validated proof.  It
+still independently observes current service/image/database/budget state and
+restore cleanup.  Do not edit or recreate a receipt: a digest mismatch,
+unknown field, conflicting task context, wrong target/image, missing terminal
+fact, or invalid sequence blocks acceptance.  If a proof completed before
+this control existed and no equally complete provider observation was retained,
+repeat only that governed proof and let its controller capture the receipt.
+
 Run exactly one migration task. It has the only structural credential. A task
 timeout, non-zero completion or lost controller observation blocks acceptance
 and needs a fresh database-state observation; it must not be replayed

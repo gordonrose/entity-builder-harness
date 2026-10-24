@@ -1,0 +1,31 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 24
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:e0a3d888b1f6cba0813c797b80c0d49ae52376ee48ec2fab3a0ec9db4b00d844"
+  },
+  "operation": "rotate",
+  "proof_type": "migration",
+  "provenance": {
+    "collected_at": "2026-10-24T15:38:27.204462Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-migration"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/c8175d80890943e79a531a7b4ff90ebe",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-migration:15",
+    "exit_code": 0,
+    "image_digest": "sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e",
+    "result_code": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
+    "started_at": "2026-10-24T14:51:17.076000+00:00",
+    "stopped_at": "2026-10-24T14:51:41.713000+00:00",
+    "stopped_reason": "Essential container in task exited",
+    "terminal_status": "STOPPED"
+  }
+}

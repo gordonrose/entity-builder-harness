@@ -233,6 +233,76 @@ def parse_proofs(values: list[str]) -> dict[str, str]:
     return result
 
 
+def receipt_module():
+    path = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py"
+    specification = importlib.util.spec_from_file_location("persistence_proof_receipts", path)
+    module = importlib.util.module_from_spec(specification)
+    assert specification and specification.loader
+    specification.loader.exec_module(module)
+    return module
+
+
+def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, str, str, str]], deadlines: dict[str, int], receipt_root: Path | None = None) -> dict[str, dict[str, Any]]:
+    """Validate retained controller receipts without re-querying aged ECS tasks."""
+    result: dict[str, dict[str, Any]] = {}
+    receipt_paths: dict[str, Path] = {}
+    root = receipt_root.resolve() if receipt_root is not None else ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts"
+    module = receipt_module()
+    for value in values:
+        if value.count("=") != 1:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-argument-invalid")
+        name, raw_path = value.split("=", 1)
+        path = Path(raw_path).resolve()
+        if not name or name in result or root not in path.parents:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-argument-invalid")
+        try:
+            item = module.validate(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-invalid") from error
+        result[name] = item
+        receipt_paths[name] = path
+    if set(result) != set(required):
+        raise EvidenceFailure("acceptance-evidence-proof-receipt-set-invalid")
+    observed: dict[str, dict[str, Any]] = {}
+    controllers = {"migration": "run-migration", "verifier": "verify-candidate", "restore": "rehearse-isolated-database-restore", "server-replacement": "rehearse-server-replacement"}
+    operations = {"migration-apply": "apply", "effective-privilege": "prove-effective-privilege", "server-replacement": "controlled-replacement", "server-replacement-read": "read", "credential-rotation": "rotate", "credential-revocation": "revoke", "credential-revocation-unready": "health-unready", "credential-recovery": "rotate", "credential-recovery-health": "health-ready", "credential-recovery-read": "read", "rollback-b-health": "health-ready", "rollback-b-read": "read", "rollback-final-health": "health-ready", "rollback-final-read": "read", "isolated-restore": "isolated-restore"}
+    for name, (kind, family, expected_digest, code, workload) in required.items():
+        item = result[name]
+        task = item["task"]
+        if kind not in controllers or name not in operations:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-mapping-invalid")
+        if item["proof_type"] != kind or item["operation"] != operations[name] or task["result_code"] != code or task["image_digest"] != expected_digest or item["provenance"]["controller"] != controllers[kind] or item["provenance"]["collection_method"] != "ecs-terminal-task+task-definition+safe-log":
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-mismatch")
+        replacement = kind == "server-replacement"
+        if TASK_ARN.fullmatch(task["arn"]) is None or not isinstance(task["definition"], str) or f":task-definition/{family}:" not in task["definition"] or task["terminal_status"] != "STOPPED" or (not replacement and task["exit_code"] != 0) or (replacement and task.get("stopped_reason") != "governed core-server-persistence replacement rehearsal"):
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-terminal-invalid")
+        started, stopped = parsed_time(task["started_at"]), parsed_time(task["stopped_at"])
+        if parsed_time(item["provenance"]["collected_at"]) < stopped:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-provenance-invalid")
+        duration = int((stopped - started).total_seconds())
+        if duration < 0 or (workload is not None and duration > deadlines[workload]):
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-deadline-exceeded")
+        context = item["context"]
+        if "completion_duration_seconds" in context and context["completion_duration_seconds"] != duration:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-duration-mismatch")
+        if workload is not None and context.get("completion_deadline_seconds") != deadlines[workload]:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-deadline-mismatch")
+        if replacement:
+            try:
+                successor_started = parsed_time(context["successor_started_at"])
+                boundary = parsed_time(context["recovery_boundary"])
+            except (KeyError, EvidenceFailure) as error:
+                raise EvidenceFailure("acceptance-evidence-server-replacement-receipt-invalid") from error
+            if context.get("original_stopped_reason") != "governed core-server-persistence replacement rehearsal" or context.get("runtime_task_definition") != task["definition"] or context.get("successor_task_arn") == task["arn"] or successor_started <= started or boundary < started or boundary > stopped:
+                raise EvidenceFailure("acceptance-evidence-server-replacement-receipt-invalid")
+        try:
+            receipt_path = str(receipt_paths[name].relative_to(ROOT))
+        except ValueError:  # test-only injected root; production receipts are repo-relative.
+            receipt_path = str(receipt_paths[name])
+        observed[name] = {"name": name, "task_arn": task["arn"], "task_definition": task["definition"], "image_digest": task["image_digest"], "started_at": task["started_at"], "stopped_at": task["stopped_at"], "duration_seconds": duration, "result_code": task["result_code"], "receipt": receipt_path}
+    return observed
+
+
 def stack_outputs() -> dict[str, str]:
     response = aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     stacks = response.get("Stacks")
@@ -314,7 +384,7 @@ def write_record(record: dict[str, Any]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--rollback-receipt", type=Path, required=True); parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot"); parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--rollback-receipt", type=Path, required=True); parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[]); parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot"); parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or not isinstance(args.server_replacement_original, str) or not isinstance(args.server_replacement_successor, str) or not isinstance(args.recovery_snapshot, str) or SNAPSHOT.fullmatch(args.recovery_snapshot) is None:
         return report("blocked", "acceptance-evidence-arguments-invalid")
@@ -322,17 +392,31 @@ def main() -> int:
         candidate, rollback = receipt(args.receipt), receipt(args.rollback_receipt)
         if candidate["image_digest"] == rollback["image_digest"]:
             raise EvidenceFailure("acceptance-evidence-rollback-identity-invalid")
-        proofs = parse_proofs(args.proof)
         required = {
-            "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"), "effective-privilege": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-migration"), "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "credential-rotation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-revocation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-migration"), "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"), "credential-recovery": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier")}
-        if set(proofs) != set(required):
-            raise EvidenceFailure("acceptance-evidence-proof-set-invalid")
-        # Every proof and the retired original must be terminal.  The
-        # successor is deliberately live, so observe it separately below.
-        preload_tasks([*proofs.values(), args.server_replacement_original])
+            "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"), "effective-privilege": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-migration"), "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate["image_digest"], "PERSISTENCE_SERVER_REPLACED", None), "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "credential-rotation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-revocation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-migration"), "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"), "credential-recovery": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier")}
         deadlines = contract_deadlines()
-        observed = {name: task_fact(name, proofs[name], kind, family, digest, code, deadlines[workload]) for name, (kind, family, digest, code, workload) in required.items()}
-        original, successor = server_task(args.server_replacement_original, candidate["image_digest"]), server_task(args.server_replacement_successor, candidate["image_digest"])
+        if args.proof and args.proof_receipt:
+            raise EvidenceFailure("acceptance-evidence-proof-source-ambiguous")
+        if args.proof_receipt:
+            observed = parse_proof_receipts(args.proof_receipt, required, deadlines)
+        else:
+            proofs = parse_proofs(args.proof)
+            if set(proofs) != set(required):
+                raise EvidenceFailure("acceptance-evidence-proof-set-invalid")
+            # Every proof and the retired original must be terminal.  The
+            # successor is deliberately live, so observe it separately below.
+            preload_tasks([*proofs.values(), args.server_replacement_original])
+            observed = {name: task_fact(name, proofs[name], kind, family, digest, code, deadlines[workload]) for name, (kind, family, digest, code, workload) in required.items()}
+        if args.proof_receipt:
+            replacement = observed["server-replacement"]
+            original = {"task_arn": replacement["task_arn"], "task_definition": replacement["task_definition"], "started_at": parsed_time(replacement["started_at"]), "stopped_at": parsed_time(replacement["stopped_at"]), "stopped_reason": "governed core-server-persistence replacement rehearsal"}
+            # The receipt parser has already authenticated the bounded
+            # relationship; do not re-query the aged predecessor/successor.
+            source_path = next(value.split("=", 1)[1] for value in args.proof_receipt if value.startswith("server-replacement="))
+            receipt_value = receipt_module().validate(json.loads(Path(source_path).read_text(encoding="utf-8")))
+            successor = {"task_arn": receipt_value["context"]["successor_task_arn"], "task_definition": receipt_value["context"]["runtime_task_definition"], "started_at": parsed_time(receipt_value["context"]["successor_started_at"]), "stopped_at": None, "stopped_reason": None}
+        else:
+            original, successor = server_task(args.server_replacement_original, candidate["image_digest"]), server_task(args.server_replacement_successor, candidate["image_digest"])
         # ECS may start a healthy replacement slightly before it stops the
         # retiring task.  Require the governed retirement and an independent
         # read after the replacement begins; ordering task starts after stops

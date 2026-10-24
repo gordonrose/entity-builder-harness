@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -54,6 +55,15 @@ def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) ->
         value["facts"] = facts
     print(json.dumps(value, sort_keys=True))
     return 0 if verdict == "accepted" else 1
+
+
+def proof_receipts():
+    path = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py"
+    spec = importlib.util.spec_from_file_location("persistence_proof_receipts", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
 
 
 def outputs(stack_name: str) -> tuple[dict[str, str] | None, str]:
@@ -130,6 +140,34 @@ def no_direct_database_credential(task_definition: str) -> bool:
     return not container.get("secrets") and not any(isinstance(name, str) and name.startswith("PERSISTENCE_POSTGRES") for name in names)
 
 
+def image_digest(task_definition: object) -> str | None:
+    if not isinstance(task_definition, str):
+        return None
+    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
+    containers = definition.get("taskDefinition", {}).get("containerDefinitions", []) if ok and isinstance(definition, dict) else []
+    image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
+    return image.rsplit("@", 1)[1] if isinstance(image, str) and image.count("@") == 1 and image.rsplit("@", 1)[1].startswith("sha256:") else None
+
+
+def qualified_digest(path: Path) -> str | None:
+    source = ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"
+    spec = importlib.util.spec_from_file_location("historic_capture_prepare", source)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    value = module.validate_receipt(path)
+    return value.get("image_digest") if isinstance(value, dict) and isinstance(value.get("image_digest"), str) else None
+
+
+def historical_task_identity(task: dict[str, object], expected_digest: str) -> bool:
+    arn, definition_arn = task.get("taskArn"), task.get("taskDefinitionArn")
+    if not isinstance(arn, str) or not arn.startswith(f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/") or not isinstance(definition_arn, str):
+        return False
+    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", definition_arn)
+    value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
+    return isinstance(value, dict) and value.get("family") == "kanbien-core-platform-persistence-verifier" and image_digest(definition_arn) == expected_digest and no_direct_database_credential(definition_arn)
+
+
 def accepted_completion(task: dict[str, object], seconds: int, mode: str) -> int:
     observed_duration = duration(task)
     if observed_duration is None:
@@ -142,16 +180,30 @@ def accepted_completion(task: dict[str, object], seconds: int, mode: str) -> int
     if not accepted:
         return report("blocked", code)
     arn = task.get("taskArn")
-    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+    digest = image_digest(task.get("taskDefinitionArn"))
+    if not isinstance(arn, str) or digest is None:
+        return report("blocked", "private-persistence-verifier-receipt-identity-unavailable")
+    try:
+        receipt = proof_receipts().make(
+            proof_type="verifier", operation=mode, task=task, image_digest=digest,
+            result_code=SUCCESS[mode], context={"record_id": RECORD_ID, "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration},
+            controller="verify-candidate", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        )
+        path = proof_receipts().persist(receipt)
+    except Exception:
+        return report("blocked", "private-persistence-verifier-receipt-persistence-failed")
+    return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT))})
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--mode")
     parser.add_argument("--reconcile-task")
+    parser.add_argument("--capture-completed-task")
+    parser.add_argument("--qualified-receipt", type=Path)
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
-    if unknown or args.mode not in SUCCESS:
+    if unknown or args.mode not in SUCCESS or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None):
         return report("blocked", "private-persistence-verification-arguments-invalid")
     seconds = deadline()
     if seconds is None:
@@ -177,6 +229,16 @@ def main() -> int:
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
             return report("blocked", code)
+        return accepted_completion(task, seconds, args.mode)
+    if args.capture_completed_task is not None:
+        expected_digest = qualified_digest(args.qualified_receipt)
+        if expected_digest is None:
+            return report("blocked", "private-persistence-verifier-historic-receipt-invalid")
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.capture_completed_task)
+        listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
+        task = listed[0] if len(listed) == 1 and isinstance(listed[0], dict) else None
+        if not isinstance(task, dict) or not historical_task_identity(task, expected_digest):
+            return report("blocked", code if not ok else "private-persistence-verifier-historic-task-identity-invalid")
         return accepted_completion(task, seconds, args.mode)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "private-persistence-verifier", "environment": [

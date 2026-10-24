@@ -10,6 +10,8 @@ DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; S
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
+def proof_receipts():
+ p=ROOT/"scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py"; s=importlib.util.spec_from_file_location("persistence_proof_receipts",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
 def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
@@ -62,6 +64,9 @@ def task_def_valid(m,arn):
  # only the exact verifier shape may reach an isolated restored database.
  c=cs[0]; env={x.get("name"):x.get("value") for x in c.get("environment",[]) if isinstance(x,dict)}; secrets={x.get("name") for x in c.get("secrets",[]) if isinstance(x,dict)}
  return c.get("name")=="persistence-restoration-verifier" and c.get("command")==["artifacts/kanbien-core-server-persistence-restore-verifier.main.js"] and secrets=={"PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS"} and "PERSISTENCE_POSTGRES_HOST" not in env and env.get("PERSISTENCE_POSTGRES_DATABASE")=="kanbienpersistence" and env.get("PERSISTENCE_POSTGRES_SCHEMA")=="platform"
+def task_image_digest(m,arn):
+ ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
+ return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
 def task_duration(task):
  try:
   a=datetime.fromisoformat(task["startedAt"].replace("Z","+00:00")); b=datetime.fromisoformat(task["stoppedAt"].replace("Z","+00:00")); return int((b-a).total_seconds()) if b>=a else None
@@ -103,7 +108,13 @@ def verify(m,sid,rid):
   t=xs[0]
   if t.get("lastStatus")!="STOPPED":return emit("blocked","persistence-restoration-verifier-still-running")
   containers=t.get("containers"); exit_code=containers[0].get("exitCode") if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None; duration=task_duration(t); arn=t.get("taskArn")
-  return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={"snapshot":sid,"restored_database":rid,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration}) if type(exit_code) is int and exit_code==0 and duration is not None and duration<=DEADLINE and isinstance(arn,str) and accepted_log(m,arn) else emit("blocked","persistence-restoration-verifier-completion-invalid")
+  if not (type(exit_code) is int and exit_code==0 and duration is not None and duration<=DEADLINE and isinstance(arn,str) and accepted_log(m,arn)):return emit("blocked","persistence-restoration-verifier-completion-invalid")
+  digest=task_image_digest(m,td)
+  if digest is None:return emit("blocked","persistence-restoration-verifier-receipt-identity-unavailable")
+  try:
+   receipt=proof_receipts().make(proof_type="restore",operation="isolated-restore",task=t,image_digest=digest,result_code="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED",context={"snapshot":sid,"restored_database":rid,"completion_deadline_seconds":DEADLINE,"completion_duration_seconds":duration},controller="rehearse-isolated-database-restore",collected_at=datetime.now().astimezone().isoformat().replace("+00:00","Z"));path=proof_receipts().persist(receipt)
+  except Exception:return emit("blocked","persistence-restoration-verifier-receipt-persistence-failed")
+  return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={"snapshot":sid,"restored_database":rid,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration,"proof_receipt":str(path.relative_to(ROOT))})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--network-configuration",net,"--overrides",overrides)
  return emit("blocked","persistence-restoration-verifier-submitted-awaiting-provider-observation",facts={"snapshot":sid,"restored_database":rid}) if ok else emit("blocked",c)

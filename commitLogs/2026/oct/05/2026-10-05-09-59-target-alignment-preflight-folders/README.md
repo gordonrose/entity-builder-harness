@@ -165,6 +165,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The persistence release transition omitted the required RestoreVerifierImageDigest CloudFormation parameter, so AWS rejected change-set creation before any update.
   Resolution: Both clean-create and update controllers now bind the restoration verifier to the same qualified immutable persistence image digest as the server.
 
+
+- Raised: Acceptance required every historical ECS stopped-task record to remain queryable at the end of a multi-step rehearsal. ECS retention then aged out an already-proved replacement task and would have forced unrelated rehearsals.
+  Resolution: Each completed persistence proof now writes an allowlisted, integrity-checked durable receipt before reporting success. Acceptance consumes those retained receipts for historical proof while independently observing current service, database, recovery-point, cleanup, and budget state. One narrowly necessary replacement was repeated only after the old provider record had already expired; no migration, credential lifecycle, image update, or restore was repeated.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -234,6 +238,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt fixed target-bound R6 control surfaces
   Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
+
+- Decision: Promote the accepted core-server-persistence successor and retain durable proof receipts
+  Rationale: The active persistence scope now owns the live server, verifier, migration, and restoration-verifier workloads. Bootstrap remains accepted historical evidence. Scope-local receipts preserve validated terminal proof facts beyond ECS stopped-task retention, while final acceptance continues to require fresh current-state observation.
 
 
 - Decision: Selected private ECS Fargate candidate design for kanbien-core-platform E1
@@ -3501,6 +3509,11 @@ ADR impact: covered by session ADR disposition
   Message: fix(deploy): fail closed on persistence revocation
   Summary: Added fail-closed runtime-session termination evidence, bounded fresh restore naming, and target-bound acceptance evidence collection.
   ADR impact: covered by session ADR disposition
+
+
+- Commit: pending
+  Summary: Record durable persistence proof receipts, collect accepted release evidence without depending on aged ECS tasks, and promote core-server-persistence to the active scope.
+  ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
 
 ## Main Refresh Conflicts
 
