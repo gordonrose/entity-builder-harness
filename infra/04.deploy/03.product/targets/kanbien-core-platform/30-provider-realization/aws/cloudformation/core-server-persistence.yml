@@ -32,12 +32,16 @@ Parameters:
   ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   SupportImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
-  ObservabilityCollectorImage: { Type: String, AllowedPattern: '^.+@sha256:[a-f0-9]{64}$' }
+  EnableObservability: { Type: String, Default: 'false', AllowedValues: ['true', 'false'] }
+  ObservabilityCollectorImage: { Type: String, Default: '', AllowedPattern: '^$|^.+@sha256:[a-f0-9]{64}$' }
   # Supplied only to the governed target-update route.  It is never retained
   # in the repository or in accepted evidence; CloudFormation creates the
   # target-owned topic and awaits the recipient's normal SNS confirmation.
-  ObservabilityAlertEmail: { Type: String, NoEcho: true, AllowedPattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$' }
+  ObservabilityAlertEmail: { Type: String, NoEcho: true, Default: '', AllowedPattern: '^$|^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$' }
   SourceRevision: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' }
+
+Conditions:
+  ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']
 
 Resources:
   DatabaseSubnetGroup:
@@ -233,6 +237,7 @@ Resources:
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   ObservabilityCollectorConfiguration:
+    Condition: ObservabilityEnabled
     Type: AWS::SSM::Parameter
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
@@ -330,9 +335,13 @@ Resources:
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
               - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref RuntimeCredentialsSecret }
-              - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
+              - !If
+                - ObservabilityEnabled
+                - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
+                - !Ref AWS::NoValue
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   ServerTaskRole:
+    Condition: ObservabilityEnabled
     Type: AWS::IAM::Role
     Properties:
       RoleName: kanbien-core-platform-persistence-server-observability
@@ -349,12 +358,14 @@ Resources:
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   ObservabilityAlarmTopic:
+    Condition: ObservabilityEnabled
     Type: AWS::SNS::Topic
     Properties:
       TopicName: kanbien-core-platform-observability-alerts
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   ObservabilityAlertSubscription:
+    Condition: ObservabilityEnabled
     Type: AWS::SNS::Subscription
     Properties:
       TopicArn: !Ref ObservabilityAlarmTopic
@@ -430,7 +441,7 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt ServerExecutionRole.Arn
-      TaskRoleArn: !GetAtt ServerTaskRole.Arn
+      TaskRoleArn: !If [ObservabilityEnabled, !GetAtt ServerTaskRole.Arn, !Ref AWS::NoValue]
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
@@ -439,35 +450,47 @@ Resources:
           Essential: true
           Cpu: 128
           MemoryReservation: 256
-          DependsOn: [{ ContainerName: observability-collector, Condition: START }]
+          DependsOn: !If [ObservabilityEnabled, [{ ContainerName: observability-collector, Condition: START }], !Ref AWS::NoValue]
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
           PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
-          Environment:
-            - { Name: NODE_ENV, Value: production }
-            - { Name: HOST, Value: 0.0.0.0 }
-            - { Name: PORT, Value: '3000' }
-            - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
-            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !GetAtt PersistenceDatabase.Endpoint.Address }
-            - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
-            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
-            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-            - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
-            - { Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER, Value: cloudwatch-otel }
-            - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://127.0.0.1:4318/v1/metrics }
-            - { Name: PLATFORM_OBSERVABILITY_METRICS_REGION, Value: !Ref 'AWS::Region' }
-            - { Name: PLATFORM_OBSERVABILITY_SERVICE_NAME, Value: kanbien-core-server-persistence }
-            - { Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: kanbien-core-platform }
-            - { Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS, Value: '30000' }
-            - { Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS, Value: '5000' }
-            - { Name: PLATFORM_OBSERVABILITY_TARGET, Value: kanbien-core-platform }
-            - { Name: PLATFORM_OBSERVABILITY_SCOPE, Value: core-server-persistence }
-            - { Name: PLATFORM_OBSERVABILITY_WORKLOAD, Value: core-server }
-            - { Name: PLATFORM_OBSERVABILITY_DEPENDENCY, Value: postgresql }
-            - { Name: PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS, Value: '30000' }
-            - { Name: PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS, Value: '5000' }
-            - { Name: PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS, Value: '180000' }
-            - { Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON, Value: '[{"sourceName":"platform.dependency.readiness","sourceKind":"gauge","sourceUnit":"count","instrumentName":"kanbien.core_server.postgresql_readiness","description":"Periodic PostgreSQL readiness from the core server","allowedLabelNames":["target","scope","workload","dependency","readiness"],"cardinalityLimit":16}]' }
+          Environment: !If
+            - ObservabilityEnabled
+            -
+              - { Name: NODE_ENV, Value: production }
+              - { Name: HOST, Value: 0.0.0.0 }
+              - { Name: PORT, Value: '3000' }
+              - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+              - { Name: PERSISTENCE_POSTGRES_HOST, Value: !GetAtt PersistenceDatabase.Endpoint.Address }
+              - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
+              - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
+              - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
+              - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
+              - { Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER, Value: cloudwatch-otel }
+              - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://127.0.0.1:4318/v1/metrics }
+              - { Name: PLATFORM_OBSERVABILITY_METRICS_REGION, Value: !Ref 'AWS::Region' }
+              - { Name: PLATFORM_OBSERVABILITY_SERVICE_NAME, Value: kanbien-core-server-persistence }
+              - { Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: kanbien-core-platform }
+              - { Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS, Value: '30000' }
+              - { Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS, Value: '5000' }
+              - { Name: PLATFORM_OBSERVABILITY_TARGET, Value: kanbien-core-platform }
+              - { Name: PLATFORM_OBSERVABILITY_SCOPE, Value: core-server-persistence }
+              - { Name: PLATFORM_OBSERVABILITY_WORKLOAD, Value: core-server }
+              - { Name: PLATFORM_OBSERVABILITY_DEPENDENCY, Value: postgresql }
+              - { Name: PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS, Value: '30000' }
+              - { Name: PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS, Value: '5000' }
+              - { Name: PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS, Value: '180000' }
+              - { Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON, Value: '[{"sourceName":"platform.dependency.readiness","sourceKind":"gauge","sourceUnit":"count","instrumentName":"kanbien.core_server.postgresql_readiness","description":"Periodic PostgreSQL readiness from the core server","allowedLabelNames":["target","scope","workload","dependency","readiness"],"cardinalityLimit":16}]' }
+            -
+              - { Name: NODE_ENV, Value: production }
+              - { Name: HOST, Value: 0.0.0.0 }
+              - { Name: PORT, Value: '3000' }
+              - { Name: PLATFORM_SOURCE_COMMIT_SHA, Value: !Ref SourceRevision }
+              - { Name: PERSISTENCE_POSTGRES_HOST, Value: !GetAtt PersistenceDatabase.Endpoint.Address }
+              - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
+              - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
+              - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
+              - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
           Secrets: [{ Name: PERSISTENCE_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }]
           HealthCheck:
             Command: [CMD, /nodejs/bin/node, -e, 'fetch("http://127.0.0.1:3000/livez").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))']
@@ -476,18 +499,13 @@ Resources:
             Retries: 3
             StartPeriod: 30
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence } }
-        - Name: observability-collector
-          Image: !Ref ObservabilityCollectorImage
-          Essential: false
-          Cpu: 64
-          MemoryReservation: 128
-          ReadonlyRootFilesystem: true
-          LinuxParameters: { Capabilities: { Drop: [ALL] } }
-          Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }]
-          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }]
-          LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } }
+        - !If
+          - ObservabilityEnabled
+          - { Name: observability-collector, Image: !Ref ObservabilityCollectorImage, Essential: false, Cpu: 64, MemoryReservation: 128, ReadonlyRootFilesystem: true, LinuxParameters: { Capabilities: { Drop: [ALL] } }, Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }], Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }], LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } } }
+          - !Ref AWS::NoValue
 
   CoreServerPostgreSqlReadinessAlarm:
+    Condition: ObservabilityEnabled
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: kanbien-core-platform-core-server-postgresql-readiness-not-ready-or-silent
@@ -511,6 +529,7 @@ Resources:
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceDatabaseFreeStorageAlarm:
+    Condition: ObservabilityEnabled
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: kanbien-core-platform-postgresql-free-storage-low
@@ -668,6 +687,6 @@ Outputs:
   PersistenceAdministrationSecurityGroupId: { Value: !Ref AdministrationSecurityGroup }
   PersistenceRestorationVerifierSecurityGroupId: { Value: !Ref RestorationVerifierSecurityGroup }
   PersistenceRestoredDatabaseSecurityGroupId: { Value: !Ref RestoredDatabaseSecurityGroup }
-  ObservabilityCollectorConfigurationParameter: { Value: !Ref ObservabilityCollectorConfiguration }
-  CoreServerPostgreSqlReadinessAlarmArn: { Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }
-  PersistenceDatabaseFreeStorageAlarmArn: { Value: !GetAtt PersistenceDatabaseFreeStorageAlarm.Arn }
+  ObservabilityCollectorConfigurationParameter: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorConfiguration }
+  CoreServerPostgreSqlReadinessAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }
+  PersistenceDatabaseFreeStorageAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt PersistenceDatabaseFreeStorageAlarm.Arn }

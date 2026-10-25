@@ -86,15 +86,13 @@ module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-permissions-" + "a" * 12
 digest = "sha256:" + "a" * 64
 revision = "a" * 40
-collector = "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@" + digest
-assert "ServerTaskRole" in module.ADDED and "ServerTaskRole" not in module.MODIFIED
+assert "ServerTaskRole" not in module.ADDED and "ServerTaskRole" not in module.MODIFIED
 parameters = [
     {"ParameterKey": "ImageDigest", "ParameterValue": digest},
     {"ParameterKey": "SupportImageDigest", "ParameterValue": digest},
     {"ParameterKey": "RestoreVerifierImageDigest", "ParameterValue": digest},
     {"ParameterKey": "SourceRevision", "ParameterValue": revision},
-    {"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector},
-    {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"},
+    {"ParameterKey": "EnableObservability", "ParameterValue": "false"},
 ]
 changes = [
     {"ResourceChange": {"Action": "Add", "LogicalResourceId": logical, "ResourceType": resource_type}}
@@ -104,15 +102,16 @@ changes = [
     for logical, resource_type in module.MODIFIED.items()
 ]
 valid = {"ChangeSetName": name, "Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE", "Parameters": parameters, "Changes": changes}
-assert module.reviewable(valid, "UPDATE_COMPLETE", name, digest, revision, collector)
-assert not module.reviewable({**valid, "Changes": changes[:-1]}, "UPDATE_COMPLETE", name, digest, revision, collector)
+assert module.reviewable(valid, "UPDATE_COMPLETE", name, digest, revision)
+assert not module.reviewable({**valid, "Changes": changes[:-1]}, "UPDATE_COMPLETE", name, digest, revision)
+assert not module.reviewable({**valid, "Parameters": parameters[:-1] + [{"ParameterKey": "EnableObservability", "ParameterValue": "true"}]}, "UPDATE_COMPLETE", name, digest, revision)
 class Prepare:
     def __init__(self): self.calls = 0
     def aws(self, *parts):
         self.calls += 1
         return True, {"Status": "FAILED"}, "ok"
 prepare = Prepare()
-observed, code = module.wait_for_review(prepare, name, "UPDATE_COMPLETE", digest, revision, collector)
+observed, code = module.wait_for_review(prepare, name, "UPDATE_COMPLETE", digest, revision)
 assert observed is None and code == "persistence-database-permission-surface-change-set-failed" and prepare.calls == 1
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py" <<'PY'
