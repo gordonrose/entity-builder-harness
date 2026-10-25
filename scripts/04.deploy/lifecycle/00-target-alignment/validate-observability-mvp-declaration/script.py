@@ -73,7 +73,7 @@ def contains_recipient(value: object) -> bool:
 def check(root: Path) -> None:
     declaration = document(root / "20-scopes" / SCOPE / "00-declaration" / "declaration-contract.yml", "observability-scope-contract-unreadable")
     observability = mapping(declaration.get("observability_mvp"), "observability-declaration-missing")
-    if observability.get("declaration_schema") != "deploy/readiness-observability-mvp/v1" or observability.get("status") != "local-contract-validated-live-proof-required" or observability.get("owner") != "observability-owner":
+    if observability.get("declaration_schema") != "deploy/readiness-observability-mvp/v1" or observability.get("status") != "local-contract-validated-deployment-disabled-pending-dedicated-collector-boundary" or observability.get("owner") != "observability-owner":
         raise Failure("observability-declaration-invalid")
     envelope = mapping(observability.get("event_envelope"), "observability-event-envelope-invalid")
     if envelope.get("owner") != "platform-contracts" or envelope.get("type") != "dependency.readiness-observed" or envelope.get("code_owner") != "platform-observability" or envelope.get("raw_error_fields") != "prohibited" or envelope.get("closed_fields") != ["event_type", "target", "scope", "workload", "dependency", "readiness", "observed_at", "diagnostic_code"]:
@@ -94,7 +94,7 @@ def check(root: Path) -> None:
     if set(native) != set(expected_rds) or any(item.get("source") != "rds-native" or item.get("namespace") != "AWS/RDS" or item.get("metric") != expected_rds[item_id] for item_id, item in native.items()):
         raise Failure("observability-rds-metric-catalogue-invalid")
     collector = mapping(observability.get("collector"), "observability-collector-invalid")
-    if collector.get("runtime_dependency") != "task-local-otel-collector" or collector.get("adapter") != "@kanbien/platform-adapter-aws-observability-cloudwatch" or collector.get("endpoint") != "http://127.0.0.1:4318/v1/metrics" or collector.get("configuration_delivery") != "target-owned-ssm-parameter-non-secret":
+    if collector.get("runtime_dependency") != "task-local-otel-collector" or collector.get("adapter") != "@kanbien/platform-adapter-aws-observability-cloudwatch" or collector.get("endpoint") != "http://127.0.0.1:4318/v1/metrics" or collector.get("configuration_delivery") != "target-owned-ssm-parameter-non-secret" or collector.get("deployment_status") != "disabled-pending-dedicated-task-role-and-private-route" or collector.get("prohibited_topology") != "task-local-sidecar-sharing-server-task-role":
         raise Failure("observability-collector-invalid")
     alarms = mapping(observability.get("alarms"), "observability-alarm-policy-invalid")
     if contains_recipient(alarms):
@@ -142,8 +142,8 @@ def check(root: Path) -> None:
     # database-permission transition must not claim notification delivery or
     # couple its recovery to collector activation.
     required_template_text = [
-        "EnableObservability:", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
-        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "Condition: ObservabilityEnabled", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !If [ObservabilityEnabled, !GetAtt ServerTaskRole.Arn, !Ref AWS::NoValue]", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
+        "EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false'] }", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
+        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "Condition: ObservabilityEnabled", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
     ]
     if any(item not in template for item in required_template_text):
         raise Failure("observability-provider-realization-invalid")

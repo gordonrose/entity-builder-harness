@@ -108,6 +108,7 @@ def full_route():
     with tempfile.TemporaryDirectory(prefix='acceptance-route-rehearsal-') as directory:
         root=Path(directory);shutil.copytree(ROOT/TARGET,root/TARGET)
         shutil.copytree(ROOT/'.agentic/04.deploy/60-run/schemas',root/'.agentic/04.deploy/60-run/schemas')
+        shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
         image_contract=Path(yaml.safe_load((root/CONTRACT).read_text())['program']['image_contract']);(root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
         shutil.rmtree(root/SCOPE/'30-release-evidence/proof-receipts');(root/RECORD).unlink()
         facts=fixtures.capture_proofs(root)

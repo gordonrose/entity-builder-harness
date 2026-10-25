@@ -5,7 +5,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -73,6 +73,22 @@ def completion_failure() -> dict[str, Any]:
     }
 
 
+def identity_completion_failure() -> dict[str, Any]:
+    return {
+        "completion": {
+            "unavailable": {"outcome": "unsuccessful-completion", "diagnostic_code": "DEPENDENCY_IDENTITY_UNAVAILABLE"},
+            "invalid_shape": {"outcome": "unsuccessful-completion", "diagnostic_code": "DEPENDENCY_IDENTITY_SHAPE_INVALID"},
+        },
+    }
+
+
+def identity_server_failure() -> dict[str, Any]:
+    return {
+        "startup": {"unavailable": "process-exits", "invalid_shape": "process-exits"},
+        "readiness": {"unavailable": "block-readiness", "invalid_shape": "block-readiness"},
+    }
+
+
 def secret_entry(identifier: str, access_class: str, authorised_workloads: list[str], failure: dict[str, Any], dependency: str = "persistence") -> dict[str, Any]:
     injection = f"{identifier.upper().replace('-', '_')}_SECRET_JSON"
     return {
@@ -95,11 +111,31 @@ def secret_entry(identifier: str, access_class: str, authorised_workloads: list[
     }
 
 
+def identity_entry(identifier: str, access_class: str, authorised_workloads: list[str], failure: dict[str, Any], dependency: str = "persistence") -> dict[str, Any]:
+    return {
+        "id": identifier,
+        "dependency": dependency,
+        "purpose": "authenticate-declared-workload-to-declared-dependency-with-workload-identity",
+        "owner": "persistence-platform",
+        "authorised_workloads": authorised_workloads,
+        "access_class": access_class,
+        "authentication_reference_id": identifier,
+        "delivery": {"method": "workload-identity-token", "phase": "dependency-connection"},
+        "access_grant": {"owner": "persistence-platform", "policy": "governed-workload-identity-access-grant", "privilege_boundary": "declared-access-class-boundary-not-effective-privilege-proof", "proof_requirement": "provider-binding-and-effective-access-observation-required"},
+        "authentication_lifecycle": {"owner": "persistence-platform", "policy": "governed-workload-identity-token-lifecycle", "task_role_credential_renewal": "provider-managed-automatic", "new_connection_token_generation": "generate-for-each-new-database-connection", "existing_session_behavior": "remains-valid-until-closed-or-governed-revocation", "replacement_policy": "not-required-for-normal-token-expiry", "completed_task_behavior": "no-replay"},
+        "revocation": {"owner": "persistence-platform", "policy": "governed-workload-identity-revocation", "condition": "workload-retirement-or-security-incident", "workload_effect": "block-new-start-and-stop-active-authorised-workloads", "proof_requirement": "delivery-and-dependency-access-denied-observation-required"},
+        "retirement": {"owner": "persistence-platform", "policy": "governed-workload-identity-removal", "condition": "after-dependent-workload-retirement"},
+        "failure_behaviour": failure,
+        "safe_diagnostics": {"unavailable": "DEPENDENCY_IDENTITY_UNAVAILABLE", "invalid_shape": "DEPENDENCY_IDENTITY_SHAPE_INVALID", "credential_rejected": "DEPENDENCY_IDENTITY_REJECTED", "access_denied": "DEPENDENCY_IDENTITY_ACCESS_DENIED"},
+    }
+
+
 def scope_with(baseline: dict[str, Any], workloads: list[dict[str, str]], entries: list[dict[str, Any]]) -> dict[str, Any]:
     value = copy.deepcopy(baseline)
     value["health_recovery"]["workloads"] = workloads
     value["configuration"]["secret_dependencies"] = entries
     value["configuration"]["secret_names"] = [entry["injection_name"] for entry in entries]
+    value["configuration"].pop("workload_identity_dependencies", None)
     value["dependencies"] = {"required": sorted({entry["dependency"] for entry in entries}), "optional": []}
     return value
 
@@ -137,6 +173,12 @@ def main() -> int:
         mediated_verifier["health_recovery"]["workloads"][1]["server_mediated_dependency_proof"] = {"dependency": "persistence"}
         expect_failure(mediated_verifier, "server-mediated-verifier-direct-secret-prohibited", directory)
 
+        mediated_identity_verifier = copy.deepcopy(mediated_verifier)
+        mediated_identity_verifier["configuration"]["secret_dependencies"] = []
+        mediated_identity_verifier["configuration"]["secret_names"] = []
+        mediated_identity_verifier["configuration"]["workload_identity_dependencies"] = [identity_entry("verifier-runtime-identity", "runtime", ["persistence-verifier"], identity_completion_failure())]
+        expect_failure(mediated_identity_verifier, "server-mediated-verifier-direct-workload-identity-prohibited", directory)
+
         server_runtime = copy.deepcopy(mediated_verifier)
         server_runtime["configuration"]["secret_dependencies"][0]["authorised_workloads"] = ["core-server"]
         server_runtime["configuration"]["secret_dependencies"][0]["failure_behaviour"] = server_failure()
@@ -149,6 +191,47 @@ def main() -> int:
         )
         migration_executor["health_recovery"]["workloads"][0]["migration_execution"] = {"dependency": "persistence"}
         expect_pass(migration_executor, directory, "migration-executor-credential")
+
+        migration_identity = scope_with(
+            baseline,
+            [workload("persistence-migration", "run-to-completion-task")],
+            [],
+        )
+        migration_identity["dependencies"] = {"required": ["persistence"], "optional": [], "persistence": ["persistence"]}
+        migration_identity["health_recovery"]["workloads"][0]["migration_execution"] = {"dependency": "persistence"}
+        migration_identity["configuration"]["workload_identity_dependencies"] = [identity_entry("migration-workload-identity", "migration", ["persistence-migration"], identity_completion_failure())]
+        expect_pass(migration_identity, directory, "migration-executor-workload-identity")
+        malformed_identity = copy.deepcopy(migration_identity)
+        malformed_identity["configuration"]["workload_identity_dependencies"][0]["authorised_workloads"] = None
+        expect_failure(malformed_identity, "workload-identity-workload-invalid", directory)
+        wrong_identity_delivery = copy.deepcopy(migration_identity)
+        wrong_identity_delivery["configuration"]["workload_identity_dependencies"][0]["delivery"]["method"] = "target-secret-store-injection"
+        expect_failure(wrong_identity_delivery, "workload-identity-delivery-invalid", directory)
+        malformed_identity_lifecycle = copy.deepcopy(migration_identity)
+        malformed_identity_lifecycle["configuration"]["workload_identity_dependencies"][0]["authentication_lifecycle"]["replacement_policy"] = "replacement-required"
+        expect_failure(malformed_identity_lifecycle, "workload-identity-lifecycle-invalid", directory)
+
+        # Authentication requirements follow the declared persistence
+        # classification and workload relationship, not a provider name or a
+        # write-only shortcut.  A read-only server that declares dependency
+        # readiness still needs runtime access for its named dependency.
+        read_only_identity = scope_with(
+            baseline,
+            [workload("read-only-server", "long-running-server")],
+            [],
+        )
+        read_only_identity["dependencies"] = {"required": ["primary-relational-store"], "optional": [], "persistence": ["primary-relational-store"]}
+        read_only_identity["health_recovery"]["workloads"][0]["dependency_failures"] = [{"dependency": "primary-relational-store"}]
+        read_only_identity["configuration"]["workload_identity_dependencies"] = [identity_entry("primary-store-runtime-identity", "runtime", ["read-only-server"], identity_server_failure(), dependency="primary-relational-store")]
+        expect_pass(read_only_identity, directory, "read-only-named-persistence-identity")
+        missing_read_only_identity = copy.deepcopy(read_only_identity)
+        missing_read_only_identity["configuration"]["workload_identity_dependencies"] = []
+        expect_failure(missing_read_only_identity, "runtime-workload-credential-missing", directory)
+
+        write_identity = copy.deepcopy(read_only_identity)
+        write_identity["health_recovery"]["workloads"][0].pop("dependency_failures")
+        write_identity["health_recovery"]["workloads"][0]["persistence_writes"] = True
+        expect_pass(write_identity, directory, "write-named-persistence-identity")
 
         migration_without_credential = copy.deepcopy(migration_executor)
         migration_without_credential["configuration"]["secret_dependencies"] = []
@@ -225,7 +308,8 @@ def main() -> int:
         )
         expect_pass(privileged_tasks, directory, "privileged-tasks")
         administrative_executor = copy.deepcopy(privileged_tasks)
-        administrative_executor["health_recovery"]["workloads"][1]["administrative_execution"] = {"dependency": "persistence", "credential_access_class": "administrative"}
+        administrative_executor["health_recovery"]["workloads"][1]["administrative_execution"] = {"dependency": "persistence", "credential_access_class": "administrative", "runtime_identity_probe": {"dependency": "persistence", "credential_access_class": "runtime", "purpose": "effective-runtime-identity-privilege-proof"}}
+        administrative_executor["configuration"]["workload_identity_dependencies"] = [identity_entry("administration-runtime-identity", "runtime", ["persistence-admin"], identity_completion_failure())]
         expect_pass(administrative_executor, directory, "administrative-executor-credential")
         administrative_executor_missing_credential = copy.deepcopy(administrative_executor)
         administrative_executor_missing_credential["configuration"]["secret_dependencies"] = [administrative_executor_missing_credential["configuration"]["secret_dependencies"][0]]
@@ -234,6 +318,12 @@ def main() -> int:
         malformed_administrative_executor = copy.deepcopy(administrative_executor)
         malformed_administrative_executor["health_recovery"]["workloads"][1]["administrative_execution"]["credential_access_class"] = "migration"
         expect_failure(malformed_administrative_executor, "administrative-executor-declaration-invalid", directory)
+        missing_administrative_probe = copy.deepcopy(administrative_executor)
+        missing_administrative_probe["health_recovery"]["workloads"][1]["administrative_execution"].pop("runtime_identity_probe")
+        expect_failure(missing_administrative_probe, "administrative-executor-declaration-invalid", directory)
+        missing_administrative_identity = copy.deepcopy(administrative_executor)
+        missing_administrative_identity["configuration"]["workload_identity_dependencies"] = []
+        expect_failure(missing_administrative_identity, "administrative-runtime-identity-probe-missing", directory)
 
         missing = copy.deepcopy(baseline)
         missing["configuration"].pop("secret_dependencies")

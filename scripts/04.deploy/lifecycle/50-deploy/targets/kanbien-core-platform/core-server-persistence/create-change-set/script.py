@@ -116,12 +116,15 @@ def main() -> int:
         return report("blocked", "package-custody-receipt-invalid")
     name = f"kanbien-core-platform-persistence-create-{receipt['image_digest'][7:19]}"
     diagnostic_path = args.diagnostic_report or DIAGNOSTIC_DIRECTORY / f"{name}.json"
+    if not module.declaration_covered():
+        return report("blocked", "persistence-declaration-coverage-gap")
+    # A declaration gap is a local, pre-provider rejection. Require retained
+    # diagnostics before reconciliation or a provider mutation, not before the
+    # existing structural guard can state its precise failure.
     if not diagnostic_path_is_governed(diagnostic_path) or not diagnostics_ready(diagnostic_path):
         return report("blocked", "persistence-change-set-diagnostic-route-unavailable")
     if args.reconcile:
         return reconcile(module, name, receipt, diagnostic_path)
-    if not module.declaration_covered():
-        return report("blocked", "persistence-declaration-coverage-gap")
     if not package_gates(args.receipt, coverage_checked=True):
         return report("blocked", "persistence-declaration-or-package-gate-not-proven")
     outputs, code = module.foundation_outputs()

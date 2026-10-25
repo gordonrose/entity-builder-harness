@@ -40,10 +40,10 @@ required = {
  "effective-privilege": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-administration"),
  "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate, "PERSISTENCE_SERVER_REPLACED", None),
  "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
- "credential-rotation": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-administration"),
- "credential-revocation": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-administration"),
+ "runtime-identity-initial-access": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED", "persistence-administration"),
+ "credential-revocation": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED", "persistence-administration"),
  "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"),
- "credential-recovery": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-administration"),
+ "credential-recovery": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED", "persistence-administration"),
  "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
  "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
  "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
@@ -52,7 +52,7 @@ required = {
  "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
  "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier"),
 }
-operations = {"migration-apply":"apply","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","credential-rotation":"rotate-runtime","credential-revocation":"revoke-runtime","credential-revocation-unready":"health-unready","credential-recovery":"rotate-runtime","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
+operations = {"migration-apply":"apply","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","runtime-identity-initial-access":"confirm-runtime-iam-access","credential-revocation":"revoke-runtime","credential-revocation-unready":"health-unready","credential-recovery":"restore-runtime","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
 controllers={"administration":"run-administration","migration":"run-migration","verifier":"verify-candidate","restore":"rehearse-isolated-database-restore","server-replacement":"rehearse-server-replacement"}
 deadlines={"persistence-migration":300,"persistence-administration":300,"private-release-verifier":120,"persistence-restoration-verifier":120}
 directory = Path(tempfile.mkdtemp(prefix="persistence-proof-receipt-"))
@@ -90,14 +90,14 @@ try:
     # cleanup posture.
     try:
         with patch.object(collector, "aws", return_value={"services": [{"status": "ACTIVE", "desiredCount": 1, "runningCount": 0}]}):
-            collector.current_service("arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:1", candidate)
+            collector.current_service("arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:1", {"image_digest": candidate, "source_revision": "f" * 40}, candidate)
     except collector.EvidenceFailure as error:
         assert str(error) == "acceptance-evidence-current-service-unhealthy"
     else:
         raise AssertionError("unhealthy current service was concealed by historical receipts")
     try:
         with patch.object(collector, "aws", return_value={"DBInstances": [{"DBInstanceStatus": "available", "Engine": "postgres", "PubliclyAccessible": False, "StorageEncrypted": True, "DeletionProtection": False}]}):
-            collector.database_posture("kanbien-core-platform-persistence-recovery-20261024-r3")
+            collector.database_posture("kanbien-core-platform-persistence-recovery-20261024-r3", {})
     except collector.EvidenceFailure as error:
         assert str(error) == "acceptance-evidence-source-database-posture-invalid"
     else:

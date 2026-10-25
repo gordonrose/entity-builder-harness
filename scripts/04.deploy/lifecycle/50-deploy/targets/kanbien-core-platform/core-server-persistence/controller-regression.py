@@ -28,7 +28,7 @@ import unittest
 import yaml
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 ROOT = Path(__file__).resolve().parents[7]
 DEPLOY = ROOT / 'scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence'
@@ -281,36 +281,19 @@ class ControllerRegression(unittest.TestCase):
                 self.assertEqual(result(module.main)[1]['verdict'],verdict)
             self.assertFalse(any(parts[1]=='stop-task' for parts in provider.calls))
 
-    def test_secret_submission_timeout_retains_non_secret_request_identity(self):
-        import subprocess
+    def test_runtime_identity_lifecycle_has_no_password_rotation_path(self):
         module=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
-        prepare=SimpleNamespace(PROFILE='synthetic',REGION='synthetic',aws=lambda *parts:(True,{'RandomPassword':'synthetic-fixture-value'},'ok'))
-        calls=[]
-        def interrupted(command,**kwargs):
-            calls.append(command)
-            raise subprocess.TimeoutExpired(command,30)
-        with patch.object(module.subprocess,'run',side_effect=interrupted),contextlib.redirect_stderr(io.StringIO()):
-            version,code=module.advance_secret(prepare,'synthetic-reference')
-        self.assertIsNone(version)
-        self.assertEqual(code,'persistence-credential-lifecycle-secret-version-write-uncertain')
-        self.assertEqual(len(calls),1)
-        token=calls[0][calls[0].index('--client-request-token')+1]
-        self.assertEqual(module.SECRET_CHECKPOINT,{'secret_operation_id':token})
-        private_file=Path(calls[0][calls[0].index('--secret-string')+1].removeprefix('file://'))
-        self.assertFalse(private_file.exists())
-        report=result(lambda:module.report('blocked',code))[1]
-        self.assertEqual(report['verdict'],'uncertain')
-        self.assertNotIn('synthetic-fixture-value',json.dumps(report))
-
-    def test_secret_version_reconciliation_is_metadata_only(self):
-        module=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
-        operation='11111111-1111-1111-1111-111111111111'
-        receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40}
-        prepare=SimpleNamespace(validate_receipt=lambda path:receipt,live_budget=lambda:(True,'ok'))
-        create=SimpleNamespace(package_gates=lambda path:True)
-        for current,verdict in [(operation,'prepared'),('other-operation','uncertain')]:
-            with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'outputs',return_value=({module.RUNTIME_SECRET_OUTPUT:'synthetic-secret-reference'},'ok')),patch.object(module,'current_secret_version',return_value=(current,'ok')),patch.object(module,'healthy',side_effect=AssertionError('new verifier forbidden')),patch.object(module,'advance_secret',side_effect=AssertionError('new secret version forbidden')),patch.object(sys,'argv',['test','--receipt','synthetic','--operation','reconcile-secret','--secret-operation-id',operation]):
-                self.assertEqual(result(module.main)[1]['verdict'],verdict)
+        # IAM task-role renewal and per-connection database tokens replace the
+        # former secret-version controller. A lifecycle rehearsal must not
+        # regain an API that reads, writes, or transports a database password.
+        for obsolete in ('advance_secret','current_secret_version','RUNTIME_SECRET_OUTPUT','SECRET_CHECKPOINT'):
+            self.assertFalse(hasattr(module,obsolete))
+        receipt=Path('synthetic-receipt.json')
+        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy:
+            self.assertEqual(module.recover(receipt),'ok')
+        administer.assert_called_once_with('restore-runtime')
+        replace.assert_called_once_with(receipt)
+        self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])
 
     def test_correction_parameters_remain_complete_and_unique(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
@@ -371,13 +354,13 @@ class ControllerRegression(unittest.TestCase):
     def test_parent_preserves_timeout_operation_receipt(self):
         import subprocess
         module=load(RUN/'rehearse-runtime-credential-lifecycle/script.py')
-        receipt={'verdict':'pending','facts':{'operation_id':'kp-'+'a'*32,'secret':'must-not-escape'}}
+        receipt={'verdict':'pending','facts':{'administration_task':'task-safe','secret':'must-not-escape'}}
         error=subprocess.TimeoutExpired(['synthetic'],180,stderr=json.dumps(receipt).encode())
         with patch.object(module.subprocess,'run',side_effect=error):
             self.assertIsNone(module.child('synthetic-controller'))
         report=result(lambda:module.report('blocked','child-unconfirmed'))[1]
         self.assertEqual(report['verdict'],'pending')
-        self.assertEqual(report['facts']['child_checkpoint']['facts'],{'operation_id':'kp-'+'a'*32})
+        self.assertEqual(report['facts']['child_checkpoint']['facts'],{'administration_task':'task-safe'})
         self.assertNotIn('must-not-escape',json.dumps(report))
 
     def test_malformed_endpoint_group_blocks_before_mutation(self):
@@ -417,11 +400,11 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual([parts[1] for parts in provider.calls],['describe-db-snapshots'])
 
     def test_task_reconciliation_and_lost_submission(self):
-        for name,mode_arg,mode,output_key in [('run-migration','--runtime-credential-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn'),('verify-candidate','--mode','create','CoreServerPersistenceVerifierTaskDefinitionArn')]:
+        for name,mode_arg,mode,output_key in [('run-migration','--migration-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn'),('verify-candidate','--mode','create','CoreServerPersistenceVerifierTaskDefinitionArn')]:
             module=load(RUN/name/'script.py'); operation='kp-'+'a'*32
             arn=f'arn:aws:ecs:{module.REGION}:{module.ACCOUNT}:task/{module.CLUSTER}/'+'b'*32
             task={'taskArn':arn,'taskDefinitionArn':'definition-safe','startedBy':operation,'lastStatus':'STOPPED','containers':[{'exitCode':0}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
-            expected_env={'PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
+            expected_env={'PERSISTENCE_MIGRATION_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
             task['overrides']={'inferenceAcceleratorOverrides':[],'containerOverrides':[{'name':'persistence-migration' if name=='run-migration' else 'private-persistence-verifier','environment':[{'name':key,'value':value} for key,value in expected_env.items()]}]}
             def response(parts):
                 if parts[1]=='list-tasks':return True,{'taskArns':[arn]},'ok'
@@ -470,7 +453,7 @@ class ControllerRegression(unittest.TestCase):
             environment={item['name']:item['value'] for item in task['overrides']['containerOverrides'][0]['environment']}
             predicate=lambda candidate:controller.task_evidence().task_overrides_match(candidate,container_name,environment)
             self.assertTrue(predicate(task))
-            if kind=='migration':self.assertTrue(controller.task_operation_bound(task,environment['PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION']))
+            if kind=='migration':self.assertTrue(controller.task_operation_bound(task,environment['PERSISTENCE_MIGRATION_OPERATION']))
             if kind=='verifier':self.assertTrue(controller.task_operation_bound(task,environment['PERSISTENCE_VERIFIER_MODE']))
             without_default=copy.deepcopy(task);del without_default['overrides']['inferenceAcceleratorOverrides'];self.assertTrue(predicate(without_default))
             negatives=[]
@@ -493,7 +476,7 @@ class ControllerRegression(unittest.TestCase):
 
     def test_malformed_provider_evidence_is_structured(self):
         arn='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'b'*32
-        for name,mode_arg,mode,output_key in [('run-migration','--runtime-credential-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn'),('verify-candidate','--mode','read','CoreServerPersistenceVerifierTaskDefinitionArn')]:
+        for name,mode_arg,mode,output_key in [('run-migration','--migration-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn'),('verify-candidate','--mode','read','CoreServerPersistenceVerifierTaskDefinitionArn')]:
             module=load(RUN/name/'script.py')
             output={output_key:'definition-safe','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
             with contextlib.ExitStack() as stack:
@@ -516,14 +499,15 @@ class ControllerRegression(unittest.TestCase):
             with patch.object(module,'aws',side_effect=bad_identity):self.assertIsNone(module.reconciliation_operation('kp-'+'a'*32,'definition-safe')[0])
         module=load(RUN/'rehearse-isolated-database-restore/script.py')
         restored={'Endpoint':{'Address':'synthetic.invalid'},'DbiResourceId':'db-fixture'}
-        ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored'}
-        with patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True),patch.object(module,'verifier_tasks',return_value=([arn],'ok')):
+        ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PersistenceRestorationVerifierTaskRoleName':'restore-role'}
+        identity='arn:aws:rds-db:eu-west-1:337159794548:dbuser:db-fixture/core_runtime'
+        with patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True),patch.object(module,'temporary_restore_identity_policy',return_value=('ok',identity)),patch.object(module,'verifier_tasks',return_value=([arn],'ok')):
             for tasks in (None,{},True,'unexpected',[None]):
                 provider=Provider(lambda _: (True,{'tasks':tasks},'ok'))
                 self.assertEqual(result(lambda:module.verify(provider,'snapshot','restore',True))[1]['verdict'],'uncertain')
 
     def test_argument_preflight_checks_required_inputs_without_provider_access(self):
-        cases=[('run-migration',['--runtime-credential-operation','apply'],['--runtime-credential-operation','unsupported']),
+        cases=[('run-migration',['--migration-operation','apply'],['--migration-operation','unsupported']),
                ('verify-candidate',['--mode','read'],[]),
                ('rehearse-isolated-database-restore',['--operation','restore','--snapshot-id','kanbien-core-platform-persistence-recovery-20261025-b','--record-proof-receipt','not-read-during-parser-check'],['--operation','restore','--snapshot-id','kanbien-core-platform-persistence-recovery-20261025-b'])]
         for name,valid,invalid in cases:
@@ -549,7 +533,7 @@ class ControllerRegression(unittest.TestCase):
                     mutations.append(parts)
                     tag_values=parts[parts.index('--tags')+1:]
                     tags=[{'Key':value.split(',Value=',1)[0][4:],'Value':value.split(',Value=',1)[1]} for value in tag_values]
-                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
+                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
                     return True,{},'ok'
                 raise AssertionError(f'unexpected provider action {parts}')
             provider=Provider(response)
@@ -580,7 +564,7 @@ class ControllerRegression(unittest.TestCase):
 
     def test_historical_task_capture_preserves_qualified_receipts(self):
         for name,mode_arg,mode,output_key,family in [
-            ('run-migration','--runtime-credential-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn','kanbien-core-platform-persistence-migration'),
+            ('run-migration','--migration-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn','kanbien-core-platform-persistence-migration'),
             ('verify-candidate','--mode','read','CoreServerPersistenceVerifierTaskDefinitionArn','kanbien-core-platform-persistence-verifier'),
         ]:
             module=load(RUN/name/'script.py'); digest='sha256:'+'c'*64
@@ -588,7 +572,7 @@ class ControllerRegression(unittest.TestCase):
             old_definition=f'arn:aws:ecs:{module.REGION}:{module.ACCOUNT}:task-definition/{family}:7'
             task={'taskArn':arn,'taskDefinitionArn':old_definition,'lastStatus':'STOPPED','containers':[{'exitCode':0}],
                   'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
-            environment={'PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
+            environment={'PERSISTENCE_MIGRATION_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
             task['overrides']={'inferenceAcceleratorOverrides':[],'containerOverrides':[{'name':'persistence-migration' if name=='run-migration' else 'private-persistence-verifier','environment':[{'name':key,'value':value} for key,value in environment.items()]}]}
             def response(parts):
                 if parts[1]=='describe-tasks':return True,{'tasks':[task]},'ok'
@@ -657,9 +641,10 @@ class ControllerRegression(unittest.TestCase):
 
     def test_restore_reconciliation_pending_failed_and_strict_evidence(self):
         module=load(RUN/'rehearse-isolated-database-restore/script.py'); sid='kanbien-core-platform-persistence-recovery-20261024'; rid=module.restore_id(sid)
-        restored={'DBInstanceStatus':'available','DbiResourceId':'db-restore-safe','PubliclyAccessible':False,'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'Endpoint':{'Address':'synthetic.invalid'}}
+        restored={'DBInstanceStatus':'available','DbiResourceId':'db-restore-safe','PubliclyAccessible':False,'IAMDatabaseAuthenticationEnabled':True,'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'Endpoint':{'Address':'synthetic.invalid'}}
         operation=module.restore_run_identity(restored); arn='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'f'*32
-        task={'taskArn':arn,'taskDefinitionArn':'definition-safe','startedBy':operation,'lastStatus':'STOPPED','containers':[{'exitCode':0}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z','overrides':{'inferenceAcceleratorOverrides':[],'containerOverrides':[{'name':'persistence-restoration-verifier','environment':[{'name':key,'value':value} for key,value in {'PERSISTENCE_POSTGRES_HOST':'synthetic.invalid','PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT_DIGEST':module.FACT_DIGEST}.items()]}]}}
+        identity='arn:aws:rds-db:eu-west-1:337159794548:dbuser:db-restore-safe/core_runtime'
+        task={'taskArn':arn,'taskDefinitionArn':'definition-safe','startedBy':operation,'lastStatus':'STOPPED','containers':[{'exitCode':0}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z','overrides':{'inferenceAcceleratorOverrides':[],'containerOverrides':[{'name':'persistence-restoration-verifier','environment':[{'name':key,'value':value} for key,value in {'PERSISTENCE_POSTGRES_HOST':'synthetic.invalid','PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE':identity,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT_DIGEST':module.FACT_DIGEST}.items()]}]}}
         log=json.dumps({'verdict':'accepted','code':'KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED'})
         def response(parts):
             if parts[1]=='list-tasks':return True,{'taskArns':[arn]},'ok'
@@ -668,8 +653,8 @@ class ControllerRegression(unittest.TestCase):
             if parts[1]=='describe-task-definition':return True,{'taskDefinition':{'containerDefinitions':[{'image':'synthetic.invalid/persistence@sha256:'+'c'*64}]}},'ok'
             raise AssertionError(f'unexpected mutation {parts}')
         provider=Provider(response)
-        ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PrivateSubnetIds':'subnet-safe','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
-        with temporary_receipts(module),patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True):
+        ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PersistenceRestorationVerifierTaskRoleName':'restore-role','PrivateSubnetIds':'subnet-safe','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
+        with temporary_receipts(module),patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True),patch.object(module,'temporary_restore_identity_policy',return_value=('ok',identity)):
             for status,exitcode,verdict in [('RUNNING',0,'pending'),('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
                 task['lastStatus']=status;task['containers'][0]['exitCode']=exitcode
                 self.assertEqual(result(lambda:module.verify(provider,sid,rid))[1]['verdict'],verdict)

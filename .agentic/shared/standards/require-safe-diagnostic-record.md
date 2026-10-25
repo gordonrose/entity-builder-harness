@@ -48,6 +48,17 @@ resource logical identifier, resource type, provider status, or safe property
 path. If no safe fact is available, report that fact as unavailable rather than
 guessing from raw output.
 
+Credential-bearing commands require an end-to-end logging review, not only a
+check of the program's own output. Before a command can create, alter, rotate,
+or revoke a database credential, its owner must identify downstream logs and
+error surfaces (for example, database-server logs, provider logs, shell
+tracing, task logs, and retained CI artifacts). Plaintext passwords, derived
+password verifiers, authentication tokens, and connection strings are all
+sensitive credential material. A hash or redaction pattern does not make one
+safe to put in a command or diagnostic. Qualification must exercise a rejected
+path where practical and inspect the applicable downstream logs using only
+synthetic canaries; it must not suppress error logging merely to pass.
+
 The product/core layer owns bounded provider-neutral diagnostic primitives.
 Platform capabilities own provider-neutral meaning and safe workload effects.
 Provider adapters translate provider facts privately into those meanings.

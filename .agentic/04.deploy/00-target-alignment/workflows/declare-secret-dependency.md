@@ -4,7 +4,7 @@ id: deploy.workflow.declare-secret-dependency
 version: 5
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -56,6 +56,12 @@ a provider permission.
    If a completion task declares migration execution, authorise a matching
    `migration` credential for its named dependency; do not substitute runtime
    access.
+   A workload-identity token has a distinct `authentication_lifecycle`:
+   provider task-role credentials renew independently, a new database token is
+   generated for each new connection, and ordinary token expiry does not
+   require a healthy server restart. Existing sessions and urgent revocation
+   have separate controls. A successful IAM login is not proof of renewal,
+   revocation, or incident remediation.
 5. Run the secret-dependency validator and the active-scope inventory. Treat
    any failure as a declaration-coverage gap.
 6. Before a provider mutation, use target alignment to prove the declared

@@ -94,7 +94,7 @@ def capture_proofs(root: Path) -> dict:
         deadline = controller.deadline()
         if type(deadline) is not int or deadline <= 0: raise AssertionError('owner completion deadline unavailable')
         observed = task(number, proof['family'], start, container)
-        environment = {'PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION': mode} if kind == 'migration' else {'PERSISTENCE_VERIFIER_MODE': mode, 'PERSISTENCE_ACCEPTANCE_RECORD_ID': controller.RECORD_ID, 'PERSISTENCE_ACCEPTANCE_FACT': controller.FACT}
+        environment = {'PERSISTENCE_MIGRATION_OPERATION': mode} if kind == 'migration' else {'PERSISTENCE_VERIFIER_MODE': mode, 'PERSISTENCE_ACCEPTANCE_RECORD_ID': controller.RECORD_ID, 'PERSISTENCE_ACCEPTANCE_FACT': controller.FACT}
         observed['overrides'] = {'containerOverrides': [{'name': container, 'environment': [{'name': key, 'value': value} for key, value in environment.items()]}], 'inferenceAcceleratorOverrides': []}
         digest = candidate if proof['image_role'] == 'candidate' else rollback
         definition = {'family': proof['family'], 'taskDefinitionArn': observed['taskDefinitionArn'], 'containerDefinitions': [{'name': container, 'image': REPOSITORY + '@' + digest, 'environment': [], 'secrets': []}]}
@@ -110,7 +110,7 @@ def capture_proofs(root: Path) -> dict:
             raise AssertionError('unexpected provider action: ' + str(parts))
         output_key = 'CoreServerPersistenceMigrationTaskDefinitionArn' if kind == 'migration' else 'CoreServerPersistenceVerifierTaskDefinitionArn'
         outputs = {output_key: DEFINITION_PREFIX + proof['family'] + ':99', 'PersistenceMigrationSecurityGroupId': 'sg-fixture', 'PrivateSubnetIds': 'subnet-fixture', 'VerifierSecurityGroupId': 'sg-fixture'}
-        flag = '--runtime-credential-operation' if kind == 'migration' else '--mode'
+        flag = '--migration-operation' if kind == 'migration' else '--mode'
         with patch.object(controller, 'ROOT', root), patch.object(controller, 'proof_receipts', return_value=receipt_module), patch.object(controller, 'deadline', return_value=deadline), patch.object(controller, 'outputs', return_value=(outputs, 'ok')), patch.object(controller, 'qualified_digest', return_value=digest), patch.object(controller, 'aws', side_effect=aws):
             report = invoke(controller, [flag, mode, '--capture-completed-task', observed['taskArn'], '--qualified-receipt', str(root / ('qualified-' + proof['image_role'] + '.json')), '--json'])
         return str(root / report['facts']['proof_receipt'])
@@ -120,6 +120,55 @@ def capture_proofs(root: Path) -> dict:
         start = begin + timedelta(minutes=number - 10)
         if proof['proof_type'] in {'migration', 'verifier'}:
             captures[name] = task_capture(name, proof, number, start)
+            continue
+        if proof['proof_type'] == 'administration':
+            controller = load(SOURCE / RUN / 'run-administration' / 'script.py')
+            observed = task(number, proof['family'], start, 'persistence-administration')
+            digest = candidate if proof['image_role'] == 'candidate' else rollback
+            definition = {
+                'taskDefinitionArn': observed['taskDefinitionArn'],
+                'containerDefinitions': [
+                    {
+                        'name': 'persistence-administration',
+                        'image': REPOSITORY + '@' + digest,
+                    }
+                ],
+            }
+            outputs = {
+                'CoreServerPersistenceAdministrationTaskDefinitionArn': observed['taskDefinitionArn'],
+                'PersistenceAdministrationSecurityGroupId': 'sg-fixture',
+            }
+            foundation = {'PrivateSubnetIds': 'subnet-fixture'}
+
+            def aws(*parts):
+                observations.append(parts)
+                if parts[1] == 'describe-tasks':
+                    assert parts[-1] == observed['taskArn']
+                    return True, {'tasks': [observed]}, 'ok'
+                if parts[1] == 'describe-task-definition':
+                    return True, {'taskDefinition': definition}, 'ok'
+                if parts[1] == 'get-log-events':
+                    message = '{"verdict":"accepted","code":"' + proof['result_code'] + '"}'
+                    return True, {'events': [{'message': message}]}, 'ok'
+                raise AssertionError('unexpected provider action: ' + str(parts))
+
+            def stack_outputs(name):
+                if name == controller.STACK:
+                    return outputs, 'ok'
+                if name == controller.FOUNDATION:
+                    return foundation, 'ok'
+                raise AssertionError('unexpected stack output request: ' + name)
+
+            with patch.object(controller, 'ROOT', root), \
+                 patch.object(controller, 'RECEIPTS', receipt_module), \
+                 patch.object(controller.MIGRATION, 'aws', side_effect=aws), \
+                 patch.object(controller.MIGRATION, 'outputs', side_effect=stack_outputs):
+                report = invoke(controller, [
+                    '--operation', proof['operation'],
+                    '--reconcile-task', observed['taskArn'],
+                    '--json',
+                ])
+            captures[name] = str(root / report['facts']['proof_receipt'])
             continue
         if proof['proof_type'] == 'server-replacement':
             controller = load(SOURCE / RUN / 'rehearse-server-replacement/script.py')
@@ -146,14 +195,15 @@ def capture_proofs(root: Path) -> dict:
         if proof['proof_type'] != 'restore': raise AssertionError('unsupported fixture proof: ' + name)
         controller = load(SOURCE / RUN / 'rehearse-isolated-database-restore/script.py')
         restored_id = controller.restore_id(snapshot)
-        source = {'DBInstanceIdentifier': controller.DATABASE, 'DBInstanceStatus': 'available', 'PubliclyAccessible': False, 'StorageEncrypted': True, 'DBSubnetGroup': {'DBSubnetGroupName': 'fixture-private'}}
+        source = {'DBInstanceIdentifier': controller.DATABASE, 'DBInstanceStatus': 'available', 'PubliclyAccessible': False, 'StorageEncrypted': True, 'IAMDatabaseAuthenticationEnabled': True, 'DBSubnetGroup': {'DBSubnetGroupName': 'fixture-private'}}
         restored = {**source, 'DBInstanceIdentifier': restored_id, 'DbiResourceId': 'db-FIXTURE-RESTORE', 'Engine': 'postgres', 'VpcSecurityGroups': [{'VpcSecurityGroupId': 'sg-restored'}], 'Endpoint': {'Address': 'restored.fixture.invalid'}}
         observed = task(number, proof['family'], start, 'persistence-restoration-verifier')
         observed['startedBy'] = controller.restore_run_identity(restored)
-        environment = {'PERSISTENCE_POSTGRES_HOST': 'restored.fixture.invalid', 'PERSISTENCE_ACCEPTANCE_RECORD_ID': controller.RECORD_ID, 'PERSISTENCE_ACCEPTANCE_FACT_DIGEST': controller.FACT_DIGEST}
+        identity = controller.restore_identity_resource(restored)
+        environment = {'PERSISTENCE_POSTGRES_HOST': 'restored.fixture.invalid', 'PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE': identity, 'PERSISTENCE_ACCEPTANCE_RECORD_ID': controller.RECORD_ID, 'PERSISTENCE_ACCEPTANCE_FACT_DIGEST': controller.FACT_DIGEST}
         observed['overrides'] = {'containerOverrides': [{'name': 'persistence-restoration-verifier', 'environment': [{'name': key, 'value': value} for key, value in environment.items()]}], 'inferenceAcceleratorOverrides': []}
-        definition = {'containerDefinitions': [{'name': 'persistence-restoration-verifier', 'image': REPOSITORY + '@' + candidate, 'command': ['artifacts/kanbien-core-server-persistence-restore-verifier.main.js'], 'environment': [{'name': 'PERSISTENCE_POSTGRES_DATABASE', 'value': 'kanbienpersistence'}, {'name': 'PERSISTENCE_POSTGRES_SCHEMA', 'value': 'platform'}], 'secrets': [{'name': 'PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS', 'valueFrom': 'fixture-secret-reference'}]}]}
-        outputs = {'CoreServerPersistenceRestorationVerifierTaskDefinitionArn': observed['taskDefinitionArn'], 'PersistenceRestorationVerifierSecurityGroupId': 'sg-verifier', 'PersistenceRestoredDatabaseSecurityGroupId': 'sg-restored', 'PrivateSubnetIds': 'subnet-fixture'}
+        definition = {'containerDefinitions': [{'name': 'persistence-restoration-verifier', 'image': REPOSITORY + '@' + candidate, 'command': ['artifacts/kanbien-core-server-persistence-restore-verifier.main.js'], 'environment': [{'name': 'PERSISTENCE_POSTGRES_PORT', 'value': '5432'}, {'name': 'PERSISTENCE_POSTGRES_DATABASE', 'value': 'kanbienpersistence'}, {'name': 'PERSISTENCE_POSTGRES_SCHEMA', 'value': 'platform'}, {'name': 'PERSISTENCE_POSTGRES_IAM_REGION', 'value': 'eu-west-1'}, {'name': 'PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE', 'value': 'restoration-identity-supplied-at-governed-task-run'}, {'name': 'PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME', 'value': 'core_runtime'}], 'secrets': []}]}
+        outputs = {'CoreServerPersistenceRestorationVerifierTaskDefinitionArn': observed['taskDefinitionArn'], 'PersistenceRestorationVerifierSecurityGroupId': 'sg-verifier', 'PersistenceRestoredDatabaseSecurityGroupId': 'sg-restored', 'PersistenceRestorationVerifierTaskRoleName': 'fixture-restoration-role', 'PrivateSubnetIds': 'subnet-fixture'}
         def aws(*parts):
             observations.append(parts)
             if parts[1] == 'describe-db-instances': return True, {'DBInstances': [source if parts[-1] == controller.DATABASE else restored]}, 'ok'
@@ -165,6 +215,7 @@ def capture_proofs(root: Path) -> dict:
                 return True, {'taskArns': [observed['taskArn']]}, 'ok'
             if parts[1] == 'describe-tasks': return True, {'tasks': [observed]}, 'ok'
             if parts[1] == 'get-log-events': return True, {'events': [{'message': json.dumps({'verdict': 'accepted', 'code': proof['result_code']})}]}, 'ok'
+            if parts[1] == 'get-role-policy': return True, {'PolicyDocument': {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': 'rds-db:connect', 'Resource': identity}]}}, 'ok'
             raise AssertionError('unexpected provider action: ' + str(parts))
         prepare = SimpleNamespace(aws=aws, live_budget=lambda: (True, 'ok'))
         with patch.object(controller, 'ROOT', root), patch.object(controller, 'EVIDENCE_CLASS', 'simulated'), patch.object(controller, 'proof_receipts', return_value=receipt_module), patch.object(controller, 'load', return_value=prepare):

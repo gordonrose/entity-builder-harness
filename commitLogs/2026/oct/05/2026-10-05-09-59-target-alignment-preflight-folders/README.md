@@ -213,6 +213,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Corrected collector qualification after public layer throttling
   Resolution: The protected collector custody job authenticated to AWS but its anonymous public registry layer pull returned Data limit exceeded before any mirror, scan, receipt, or workload action. Read-only OCI metadata established that public index sha256:7968... selects Linux/AMD64 manifest sha256:d0a..., which already exists identically in target-private ECR from the earlier protected mirror. The custody route now verifies the public index bytes, requires that identical private digest, qualifies and scans that payload, then issues custody only after the unprivileged scan.
 
+
+- Raised: Corrected IAM lifecycle semantics and package recovery boundary
+  Resolution: Runtime access now uses task-role renewal plus per-connection RDS IAM tokens; normal token expiry does not replace a healthy server. Recovery restores only bounded IAM login/membership after termination proof; local tests use disposable constrained PostgreSQL and do not claim RDS IAM proof.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -697,6 +701,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Collector run 40202249108 failed at public layer download only. The exact Linux/AMD64 public manifest and retained private ECR image share sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31.
   Durable evidence: Durable target contract and workflow are in infra/04.deploy/03.product/image/core-server-persistence-observability-collector and .github/workflows/publish-kanbien-core-platform-observability-collector.yml; run logs remain GitHub Actions evidence.
+
+
+- Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
+  Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
 
 ## Activity Log
 
@@ -3281,6 +3289,20 @@ Message: fix(deploy): validate phased observability declaration
 Summary: Validated explicit observability activation separately from the database-permission phase and repaired its regression fixture topology.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T18:48:32Z - Issue
+
+Raised: Corrected IAM lifecycle semantics and package recovery boundary
+
+Resolution: Runtime access now uses task-role renewal plus per-connection RDS IAM tokens; normal token expiry does not replace a healthy server. Recovery restores only bounded IAM login/membership after termination proof; local tests use disposable constrained PostgreSQL and do not claim RDS IAM proof.
+
+
+### 2026-10-25T18:48:33Z - Context hygiene
+
+Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
+
+Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
 
 ## Sub-Agent Activity
 

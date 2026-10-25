@@ -57,3 +57,9 @@ reference, never its contents.
 - If report collection fails, emit a distinct safe collection-failure finding
   while preserving the original child status and original failure code.
 - Test one controlled child failure for every reusable wrapper.
+- When a child command can create, alter, rotate, or revoke credentials, apply
+  the shared downstream-log rule: review and test the database/provider/task
+  error surfaces as well as this wrapper's own output. Passwords, SCRAM
+  verifiers, IAM authentication tokens, and connection strings are all
+  sensitive and must not be retained in the command text, safe report, or
+  ordinary diagnostic output.

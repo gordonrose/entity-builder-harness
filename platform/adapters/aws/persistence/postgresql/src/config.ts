@@ -35,7 +35,7 @@ export function postgreSqlPersistenceConfiguration(
   if (!hostPattern.test(input.host)) return invalid("host", "Host must be a DNS name, IPv4 address, or IPv6 literal without a scheme.");
   if (!sqlIdentifierPattern.test(input.database)) return invalid("database", "Database must be a reviewed lowercase SQL identifier.");
   if (!sqlIdentifierPattern.test(input.schema)) return invalid("schema", "Schema must be a reviewed lowercase SQL identifier.");
-  if (!secretReferencePattern.test(input.runtimeCredentialSecretReference)) return invalid("runtimeCredentialSecretReference", "Runtime credentials must use an explicit Secrets Manager reference.");
+  if (!authenticationReferencePattern.test(input.runtimeCredentialSecretReference)) return invalid("runtimeCredentialSecretReference", "Runtime authentication must use an explicit Secrets Manager or RDS IAM database-user reference.");
   if (!Number.isInteger(input.port) || input.port < 1 || input.port > 65_535) return invalid("port", "Port must be an integer between 1 and 65535.");
   if (!Number.isInteger(input.maximumPoolSize) || input.maximumPoolSize < 1 || input.maximumPoolSize > 10) return invalid("maximumPoolSize", "Maximum pool size must be an integer between 1 and 10.");
   for (const [path, value] of [
@@ -78,4 +78,4 @@ function invalid(path: string, reason: string): { readonly ok: false; readonly e
 
 const sqlIdentifierPattern = /^[a-z][a-z0-9_]{0,62}$/;
 const hostPattern = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9.-]{0,251}[a-zA-Z0-9])?|\[[0-9a-fA-F:]+\])$/;
-const secretReferencePattern = /^arn:aws(?:-[a-z]+)?:secretsmanager:[a-z0-9-]+:\d{12}:secret:[A-Za-z0-9/_+=.@-]+$/;
+const authenticationReferencePattern = /^arn:aws(?:-[a-z]+)?:(?:secretsmanager:[a-z0-9-]+:\d{12}:secret:[A-Za-z0-9/_+=.@-]+|rds-db:[a-z0-9-]+:\d{12}:dbuser:[A-Za-z0-9-]+\/[a-z_][a-z0-9_]{0,62})$/;
