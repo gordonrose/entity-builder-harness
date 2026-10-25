@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.isolated-persistence-restore
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -85,6 +85,18 @@ second_restore = {"DbiResourceId": "db-RESTORE-B"}
 assert module.restore_run_identity(first_restore) != module.restore_run_identity(second_restore)
 assert module.restore_run_identity(first_restore).startswith("kanbien-restore-")
 assert module.restore_run_identity({}) is None
+
+# A failed verifier may contribute only an explicit allowlisted result code.
+# Raw provider output and lookalike payloads are not diagnostic evidence.
+class LogFixture:
+    def __init__(self, messages): self.messages = messages
+    def aws(self, *_args): return True, {"events": [{"message": message} for message in self.messages]}, "ok"
+
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "accepted", "code": "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"})]), "task-accepted") == ("accepted", "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED"})]), "task-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"})]), "task-tls-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("unavailable", None)
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("unavailable", None)
 
 # A normal RDS restore reports ``creating`` before it has an endpoint.  The
 # controller must preserve that as an in-flight operation instead of claiming

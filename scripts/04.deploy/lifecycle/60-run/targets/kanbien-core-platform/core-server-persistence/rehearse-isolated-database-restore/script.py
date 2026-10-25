@@ -9,6 +9,17 @@ ROOT=Path(__file__).resolve().parents[8]
 DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"; STACK="kanbien-core-platform-core-server-persistence"; FOUNDATION="kanbien-core-platform-foundation"; LOG_GROUP="/aws/ecs/kanbien-core-platform"
 EVIDENCE_CLASS="live"  # Only isolated imported test harnesses may change this; no CLI bypass.
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
+RESTORE_ACCEPTED_RESULT="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"
+RESTORE_REJECTED_RESULTS={
+ "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE",
+}
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
 def proof_receipts():
@@ -169,14 +180,20 @@ def task_duration(task):
  try:
   a=datetime.fromisoformat(task["startedAt"].replace("Z","+00:00")); b=datetime.fromisoformat(task["stoppedAt"].replace("Z","+00:00")); return int((b-a).total_seconds()) if b>=a else None
  except (KeyError,ValueError,TypeError,OverflowError):return None
-def accepted_log(m,arn):
+def terminal_result(m,arn):
+ """Read only the verifier's closed result envelope, never raw provider output."""
  tid=arn.rsplit("/",1)[-1]; ok,d,c=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head"); xs=d.get("events") if ok and isinstance(d,dict) else None
- if not isinstance(xs,list):return "uncertain"
+ if not isinstance(xs,list):return "unavailable",None
+ results=[]
  for event in xs:
   try:value=json.loads(event.get("message", "")) if isinstance(event,dict) else None
   except (json.JSONDecodeError,TypeError):continue
-  if isinstance(value,dict) and value.get("verdict")=="accepted" and value.get("code")=="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED":return "accepted"
- return "pending"
+  if not isinstance(value,dict) or set(value)!={"verdict","code"}:continue
+  verdict,code=value.get("verdict"),value.get("code")
+  if verdict=="accepted" and code==RESTORE_ACCEPTED_RESULT:results.append(("accepted",code))
+  elif verdict=="rejected" and code in RESTORE_REJECTED_RESULTS:results.append(("rejected",code))
+ if len(results)!=1:return "unavailable",None
+ return results[0]
 def verifier_tasks(m,operation,definition):
  arns = []
  family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
@@ -236,9 +253,14 @@ def verify(m,sid,rid,observe_only=False):
   if t.get("lastStatus")!="STOPPED":return emit("uncertain","persistence-restoration-verifier-status-unknown",facts=facts)
   containers=t.get("containers"); exit_code=containers[0].get("exitCode") if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None; duration=task_duration(t); arn=t.get("taskArn")
   if type(exit_code) is not int or duration is None or not isinstance(arn,str):return emit("uncertain","persistence-restoration-verifier-completion-evidence-unavailable",facts=facts)
-  if exit_code!=0 or duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
-  evidence=accepted_log(m,arn)
-  if evidence!="accepted":return emit(evidence,"persistence-restoration-verifier-log-evidence-unavailable",facts=facts)
+  if duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
+  evidence,result=terminal_result(m,arn)
+  if exit_code!=0:
+   return emit("failed","persistence-restoration-verifier-rejected" if evidence=="rejected" else "persistence-restoration-verifier-completion-invalid",facts={**facts,**({"safe_result_code":result} if evidence=="rejected" and result is not None else {})})
+  # CloudWatch delivery can lag a stopped task.  A clean exit without the
+  # closed acceptance envelope is therefore pending evidence, not proof; the
+  # reconciler will never manufacture a receipt from it.
+  if evidence!="accepted":return emit("pending","persistence-restoration-verifier-log-evidence-unavailable",facts=facts)
   digest=task_image_digest(m,td)
   if digest is None:return emit("blocked","persistence-restoration-verifier-receipt-identity-unavailable")
   try:

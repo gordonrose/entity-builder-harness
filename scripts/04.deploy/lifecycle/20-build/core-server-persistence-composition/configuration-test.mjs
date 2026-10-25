@@ -128,7 +128,10 @@ function restoreDiagnosticRegression() {
     ["42501", "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED"],
     ["42P01", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE"],
     ["ETIMEDOUT", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
+    ["ENETUNREACH", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
+    ["ERR_TLS_CERT_ALTNAME_INVALID", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"],
   ]) assert.equal(restore.restoreVerificationFailureCode({ code: providerCode }), diagnostic);
+  assert.equal(restore.restoreVerificationFailureCode({ cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" }, message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "only an allowlisted causal machine code may cross the diagnostic boundary");
   assert.equal(restore.restoreVerificationFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "raw provider detail must never become a diagnostic code");
 }
 
