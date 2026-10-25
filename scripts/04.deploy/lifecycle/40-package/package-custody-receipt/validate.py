@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.package-custody-receipt-validation
-#   version: 2
+#   version: 3
 #   status: draft
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
@@ -12,7 +12,7 @@
 #   portability: { class: internal, targets: [] }
 #   effects: [read-only]
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   used_by:
 #   - id: deploy.command.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
@@ -23,7 +23,8 @@ from pathlib import Path
 
 SCHEMA = "deploy/package-custody-receipt/v1"
 FIELDS = {"schema", "target", "environment_class", "provider_region_alias", "candidate_id", "package_contract_id", "program_id", "source_revision", "image_digest", "release_identity", "checked_at", "checks", "verdict", "receipt_reference"}
-CHECKS = {"runnable_program_contract", "dependency_boundary", "delivery_access_static", "delivery_access_live", "local_image_smoke", "ecr_scan", "sbom", "provenance_attestation"}
+BASE_CHECKS = {"runnable_program_contract", "dependency_boundary", "delivery_access_static", "delivery_access_live", "local_image_smoke", "sbom", "provenance_attestation"}
+SCAN_CHECKS = {"ecr_scan", "vulnerability_scan"}
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]{1,95}$")
 REGION = re.compile(r"^[a-z][a-z0-9-]{1,31}-[a-z]+-[a-z0-9-]{1,31}$")
 SHA = re.compile(r"^[0-9a-f]{40,64}$")
@@ -64,7 +65,8 @@ def validate(receipt, expected):
     except ValueError: raise Failure("checked-at-invalid") from None
     if parsed.tzinfo is None: raise Failure("checked-at-invalid")
     if receipt.get("verdict") != "qualified": raise Failure("receipt-not-qualified")
-    if not isinstance(receipt.get("checks"), dict) or set(receipt["checks"]) != CHECKS or any(v != "passed" for v in receipt["checks"].values()): raise Failure("receipt-checks-invalid")
+    checks = receipt.get("checks")
+    if not isinstance(checks, dict) or not BASE_CHECKS.issubset(checks) or len(SCAN_CHECKS.intersection(checks)) != 1 or set(checks) != BASE_CHECKS.union(SCAN_CHECKS.intersection(checks)) or any(v != "passed" for v in checks.values()): raise Failure("receipt-checks-invalid")
 
 def report(verdict, codes=(), receipt=None):
     result = {"schema": "deploy/package-custody-receipt-validation/v1", "verdict": verdict, "findings": [{"code": code} for code in codes]}

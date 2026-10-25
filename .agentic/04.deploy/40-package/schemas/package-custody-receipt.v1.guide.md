@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.package-custody-receipt.v1.guide
-version: 2
+version: 3
 status: draft
 layer: 04.deploy
 domain: deployment.package-candidates
@@ -20,7 +20,7 @@ used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 -->
 # Package Custody Receipt v1 Guide
 
@@ -39,6 +39,12 @@ covered by the reviewed provider policy. `delivery_access_live` proves the
 assumed delivery identity completed its approved safe read probes. They are
 separate because a correct repository policy does not prove the deployed role
 is currently usable.
+
+`ecr_scan` records a successful ECR-native vulnerability scan when that
+provider mechanism supports the published image. `vulnerability_scan` records
+an equivalent successful image scan by the governed portable scanner when the
+provider scanner cannot inspect the image format. A receipt carries exactly one
+of those scan checks. Neither scanner's detailed findings belong in the receipt.
 
 Target-bound callers supply their expected target, candidate, package contract,
 and program when validating the receipt. A receipt that has a valid general

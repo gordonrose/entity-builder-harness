@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: github.workflow.publish-kanbien-core-platform-observability-collector
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -16,16 +16,43 @@
 #     path: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml
 name: Publish Kanbien Core Platform Observability Collector
 on: { workflow_dispatch: {} }
-permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+permissions: { contents: read }
 concurrency: { group: kanbien-core-platform-observability-collector-publication, cancel-in-progress: false }
 env:
-  AWS_REGION: eu-west-1
-  AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
-  ECR_REPOSITORY: kanbien-core-platform/core-server
-  ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+  # This is the only value exposed to the unprivileged scan job. It is a
+  # contract-pinned public source identity, never a credential or private URI.
   COLLECTOR_SOURCE_IMAGE: public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
 jobs:
+  scan-pinned-public-source:
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Require clean portable vulnerability scan of pinned source
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.COLLECTOR_SOURCE_IMAGE }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: 'false'
+          exit-code: '1'
+          format: json
+          output: observability-collector.trivy.json
+      - name: Retain vulnerability scan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-observability-collector-vulnerability-scan-${{ github.run_id }}
+          path: observability-collector.trivy.json
+          if-no-files-found: error
+          retention-days: 30
   qualify-and-publish:
+    needs: scan-pinned-public-source
+    permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
+    env:
+      AWS_REGION: eu-west-1
+      AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
+      ECR_REPOSITORY: kanbien-core-platform/core-server
+      ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
     runs-on: ubuntu-latest
     timeout-minutes: 35
     environment: kanbien-core-platform
@@ -75,22 +102,6 @@ jobs:
           docker pull "$ECR_URI@$digest" >/dev/null
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-      - name: Require clean ECR scan
-        id: scan
-        run: |
-          set -euo pipefail
-          scan_digest="$(aws ecr batch-get-image --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="${{ steps.image.outputs.digest }}" --accepted-media-types application/vnd.oci.image.index.v1+json application/vnd.oci.image.manifest.v1+json --query 'images[0].{digest:imageId.imageDigest,mediaType:imageManifestMediaType,manifest:imageManifest}' --output json | python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/resolve-ecr-scan-manifest.py)"
-          [[ "$scan_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-          for attempt in $(seq 1 30); do
-            if aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --max-results 1 >/dev/null 2>"$RUNNER_TEMP/scan.err"; then break; fi
-            if ! grep -q 'ScanNotFoundException' "$RUNNER_TEMP/scan.err" || [ "$attempt" = 30 ]; then echo 'Publication blocked: ECR scan record was unavailable.' >&2; exit 1; fi
-            sleep 10
-          done
-          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest"
-          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
-          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
-          test "${critical:-0}" = 0 && test "${high:-0}" = 0
-          echo "scan_digest=$scan_digest" >> "$GITHUB_OUTPUT"
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -130,7 +141,7 @@ jobs:
             'program_id': 'aws-otel-collector', 'source_revision': os.environ['GITHUB_SHA'],
             'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
             'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','ecr_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
+            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
             'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
           }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
           PY

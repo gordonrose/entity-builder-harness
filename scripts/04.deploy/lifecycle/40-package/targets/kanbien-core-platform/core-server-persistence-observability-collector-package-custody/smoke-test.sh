@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.core-server-persistence-observability-collector-package-custody
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -23,7 +23,6 @@ GUARD="$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platfor
 WORKFLOW="$ROOT/.github/workflows/publish-kanbien-core-platform-observability-collector.yml"
 CONTRACT="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 CONFIG="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
-RESOLVER="$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/resolve-ecr-scan-manifest.py"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
@@ -46,12 +45,10 @@ if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$TMP
   echo 'collector custody guard accepted secret-bearing configuration' >&2
   exit 1
 fi
-single_digest="sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-index_digest="sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-printf '{"digest":"%s","mediaType":"application/vnd.oci.image.manifest.v1+json","manifest":"{}"}' "$single_digest" | python3 "$RESOLVER" | grep -Fx "$single_digest" >/dev/null
-printf '{"digest":"%s","mediaType":"application/vnd.oci.image.index.v1+json","manifest":"{\\"manifests\\":[{\\"mediaType\\":\\"application/vnd.oci.image.manifest.v1+json\\",\\"digest\\":\\"%s\\",\\"platform\\":{\\"architecture\\":\\"amd64\\",\\"os\\":\\"linux\\"}}]}"}' "$single_digest" "$index_digest" | python3 "$RESOLVER" | grep -Fx "$index_digest" >/dev/null
-if printf '{"digest":"%s","mediaType":"application/vnd.oci.image.index.v1+json","manifest":"{\\"manifests\\":[]}"}' "$single_digest" | python3 "$RESOLVER" >/dev/null 2>&1; then
-  echo 'collector scan resolver accepted an index without one runnable amd64 manifest' >&2
+cp "$WORKFLOW" "$TMP/unprivileged-scan-boundary.yml"
+sed -i '/scan-pinned-public-source:/a\    permissions: { contents: read, id-token: write }' "$TMP/unprivileged-scan-boundary.yml"
+if python3 "$GUARD" --workflow "$TMP/unprivileged-scan-boundary.yml" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null 2>&1; then
+  echo 'collector custody guard accepted privileged third-party scan execution' >&2
   exit 1
 fi
 echo 'Collector package-custody workflow tests passed.'

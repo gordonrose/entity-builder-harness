@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.package-custody-receipt
-#   version: 2
+#   version: 3
 #   status: draft
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
@@ -16,7 +16,7 @@ set -euo pipefail
 #   - id: deploy.command.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 ROOT="$(git rev-parse --show-toplevel)"; SCRIPT="$ROOT/scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
 TEMP="$(mktemp -d)"; trap 'rm -rf "$TEMP"' EXIT
 python3 - "$TEMP/safe.json" <<'PY'
@@ -25,6 +25,16 @@ json.dump({"schema":"deploy/package-custody-receipt/v1","target":"example-target
 PY
 ARGS=(--expected-target example-target --expected-candidate example-candidate --expected-package-contract example-image --expected-program example-server --json)
 bash "$SCRIPT" --receipt "$TEMP/safe.json" "${ARGS[@]}" >/dev/null
+python3 - "$TEMP/safe.json" "$TEMP/portable-scan.json" <<'PY'
+import json,sys
+v=json.load(open(sys.argv[1])); v["checks"].pop("ecr_scan"); v["checks"]["vulnerability_scan"]="passed"; json.dump(v,open(sys.argv[2],"w"))
+PY
+bash "$SCRIPT" --receipt "$TEMP/portable-scan.json" "${ARGS[@]}" >/dev/null
+python3 - "$TEMP/safe.json" "$TEMP/two-scans.json" <<'PY'
+import json,sys
+v=json.load(open(sys.argv[1])); v["checks"]["vulnerability_scan"]="passed"; json.dump(v,open(sys.argv[2],"w"))
+PY
+if bash "$SCRIPT" --receipt "$TEMP/two-scans.json" "${ARGS[@]}" >/dev/null; then echo 'ERROR: receipt with two scanner claims passed' >&2; exit 1; fi
 python3 - "$TEMP/safe.json" "$TEMP/unsafe.json" <<'PY'
 import json,sys
 v=json.load(open(sys.argv[1])); v["receipt_reference"]="https://unsafe.example"; json.dump(v,open(sys.argv[2],"w"))

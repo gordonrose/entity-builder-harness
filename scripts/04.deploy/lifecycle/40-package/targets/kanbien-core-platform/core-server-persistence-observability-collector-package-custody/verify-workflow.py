@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.core-server-persistence-observability-collector-package-custody.verify
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -30,8 +30,8 @@ DEFAULT_WORKFLOW = ROOT / ".github/workflows/publish-kanbien-core-platform-obser
 DEFAULT_CONTRACT = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 DEFAULT_CONFIG = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
 SOURCE = "public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e"
-REQUIRED = ("workflow_dispatch:", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "resolve-ecr-scan-manifest.py", "aws ecr describe-image-scan-findings", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
-FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "terraform apply")
+REQUIRED = ("workflow_dispatch:", "scan-pinned-public-source:", "needs: scan-pinned-public-source", "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
+FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "terraform apply", "aws ecr describe-image-scan-findings")
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
@@ -52,6 +52,9 @@ def main() -> int:
         codes.append("collector-custody-workflow-incomplete")
     if any(item in workflow.lower() for item in FORBIDDEN):
         codes.append("collector-custody-workflow-target-mutation-present")
+    scan_job = workflow.split("  qualify-and-publish:", 1)[0]
+    if any(item in scan_job for item in ("id-token:", "AWS_ROLE_ARN", "environment: kanbien-core-platform", "ECR_URI:")):
+        codes.append("collector-custody-unprivileged-scan-boundary-invalid")
     if not all(item in contract for item in ("registry: public.ecr.aws", "repository: aws-observability/aws-otel-collector", "immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e", "aws-emf-cloudwatch-logs")):
         codes.append("collector-custody-contract-invalid")
     if not all(item in config for item in ("awsemf:", "dimension_rollup_option: NoDimensionRollup", "log_group_name: /aws/ecs/kanbien-core-platform", "metric_name_selectors:")):

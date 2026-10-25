@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.contract
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -38,5 +38,5 @@ runtime:
   exporter: aws-emf-cloudwatch-logs
   application_failure_effect: bounded-telemetry-failure-only
 qualification:
-  required_checks: [source-identity, configuration-startup, ecr-scan, sbom, provenance-attestation]
+  required_checks: [source-identity, configuration-startup, vulnerability-scan, sbom, provenance-attestation]
   receipt_schema: deploy/package-custody-receipt/v1

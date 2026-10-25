@@ -201,6 +201,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Collector package workflow mirrored the qualified image but its scan selector assumed an OCI index.
   Resolution: ECR returned a valid single OCI manifest. Added a deterministic resolver that accepts either the published runnable manifest or exactly one amd64 child of an OCI index; it rejects ambiguous or malformed responses. The existing mirrored digest was read-only verified; no deployment occurred.
 
+
+- Raised: ECR Basic scanning cannot inspect the mirrored ADOT collector image.
+  Resolution: AWS reported UnsupportedImageError for the image's OS/package-manager. The custody requirement remains mandatory: a dedicated unprivileged job now runs a pinned portable scanner against the same pinned public source before the protected AWS publication job can run.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -447,6 +451,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Integrate collector custody on top of the accepted persistence baseline.
   Rationale: Conflicting controller and runtime files take the newer main implementation; collector custody remains separately package-owned and its target gate verifies that it cannot be silently omitted.
 
+
+- Decision: Separate third-party vulnerability scanning from cloud credentials.
+  Rationale: The scanner job has only contents-read permission and the public immutable source reference. It has no OIDC permission, AWS role, target Environment, or private ECR URI. The protected publication job depends on its successful result. Custody receipts accept exactly one explicit scanner proof: legacy ECR-native or portable vulnerability scan.
+
 ## Context Hygiene
 
 
@@ -661,6 +669,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Collector run 40200948509 qualified startup, private mirror, and then failed only before scan acceptance due to manifest-shape selection. The target-private digest sha256:d0a012... is not accepted as custody evidence yet. Resolver tests and the actual ECR response prove the corrective selector.
   Durable evidence: Workflow, resolver, and regression live in the collector package-custody directory; GitHub run 40200948509 remains the factual failed attempt.
+
+
+- Summary: Collector GitHub runs 40200948509 and 40201291933 both reached private mirroring but failed only at ECR Basic Scan: UnsupportedImageError. The trusted fix uses pinned Trivy action ed142fd in an unprivileged public-source job and keeps credentialed package publication separate. Local package receipt, collector guard, declaration, and privilege-boundary tests pass.
+  Durable evidence: Scanner boundary lives in the collector workflow; generic receipt vocabulary and regression live under .agentic/04.deploy/40-package and scripts/04.deploy/lifecycle/40-package/package-custody-receipt.
 
 ## Activity Log
 
@@ -3072,6 +3084,27 @@ Message: fix(deploy): scan single-manifest collector images
 Summary: Corrected the collector scan selector to resolve either a single OCI manifest or exactly one amd64 child of an OCI index. Regression coverage and a read-only check against the actual mirrored digest passed; the failed first workflow remains unaccepted evidence.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:21:27Z - Issue
+
+Raised: ECR Basic scanning cannot inspect the mirrored ADOT collector image.
+
+Resolution: AWS reported UnsupportedImageError for the image's OS/package-manager. The custody requirement remains mandatory: a dedicated unprivileged job now runs a pinned portable scanner against the same pinned public source before the protected AWS publication job can run.
+
+
+### 2026-10-25T14:21:27Z - Decision
+
+Decision: Separate third-party vulnerability scanning from cloud credentials.
+
+Rationale: The scanner job has only contents-read permission and the public immutable source reference. It has no OIDC permission, AWS role, target Environment, or private ECR URI. The protected publication job depends on its successful result. Custody receipts accept exactly one explicit scanner proof: legacy ECR-native or portable vulnerability scan.
+
+
+### 2026-10-25T14:21:27Z - Context hygiene
+
+Summary: Collector GitHub runs 40200948509 and 40201291933 both reached private mirroring but failed only at ECR Basic Scan: UnsupportedImageError. The trusted fix uses pinned Trivy action ed142fd in an unprivileged public-source job and keeps credentialed package publication separate. Local package receipt, collector guard, declaration, and privilege-boundary tests pass.
+
+Durable evidence: Scanner boundary lives in the collector workflow; generic receipt vocabulary and regression live under .agentic/04.deploy/40-package and scripts/04.deploy/lifecycle/40-package/package-custody-receipt.
 
 ## Sub-Agent Activity
 
