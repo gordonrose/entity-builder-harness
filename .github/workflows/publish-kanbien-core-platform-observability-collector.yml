@@ -19,10 +19,11 @@ on: { workflow_dispatch: {} }
 permissions: { contents: read }
 concurrency: { group: kanbien-core-platform-observability-collector-publication, cancel-in-progress: false }
 env:
-  # This contract-pinned public OCI index is resolved only for metadata. The
-  # protected job requires its selected Linux/AMD64 manifest to already exist
-  # in target-private ECR, then the scanner receives that exact local payload.
+  # This contract-pinned public OCI index and its reviewed Linux/AMD64 manifest
+  # selection are retained in the image contract. The protected job requires
+  # that exact manifest in private ECR, then scans only the local payload.
   COLLECTOR_SOURCE_IMAGE: public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
+  COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST: sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31
 jobs:
   qualify-and-publish:
     permissions: { contents: read, id-token: write }
@@ -52,18 +53,13 @@ jobs:
         run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-      - name: Resolve pinned public collector platform manifest
+      - name: Require declared private collector manifest
         id: source
         run: |
           set -euo pipefail
-          source_index_digest="${COLLECTOR_SOURCE_IMAGE##*@}"
-          token="$(curl --silent --show-error --fail --max-time 20 'https://public.ecr.aws/token/?service=public.ecr.aws&scope=repository:aws-observability/aws-otel-collector:pull' | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')"
-          index="$RUNNER_TEMP/collector-source-index.json"
-          curl --silent --show-error --fail --max-time 20 --output "$index" --header "Authorization: Bearer $token" --header 'Accept: application/vnd.oci.image.index.v1+json' "https://public.ecr.aws/v2/aws-observability/aws-otel-collector/manifests/$source_index_digest"
-          verdict="$(python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-source-manifest.py --index "$index" --expected-index-digest "$source_index_digest" --json)"
-          platform_manifest_digest="$(printf '%s' "$verdict" | python3 -c 'import json,sys; print(json.load(sys.stdin)["platform_manifest_digest"])')"
-          aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="$platform_manifest_digest" --query 'imageDetails[0].imageDigest' --output text | grep -Fx "$platform_manifest_digest"
-          echo "platform_manifest_digest=$platform_manifest_digest" >> "$GITHUB_OUTPUT"
+          [[ "$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" --query 'imageDetails[0].imageDigest' --output text | grep -Fx "$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST"
+          echo "platform_manifest_digest=$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" >> "$GITHUB_OUTPUT"
       - name: Qualify exact private collector startup
         id: image
         run: |

@@ -23,22 +23,14 @@ GUARD="$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platfor
 WORKFLOW="$ROOT/.github/workflows/publish-kanbien-core-platform-observability-collector.yml"
 CONTRACT="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 CONFIG="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
-SOURCE_GUARD="$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-source-manifest.py"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null
-printf '%s' '{"schemaVersion":2,"mediaType":"application/vnd.oci.image.index.v1+json","manifests":[{"digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","platform":{"os":"linux","architecture":"amd64"}}]}' >"$TMP/source-index.json"
-source_index_digest="sha256:$(sha256sum "$TMP/source-index.json" | awk '{print $1}')"
-python3 "$SOURCE_GUARD" --index "$TMP/source-index.json" --expected-index-digest "$source_index_digest" --json >/dev/null
-if python3 "$SOURCE_GUARD" --index "$TMP/source-index.json" --expected-index-digest sha256:0000000000000000000000000000000000000000000000000000000000000000 --json >/dev/null 2>&1; then
-  echo 'collector source guard accepted a mismatched OCI index identity' >&2
-  exit 1
-fi
-printf '%s' '{"schemaVersion":2,"mediaType":"application/vnd.oci.image.index.v1+json","manifests":[{"digest":"sha256:1111111111111111111111111111111111111111111111111111111111111111","platform":{"os":"linux","architecture":"amd64"}},{"digest":"sha256:2222222222222222222222222222222222222222222222222222222222222222","platform":{"os":"linux","architecture":"amd64"}}]}' >"$TMP/ambiguous-source-index.json"
-ambiguous_index_digest="sha256:$(sha256sum "$TMP/ambiguous-source-index.json" | awk '{print $1}')"
-if python3 "$SOURCE_GUARD" --index "$TMP/ambiguous-source-index.json" --expected-index-digest "$ambiguous_index_digest" --json >/dev/null 2>&1; then
-  echo 'collector source guard accepted ambiguous platform manifests' >&2
+cp "$WORKFLOW" "$TMP/wrong-private-manifest.yml"
+sed -i 's#sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31#sha256:0000000000000000000000000000000000000000000000000000000000000000#' "$TMP/wrong-private-manifest.yml"
+if python3 "$GUARD" --workflow "$TMP/wrong-private-manifest.yml" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null 2>&1; then
+  echo 'collector custody guard accepted a wrong declared private manifest' >&2
   exit 1
 fi
 cp "$WORKFLOW" "$TMP/workflow.yml"

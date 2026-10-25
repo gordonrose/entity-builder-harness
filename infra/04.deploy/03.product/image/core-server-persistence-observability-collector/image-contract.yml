@@ -25,12 +25,16 @@ program_id: aws-otel-collector
 source:
   registry: public.ecr.aws
   repository: aws-observability/aws-otel-collector
-  # Resolved from the public OCI index on 2026-10-25. The package workflow
-  # rejects mutable source input and uses only the identical manifest already
-  # retained in target-private ECR.
+  # The public OCI index was read on 2026-10-25 and its Linux/AMD64 selection
+  # recorded below. The package workflow does not depend on an availability or
+  # rate-limit-prone public registry lookup: it uses only that exact manifest
+  # already retained in target-private ECR.
   immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
-  selected_platform: { os: linux, architecture: amd64 }
-  identity_proof: public-oci-index-to-private-manifest-digest-match
+  selected_platform:
+    os: linux
+    architecture: amd64
+    immutable_manifest_digest: sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31
+  identity_proof: reviewed-pinned-source-index-resolution-and-private-manifest-digest-match
 destination:
   repository: kanbien-core-platform/core-server
   selection: private-ecr-immutable-digest
