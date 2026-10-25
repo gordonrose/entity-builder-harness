@@ -14,6 +14,12 @@ export interface PostgreSqlMigration {
 
 export interface PostgreSqlMigrationManifest {
   readonly schema: string;
+  /**
+   * An administrative bootstrap may own schema creation.  In that mode an
+   * ordinary migration identity must not need CREATE on the database merely
+   * because the generic runner normally creates its schema defensively.
+   */
+  readonly schemaPreprovisioned?: boolean;
   readonly migrations: readonly PostgreSqlMigration[];
 }
 
@@ -83,7 +89,17 @@ async function applyManifest(
 ): Promise<Result<readonly PostgreSqlMigrationResult[], PlatformPersistenceError>> {
   const historyTable = qualified(manifest.schema, "platform_migration_history");
   try {
-    await client.query({ text: `CREATE SCHEMA IF NOT EXISTS ${quoted(manifest.schema)}` });
+    if (manifest.schemaPreprovisioned === true) {
+      const existing = await client.query<{ readonly exists: boolean }>({
+        text: "SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = $1) AS exists",
+        values: [manifest.schema],
+      });
+      if (existing.rows[0]?.exists !== true) {
+        return invalidMigration("Reviewed migration schema is absent; run the governed administrative bootstrap before the ordinary migration task.");
+      }
+    } else {
+      await client.query({ text: `CREATE SCHEMA IF NOT EXISTS ${quoted(manifest.schema)}` });
+    }
     await client.query({
       text: `CREATE TABLE IF NOT EXISTS ${historyTable} (migration_id text PRIMARY KEY, checksum text NOT NULL, tool_version text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
     });
@@ -113,6 +129,7 @@ async function applyManifest(
 }
 
 function validManifest(manifest: PostgreSqlMigrationManifest): boolean {
+  if (manifest.schemaPreprovisioned !== undefined && typeof manifest.schemaPreprovisioned !== "boolean") return false;
   const identifiers = new Set<string>();
   let priorIdentifier: string | undefined;
   return manifest.migrations.every((migration) => {

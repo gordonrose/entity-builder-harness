@@ -488,6 +488,18 @@ def check_pipeline(root: Path) -> None:
             raise DeclarationFailure("pipeline-authority-invalid")
 
 
+def check_observability_mvp(root: Path) -> None:
+    validator = Path(__file__).resolve().parents[1] / "validate-observability-mvp-declaration" / "script.py"
+    result = subprocess.run(
+        [sys.executable, str(validator), "--target-root", str(root), "--json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise DeclarationFailure("observability-mvp-declaration-invalid")
+
+
 def report(verdict: str, codes: tuple[str, ...]) -> str:
     return json.dumps({"schema": "deploy/target-declaration-report/v1", "target": TARGET, "scope": "repository-declaration", "verdict": verdict, "findings": [{"code": code} for code in codes]}, sort_keys=True)
 
@@ -502,6 +514,7 @@ def main() -> int:
         check_scope(root)
         check_accepted_release(root)
         check_pipeline(root)
+        check_observability_mvp(root)
         print(report("repository-declaration-complete", ()))
         return 0
     except DeclarationFailure as failure:

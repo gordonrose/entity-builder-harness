@@ -71,6 +71,11 @@ export interface KanbienCorePersistenceRuntime {
   readonly close: () => Promise<void>;
 }
 
+export interface KanbienCoreServerPersistenceLifecycle {
+  /** Target composition can stop target-owned observers before the pool closes. */
+  readonly beforeStop?: () => Promise<void>;
+}
+
 export interface KanbienPersistenceAcceptanceRecord {
   readonly id: string;
   readonly factDigest: string;
@@ -109,12 +114,16 @@ const releaseVerificationProfile: PlatformCapabilityObservabilityProfile = {
 export function createKanbienCoreServerPersistenceApp(
   releaseIdentity: PlatformReleaseIdentity,
   persistence: KanbienCorePersistenceRuntime,
+  lifecycle: KanbienCoreServerPersistenceLifecycle = {},
 ): PlatformApp {
   return definePlatformApp({
     id: coreServerAppId,
     name: "Kanbien Core Server Persistence Candidate",
     lifecycle: {
-      beforeStop: () => persistence.close(),
+      beforeStop: async () => {
+        await lifecycle.beforeStop?.();
+        await persistence.close();
+      },
     },
     mount(registry) {
       registry.registerObservabilityProfile(releaseVerificationProfile);

@@ -42,4 +42,4 @@ health:
   proof: external-container-smoke-with-disposable-postgresql
 payload:
   allowed_program: kanbien-core-server-persistence
-  required_dependency_ids: [platform-persistence, platform-adapter-aws-postgresql, postgresql]
+  required_dependency_ids: [platform-persistence, platform-observability, platform-adapter-aws-postgresql, platform-adapter-aws-cloudwatch-otel, postgresql, opentelemetry-metrics-runtime]

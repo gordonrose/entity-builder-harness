@@ -3,6 +3,7 @@ import type { Logger, LogRecord } from "@kanbien/core/logging";
 import { createInMemoryTracer, type MetricPoint, type Metrics, type Tracer } from "@kanbien/core/monitoring";
 import { correlationId, fixedClock } from "@kanbien/core/shared";
 import {
+  createPlatformReadinessObserver,
   createPlatformSafeLogger,
   endPlatformTraceSpan,
   elapsedMilliseconds,
@@ -17,6 +18,7 @@ import {
   startPlatformTraceSpan,
   writePlatformLog,
 } from "../src/index";
+import { platformReadinessObservationEvent } from "@kanbien/platform-contracts";
 
 async function main(): Promise<void> {
   const circular: Record<string, unknown> = { name: "loop" };
@@ -162,6 +164,52 @@ async function main(): Promise<void> {
   writePlatformLog(unavailableLogger, { level: "info", message: "best-effort" });
   const unavailableMetrics: Metrics = { record: () => { throw new Error("metrics unavailable"); } };
   recordPlatformHealthMetric(unavailableMetrics, clock, { healthState: "ready" });
+
+  // This is the actual readiness-event emission boundary, not just the
+  // generic field-normalisation helper.  The emitted JSON has a closed,
+  // allowlisted shape and cannot carry a raw provider error or secret.
+  const readinessRecords: LogRecord[] = [];
+  const readinessPoints: MetricPoint[] = [];
+  const observer = createPlatformReadinessObserver({
+    identity: { target: "kanbien-core-platform", scope: "core-server-persistence", workload: "core-server", dependency: "postgresql" },
+    probe: async () => ({ readiness: "not-ready", diagnosticCode: "persistence.credential-rejected" }),
+    logger: { write: (record) => { readinessRecords.push(record); } },
+    metrics: { record: (point) => { readinessPoints.push(point); } },
+    clock,
+    timeoutMs: 5,
+    allowedDiagnosticCodes: ["persistence.transport-unavailable", "persistence.credential-rejected"],
+    defaultDiagnosticCode: "persistence.transport-unavailable",
+  });
+  const readinessEvent = await observer.observe();
+  equal(readinessEvent.readiness, "not-ready");
+  equal(readinessRecords[0]?.message, "platform.dependency.readiness_observed");
+  equal(readinessPoints[0]?.name, "platform.dependency.readiness");
+  equal(readinessPoints[0]?.value, 0);
+  const serializedReadinessRecord = JSON.stringify(readinessRecords[0]);
+  equal(serializedReadinessRecord.includes("password"), false);
+  equal(serializedReadinessRecord.includes("provider_message"), false);
+  equal(serializedReadinessRecord.includes("persistence.credential-rejected"), true);
+
+  const rejectedEnvelope = platformReadinessObservationEvent({
+    ...readinessEvent,
+    raw_provider_error: { password: "synthetic-secret", message: "do not emit" },
+  });
+  equal(rejectedEnvelope.ok, false);
+
+  const timedOutRecords: LogRecord[] = [];
+  const timedOut = createPlatformReadinessObserver({
+    identity: { target: "kanbien-core-platform", scope: "core-server-persistence", workload: "core-server", dependency: "postgresql" },
+    probe: async () => new Promise(() => undefined),
+    logger: { write: (record) => { timedOutRecords.push(record); } },
+    metrics: { record: () => undefined },
+    clock,
+    timeoutMs: 1,
+    allowedDiagnosticCodes: ["persistence.transport-unavailable"],
+    defaultDiagnosticCode: "persistence.transport-unavailable",
+  });
+  const timedOutEvent = await timedOut.observe();
+  equal(timedOutEvent.diagnosticCode, "persistence.transport-unavailable");
+  equal(timedOutRecords[0]?.fields?.["diagnostic_code"], "persistence.transport-unavailable");
 
 }
 

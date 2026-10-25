@@ -243,7 +243,10 @@ def migration_workload(contract: dict[str, Any], binding: dict[str, Any]) -> Non
         "image_rollback": {
             "predecessor": "persistence-capable-accepted-release",
             "schema_compatibility": "required",
+            "permission_contract_compatibility": "required",
+            "legacy_permission_facts": "not-an-automatic-rollback-candidate",
             "database_reversal": "prohibited",
+            "prohibited_effects": ["re-broaden-runtime-grants", "inject-administrative-credentials-into-ordinary-migration", "restore-migration-history-write", "undo-revocation"],
             "proof_requirement": "required-before-persistence-scope-acceptance",
         },
         "isolated_database_restore": {
@@ -310,6 +313,10 @@ def main() -> int:
     unsafe_image_rollback = copy.deepcopy(migration_contract)
     unsafe_image_rollback["health_recovery"]["persistence_recovery"]["image_rollback"]["database_reversal"] = "automatic"
     expect_failure(unsafe_image_rollback, migration_binding, "persistence-recovery-image-rollback-invalid")
+
+    unsafe_permission_rollback = copy.deepcopy(migration_contract)
+    unsafe_permission_rollback["health_recovery"]["persistence_recovery"]["image_rollback"]["prohibited_effects"] = []
+    expect_failure(unsafe_permission_rollback, migration_binding, "persistence-recovery-image-rollback-invalid")
 
     source_mutating_restore = copy.deepcopy(migration_contract)
     source_mutating_restore["health_recovery"]["persistence_recovery"]["isolated_database_restore"]["source_mutation"] = "allowed"

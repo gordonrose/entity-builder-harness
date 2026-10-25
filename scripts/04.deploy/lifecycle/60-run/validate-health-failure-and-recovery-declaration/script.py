@@ -460,7 +460,10 @@ def check_persistence_recovery(health: dict[str, Any], workloads: list[Any], cod
     if rollback is not None and rollback != {
         "predecessor": "persistence-capable-accepted-release",
         "schema_compatibility": "required",
+        "permission_contract_compatibility": "required",
+        "legacy_permission_facts": "not-an-automatic-rollback-candidate",
         "database_reversal": "prohibited",
+        "prohibited_effects": ["re-broaden-runtime-grants", "inject-administrative-credentials-into-ordinary-migration", "restore-migration-history-write", "undo-revocation"],
         "proof_requirement": "required-before-persistence-scope-acceptance",
     }:
         codes.append("persistence-recovery-image-rollback-invalid")

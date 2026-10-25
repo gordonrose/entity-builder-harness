@@ -83,8 +83,9 @@ def advance_secret(prepare: Any, secret_arn: str) -> tuple[str | None, str]:
 def healthy(verify: str) -> bool:
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh", "--mode", verify, "--json") is not None
 
-def migrate(operation: str) -> bool:
-    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh", "--runtime-credential-operation", operation, "--json") is not None
+def administer(operation: str) -> bool:
+    """Use the separately governed administrator task for credential state."""
+    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh", "--operation", operation, "--json") is not None
 
 def replace(receipt: Path) -> bool:
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh", "--receipt", str(receipt), "--json") is not None
@@ -92,9 +93,9 @@ def replace(receipt: Path) -> bool:
 def rotate_and_replace(prepare: Any, secret_arn: str, receipt: Path) -> tuple[str | None, str]:
     version, code = advance_secret(prepare, secret_arn)
     if version is None: return None, code
-    # An unconfirmed migration may have changed the database role.  Do not
+    # An unconfirmed administration task may have changed the database role. Do not
     # revert the secret automatically: block and require fresh observation.
-    if not migrate("rotate"): return version, "persistence-credential-lifecycle-rotation-migration-not-confirmed"
+    if not administer("rotate-runtime"): return version, "persistence-credential-lifecycle-rotation-administration-not-confirmed"
     if not replace(receipt): return version, "persistence-credential-lifecycle-rotation-replacement-not-confirmed"
     if not healthy("health-ready") or not healthy("read"): return version, "persistence-credential-lifecycle-rotation-meaningful-operation-not-confirmed"
     return version, "ok"
@@ -128,11 +129,11 @@ def main() -> int:
         return report("accepted", "persistence-runtime-credential-recovery-proved", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
     if args.operation == "recover-secret":
         # This is deliberately a single, recorded mutation boundary.  The
-        # next governed action must reconcile a matching rotate migration;
+        # next governed action must reconcile a matching administrator rotation;
         # callers must not issue another secret version as a retry.
         version, code = advance_secret(prepare, secret_arn)
-        return report("prepared", "persistence-runtime-credential-secret-advanced-migration-required", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
-    if not migrate("revoke"): return report("blocked", "persistence-credential-lifecycle-revocation-not-confirmed", facts={"prior_secret_version": prior_version})
+        return report("prepared", "persistence-runtime-credential-secret-advanced-administration-required", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
+    if not administer("revoke-runtime"): return report("blocked", "persistence-credential-lifecycle-revocation-not-confirmed", facts={"prior_secret_version": prior_version})
     if not replace(args.receipt) or not healthy("health-unready"): return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-confirmed", facts={"prior_secret_version": prior_version})
     version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
     return report("accepted", "persistence-runtime-credential-revocation-and-recovery-proved", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})

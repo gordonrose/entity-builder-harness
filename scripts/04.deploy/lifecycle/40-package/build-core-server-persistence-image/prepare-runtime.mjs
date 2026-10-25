@@ -24,6 +24,7 @@ for (const entrypoint of [
   "kanbien-core-server-persistence.main.js",
   "kanbien-core-server-persistence-verifier.main.js",
   "kanbien-core-server-persistence-migration.main.js",
+  "kanbien-core-server-persistence-administration.main.js",
   "kanbien-core-server-persistence-restore-verifier.main.js",
 ]) {
   const compiledEntrypoint = join(compiledRoot, "infra/04.deploy/03.product/entrypoints", entrypoint);
@@ -33,6 +34,7 @@ const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events
 const packages = {
   "@kanbien/core": { ".": "packages/core/src/index.js", ...Object.fromEntries(coreModules.map((name) => [`./${name}`, `packages/core/src/${name}/index.js`])) },
   "@kanbien/platform-adapter-aws-persistence-postgresql": { ".": "platform/adapters/aws/persistence/postgresql/src/index.js" },
+  "@kanbien/platform-adapter-aws-observability-cloudwatch": { ".": "platform/adapters/aws/observability/cloudwatch/src/index.js" },
   "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
   "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },
   "@kanbien/platform-health": { ".": "platform/health/src/index.js" },
@@ -54,6 +56,10 @@ writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-verifier.main.
 writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-migration.main.js"), [
   'const { runKanbienCoreServerPersistenceMigration } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.js");',
   "void runKanbienCoreServerPersistenceMigration().catch(() => { process.exitCode = 1; });", "",
+].join("\n"));
+writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-administration.main.js"), [
+  'const { runKanbienCoreServerPersistenceAdministration } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.js");',
+  "void runKanbienCoreServerPersistenceAdministration().catch(() => { process.exitCode = 1; });", "",
 ].join("\n"));
 writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-restore-verifier.main.js"), [
   'const { runKanbienCoreServerPersistenceRestoreVerifier } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js");',

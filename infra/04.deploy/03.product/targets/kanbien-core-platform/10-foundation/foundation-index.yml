@@ -39,6 +39,10 @@ resources:
     declaration: ../00-target/target-profile.yml#logging-destination
     status: live-verified-fresh-alignment-required
     owner: observability-owner
+  - id: readiness-observability-mvp
+    declaration: observability.yml
+    status: live-verified-fresh-alignment-required
+    owner: observability-owner
   - id: cost-guard
     declaration: cost-control.yml
     status: cost-control-verified-fresh-alignment-required

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.plan.implementation.platform-to-target-chain-control
-version: 51
+version: 54
 status: draft
 created_on: "2026-10-06"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -52,10 +52,24 @@ accepted-release writer has isolated coverage of actual writes and failed
 writes, not only a successful preview. Initial creation remains historical
 evidence; the update route does not authorize recreation of an absent target.
 
+**Persistence acceptance update (2026-10-25):** the bounded
+`core-server-persistence` successor is live and accepted on
+`kanbien-core-platform`. It supersedes `bootstrap-runtime` as the active core
+server scope; bootstrap remains `accepted-historical` evidence, not a second
+active server route. The accepted release binds source revision, immutable
+image digest, deployed workload identity, live proof receipts, and current
+target observations. Proof receipts are retained as each completed proof is
+validated, so final acceptance does not depend on ECS retaining stopped-task
+records. A historical receipt is not current-state proof: acceptance still
+requires fresh service, deployed-image, database, budget, recovery-point, and
+cleanup observations.
+
 ### Canonical Current Core Route
 
-The proven `kanbien-core-platform/bootstrap-runtime` route is active. Its
-current facts live under
+The proven `kanbien-core-platform/core-server-persistence` route is active.
+The dependency-free `bootstrap-runtime` route is retained as accepted
+historical evidence and a bounded predecessor, not a route to extend. The
+active scope's current facts live under
 `infra/04.deploy/03.product/targets/kanbien-core-platform/`; its reusable
 lifecycle authority lives in `.agentic/04.deploy/00-target-alignment/`,
 `20-build/`, `40-package/`, `50-deploy/`, and `60-run/`; and its fixed AWS
@@ -116,8 +130,8 @@ The completed bounded implementation packet is
 replacement route are now part of the normal scope and release path rather
 than a retrospective core-server test.
 
-Only after this package is in place is the next candidate a small
-**application persistence** slice. Its
+The next candidate at the time was a small **application persistence** slice.
+Its
 useful proof is a private synthetic record written once and retrieved after
 process/container replacement, with duplicate-create, invalid-input and
 dependency-failure behaviour checked. An image rollback must preserve data
@@ -232,18 +246,17 @@ establish these provider-neutral decisions:
 
 ### Core-Server Persistence Definition Packet
 
-**Status: candidate declared; provider implementation and live proof in progress.**
+**Status: implemented, live, and accepted on 2026-10-25.**
 
-`core-server-persistence` is the next intended scope identity. It will succeed
-the active, dependency-free `bootstrap-runtime` scope for the core server; it
-does not extend that scope in place. `bootstrap-runtime` remains the accepted
-baseline until a separately proved candidate has been accepted. A change to
-the bootstrap scope is therefore not inherited automatically by the future
-persistence scope: each scope declares, packages, and proves its own selected
-program, dependencies, workload bindings, and release evidence.
+`core-server-persistence` succeeds the dependency-free `bootstrap-runtime`
+scope for the core server; it did not extend that scope in place.
+`bootstrap-runtime` remains accepted-historical evidence. A change to it is
+not inherited automatically by the active persistence scope: each scope
+declares, packages, and proves its own selected program, dependencies,
+workload bindings, and release evidence.
 
-The candidate owns the successor
-`core-server-service` workload and declare two additional one-shot workloads:
+The active scope owns the successor `core-server-service` workload and
+declares two additional one-shot workloads:
 a structural `persistence-migration` task and a private,
 server-mediated `persistence-verifier` task. The server will use the selected
 provider through the provider-neutral persistence boundary and selected
@@ -252,15 +265,13 @@ credential. The verifier has neither a database credential nor a direct
 database network path: it proves persistence only through the server's private
 route.
 
-The canonical candidate exists at
+The canonical active scope exists at
 `20-scopes/core-server-persistence/` and is indexed as the governed successor
 to `bootstrap-runtime`. Its declarations, workload binding, composition proof,
-secret dependency contract, health/recovery contract, and diagnostic mapping
-pass their local gates. The accepted bootstrap remains live and is the recovery
-route until the persistence candidate has a complete package, provider, and
-live-evidence chain.
+secret dependency contract, health/recovery contract, diagnostic mapping,
+package, provider binding, and live evidence chain pass their required gates.
 
-The bounded repository sequence is:
+The completed bounded repository sequence was:
 
 1. Define and test the persistence-capable runnable-program and image
    boundary. The first local composition step injects only a provider-neutral
@@ -277,13 +288,11 @@ The bounded repository sequence is:
    RDS-native backup and restore boundary, and safe target-alignment evidence.
    This maps references and responsibilities; it does not create a database,
    secret, grant, role, or network rule.
-4. Once the declaration and package/release checks exist and pass, add the
-   successor as a lifecycle `candidate` against `bootstrap-runtime` and run
-   the existing inventory, target-declaration, and release gates.
-5. Only then prepare a separately reviewed execution packet for target
-   creation, a safe migration, server startup, server-mediated verification,
-   replacement, compatible rollback, and isolated restore proof. Acceptance
-   promotes the candidate; failure leaves `bootstrap-runtime` active.
+4. Add the successor as a lifecycle candidate against `bootstrap-runtime`,
+   then run the existing inventory, target-declaration, and release gates.
+5. Execute the reviewed packet: target creation, safe migration, server
+   startup, server-mediated verification, controlled replacement, compatible
+   rollback, and isolated restore proof. Acceptance promoted the successor.
 
 The execution packet now authorises the bounded target implementation only:
 private RDS PostgreSQL, target-specific Secrets Manager references, isolated
@@ -331,16 +340,24 @@ check because it is dependency-free. The persistence scope must select and
 prove its distinct liveness/readiness/replacement mapping before a provider
 binding is accepted.
 
-**Current implementation status (2026-10-23):** the reusable lifecycle
+**Current implementation status (2026-10-25):** the reusable lifecycle
 inventory schema, standard, workflow, validator, regression fixtures, and
 existing `kanbien-core-platform` target/release gate routing are implemented.
-The index records `bootstrap-runtime` as the accepted active baseline and
-`core-server-persistence` as its not-live candidate. The candidate has a real
-PostgreSQL composition, migration and verifier programs, an image package
-boundary, and a target-specific provider template. Its first hosted image
-publication exposed an OCI-index scan-routing defect; the workflow now resolves
-and scans the actual AMD64 runnable manifest. No candidate database, secret,
-role, or workload has yet been created, and no live evidence is claimed.
+The index records `bootstrap-runtime` as accepted-historical and
+`core-server-persistence` as active. The accepted scope has a real PostgreSQL
+composition, migration and server-mediated verifier programs, an image package
+boundary, target-specific provider controls, private RDS PostgreSQL, scoped
+Secrets Manager references, and isolated ECS identities. Its hosted-image
+route resolves and scans the actual AMD64 runnable manifest.
+
+The accepted proof set includes migration application, effective runtime
+privilege (including prohibited structural access), server-mediated data
+verification, controlled server replacement with retained data, compatible
+image rollback between persistence-capable releases, credential
+rotation/revocation/recovery, and isolated recovery-point restoration followed
+by governed cleanup. It does **not** claim an injected readiness failure or
+an ECS deployment circuit-breaker rollback rehearsal; those remain explicit
+future resilience proofs.
 
 The reusable health-signal mapping rule is also implemented: every
 long-running server declares the provider replacement signal, readiness effect,
@@ -839,12 +856,134 @@ reconciliation; a migration timeout or uncertain outcome blocks release and
 requires fresh state observation. The fixed `kanbien-core-platform`
 target-declaration and release-contract routes invoke that inventory, so an
 active or candidate local scope cannot omit the check.
-The dependency-free bootstrap accurately records `not-applicable`; no
-PostgreSQL scope, runtime adapter mapping, provider operation, or live
-diagnostic evidence has been added. `packages/core/diagnostics` and the
-existing PostgreSQL adapter already provide generic descriptors and private
-provider-failure classification, but the selected persistence slice must still
-prove its actual mapping to the controlled codes before acceptance.
+The dependency-free bootstrap accurately records `not-applicable`; the active
+persistence scope declares and proves its applicable mapping. The generic
+`packages/core/diagnostics` boundary and PostgreSQL adapter keep provider
+interpretation out of the portable contract. Their declaration checks do not
+replace the still-deferred observability implementation: log/metric/trace
+delivery, dashboards, alert routing, and retention remain the next separate
+observability slice.
+
+### Observability MVP Work Package (2026-10-25)
+
+**Status: designed next slice; no full observability delivery is claimed yet.**
+
+The next slice is a bounded operating capability for the active
+`core-server-persistence` scope, not a general telemetry programme. It proves
+one complete, controlled path:
+
+```text
+PostgreSQL access failure
+  -> core server remains live but becomes not-ready
+  -> controlled persistence diagnostic and ordinary lifecycle event
+  -> allowlisted structured event and bounded metrics are delivered
+  -> alarm changes state and notification reaches the declared test destination
+  -> dependency recovery returns readiness and the alarm to healthy state
+  -> durable evidence binds the fault, delivery, notification, and recovery
+```
+
+#### First-path acceptance contract
+
+The first implementation packet must build its acceptance route at the same
+time as its event contract. It must not defer the collector, alarm, or
+notification proof until after runtime behaviour appears to work. The exact
+initial contract is:
+
+| Item | Initial requirement | Owner and acceptance evidence |
+| --- | --- | --- |
+| Ordinary event | `persistence.readiness-observed`, with controlled `ready` or `not-ready` outcome and a declared diagnostic code for an abnormal outcome | Platform observability event contract; serialized-envelope regression proof and retained safe event observation |
+| Application metric | `kanbien.core_server.readiness`, a `1`/`0` gauge emitted by the server after its declared persistence probe; dimensions are only declared target, scope, workload, and environment | Target metric catalogue; collector export and query of the exact series |
+| Readiness observation | A bounded database probe every 30 seconds, with a 5-second probe timeout; absence of an observation for 180 seconds is telemetry stale | Persistence composition and workload declaration; controlled dependency-failure and missing-observation tests |
+| Failure alarm | `CoreServerPersistenceNotReady`: three one-minute `0` observations; missing data is not treated as a readiness failure | Target alarm declaration; CloudWatch state-transition receipt |
+| Silence alarm | `CoreServerReadinessTelemetryStale`: three one-minute periods without the required readiness observation; missing data is treated as breaching | Target alarm declaration; missing-telemetry state-transition receipt |
+| Notification | The target-owned `kanbien-core-platform-operational-alerts` route sends a safe, deduplicated test notification to an operation-supplied, confirmed recipient. The address itself remains outside Git and receipts. | Target declaration plus provider observation and notification-delivery receipt |
+| Timing | The expected route is alarm and notification within ten minutes of the first failed or missing observation; recovery uses the same cadence and records a healthy transition. | Live rehearsal receipt records observed timestamps and deadline verdict |
+| Collector and gate | Extend the existing `collect-acceptance-evidence` controller and the fixed persistence release-contract route to collect/validate the event, metric query, alarm transitions, notification result, and recovery observation. | Durable, allowlisted scope proof receipt; release gate rejects incomplete or mismatched evidence |
+
+The stated intervals are deliberately small and target-specific defaults for
+this one initial server. A later target may choose different values only by
+updating the target declaration, validation, alarm evaluation, and acceptance
+proof together. The server probe is independent of client traffic: it is a
+bounded background readiness observer, not a side effect of an incoming
+request. A failed probe changes readiness but does not make the process fail
+its liveness check or automatically create a replacement loop.
+
+Reusable implementation rules belong in platform code. Extend the existing
+`packages/core/diagnostics`, `platform/contracts` observability vocabulary,
+`platform/observability`, `platform/persistence/src/observability`, and the
+selected PostgreSQL and CloudWatch adapters rather than creating parallel
+registries or emitters. Code owns the typed event and diagnostic categories,
+closed event-envelope constructors, safe serialization, provider-neutral
+emitters, adapter translation, and their tests. The harness owns scope
+coverage, target delivery selection, retention/access, alert policy, required
+checks, and proof; it must guide agents to extend the code boundary when a new
+capability needs a new runtime meaning. There is one event-contract owner:
+`packages/core/diagnostics` retains generic safe diagnostic primitives, while
+`platform/contracts` owns platform event-envelope and operational-context
+vocabularies. `platform/observability` consumes those contracts. Target, scope,
+and workload values remain deployment declarations, not a second TypeScript
+registry.
+
+The event envelope distinguishes ordinary events—startup, readiness change,
+migration completion, recovery, verifier completion—from diagnostics that
+explain abnormal outcomes and a safe next check. It permits only stable
+identities and controlled categories: event type, target, scope, workload,
+lifecycle stage, outcome, release identity where applicable, diagnostic code,
+severity/retryability/next-check where applicable, bounded correlation ID,
+timestamp, and bounded numeric duration or count. It rejects arbitrary facts,
+nested errors, raw provider responses, SQL, hostnames, endpoints, secret or
+credential material, PII, and high-cardinality metric labels. Pattern
+redaction remains defence in depth, not proof that an arbitrary field is safe.
+
+The initial metric catalogue must state each producer, unit, allowed low-
+cardinality dimensions, observation cadence, stale deadline, and missing-data
+treatment. Application readiness is emitted by the application and is not
+inferred from ECS running-task count. Application-produced signals are
+`kanbien.core_server.readiness`, persistence dependency availability, and
+bounded operation outcomes/duration. The provider catalogue separately names
+native RDS `FreeStorageSpace`, `DatabaseConnections`, `CPUUtilization`, and
+`FreeableMemory`; the application must not republish those provider measures.
+Release and operation identifiers remain in events and receipts, not metric
+dimensions. Long-running servers have a heartbeat/staleness rule; one-shot
+tasks use their completion receipt and deadline instead. Required production
+delivery cannot use a no-op emitter; runtime telemetry failure must remain
+bounded and must not alter an already-completed business outcome.
+
+The selected CloudWatch adapter is not direct CloudWatch delivery. It exports
+only to a task-local OTLP collector, so that collector is an explicit runtime
+and package dependency of the first path. Target composition must declare its
+pinned image and configuration, task-local endpoint, task role permissions,
+private AWS delivery connectivity, CPU/memory limits, startup/shutdown and
+bounded failure behaviour. Package proof must start the collector with the
+server and demonstrate that the collector produces the exact queryable series
+consumed by both alarms. A collector failure may report telemetry stale, but
+must not turn a completed business operation into a failure.
+
+Alert acceptance includes delivery, not merely an alarm state: fault observed,
+alarm state transition, notification received at the agreed test destination,
+recovery observation, recovery alarm/notification, and retained evidence.
+Each alarm declares condition, evaluation duration, missing-data treatment,
+expected delivery delay, owner, safe message content, deduplication, and
+recovery condition. The collector validates retained historical proof receipts
+without requiring aged-out ECS task records, and separately obtains fresh
+provider observations for current service, database, telemetry route, and
+cleanup state. The initial scope deliberately defers a distributed trace
+backend, a full SLO/error-budget programme, and a broad dashboard estate.
+
+The repository already contains a safe logging/metrics/tracing package, a
+persistence observer, bounded PostgreSQL telemetry, an acceptance collector,
+and a CloudWatch OTel metric adapter with target-approved series and
+cardinality controls. The active core server does not yet compose that adapter
+or a complete safe event emitter; the target has an ECS log group and container
+logs but no selected metric catalogue, collector/export route, alarms,
+notification route, or live proof. The work sequence is therefore: (1) extend
+the single code-owned envelope and readiness observer; (2) declare target
+metric, collector, alarm, notification, receipt and gate facts together; (3)
+package-test the server plus collector; (4) map the complete route to AWS; and
+(5) perform the bounded live fault/missing-telemetry/notification/recovery
+rehearsal. Database-permissions work may continue in parallel; it joins only
+for the integrated credential-failure/recovery exercise and shared image/target
+coordination.
 
 ## Concern Control Matrix
 

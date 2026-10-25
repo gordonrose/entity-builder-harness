@@ -17,6 +17,7 @@
       "@kanbien/core/*": ["packages/core/src/*/index.ts"],
       "@kanbien/platform-contracts": ["platform/contracts/src/index.ts"],
       "@kanbien/platform-adapter-aws-persistence-postgresql": ["platform/adapters/aws/persistence/postgresql/src/index.ts"],
+      "@kanbien/platform-adapter-aws-observability-cloudwatch": ["platform/adapters/aws/observability/cloudwatch/src/index.ts"],
       "@kanbien/platform-config": ["platform/config/src/index.ts"],
       "@kanbien/platform-health": ["platform/health/src/index.ts"],
       "@kanbien/platform-observability": ["platform/observability/src/index.ts"],
@@ -34,8 +35,10 @@
     "./kanbien-core-server-persistence.main.ts",
     "./kanbien-core-server-persistence-verifier.main.ts",
     "./kanbien-core-server-persistence-migration.main.ts",
+    "./kanbien-core-server-persistence-administration.main.ts",
     "./kanbien-core-server-persistence-runtime-credential.ts",
     "./kanbien-core-server-persistence-restore-verifier.main.ts",
+    "./kanbien-platform-observability.ts",
     "../../../../packages/core/src/**/*.ts",
     "../../../../platform/config/src/**/*.ts",
     "../../../../platform/contracts/src/**/*.ts",
@@ -45,6 +48,7 @@
     "../../../../platform/runtime/src/**/*.ts",
     "../../../../platform/security/src/**/*.ts",
     "../../../../platform/server/src/**/*.ts",
-    "../../../../platform/adapters/aws/persistence/postgresql/src/**/*.ts"
+    "../../../../platform/adapters/aws/persistence/postgresql/src/**/*.ts",
+    "../../../../platform/adapters/aws/observability/cloudwatch/src/**/*.ts"
   ]
 }

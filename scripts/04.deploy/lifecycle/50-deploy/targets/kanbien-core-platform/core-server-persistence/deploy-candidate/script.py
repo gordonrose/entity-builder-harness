@@ -43,7 +43,7 @@ def reviewable(change: object, stack_status: object, expected: str, digest: str,
     if change.get("ChangeSetType") not in {None, "CREATE"}:
         return False
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if parameters.get("ImageDigest") != digest or parameters.get("SourceRevision") != revision:
+    if parameters.get("ImageDigest") != digest or parameters.get("SupportImageDigest") != digest or parameters.get("SourceRevision") != revision:
         return False
     types = {item.get("ResourceChange", {}).get("ResourceType") for item in change.get("Changes", []) if isinstance(item, dict)}
     return bool(types) and types <= ALLOWED_TYPES

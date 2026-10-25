@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.lifecycle.readme
-version: 2
+version: 3
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.lifecycle
 disciplines:
@@ -57,7 +57,7 @@ that declaration with safe target facts.
 | `20-build` | [Prove runnable program builds](../20-build/workflows/prove-runnable-program-builds.md) |
 | `40-package` | [Publish immutable package with custody](../40-package/workflows/publish-immutable-package-with-custody.md) |
 | `50-deploy` | [Review and execute target update](../50-deploy/workflows/review-and-execute-target-update.md) |
-| `60-run` | [Verify health, failure, and recovery](../60-run/workflows/verify-health-failure-and-recovery.md), then [verify, accept or restore release](../60-run/workflows/verify-accept-or-restore-release.md) and [retain the accepted release](../60-run/standards/retain-accepted-release-for-restoration.md) |
+| `60-run` | [Verify health, failure, and recovery](../60-run/workflows/verify-health-failure-and-recovery.md), then [verify, accept or restore release](../60-run/workflows/verify-accept-or-restore-release.md), retain immutable release history, and advance only the governed current-release reference. |
 
 The [fixed AWS bootstrap-runtime procedure](../../aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md)
 binds these instructions to existing commands. It covers an already-established
@@ -66,6 +66,7 @@ rehearsal are evidence; they are not standing permission to recreate resources
 or expand the dependency-free bootstrap boundary.
 
 The [implementation programme](../plans/implementation/platform-to-target-chain-control.md)
-tracks further scope work. `core-server-persistence` now has a separately
-qualified package and a target-bound AWS candidate-creation route; it is not
-yet an accepted runtime and does not supersede the retained bootstrap release.
+tracks further scope work. `core-server-persistence` has an accepted historical
+release with retained proof receipts. Its next release must use the
+candidate-and-succession route; it does not overwrite the prior evidence or
+grant a rollback across unknown legacy permission facts.

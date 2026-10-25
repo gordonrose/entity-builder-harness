@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -27,6 +27,8 @@ VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/c
 REPLACE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh"
 ROUTE_UPDATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh"
 TRANSITION="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh"
+SUCCESSION="$ROOT/scripts/04.deploy/lifecycle/60-run/release-succession/script.sh"
+COLLECT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
 expect_failure package-custody-receipt-invalid "$CREATE" --receipt /tmp/missing-persistence-receipt.json --json
@@ -39,12 +41,25 @@ expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mo
 expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
+expect_failure release-succession-arguments-invalid "$SUCCESSION" --operation promote --json
+expect_failure acceptance-evidence-permission-baseline-requires-reviewed-exception python3 "$COLLECT" --receipt /tmp/no-receipt --permission-baseline --server-replacement-original arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --server-replacement-successor arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --recovery-snapshot kanbien-core-platform-persistence-recovery-20261025 --json
+"$SUCCESSION" --operation validate-current --evidence-root "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence" --json
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py"
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py" <<'PY'
+import importlib.util, sys
+spec=importlib.util.spec_from_file_location("transition",sys.argv[1]); module=importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+release="release-652d4dfa24d1096a23a346d1"
+receipt={"source_revision":"e6b430e07556b6fce8a0dbb0870aa3b24446e246","image_digest":"sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e"}
+assert module.release_state(release,"update",receipt,None)[1] == "ok"
+assert module.release_state("release-stale","update",receipt,None)[1] == "persistence-release-transition-predecessor-mismatch"
+assert module.release_state(release,"rollback",receipt,None)[1] == "persistence-release-transition-rollback-compatibility-required"
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, subprocess, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
+valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SupportImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
 assert module.reviewable(valid, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable({**valid, "Changes":[{"ResourceChange":{"ResourceType":"AWS::S3::Bucket"}}]}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable(valid, "CREATE_COMPLETE", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
@@ -122,6 +137,18 @@ assert module.current_reconciliation_task({**task, "lastStatus": "RUNNING"}, arn
 assert module.current_reconciliation_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "persistence-migration-reconciliation-task-not-current"
 assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "a" * 32, definition) == "persistence-migration-reconciliation-task-identity-invalid"
 PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("administration", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+arn = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + "c" * 32
+definition = "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:2"
+task = {"taskArn": arn, "taskDefinitionArn": definition, "lastStatus": "STOPPED"}
+assert module.current_task(task, arn, definition) == "ok"
+assert module.current_task({**task, "lastStatus": "RUNNING"}, arn, definition) == "persistence-administration-reconciliation-task-not-terminal"
+assert module.current_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "persistence-administration-reconciliation-task-not-current"
+assert module.current_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "c" * 32, definition) == "persistence-administration-reconciliation-task-identity-invalid"
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py" <<'PY'
 import importlib.util, sys
 
@@ -135,6 +162,20 @@ assert module.current_reconciliation_task({**task, "lastStatus": "RUNNING"}, arn
 assert module.current_reconciliation_task({**task, "taskDefinitionArn": definition + "-other"}, arn, definition) == "private-persistence-verifier-reconciliation-task-not-current"
 assert module.current_reconciliation_task(task, "arn:aws:ecs:eu-west-1:337159794548:task/another-cluster/" + "b" * 32, definition) == "private-persistence-verifier-reconciliation-task-identity-invalid"
 PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("permission_surface", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+digest, revision = "sha256:" + "a" * 64, "a" * 40
+name = "kanbien-core-platform-persistence-permissions-" + "a" * 12
+changes = ([{"ResourceChange": {"LogicalResourceId": key, "ResourceType": value, "Action": "Add"}} for key, value in module.ADDED.items()]
+           + [{"ResourceChange": {"LogicalResourceId": key, "ResourceType": value, "Action": "Modify"}} for key, value in module.MODIFIED.items()])
+change = {"ChangeSetName": name, "Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE", "Parameters": [{"ParameterKey": "ImageDigest", "ParameterValue": digest}, {"ParameterKey": "SupportImageDigest", "ParameterValue": digest}, {"ParameterKey": "RestoreVerifierImageDigest", "ParameterValue": digest}, {"ParameterKey": "SourceRevision", "ParameterValue": revision}], "Changes": changes}
+assert module.reviewable(change, "UPDATE_COMPLETE", name, digest, revision)
+assert not module.reviewable({**change, "Changes": changes[:-1]}, "UPDATE_COMPLETE", name, digest, revision)
+assert not module.reviewable({**change, "Changes": changes + [{"ResourceChange": {"LogicalResourceId": "PersistenceDatabase", "ResourceType": "AWS::RDS::DBInstance", "Action": "Modify"}}]}, "UPDATE_COMPLETE", name, digest, revision)
+assert module.stack_parameters({"Stacks": [{"Parameters": [{"ParameterKey": "ImageDigest", "ParameterValue": "sha256:" + "b" * 64}]}]}) == {"ImageDigest": "sha256:" + "b" * 64}
+assert module.stack_parameters({"Stacks": []}) is None
+PY
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
 import sys
 template = open(sys.argv[1], encoding="utf-8").read()
@@ -146,9 +187,25 @@ assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-
 verifier = template[template.index("VerifierExecutionRole:"):template.index("RestorationVerifierExecutionRole:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template
-for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
+for group in ("ServerSecurityGroup", "MigrationSecurityGroup", "AdministrationSecurityGroup"):
     expected = f"GroupId: !Ref {group}, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId"
     assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
 assert "GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup" in template, "the private verifier must have explicit egress to the candidate server"
+assert "CoreServerPersistenceAdministrationTaskDefinition" in template
+assert "OrdinaryMigrationCredentialsSecret" in template
+assert "PERSISTENCE_ADMINISTRATOR_CREDENTIALS" in template
+assert "PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS" not in template
+assert "SupportImageDigest" in template
+migration_task = template[template.index("CoreServerPersistenceMigrationTaskDefinition:"):template.index("CoreServerPersistenceAdministrationTaskDefinition:")]
+assert "OrdinaryMigrationCredentialsSecret" in migration_task
+assert "!Ref MigrationCredentialsSecret" not in migration_task
+assert "!Ref RuntimeCredentialsSecret" not in migration_task
+administration_task = template[template.index("CoreServerPersistenceAdministrationTaskDefinition:"):template.index("CoreServerPersistenceVerifierTaskDefinition:")]
+for secret in ("MigrationCredentialsSecret", "OrdinaryMigrationCredentialsSecret", "RuntimeCredentialsSecret"):
+    assert secret in administration_task
+migration_role = template[template.index("MigrationExecutionRole:"):template.index("AdministrationExecutionRole:")]
+assert "OrdinaryMigrationCredentialsSecret" in migration_role
+assert "!Ref MigrationCredentialsSecret" not in migration_role
+assert "!Ref RuntimeCredentialsSecret" not in migration_role
 PY
 echo 'Core-server-persistence fixed target controls passed.'

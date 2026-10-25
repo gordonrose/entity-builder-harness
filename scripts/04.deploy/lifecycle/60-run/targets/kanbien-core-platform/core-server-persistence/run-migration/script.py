@@ -114,12 +114,7 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
     return "ok"
 
 
-SUCCESS = {
-    "apply": "PERSISTENCE_MIGRATION_APPLIED",
-    "rotate": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
-    "revoke": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
-    "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
-}
+SUCCESS = {"apply": "PERSISTENCE_MIGRATION_APPLIED"}
 
 
 def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[bool, str]:
@@ -198,9 +193,8 @@ def main() -> int:
     parser.add_argument("--reconcile-task")
     parser.add_argument("--capture-completed-task")
     parser.add_argument("--qualified-receipt", type=Path)
-    parser.add_argument("--runtime-credential-operation", default="apply")
     args, unknown = parser.parse_known_args()
-    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.runtime_credential_operation not in SUCCESS:
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None):
         return report("blocked", "persistence-migration-arguments-invalid")
     seconds = deadline()
     if seconds is None:
@@ -224,7 +218,7 @@ def main() -> int:
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
             return report("blocked", code)
-        return accepted_completion(task, seconds, args.runtime_credential_operation)
+        return accepted_completion(task, seconds, "apply")
     if args.capture_completed_task is not None:
         expected_digest = qualified_digest(args.qualified_receipt)
         if expected_digest is None:
@@ -234,10 +228,9 @@ def main() -> int:
         task = listed[0] if len(listed) == 1 and isinstance(listed[0], dict) else None
         if not isinstance(task, dict) or not historical_task_identity(task, expected_digest):
             return report("blocked", code if not ok else "persistence-migration-historic-task-identity-invalid")
-        return accepted_completion(task, seconds, args.runtime_credential_operation)
+        return accepted_completion(task, seconds, "apply")
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
-    overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION", "value": args.runtime_credential_operation}]}]})
-    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network, "--overrides", overrides)
+    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network)
     tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
     if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
         return report("blocked", code if not ok else "persistence-migration-not-started")
@@ -255,7 +248,7 @@ def main() -> int:
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
         return report("blocked", "persistence-migration-controller-deadline-remote-task-still-running")
-    return accepted_completion(current, seconds, args.runtime_credential_operation)
+    return accepted_completion(current, seconds, "apply")
 
 
 if __name__ == "__main__":

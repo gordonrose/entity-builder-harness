@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 3
+version: 4
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -34,9 +34,12 @@ and the selected provider workflow for concrete commands and authority.
    operation verifier. Use the deployed candidate's receipt.
 3. Require the workload digest, application source identity and receipt to
    agree. Process health alone is insufficient. Retain the safe report.
-4. For a normal accepted update, check acceptance readiness, then record it
-   under repository write authority. Retain prior release evidence for recovery;
-   the image source revision is distinct from the evidence commit.
+4. For a normal accepted update, collect the target's verified release-candidate
+   record, then use the release-succession command with the exact current
+   release id as `--expected-predecessor`. It archives immutable evidence before
+   atomically advancing the current reference. Retain prior release evidence for
+   recovery; the image source revision is distinct from the evidence commit.
+   Do not directly overwrite an `accepted-release.yml` file.
 5. For an approved update/restoration rehearsal, retain the original accepted
    baseline and record candidate proof separately. Continue with restoration;
    do not declare the candidate current after restoring the original release.
@@ -49,15 +52,24 @@ and the selected provider workflow for concrete commands and authority.
 2. On rejected or unproved verification, keep the existing accepted baseline.
    A failure alone does not authorize restoration.
 3. Select the retained immutable package and its receipt/evidence, preserving
-   the original source revision. Do not rebuild earlier source or reuse the
-   rejected candidate's receipt.
+   the original source revision. Establish that its configuration and permission
+   contract are compatible with the current target before restoration. Do not
+   rebuild earlier source, reuse the rejected candidate's receipt, re-broaden
+   data privileges, or use legacy history with unrecorded permission facts as
+   an automatic rollback candidate.
+   When an earlier retained image predates the permission model, require a
+   fresh release-succession rollback-compatibility record. It must bind that
+   exact image and source identity to the current configuration/permission
+   contracts and completed proofs for every workload actually selected by the
+   rollback. Do not replay a completed migration merely to produce this proof.
 4. Follow the provider's bounded restoration control for fresh alignment,
    condition checks and change review. Execute only under restoration authority.
 5. Privately verify the restored release. If the restoration wrapper includes
    verification, observe that invocation's result; do not independently launch a
    second verifier because the wrapper's response was interrupted.
-6. Reconcile the accepted record with the actual restored workload identities
-   and proof. Retain candidate and restoration evidence separately.
+6. Reconcile the immutable release history and current reference with actual
+   restored workload identities and proof. Retain candidate and restoration
+   evidence separately.
 
 ## Uncertain Results and Completion
 

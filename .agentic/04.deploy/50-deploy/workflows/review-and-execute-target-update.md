@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.release-update-and-recovery
-version: 3
+version: 4
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -43,7 +43,8 @@ independent local work when an external prerequisite blocks mutation.
 
 1. Confirm declaration coverage, build/package qualification and the exact
    receipt for the immutable candidate. Qualification is not deployment.
-2. Retain the accepted-release record unchanged. Run the scope's connected
+2. Read and validate the scope's current accepted-release reference without
+   changing it. Retain the immutable history. Run the scope's connected
    release-contract check against image and target together.
 3. Run fresh update alignment. It must prove the live workload matches the
    retained accepted baseline before a new candidate is proposed.

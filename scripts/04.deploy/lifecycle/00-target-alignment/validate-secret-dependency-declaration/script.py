@@ -229,6 +229,16 @@ def main() -> int:
                 and isinstance(item.get("migration_execution"), dict)
                 and text(item["migration_execution"].get("dependency"))
             }
+            administrative_executors: dict[str, str] = {}
+            for item in health["workloads"]:
+                if not isinstance(item, dict) or not text(item.get("id")) or "administrative_execution" not in item:
+                    continue
+                execution = item.get("administrative_execution")
+                dependency = execution.get("dependency") if isinstance(execution, dict) else None
+                if not isinstance(execution, dict) or not text(dependency) or execution.get("credential_access_class") != "administrative":
+                    codes.append("administrative-executor-declaration-invalid")
+                    continue
+                administrative_executors[item["id"]] = dependency
             entries = configuration["secret_dependencies"]
             names = text_list(configuration["secret_names"])
             if names is None or len(names) != len(set(names)) or any(CONFIG_NAME.fullmatch(name) is None for name in names):
@@ -259,14 +269,17 @@ def main() -> int:
                     continue
                 first = shared[0]
                 workload_sets = [set(entry["authorised_workloads"]) for entry in shared]
-                same_runtime_shape = all(
-                    entry["access_class"] == "runtime"
-                    and entry["dependency"] == first["dependency"]
+                same_reference_shape = all(
+                    entry["dependency"] == first["dependency"]
                     and entry["expected_fields"] == first["expected_fields"]
                     for entry in shared
                 )
+                access_classes = {entry["access_class"] for entry in shared}
+                permitted_coordinated_reference = access_classes in (
+                    {"runtime"}, {"runtime", "administrative"}, {"migration", "administrative"},
+                )
                 disjoint_workloads = all(not left.intersection(right) for index, left in enumerate(workload_sets) for right in workload_sets[index + 1:])
-                if not same_runtime_shape or not disjoint_workloads:
+                if not same_reference_shape or not permitted_coordinated_reference or not disjoint_workloads:
                     codes.append("secret-dependency-shared-reference-invalid")
             if names is None or set(names) != injection_names:
                 codes.append("secret-dependency-names-mismatch")
@@ -278,6 +291,14 @@ def main() -> int:
                     for entry in valid_entries
                 ):
                     codes.append("migration-executor-credential-missing")
+            for workload_id, dependency in administrative_executors.items():
+                if not any(
+                    entry.get("access_class") == "administrative"
+                    and entry.get("dependency") == dependency
+                    and workload_id in entry.get("authorised_workloads", [])
+                    for entry in valid_entries
+                ):
+                    codes.append("administrative-executor-credential-missing")
     report = {
         "schema": "deploy/secret-dependency-declaration-report/v1",
         "scope_contract": str(args.scope_contract),

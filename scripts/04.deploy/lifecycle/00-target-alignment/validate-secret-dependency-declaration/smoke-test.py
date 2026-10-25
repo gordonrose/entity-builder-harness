@@ -190,6 +190,19 @@ def main() -> int:
         )
         shared_runtime_across_lifecycles["configuration"]["secret_dependencies"][1]["target_reference_id"] = "server-runtime-credential"
         expect_pass(shared_runtime_across_lifecycles, directory, "shared-runtime-reference-across-workload-lifecycles")
+        coordinated_runtime_administration = scope_with(
+            baseline,
+            [workload("core-server", "long-running-server"), workload("persistence-administration", "run-to-completion-task")],
+            [
+                secret_entry("runtime-credential", "runtime", ["core-server"], server_failure()),
+                secret_entry("administration-runtime-credential", "administrative", ["persistence-administration"], completion_failure()),
+            ],
+        )
+        coordinated_runtime_administration["configuration"]["secret_dependencies"][1]["target_reference_id"] = "runtime-credential"
+        expect_pass(coordinated_runtime_administration, directory, "runtime-and-administration-shared-reference")
+        malformed_coordinated_reference = copy.deepcopy(coordinated_runtime_administration)
+        malformed_coordinated_reference["configuration"]["secret_dependencies"][1]["expected_fields"] = ["username", "password", "unexpected"]
+        expect_failure(malformed_coordinated_reference, "secret-dependency-shared-reference-invalid", directory)
         invalid_shared_reference = copy.deepcopy(shared_runtime_across_lifecycles)
         invalid_shared_reference["configuration"]["secret_dependencies"][1]["access_class"] = "migration"
         expect_failure(invalid_shared_reference, "secret-dependency-shared-reference-invalid", directory)
@@ -211,6 +224,16 @@ def main() -> int:
             ],
         )
         expect_pass(privileged_tasks, directory, "privileged-tasks")
+        administrative_executor = copy.deepcopy(privileged_tasks)
+        administrative_executor["health_recovery"]["workloads"][1]["administrative_execution"] = {"dependency": "persistence", "credential_access_class": "administrative"}
+        expect_pass(administrative_executor, directory, "administrative-executor-credential")
+        administrative_executor_missing_credential = copy.deepcopy(administrative_executor)
+        administrative_executor_missing_credential["configuration"]["secret_dependencies"] = [administrative_executor_missing_credential["configuration"]["secret_dependencies"][0]]
+        administrative_executor_missing_credential["configuration"]["secret_names"] = [administrative_executor_missing_credential["configuration"]["secret_dependencies"][0]["injection_name"]]
+        expect_failure(administrative_executor_missing_credential, "administrative-executor-credential-missing", directory)
+        malformed_administrative_executor = copy.deepcopy(administrative_executor)
+        malformed_administrative_executor["health_recovery"]["workloads"][1]["administrative_execution"]["credential_access_class"] = "migration"
+        expect_failure(malformed_administrative_executor, "administrative-executor-declaration-invalid", directory)
 
         missing = copy.deepcopy(baseline)
         missing["configuration"].pop("secret_dependencies")

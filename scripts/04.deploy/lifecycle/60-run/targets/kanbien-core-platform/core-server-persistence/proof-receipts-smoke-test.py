@@ -38,6 +38,9 @@ task = {
 }
 valid = module.make(proof_type="verifier", operation="read", task=task, image_digest="sha256:" + "b" * 64, result_code="KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", context={"record_id": "core-persistence-acceptance-v1", "completion_deadline_seconds": 120, "completion_duration_seconds": 23}, controller="verify-candidate", collected_at="2026-10-24T15:00:24Z")
 assert module.validate(valid) == valid
+administration_task = {**task, "taskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:15"}
+administration = module.make(proof_type="administration", operation="prove-effective-privilege", task=administration_task, image_digest="sha256:" + "d" * 64, result_code="PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", context={"completion_deadline_seconds": 300, "completion_duration_seconds": 23}, controller="run-administration", collected_at="2026-10-24T15:00:24Z")
+assert module.validate(administration) == administration
 for mutate in (
     lambda value: value["task"].update({"exit_code": None}),
     lambda value: value.update({"target": "other-target"}),

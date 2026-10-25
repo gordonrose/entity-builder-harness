@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: education.teaching-notes.0003-packaging-and-deployment-learning-handbook
-  version: 35
+  version: 38
   status: active
   created_on: "2026-10-07"
-  updated_on: "2026-10-23"
+  updated_on: "2026-10-25"
   layer: 05.education
   domain: education
   disciplines:
@@ -67,6 +67,7 @@ checks remain the evidence.
 22. [From a runnable program to a proven package](#22-from-a-runnable-program-to-a-proven-package)
 23. [Health, failure, and recovery are reusable concerns](#23-health-failure-and-recovery-are-reusable-concerns)
 24. [Next lesson queue](#24-next-lesson-queue)
+25. [The observability MVP](#25-the-observability-mvp)
 
 ## 1. The Deployment Journey
 
@@ -2211,38 +2212,36 @@ HTTP response or a controlled task stop.
 
 ### A successor scope is not an inherited deployment
 
-The next planned scope is `core-server-persistence`. It is a **successor** to
-the accepted, dependency-free `bootstrap-runtime` scope, not a folder into
-which we silently add a database. This distinction keeps the first proven
-server route available while a dependency-bearing route is being designed and
-tested.
+`core-server-persistence` is now the **accepted active successor** to the
+dependency-free `bootstrap-runtime` scope. It was not a folder into which a
+database was silently added. This distinction kept the first proven server
+route available while the dependency-bearing route was designed and tested.
 
 ```text
-bootstrap-runtime (active, accepted, dependency-free)
+bootstrap-runtime (accepted-historical, dependency-free)
         │
-        └── core-server-persistence (defined now; candidate only after checks)
+        └── core-server-persistence (active, accepted)
                  ├── long-running core server
                  ├── one-shot migration task
                  └── one-shot server-mediated persistence verifier
 ```
 
-There is no automatic inheritance between the two scopes. A later persistence
-scope deliberately reuses generic harness rules, but it has to declare and
-prove its own program/image dependency closure, configuration, workload
-bindings, readiness semantics, and release evidence. The bootstrap image does
-not acquire PostgreSQL code merely because the later scope exists.
+There is no automatic inheritance between the two scopes. The persistence
+scope reused generic harness rules, but declared and proved its own
+program/image dependency closure, configuration, workload bindings, readiness
+semantics, and release evidence. The bootstrap image did not acquire
+PostgreSQL code merely because the successor existed.
 
-The lifecycle index therefore stays unchanged until the later scope has
-canonical declarations, local/package proof, and a release route. Only then
-may it enter as a `candidate` with `bootstrap-runtime` as its active
-predecessor. If it fails, the baseline remains active; when it is accepted,
-the lifecycle transition is a separate recorded release action.
+The lifecycle index recorded the candidate transition only after canonical
+declarations, local/package proof, and a release route existed. Acceptance is
+a separate recorded release action; it made `core-server-persistence` active
+and retained `bootstrap-runtime` as accepted-historical evidence.
 
 The important design rule is that this cannot become a special core-server
 patch. Every future runnable scope needs the same kinds of answers, even though
 their answers differ:
 
-| Concern | Dependency-free core server | Future persistence scope |
+| Concern | Dependency-free core server | Active persistence scope |
 | --- | --- | --- |
 | Liveness | Can the process answer? | Can the process answer? |
 | Readiness | Is startup configuration valid? | Is startup configuration valid and can the required database be used safely? |
@@ -2283,16 +2282,202 @@ reviewed adapter from a governed configuration and credential reference. That
 separation lets us test server behaviour now without pretending that a fake is
 a database, that a provider is portable, or that local proof is live evidence.
 
+### What the accepted persistence slice actually proved
+
+The accepted `core-server-persistence` release now proves more than local
+contracts. Its retained, machine-readable receipts bind each completed proof
+to the target, scope, task and task definition, immutable image identity,
+terminal status, safe result, timestamps, and collection provenance. This
+prevents the later acceptance decision from depending on ECS retaining every
+stopped task record. A receipt preserves a completed proof; it does not prove
+that today's service or database is healthy, so acceptance also takes fresh
+provider observations.
+
+The live proof set establishes:
+
+- a private, encrypted PostgreSQL dependency with distinct runtime and
+  migration credentials;
+- safe migration application, permitted runtime access, and prohibition of
+  structural access by the server credential;
+- server-mediated persistence verification without database credential or
+  direct database route in the verifier;
+- controlled server replacement while the synthetic record remains available;
+- compatible rollback between persistence-capable releases;
+- credential rotation, revocation, and subsequent recovery; and
+- restoration of an isolated database recovery point, verification through an
+  isolated application, and governed cleanup.
+
+Two resilience cases remain deliberately unproved: injected application
+readiness failure in AWS, and an ECS deployment circuit-breaker rollback.
+Likewise, typed safe diagnostics are in place, but the separate observability
+slice still owns log/metric/trace delivery, retention, dashboards, and alert
+routing. RDS-native recovery points are in use; AWS Backup policy, copying,
+retention, access, and restore design remain a future foundation capability.
+
 ## 24. Next Lesson Queue
 
 Continue this handbook incrementally with:
 
-1. select and locally prove the reviewed PostgreSQL adapter and image boundary
-   without changing the accepted bootstrap image;
-2. define and validate the `core-server-persistence` candidate contract,
-   including private TLS/network, secret-reference, migration, server-mediated
-   verifier, capacity, diagnostic, cleanup, and recovery facts;
-3. prepare a separately reviewed PostgreSQL execution packet only after the
-   candidate has local/package and release-route proof; and
-4. later add foundation and product scopes for observability, worker/queue,
-   relay, identity/access, and public ingress.
+1. implement the bounded observability MVP defined below, beginning with its
+   typed safe event boundary and one PostgreSQL readiness-failure/recovery
+   signal path;
+2. design and rehearse the two remaining resilience proofs—an injected
+   readiness failure and circuit-breaker rollback—under their own bounded
+   execution authority;
+3. add later foundation and product scopes for worker/queue, relay,
+   identity/access, and public ingress; and
+4. separately assess the broader provider-neutral transition and AWS Backup
+   programme rather than folding either into the accepted persistence slice.
+
+## 25. The Observability MVP
+
+The first observability slice is intentionally not “collect everything” or
+“build dashboards.” It proves one useful operating loop for the accepted core
+server and PostgreSQL dependency:
+
+```text
+PostgreSQL access fails
+→ core server stays live but becomes not-ready
+→ safe diagnostic explains the class and next check
+→ safe event and bounded metrics are delivered
+→ an alarm changes state and a notification reaches its test destination
+→ PostgreSQL access recovers
+→ readiness, alarm, and notification show recovery
+→ durable evidence records the exercise
+```
+
+### Three different kinds of signal
+
+An **ordinary event** records a safe fact such as server startup, readiness
+changed, migration completed, verifier completed, or dependency recovery. A
+**diagnostic** records an abnormal observed class and its safe next check, such
+as `persistence.credential-rejected`. A **metric** is a bounded number measured
+over time, such as readiness state, dependency-failure count, or operation
+duration. The same diagnostic may lead to an event, a readiness change, and a
+metric; a normal event does not need to pretend to be a failure diagnostic.
+
+```text
+raw PostgreSQL/AWS observation
+→ private adapter translation
+→ provider-neutral diagnostic or ordinary event
+→ safe event record, metric and optional trace signal
+→ target delivery, alert evaluation and durable proof
+```
+
+### Code first; harness governs composition and proof
+
+Most reusable rules belong in the codebase. `packages/core/diagnostics` and
+the platform observability contracts own controlled categories; generic
+`platform/observability` owns safe emission, metric and correlation behaviour;
+`platform/persistence/src/observability` owns persistence integration; and the
+PostgreSQL adapter owns private translation of driver/provider facts. The
+CloudWatch adapter remains a target-selected delivery implementation.
+
+There is a deliberate ownership split, not two registries. Core owns generic
+safe diagnostic primitives. `platform/contracts` owns the one platform event
+envelope and operational vocabulary. Deployment declarations supply target,
+scope, and workload identities. The observability implementation consumes all
+three; it must not create another list of event types elsewhere.
+
+The harness does not duplicate that runtime logic. It tells an agent when a
+scope needs to extend or compose it, requires a declared subset of signals,
+checks delivery/retention/access/alert facts, and requires local, package and
+live proof. A target must not claim observability merely because a logger or
+adapter package exists.
+
+### The safe event envelope
+
+Every emitted event needs a small, allowlisted label rather than an arbitrary
+object. Its controlled fields are: event type; target, scope and workload;
+lifecycle stage; outcome; applicable release identity; applicable diagnostic
+code, severity, retryability and next check; bounded correlation identifier;
+timestamp; and bounded numeric duration or count. Target/scope/workload refer
+to declared repository identities; most other values come from controlled code
+vocabularies.
+
+The envelope must reject arbitrary facts, nested `Error` objects, raw provider
+responses, SQL, hostnames/endpoints, secret or credential material, PII and
+unsupported fields. Existing redaction and size limits help, but do not prove
+an arbitrary string is safe. Tests must inspect the serialized output,
+including accidental nested and secret-bearing fields.
+
+### Metrics and silence
+
+Application readiness must be produced by the application on a declared
+cadence; an ECS running-task count proves capacity, not readiness with its
+database dependency. The initial metric set covers application readiness,
+persistence dependency availability, bounded operation outcomes/duration, RDS
+free storage, connection pressure and resource pressure. Metric dimensions are
+small and controlled: release and operation identifiers belong in events and
+receipts, not metrics.
+
+Silence is also a fact. A long-running server must have a last-observation
+deadline and a declared missing-data response. A one-shot task is not a silent
+server after its durable completion receipt; it fails its deadline only when a
+required completion result is absent. Telemetry delivery is bounded and cannot
+change an already-completed business result, but a required production route
+cannot be satisfied by a no-op emitter.
+
+For the first PostgreSQL path, the server itself runs a bounded database
+readiness probe every 30 seconds, giving each probe five seconds to finish. It
+emits `kanbien.core_server.readiness` as `1` or `0`; 180 seconds without an
+observation is a separate **telemetry-stale** condition. This is independent
+of customer traffic. A running ECS task therefore never gets mistaken for an
+application that can still use its database.
+
+Two alarms make the distinction clear: three one-minute `0` observations mean
+“the server is not ready”; three one-minute missing observations mean “the
+readiness telemetry path is stale.” A missing metric must not be silently
+treated as healthy. The target catalogue also names RDS-native free storage,
+connection pressure, CPU, and freeable-memory metrics separately: the
+application emits application state and outcomes; RDS publishes its own
+resource facts.
+
+### The collector is part of the running system
+
+The AWS CloudWatch adapter does not contact CloudWatch directly. It sends OTLP
+metrics to a task-local collector, and that collector performs AWS delivery.
+So the collector is not incidental configuration: it is a runtime dependency
+with an image, configuration, task permissions, private connectivity, resource
+limits, startup/shutdown behaviour, and a failure mode. The package test must
+run the server and collector together and prove that the exact CloudWatch
+series used by the alarms can be queried afterwards.
+
+### Acceptance is designed before implementation
+
+The first event path has a fixed acceptance shape before code is written:
+
+```text
+persistence.readiness-observed
+→ kanbien.core_server.readiness metric
+→ task-local collector
+→ CoreServerPersistenceNotReady or telemetry-stale alarm
+→ target-owned operational-alert notification route
+→ recovery notification
+→ durable scope receipt and release gate
+```
+
+The target-owned route is named `kanbien-core-platform-operational-alerts`.
+The actual test recipient is supplied only for the operation; an email address
+does not belong in Git, logs, or the durable receipt. The expected route is
+bounded to ten minutes from the first failed or missing observation. The
+existing `collect-acceptance-evidence` controller is extended to collect the
+safe event, metric query, alarm transitions, notification delivery, recovery,
+and current-state checks. It writes an allowlisted durable receipt, while the
+release gate rejects incomplete, mismatched, or stale-current-state evidence.
+
+### What acceptance means
+
+An alarm is not accepted merely because its console state becomes `ALARM`.
+Acceptance proves the complete route: fault observed, alarm state changed,
+notification received at the agreed test destination, recovery observed,
+recovery alarm/notification, and retained safe evidence. Each alert must name
+its threshold, duration, missing-data treatment, expected delivery delay,
+owner, safe message content, deduplication and recovery condition.
+
+The initial MVP defers a mandatory distributed-trace backend, a full SLO/error
+budget programme, and a large dashboard estate. It does require the one
+complete safe failure-to-recovery path, because that proves an operator or
+agent can identify the workload and release, distinguish a failure from
+missing telemetry, receive an actionable notification, observe recovery, and
+retrieve durable evidence without exposing sensitive data.

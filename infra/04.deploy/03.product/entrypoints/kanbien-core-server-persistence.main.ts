@@ -22,14 +22,18 @@
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
 import { readFileSync } from "node:fs";
+import type { Logger, LogRecord } from "@kanbien/core/logging";
+import { systemClock } from "@kanbien/core/shared";
 import {
   createNodePostgreSqlConnectionPool,
   postgreSqlPersistenceConfiguration,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { createPlatformSafeLogger, createPlatformReadinessObserver } from "@kanbien/platform-observability";
 import { resolvePlatformReleaseIdentity } from "@kanbien/platform-server";
 import { startPlatformServerProcess } from "@kanbien/platform-server/main";
 import { createKanbienCoreServerPersistenceApp } from "./kanbien-core-server-persistence.app";
 import { createKanbienCoreServerPostgreSqlPersistenceRuntime } from "./kanbien-core-server-persistence-postgresql";
+import { observabilityFromTargetEnvironment, readinessObservationFromTargetEnvironment } from "./kanbien-platform-observability";
 
 export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = configurationFromEnvironment(env);
@@ -39,15 +43,45 @@ export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv
   const certificateAuthority = certificateAuthorityFromEnvironment(env);
   if (certificateAuthority === undefined) return startupFailed("tls-authority-unavailable");
 
+  const targetObservability = observabilityFromTargetEnvironment(env);
+  if (!targetObservability.ok) return startupFailed(targetObservability.error.code);
+  const readinessObservation = readinessObservationFromTargetEnvironment(env);
+  if (!readinessObservation.ok) return startupFailed(readinessObservation.error.code);
+
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
   const persistence = createKanbienCoreServerPostgreSqlPersistenceRuntime({ pool, schema: configuration.schema });
+  const logger = createPlatformSafeLogger(consoleJsonLogger);
+  let stopReadinessObservation: () => Promise<void> = async () => undefined;
   const started = await startPlatformServerProcess({
-    apps: [createKanbienCoreServerPersistenceApp(resolvePlatformReleaseIdentity(env["PLATFORM_SOURCE_COMMIT_SHA"]), persistence)],
+    apps: [createKanbienCoreServerPersistenceApp(resolvePlatformReleaseIdentity(env["PLATFORM_SOURCE_COMMIT_SHA"]), persistence, {
+      beforeStop: async () => stopReadinessObservation(),
+    })],
     env,
+    logger,
+    ...(targetObservability.value === undefined ? {} : { metrics: targetObservability.value.metrics }),
   });
   if (!started.ok) {
     await persistence.close();
     return startupFailed(started.error.code);
+  }
+  if (readinessObservation.value !== undefined) {
+    const observer = createPlatformReadinessObserver({
+      identity: readinessObservation.value.identity,
+      probe: async () => ({ readiness: await persistence.readiness(), diagnosticCode: "persistence.transport-unavailable" }),
+      logger,
+      metrics: targetObservability.value?.metrics ?? { record: () => undefined },
+      clock: systemClock,
+      timeoutMs: readinessObservation.value.timeoutMs,
+      allowedDiagnosticCodes: ["persistence.transport-unavailable", "persistence.credential-rejected", "persistence.trust-validation-failed", "persistence.schema-incompatible"],
+      defaultDiagnosticCode: "persistence.transport-unavailable",
+    });
+    await observer.observe();
+    const timer = setInterval(() => { void observer.observe(); }, readinessObservation.value.cadenceMs);
+    timer.unref();
+    stopReadinessObservation = async () => {
+      clearInterval(timer);
+      if (targetObservability.value !== undefined) await targetObservability.value.shutdown();
+    };
   }
   if (env["PLATFORM_SERVER_EXIT_AFTER_START"] === "1") await started.value.close();
 }
@@ -118,6 +152,14 @@ function startupFailed(code: string): void {
   }));
   process.exitCode = 1;
 }
+
+const consoleJsonLogger: Logger = {
+  write: (record: LogRecord) => {
+    const serialized = JSON.stringify(record);
+    if (record.level === "error") console.error(serialized);
+    else console.log(serialized);
+  },
+};
 
 if (typeof require !== "undefined" && require.main === module) {
   void runKanbienCoreServerPersistenceMain();

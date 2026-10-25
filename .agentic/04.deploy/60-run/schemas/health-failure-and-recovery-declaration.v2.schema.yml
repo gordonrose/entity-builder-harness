@@ -167,10 +167,13 @@ persistence_recovery:
     required_fields: [verifier_workload, outcome, proof_requirement]
     outcome: original-record-survives-server-replacement
   image_rollback:
-    required_fields: [predecessor, schema_compatibility, database_reversal, proof_requirement]
+    required_fields: [predecessor, schema_compatibility, permission_contract_compatibility, legacy_permission_facts, database_reversal, prohibited_effects, proof_requirement]
     predecessor: persistence-capable-accepted-release
     schema_compatibility: required
+    permission_contract_compatibility: required
+    legacy_permission_facts: not-an-automatic-rollback-candidate
     database_reversal: prohibited
+    prohibited_effects: [re-broaden-runtime-grants, inject-administrative-credentials-into-ordinary-migration, restore-migration-history-write, undo-revocation]
   isolated_database_restore:
     required_fields: [restore_target, verification, source_mutation, proof_requirement]
     restore_target: new-isolated-database

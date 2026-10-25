@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 version: 1
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-24"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -58,10 +58,122 @@ retry, or submit another change set merely because a client response was lost.
 
 ## Run Proof
 
+### Permission-separation update of an existing candidate
+
+If the persistence candidate already exists and is healthy, do not use the
+CREATE-only candidate controller or the image-only transition controller for
+the privilege-separation change. The bounded route below is the only governed
+update: it uses a newly qualified immutable image because it contains the
+administration entrypoint, then permits the exact CloudFormation additions and
+modifications required to separate administrator, ordinary-migration, and
+runtime access.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$receipt" --json
+```
+
+Before it executes, the controller re-observes the current healthy stack,
+service, budget, foundation alignment, and qualified image. It requires the
+reviewed change set to add exactly the administration security group, private
+network routes, ordinary migration secret, administrator role, and
+administrator task definition; and to modify exactly the endpoint policy,
+ordinary migration role and task definition, image-bound service task
+definitions, and service rollout. It rejects any database, existing
+administrator-secret, public-route, target, deletion, or unrelated resource
+change. A lost controller response is reconciled through the named change set
+and stack before another mutation; it is never treated as permission to
+resubmit an update.
+
+The update is not acceptance. It only makes the isolated administrative task
+available. Continue with the administration, ordinary migration, effective
+privilege, server/verifier, recovery, and retained-receipt proofs below.
+
+#### Review packet and handoff boundary
+
+The parent release coordinator supplies two immutable package-custody receipts:
+`$candidate_receipt` for this new image and `$rollback_receipt` for the prior
+accepted persistence-capable image. The latter is never the dependency-free
+bootstrap image. The coordinator must retain the JSON reports produced below,
+because each successful controller reports its durable proof-receipt path.
+
+```bash
+# 1. Provider surface: one reviewed UPDATE only.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$candidate_receipt" --json > permission_surface_report.json
+
+# 2. Identities and structural schema, then the narrow runtime DML grant.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation bootstrap-identities --json > administration_bootstrap_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --json > migration_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation grant-runtime-application-access --json > administration_grant_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation prove-effective-privilege --json > effective_privilege_report.json
+
+# 3. Meaningful server-mediated persistence and retained-data replacement.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode create --json > create_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$candidate_receipt" --json > replacement_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > replacement_read_report.json
+
+# 4. Rotation, urgent revocation, replacement, and recovery.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$candidate_receipt" --operation rotate --json > rotation_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$candidate_receipt" --operation revoke-and-recover --json > revocation_recovery_report.json
+
+# 5. Isolated database restore proof. Image rollback is a separate compatibility
+# decision: do not restore an image across a changed permission contract.
+```
+
+At the update boundary ECS replaces the image-bound service task. The service
+is not acceptable merely because it is running: its private readiness and a
+meaningful verifier operation must pass after the administration/migration/
+grant sequence. The database remains private and retained; this route neither
+replaces the RDS instance nor rotates the retained master secret. Its only new
+database access path is the one-shot administration task.
+
+Use the existing isolated-restore commands with one explicitly named recovery
+snapshot after the retained synthetic record exists. The restore controller
+writes the `isolated-restore` receipt and removes only the derived restored
+database. Then give the acceptance collector the exact paths reported by the
+controllers, all under
+`infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/`:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt credential-rotation="$rotation_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
+```
+
+This command creates an immutable verified candidate record. It does not
+overwrite the current accepted release. Validate the existing current reference,
+then promote the candidate with its exact predecessor id:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/release-succession/script.sh --operation validate-current --evidence-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/release-succession/script.sh --operation promote --evidence-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence --candidate-record "$candidate_record" --expected-predecessor "$current_release_id" --json
+```
+
+The first command reports `$current_release_id`; the collector reports
+`$candidate_record`. The promotion archives the candidate and atomically moves
+only `current-accepted-release.yml`. Never edit legacy or archived records
+manually.
+
+The present persistence history records `legacy-not-recorded` permission facts.
+It is therefore not a compatible rollback predecessor for the separated
+administrator/migration design. Do not omit the four rollback receipts or use
+`--permission-baseline`: that route deliberately fails until a separately
+reviewed exception establishes a safe acceptance boundary. The live packet is
+otherwise ready, but promotion is intentionally blocked at this decision rather
+than restoring the old broad credential/privilege model.
+
+Any controller interruption is a stop-and-reconcile boundary. Reconcile the
+exact task/change-set identifier reported by that controller; do not submit a
+second update, rerun an uncertain migration, rotate another secret version, or
+delete the candidate. If the provider update itself fails or cannot be
+observed as stable, preserve the database and stack for diagnosis. If a later
+image rollback is needed, use the qualified-release rollback only after
+checking schema and permission-contract compatibility; it restores an image,
+not a database state. The historical persistence release predating separated
+administrator/migration identities is not an automatic rollback candidate:
+rolling it back could reintroduce broader credentials or grants.
+
 ### Durable completed-proof receipts
 
-Each successful migration, private verifier, controlled replacement, and
-isolated-restore verifier writes an allowlisted machine-readable receipt under
+Each successful administration task, migration, private verifier, controlled
+replacement, and isolated-restore verifier writes an allowlisted machine-readable receipt under
 the scope's `30-release-evidence/proof-receipts/` directory before it reports
 success.  A receipt contains only target/scope identity, proof operation,
 terminal task/task-definition/image identity, timestamps, exit state, safe
@@ -78,10 +190,26 @@ fact, or invalid sequence blocks acceptance.  If a proof completed before
 this control existed and no equally complete provider observation was retained,
 repeat only that governed proof and let its controller capture the receipt.
 
-Run exactly one migration task. It has the only structural credential. A task
-timeout, non-zero completion or lost controller observation blocks acceptance
-and needs a fresh database-state observation; it must not be replayed
-automatically.
+Run the bounded administrative bootstrap first. It is the only task permitted
+to create or alter login roles, set a password, transfer ownership, or
+grant/revoke runtime application access. The existing CloudFormation logical
+identifier `MigrationCredentialsSecret` is the retained RDS-master secret for
+backward-compatible stack updates; from this transition onward it is injected
+only into this administrator task, never into an ordinary migration or server.
+The administrator creates the ordinary migration and runtime logins,
+pre-provisions the schema under the migration owner, and removes broad runtime
+grants. A timeout, non-zero completion, or lost controller observation blocks
+the transition and requires fresh state observation; it must not be replayed.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation bootstrap-identities --json > "$administration_report"
+```
+
+Then run exactly one ordinary migration task. It has structural access only in
+the already-administrated schema: it cannot administer login roles or create
+schemas elsewhere in the database. A migration timeout, non-zero completion or
+lost controller observation blocks acceptance and needs a fresh database-state
+observation; it must not be replayed automatically.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --json > "$migration_report"
@@ -166,19 +294,20 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 ## Runtime Credential Rotation and Urgent Revocation
 
-The migration credential remains the recovery identity.  The server receives
-only the runtime secret and never refreshes it in place: a successful runtime
-credential rotation writes a new secret version, uses the migration task to
-apply the matching database role password, replaces the server task, then
-requires both ready health and a meaningful retained-record read.  If the
-migration outcome is uncertain after the secret advances, this route blocks;
-it never blindly restores a secret version or replays a completed migration.
+The administrator credential remains the recovery identity. The server
+receives only the runtime secret and never refreshes it in place: a successful
+runtime credential rotation writes a new secret version, uses the separately
+governed administrator task to apply the matching database role password,
+replaces the server task, then requires both ready health and a meaningful
+retained-record read. If the administrative outcome is uncertain after the
+secret advances, this route blocks; it never blindly restores a secret version
+or replays a completed task.
 
-Urgent revocation is a separate, bounded exercise.  The migration task first
-sets the runtime role to `NOLOGIN` and terminates sessions for that role.  ECS
+Urgent revocation is a separate, bounded exercise. The administrator task first
+sets the runtime role to `NOLOGIN` and terminates sessions for that role. ECS
 then starts a replacement carrying the now-denied version; it must remain live
 but not ready.  Recovery writes a new runtime secret version, applies the
-matching role password through the migration identity, replaces the server,
+matching role password through the administrator identity, replaces the server,
 and repeats ready/read proof.  No completed verifier or migration is replayed
 merely because a credential changed.
 
@@ -199,8 +328,8 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 If the provider observer itself is interrupted after the denied-state proof,
 the following explicit boundary may advance exactly one secret version. Its
-`prepared` verdict requires the next action to be the matching `rotate`
-migration reconciliation; never invoke it again as a retry.
+`prepared` verdict requires the next action to be the matching administrator
+rotation reconciliation; never invoke it again as a retry.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-secret --json
@@ -208,19 +337,21 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 This command creates no new persistent AWS resource.  It never prints or
 records a credential value: only secret-version identifiers, task identities,
-and the bounded verifier/migration verdicts may become evidence.
+and the bounded verifier/administrator verdicts may become evidence.
 
 ## Qualified Persistence Image Transition
 
-The only governed route for a persistence-capable image update or rollback is
-receipt-bound and permits CloudFormation to alter only ECS task definitions and
-the candidate service. It rejects database, secret, role, network, or target
-changes. `rollback` requires an earlier qualified persistence receipt; the
-dependency-free bootstrap image is never an eligible persistence rollback.
+The only governed route for a persistence-capable image update or compatible
+rollback is receipt-bound and permits CloudFormation to alter only ECS task
+definitions and the candidate service. It rejects database, secret, role,
+network, or target changes. `rollback` requires an earlier qualified
+persistence receipt and a predecessor whose permission contract is explicitly
+compatible; the dependency-free bootstrap image and a predecessor with unknown
+legacy permission facts are never eligible persistence rollbacks.
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --json
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --expected-predecessor "$current_release_id" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --expected-predecessor "$current_release_id" --json
 ```
 
 ## Failed Creation Cleanup

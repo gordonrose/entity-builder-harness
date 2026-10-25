@@ -26,6 +26,7 @@ import { // Keep the AWS provider construction at the target composition boundar
   type CloudWatchOtelMetricSeries, // Describe the target-approved Core metric catalogue.
   type CloudWatchOtelMetricsRuntime, // Return lifecycle ownership to the target process.
 } from "@kanbien/platform-adapter-aws-observability-cloudwatch"; // Do not expose this AWS adapter to generic platform modules.
+import type { PlatformReadinessObserverIdentity } from "@kanbien/platform-observability";
 
 export interface TargetObservabilityConfigurationError { // Return a safe startup error without echoing values from the process environment.
   readonly code: "KANBIEN_PLATFORM_TARGET_OBSERVABILITY_CONFIG_INVALID"; // Give operators one stable error category for target telemetry configuration.
@@ -34,6 +35,14 @@ export interface TargetObservabilityConfigurationError { // Return a safe startu
     readonly path: string; // Identify the reviewed target configuration field that needs correction.
     readonly reason: string; // Explain the expected shape without including its raw value.
   }>;
+}
+
+/** Deployment-owned schedule for a dependency readiness observation. */
+export interface TargetReadinessObservationConfiguration {
+  readonly identity: PlatformReadinessObserverIdentity;
+  readonly cadenceMs: number;
+  readonly timeoutMs: number;
+  readonly staleAfterMs: number;
 }
 
 export function observabilityFromTargetEnvironment( // Construct optional target metrics only when this target selects a supported provider.
@@ -86,6 +95,45 @@ export function observabilityFromTargetEnvironment( // Construct optional target
   }
 }
 
+/**
+ * Read the target-owned readiness observation schedule.  This is intentionally
+ * independent of HTTP traffic and of the metric exporter interval.  A target
+ * with no enabled metrics has no required observation path yet, preserving
+ * local/package proof without pretending it has production telemetry.
+ */
+export function readinessObservationFromTargetEnvironment(
+  env: NodeJS.ProcessEnv,
+): { readonly ok: true; readonly value: TargetReadinessObservationConfiguration | undefined } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
+  const provider = env["PLATFORM_OBSERVABILITY_METRICS_PROVIDER"];
+  if (provider === undefined || provider.length === 0 || provider === "none") return { ok: true, value: undefined };
+  const target = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_TARGET");
+  const scope = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_SCOPE");
+  const workload = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_WORKLOAD");
+  const dependency = requiredBoundedName(env, "PLATFORM_OBSERVABILITY_DEPENDENCY");
+  const cadenceMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS");
+  const timeoutMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS");
+  const staleAfterMs = positiveInteger(env, "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS");
+  if (!target.ok) return target;
+  if (!scope.ok) return scope;
+  if (!workload.ok) return workload;
+  if (!dependency.ok) return dependency;
+  if (!cadenceMs.ok) return cadenceMs;
+  if (!timeoutMs.ok) return timeoutMs;
+  if (!staleAfterMs.ok) return staleAfterMs;
+  if (timeoutMs.value >= cadenceMs.value || staleAfterMs.value < cadenceMs.value + timeoutMs.value) {
+    return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_READINESS_*", "Readiness timeout must be shorter than cadence and stale deadline must cover a completed observation.");
+  }
+  return {
+    ok: true,
+    value: {
+      identity: { target: target.value, scope: scope.value, workload: workload.value, dependency: dependency.value },
+      cadenceMs: cadenceMs.value,
+      timeoutMs: timeoutMs.value,
+      staleAfterMs: staleAfterMs.value,
+    },
+  };
+}
+
 function requiredString( // Read one mandatory non-empty target configuration string.
   env: NodeJS.ProcessEnv, // Receive the task environment selected by CloudFormation.
   key: string, // Name the exact reviewed environment key.
@@ -95,6 +143,17 @@ function requiredString( // Read one mandatory non-empty target configuration st
     return targetObservabilityConfigurationError(key, "A non-empty value is required when cloudwatch-otel metrics are enabled."); // Avoid ambiguous default behaviour for a configured provider.
   }
   return { ok: true, value }; // Return the reviewed raw string only to the local composition function.
+}
+
+function requiredBoundedName(
+  env: NodeJS.ProcessEnv,
+  key: string,
+): { readonly ok: true; readonly value: string } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
+  const value = env[key];
+  if (typeof value !== "string" || !/^[a-z][a-z0-9-]{1,63}$/.test(value)) {
+    return targetObservabilityConfigurationError(key, "A bounded lowercase target identity is required when cloudwatch-otel metrics are enabled.");
+  }
+  return { ok: true, value };
 }
 
 function positiveInteger( // Parse one mandatory positive integer target configuration value.

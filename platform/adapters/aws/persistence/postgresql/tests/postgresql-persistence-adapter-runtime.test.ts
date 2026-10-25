@@ -195,6 +195,26 @@ async function main(): Promise<void> {
   equal(migrationQueries.some((query) => query.text === "SET LOCAL lock_timeout = '30000ms'"), true);
   equal(migrationQueries.some((query) => query.text === "SELECT pg_advisory_xact_lock(hashtext($1))"), true);
   equal(migrationQueries.some((query) => query.text.includes("tool_version")), true);
+
+  // An ordinary migration identity owns objects in its reviewed schema, but
+  // deliberately has no database-wide CREATE privilege.  Administrative
+  // bootstrap therefore creates the schema first; this path must check that
+  // fact rather than silently reintroduce database-wide privilege.
+  const preprovisionedQueries: PostgreSqlStatement[] = [];
+  const preprovisioned = await createPostgreSqlMigrationRunner(
+    configuration,
+    { pool: schemaPreprovisionedPool(preprovisionedQueries, true) },
+    "adapter-v1",
+  ).apply({ schema: configuration.schema, schemaPreprovisioned: true, migrations: [migration] });
+  equal(preprovisioned.ok, true);
+  equal(preprovisionedQueries.some((query) => query.text.startsWith("SELECT EXISTS (SELECT 1 FROM pg_namespace")), true);
+  equal(preprovisionedQueries.some((query) => query.text.startsWith("CREATE SCHEMA")), false);
+  const absentPreprovisioned = await createPostgreSqlMigrationRunner(
+    configuration,
+    { pool: schemaPreprovisionedPool([], false) },
+    "adapter-v1",
+  ).apply({ schema: configuration.schema, schemaPreprovisioned: true, migrations: [migration] });
+  equal(absentPreprovisioned.ok, false);
   const checksumMismatchQueries: PostgreSqlStatement[] = [];
   const checksumMismatch = await createPostgreSqlMigrationRunner(
     configuration,
@@ -247,6 +267,18 @@ function checksumMismatchPool(queries: PostgreSqlStatement[]): PostgreSqlConnect
     queries.push(copyStatement(statement));
     if (statement.text.startsWith("SELECT checksum")) {
       return { rows: [{ checksum: "0".repeat(64) }] } as unknown as QueryResult<TRow>;
+    }
+    return queryResult<TRow>();
+  };
+  const client: PostgreSqlTransactionalClient = { query, release: () => undefined };
+  return { query, connect: async () => client, end: async () => undefined };
+}
+
+function schemaPreprovisionedPool(queries: PostgreSqlStatement[], schemaExists: boolean): PostgreSqlConnectionPool {
+  const query = async <TRow extends QueryResultRow>(statement: PostgreSqlStatement): Promise<QueryResult<TRow>> => {
+    queries.push(copyStatement(statement));
+    if (statement.text.startsWith("SELECT EXISTS (SELECT 1 FROM pg_namespace")) {
+      return { rows: [{ exists: schemaExists }] } as unknown as QueryResult<TRow>;
     }
     return queryResult<TRow>();
   };

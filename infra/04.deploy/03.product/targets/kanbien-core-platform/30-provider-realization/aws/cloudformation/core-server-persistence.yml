@@ -4,12 +4,12 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
 #   kind: cloudformation-template
-#   purpose: Define the private PostgreSQL persistence candidate, its three isolated ECS workload identities, and its native RDS recovery controls.
+#   purpose: Define the private PostgreSQL persistence candidate, its isolated server, verifier, ordinary-migration, and administration ECS workload identities, and its native RDS recovery controls.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.create-core-server-persistence-change-set
@@ -30,7 +30,10 @@ Parameters:
   ImageRepositoryArn: { Type: String, AllowedPattern: '^arn:aws:ecr:[a-z0-9-]+:[0-9]{12}:repository/kanbien-core-platform/core-server$' }
   ImageRepositoryUri: { Type: String, AllowedPattern: '^[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/kanbien-core-platform/core-server$' }
   ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
+  SupportImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
+  ObservabilityCollectorImage: { Type: String, AllowedPattern: '^.+@sha256:[a-f0-9]{64}$' }
+  ObservabilityAlarmTopicArn: { Type: String, AllowedPattern: '^arn:aws:sns:[a-z0-9-]+:[0-9]{12}:[A-Za-z0-9_-]+$' }
   SourceRevision: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' }
 
 Resources:
@@ -59,6 +62,13 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Private one-shot PostgreSQL migration task.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  AdministrationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private one-shot PostgreSQL administration task, isolated from ordinary migration execution.
       VpcId: !Ref VpcId
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
@@ -106,6 +116,21 @@ Resources:
   MigrationDatabaseEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }
+  AdministrationDnsUdpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref AdministrationSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  AdministrationDnsTcpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref AdministrationSecurityGroup, IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  AdministrationEndpointEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref AdministrationSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+  AdministrationArtifactObjectStoreEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref AdministrationSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
+  AdministrationDatabaseEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref AdministrationSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }
   RestorationVerifierDnsUdpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref RestorationVerifierSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
@@ -127,6 +152,9 @@ Resources:
   DatabaseIngressFromMigration:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref DatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  DatabaseIngressFromAdministration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref DatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref AdministrationSecurityGroup }
   RestoredDatabaseIngressFromRestorationVerifier:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref RestoredDatabaseSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref RestorationVerifierSecurityGroup }
@@ -142,6 +170,9 @@ Resources:
   EndpointIngressFromMigration:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
+  EndpointIngressFromAdministration:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref AdministrationSecurityGroup }
   EndpointIngressFromRestorationVerifier:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref RestorationVerifierSecurityGroup }
@@ -149,6 +180,9 @@ Resources:
   MigrationCredentialsSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
+      # Retains the established physical secret during the transition. Despite
+      # its legacy logical name, this is the RDS master/administrator secret
+      # and may be injected only into the administration task.
       Name: kanbien-core-platform-persistence-migration
       GenerateSecretString:
         SecretStringTemplate: '{"username":"core_migration"}'
@@ -162,6 +196,16 @@ Resources:
       Name: kanbien-core-platform-persistence-runtime
       GenerateSecretString:
         SecretStringTemplate: '{"username":"core_runtime"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludePunctuation: true
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  OrdinaryMigrationCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: kanbien-core-platform-persistence-ordinary-migration
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"core_schema_migration"}'
         GenerateStringKey: password
         PasswordLength: 32
         ExcludePunctuation: true
@@ -182,7 +226,75 @@ Resources:
           - Effect: Allow
             Principal: '*'
             Action: secretsmanager:GetSecretValue
-            Resource: [!Ref MigrationCredentialsSecret, !Ref RuntimeCredentialsSecret]
+            Resource: [!Ref MigrationCredentialsSecret, !Ref OrdinaryMigrationCredentialsSecret, !Ref RuntimeCredentialsSecret]
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  MonitoringEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VpcId
+      VpcEndpointType: Interface
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.monitoring'
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref PrivateSubnetIds
+      SecurityGroupIds: [!Ref EndpointSecurityGroupId]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: monitoring:PutMetricData
+            Resource: '*'
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityCollectorConfiguration:
+    Type: AWS::SSM::Parameter
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: /kanbien/core-platform/core-server-persistence/observability/collector-config
+      Type: String
+      Tier: Standard
+      DataType: text
+      Description: Non-secret target-owned OTLP metrics collector configuration for the core-server persistence readiness path.
+      Value: !Sub |
+        extensions:
+          health_check:
+            endpoint: 127.0.0.1:13133
+          sigv4auth:
+            service: monitoring
+            region: ${AWS::Region}
+        receivers:
+          otlp:
+            protocols:
+              http:
+                endpoint: 127.0.0.1:4318
+        processors:
+          memory_limiter:
+            check_interval: 1s
+            limit_mib: 96
+            spike_limit_mib: 32
+          batch:
+            send_batch_size: 100
+            timeout: 10s
+        exporters:
+          otlphttp/cloudwatch:
+            tls:
+              insecure: false
+            compression: gzip
+            metrics_endpoint: https://monitoring.${AWS::Region}.amazonaws.com/v1/metrics
+            auth:
+              authenticator: sigv4auth
+        service:
+          extensions: [health_check, sigv4auth]
+          telemetry:
+            logs:
+              level: info
+          pipelines:
+            metrics:
+              receivers: [otlp]
+              processors: [memory_limiter, batch]
+              exporters: [otlphttp/cloudwatch]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceDatabase:
@@ -232,6 +344,19 @@ Resources:
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
               - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref RuntimeCredentialsSecret }
+              - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  ServerTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-server-observability
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: deliver-reviewed-readiness-metrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: monitoring:PutMetricData, Resource: '*' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   MigrationExecutionRole:
     Type: AWS::IAM::Role
@@ -239,14 +364,29 @@ Resources:
       RoleName: kanbien-core-platform-persistence-migration-execution
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
-        - PolicyName: pull-log-and-read-migration-bootstrap-secrets
+        - PolicyName: pull-log-and-read-ordinary-migration-secret
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: [!Ref MigrationCredentialsSecret, !Ref RuntimeCredentialsSecret] }
+              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref OrdinaryMigrationCredentialsSecret }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  AdministrationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-administration-execution
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: pull-log-and-read-administration-bound-secrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
+              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: [!Ref MigrationCredentialsSecret, !Ref OrdinaryMigrationCredentialsSecret, !Ref RuntimeCredentialsSecret] }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   VerifierExecutionRole:
     Type: AWS::IAM::Role
@@ -288,12 +428,16 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt ServerExecutionRole.Arn
+      TaskRoleArn: !GetAtt ServerTaskRole.Arn
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
         - Name: core-server-persistence
           Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
           Essential: true
+          Cpu: 128
+          MemoryReservation: 256
+          DependsOn: [{ ContainerName: observability-collector, Condition: START }]
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
           PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
@@ -307,6 +451,21 @@ Resources:
             - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
             - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
             - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
+            - { Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER, Value: cloudwatch-otel }
+            - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://127.0.0.1:4318/v1/metrics }
+            - { Name: PLATFORM_OBSERVABILITY_METRICS_REGION, Value: !Ref 'AWS::Region' }
+            - { Name: PLATFORM_OBSERVABILITY_SERVICE_NAME, Value: kanbien-core-server-persistence }
+            - { Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: kanbien-core-platform }
+            - { Name: PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS, Value: '30000' }
+            - { Name: PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS, Value: '5000' }
+            - { Name: PLATFORM_OBSERVABILITY_TARGET, Value: kanbien-core-platform }
+            - { Name: PLATFORM_OBSERVABILITY_SCOPE, Value: core-server-persistence }
+            - { Name: PLATFORM_OBSERVABILITY_WORKLOAD, Value: core-server }
+            - { Name: PLATFORM_OBSERVABILITY_DEPENDENCY, Value: postgresql }
+            - { Name: PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS, Value: '30000' }
+            - { Name: PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS, Value: '5000' }
+            - { Name: PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS, Value: '180000' }
+            - { Name: PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON, Value: '[{"sourceName":"platform.dependency.readiness","sourceKind":"gauge","sourceUnit":"count","instrumentName":"kanbien.core_server.postgresql_readiness","description":"Periodic PostgreSQL readiness from the core server","allowedLabelNames":["target","scope","workload","dependency","readiness"],"cardinalityLimit":16}]' }
           Secrets: [{ Name: PERSISTENCE_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }]
           HealthCheck:
             Command: [CMD, /nodejs/bin/node, -e, 'fetch("http://127.0.0.1:3000/livez").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))']
@@ -315,6 +474,57 @@ Resources:
             Retries: 3
             StartPeriod: 30
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence } }
+        - Name: observability-collector
+          Image: !Ref ObservabilityCollectorImage
+          Essential: false
+          Cpu: 64
+          MemoryReservation: 128
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }]
+          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }]
+          LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } }
+
+  CoreServerPostgreSqlReadinessAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: kanbien-core-platform-core-server-postgresql-readiness-not-ready-or-silent
+      AlarmDescription: Core-server PostgreSQL readiness is not ready or no periodic readiness observation arrived before its stale deadline.
+      Namespace: Kanbien/CorePlatform
+      MetricName: kanbien.core_server.postgresql_readiness
+      Dimensions:
+        - { Name: target, Value: kanbien-core-platform }
+        - { Name: scope, Value: core-server-persistence }
+        - { Name: workload, Value: core-server }
+        - { Name: dependency, Value: postgresql }
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions: [!Ref ObservabilityAlarmTopicArn]
+      OKActions: [!Ref ObservabilityAlarmTopicArn]
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  PersistenceDatabaseFreeStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: kanbien-core-platform-postgresql-free-storage-low
+      AlarmDescription: Native RDS free storage is below the declared operating reserve.
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions: [{ Name: DBInstanceIdentifier, Value: !Ref PersistenceDatabase }]
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2147483648
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref ObservabilityAlarmTopicArn]
+      OKActions: [!Ref ObservabilityAlarmTopicArn]
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   CoreServerPersistenceService:
     Type: AWS::ECS::Service
@@ -346,7 +556,7 @@ Resources:
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
         - Name: persistence-migration
-          Image: !Sub '${ImageRepositoryUri}@${ImageDigest}'
+          Image: !Sub '${ImageRepositoryUri}@${SupportImageDigest}'
           Essential: true
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
@@ -356,11 +566,40 @@ Resources:
             - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
             - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
             - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-            - { Name: PERSISTENCE_MIGRATION_SECRET_REFERENCE, Value: !Ref MigrationCredentialsSecret }
+            - { Name: PERSISTENCE_MIGRATION_SECRET_REFERENCE, Value: !Ref OrdinaryMigrationCredentialsSecret }
           Secrets:
-            - { Name: PERSISTENCE_MIGRATION_CREDENTIALS, ValueFrom: !Ref MigrationCredentialsSecret }
-            - { Name: PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }
+            - { Name: PERSISTENCE_MIGRATION_CREDENTIALS, ValueFrom: !Ref OrdinaryMigrationCredentialsSecret }
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-migration } }
+
+  CoreServerPersistenceAdministrationTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-persistence-administration
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt AdministrationExecutionRole.Arn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      ContainerDefinitions:
+        - Name: persistence-administration
+          Image: !Sub '${ImageRepositoryUri}@${SupportImageDigest}'
+          Essential: true
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          Command: [artifacts/kanbien-core-server-persistence-administration.main.js]
+          Environment:
+            - { Name: PERSISTENCE_POSTGRES_HOST, Value: !GetAtt PersistenceDatabase.Endpoint.Address }
+            - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
+            - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
+            - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
+            - { Name: PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE, Value: !Ref MigrationCredentialsSecret }
+          Secrets:
+            - { Name: PERSISTENCE_ADMINISTRATOR_CREDENTIALS, ValueFrom: !Ref MigrationCredentialsSecret }
+            - { Name: PERSISTENCE_ADMINISTRATION_MIGRATION_CREDENTIALS, ValueFrom: !Ref OrdinaryMigrationCredentialsSecret }
+            - { Name: PERSISTENCE_ADMINISTRATION_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }
+          LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-administration } }
 
   CoreServerPersistenceVerifierTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -414,12 +653,19 @@ Outputs:
   PersistenceDatabaseIdentifier: { Value: !Ref PersistenceDatabase }
   RuntimeCredentialsSecretArn: { Value: !Ref RuntimeCredentialsSecret }
   MigrationCredentialsSecretArn: { Value: !Ref MigrationCredentialsSecret }
+  AdministratorCredentialsSecretArn: { Value: !Ref MigrationCredentialsSecret }
+  OrdinaryMigrationCredentialsSecretArn: { Value: !Ref OrdinaryMigrationCredentialsSecret }
   CoreServerPersistenceServiceArn: { Value: !Ref CoreServerPersistenceService }
   CoreServerPersistenceTaskDefinitionArn: { Value: !Ref CoreServerPersistenceTaskDefinition }
   CoreServerPersistenceMigrationTaskDefinitionArn: { Value: !Ref CoreServerPersistenceMigrationTaskDefinition }
+  CoreServerPersistenceAdministrationTaskDefinitionArn: { Value: !Ref CoreServerPersistenceAdministrationTaskDefinition }
   CoreServerPersistenceVerifierTaskDefinitionArn: { Value: !Ref CoreServerPersistenceVerifierTaskDefinition }
   CoreServerPersistenceRestorationVerifierTaskDefinitionArn: { Value: !Ref CoreServerPersistenceRestorationVerifierTaskDefinition }
   PersistenceServiceDiscoveryArn: { Value: !GetAtt PersistenceServiceDiscovery.Arn }
   PersistenceMigrationSecurityGroupId: { Value: !Ref MigrationSecurityGroup }
+  PersistenceAdministrationSecurityGroupId: { Value: !Ref AdministrationSecurityGroup }
   PersistenceRestorationVerifierSecurityGroupId: { Value: !Ref RestorationVerifierSecurityGroup }
   PersistenceRestoredDatabaseSecurityGroupId: { Value: !Ref RestoredDatabaseSecurityGroup }
+  ObservabilityCollectorConfigurationParameter: { Value: !Ref ObservabilityCollectorConfiguration }
+  CoreServerPostgreSqlReadinessAlarmArn: { Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }
+  PersistenceDatabaseFreeStorageAlarmArn: { Value: !GetAtt PersistenceDatabaseFreeStorageAlarm.Arn }

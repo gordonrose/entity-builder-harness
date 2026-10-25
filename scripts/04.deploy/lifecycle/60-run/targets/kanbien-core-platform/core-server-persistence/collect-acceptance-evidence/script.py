@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime, timezone
 import importlib.util
 import json
@@ -42,6 +43,9 @@ SERVICE = "kanbien-core-platform-core-server-persistence"
 DATABASE = "kanbien-core-platform-persistence"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 RECORD = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/accepted-release.yml"
+EVIDENCE_ROOT = RECORD.parent
+CONFIGURATION_CONTRACT = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"
+PERMISSION_CONTRACT = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 TASK_ARN = re.compile(rf"^arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/[0-9a-f]{{32}}$")
 SNAPSHOT = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 TASKS: dict[str, dict[str, Any]] = {}
@@ -51,8 +55,11 @@ class EvidenceFailure(Exception):
     pass
 
 
-def report(verdict: str, *codes: str) -> int:
-    print(json.dumps({"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)]}, sort_keys=True))
+def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> int:
+    value: dict[str, Any] = {"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)]}
+    if facts:
+        value["facts"] = facts
+    print(json.dumps(value, sort_keys=True))
     return 0 if verdict in {"ready", "recorded"} else 1
 
 
@@ -122,9 +129,9 @@ def contract_deadlines() -> dict[str, int]:
             continue
         completion = workload.get("completion")
         value = completion.get("deadline_seconds") if isinstance(completion, dict) else None
-        if workload["id"] in {"private-release-verifier", "persistence-migration", "persistence-restoration-verifier"} and type(value) is int and value > 0:
+        if workload["id"] in {"private-release-verifier", "persistence-migration", "persistence-administration", "persistence-restoration-verifier"} and type(value) is int and value > 0:
             deadlines[workload["id"]] = value
-    if set(deadlines) != {"private-release-verifier", "persistence-migration", "persistence-restoration-verifier"}:
+    if set(deadlines) != {"private-release-verifier", "persistence-migration", "persistence-administration", "persistence-restoration-verifier"}:
         raise EvidenceFailure("acceptance-evidence-scope-contract-invalid")
     return deadlines
 
@@ -179,7 +186,7 @@ def definition_identity(arn: object, expected_family: str, expected_digest: str)
 
 
 def expected_stream(kind: str, task_id: str) -> str:
-    prefixes = {"verifier": "persistence-verifier/private-persistence-verifier", "migration": "persistence-migration/persistence-migration", "restore": "persistence-restoration-verifier/persistence-restoration-verifier"}
+    prefixes = {"administration": "persistence-administration/persistence-administration", "verifier": "persistence-verifier/private-persistence-verifier", "migration": "persistence-migration/persistence-migration", "restore": "persistence-restoration-verifier/persistence-restoration-verifier"}
     return f"{prefixes[kind]}/{task_id}"
 
 
@@ -242,6 +249,15 @@ def receipt_module():
     return module
 
 
+def succession_module():
+    path = ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+    specification = importlib.util.spec_from_file_location("release_succession", path)
+    module = importlib.util.module_from_spec(specification)
+    assert specification and specification.loader
+    specification.loader.exec_module(module)
+    return module
+
+
 def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, str, str, str]], deadlines: dict[str, int], receipt_root: Path | None = None) -> dict[str, dict[str, Any]]:
     """Validate retained controller receipts without re-querying aged ECS tasks."""
     result: dict[str, dict[str, Any]] = {}
@@ -264,8 +280,8 @@ def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, 
     if set(result) != set(required):
         raise EvidenceFailure("acceptance-evidence-proof-receipt-set-invalid")
     observed: dict[str, dict[str, Any]] = {}
-    controllers = {"migration": "run-migration", "verifier": "verify-candidate", "restore": "rehearse-isolated-database-restore", "server-replacement": "rehearse-server-replacement"}
-    operations = {"migration-apply": "apply", "effective-privilege": "prove-effective-privilege", "server-replacement": "controlled-replacement", "server-replacement-read": "read", "credential-rotation": "rotate", "credential-revocation": "revoke", "credential-revocation-unready": "health-unready", "credential-recovery": "rotate", "credential-recovery-health": "health-ready", "credential-recovery-read": "read", "rollback-b-health": "health-ready", "rollback-b-read": "read", "rollback-final-health": "health-ready", "rollback-final-read": "read", "isolated-restore": "isolated-restore"}
+    controllers = {"administration": "run-administration", "migration": "run-migration", "verifier": "verify-candidate", "restore": "rehearse-isolated-database-restore", "server-replacement": "rehearse-server-replacement"}
+    operations = {"migration-apply": "apply", "effective-privilege": "prove-effective-privilege", "server-replacement": "controlled-replacement", "server-replacement-read": "read", "credential-rotation": "rotate-runtime", "credential-revocation": "revoke-runtime", "credential-revocation-unready": "health-unready", "credential-recovery": "rotate-runtime", "credential-recovery-health": "health-ready", "credential-recovery-read": "read", "rollback-b-health": "health-ready", "rollback-b-read": "read", "rollback-final-health": "health-ready", "rollback-final-read": "read", "isolated-restore": "isolated-restore"}
     for name, (kind, family, expected_digest, code, workload) in required.items():
         item = result[name]
         task = item["task"]
@@ -311,7 +327,7 @@ def stack_outputs() -> dict[str, str]:
         raise EvidenceFailure("acceptance-evidence-runtime-stack-not-stable")
     outputs = stack.get("Outputs")
     result = {item.get("OutputKey"): item.get("OutputValue") for item in outputs if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)} if isinstance(outputs, list) else {}
-    required = {"CoreServerPersistenceTaskDefinitionArn", "CoreServerPersistenceVerifierTaskDefinitionArn", "CoreServerPersistenceMigrationTaskDefinitionArn", "CoreServerPersistenceRestorationVerifierTaskDefinitionArn"}
+    required = {"CoreServerPersistenceTaskDefinitionArn", "CoreServerPersistenceVerifierTaskDefinitionArn", "CoreServerPersistenceMigrationTaskDefinitionArn", "CoreServerPersistenceAdministrationTaskDefinitionArn", "CoreServerPersistenceRestorationVerifierTaskDefinitionArn"}
     if not required <= set(result):
         raise EvidenceFailure("acceptance-evidence-runtime-stack-outputs-invalid")
     return result
@@ -370,30 +386,96 @@ def live_budget() -> None:
         raise EvidenceFailure("acceptance-evidence-target-budget-invalid")
 
 
-def write_record(record: dict[str, Any]) -> None:
-    metadata = {"schema": "agentic-artifact/v3", "id": "infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.accepted-release", "version": 1, "status": "active", "created_on": "2026-10-24", "updated_on": "2026-10-24", "layer": "04.deploy", "domain": "deployment.core-server-persistence", "disciplines": ["security", "sre"], "kind": "accepted-release-record", "purpose": "Record the qualified persistence release and AWS-observed proof set accepted for core-server-persistence.", "portability": {"class": "internal", "targets": []}, "used_by": [{"id": "deploy.command.core-platform-target-declaration", "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh"}]}
-    rendered = "# agentic-artifact:\n" + "".join("#   " + line + "\n" for line in yaml.safe_dump(metadata, sort_keys=False).splitlines()) + yaml.safe_dump(record, sort_keys=False)
-    RECORD.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=RECORD.parent, prefix=f".{RECORD.name}.", suffix=".tmp", delete=False) as output:
+def observability_declaration() -> None:
+    """Route acceptance through the active observability declaration gate."""
+    command = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.py"
+    result = subprocess.run(["python3", str(command), "--json"], capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise EvidenceFailure("acceptance-evidence-observability-declaration-invalid")
+
+
+def file_sha256(path: Path) -> str:
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise EvidenceFailure("acceptance-evidence-contract-unreadable") from error
+    return "sha256:" + hashlib.sha256(raw).hexdigest()
+
+
+def candidate_record(candidate: dict[str, str], observed: dict[str, dict[str, Any]], accepted_at: str) -> tuple[Path, dict[str, Any]]:
+    """Make a successor input; promotion owns the current-reference mutation."""
+    succession = succession_module()
+    configuration = {"path": str(CONFIGURATION_CONTRACT.relative_to(ROOT)), "sha256": file_sha256(CONFIGURATION_CONTRACT)}
+    permissions = {"path": str(PERMISSION_CONTRACT.relative_to(ROOT)), "sha256": file_sha256(PERMISSION_CONTRACT)}
+    proof_set: dict[str, dict[str, str]] = {}
+    for name, facts in sorted(observed.items()):
+        receipt_path = Path(facts["receipt"])
+        if receipt_path.is_absolute():
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-path-invalid")
+        receipt = ROOT / receipt_path
+        try:
+            receipt.relative_to(EVIDENCE_ROOT / "proof-receipts")
+        except ValueError as error:
+            raise EvidenceFailure("acceptance-evidence-proof-receipt-path-invalid") from error
+        proof_set[name] = {"path": str(receipt_path), "sha256": file_sha256(receipt)}
+    identity = {
+        "target": TARGET,
+        "scope": SCOPE,
+        "source_revision": candidate["source_revision"],
+        "image_digest": candidate["image_digest"],
+        "configuration_contract": configuration,
+        "permission_contract": permissions,
+        "proof_set_sha256": succession.sha256_bytes(succession.canonical(proof_set)),
+    }
+    value = {
+        "schema": "deploy/release-candidate/v1",
+        "target": TARGET,
+        "scope": SCOPE,
+        "status": "verified",
+        "release": {"id": succession.release_id(identity), **{key: identity[key] for key in ("source_revision", "image_digest", "configuration_contract", "permission_contract", "proof_set_sha256")}},
+        "proof": {"accepted_at": accepted_at, "receipt_count": len(observed)},
+        "proof_set": proof_set,
+    }
+    path = EVIDENCE_ROOT / "release-candidates" / f"{value['release']['id']}.yml"
+    return path, value
+
+
+def write_candidate(path: Path, value: dict[str, Any]) -> None:
+    rendered = yaml.safe_dump(value, sort_keys=False).encode("utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        try:
+            existing = path.read_bytes()
+        except OSError as error:
+            raise EvidenceFailure("acceptance-evidence-candidate-unreadable") from error
+        if existing != rendered:
+            raise EvidenceFailure("acceptance-evidence-candidate-conflict")
+        return
+    with tempfile.NamedTemporaryFile(mode="wb", dir=path.parent, prefix=f".{path.name}.", suffix=".tmp", delete=False) as output:
         temporary = Path(output.name)
         output.write(rendered)
         output.flush()
         os.fsync(output.fileno())
-    os.replace(temporary, RECORD)
+    os.replace(temporary, path)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--rollback-receipt", type=Path, required=True); parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[]); parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot"); parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--rollback-receipt", type=Path); parser.add_argument("--permission-baseline", action="store_true"); parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[]); parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot"); parser.add_argument("--write-candidate", action="store_true"); parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or not isinstance(args.server_replacement_original, str) or not isinstance(args.server_replacement_successor, str) or not isinstance(args.recovery_snapshot, str) or SNAPSHOT.fullmatch(args.recovery_snapshot) is None:
         return report("blocked", "acceptance-evidence-arguments-invalid")
     try:
+        if args.permission_baseline:
+            raise EvidenceFailure("acceptance-evidence-permission-baseline-requires-reviewed-exception")
+        if args.rollback_receipt is None:
+            raise EvidenceFailure("acceptance-evidence-rollback-receipt-required")
+        observability_declaration()
         candidate, rollback = receipt(args.receipt), receipt(args.rollback_receipt)
         if candidate["image_digest"] == rollback["image_digest"]:
             raise EvidenceFailure("acceptance-evidence-rollback-identity-invalid")
         required = {
-            "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"), "effective-privilege": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-migration"), "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate["image_digest"], "PERSISTENCE_SERVER_REPLACED", None), "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "credential-rotation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-revocation": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-migration"), "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"), "credential-recovery": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"), "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier")}
+            "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate["image_digest"], "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"), "effective-privilege": ("administration", "kanbien-core-platform-persistence-administration", candidate["image_digest"], "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-administration"), "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate["image_digest"], "PERSISTENCE_SERVER_REPLACED", None), "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "credential-rotation": ("administration", "kanbien-core-platform-persistence-administration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-administration"), "credential-revocation": ("administration", "kanbien-core-platform-persistence-administration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-administration"), "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"), "credential-recovery": ("administration", "kanbien-core-platform-persistence-administration", candidate["image_digest"], "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-administration"), "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"), "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"), "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate["image_digest"], "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier")}
         deadlines = contract_deadlines()
         if args.proof and args.proof_receipt:
             raise EvidenceFailure("acceptance-evidence-proof-source-ambiguous")
@@ -428,14 +510,17 @@ def main() -> int:
             if parsed_time(observed[later]["started_at"]) < parsed_time(observed[prior]["stopped_at"]):
                 raise EvidenceFailure("acceptance-evidence-rehearsal-sequence-invalid")
         outputs = stack_outputs(); current = current_service(outputs["CoreServerPersistenceTaskDefinitionArn"], candidate["image_digest"]); database = database_posture(args.recovery_snapshot); live_budget()
+        if args.write:
+            raise EvidenceFailure("acceptance-evidence-direct-record-write-retired")
         stamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         serialise = lambda item: {key: value.isoformat().replace("+00:00", "Z") if isinstance(value, datetime) else value for key, value in item.items()}
         record = {"schema": "deploy/persistence-accepted-release/v1", "target": TARGET, "scope": SCOPE, "status": "accepted", "release": {"source_revision": candidate["source_revision"], "image_digest": candidate["image_digest"], "image_repository": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server", "package_custody_reference": candidate["receipt_reference"], "runtime_stack": STACK, "service": SERVICE, "runtime_task_definition": outputs["CoreServerPersistenceTaskDefinitionArn"], "verifier_task_definition": outputs["CoreServerPersistenceVerifierTaskDefinitionArn"], "migration_task_definition": outputs["CoreServerPersistenceMigrationTaskDefinitionArn"], "restoration_verifier_task_definition": outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]}, "acceptance": {"accepted_at": stamp, "collector": "collect-acceptance-evidence", "retained_for_restoration": True, "rollback_release": {"source_revision": rollback["source_revision"], "image_digest": rollback["image_digest"], "package_custody_reference": rollback["receipt_reference"]}}, "provider_observation": {"current_service": current, "database": database, "proofs": observed, "server_replacement": {"original_task": serialise(original), "replacement_task": serialise(successor)}}}
-        if args.write:
-            if RECORD.exists():
-                raise EvidenceFailure("acceptance-evidence-record-already-exists")
-            write_record(record)
-        return report("recorded" if args.write else "ready")
+        facts: dict[str, str] | None = None
+        if args.write_candidate:
+            path, successor = candidate_record(candidate, observed, stamp)
+            write_candidate(path, successor)
+            facts = {"candidate_record": str(path.relative_to(ROOT)), "release_id": successor["release"]["id"]}
+        return report("recorded" if args.write_candidate else "ready", facts=facts)
     except EvidenceFailure as error:
         return report("blocked", str(error))
 

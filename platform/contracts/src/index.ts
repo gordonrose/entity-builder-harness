@@ -54,6 +54,17 @@ export {
   platformOperationalFieldNames,
   platformOperationalOutcomes,
 } from "./observability";
+export {
+  platformOperationalEventTypes,
+  platformReadinessObservationEvent,
+  platformReadinessStates,
+} from "./operational-events";
+export type {
+  PlatformOperationalEventError,
+  PlatformOperationalEventType,
+  PlatformReadinessObservationEvent,
+  PlatformReadinessState,
+} from "./operational-events";
 export type {
   PlatformCapabilityAction,
   PlatformCapabilityName,

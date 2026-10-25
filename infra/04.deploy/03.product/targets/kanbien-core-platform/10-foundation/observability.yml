@@ -1,0 +1,33 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.observability-mvp
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence.observability
+#   disciplines: [architecture, security, sre]
+#   kind: observability-foundation-declaration
+#   purpose: Declare the target-owned non-secret collector, metric delivery, and alarm foundation required by the first readiness observability path.
+#   portability: { class: internal, targets: [] }
+schema: deploy/observability-foundation/v1
+target: kanbien-core-platform
+status: local-contract-validated-live-proof-required
+owner: observability-owner
+collector:
+  delivery: task-local-sidecar
+  image: immutable-image-parameter-required-before-live-deployment
+  config_parameter: /kanbien/core-platform/core-server-persistence/observability/collector-config
+  config_values: non-secret-only
+  startup: start-before-application-container
+  shutdown: application-stops-exporting-before-collector-task-termination
+  private_delivery: cloudwatch-monitoring-interface-endpoint
+  task_role: put-metric-data-only
+metric_sources:
+  application: scope-contract:core-server-persistence.observability_mvp.metric_catalogue.application
+  rds_native: scope-contract:core-server-persistence.observability_mvp.metric_catalogue.rds_native
+notification:
+  destination: target-owned-topic-parameter
+  acceptance: external-subscription-confirmation-and-delivery-receipt-without-address-or-message-content
+

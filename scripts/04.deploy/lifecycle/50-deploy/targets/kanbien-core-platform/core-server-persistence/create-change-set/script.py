@@ -88,6 +88,7 @@ def main() -> int:
         {"ParameterKey": "ImageRepositoryArn", "ParameterValue": f"arn:aws:ecr:eu-west-1:337159794548:repository/kanbien-core-platform/core-server"},
         {"ParameterKey": "ImageRepositoryUri", "ParameterValue": outputs["RepositoryUri"]},
         {"ParameterKey": "ImageDigest", "ParameterValue": digest},
+        {"ParameterKey": "SupportImageDigest", "ParameterValue": digest},
         # The qualified persistence image contains the isolated restore
         # verifier entrypoint as well as the server. Keep both task
         # definitions bound to the same immutable candidate on a clean

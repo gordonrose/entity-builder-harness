@@ -30,13 +30,16 @@ COPY platform/runtime/ ./platform/runtime/
 COPY platform/security/ ./platform/security/
 COPY platform/server/ ./platform/server/
 COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
+COPY platform/adapters/aws/observability/cloudwatch/ ./platform/adapters/aws/observability/cloudwatch/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts ./infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
 RUN npm ci --ignore-scripts \
@@ -44,7 +47,11 @@ RUN npm ci --ignore-scripts \
  && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root /payload/artifacts \
  && mkdir -p /payload/node_modules \
  && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/ \
- && NODE_PATH=/payload/node_modules node -e 'require("pg")'
+ && mkdir -p /payload/node_modules/@opentelemetry /payload/node_modules/@protobufjs \
+ && cp -a node_modules/@opentelemetry/. /payload/node_modules/@opentelemetry/ \
+ && cp -a node_modules/@protobufjs/. /payload/node_modules/@protobufjs/ \
+ && cp -a node_modules/protobufjs node_modules/long node_modules/ajv node_modules/fast-deep-equal node_modules/fast-uri node_modules/json-schema-traverse node_modules/require-from-string /payload/node_modules/ \
+ && NODE_PATH=/payload/node_modules node -e 'require("pg"); require("@opentelemetry/sdk-metrics"); require("@opentelemetry/exporter-metrics-otlp-proto")'
 FROM ${RUNTIME_NODE_IMAGE}
 ARG SOURCE_COMMIT_SHA=unknown
 LABEL org.opencontainers.image.title="kanbien-core-server-persistence"

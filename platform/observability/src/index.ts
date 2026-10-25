@@ -25,6 +25,17 @@ export {
 export type { PlatformMetricInput } from "./metrics";
 
 export {
+  createPlatformReadinessObserver,
+  emitPlatformReadinessObservation,
+} from "./readiness-observation";
+export type {
+  PlatformReadinessObserver,
+  PlatformReadinessObserverIdentity,
+  PlatformReadinessObserverOptions,
+  PlatformReadinessProbeResult,
+} from "./readiness-observation";
+
+export {
   endPlatformTraceSpan,
   platformTraceAttributes,
   platformTraceFields,
