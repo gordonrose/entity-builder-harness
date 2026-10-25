@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -236,19 +236,28 @@ class ControllerRegression(unittest.TestCase):
             elif name=='apply-private-verifier-route-update':changes=[{'ResourceChange':{'LogicalResourceId':'VerifierEgressToServer','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]
             else:changes=[{'ResourceChange':{'LogicalResourceId':'Runtime','ResourceType':'AWS::ECS::TaskDefinition','Action':'Modify'}}]
             change={'ChangeSetName':change_name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in params.items()],'Changes':changes}
-            for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
-                def response(parts):
-                    if parts[1]=='describe-change-set':return True,change,'ok'
-                    if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
-                    raise AssertionError(f'mutation during reconciliation: {parts}')
-                provider=Provider(response)
-                with patch.object(prepare,'aws',provider.aws):
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                # A synthetic provider failure must never create a file in the
+                # canonical retained-evidence directory.  The production
+                # controller keeps that durable route; this fixture uses a
+                # temporary substitute while exercising the same write path.
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics:
+                    for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
+                        def response(parts):
+                            if parts[1]=='describe-change-set':return True,change,'ok'
+                            if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
+                            raise AssertionError(f'mutation during reconciliation: {parts}')
+                        provider=Provider(response)
+                        with patch.object(prepare,'aws',provider.aws):
+                            call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
+                            self.assertEqual(result(call)[1]['verdict'],verdict)
+                        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics, patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
                     call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                    self.assertEqual(result(call)[1]['verdict'],verdict)
-                self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
-            with patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
-                call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                self.assertEqual(result(call)[1]['verdict'],'uncertain')
+                    self.assertEqual(result(call)[1]['verdict'],'uncertain')
 
     def test_transition_failure_retains_allowlisted_diagnostic(self):
         """A circuit-breaker failure survives controller reconciliation safely."""
