@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:09:06Z
-latest_commit_sha: 0360770f7c82b090716c445dba31e7226b1de95a
-chat_duration: 1746577s (20:05:09:37)
+latest_commit_at_utc: 2026-10-25T14:14:09Z
+latest_commit_sha: c15677c2b50a92b3d835050c374818d7e0a20a9a
+chat_duration: 1746880s (20:05:14:40)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3062,6 +3062,17 @@ Summary: Collector run 40200948509 qualified startup, private mirror, and then f
 
 Durable evidence: Workflow, resolver, and regression live in the collector package-custody directory; GitHub run 40200948509 remains the factual failed attempt.
 
+
+### 2026-10-25T14:14:09Z - Commit recorded
+
+Commit: `c15677c2b50a92b3d835050c374818d7e0a20a9a`
+
+Message: fix(deploy): scan single-manifest collector images
+
+Summary: Corrected the collector scan selector to resolve either a single OCI manifest or exactly one amd64 child of an OCI index. Regression coverage and a read-only check against the actual mirrored digest passed; the failed first workflow remains unaccepted evidence.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3839,6 +3850,13 @@ Durable evidence: Workflow, resolver, and regression live in the collector packa
   Summary: Integrated the newer accepted persistence implementation from main with the collector custody route. Resolved only genuine overlaps by retaining main's newer controller/runtime implementation and reran collector, observability, target, and fixed deployment-controller checks successfully.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c15677c2b50a92b3d835050c374818d7e0a20a9a`
+  Time UTC: 2026-10-25T14:14:09Z
+  Message: fix(deploy): scan single-manifest collector images
+  Summary: Corrected the collector scan selector to resolve either a single OCI manifest or exactly one amd64 child of an OCI index. Regression coverage and a read-only check against the actual mirrored digest passed; the failed first workflow remains unaccepted evidence.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3862,9 +3880,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:09:06Z
-Latest commit SHA: 0360770f7c82b090716c445dba31e7226b1de95a
-Chat duration: 1746577s (20:05:09:37)
+Latest commit at UTC: 2026-10-25T14:14:09Z
+Latest commit SHA: c15677c2b50a92b3d835050c374818d7e0a20a9a
+Chat duration: 1746880s (20:05:14:40)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
