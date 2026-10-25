@@ -72,7 +72,7 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
       return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED");
     }
     if (operation === "observe-migration-state") {
-      await observeMigrationState(pool, configuration.schema);
+      await observeMigrationState(pool, configuration.schema, migration.username);
       return accepted("PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED");
     }
     await proveRuntimePrivilege(configuration, runtime, certificateAuthority, env);
@@ -192,17 +192,31 @@ async function grantRuntimeApplicationAccess(pool: PostgreSqlConnectionPool, sch
  * interrupted controller. The migration runner is transaction-bound, so an
  * empty reviewed manifest is the sole state that permits a new submission.
  */
-async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string): Promise<void> {
+async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string): Promise<void> {
   const history = `${quotedIdentifier(schemaName)}."platform_migration_history"`;
+  const migration = quotedIdentifier(migrationUsername);
   const foundation = postgreSqlPersistenceFoundationMigration(schemaName);
   const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(schemaName);
   const expected = [
     { id: foundation.id, checksum: foundation.checksum },
     { id: acceptance.id, checksum: postgreSqlMigrationChecksum(acceptance.statements) },
   ];
-  const observed = await pool.query<{ readonly migration_id: string; readonly checksum: string }>({
-    text: `SELECT migration_id, checksum FROM ${history} ORDER BY migration_id ASC`,
-  });
+  await pool.query({ text: "BEGIN READ ONLY" });
+  let observed: { readonly rows: readonly { readonly migration_id: string; readonly checksum: string }[] };
+  try {
+    // The history is owned by the constrained migration identity. The
+    // administrative task assumes that already-governed role only inside a
+    // read-only transaction; it neither reuses migration credentials nor gains
+    // authority to alter schema state through this observation path.
+    await pool.query({ text: `SET LOCAL ROLE ${migration}` });
+    observed = await pool.query<{ readonly migration_id: string; readonly checksum: string }>({
+      text: `SELECT migration_id, checksum FROM ${history} ORDER BY migration_id ASC`,
+    });
+    await pool.query({ text: "ROLLBACK" });
+  } catch (error) {
+    try { await pool.query({ text: "ROLLBACK" }); } catch { /* preserve the safe original failure */ }
+    throw error;
+  }
   if (observed.rows.length === 0) return;
   if (
     observed.rows.length === expected.length
