@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:14:09Z
-latest_commit_sha: c15677c2b50a92b3d835050c374818d7e0a20a9a
-chat_duration: 1746880s (20:05:14:40)
+latest_commit_at_utc: 2026-10-25T14:22:11Z
+latest_commit_sha: db4cb76763a905ce6be2b7efd9ec8325a670b87b
+chat_duration: 1747362s (20:05:22:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3106,6 +3106,17 @@ Summary: Collector GitHub runs 40200948509 and 40201291933 both reached private 
 
 Durable evidence: Scanner boundary lives in the collector workflow; generic receipt vocabulary and regression live under .agentic/04.deploy/40-package and scripts/04.deploy/lifecycle/40-package/package-custody-receipt.
 
+
+### 2026-10-25T14:22:11Z - Commit recorded
+
+Commit: `db4cb76763a905ce6be2b7efd9ec8325a670b87b`
+
+Message: fix(deploy): isolate collector vulnerability scan
+
+Summary: Replaced unsupported ECR Basic scanning with a pinned portable scanner in a separate unprivileged public-source job, while preserving protected OIDC publication as a dependent job. Receipt validation now allows exactly one explicit native or portable scanner proof.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3890,6 +3901,13 @@ Durable evidence: Scanner boundary lives in the collector workflow; generic rece
   Summary: Corrected the collector scan selector to resolve either a single OCI manifest or exactly one amd64 child of an OCI index. Regression coverage and a read-only check against the actual mirrored digest passed; the failed first workflow remains unaccepted evidence.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `db4cb76763a905ce6be2b7efd9ec8325a670b87b`
+  Time UTC: 2026-10-25T14:22:11Z
+  Message: fix(deploy): isolate collector vulnerability scan
+  Summary: Replaced unsupported ECR Basic scanning with a pinned portable scanner in a separate unprivileged public-source job, while preserving protected OIDC publication as a dependent job. Receipt validation now allows exactly one explicit native or portable scanner proof.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3913,9 +3931,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:14:09Z
-Latest commit SHA: c15677c2b50a92b3d835050c374818d7e0a20a9a
-Chat duration: 1746880s (20:05:14:40)
+Latest commit at UTC: 2026-10-25T14:22:11Z
+Latest commit SHA: db4cb76763a905ce6be2b7efd9ec8325a670b87b
+Chat duration: 1747362s (20:05:22:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
