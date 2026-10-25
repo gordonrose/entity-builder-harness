@@ -79,7 +79,7 @@ jobs:
         id: scan
         run: |
           set -euo pipefail
-          scan_digest="$(aws ecr batch-get-image --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="${{ steps.image.outputs.digest }}" --accepted-media-types application/vnd.oci.image.index.v1+json --query 'images[0].imageManifest' --output text | python3 -c 'import json, sys; manifests = json.load(sys.stdin).get("manifests", []); candidates = [item.get("digest") for item in manifests if item.get("mediaType") == "application/vnd.oci.image.manifest.v1+json" and item.get("platform") == {"architecture": "amd64", "os": "linux"}]; assert len(candidates) == 1; print(candidates[0])')"
+          scan_digest="$(aws ecr batch-get-image --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="${{ steps.image.outputs.digest }}" --accepted-media-types application/vnd.oci.image.index.v1+json application/vnd.oci.image.manifest.v1+json --query 'images[0].{digest:imageId.imageDigest,mediaType:imageManifestMediaType,manifest:imageManifest}' --output json | python3 scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/resolve-ecr-scan-manifest.py)"
           [[ "$scan_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           for attempt in $(seq 1 30); do
             if aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="$scan_digest" --max-results 1 >/dev/null 2>"$RUNNER_TEMP/scan.err"; then break; fi

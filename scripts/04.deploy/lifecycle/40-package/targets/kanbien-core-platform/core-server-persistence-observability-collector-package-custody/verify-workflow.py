@@ -30,7 +30,7 @@ DEFAULT_WORKFLOW = ROOT / ".github/workflows/publish-kanbien-core-platform-obser
 DEFAULT_CONTRACT = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 DEFAULT_CONFIG = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
 SOURCE = "public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e"
-REQUIRED = ("workflow_dispatch:", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "aws ecr describe-image-scan-findings", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
+REQUIRED = ("workflow_dispatch:", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "resolve-ecr-scan-manifest.py", "aws ecr describe-image-scan-findings", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
 FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "terraform apply")
 
 def main() -> int:

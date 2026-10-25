@@ -197,6 +197,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The collector route was developed on a chat branch that diverged from newer accepted persistence work on local main.
   Resolution: Resolved the integration by retaining main's newer accepted implementation for overlapping persistence controllers and entrypoints, preserving nonconflicting observability/collector custody artifacts, then rerunning collector, target, and deployment-control gates.
 
+
+- Raised: Collector package workflow mirrored the qualified image but its scan selector assumed an OCI index.
+  Resolution: ECR returned a valid single OCI manifest. Added a deterministic resolver that accepts either the published runnable manifest or exactly one amd64 child of an OCI index; it rejects ambiguous or malformed responses. The existing mirrored digest was read-only verified; no deployment occurred.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -653,6 +657,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: The merge base was c884c321. Main contained newer accepted scope/recovery controls; the chat branch contained permissions and observability corrections plus collector custody. The final tree has no conflicts and targeted package, declaration, target, and deployment-control regressions pass.
   Durable evidence: Durable details are in Git merge parents, collector custody artifacts, and this chat session log.
+
+
+- Summary: Collector run 40200948509 qualified startup, private mirror, and then failed only before scan acceptance due to manifest-shape selection. The target-private digest sha256:d0a012... is not accepted as custody evidence yet. Resolver tests and the actual ECR response prove the corrective selector.
+  Durable evidence: Workflow, resolver, and regression live in the collector package-custody directory; GitHub run 40200948509 remains the factual failed attempt.
 
 ## Activity Log
 
@@ -3039,6 +3047,20 @@ Message: Merge main into chat branch
 Summary: Integrated the newer accepted persistence implementation from main with the collector custody route. Resolved only genuine overlaps by retaining main's newer controller/runtime implementation and reran collector, observability, target, and fixed deployment-controller checks successfully.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:13:24Z - Issue
+
+Raised: Collector package workflow mirrored the qualified image but its scan selector assumed an OCI index.
+
+Resolution: ECR returned a valid single OCI manifest. Added a deterministic resolver that accepts either the published runnable manifest or exactly one amd64 child of an OCI index; it rejects ambiguous or malformed responses. The existing mirrored digest was read-only verified; no deployment occurred.
+
+
+### 2026-10-25T14:13:24Z - Context hygiene
+
+Summary: Collector run 40200948509 qualified startup, private mirror, and then failed only before scan acceptance due to manifest-shape selection. The target-private digest sha256:d0a012... is not accepted as custody evidence yet. Resolver tests and the actual ECR response prove the corrective selector.
+
+Durable evidence: Workflow, resolver, and regression live in the collector package-custody directory; GitHub run 40200948509 remains the factual failed attempt.
 
 ## Sub-Agent Activity
 
