@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:49:53Z
-latest_commit_sha: f5890f9a82cae7e8c46a24c8b01acf9dee234c50
-chat_duration: 1749024s (20:05:50:24)
+latest_commit_at_utc: 2026-10-25T14:53:24Z
+latest_commit_sha: 3536df5a9a6461f35f02d7ca3e02e2337efa55ec
+chat_duration: 1749235s (20:05:53:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3200,6 +3200,12 @@ Durable evidence: Durable target contract and workflow are in infra/04.deploy/03
 
 ## Commits
 
+- Commit: `3536df5a9a6461f35f02d7ca3e02e2337efa55ec`
+  Time UTC: 2026-10-25T14:53:24Z
+  Message: fix(deploy): retain collector scan evidence
+  Summary: The unprivileged scanner now retains its JSON result whether clean or failing, then fails the job explicitly when the scan verdict is not clean. This makes vendor findings inspectable while preserving fail-closed custody.
+  ADR impact: No ADR: bounded evidence-retention correction to the active target package custody route.
+
 - Commit: `f5890f9a82cae7e8c46a24c8b01acf9dee234c50`
   Time UTC: 2026-10-25T14:49:53Z
   Message: fix(deploy): scan exact collector payload
@@ -4033,9 +4039,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:49:53Z
-Latest commit SHA: f5890f9a82cae7e8c46a24c8b01acf9dee234c50
-Chat duration: 1749024s (20:05:50:24)
+Latest commit at UTC: 2026-10-25T14:53:24Z
+Latest commit SHA: 3536df5a9a6461f35f02d7ca3e02e2337efa55ec
+Chat duration: 1749235s (20:05:53:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
