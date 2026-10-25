@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T11:27:11Z
-latest_commit_sha: f10d6cd2
-chat_duration: 1650462s (19:02:27:42)
+latest_commit_at_utc: 2026-10-24T16:05:00Z
+latest_commit_sha: 21d02a53
+chat_duration: 1667131s (19:07:05:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -165,6 +165,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The persistence release transition omitted the required RestoreVerifierImageDigest CloudFormation parameter, so AWS rejected change-set creation before any update.
   Resolution: Both clean-create and update controllers now bind the restoration verifier to the same qualified immutable persistence image digest as the server.
 
+
+- Raised: Acceptance required every historical ECS stopped-task record to remain queryable at the end of a multi-step rehearsal. ECS retention then aged out an already-proved replacement task and would have forced unrelated rehearsals.
+  Resolution: Each completed persistence proof now writes an allowlisted, integrity-checked durable receipt before reporting success. Acceptance consumes those retained receipts for historical proof while independently observing current service, database, recovery-point, cleanup, and budget state. One narrowly necessary replacement was repeated only after the old provider record had already expired; no migration, credential lifecycle, image update, or restore was repeated.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -234,6 +238,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Decision: Adopt fixed target-bound R6 control surfaces
   Rationale: Prepare, deploy, and verify commands are permanently bound to kanbien-core-platform/bootstrap-runtime, reject free-form target selection, emit safe diagnostics, and cannot contact a provider until E0/E1 facts and approvals exist.
+
+
+- Decision: Promote the accepted core-server-persistence successor and retain durable proof receipts
+  Rationale: The active persistence scope now owns the live server, verifier, migration, and restoration-verifier workloads. Bootstrap remains accepted historical evidence. Scope-local receipts preserve validated terminal proof facts beyond ECS stopped-task retention, while final acceptance continues to require fresh current-state observation.
 
 
 - Decision: Selected private ECS Fargate candidate design for kanbien-core-platform E1
@@ -2768,6 +2776,28 @@ Summary: Added a receipt-governed migration-task operation that verifies runtime
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-24T13:58:38Z - Commit recorded
+
+Commit: `5942afe2`
+
+Message: fix(deploy): fail closed on persistence revocation
+
+Summary: Added fail-closed runtime-session termination evidence, bounded fresh restore naming, and target-bound acceptance evidence collection.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-24T16:05:00Z - Commit recorded
+
+Commit: `21d02a53`
+
+Message: feat(deploy): retain persistence acceptance proofs
+
+Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
+
+ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3484,6 +3514,25 @@ ADR impact: covered by session ADR disposition
   Summary: Added a receipt-governed migration-task operation that verifies runtime DML succeeds and PostgreSQL rejects structural DDL in rolled-back transactions.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5942afe2`
+  Time UTC: 2026-10-24T13:58:38Z
+  Message: fix(deploy): fail closed on persistence revocation
+  Summary: Added fail-closed runtime-session termination evidence, bounded fresh restore naming, and target-bound acceptance evidence collection.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: pending
+  Summary: Record durable persistence proof receipts, collect accepted release evidence without depending on aged ECS tasks, and promote core-server-persistence to the active scope.
+  ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
+
+- Commit: `21d02a53`
+  Time UTC: 2026-10-24T16:05:00Z
+  Message: feat(deploy): retain persistence acceptance proofs
+  Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
+  ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
 ## Main Refresh Conflicts
 
 
@@ -3507,9 +3556,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T11:27:11Z
-Latest commit SHA: f10d6cd2
-Chat duration: 1650462s (19:02:27:42)
+Latest commit at UTC: 2026-10-24T16:05:00Z
+Latest commit SHA: 21d02a53
+Chat duration: 1667131s (19:07:05:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-24"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -165,11 +165,11 @@ def main() -> int:
         shutil.copytree(SCOPES, target_root)
         index_path = target_root / "scope-index.yml"
         valid = index(index_path)
-        # Isolate the generic successor fixture from the target's real
-        # candidate scope, which is itself covered by the initial live-tree
-        # validation above.
+        # Isolate the generic successor fixture from the target's now-active
+        # persistence scope.  Recreate a minimal active predecessor so this
+        # fixture remains a true candidate-to-active transition test.
         shutil.rmtree(target_root / "core-server-persistence")
-        valid["scopes"] = [item for item in valid["scopes"] if item.get("id") != "core-server-persistence"]
+        valid["scopes"] = [scope_entry("bootstrap-runtime", "active")]
         copied_scope(target_root, "core-server-persistence")
 
         candidate = copy.deepcopy(valid)

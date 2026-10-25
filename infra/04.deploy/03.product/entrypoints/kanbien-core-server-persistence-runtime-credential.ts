@@ -36,10 +36,18 @@ export function runtimeCredentialOperation(value: unknown): RuntimeCredentialOpe
 export async function revokeRuntimeAccess(pool: PostgreSqlConnectionPool, runtimeUsername: string): Promise<void> {
   const role = quotedIdentifier(runtimeUsername);
   await pool.query({ text: `ALTER ROLE ${role} NOLOGIN` });
-  await pool.query({
-    text: "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = $1 AND pid <> pg_backend_pid()",
+  const terminated = await pool.query<{ readonly terminated: boolean }>({
+    text: "SELECT pg_terminate_backend(pid) AS terminated FROM pg_stat_activity WHERE usename = $1 AND pid <> pg_backend_pid()",
     values: [runtimeUsername],
   });
+  // Revocation is not established merely because PostgreSQL accepted the
+  // statement. Every returned session must have been terminated. A zero-row
+  // result is valid when no runtime session exists at that exact instant;
+  // the governed replacement and not-ready proof then establish that new
+  // runtime access is denied without inventing a session to terminate.
+  if (terminated.rows.some((row) => row.terminated !== true)) {
+    throw new Error("PERSISTENCE_RUNTIME_SESSION_TERMINATION_NOT_CONFIRMED");
+  }
 }
 
 function quotedIdentifier(value: string): string {

@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""Regression coverage for retained-proof receipt acceptance parsing."""
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.test.kanbien-core-platform.persistence-acceptance-receipts
+#   version: 1
+#   status: active
+#   created_on: "2026-10-24"
+#   updated_on: "2026-10-24"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [security, sre]
+#   kind: script
+#   purpose: Exercise retained persistence acceptance receipt parsing without AWS calls.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
+#     path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md
+#   effects: [read-only, writes-files]
+from __future__ import annotations
+import copy
+import importlib.util
+import json
+import shutil
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[8]
+BASE = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence"
+def load(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path); module = importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(module); return module
+collector = load("collector", BASE / "collect-acceptance-evidence/script.py")
+receipts = load("proof_receipts", BASE / "proof-receipts.py")
+
+candidate, rollback = "sha256:" + "a" * 64, "sha256:" + "b" * 64
+required = {
+ "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"),
+ "effective-privilege": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-migration"),
+ "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate, "PERSISTENCE_SERVER_REPLACED", None),
+ "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
+ "credential-rotation": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"),
+ "credential-revocation": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED", "persistence-migration"),
+ "credential-revocation-unready": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", "private-release-verifier"),
+ "credential-recovery": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED", "persistence-migration"),
+ "credential-recovery-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
+ "credential-recovery-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
+ "rollback-b-health": ("verifier", "kanbien-core-platform-persistence-verifier", rollback, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
+ "rollback-b-read": ("verifier", "kanbien-core-platform-persistence-verifier", rollback, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
+ "rollback-final-health": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_HEALTHY", "private-release-verifier"),
+ "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
+ "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier"),
+}
+operations = {"migration-apply":"apply","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","credential-rotation":"rotate","credential-revocation":"revoke","credential-revocation-unready":"health-unready","credential-recovery":"rotate","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
+controllers={"migration":"run-migration","verifier":"verify-candidate","restore":"rehearse-isolated-database-restore","server-replacement":"rehearse-server-replacement"}
+deadlines={"persistence-migration":300,"private-release-verifier":120,"persistence-restoration-verifier":120}
+directory = Path(tempfile.mkdtemp(prefix="persistence-proof-receipt-"))
+try:
+    arguments=[]
+    for index,(name,(kind,family,digest,code,workload)) in enumerate(required.items()):
+        task={"taskArn":f"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/{index:032x}","taskDefinitionArn":f"arn:aws:ecs:eu-west-1:337159794548:task-definition/{family}:15","startedAt":f"2026-10-24T15:{index:02d}:00Z","stoppedAt":f"2026-10-24T15:{index:02d}:23Z","lastStatus":"STOPPED","containers":[{"exitCode":0}]}
+        if kind == "migration": context={"completion_deadline_seconds":deadlines[workload],"completion_duration_seconds":23}
+        elif kind == "verifier": context={"record_id":"acceptance-record","completion_deadline_seconds":deadlines[workload],"completion_duration_seconds":23}
+        elif kind == "restore": context={"snapshot":"kanbien-core-platform-persistence-recovery-20261024-r3","restored_database":"kanbien-core-platform-persistence-restore-20261024-r3","completion_deadline_seconds":deadlines[workload],"completion_duration_seconds":23}
+        else:
+            task["stoppedReason"]="governed core-server-persistence replacement rehearsal"
+            context={"original_stopped_reason":"governed core-server-persistence replacement rehearsal","successor_task_arn":"arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/ffffffffffffffffffffffffffffffff","successor_started_at":f"2026-10-24T15:{index:02d}:24Z","runtime_task_definition":task["taskDefinitionArn"],"recovery_boundary":f"2026-10-24T15:{index:02d}:12Z"}
+        item=receipts.make(proof_type=kind,operation=operations[name],task=task,image_digest=digest,result_code=code,context=context,controller=controllers[kind],collected_at=f"2026-10-24T15:{index:02d}:24Z")
+        path=directory/f"{name}.json"; path.write_text(json.dumps(item),encoding="utf-8"); arguments.append(f"{name}={path}")
+    assert set(collector.parse_proof_receipts(arguments,required,deadlines,directory)) == set(required)
+    broken=directory/"migration-apply.json"; value=json.loads(broken.read_text()); value["task"]["exit_code"]=None; broken.write_text(json.dumps(value),encoding="utf-8")
+    try: collector.parse_proof_receipts(arguments,required,deadlines,directory)
+    except collector.EvidenceFailure: pass
+    else: raise AssertionError("incomplete retained task proof passed")
+finally:
+    shutil.rmtree(directory)
+print("retained persistence acceptance receipt checks passed")

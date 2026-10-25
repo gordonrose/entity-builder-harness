@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import subprocess
@@ -10,7 +11,7 @@ import sys
 import time
 import uuid
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
@@ -50,6 +51,15 @@ def report(verdict: str, *codes: str, facts: dict[str, object] | None = None, st
         value["facts"] = facts
     print(json.dumps(value, sort_keys=True), file=stream or sys.stdout)
     return 0 if verdict == "accepted" else 1
+
+
+def proof_receipts():
+    path = ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py"
+    spec = importlib.util.spec_from_file_location("persistence_proof_receipts", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
 
 
 def deadline() -> int | None:
@@ -172,6 +182,34 @@ def task_operation_bound(task: dict, mode: str) -> bool:
     return all(isinstance(item, dict) and set(item) == {"name", "value"} for item in environment) and {item["name"]: item["value"] for item in environment} == expected
 
 
+def image_digest(task_definition: object) -> str | None:
+    if not isinstance(task_definition, str):
+        return None
+    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
+    containers = definition.get("taskDefinition", {}).get("containerDefinitions", []) if ok and isinstance(definition, dict) else []
+    image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
+    return image.rsplit("@", 1)[1] if isinstance(image, str) and image.count("@") == 1 and image.rsplit("@", 1)[1].startswith("sha256:") else None
+
+
+def historical_task_identity(task: dict[str, object], expected_digest: str) -> bool:
+    arn, definition_arn = task.get("taskArn"), task.get("taskDefinitionArn")
+    if not isinstance(arn, str) or not arn.startswith(f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/") or not isinstance(definition_arn, str):
+        return False
+    ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", definition_arn)
+    value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
+    return isinstance(value, dict) and value.get("family") == "kanbien-core-platform-persistence-migration" and image_digest(definition_arn) == expected_digest
+
+
+def qualified_digest(path: Path) -> str | None:
+    source = ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"
+    spec = importlib.util.spec_from_file_location("historic_capture_prepare", source)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    value = module.validate_receipt(path)
+    return value.get("image_digest") if isinstance(value, dict) and isinstance(value.get("image_digest"), str) else None
+
+
 def accepted_completion(task: dict[str, object], seconds: int, operation: str) -> int:
     facts = {"migration_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
     observed_duration = duration(task)
@@ -188,7 +226,19 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str) -
     if not accepted:
         return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
     arn = task.get("taskArn")
-    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
+    digest = image_digest(task.get("taskDefinitionArn"))
+    if not isinstance(arn, str) or digest is None:
+        return report("blocked", "persistence-migration-receipt-identity-unavailable")
+    try:
+        receipt = proof_receipts().make(
+            proof_type="migration", operation=operation, task=task, image_digest=digest,
+            result_code=SUCCESS[operation], context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration},
+            controller="run-migration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        )
+        path = proof_receipts().persist(receipt)
+    except Exception:
+        return report("blocked", "persistence-migration-receipt-persistence-failed")
+    return report("accepted", "persistence-migration-applied", facts={"operation": operation, "migration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration, "proof_receipt": str(path.relative_to(ROOT))})
 
 
 def main() -> int:
@@ -196,11 +246,13 @@ def main() -> int:
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--reconcile-task")
     parser.add_argument("--reconcile-operation")
+    parser.add_argument("--capture-completed-task")
+    parser.add_argument("--qualified-receipt", type=Path)
     parser.add_argument("--runtime-credential-operation", default="apply")
     args, unknown = parser.parse_known_args()
-    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or args.runtime_credential_operation not in SUCCESS:
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.runtime_credential_operation not in SUCCESS:
         return report("blocked", "persistence-migration-arguments-invalid")
-    if args.reconcile_operation is not None and (args.reconcile_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
+    if args.reconcile_operation is not None and (args.reconcile_task is not None or args.capture_completed_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
         return report("blocked", "persistence-migration-reconciliation-operation-invalid")
     seconds = deadline()
     if seconds is None:
@@ -233,6 +285,16 @@ def main() -> int:
         if code != "ok":
             verdict = "pending" if code.endswith("-not-terminal") and task.get("lastStatus") in {"PROVISIONING", "PENDING", "ACTIVATING", "RUNNING", "DEACTIVATING", "STOPPING", "DEPROVISIONING"} else "blocked"
             return report(verdict, code, facts={"migration_task": args.reconcile_task, "operation_id": args.reconcile_operation})
+        return accepted_completion(task, seconds, args.runtime_credential_operation)
+    if args.capture_completed_task is not None:
+        expected_digest = qualified_digest(args.qualified_receipt)
+        if expected_digest is None:
+            return report("blocked", "persistence-migration-historic-receipt-invalid")
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.capture_completed_task)
+        listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
+        task = listed[0] if len(listed) == 1 and isinstance(listed[0], dict) else None
+        if not isinstance(task, dict) or task.get("taskArn") != args.capture_completed_task or not historical_task_identity(task, expected_digest) or not task_operation_bound(task, args.runtime_credential_operation):
+            return report("blocked", code if not ok else "persistence-migration-historic-task-identity-invalid")
         return accepted_completion(task, seconds, args.runtime_credential_operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION", "value": args.runtime_credential_operation}]}]})

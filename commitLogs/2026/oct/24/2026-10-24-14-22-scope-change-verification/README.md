@@ -126,6 +126,72 @@ Summary: Preserve prior implementation and six-finding corrective request before
 
 ADR impact: ADR 0042 retained.
 
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
+
+### 2026-10-25T10:10:34Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+
 ## Sub-Agent Activity
 
 
@@ -183,7 +249,72 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `.agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches change the same authored persistence capability. Direct user confirmation on 2026-10-25 explicitly authorizes conflict resolution and preservation of both implementations.
+  Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
+  Preflight branch: `agentic/preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f/20261025100658`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-24-14-22-connect-scope-implementati-d71f6bc6f34f-20261025100658`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py
+  Checks: Combined controller 24-group suite, durable receipts, composition, collector, lifecycle, target, release, restore and credential suites passed; 18 accepted evidence/lifecycle files match main; metadata1303 and conflict audit passed.
 
 ## ADR Disposition
 
@@ -334,3 +465,11 @@ Independent read-only preparation is complete. The required next step is the gov
 ### Direct authorization and Goal resumed
 
 The user directly confirmed in chat: "I authorize checkpoint commits, main integration, conflict resolution, and final merge to main." The Goal is active again. This supersedes the earlier no-commit/no-merge restriction for the corrective work; live cloud mutations, real secret operations, publication, deployment and push remain prohibited. The prior checkpoint gates passed, and only session bookkeeping changed while waiting. Proceed with the authorized checkpoint and rehearsed refresh.
+
+### Main reconciliation in governed preflight
+
+Source checkpoint: 93aa74906ad6534d62b23bdd42607c4b7fb0965d; bookkeeping checkpoint: d71f6bc6f34f02f11dab21dd9d364c80562131b7. Verified bundle: /home/owner/projects/.chat-preservation/2026-10-25-scope-change-checkpoint.bundle (complete history; git bundle verify passed). Main c884c321 produces six normal-repo conflicts, all classified and explicitly authorized for manual resolution. No stash. The chat-owned worktree remains clean while this preflight combines the changes.
+
+Independent read-only preservation audit: persistence accepted-release, 15 proof receipts, bootstrap accepted-release and scope-index (18 files) are byte-identical to main. All retained receipts validate, and historical collector parsing issued zero provider queries. Revocation SQL alias and true/false/zero-row checks survived the clean merge. These are partial integration observations; combined executable checks are still pending.
+
+Combined preflight baseline passed: see `corrective-main-baseline.json`. Nine additional command checks passed; delegated controller suite passed 24 groups and durable receipt suite passed. All 18 accepted evidence/lifecycle files remain byte-identical to main. Global metadata passed for 1,303 artifacts. Conflict audit verified all six paths. No corrective finding is marked complete by this baseline.

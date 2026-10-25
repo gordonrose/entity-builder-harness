@@ -1,12 +1,12 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope-lifecycle-inventory
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-24"
 #   layer: 04.deploy
-#   domain: deployment.bootstrap-runtime
+#   domain: deployment.scope-lifecycle
 #   disciplines: [security, sre]
 #   kind: scope-index
 #   purpose: Inventory new-framework scope lifecycle and exclusive active workload ownership for health, failure, and recovery validation.
@@ -18,14 +18,15 @@ schema: deploy/scope-lifecycle-inventory/v1
 target: kanbien-core-platform
 scopes:
   - id: bootstrap-runtime
-    lifecycle: active
+    lifecycle: accepted-historical
+    successor: core-server-persistence
     declaration: bootstrap-runtime/00-declaration/declaration-contract.yml
     workload_binding: bootstrap-runtime/10-workload-binding/workload-binding.yml
     workload_ownership:
       - core-server-service
       - private-release-verifier-task
   - id: core-server-persistence
-    lifecycle: candidate
+    lifecycle: active
     predecessor: bootstrap-runtime
     declaration: core-server-persistence/00-declaration/declaration-contract.yml
     workload_binding: core-server-persistence/10-workload-binding/workload-binding.yml

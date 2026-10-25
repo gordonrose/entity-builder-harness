@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -12,7 +12,7 @@
 #   kind: script
 #   purpose: Prove provider controller outcomes and interrupted observation reconciliation with synthetic AWS responses only.
 #   portability: { class: internal, targets: [] }
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 #   used_by:
 #   - id: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh
@@ -23,6 +23,7 @@ import importlib.util
 import io
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -44,6 +45,16 @@ def result(call):
         code = call()
     reports = [json.loads(line) for line in out.getvalue().splitlines()]
     return code, reports[-1], reports
+
+@contextlib.contextmanager
+def temporary_receipts(controller):
+    """Exercise real receipt writes outside every canonical release-evidence path."""
+    receipts = load(RUN / 'proof-receipts.py')
+    with tempfile.TemporaryDirectory(prefix='persistence-controller-receipts-') as directory:
+        root = Path(directory)
+        receipts.RECEIPTS = root / 'proof-receipts'
+        with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root):
+            yield receipts
 
 class Provider:
     def __init__(self, responder):
@@ -405,6 +416,7 @@ class ControllerRegression(unittest.TestCase):
                 if parts[1]=='list-tasks':return True,{'taskArns':[arn]},'ok'
                 if parts[1]=='describe-tasks':return True,{'tasks':[task]},'ok'
                 if parts[1]=='get-log-events':return True,{'events':[{'message':json.dumps({'verdict':'accepted','code':module.SUCCESS[mode]})}]},'ok'
+                if parts[1]=='describe-task-definition':return True,{'taskDefinition':{'containerDefinitions':[{'image':'synthetic.invalid/persistence@sha256:'+'c'*64}]}},'ok'
                 raise AssertionError(f'unexpected mutation {parts}')
             provider=Provider(response)
             output={output_key:'definition-safe','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
@@ -412,6 +424,7 @@ class ControllerRegression(unittest.TestCase):
                 stack.enter_context(patch.object(module,'outputs',return_value=(output,'ok')))
                 stack.enter_context(patch.object(module,'deadline',return_value=120))
                 stack.enter_context(patch.object(module,'aws',provider.aws))
+                receipts = stack.enter_context(temporary_receipts(module))
                 if name=='verify-candidate':stack.enter_context(patch.object(module,'no_direct_database_credential',return_value=True))
                 for status,exitcode,verdict in [('RUNNING',0,'pending'),('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
                     task['lastStatus']=status;task['containers'][0]['exitCode']=exitcode
@@ -438,6 +451,83 @@ class ControllerRegression(unittest.TestCase):
                     call=provider.calls[-1];self.assertIn('--client-token',call)
             self.assertFalse(module.accepted_message('prefix '+json.dumps({'verdict':'accepted','code':module.SUCCESS[mode]}),module.SUCCESS[mode]))
 
+    def test_historical_task_capture_preserves_qualified_receipts(self):
+        for name,mode_arg,mode,output_key,family in [
+            ('run-migration','--runtime-credential-operation','apply','CoreServerPersistenceMigrationTaskDefinitionArn','kanbien-core-platform-persistence-migration'),
+            ('verify-candidate','--mode','read','CoreServerPersistenceVerifierTaskDefinitionArn','kanbien-core-platform-persistence-verifier'),
+        ]:
+            module=load(RUN/name/'script.py'); digest='sha256:'+'c'*64
+            arn=f'arn:aws:ecs:{module.REGION}:{module.ACCOUNT}:task/{module.CLUSTER}/'+'d'*32
+            old_definition=f'arn:aws:ecs:{module.REGION}:{module.ACCOUNT}:task-definition/{family}:7'
+            task={'taskArn':arn,'taskDefinitionArn':old_definition,'lastStatus':'STOPPED','containers':[{'exitCode':0}],
+                  'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
+            environment={'PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION':mode} if name=='run-migration' else {'PERSISTENCE_VERIFIER_MODE':mode,'PERSISTENCE_ACCEPTANCE_RECORD_ID':module.RECORD_ID,'PERSISTENCE_ACCEPTANCE_FACT':module.FACT}
+            task['overrides']={'containerOverrides':[{'name':'persistence-migration' if name=='run-migration' else 'private-persistence-verifier','environment':[{'name':key,'value':value} for key,value in environment.items()]}]}
+            def response(parts):
+                if parts[1]=='describe-tasks':return True,{'tasks':[task]},'ok'
+                if parts[1]=='describe-task-definition':
+                    self.assertEqual(parts[-1],old_definition)
+                    return True,{'taskDefinition':{'family':family,'containerDefinitions':[{'image':'synthetic.invalid/persistence@'+digest}]}},'ok'
+                if parts[1]=='get-log-events':return True,{'events':[{'message':json.dumps({'verdict':'accepted','code':module.SUCCESS[mode]})}]},'ok'
+                raise AssertionError(f'historical capture cannot mutate {parts}')
+            provider=Provider(response)
+            output={output_key:'current-definition:99','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
+            with contextlib.ExitStack() as stack:
+                receipts=stack.enter_context(temporary_receipts(module))
+                stack.enter_context(patch.object(module,'outputs',return_value=(output,'ok')))
+                stack.enter_context(patch.object(module,'deadline',return_value=120))
+                stack.enter_context(patch.object(module,'qualified_digest',return_value=digest))
+                stack.enter_context(patch.object(module,'aws',provider.aws))
+                if name=='verify-candidate':stack.enter_context(patch.object(module,'no_direct_database_credential',return_value=True))
+                argv=['test',mode_arg,mode,'--capture-completed-task',arn,'--qualified-receipt','synthetic']
+                with patch.object(sys,'argv',argv):
+                    self.assertEqual(result(module.main)[1]['verdict'],'accepted')
+                    stored=next(receipts.RECEIPTS.glob('*.json'));original=stored.read_bytes()
+                    self.assertEqual(result(module.main)[1]['verdict'],'accepted')
+                    self.assertEqual(stored.read_bytes(),original)
+                    captured=receipts.validate(json.loads(original))
+                    self.assertEqual(captured['task']['definition'],old_definition)
+                    task['overrides']['containerOverrides'][0]['environment'][0]['value']='unrelated'
+                    self.assertEqual(result(module.main)[1]['verdict'],'blocked')
+                provider.calls=[]
+                with patch.object(sys,'argv',argv+['--reconcile-operation','kp-'+'e'*32]):
+                    self.assertEqual(result(module.main)[1]['verdict'],'blocked')
+                self.assertFalse(provider.calls)
+
+    def test_historical_replacement_retains_predecessor_successor(self):
+        module=load(RUN/'rehearse-server-replacement/script.py'); digest='sha256:'+'c'*64
+        prefix='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'
+        old_definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:7'
+        original={'taskArn':prefix+'a'*32,'taskDefinitionArn':old_definition,'group':'service:'+module.SERVICE,'lastStatus':'STOPPED',
+                  'startedAt':'2026-10-24T09:00:00Z','stoppedAt':'2026-10-24T10:00:00Z','containers':[{'exitCode':137}],
+                  'stoppedReason':'governed core-server-persistence replacement rehearsal'}
+        successor={'taskArn':prefix+'b'*32,'taskDefinitionArn':old_definition,'group':'service:'+module.SERVICE,'startedAt':'2026-10-24T10:00:01Z'}
+        def response(parts):
+            if parts[1]=='describe-tasks':return True,{'tasks':[original if parts[-1]==original['taskArn'] else successor]},'ok'
+            if parts[1]=='describe-task-definition':return True,{'taskDefinition':{'containerDefinitions':[{'image':'synthetic.invalid/persistence@'+digest}]}},'ok'
+            raise AssertionError(f'historical replacement cannot mutate {parts}')
+        prepare=Provider(response);prepare.REGION='eu-west-1';prepare.ACCOUNT='337159794548'
+        prepare.validate_receipt=lambda _: {'image_digest':digest,'source_revision':'revision-safe'}
+        create=SimpleNamespace(package_gates=lambda _:True)
+        argv=['test','--receipt','synthetic','--capture-completed-original-task',original['taskArn'],'--capture-completed-successor-task',successor['taskArn']]
+        with temporary_receipts(module) as receipts,patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'current_task',side_effect=AssertionError('historical capture must use historical definitions')),patch.object(sys,'argv',argv):
+            self.assertEqual(result(module.main)[1]['verdict'],'replaced')
+            captured=receipts.validate(json.loads(next(receipts.RECEIPTS.glob('*.json')).read_text()))
+            self.assertEqual(captured['task']['arn'],original['taskArn'])
+            self.assertEqual(captured['context']['successor_task_arn'],successor['taskArn'])
+            self.assertEqual(captured['context']['runtime_task_definition'],old_definition)
+
+    def test_main_snapshot_suffix_support_is_preserved(self):
+        snapshot=load(RUN/'create-recovery-point/script.py');restore=load(RUN/'rehearse-isolated-database-restore/script.py')
+        for suffix in ('','-b','-followup'):
+            identifier='kanbien-core-platform-persistence-recovery-20261024'+suffix
+            self.assertIsNotNone(snapshot.PATTERN.fullmatch(identifier))
+            self.assertEqual(restore.restore_id(identifier),'kanbien-core-platform-persistence-restore-20261024'+suffix)
+        for suffix in ('-too-long-suffix','-UPPER','-'):
+            identifier='kanbien-core-platform-persistence-recovery-20261024'+suffix
+            self.assertIsNone(snapshot.PATTERN.fullmatch(identifier))
+            self.assertIsNone(restore.restore_id(identifier))
+
     def test_restore_reconciliation_pending_failed_and_strict_evidence(self):
         module=load(RUN/'rehearse-isolated-database-restore/script.py'); sid='kanbien-core-platform-persistence-recovery-20261024'; rid=module.restore_id(sid)
         restored={'DBInstanceStatus':'available','DbiResourceId':'db-restore-safe','PubliclyAccessible':False,'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'Endpoint':{'Address':'synthetic.invalid'}}
@@ -448,10 +538,11 @@ class ControllerRegression(unittest.TestCase):
             if parts[1]=='list-tasks':return True,{'taskArns':[arn]},'ok'
             if parts[1]=='describe-tasks':return True,{'tasks':[task]},'ok'
             if parts[1]=='get-log-events':return True,{'events':[{'message':log}]},'ok'
+            if parts[1]=='describe-task-definition':return True,{'taskDefinition':{'containerDefinitions':[{'image':'synthetic.invalid/persistence@sha256:'+'c'*64}]}},'ok'
             raise AssertionError(f'unexpected mutation {parts}')
         provider=Provider(response)
         ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PrivateSubnetIds':'subnet-safe','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
-        with patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True):
+        with temporary_receipts(module),patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True):
             for status,exitcode,verdict in [('RUNNING',0,'pending'),('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
                 task['lastStatus']=status;task['containers'][0]['exitCode']=exitcode
                 self.assertEqual(result(lambda:module.verify(provider,sid,rid))[1]['verdict'],verdict)
