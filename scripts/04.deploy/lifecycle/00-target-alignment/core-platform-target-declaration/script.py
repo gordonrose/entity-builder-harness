@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration.implementation
-#   version: 8
+#   version: 9
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -469,22 +469,23 @@ def check_pipeline(root: Path) -> None:
     if catalogue.get("schema") != "deploy/pipeline-index/v1" or catalogue.get("target") != TARGET:
         raise DeclarationFailure("pipeline-index-invalid")
     pipelines = catalogue.get("pipelines")
-    if not isinstance(pipelines, list) or len(pipelines) != 2 or not all(isinstance(pipeline, dict) for pipeline in pipelines):
+    if not isinstance(pipelines, list) or len(pipelines) != 3 or not all(isinstance(pipeline, dict) for pipeline in pipelines):
         raise DeclarationFailure("pipeline-record-missing")
     expected = {
-        "core-server-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server.yml", "core-server-package-custody.delivery-access.yml", "bootstrap-runtime"),
-        "core-server-persistence-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence"),
+        "core-server-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server.yml", "core-server-package-custody.delivery-access.yml", "bootstrap-runtime", ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
+        "core-server-persistence-package-custody": (".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence", ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "local-image-qualification"),
+        "core-server-persistence-observability-collector-package-custody": (".github/workflows/publish-kanbien-core-platform-observability-collector.yml", "core-server-persistence-package-custody.delivery-access.yml", "core-server-persistence", ["qualify-pinned-sidecar", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"], "source-identity"),
     }
     indexed = {pipeline.get("id"): pipeline for pipeline in pipelines}
     if set(indexed) != set(expected):
         raise DeclarationFailure("pipeline-record-missing")
-    for pipeline_id, (workflow, access_contract, scope) in expected.items():
+    for pipeline_id, (workflow, access_contract, scope, operations, primary_proof) in expected.items():
         pipeline = indexed[pipeline_id]
         if pipeline.get("type") != "package-publication" or pipeline.get("state") != "active" or pipeline.get("executable_workflow") != workflow or pipeline.get("delivery_access_contract") != access_contract or pipeline.get("trigger") != "workflow_dispatch" or pipeline.get("permitted_source_ref") != "refs/heads/main" or pipeline.get("approval") != "github-environment:kanbien-core-platform" or pipeline.get("provider_identity") != "github-kanbien-core-platform-delivery" or pipeline.get("package_destination") != "kanbien-core-platform/core-server" or pipeline.get("provider_region_alias") != "aws-eu-west-1" or pipeline.get("receipt_contract") != ".agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml":
             raise DeclarationFailure("pipeline-record-invalid")
         if not non_empty(pipeline.get("owner")):
             raise DeclarationFailure("pipeline-unowned")
-        if pipeline.get("permitted_operations") != ["qualify-local-image", "publish-immutable-image", "vulnerability-scan", "sbom", "provenance-attestation", "write-safe-package-custody-receipt"] or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != [scope] or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
+        if pipeline.get("permitted_operations") != operations or pipeline.get("outputs") != ["immutable-image-digest", "package-custody-receipt"] or pipeline.get("used_by_scopes") != [scope] or primary_proof not in pipeline.get("required_proofs", []) or "delivery-access-coverage" not in pipeline.get("required_proofs", []) or pipeline.get("deployment_boundary") != "target-bound-deploy-capability-not-this-pipeline":
             raise DeclarationFailure("pipeline-authority-invalid")
 
 

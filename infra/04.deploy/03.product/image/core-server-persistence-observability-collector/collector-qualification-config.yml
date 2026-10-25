@@ -1,0 +1,49 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.qualification-config
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence.observability
+#   disciplines: [security, sre]
+#   kind: collector-configuration-fixture
+#   purpose: Exercise the exact permitted ADOT component path with non-secret target-shaped values during package qualification.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.pipeline.kanbien-core-platform.observability-collector-package-custody
+#     path: .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+extensions:
+  health_check:
+    endpoint: 127.0.0.1:13133
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 127.0.0.1:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 96
+    spike_limit_mib: 32
+  batch:
+    send_batch_size: 100
+    timeout: 10s
+exporters:
+  awsemf:
+    region: eu-west-1
+    namespace: Kanbien/CorePlatform
+    log_group_name: /aws/ecs/kanbien-core-platform
+    log_stream_name: core-server-persistence-readiness-metrics
+    dimension_rollup_option: NoDimensionRollup
+    metric_declarations:
+      - dimensions: [[target, scope, workload, dependency, readiness]]
+        metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']
+service:
+  extensions: [health_check]
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [awsemf]

@@ -110,6 +110,22 @@ def check(root: Path) -> None:
     foundation = document(root / "10-foundation" / "observability.yml", "observability-foundation-unreadable")
     if foundation.get("schema") != "deploy/observability-foundation/v1" or foundation.get("target") != TARGET or foundation.get("status") != "local-contract-validated-live-proof-required" or contains_recipient(foundation):
         raise Failure("observability-foundation-invalid")
+    collector_contract = document(
+        root.parent.parent / "image" / "core-server-persistence-observability-collector" / "image-contract.yml",
+        "observability-collector-package-contract-unreadable",
+    )
+    if (
+        collector_contract.get("schema") != "deploy/sidecar-image-contract/v1"
+        or collector_contract.get("target") != TARGET
+        or collector_contract.get("scope") != SCOPE
+        or collector_contract.get("candidate_id") != "observability-collector"
+        or collector_contract.get("package_contract_id") != "core-server-persistence-observability-collector-image"
+        or collector_contract.get("program_id") != "aws-otel-collector"
+        or mapping(collector_contract.get("source"), "observability-collector-package-contract-invalid").get("immutable_digest") != "sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e"
+        or mapping(collector_contract.get("destination"), "observability-collector-package-contract-invalid").get("selection") != "private-ecr-immutable-digest"
+        or mapping(collector_contract.get("runtime"), "observability-collector-package-contract-invalid").get("exporter") != "aws-emf-cloudwatch-logs"
+    ):
+        raise Failure("observability-collector-package-contract-invalid")
     template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
     required_template_text = [
         "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",

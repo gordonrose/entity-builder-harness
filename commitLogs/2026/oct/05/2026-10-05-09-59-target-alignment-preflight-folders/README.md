@@ -189,6 +189,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Classified absent named change sets as a reconciled lifecycle state
   Resolution: CloudFormation can report ChangeSetNotFoundException without the generic phrases recognized by the provider adapter. The preparation adapter now maps only that explicit condition to aws-resource-missing; target-control regression proves it. A change-set must still be reviewed before creation or execution.
 
+
+- Raised: Target-private collector custody was not yet an executable package route.
+  Resolution: Added a contract-pinned ADOT collector package workflow; it mirrors only the immutable public source into the existing target-private ECR repository, validates non-secret startup configuration, scan/SBOM/provenance, and emits a custody receipt before it can be selected by a deployment.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -427,6 +431,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Repair mutable release reference without rewriting accepted history
   Rationale: Current release references must hash the exact immutable bytes they name. A pointer-only correction restores validation while preserving historical acceptance truth.
 
+
+- Decision: Adopt target-private collector package custody.
+  Rationale: The collector remains a sidecar dependency, not a deployment authority: its protected manual GitHub workflow may qualify and publish one pinned digest only. The persistence deploy controller will remain blocked until that receipt and digest are supplied.
+
 ## Context Hygiene
 
 
@@ -629,6 +637,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Actual private support image sha256:bc9080d4ed02ad422100bd31ef17b213012de27bbb5a7c75f6b14ef77847a166 contains the administration program. The retained image sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3 passed the governed disposable PostgreSQL/TLS compatibility qualifier with it. Current stack has no observability parameters or target-owned SNS topic; only a staging topic exists and must not be reused.
   Durable evidence: Package provenance is GitHub Actions run 40197961821; local qualification is governed by scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh; current stack facts were read from CloudFormation in eu-west-1.
+
+
+- Summary: A public ADOT OCI index is pinned by contract and package-tested structurally; the target catalogue now routes the collector through protected private custody. Static checks pass; publication and live observability proof remain pending.
+  Durable evidence: Collector contract and config live under infra/04.deploy/03.product/image/core-server-persistence-observability-collector; workflow and guard live under .github/workflows and scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform.
 
 ## Activity Log
 
@@ -2951,6 +2963,27 @@ Message: fix(deploy): correct observability delivery route
 Summary: Corrected ADOT delivery to use EMF through the existing private Logs endpoint, declared target-owned notification binding, and classified named absent change sets safely; local target and observability gates pass.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:04:31Z - Issue
+
+Raised: Target-private collector custody was not yet an executable package route.
+
+Resolution: Added a contract-pinned ADOT collector package workflow; it mirrors only the immutable public source into the existing target-private ECR repository, validates non-secret startup configuration, scan/SBOM/provenance, and emits a custody receipt before it can be selected by a deployment.
+
+
+### 2026-10-25T14:04:31Z - Decision
+
+Decision: Adopt target-private collector package custody.
+
+Rationale: The collector remains a sidecar dependency, not a deployment authority: its protected manual GitHub workflow may qualify and publish one pinned digest only. The persistence deploy controller will remain blocked until that receipt and digest are supplied.
+
+
+### 2026-10-25T14:04:32Z - Context hygiene
+
+Summary: A public ADOT OCI index is pinned by contract and package-tested structurally; the target catalogue now routes the collector through protected private custody. Static checks pass; publication and live observability proof remain pending.
+
+Durable evidence: Collector contract and config live under infra/04.deploy/03.product/image/core-server-persistence-observability-collector; workflow and guard live under .github/workflows and scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform.
 
 ## Sub-Agent Activity
 

@@ -1,0 +1,42 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.contract
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence.observability
+#   disciplines: [security, sre]
+#   kind: image-contract
+#   purpose: Pin, qualify, and mirror the ADOT collector sidecar before the target can select it by private immutable digest.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.pipeline.kanbien-core-platform.observability-collector-package-custody
+#     path: .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+#   - id: deploy.command.validate-core-server-persistence-observability-mvp
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh
+schema: deploy/sidecar-image-contract/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+candidate_id: observability-collector
+package_contract_id: core-server-persistence-observability-collector-image
+program_id: aws-otel-collector
+source:
+  registry: public.ecr.aws
+  repository: aws-observability/aws-otel-collector
+  # Resolved from the public OCI index on 2026-10-25. The package workflow
+  # rejects a mutable source reference and mirrors this exact identity only.
+  immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
+destination:
+  repository: kanbien-core-platform/core-server
+  selection: private-ecr-immutable-digest
+runtime:
+  configuration_source: target-owned-ssm-parameter-non-secret
+  configuration_environment: AOT_CONFIG_CONTENT
+  receiver: otlp-http-127-0-0-1-4318
+  exporter: aws-emf-cloudwatch-logs
+  application_failure_effect: bounded-telemetry-failure-only
+qualification:
+  required_checks: [source-identity, configuration-startup, ecr-scan, sbom, provenance-attestation]
+  receipt_schema: deploy/package-custody-receipt/v1
