@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T11:58:34Z
-latest_commit_sha: 657806d5815b74d60c99c03449e7934e8209fae3
-chat_duration: 81347s (00:22:35:47)
+latest_commit_at_utc: 2026-10-25T12:02:58Z
+latest_commit_sha: 481ff0d412bb5e33e1be5701de1934a8bc57b561
+chat_duration: 81611s (00:22:40:11)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -411,6 +411,17 @@ Summary: Second resumed Goal turn: helper version success does not restore Docke
 
 Durable evidence: Native attempt6 from clean23128b56 failed after34.2s with identical credential-helper WSLvsock error, despite same-process helper version probe exit0. No smoke started; existing Docker configuration unchanged. Latest fetch succeeded; main remainsc884c321. This evidence means version-only success is insufficient reason to launch further retries. Required current image proof and final merge remain incomplete; bounded package-owner public-image recovery approval is pending. No independent implementation work remains.
 
+
+### 2026-10-25T12:02:58Z - Commit recorded
+
+Commit: `481ff0d412bb5e33e1be5701de1934a8bc57b561`
+
+Message: Record native qualification failure after successful helper probe
+
+Summary: Attempt6 still fails before image build despite successful Docker helper version precondition. Recovery approval remains pending; current-source container smoke and final main merge remain incomplete.
+
+ADR impact: Diagnostic evidence only; no source or architecture change.
+
 ## Sub-Agent Activity
 
 
@@ -494,6 +505,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Summary: User-requested retry observed initial WSL success but Docker credential-helper and subsequent Windows probes failed. All source unchanged. Bounded public-image local recovery proposal pending under repository governance; container qualification and final main merge incomplete.
   ADR impact: No new architecture decision; diagnostic evidence only.
 
+
+- Commit: `481ff0d412bb5e33e1be5701de1934a8bc57b561`
+  Time UTC: 2026-10-25T12:02:58Z
+  Message: Record native qualification failure after successful helper probe
+  Summary: Attempt6 still fails before image build despite successful Docker helper version precondition. Recovery approval remains pending; current-source container smoke and final main merge remain incomplete.
+  ADR impact: Diagnostic evidence only; no source or architecture change.
+
 ## Main Refresh Conflicts
 
 
@@ -572,9 +590,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T11:58:34Z
-Latest commit SHA: 657806d5815b74d60c99c03449e7934e8209fae3
-Chat duration: 81347s (00:22:35:47)
+Latest commit at UTC: 2026-10-25T12:02:58Z
+Latest commit SHA: 481ff0d412bb5e33e1be5701de1934a8bc57b561
+Chat duration: 81611s (00:22:40:11)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
