@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:22:11Z
-latest_commit_sha: db4cb76763a905ce6be2b7efd9ec8325a670b87b
-chat_duration: 1747362s (20:05:22:42)
+latest_commit_at_utc: 2026-10-25T14:26:24Z
+latest_commit_sha: 7defa885fb1fece769b15f170af298953c25adfd
+chat_duration: 1747615s (20:05:26:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3150,6 +3150,17 @@ Summary: Runs 40200948509 and 40201291933 established successful collector start
 
 Durable evidence: Workflow contract and static boundary guard remain under collector package custody; generic receipt validation records only safe scan verdict vocabulary.
 
+
+### 2026-10-25T14:26:24Z - Commit recorded
+
+Commit: `7defa885fb1fece769b15f170af298953c25adfd`
+
+Message: fix(deploy): scan mirrored collector payload
+
+Summary: Collector custody now mirrors the pinned source, exports the exact private image as a one-day scan input, scans that payload in an unprivileged job, and only afterward issues the protected SBOM/provenance/receipt. No scan result or failed attempt is accepted as custody evidence.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3941,6 +3952,13 @@ Durable evidence: Workflow contract and static boundary guard remain under colle
   Summary: Replaced unsupported ECR Basic scanning with a pinned portable scanner in a separate unprivileged public-source job, while preserving protected OIDC publication as a dependent job. Receipt validation now allows exactly one explicit native or portable scanner proof.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `7defa885fb1fece769b15f170af298953c25adfd`
+  Time UTC: 2026-10-25T14:26:24Z
+  Message: fix(deploy): scan mirrored collector payload
+  Summary: Collector custody now mirrors the pinned source, exports the exact private image as a one-day scan input, scans that payload in an unprivileged job, and only afterward issues the protected SBOM/provenance/receipt. No scan result or failed attempt is accepted as custody evidence.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3964,9 +3982,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:22:11Z
-Latest commit SHA: db4cb76763a905ce6be2b7efd9ec8325a670b87b
-Chat duration: 1747362s (20:05:22:42)
+Latest commit at UTC: 2026-10-25T14:26:24Z
+Latest commit SHA: 7defa885fb1fece769b15f170af298953c25adfd
+Chat duration: 1747615s (20:05:26:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
