@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Govern one fixed isolated native PostgreSQL restore proof."""
 from __future__ import annotations
-import argparse, hashlib, importlib.util, json, re
+import argparse, hashlib, importlib.util, json, re, time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -10,6 +10,11 @@ DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; S
 EVIDENCE_CLASS="live"  # Only isolated imported test harnesses may change this; no CLI bypass.
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
 RESTORE_ACCEPTED_RESULT="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"
+# IAM policy observation confirms the target binding, but RDS IAM database
+# authentication is separately eventually consistent.  This is a bounded
+# *pre-launch stabilization wait*, not an automatic retry of a verifier that
+# has already started or completed.
+RESTORATION_IDENTITY_STABILIZATION_SECONDS=60
 RESTORE_REJECTED_RESULTS={
  "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
@@ -268,6 +273,14 @@ def verify(m,sid,rid,observe_only=False):
   except Exception:return emit("blocked","persistence-restoration-verifier-receipt-persistence-failed")
   return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={**facts,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration,"proof_receipt":str(path.relative_to(ROOT))})
  if observe_only:return emit("uncertain","persistence-restoration-verifier-operation-not-observed",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+ # A policy can be visible to IAM before it is usable by RDS IAM database
+ # authentication.  Do not turn the resulting first connection into a
+ # misleading retryable verifier failure.  Re-observe the exact policy after
+ # one bounded stabilization interval, then launch at most one task for this
+ # restored database incarnation.
+ time.sleep(RESTORATION_IDENTITY_STABILIZATION_SECONDS)
+ identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,True)
+ if identity_status!="ok" or identity_reference!=restore_identity_resource(restored):return emit("uncertain","persistence-restoration-temporary-identity-policy-not-stable",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
  return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})

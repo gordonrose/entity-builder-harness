@@ -340,6 +340,14 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
 ```
 
+The first verifier launch waits for one bounded restoration-identity
+stabilization interval after the exact temporary `rds-db:connect` policy is
+observed, then re-observes that policy before submitting the task. This covers
+normal IAM/RDS propagation without retrying a verifier that has already run.
+An unsuccessful verifier remains a failed completion: collect its closed safe
+result, clean up the derived database, diagnose through governed controls, and
+start a fresh rehearsal only after the correction is reviewed.
+
 New restores retain source, snapshot, record and proof-digest tags. Continue
 with the same snapshot and record receipt; existing resources with absent or
 mismatched tags cannot establish that rehearsal, and observation never submits

@@ -86,6 +86,39 @@ assert module.restore_run_identity(first_restore) != module.restore_run_identity
 assert module.restore_run_identity(first_restore).startswith("kanbien-restore-")
 assert module.restore_run_identity({}) is None
 
+# RDS IAM authentication can lag the IAM policy read that binds the temporary
+# restored instance.  A first verifier launch therefore waits once, rechecks
+# that exact policy, and launches at most one bound task; it is not a retry of
+# an already submitted verifier.
+restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
+controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "definition-safe", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
+class LaunchFixture:
+    def __init__(self): self.calls = []
+    def aws(self, *args):
+        self.calls.append(args)
+        if args[1] == "run-task": return True, {}, "ok"
+        raise AssertionError(args)
+
+launch = LaunchFixture()
+originals = module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.verifier_tasks, module.time.sleep
+module.source = lambda _m: ({}, "ok")
+module.controls = lambda _m: (controls, "ok")
+module.db = lambda _m, _id: (restored, "ok")
+module.correct = lambda *_: True
+module.task_def_valid = lambda *_: True
+identity = module.restore_identity_resource(restored)
+module.temporary_restore_identity_policy = lambda *_args: ("ok", identity)
+module.verifier_tasks = lambda *_args: ([], "ok")
+waits = []
+module.time.sleep = lambda seconds: waits.append(seconds)
+output = io.StringIO()
+with contextlib.redirect_stdout(output):
+    assert module.verify(launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2") == 1
+module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.verifier_tasks, module.time.sleep = originals
+assert waits == [module.RESTORATION_IDENTITY_STABILIZATION_SECONDS]
+assert any(call[1] == "run-task" for call in launch.calls)
+assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
+
 # A failed verifier may contribute only an explicit allowlisted result code.
 # Raw provider output and lookalike payloads are not diagnostic evidence.
 class LogFixture:
