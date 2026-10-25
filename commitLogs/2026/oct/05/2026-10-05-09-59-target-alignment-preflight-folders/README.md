@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T15:54:11Z
-latest_commit_sha: b12f2d75
-chat_duration: 1752882s (20:06:54:42)
+latest_commit_at_utc: 2026-10-25T16:00:07Z
+latest_commit_sha: 535815b0
+chat_duration: 1753238s (20:07:00:38)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3260,6 +3260,17 @@ Summary: Corrected the permission update change-set allowlist and added safe fai
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T16:00:07Z - Commit recorded
+
+Commit: `535815b0`
+
+Message: refactor(deploy): phase persistence observability rollout
+
+Summary: Separated the database-permission update from conditional observability activation so each is independently reviewed and recoverable.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4124,6 +4135,13 @@ ADR impact: covered by session ADR disposition
   Summary: Corrected the permission update change-set allowlist and added safe failed-change-set retirement with regression coverage.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `535815b0`
+  Time UTC: 2026-10-25T16:00:07Z
+  Message: refactor(deploy): phase persistence observability rollout
+  Summary: Separated the database-permission update from conditional observability activation so each is independently reviewed and recoverable.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4147,9 +4165,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T15:54:11Z
-Latest commit SHA: b12f2d75
-Chat duration: 1752882s (20:06:54:42)
+Latest commit at UTC: 2026-10-25T16:00:07Z
+Latest commit SHA: 535815b0
+Chat duration: 1753238s (20:07:00:38)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
