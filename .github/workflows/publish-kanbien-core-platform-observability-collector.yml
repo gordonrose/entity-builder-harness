@@ -193,7 +193,11 @@ jobs:
             'program_id': 'kanbien-observability-collector', 'source_revision': os.environ['GITHUB_SHA'],
             'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
             'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            'checks': {'runnable_program_contract':'passed','minimal_source_build':'passed','configuration_startup':'passed','delivery_access_static':'passed','delivery_access_live':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
+            # The generic custody receipt carries the reusable check vocabulary.
+            # Target-specific proof names remain in the collector contract and
+            # pipeline declaration; adding them here would make this otherwise
+            # valid receipt fail the generic schema.
+            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
             'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
           }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
           PY
