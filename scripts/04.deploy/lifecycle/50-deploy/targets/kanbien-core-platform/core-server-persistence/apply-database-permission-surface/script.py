@@ -33,22 +33,28 @@ CLUSTER = "kanbien-core-platform"
 SERVICE = "kanbien-core-platform-core-server-persistence"
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 ADDED = {
-    "AdministrationSecurityGroup": "AWS::EC2::SecurityGroup",
-    "AdministrationDnsUdpEgress": "AWS::EC2::SecurityGroupEgress",
-    "AdministrationDnsTcpEgress": "AWS::EC2::SecurityGroupEgress",
-    "AdministrationEndpointEgress": "AWS::EC2::SecurityGroupEgress",
-    "AdministrationArtifactObjectStoreEgress": "AWS::EC2::SecurityGroupEgress",
-    "AdministrationDatabaseEgress": "AWS::EC2::SecurityGroupEgress",
-    "DatabaseIngressFromAdministration": "AWS::EC2::SecurityGroupIngress",
-    "EndpointIngressFromAdministration": "AWS::EC2::SecurityGroupIngress",
-    "OrdinaryMigrationCredentialsSecret": "AWS::SecretsManager::Secret",
-    "AdministrationExecutionRole": "AWS::IAM::Role",
-    "CoreServerPersistenceAdministrationTaskDefinition": "AWS::ECS::TaskDefinition",
+    # The pre-IAM target already owns the bounded administration network
+    # surface.  This transition adds identity roles only; permitting the old
+    # network additions here would make an unrelated topology change look like
+    # an IAM migration.
+    "ServerTaskRole": "AWS::IAM::Role",
+    "MigrationTaskRole": "AWS::IAM::Role",
+    "AdministrationTaskRole": "AWS::IAM::Role",
+    "RestorationVerifierTaskRole": "AWS::IAM::Role",
 }
 MODIFIED = {
+    # RDS IAM database authentication is enabled on the existing retained
+    # instance; it is not a database replacement or restoration.
+    "PersistenceDatabase": "AWS::RDS::DBInstance",
+    "RuntimeCredentialsSecret": "AWS::SecretsManager::Secret",
+    "OrdinaryMigrationCredentialsSecret": "AWS::SecretsManager::Secret",
     "SecretsManagerEndpoint": "AWS::EC2::VPCEndpoint",
+    "ServerExecutionRole": "AWS::IAM::Role",
     "MigrationExecutionRole": "AWS::IAM::Role",
+    "AdministrationExecutionRole": "AWS::IAM::Role",
+    "RestorationVerifierExecutionRole": "AWS::IAM::Role",
     "CoreServerPersistenceMigrationTaskDefinition": "AWS::ECS::TaskDefinition",
+    "CoreServerPersistenceAdministrationTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceRestorationVerifierTaskDefinition": "AWS::ECS::TaskDefinition",

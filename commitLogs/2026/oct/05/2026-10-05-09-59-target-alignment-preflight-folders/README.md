@@ -217,6 +217,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Corrected IAM lifecycle semantics and package recovery boundary
   Resolution: Runtime access now uses task-role renewal plus per-connection RDS IAM tokens; normal token expiry does not replace a healthy server. Recovery restores only bounded IAM login/membership after termination proof; local tests use disposable constrained PostgreSQL and do not claim RDS IAM proof.
 
+
+- Raised: Corrected permission-surface change-set allowlist against the active stack baseline
+  Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that differed from the controller's stale CREATE-era allowlist. The controller now admits only the reviewed four task-role additions and exact IAM/RDS/secret/task/service modifications; it continues to reject network expansion and unrelated resources. No change set was executed while the guard was invalid.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -3314,6 +3318,13 @@ Message: feat(deploy): harden persistence IAM lifecycle
 Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
 
 ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
+
+
+### 2026-10-25T19:01:59Z - Issue
+
+Raised: Corrected permission-surface change-set allowlist against the active stack baseline
+
+Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that differed from the controller's stale CREATE-era allowlist. The controller now admits only the reviewed four task-role additions and exact IAM/RDS/secret/task/service modifications; it continues to reject network expansion and unrelated resources. No change set was executed while the guard was invalid.
 
 ## Sub-Agent Activity
 
