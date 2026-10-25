@@ -26,11 +26,15 @@ source:
   registry: public.ecr.aws
   repository: aws-observability/aws-otel-collector
   # Resolved from the public OCI index on 2026-10-25. The package workflow
-  # rejects a mutable source reference and mirrors this exact identity only.
+  # rejects mutable source input and uses only the identical manifest already
+  # retained in target-private ECR.
   immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
+  selected_platform: { os: linux, architecture: amd64 }
+  identity_proof: public-oci-index-to-private-manifest-digest-match
 destination:
   repository: kanbien-core-platform/core-server
   selection: private-ecr-immutable-digest
+  precondition: exact-selected-platform-manifest-already-private
 runtime:
   configuration_source: target-owned-ssm-parameter-non-secret
   configuration_environment: AOT_CONFIG_CONTENT

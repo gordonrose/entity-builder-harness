@@ -209,6 +209,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: The unprivileged portable scanner was rate-limited by Public ECR before it could inspect the pinned image.
   Resolution: Changed the route so the protected mirror job exports the exact target-private digest as a short-retention scan-input artifact; a separate unprivileged job scans that local artifact, and final custody/attestation waits for the scan. No failed run produced an accepted receipt or deployment.
 
+
+- Raised: Corrected collector qualification after public layer throttling
+  Resolution: The protected collector custody job authenticated to AWS but its anonymous public registry layer pull returned Data limit exceeded before any mirror, scan, receipt, or workload action. Read-only OCI metadata established that public index sha256:7968... selects Linux/AMD64 manifest sha256:d0a..., which already exists identically in target-private ECR from the earlier protected mirror. The custody route now verifies the public index bytes, requires that identical private digest, qualifies and scans that payload, then issues custody only after the unprivileged scan.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -463,6 +467,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Scan the exact mirrored collector payload out of band from AWS credentials.
   Rationale: The artifact handoff ties the scanner to the exact digest produced by the protected mirror job while keeping the third-party scanner unprivileged. The final protected job may issue receipt and attestations only after the scan-job dependency passes.
 
+
+- Decision: Use manifest-identity requalification for the retained collector mirror
+  Rationale: No delivery-role permission expansion or public image-layer retry is required. The collector workflow proves the immutable public OCI index and selected platform manifest, requires the same content-addressed digest in private ECR, and qualifies/scans only that private payload. This is a bounded custody correction; no ADR is required because it changes an in-flight target package route rather than the architecture.
+
 ## Context Hygiene
 
 
@@ -685,6 +693,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Runs 40200948509 and 40201291933 established successful collector startup/mirror but ECR Basic scan unsupported; run 40201922054 established portable scanner cannot anonymously pull Public ECR due rate limit. The new three-job workflow scans a short-retention Docker-save artifact of the private immutable image with no AWS access, then finalizes custody only on scan success.
   Durable evidence: Workflow contract and static boundary guard remain under collector package custody; generic receipt validation records only safe scan verdict vocabulary.
+
+
+- Summary: Collector run 40202249108 failed at public layer download only. The exact Linux/AMD64 public manifest and retained private ECR image share sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31.
+  Durable evidence: Durable target contract and workflow are in infra/04.deploy/03.product/image/core-server-persistence-observability-collector and .github/workflows/publish-kanbien-core-platform-observability-collector.yml; run logs remain GitHub Actions evidence.
 
 ## Activity Log
 
@@ -3160,6 +3172,27 @@ Message: fix(deploy): scan mirrored collector payload
 Summary: Collector custody now mirrors the pinned source, exports the exact private image as a one-day scan input, scans that payload in an unprivileged job, and only afterward issues the protected SBOM/provenance/receipt. No scan result or failed attempt is accepted as custody evidence.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:38:10Z - Issue
+
+Raised: Corrected collector qualification after public layer throttling
+
+Resolution: The protected collector custody job authenticated to AWS but its anonymous public registry layer pull returned Data limit exceeded before any mirror, scan, receipt, or workload action. Read-only OCI metadata established that public index sha256:7968... selects Linux/AMD64 manifest sha256:d0a..., which already exists identically in target-private ECR from the earlier protected mirror. The custody route now verifies the public index bytes, requires that identical private digest, qualifies and scans that payload, then issues custody only after the unprivileged scan.
+
+
+### 2026-10-25T14:38:10Z - Decision
+
+Decision: Use manifest-identity requalification for the retained collector mirror
+
+Rationale: No delivery-role permission expansion or public image-layer retry is required. The collector workflow proves the immutable public OCI index and selected platform manifest, requires the same content-addressed digest in private ECR, and qualifies/scans only that private payload. This is a bounded custody correction; no ADR is required because it changes an in-flight target package route rather than the architecture.
+
+
+### 2026-10-25T14:38:10Z - Context hygiene
+
+Summary: Collector run 40202249108 failed at public layer download only. The exact Linux/AMD64 public manifest and retained private ECR image share sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31.
+
+Durable evidence: Durable target contract and workflow are in infra/04.deploy/03.product/image/core-server-persistence-observability-collector and .github/workflows/publish-kanbien-core-platform-observability-collector.yml; run logs remain GitHub Actions evidence.
 
 ## Sub-Agent Activity
 
