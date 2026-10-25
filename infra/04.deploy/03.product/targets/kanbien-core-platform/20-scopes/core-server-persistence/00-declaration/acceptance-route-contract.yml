@@ -1,0 +1,535 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.acceptance-route
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 04.deploy
+#   domain: deployment.release-lifecycle
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: deployment-contract
+#   purpose: Bind the complete applicable acceptance proof sequence, collector, record
+#     validation, lifecycle promotion and downstream gates.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.compiler.acceptance-route
+#     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+schema: deploy/acceptance-route/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+program_id: kanbien-core-server-persistence
+image_id: kanbien-core-server-persistence-image
+inputs_schema: .agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml
+inputs:
+  candidate_receipt:
+    kind: path
+    owner: package-custody
+    example: /tmp/qualified-package.json
+  rollback_receipt:
+    kind: path
+    owner: package-custody
+    example: /tmp/qualified-rollback.json
+  proof_receipts:
+    kind: proof-map
+    owner: completed-proof-controllers
+  server_replacement_original:
+    kind: identifier
+    owner: rehearse-server-replacement
+    example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  server_replacement_successor:
+    kind: identifier
+    owner: rehearse-server-replacement
+    example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  recovery_snapshot:
+    kind: identifier
+    owner: create-recovery-point
+    example: kanbien-core-platform-persistence-recovery-20261025-r1
+  record_proof_receipt:
+    kind: path
+    owner: verify-candidate
+    example: /tmp/retained-record-proof.json
+  current_health_task:
+    kind: identifier
+    owner: verify-candidate
+    example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
+commands:
+  migration-apply:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - --runtime-credential-operation
+    - apply
+    - --json
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects:
+    - aws-mutation
+    - writes-files
+  effective-privilege:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - --runtime-credential-operation
+    - prove-effective-privilege
+    - --json
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects:
+    - aws-mutation
+    - writes-files
+  server-replacement:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-core-server-persistence-replacement
+    effects:
+    - aws-mutation
+    - writes-files
+  server-replacement-read:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - read
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-rotation:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - --runtime-credential-operation
+    - rotate
+    - --json
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-revocation:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - --runtime-credential-operation
+    - revoke
+    - --json
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-revocation-unready:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - health-unready
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-recovery:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - --runtime-credential-operation
+    - rotate
+    - --json
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-recovery-health:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - health-ready
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-recovery-read:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - read
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  rollback-b-health:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - health-ready
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  rollback-b-read:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - read
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  rollback-final-health:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - health-ready
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  rollback-final-read:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - read
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  isolated-restore:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - --operation
+    - verify
+    - --snapshot-id
+    - '{recovery_snapshot}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
+    effects:
+    - aws-mutation
+    - writes-files
+  record-create:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - create
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  current-health:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    - --mode
+    - health-ready
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+    effects:
+    - aws-mutation
+    - writes-files
+  credential-rotate-route:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --operation
+    - rotate
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
+    effects:
+    - aws-mutation
+  credential-revoke-recover-route:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --operation
+    - revoke-and-recover
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
+    effects:
+    - aws-mutation
+  rollback-update:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh
+    - --receipt
+    - '{rollback_receipt}'
+    - --operation
+    - update
+    - --json
+    owner: deploy.command.kanbien-core-platform.transition-qualified-persistence-release
+    effects:
+    - aws-mutation
+  rollback-return:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --operation
+    - rollback
+    - --json
+    owner: deploy.command.kanbien-core-platform.transition-qualified-persistence-release
+    effects:
+    - aws-mutation
+  recovery-point:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh
+    - --snapshot-id
+    - '{recovery_snapshot}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.create-persistence-recovery-point
+    effects:
+    - aws-mutation
+  restore-create:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - --operation
+    - restore
+    - --snapshot-id
+    - '{recovery_snapshot}'
+    - --record-proof-receipt
+    - '{record_proof_receipt}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
+    effects:
+    - aws-mutation
+    - writes-files
+  restore-cleanup:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - --operation
+    - cleanup
+    - --snapshot-id
+    - '{recovery_snapshot}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
+    effects:
+    - aws-mutation
+    - writes-files
+  collect:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
+    - --inputs
+    - '{acceptance_inputs}'
+    - --write
+    - --json
+    owner: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance.wrapper
+    effects:
+    - network
+    - writes-files
+  validate-record:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh
+    - --record
+    - '{accepted_record}'
+    - --json
+    owner: deploy.command.persistence-accepted-release.validate
+    effects:
+    - read-only
+  promote:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh
+    - --scope-contract
+    - '{scope_contract}'
+    - --json
+    owner: deploy.command.promote-accepted-scope
+    effects:
+    - read-only
+    - writes-files
+  scope-inventory:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+    - --target-root
+    - '{target_root}'
+    - --json
+    owner: deploy.command.validate-active-workload-health-recovery
+    effects:
+    - read-only
+  target-declaration:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+    - --target-root
+    - '{target_directory}'
+    - --json
+    owner: deploy.command.core-platform-target-declaration
+    effects:
+    - read-only
+proofs:
+  migration-apply:
+    command: migration-apply
+    proof_type: migration
+    operation: apply
+    result_code: PERSISTENCE_MIGRATION_APPLIED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+  effective-privilege:
+    command: effective-privilege
+    proof_type: migration
+    operation: prove-effective-privilege
+    result_code: PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN
+    image_role: candidate
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+  server-replacement:
+    command: server-replacement
+    proof_type: server-replacement
+    operation: controlled-replacement
+    result_code: PERSISTENCE_SERVER_REPLACED
+    image_role: candidate
+    family: kanbien-core-platform-core-server-persistence
+    deadline_workload: null
+  server-replacement-read:
+    command: server-replacement-read
+    proof_type: verifier
+    operation: read
+    result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  credential-rotation:
+    command: credential-rotation
+    proof_type: migration
+    operation: rotate
+    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+  credential-revocation:
+    command: credential-revocation
+    proof_type: migration
+    operation: revoke
+    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+  credential-revocation-unready:
+    command: credential-revocation-unready
+    proof_type: verifier
+    operation: health-unready
+    result_code: KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  credential-recovery:
+    command: credential-recovery
+    proof_type: migration
+    operation: rotate
+    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-migration
+    deadline_workload: persistence-migration
+  credential-recovery-health:
+    command: credential-recovery-health
+    proof_type: verifier
+    operation: health-ready
+    result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  credential-recovery-read:
+    command: credential-recovery-read
+    proof_type: verifier
+    operation: read
+    result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  rollback-b-health:
+    command: rollback-b-health
+    proof_type: verifier
+    operation: health-ready
+    result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+    image_role: rollback
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  rollback-b-read:
+    command: rollback-b-read
+    proof_type: verifier
+    operation: read
+    result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+    image_role: rollback
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  rollback-final-health:
+    command: rollback-final-health
+    proof_type: verifier
+    operation: health-ready
+    result_code: KANBIEN_CORE_PERSISTENCE_HEALTHY
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  rollback-final-read:
+    command: rollback-final-read
+    proof_type: verifier
+    operation: read
+    result_code: KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-verifier
+    deadline_workload: private-release-verifier
+  isolated-restore:
+    command: isolated-restore
+    proof_type: restore
+    operation: isolated-restore
+    result_code: KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED
+    image_role: candidate
+    family: kanbien-core-platform-persistence-restoration-verifier
+    deadline_workload: persistence-restoration-verifier
+sequence:
+- - credential-revocation
+  - credential-revocation-unready
+- - credential-revocation-unready
+  - credential-recovery
+- - credential-recovery
+  - credential-recovery-health
+- - credential-recovery-health
+  - credential-recovery-read
+- - rollback-b-health
+  - rollback-b-read
+- - rollback-b-read
+  - rollback-final-health
+- - rollback-final-health
+  - rollback-final-read
+collector: collect
+accepted_record:
+  schema: deploy/persistence-accepted-release/v1
+  schema_path: .agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml
+  path: 30-release-evidence/accepted-release.yml
+  validator: validate-record
+promotion: promote
+downstream:
+- scope-inventory
+- target-declaration

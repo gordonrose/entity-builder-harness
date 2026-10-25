@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -88,6 +88,12 @@ capabilities = (
     'scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration',
     'scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration',
     'scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping',
+    'scripts/04.deploy/lifecycle/60-run/validate-acceptance-route',
+    'scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration',
+    'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/validate-accepted-release',
+    'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release',
+    'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence',
+    'scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore',
 )
 for capability in capabilities:
     destination = fixture / capability; destination.mkdir(parents=True, exist_ok=True)
@@ -96,6 +102,14 @@ for capability in capabilities:
         if source.is_file(): shutil.copy2(source, destination / name)
 scopes = Path('infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes')
 shutil.copytree(root / scopes, fixture / scopes, dirs_exist_ok=True)
+# Active and historical scopes retain their real acceptance routes. Include
+# their offline validators, schemas and receipt helpers rather than removing
+# acceptance from the copied declarations or bypassing record validation.
+schemas = Path('.agentic/04.deploy/60-run/schemas')
+shutil.copytree(root / schemas, fixture / schemas, dirs_exist_ok=True)
+provider = Path('scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence')
+for name in ('proof-receipts.py', 'ecs-task-evidence.py'):
+    shutil.copy2(root / provider / name, fixture / provider / name)
 import yaml
 original = contract.read_text()
 invalid = yaml.safe_load(original); invalid['health_recovery'] = {}
@@ -108,6 +122,17 @@ for command in (
     destination.write_text('#!/usr/bin/env bash\ntouch "$COVERAGE_LATER_MARKER"\n')
 later = fixture / 'later-stage-was-called'
 environment = {**os.environ, 'PATH': str(binaries) + os.pathsep + os.environ['PATH'], 'COVERAGE_FIXTURE_ROOT': str(fixture), 'COVERAGE_DOCKER_MARKER': str(marker), 'COVERAGE_LATER_MARKER': str(later)}
+helper = fixture / 'scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'
+helper_bytes = helper.read_bytes()
+for damaged in (None, b'def invalid syntax\n'):
+    if damaged is None: helper.unlink()
+    else: helper.write_bytes(damaged)
+    result = subprocess.run(['bash', str(root / 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh')], cwd=fixture, env=environment, capture_output=True, text=True)
+    reports = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
+    assert result.returncode != 0 and any('scope-lifecycle-acceptance-route-helper-unavailable' in {item['code'] for item in report.get('findings', [])} for report in reports), result.stdout + result.stderr
+    assert 'Traceback' not in result.stderr and not marker.exists() and not later.exists(), 'missing/unloadable acceptance helper must report a gap before later stages'
+helper.write_bytes(helper_bytes)
+print('Persistence package stage regression passed (missing or unloadable acceptance helper returns structured gap).')
 result = subprocess.run(['bash', str(root / 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh')], cwd=fixture, env=environment, capture_output=True, text=True)
 assert result.returncode != 0, 'corrupt health must stop image construction'
 reports = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
@@ -119,3 +144,5 @@ assert marker.exists() and later.exists(), 'valid declaration must allow the nex
 assert result.returncode != 0, 'the fake Docker boundary must never build an image'
 print('Persistence package stage regression passed (corrupt health blocks before composition/Docker; repaired declaration advances).')
 PY
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py"

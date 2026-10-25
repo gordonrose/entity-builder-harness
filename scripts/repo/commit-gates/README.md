@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: repo.script.commit-gates.readme
-  version: 3
+  version: 4
   status: active
   created_on: "2026-07-04"
   updated_on: "2026-10-25"
@@ -37,3 +37,9 @@ headers or stage files.
 Required commands fail closed if missing. Unknown implementation impact remains
 an explicit gap. Package/live proof obligations remain deferred to their owning
 stages and cannot be satisfied by local check success.
+
+The ordinary selector invocation automatically retains and reuses successful local
+runner evidence in private per-worktree Git metadata. Its JSON output includes
+`local_report_path`. Relevant staged inputs must match the working tree before
+execution or reuse. Imported reports never grant proof, and unrelated source
+revision/session bookkeeping changes do not invalidate unchanged local checks.

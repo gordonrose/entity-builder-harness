@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 3
+version: 4
 status: active
 created_on: "2026-10-23"
 updated_on: "2026-10-25"
@@ -151,7 +151,14 @@ migration, and a private create/read proof establish a candidate only.
 ## Isolated Native Database Restore
 
 Create one named encrypted recovery point after the retained synthetic record
-and release/replacement evidence exist. The recovery point is native RDS
+and release/replacement evidence exist. Supply `--record-proof-receipt` with a
+retained successful `verify-candidate` create/read receipt for the exact record.
+The controller requires the record observation to finish no later than the
+snapshot's original creation time (or creation time when no original time is
+present). It also matches the source database resource ID and rejects a proof
+from before the current source database incarnation. An earlier snapshot from
+the same day therefore blocks before provisioning; the bounded suffix permits
+a fresh follow-up snapshot after the record exists. The recovery point is native RDS
 evidence, not a source-database mutation. The restoration route derives its
 temporary database identifier from that snapshot; it restores it in the same
 private subnets but with a distinct security group. Its one-shot verifier gets
@@ -165,12 +172,13 @@ discovery expires; missing proof requires governed diagnosis, never replay.
 
 ```bash
 snapshot=kanbien-core-platform-persistence-recovery-YYYYMMDD-<bounded-rehearsal-suffix>
+record_proof=<retained-create-or-read-proof-receipt-path>
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh --snapshot-id "$snapshot" --json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh --snapshot-id "$snapshot" --observe-only --json
 # Continue only after that same snapshot is observed available:
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --record-proof-receipt "$record_proof" --json
 # Re-observe the existing operation without submitting it again:
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --observe-only --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --record-proof-receipt "$record_proof" --observe-only --json
 # Once that database is ready, submit its one-shot verifier:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation verify --snapshot-id "$snapshot" --json
 # Reconcile that existing verifier until its strict task-bound evidence is accepted:
@@ -179,6 +187,14 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
 ```
 
+New restores retain source, snapshot, record and proof-digest tags. Continue
+with the same snapshot and record receipt; existing resources with absent or
+mismatched tags cannot establish that rehearsal, and observation never submits
+another restore. Snapshot time and immutable source identity follow the
+[AWS DBSnapshot response contract](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DBSnapshot.html).
+Simulated receipts cannot authorize the ordinary restoration path. Previously
+retained genuine restore receipts remain valid historical acceptance evidence.
+
 Cleanup reports `pending` while the exact database is deleting and does not
 submit deletion again; re-observe with `--operation cleanup --observe-only`.
 The recovery-point control likewise re-observes its exact snapshot and separates
@@ -186,7 +202,12 @@ creating, failed, available and unknown outcomes. A restore-verifier task must
 match the current database incarnation, task definition, started-by identity,
 and expected record overrides; only a parsed accepted JSON record in that task's
 log establishes proof. Missing logs remain pending evidence without rerunning a
-completed task. Cleanup refuses a still-running verifier.
+completed task. Cleanup refuses a still-running verifier. The shared ECS task
+evidence parser permits the captured empty `inferenceAcceleratorOverrides`
+default, while command, role, resource and environment differences still fail.
+The [ECS override contract](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskOverride.html)
+and the sanitized `fixtures/ecs-captured-responses.yml` fixture document that
+provider boundary; derived restore fixtures are explicitly simulated.
 
 The restore verifier requires a qualified image containing its reviewed
 entrypoint and the corresponding provider control surface. Until both are
@@ -378,3 +399,47 @@ The regression suite at
 uses synthetic provider responses to exercise these boundaries. It is local
 controller evidence; it establishes no container qualification, CI result,
 provider state, native snapshot availability or live recovery success.
+
+
+## Acceptance route and retained evidence
+
+The authoritative route is the scope's
+`00-declaration/acceptance-route-contract.yml`. It binds the actual controller
+arguments, fifteen required retained proofs, qualified candidate/rollback
+identities, collector, accepted-record schema, owning validator, lifecycle
+promotion and downstream gates. The generic declaration preflight checks this
+template before package construction or provider mutation through each command's
+read-only `--validate-arguments` capability. A missing required mode, collector,
+schema or proof route blocks there; future live receipts are required only at
+the acceptance stage.
+
+After every run proof completes, retain a `deploy/acceptance-inputs/v1` manifest
+with `target: kanbien-core-platform`, `scope: core-server-persistence`, and
+`values` matching the route's typed inputs: the qualified candidate and rollback
+receipts, the fifteen-name `proof_receipts` mapping, original/successor task
+identities, exact recovery snapshot, successful retained source-record proof,
+and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
+Use paths to existing controller receipts. Missing ECS history is not permission
+to synthesize a receipt or replay a completed mutation.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --inputs "$acceptance_inputs" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --inputs "$acceptance_inputs" --write --json
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh --record infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/accepted-release.yml --json
+```
+
+The collector validates historical receipts offline and separately observes
+fresh readiness, deployed immutable identity, database/snapshot binding, budget
+and removal of the temporary restoration database. It refuses to overwrite an
+existing accepted record. Retained receipt integrity is not an attestation of
+trust: provenance must be genuine live controller observation. The existing
+accepted record and its fifteen receipts remain usable unchanged after ECS
+stopped-task expiry; new collection still requires the fresh observations.
+
+For a newly accepted candidate, follow the provider-neutral
+`govern-scope-lifecycle.md` promotion command and then the route's inventory and
+target-declaration gates. The local regression wrapper
+`scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh`
+exercises actual controller receipt capture, collection, record validation,
+promotion and downstream validation with controlled observations. Its temporary
+records are explicitly simulated and are rejected by production validation.

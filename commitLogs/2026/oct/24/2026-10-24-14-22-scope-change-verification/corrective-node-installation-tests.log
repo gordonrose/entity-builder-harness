@@ -1,0 +1,12 @@
+test_node_installation_bytes_modes_rename_and_removal_invalidate (__main__.SelectionTests.test_node_installation_bytes_modes_rename_and_removal_invalidate) ... ok
+test_node_transitive_types_and_optional_installation_are_inputs (__main__.SelectionTests.test_node_transitive_types_and_optional_installation_are_inputs) ... ok
+test_node_workspace_links_track_target_and_reject_escape (__main__.SelectionTests.test_node_workspace_links_track_target_and_reject_escape) ... ok
+test_python_package_identity_includes_paths_modes_and_bytes (__main__.SelectionTests.test_python_package_identity_includes_paths_modes_and_bytes) ... ok
+test_node_checks_require_explicit_installation_declaration (__main__.SelectionTests.test_node_checks_require_explicit_installation_declaration) ... ok
+test_real_repository_hook_reuses_local_evidence_without_report_argument (__main__.SelectionTests.test_real_repository_hook_reuses_local_evidence_without_report_argument) ... ok
+test_cache_reuses_across_unrelated_revision_but_environment_invalidates (__main__.SelectionTests.test_cache_reuses_across_unrelated_revision_but_environment_invalidates) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 19.397s
+
+OK

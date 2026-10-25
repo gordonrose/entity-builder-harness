@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.rehearse-core-server-persistence-replacement.impl
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -16,7 +16,7 @@
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.rehearse-core-server-persistence-replacement
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh
-#   effects: [aws-mutation]
+#   effects: [aws-mutation, writes-files]
 from __future__ import annotations
 
 import argparse
@@ -188,10 +188,12 @@ def main() -> int:
     parser.add_argument("--capture-completed-original-task")
     parser.add_argument("--capture-completed-successor-task")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     capture_requested = args.capture_completed_original_task is not None or args.capture_completed_successor_task is not None
     if unknown or args.receipt is None or (capture_requested and (not isinstance(args.capture_completed_original_task, str) or not isinstance(args.capture_completed_successor_task, str))) or (capture_requested and args.reconcile_original_task is not None):
         return report("blocked", "persistence-replacement-arguments-invalid")
+    if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[],"proof_contract":{"proof_type":"server-replacement","operation":"controlled-replacement","result_code":"PERSISTENCE_SERVER_REPLACED","family":"kanbien-core-platform-core-server-persistence","deadline_workload":None}})); return 0
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
     create = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)

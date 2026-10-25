@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T10:06:43Z
-latest_commit_sha: 93aa74906ad6534d62b23bdd42607c4b7fb0965d
-chat_duration: 74636s (00:20:43:56)
+latest_commit_at_utc: 2026-10-25T10:20:42Z
+latest_commit_sha: 171ea85eabea63eb51b967aac9d4a19f0c4ac82d
+chat_duration: 75475s (00:20:57:55)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -40,7 +40,26 @@ connect scope implementation verification and recovery
 
 ## Issues Raised
 
-- None recorded yet.
+
+
+- Raised: A redundant conflict-audit invocation targeted the old active log before refresh
+  Resolution: The preflight log audit had already passed all six paths before commit. The redundant call read the pre-refresh log and failed; governed apply then installed the tested merge. Revalidation against the applied log passes all six paths and ancestry includes accepted main. No source or conflict audit is missing.
+
+
+- Raised: Publication invoked mandatory local checks both directly and inside the builder
+  Resolution: Controlled actual workflow/builder regression passes: eight commands execute once, each injected failure stops progression, missing/duplicate/late/ignored gates fail. Existing custody and delivery-access validators pass. Evidence class is local runtime and static validation; CI was not dispatched.
+
+
+- Raised: Acceptance audit found unused record proof, weak current observation binding and unsafe promotion preconditions
+  Resolution: Collector now reuses restore source/time binding and exact fresh task health/image/source/override checks, with20 negative observations passing. Promotion is being corrected to check subject and temporary-root containment and validate current/proposed lifecycle state before write. Existing18 accepted records/lifecycle files remain exact main bytes;96 changed Markdown links resolve.
+
+
+- Raised: Combined gate payload fixture omitted new acceptance dependencies and missing helper raised traceback
+  Resolution: Repaired inventory helper loading to return structured gaps; fixture now copies actual acceptance dependencies. Focused payload suite passes six payload negatives, helper absence/corruption, health gate progression and publication call-count/fail-stop tests. Restaged the two repaired files; remaining local checks retain trusted cache evidence where inputs still match.
+
+
+- Raised: Final local container qualification is blocked by Docker Desktop credential-helper connection
+  Resolution: First build failed local context-directory allocation; retry after healthy engine checks reached BuildKit but failed public-base-image credential lookup: WSL UtilAcceptVsock accept4 failed110. Repository preflight/composition passed; container smoke has not run. User asked to restore the local Docker/WSL connection. No credential configuration change or service restart performed; final qualification and merge remain pending while local verification continues.
 
 ## Decisions Made
 
@@ -49,12 +68,32 @@ connect scope implementation verification and recovery
 - Decision: Continue corrective Goal in the existing recorded worktree
   Rationale: User explicitly approved checkpoints, main integration, conflict resolution and final local merge; retain prior evidence and all accepted main improvements.
 
+
+- Decision: Accepted main integrated before corrective implementation
+  Rationale: Tested merge 171ea85e includes c884c321 and the preserved task checkpoint. Governed apply fast-forwarded the active chat worktree and removed the clean temporary preflight. No stash, root changes, provider access or push. Six corrective findings remain open.
+
+
+- Decision: Remove duplicated publication qualification at its existing owner
+  Rationale: The persistence publication workflow now delegates declaration coverage, scope health, runnable validation and composition once to its image builder. Custody/access and real container qualification remain separate mandatory checks before provider credentials. Existing workflow validator checks the connected order.
+
 ## Context Hygiene
 
 
 
 - Summary: Checkpoint existing implementation before accepted-main integration
   Durable evidence: Prior audit and reports are historical; six review findings remain open. Corrective request and progress matrix are in the current session record. Combine branch behavior before claiming verification.
+
+
+- Summary: Continue six corrections on integrated baseline; no finding closed by baseline tests
+  Durable evidence: corrective-goal-request-2026-10-25.txt owns acceptance conditions; corrective-main-baseline.json records combined baseline tests and 18 preservation hashes. Prior implementation completion is historical. Root owns final evidence, metadata and merge; agents own selector/cache, recovery normalization/order and complete acceptance route.
+
+
+- Summary: Five corrective findings have focused implementation evidence; complete acceptance is undergoing adversarial review before final combined gates
+  Durable evidence: Selector44 tests pass, real plan13 local/6 deferred/0 gaps; provider28 groups plus malformed timestamp focused check pass; publication actual workflow/builder8 calls once and fail-stop negatives pass; bootstrap writer/validator simulated integration passes; persistence actual-controller route initial11 groups pass and fresh-observation20 negatives pass. Exact temporary logs are retained for final session evidence. Promotion containment/lifecycle and bootstrap freshness audit repairs remain in progress. No final correction commit or merge yet; Goal active.
+
+
+- Summary: All six corrective implementations and combined local checks pass; Docker qualification remains required before merge.
+  Durable evidence: Retain corrective-condition-audit.json, corrective-combined-checks.json, normal-reuse and stage-boundary reports, source hashes and protected18 comparison. Current source includes accepted main171ea85e; root mainc884c321 clean. No CI/live/push. Docker credential-helper restoration pending; checkpoint source now under direct authorization.
 
 ## Activity Log
 
@@ -192,6 +231,87 @@ Mode: manual
 
 Action: Manually combine main durable/historical receipts and bounded snapshot suffixes with exact-operation reconciliation and strict preflight checks; preserve accepted evidence and lifecycle state.
 
+
+### 2026-10-25T10:20:42Z - Commit recorded
+
+Commit: `171ea85eabea63eb51b967aac9d4a19f0c4ac82d`
+
+Message: Merge main and preserve persistence evidence and recovery controls
+
+Summary: Integrated accepted main c884c321 through tested rehearsal; all six conflicts resolved, 18 evidence files preserved, combined controller and acceptance baseline checks passed.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T10:22:16Z - Decision
+
+Decision: Accepted main integrated before corrective implementation
+
+Rationale: Tested merge 171ea85e includes c884c321 and the preserved task checkpoint. Governed apply fast-forwarded the active chat worktree and removed the clean temporary preflight. No stash, root changes, provider access or push. Six corrective findings remain open.
+
+
+### 2026-10-25T10:22:17Z - Issue
+
+Raised: A redundant conflict-audit invocation targeted the old active log before refresh
+
+Resolution: The preflight log audit had already passed all six paths before commit. The redundant call read the pre-refresh log and failed; governed apply then installed the tested merge. Revalidation against the applied log passes all six paths and ancestry includes accepted main. No source or conflict audit is missing.
+
+
+### 2026-10-25T10:22:17Z - Context hygiene
+
+Summary: Continue six corrections on integrated baseline; no finding closed by baseline tests
+
+Durable evidence: corrective-goal-request-2026-10-25.txt owns acceptance conditions; corrective-main-baseline.json records combined baseline tests and 18 preservation hashes. Prior implementation completion is historical. Root owns final evidence, metadata and merge; agents own selector/cache, recovery normalization/order and complete acceptance route.
+
+
+### 2026-10-25T10:31:29Z - Decision
+
+Decision: Remove duplicated publication qualification at its existing owner
+
+Rationale: The persistence publication workflow now delegates declaration coverage, scope health, runnable validation and composition once to its image builder. Custody/access and real container qualification remain separate mandatory checks before provider credentials. Existing workflow validator checks the connected order.
+
+
+### 2026-10-25T10:31:29Z - Issue
+
+Raised: Publication invoked mandatory local checks both directly and inside the builder
+
+Resolution: Controlled actual workflow/builder regression passes: eight commands execute once, each injected failure stops progression, missing/duplicate/late/ignored gates fail. Existing custody and delivery-access validators pass. Evidence class is local runtime and static validation; CI was not dispatched.
+
+
+### 2026-10-25T10:54:23Z - Context hygiene
+
+Summary: Five corrective findings have focused implementation evidence; complete acceptance is undergoing adversarial review before final combined gates
+
+Durable evidence: Selector44 tests pass, real plan13 local/6 deferred/0 gaps; provider28 groups plus malformed timestamp focused check pass; publication actual workflow/builder8 calls once and fail-stop negatives pass; bootstrap writer/validator simulated integration passes; persistence actual-controller route initial11 groups pass and fresh-observation20 negatives pass. Exact temporary logs are retained for final session evidence. Promotion containment/lifecycle and bootstrap freshness audit repairs remain in progress. No final correction commit or merge yet; Goal active.
+
+
+### 2026-10-25T10:54:23Z - Issue
+
+Raised: Acceptance audit found unused record proof, weak current observation binding and unsafe promotion preconditions
+
+Resolution: Collector now reuses restore source/time binding and exact fresh task health/image/source/override checks, with20 negative observations passing. Promotion is being corrected to check subject and temporary-root containment and validate current/proposed lifecycle state before write. Existing18 accepted records/lifecycle files remain exact main bytes;96 changed Markdown links resolve.
+
+
+### 2026-10-25T11:14:37Z - Issue
+
+Raised: Combined gate payload fixture omitted new acceptance dependencies and missing helper raised traceback
+
+Resolution: Repaired inventory helper loading to return structured gaps; fixture now copies actual acceptance dependencies. Focused payload suite passes six payload negatives, helper absence/corruption, health gate progression and publication call-count/fail-stop tests. Restaged the two repaired files; remaining local checks retain trusted cache evidence where inputs still match.
+
+
+### 2026-10-25T11:14:37Z - Issue
+
+Raised: Final local container qualification is blocked by Docker Desktop credential-helper connection
+
+Resolution: First build failed local context-directory allocation; retry after healthy engine checks reached BuildKit but failed public-base-image credential lookup: WSL UtilAcceptVsock accept4 failed110. Repository preflight/composition passed; container smoke has not run. User asked to restore the local Docker/WSL connection. No credential configuration change or service restart performed; final qualification and merge remain pending while local verification continues.
+
+
+### 2026-10-25T11:28:27Z - Context hygiene
+
+Summary: All six corrective implementations and combined local checks pass; Docker qualification remains required before merge.
+
+Durable evidence: Retain corrective-condition-audit.json, corrective-combined-checks.json, normal-reuse and stage-boundary reports, source hashes and protected18 comparison. Current source includes accepted main171ea85e; root mainc884c321 clean. No CI/live/push. Docker credential-helper restoration pending; checkpoint source now under direct authorization.
+
 ## Sub-Agent Activity
 
 
@@ -246,6 +366,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Message: chore: checkpoint scope verification before main reconciliation
   Summary: Preserve prior implementation and six-finding corrective request before integrating accepted main. Mandatory preparation gates passed; whitespace and metadata rechecked. Direct user commit/merge authorization recorded.
   ADR impact: ADR 0042 retained.
+
+
+- Commit: `171ea85eabea63eb51b967aac9d4a19f0c4ac82d`
+  Time UTC: 2026-10-25T10:20:42Z
+  Message: Merge main and preserve persistence evidence and recovery controls
+  Summary: Integrated accepted main c884c321 through tested rehearsal; all six conflicts resolved, 18 evidence files preserved, combined controller and acceptance baseline checks passed.
+  ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
 
@@ -325,9 +452,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T10:06:43Z
-Latest commit SHA: 93aa74906ad6534d62b23bdd42607c4b7fb0965d
-Chat duration: 74636s (00:20:43:56)
+Latest commit at UTC: 2026-10-25T10:20:42Z
+Latest commit SHA: 171ea85eabea63eb51b967aac9d4a19f0c4ac82d
+Chat duration: 75475s (00:20:57:55)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -336,9 +463,9 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 
 - None recorded yet.
 
-## Implementation Goal
+## Historical implementation Goal (superseded by corrective Goal below)
 
-Tracked Goal: complete (thread `01a16e12-1d6d-7c80-a970-dca7aac68b22`).
+Historical tracked Goal: complete (thread `01a16e12-1d6d-7c80-a970-dca7aac68b22`).
 Objective: connect existing change and verification mechanisms so new scopes and dependencies have consistent contracts, executable controls, focused verification and reliable continuation. Initial regression: `core-server-persistence`; reuse proof: a second synthetic scope.
 
 Authorization: local repository changes and applicable local tests. No live infrastructure changes, secret operations, image publication, commits, merges or pushes. Preserve unrelated work.
@@ -473,3 +600,21 @@ Source checkpoint: 93aa74906ad6534d62b23bdd42607c4b7fb0965d; bookkeeping checkpo
 Independent read-only preservation audit: persistence accepted-release, 15 proof receipts, bootstrap accepted-release and scope-index (18 files) are byte-identical to main. All retained receipts validate, and historical collector parsing issued zero provider queries. Revocation SQL alias and true/false/zero-row checks survived the clean merge. These are partial integration observations; combined executable checks are still pending.
 
 Combined preflight baseline passed: see `corrective-main-baseline.json`. Nine additional command checks passed; delegated controller suite passed 24 groups and durable receipt suite passed. All 18 accepted evidence/lifecycle files remain byte-identical to main. Global metadata passed for 1,303 artifacts. Conflict audit verified all six paths. No corrective finding is marked complete by this baseline.
+
+### Corrective implementation frozen for final verification
+
+All six corrections are implemented with focused passing regressions; final combined gates, container qualification, source commit and merge remain required. `corrective-focused-checks.json` records executed checkpoints. `corrective-whole-diff-review.json` records scope/preservation review; `corrective-document-links.json` validates 96 relative links. All 18 protected accepted evidence/lifecycle files remain byte-identical to main. Artifact versions and dates were prepared together; generated recognition sources were refreshed. No CI or live proof is inferred from offline rehearsals.
+
+
+### Corrective combined verification checkpoint
+
+Corrective Goal remains **active**. All six corrective findings now have passing local regressions; this is not final completion. The full condition audit is [corrective-condition-audit.json](corrective-condition-audit.json), with source hashes in [corrective-source-manifest.json](corrective-source-manifest.json).
+
+- Normal mandatory preparation passed all 11 selected local checks, zero gaps (212.92 seconds). Repeating the same ordinary route reused all 11 from trusted worktree cache (53.82 seconds).
+- Final combined selection passed all 13 local checks, including the two additional repository ownership suites. The 49-case selector suite covers installed dependency changes, source/runtime/config identity, untrusted evidence, synthetic reuse and stage/permission boundaries.
+- The acceptance-stage negative exited 1 as expected: all 13 local results reused, six package/deploy/acceptance proofs still required from their owning controllers. No provider operation ran.
+- Full actual-controller offline acceptance rehearsal, 28 provider groups, 60 configuration negatives and repaired payload/qualification-route fixtures passed. Simulation remains explicitly distinct from genuine acceptance.
+- All 18 protected accepted evidence/lifecycle files remain byte-identical to main c884c321. Static metadata passed 1329 headers, recognition and 96 links passed; complete combined diff reviewed.
+- Required current combined-tree Docker qualification is blocked before base-image resolution by Docker Desktop WSL credential-helper failure (UtilAcceptVsock accept4 failed110). Smoke has not run. Main integration changed packaged revocation SQL/result handling, so historical container success does not cover the combined source.
+
+Executed results and timings: [corrective-verification-runs.json](corrective-verification-runs.json). Complete selected command/input identities: [corrective-combined-checks.json](corrective-combined-checks.json). Container failure: [corrective-container-qualification.json](corrective-container-qualification.json). CI and live operations were not run. Checkpoint the verified source under direct user authorization; retain Goal active and defer final merge until required container proof succeeds. The pending request is for restoration of Docker/WSL connectivity, not Git permission.

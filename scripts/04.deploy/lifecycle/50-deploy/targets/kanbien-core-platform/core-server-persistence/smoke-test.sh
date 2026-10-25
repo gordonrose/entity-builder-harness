@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -16,7 +16,7 @@ set -euo pipefail
 #   used_by:
 #   - id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 #     path: .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 ROOT="$(git rev-parse --show-toplevel)"
 PREPARE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh"
 CREATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh"

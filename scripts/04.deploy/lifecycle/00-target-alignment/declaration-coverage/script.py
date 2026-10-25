@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.declaration-coverage
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 from pathlib import Path, PurePosixPath
@@ -33,7 +34,7 @@ PROOF_STAGES = {"local_proofs": "local", "package_proofs": "package", "target_pr
 def document(path: Path) -> dict[str, Any]:
     try:
         value = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except (OSError, yaml.YAMLError):
+    except (OSError, UnicodeError, yaml.YAMLError):
         return {}
     return value if isinstance(value, dict) else {}
 
@@ -59,6 +60,40 @@ def strings(value: Any, *, empty: bool = False) -> bool:
     return isinstance(value, list) and (empty or bool(value)) and all(isinstance(item, str) and bool(item.strip()) for item in value) and len(value) == len(set(value))
 
 
+def check_applicability(check: dict[str, Any], contract: dict[str, Any], image: dict[str, Any], root: Path) -> str | None:
+    """A proof must name its subject or consume a declared generic contract."""
+    binding = check.get("applicability")
+    if not isinstance(binding, dict): return "requirement-check-applicability-missing"
+    if binding.get("kind") == "generic":
+        parameters = binding.get("context_parameters")
+        schemas = {"scope_contract": "deploy/target-scope-contract/v1", "target_root": "deploy/target-scope-contract/v1", "program_contract": "deploy/runnable-program-contract/v1", "workload_binding": "deploy/target-scope-contract/v1"}
+        argv = check.get("argv", [])
+        if not strings(parameters) or not isinstance(argv, list) or len(argv) < 2 or not all(isinstance(arg, str) for arg in argv) or any(parameter not in schemas or "{" + parameter + "}" not in argv or schemas[parameter] != binding.get("contract_schema") for parameter in parameters):
+            return "requirement-check-generic-contract-invalid"
+        capability_path = within(root, check.get("capability"))
+        if capability_path is None or capability_path.parent != (root / argv[1]).parent:
+            return "requirement-check-generic-capability-missing"
+        capability = document(capability_path)
+        if capability.get("schema") != "repo/check-capability/v1" or capability.get("owner") != check.get("owner") or capability.get("command") != argv[1] or capability.get("argv") != argv or capability.get("contract_schema") != binding.get("contract_schema") or capability.get("context_parameters") != parameters:
+            return "requirement-check-generic-capability-mismatch"
+        return None
+    if binding.get("kind") != "bound": return "requirement-check-applicability-unsupported"
+    program = contract.get("program")
+    program = program if isinstance(program, dict) else {}
+    values = {"program_id": program.get("id"), "image_id": image.get("id"), "target": contract.get("target"), "scope": contract.get("scope")}
+    required = {"program_id"}
+    if check.get("stage") != "local": required.add("image_id")
+    if check.get("stage") in {"deploy", "acceptance"}: required.update({"target", "scope"})
+    for field, actual in values.items():
+        declared = binding.get(field, binding.get(field + "s"))
+        if field not in required and declared is None: continue
+        if isinstance(declared, str): declared = [declared]
+        if not strings(declared) or not isinstance(actual, str) or actual not in declared:
+            return "requirement-check-subject-mismatch"
+    if set(binding) - {"kind", *values, *(field + "s" for field in values)}: return "requirement-check-applicability-unsupported"
+    return None
+
+
 def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[str, Any]:
     contract = document(contract_path)
     findings: list[dict[str, str]] = []
@@ -75,6 +110,8 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
         elif not path.exists(): gap(code, value)
         elif isinstance(value, str): references.add(value.rstrip("/"))
     if contract.get("schema") != "deploy/target-scope-contract/v1": gap("scope-contract-unsupported")
+    for identity in ("target", "scope"):
+        if not isinstance(contract.get(identity), str) or not contract[identity]: gap("scope-identity-invalid", identity)
     impact = contract.get("change_impact")
     if not isinstance(impact, dict) or impact.get("schema") != "deploy/change-impact/v1":
         gap("change-impact-declaration-missing")
@@ -122,6 +159,12 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
     declared_local = {identity for requirement in requirements if isinstance(requirement, dict) for identity in (requirement.get("local_proofs") if isinstance(requirement.get("local_proofs"), list) else []) if isinstance(identity, str)}
     for identity in sorted(MANDATORY_LOCAL_PROOFS - declared_local):
         gap("mandatory-scope-check-missing", identity)
+    for identity, parameter in (("scope-inventory", "target_root"), ("runnable-program", "program_contract")):
+        check = known.get(identity)
+        applicable = check.get("applicability") if isinstance(check, dict) else None
+        contexts = applicable.get("context_parameters") if isinstance(applicable, dict) else None
+        if not isinstance(applicable, dict) or applicable.get("kind") != "generic" or not isinstance(contexts, list) or parameter not in contexts:
+            gap("mandatory-scope-check-capability-invalid", identity)
     for field in ("package_proofs", "target_proofs", "run_proofs"):
         if not any(isinstance(requirement, dict) and requirement.get(field) for requirement in requirements):
             gap("scope-stage-proof-missing", field)
@@ -162,6 +205,48 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
     payload = image.get("payload")
     if not isinstance(payload, dict) or payload.get("allowed_program") != program_id:
         gap("scope-image-payload-program-mismatch")
+    local_commands = {known[identity]["argv"][1] for identity in declared_local if isinstance(known.get(identity), dict) and isinstance(known[identity].get("argv"), list) and len(known[identity]["argv"]) > 1 and isinstance(known[identity]["argv"][1], str)}
+    if not isinstance(selected_program.get("local_proof"), str) or selected_program["local_proof"] not in local_commands:
+        gap("scope-program-local-proof-missing")
+    if program.get("local_proof") != selected_program.get("local_proof"):
+        gap("scope-program-local-proof-mismatch")
+    for identity in checks:
+        issue = check_applicability(known[identity], contract, image, root)
+        if known[identity].get("capability") is not None: reference(known[identity]["capability"], "requirement-check-generic-capability-missing")
+        if issue: gap(issue, identity)
+    acceptance = contract.get("acceptance")
+    for identity in checks:
+        check = known[identity]
+        if check.get("stage") == "acceptance" and check.get("acceptance_route") is not None and (not isinstance(acceptance, dict) or acceptance.get("route") != check["acceptance_route"]):
+            gap("acceptance-check-route-mismatch", identity)
+    if acceptance is not None:
+        if not isinstance(acceptance, dict) or not safe_path(acceptance.get("route")):
+            gap("acceptance-route-reference-invalid")
+        else:
+            reference(acceptance["route"], "acceptance-route-missing")
+            helper = root / "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+            if not helper.is_file(): gap("acceptance-route-validator-missing")
+            else:
+                try:
+                    loader = importlib.util.spec_from_file_location("acceptance_route_preflight", helper)
+                    assert loader and loader.loader
+                    module = importlib.util.module_from_spec(loader)
+                    loader.loader.exec_module(module)
+                    result = module.inspect(contract_path, root)
+                    findings.extend(item for item in result.get("findings", []) if item not in findings)
+                    for value in result.get("references", []): reference(value, "acceptance-route-reference-missing")
+                    references.add(helper.relative_to(root).as_posix())
+                except (OSError, ValueError, TypeError, ImportError, AttributeError, SyntaxError):
+                    gap("acceptance-route-validator-invalid")
+            route = referenced_document(acceptance["route"])
+            collector = route.get("collector")
+            commands = route.get("commands")
+            collector_command = commands.get(collector) if isinstance(commands, dict) and isinstance(collector, str) else collector
+            if isinstance(collector_command, dict):
+                for identity in checks:
+                    check = known[identity]
+                    if check.get("stage") == "acceptance" and (check.get("acceptance_route") != acceptance["route"] or check.get("argv") != collector_command.get("argv")):
+                        gap("acceptance-check-route-mismatch", identity)
     binding_path = contract_path.parent.parent / "10-workload-binding/workload-binding.yml"
     binding = document(binding_path)
     if not binding: gap("scope-workload-binding-missing")
@@ -187,7 +272,7 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
             reference(ref, "scope-provider-declaration-missing")
         except ValueError: gap("scope-provider-declaration-missing")
     else: gap("scope-provider-declaration-missing")
-    return {"schema": "deploy/declaration-coverage-report/v1", "scope": contract.get("scope"), "target": contract.get("target"), "verdict": "gap" if findings else "covered", "findings": findings, "inputs": inputs, "references": sorted(references), "consumers": sorted(consumers), "required_checks": sorted(checks)}
+    return {"schema": "deploy/declaration-coverage-report/v1", "scope": contract.get("scope") if isinstance(contract.get("scope"), str) else "invalid-scope", "target": contract.get("target") if isinstance(contract.get("target"), str) else "invalid-target", "verdict": "gap" if findings else "covered", "findings": findings, "inputs": inputs, "references": sorted(references), "consumers": sorted(consumers), "required_checks": sorted(checks)}
 
 
 def main() -> int:

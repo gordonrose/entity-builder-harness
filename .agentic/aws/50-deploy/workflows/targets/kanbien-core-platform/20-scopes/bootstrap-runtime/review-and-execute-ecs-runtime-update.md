@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
-version: 5
+version: 6
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines: [security, sre]
@@ -122,18 +122,31 @@ the JSON report in `verification_report`:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh --receipt "$receipt" --json > "$verification_report"
 ```
 
-Require `runtime-digest-and-private-verifier-accepted`. For a normal accepted
-update, check acceptance readiness, then repeat with `--write` under repository
-write authority:
+Require `runtime-digest-and-private-verifier-accepted`. The verifier observes the
+exact healthy runtime task and records both runtime and verifier task ARNs with
+`observed_at`. It reuses completed verifier proof only within ten minutes and
+after the applicable deployment/recovery boundary. Acceptance rejects missing,
+future or older-than-ten-minute observation times and preserves that actual time
+as `verified_at`; recording the report never refreshes its evidence. If the
+report expires, obtain fresh verification under the same private-verifier task
+authority before acceptance. For a normal accepted
+update, retain matching workload and restoration rehearsal records beneath the
+scope release-evidence directory. Set `rehearsal` and `restoration_rehearsal` to
+those files, check acceptance readiness, then repeat with `--write` under
+repository write authority:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh --receipt "$receipt" --verification-report "$verification_report" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh --receipt "$receipt" --verification-report "$verification_report" --rehearsal "$rehearsal" --restoration-rehearsal "$restoration_rehearsal" --json
 ```
 
 The record must retain the full qualified custody reference, source, digest,
 runtime/verifier identities, proof and valid artifact metadata. Record candidate
 proof separately during an approved A-to-B-to-A rehearsal; keep A as the retained
-baseline until restoration is proved.
+baseline until restoration is proved. The writer may preserve existing rehearsal
+references only for the same immutable digest and source revision; it validates
+the rendered record against the target owner before writing. The
+[acceptance route contract](../../../../../../../../infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml)
+also supplies the bounded `--inputs` manifest route for the same operation.
 
 ## 60 Run: Restore a Rejected Candidate
 
@@ -160,7 +173,7 @@ Do not launch another verifier merely to obtain a separate report file.
 
 Use `.agentic/aws/workflows/inspect-aws-state.md` to inspect the existing change
 set, stack, service rollout or verifier task before repeating a mutation. The
-verifier reuses completed accepted proof for the same runtime update; it does
+verifier reuses recent completed accepted proof for the same runtime update; it does
 not automatically reconcile pending, running or concurrent verifier invocations.
 A deterministic change-set name is not a general retry guarantee either.
 

@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -51,8 +51,10 @@ def reconcile(prepare,name,digest,revision):
     return emit("transitioned" if verdict=="complete" else verdict,code,facts={"change_set":name,"image_digest":digest,"source_revision":revision})
 def main():
     parser=argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt",type=Path); parser.add_argument("--operation",choices=("update","rollback")); parser.add_argument("--json",action="store_true"); parser.add_argument("--reconcile",action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args,unknown=parser.parse_known_args()
     if unknown or args.receipt is None or args.operation is None: return emit("blocked","persistence-release-transition-arguments-invalid")
+    if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
     prepare=load(ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py","prepare")
     create=load(ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py","create")
     receipt=prepare.validate_receipt(args.receipt)

@@ -1,0 +1,16 @@
+{
+  "schema": "repo/node-installation-cache-correction/v1",
+  "evidence_class": "local-runtime",
+  "reproduction": "corrective-installation-cache-reproduction.json",
+  "focused_tests": "corrective-node-installation-tests.log",
+  "tests": 7,
+  "active_dependency_installation_modified": false,
+  "new_declaration": "runtime.node_packages",
+  "installed_dependency_boundary": "declared roots plus required/optional/peer closure using repository-bounded actual package resolution; file paths, bytes, modes, package targets and links; optional absence retained",
+  "tool_boundary": "PyYAML source/native filenames+bytes+modes; TypeScript full installed package; tool executable bytes+modes, no mtime",
+  "limitations": [
+    "Explicit package roots remain the command owner responsibility; this is not universal dynamic import inference.",
+    "Out-of-repository installed package targets, cycles and unsupported file types fail closed.",
+    "No dependency installation, image qualification, CI or live operation executed for this correction."
+  ]
+}

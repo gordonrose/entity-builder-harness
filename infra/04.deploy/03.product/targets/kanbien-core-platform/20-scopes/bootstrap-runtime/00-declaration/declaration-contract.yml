@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#   version: 11
+#   version: 12
 #   status: active
 #   created_on: "2026-10-20"
 #   updated_on: "2026-10-25"
@@ -25,11 +25,13 @@ target: kanbien-core-platform
 scope: bootstrap-runtime
 status: healthy-runtime-accepted
 owner: platform-runtime
+acceptance:
+  route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
 program:
   id: kanbien-core-server
   contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
   image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
-  local_proof: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+  local_proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
 workload:
   operation: controlled-update-or-restoration
   runtime_selection: ecs-fargate-private-immutable-digest
@@ -204,6 +206,9 @@ change_impact:
     - scope-inventory
     - runnable-program
     - core-dependency-boundary
+    - acceptance-route
+    - acceptance-route-regression
+    - bootstrap-acceptance-regression
     package_proofs:
     - bootstrap-container
     target_proofs:

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.check-selection
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.dont_write_bytecode = True
+sys.path.insert(0, str(ROOT / 'scripts/repo/check-selection'))
+from local_cache import LocalCache, runtime_identity, valid_node_package, TOOLS
 sys.path.insert(0, str(ROOT / 'scripts/01.harness/artifact-metadata'))
 from header_discovery import HeaderError, parse_header_text, repository_paths
 spec = importlib.util.spec_from_file_location('declaration_coverage', ROOT / 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py')
@@ -127,9 +130,20 @@ def validate_check(root: Path, check_id: str, check: Any) -> list[dict[str, str]
     def fail(code: str) -> list[dict[str, str]]: return [{'code': code, 'check_id': check_id}]
     if not isinstance(check, dict): return fail('required-check-missing')
     stage, argv, effects = check.get('stage'), check.get('argv'), check.get('effects')
-    if not isinstance(stage, str) or stage not in STAGES or check.get('evidence_class') not in CLASSES[stage]: return fail('check-stage-invalid')
+    if not isinstance(stage, str) or stage not in STAGES or not isinstance(check.get('evidence_class'), str) or check['evidence_class'] not in CLASSES[stage]: return fail('check-stage-invalid')
     if not isinstance(argv, list) or len(argv) < 2 or argv[0] != 'bash' or not all(isinstance(arg, str) and arg and not any(c in arg for c in '\n\r\0;|&`$') for arg in argv): return fail('check-argv-invalid')
-    if any(('{' in arg or '}' in arg) and arg not in PLACEHOLDERS for arg in argv): return fail('check-argument-placeholder-invalid')
+    parameters = check.get('parameters', {})
+    if not isinstance(parameters, dict): return fail('check-parameters-invalid')
+    for name, parameter in parameters.items():
+        if not isinstance(name, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', name) or not isinstance(parameter, dict) or parameter.get('kind') != 'path' or parameter.get('required') is not True or not isinstance(parameter.get('schema'), str): return fail('check-parameters-invalid')
+        if stage == 'local' or '{' + name + '}' not in argv: return fail('check-runtime-parameter-invalid')
+    allowed = PLACEHOLDERS | {'{' + name + '}' for name in parameters}
+    if any(('{' in arg or '}' in arg) and arg not in allowed for arg in argv): return fail('check-argument-placeholder-invalid')
+    if stage == 'local':
+        runtime = check.get('runtime')
+        if not isinstance(runtime, dict) or not coverage.strings(runtime.get('tools')) or not set(runtime['tools']) <= TOOLS or not coverage.strings(runtime.get('environment'), empty=True) or not coverage.strings(runtime.get('config_inputs', []), empty=True) or any(coverage.within(root, value) is None for value in runtime.get('config_inputs', [])): return fail('check-runtime-contract-invalid')
+        node_packages = runtime.get('node_packages', [])
+        if not coverage.strings(node_packages, empty=True) or any(not valid_node_package(name) for name in node_packages) or ('node' in runtime['tools'] and 'node_packages' not in runtime) or ('typescript' in runtime['tools'] and 'typescript' not in node_packages): return fail('check-runtime-node-installation-invalid')
     command = coverage.within(root, argv[1])
     if command is None or not command.is_file(): return fail('required-check-command-missing')
     command_metadata = metadata(command)
@@ -152,9 +166,13 @@ def fingerprint(root: Path, refs: set[str]) -> str:
             if item.is_symlink(): raise ValueError('input-symlink:' + item.relative_to(root).as_posix())
         files = [item for item in entries if item.is_file()] if path.is_dir() else entries
         for item in files:
-            digest.update(item.relative_to(root).as_posix().encode())
-            try: digest.update(item.read_bytes())
-            except OSError: digest.update(b'<missing>')
+            try:
+                content = item.read_bytes()
+                mode = item.stat().st_mode & 0o777
+            except OSError:
+                content, mode = b'<missing>', None
+            digest.update(json.dumps([item.relative_to(root).as_posix(), mode, len(content)]).encode())
+            digest.update(content)
     return digest.hexdigest()
 
 
@@ -182,8 +200,8 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         contract = scope['contract']
         report = coverage.inspect(contract, root, catalog)
         refs = set(report['references']) | set(report['inputs'])
-        evidence_refs = upstream_closure(refs, graph)
         refs.add(scope['index'].relative_to(root).as_posix())
+        evidence_refs = upstream_closure(refs, graph)
         # A checker implementation change impacts every scope that requires it.
         proof_dirs: set[str] = set()
         check_inputs: set[str] = set()
@@ -194,6 +212,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             if isinstance(argv, list) and len(argv) > 1 and isinstance(argv[1], str) and coverage.safe_path(argv[1]): proof_dirs.add(str(Path(argv[1]).parent))
             values = check.get('inputs', [])
             if isinstance(values, list): check_inputs.update(value for value in values if isinstance(value, str))
+            runtime = check.get('runtime')
+            configs = runtime.get('config_inputs', []) if isinstance(runtime, dict) else []
+            if isinstance(configs, list): check_inputs.update(value for value in configs if isinstance(value, str))
         triggers = refs | proof_dirs | check_inputs
         if not (args.all or catalog_changed or any(below(path, ref) or below(ref, path) for path in consumers for ref in triggers)): continue
         for path in changed:
@@ -212,33 +233,32 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             findings += errors
             if errors: continue
             argv = tuple(substitutions.get(arg, arg) for arg in check['argv'])
-            if any(not arg or ('{' in arg or '}' in arg) for arg in argv): findings.append({'code': 'check-arguments-unresolved', 'check_id': identity}); continue
+            runtime_parameters = {'{' + name + '}' for name in check.get('parameters', {})}
+            if any(not arg or (('{' in arg or '}' in arg) and arg not in runtime_parameters) for arg in argv): findings.append({'code': 'check-arguments-unresolved', 'check_id': identity}); continue
             key = identity + ':' + hashlib.sha256(json.dumps(argv).encode()).hexdigest()[:16]
-            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending'})
-            if item['stage'] != check['stage'] or item['effects'] != check['effects'] or item['evidence_class'] != check['evidence_class']: findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
+            if any(item[field] != check.get(field, {}) for field in ('stage', 'effects', 'evidence_class', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
             item['scopes'].append(report['scope'])
             item['references'].update(evidence_refs | set(check.get('inputs', [])) | {catalog_path.relative_to(root).as_posix(), str(Path(argv[1]).parent)} | {arg for arg in argv[2:] if coverage.safe_path(arg) and (root / arg).exists()})
-    # Governance/docs/session changes are covered by mandatory portable metadata
-    # and process gates, not by an invented deployment test. All other unmapped
-    # inputs are explicit gaps, including deleted or renamed old paths.
+    # Authoritative definitions follow the same transitive consumer graph as
+    # executable source. Only prose may rely solely on portable process gates.
     repository_rules = catalog.get('repository_inputs', [])
     if not isinstance(repository_rules, list):
         findings.append({'code': 'repository-input-rule-invalid'}); repository_rules = []
     for rule in repository_rules:
         if isinstance(rule, dict) and coverage.strings(rule.get('inputs')) and coverage.strings(rule.get('checks')):
-            covered.update(path for path in changed if any(below(path, ref) for ref in rule['inputs']))
+            covered.update(path for path in changed if any(below(consumer, ref) or below(ref, consumer) for consumer in closure([path], graph) for ref in rule['inputs']))
     non_applicable = []
     for path in changed:
         if path in covered: continue
-        if path.startswith(('.agentic/', 'docs/', 'commitLogs/')) or path in {'AGENTS.md'}:
+        authoritative = metadata(root / path).get('kind') in {'schema', 'contract', 'deployment-contract', 'configuration', 'script', 'gate'}
+        if (not authoritative and path.endswith('.md') and path.startswith(('.agentic/', 'docs/'))) or (path.startswith('commitLogs/') and path.endswith(('.md', '.json', '.yml', '.yaml', '.log', '.txt'))) or path == 'AGENTS.md':
             non_applicable.append({'path': path, 'reason': 'governance-or-session-input-covered-by-mandatory-metadata-and-process-gates'})
-        elif below(path, 'scripts/repo/check-selection') or below(path, 'scripts/repo/commit-gates') or below(path, 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage'):
-            non_applicable.append({'path': path, 'reason': 'selector-implementation-requires-selector-regression-suite'})
         else: findings.append({'code': 'changed-input-uncovered', 'path': path, 'state': 'present' if (root / path).exists() else 'deleted'})
     for rule in repository_rules:
         if not isinstance(rule, dict) or not coverage.strings(rule.get('inputs')) or not coverage.strings(rule.get('checks')):
             findings.append({'code': 'repository-input-rule-invalid'}); continue
-        if not (args.all or any(below(path, ref) for path in changed for ref in rule['inputs'])): continue
+        if not (args.all or any(below(path, ref) or below(ref, path) for path in consumers for ref in rule['inputs'])): continue
         for identity in rule['checks']:
             check = checks.get(identity)
             errors = validate_check(root, identity, check)
@@ -247,36 +267,84 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             argv = tuple(check['argv'])
             if any('{' in arg or '}' in arg for arg in argv): findings.append({'code': 'repository-check-placeholder-invalid', 'check_id': identity}); continue
             key = identity + ':' + hashlib.sha256(json.dumps(argv).encode()).hexdigest()[:16]
-            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending'})
-            item['references'].update(set(rule['inputs']) | set(check.get('inputs', [])) | {catalog_path.relative_to(root).as_posix(), str(Path(argv[1]).parent)})
-    evidence_doc = coverage.document(args.evidence) if args.evidence else {}
-    supplied = evidence_doc.get('checks', [])
-    evidence = {item.get('check_key'): item for item in supplied if isinstance(item, dict)} if isinstance(supplied, list) else {}
+            item = selected.setdefault(argv, {'check_id': identity, 'check_key': key, 'argv': list(argv), 'stage': check['stage'], 'effects': check['effects'], 'evidence_class': check['evidence_class'], 'scopes': [], 'references': set(), 'status': 'pending', 'runtime': check.get('runtime', {}), 'parameters': check.get('parameters', {}), 'applicability': check.get('applicability', {})})
+            if any(item[field] != check.get(field, {}) for field in ('stage', 'effects', 'evidence_class', 'runtime', 'parameters')): findings.append({'code': 'duplicate-check-contract-conflict', 'check_id': identity})
+            item['references'].update(upstream_closure(set(rule['inputs']) | set(check.get('inputs', [])) | {catalog_path.relative_to(root).as_posix(), str(Path(argv[1]).parent)}, graph))
+    cache = None
+    if args.execute_local:
+        try: cache = LocalCache(root)
+        except (ValueError, OSError) as error: findings.append({'code': 'local-cache-unavailable', 'detail': str(error)})
     results = sorted(selected.values(), key=lambda item: (STAGES[item['stage']], item['check_key']))
+    runtime_identities: dict[str, dict] = {}
+    def identity(item: dict) -> str:
+        item['input_digest'] = fingerprint(root, item['references'])
+        runtime = item['runtime']
+        runtime_key = json.dumps(runtime, sort_keys=True)
+        if item['stage'] == 'local':
+            if runtime_key not in runtime_identities: runtime_identities[runtime_key] = runtime_identity(root, runtime)
+            item['runtime_identity'] = runtime_identities[runtime_key]
+        payload = {key: item.get(key) for key in ('input_digest', 'argv', 'effects', 'stage', 'evidence_class', 'runtime_identity', 'parameters', 'applicability')}
+        return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
     for item in results:
-        try: item['input_digest'] = fingerprint(root, item.pop('references'))
-        except ValueError as error:
+        item['references'] = upstream_closure(item['references'] | set(item['runtime'].get('config_inputs', [])), graph)
+        # The executable runner and catalog are part of every proof definition.
+        item['references'].update({'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py'})
+        try: item['evidence_key'] = identity(item)
+        except (ValueError, OSError, subprocess.SubprocessError) as error:
             item['input_digest'] = ''
-            findings.append({'code': 'check-input-symlink-unsupported', 'path': str(error).removeprefix('input-symlink:')})
+            code = 'check-input-symlink-unsupported' if str(error).startswith('input-symlink:') else 'check-runtime-identity-unavailable'
+            findings.append({'code': code, 'check_id': item['check_id'], 'detail': str(error)})
+    if args.staged:
+        # The hook must prove the bytes that would be committed. Unrelated
+        # unstaged work remains outside this selected-input boundary.
+        unstaged = set(git(root, 'diff', '--name-only', '--no-renames', '-z').split('\0')) - {''}
+        untracked = set(git(root, 'ls-files', '--others', '--exclude-standard', '-z').split('\0')) - {''}
+        selected_inputs = {reference for item in results for reference in item['references']}
+        for path in sorted(unstaged | untracked):
+            if any(below(path, ref) or below(ref, path) for ref in selected_inputs):
+                findings.append({'code': 'selected-input-not-staged', 'path': path})
     execution_preflight_passed = not findings
     for item in results:
         item['source_revision'] = revision
         item['scopes'] = sorted(set(item['scopes']))
         required_now = STAGES[item['stage']] <= STAGES[args.stage]
-        proof = evidence.get(item['check_key'], {})
-        matches = item['stage'] == 'local' and evidence_doc.get('schema') == 'repo/check-selection-report/v1' and all(proof.get(key) == item[key] for key in ('input_digest', 'source_revision', 'evidence_class', 'stage', 'argv')) and proof.get('status') == 'passed'
-        if matches: item['status'] = 'passed'; item['evidence_source'] = 'supplied-report'
+        if execution_preflight_passed and item['stage'] == 'local':
+            runtime_identities.clear()
+            try: current_identity = identity(item)
+            except (ValueError, OSError, subprocess.SubprocessError): current_identity = None
+            if current_identity != item.get('evidence_key'):
+                item['status'] = 'uncertain'
+                item['references'] = sorted(item['references'])
+                findings.append({'code': 'check-input-changed-before-execution', 'check_id': item['check_id']})
+                continue
+        proof = cache.read(item.get('evidence_key', 'invalid')) if cache and item['stage'] == 'local' and execution_preflight_passed else {}
+        if proof:
+            item.update(status='passed', exit_code=0, evidence_source='trusted-worktree-cache', executed_revision=proof.get('executed_revision', proof.get('source_revision')))
         elif not required_now: item['status'] = 'deferred'; item['reason'] = 'required-before-' + item['stage']
         elif args.execute_local and item['stage'] == 'local' and execution_preflight_passed:
-            # argv arrays only. Metadata and the catalog must agree on effects;
-            # neither later-stage selectors nor evidence can authorize execution.
             completed = subprocess.run(item['argv'], cwd=root, capture_output=True, text=True, check=False)
-            item['status'] = 'passed' if completed.returncode == 0 else 'failed'
-            item['exit_code'] = completed.returncode
-            if completed.returncode: findings.append({'code': 'required-check-failed', 'check_id': item['check_id']})
+            item.update(status='passed' if completed.returncode == 0 else 'failed', exit_code=completed.returncode, evidence_source='local-runner', executed_revision=revision)
+            # A check cannot qualify bytes that changed while it was executing.
+            before = item['evidence_key']
+            runtime_identities.clear()
+            try: after = identity(item)
+            except (ValueError, OSError, subprocess.SubprocessError): after = None
+            if after != before:
+                item['status'] = 'uncertain'
+                findings.append({'code': 'check-input-changed-during-execution', 'check_id': item['check_id']})
+            elif completed.returncode:
+                findings.append({'code': 'required-check-failed', 'check_id': item['check_id']})
+            elif cache: cache.save({**item, 'references': sorted(item['references'])})
         elif args.stage != 'local' or args.execute_local:
             findings.append({'code': 'required-proof-missing-or-stale' if item['stage'] == 'local' else 'required-proof-owned-by-stage-controller', 'check_id': item['check_id'], 'stage': item['stage']})
-    return {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'scopes': impacted, 'checks': results, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Explicit scope inputs and workspace dependencies cover supported source consumers; unclassified changed inputs remain gaps.', 'Selection and local proof never authorize package publication, provider access, secrets or acceptance.', 'Aggregate reports can reuse only local evidence; later-stage receipts must pass their owning controller and cannot be waived here.']}
+        item['references'] = sorted(item['references'])
+    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'scopes': impacted, 'checks': results, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
+    if args.evidence: report['evidence_import_status'] = 'rejected-untrusted-report'
+    if cache:
+        report['local_report_path'] = str(cache.directory / 'latest-report.json')
+        cache.save_report(report)
+    return report
+
 
 
 def main() -> int:
@@ -292,7 +360,9 @@ def main() -> int:
     parser.add_argument('--evidence', type=Path)
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args()
-    report = plan(args)
+    try: report = plan(args)
+    except (OSError, ValueError, TypeError, ImportError, subprocess.SubprocessError) as error:
+        report = {'schema': 'repo/check-selection-report/v1', 'verdict': 'gap', 'findings': [{'code': 'selection-input-or-runtime-invalid', 'error_type': type(error).__name__}]}
     print(json.dumps(report, sort_keys=True))
     return 1 if report['findings'] else 0
 

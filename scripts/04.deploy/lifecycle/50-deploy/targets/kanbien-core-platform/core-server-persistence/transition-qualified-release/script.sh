@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -13,6 +13,7 @@ set -euo pipefail
 #   kind: script
 #   purpose: Run the fixed target-scoped qualified persistence release transition.
 #   portability: { class: internal, targets: [] }
+#   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.transition-qualified-persistence-release.impl
 #     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py

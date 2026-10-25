@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.schema.change-impact.v1.guide
-version: 1
+version: 2
 status: active
 created_on: '2026-10-24'
 updated_on: "2026-10-25"
@@ -66,3 +66,20 @@ aggregate reports cannot satisfy a container or live requirement.
 
 Run declaration coverage and selection as documented in
 [scripts/repo/check-selection/README.md](../../../scripts/repo/check-selection/README.md).
+
+Proof applicability is executable. Bound checks identify their program, packaged
+image and applicable target/scope. Generic checks reference the command owner's
+adjacent `repo/check-capability/v1` declaration, which owns the exact argv,
+contract schema and consumed context parameters. The scope must retain its
+canonical runnable program `local_proof`; merely listing generic validators
+cannot replace the integration proof. An advertised acceptance check also binds
+the scope's complete acceptance route and collector arguments, with future
+receipt paths represented as typed symbolic parameters until that owning stage.
+
+Authoritative metadata consumers are followed transitively into repository input
+mappings and evidence fingerprints. Unmapped schemas/configuration are gaps;
+ordinary prose does not select unrelated runtime checks. The ordinary commit
+hook verifies selected staged bytes and automatically reuses successful local
+runner evidence from private worktree Git metadata. Declared tools, configuration,
+environment, file modes and relevant dependency bytes define reuse; source
+revision only records provenance. Imported JSON is never qualifying evidence.

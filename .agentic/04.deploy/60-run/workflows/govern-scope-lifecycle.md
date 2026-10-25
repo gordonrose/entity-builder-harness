@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.govern-scope-lifecycle
-version: 1
+version: 2
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.scope-lifecycle
 disciplines: [agentic, security, sre]
@@ -38,15 +38,24 @@ validate the target lifecycle inventory before provider or release commands.
 4. If the candidate fails preflight, deployment, health, or verification, keep
    the predecessor active. Record safe failure evidence through the candidate
    release route; do not flip lifecycle state as a workaround.
-5. After the candidate has the required accepted-release evidence, use the
-   separately authorised release transition to make it active and its
-   predecessor `accepted-historical` with reciprocal links. Re-run the target
-   declaration and release gates.
-6. A later reversion is a new governed release/recovery operation. Prepare the
+5. A supported scope advertises its provider-owned `acceptance.route` in its
+   declaration. Declaration coverage validates the complete route template and
+   invokes only each command owner's declared read-only argument parser before
+   package/deployment operations. This preflight proves the collector, record
+   schema/validator, promotion and downstream gates are connected; actual
+   receipt inputs remain deferred to the acceptance stage.
+6. After the candidate has the required accepted-release evidence, use the
+   local `scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh`
+   with `--scope-contract <path> --write --json`. It invokes the owning record
+   validator before making the candidate active and its predecessor
+   `accepted-historical` with reciprocal links. It grants no provider authority.
+   Re-run the target declaration and release gates; active/historical records
+   are validated again by the inventory check.
+7. A later reversion is a new governed release/recovery operation. Prepare the
    historical scope as a candidate only when its contract remains compatible;
    require fresh alignment, evidence, and provider-mutation authority. Do not
    equate retained historical evidence with a restored runtime.
-7. Retire a historical scope only after no active or candidate scope references
+8. Retire a historical scope only after no active or candidate scope references
    it, required evidence-retention conditions are met, and its consumers and
    indexes have been updated.
 
@@ -56,3 +65,10 @@ Stop when a lifecycle edit would create dual active ownership, a predecessor or
 successor is absent or inconsistent, a candidate is missing proof, a reversion
 lacks a compatible contract or release authority, or an agent is asked to use
 the scope index as an implicit provider-mutation command.
+
+Offline route rehearsals use explicit `evidence_class: simulated` and
+`status: rehearsed` in temporary roots. Only `--rehearsal-root` can validate or
+promote those temporary records; ordinary validation and promotion require
+accepted live evidence. Existing genuine records without this additive field
+retain their historical live meaning. Rehearsal success is local runtime
+evidence, never container, CI, provider, or production acceptance evidence.

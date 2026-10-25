@@ -1,0 +1,29 @@
+chat-worktree
+OK: chat log exists: commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/README.md
+OK: declared chat lifecycle workflow exists: .agentic/00.chat/workflows/chat-start.md
+OK: canonical before-commit checklist exists: .agentic/00.chat/checklists/before-commit.md
+OK: referenced gate script exists: scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/check-commit-prerequisites/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/check-commitlog-deletions/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/checkpoint-chat-session-log/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/read-current-chat-log/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/record-chat-commit/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/rename-current-chat-log-folder/script.sh
+OK: referenced gate script exists: scripts/00.chat/session-log/update-chat-log/script.sh
+OK: referenced gate script exists: scripts/00.chat/startup/resolve-current-chat-session/script.sh
+OK: referenced gate script exists: scripts/00.chat/startup/start-chat-session/script.sh
+OK: referenced gate script exists: scripts/00.chat/transcript/register-codex-session-log/script.sh
+OK: referenced gate script exists: scripts/00.chat/worktree/check-write-location/script.sh
+OK: referenced gate script exists: scripts/00.chat/worktree/ensure-chat-worktree/script.sh
+OK: referenced gate script exists: scripts/01.harness/artifact-metadata/check-headers/script.sh
+OK: referenced gate script exists: scripts/01.harness/check-deterministic-process-drift.sh
+OK: referenced gate script exists: scripts/01.harness/run-governed-script.sh
+OK: referenced gate script exists: scripts/repo/commit-gates/script.sh
+Commit prerequisites are present.
+Commit log deletion gate passed.
+No deterministic process drift found.
+Artifact metadata headers passed for 70 file(s); 0 existing headerless modification(s) grandfathered.
+No governed script command drift found.
+Repository commit extension gates passed.
+Chat session is ready for commit: commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/README.md

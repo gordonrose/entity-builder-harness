@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.schema.change-impact.v1
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -40,3 +40,13 @@ boundaries:
   - unsupported proof IDs are gaps rather than silently skipped requirements
   - provider command identities and effects stay with their existing owners
   - selection never grants execution authority or replaces stage-specific evidence
+
+check_contract:
+  applicability:
+    bound: program_id (or explicit program_ids); package adds image_id; deploy and acceptance add target and scope
+    generic: contract_schema and context_parameters consumed by argv; exact command-owned check-capability.yml required
+  mandatory_program_proof: canonical runnable_programs entry local_proof must occur in selected local argv
+  parameters: external-stage symbolic path parameters declare required=true and owning record schema; no local runtime parameter execution
+  acceptance_route: an advertised acceptance check route must equal the scope acceptance.route and its collector argv
+  runtime: local tools, environment names, optional repository config_inputs and declared node_packages installation closure are explicit cache identity inputs
+  cache: only unchanged successful local runner results in private per-worktree Git metadata; imported reports never qualify proof

@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-active-workload-health-recovery.implementation
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -19,6 +19,8 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
+import tempfile
 import json
 import re
 import subprocess
@@ -90,13 +92,66 @@ def binding_workload_ids(binding: dict[str, Any]) -> list[str] | None:
     return ids if len(ids) == len(set(ids)) else None
 
 
+def acceptance_codes(contract: dict, contract_path: Path, rehearsal_root: Path | None = None) -> list[str]:
+    """Existing health-only contracts remain supported; advertised acceptance is mandatory."""
+    if 'acceptance' not in contract: return []
+    root = Path(__file__).resolve().parents[5]
+    path = root / 'scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'
+    try:
+        if not path.is_file(): return ['scope-lifecycle-acceptance-route-helper-unavailable']
+        spec = importlib.util.spec_from_file_location('lifecycle_acceptance_route', path)
+        if spec is None or spec.loader is None: return ['scope-lifecycle-acceptance-route-helper-unavailable']
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        route, _ = module.load_route(contract_path, rehearsal_root or root)
+    except (OSError, ImportError, SyntaxError, AttributeError, TypeError, ValueError):
+        return ['scope-lifecycle-acceptance-route-helper-unavailable']
+    if not isinstance(route, dict) or route.get('target') != contract.get('target') or route.get('scope') != contract.get('scope'): return ['scope-lifecycle-acceptance-route-invalid']
+    record = route.get('accepted_record')
+    commands = route.get('commands')
+    if not isinstance(record, dict) or not isinstance(commands, dict) or not isinstance(record.get('validator'), str): return ['scope-lifecycle-acceptance-route-invalid']
+    command = commands.get(record['validator'])
+    if not isinstance(command, dict): return ['scope-lifecycle-acceptance-route-invalid']
+    record_path = module.reference(contract_path.parent.parent, record.get('path'))
+    if record_path is None: return ['scope-lifecycle-accepted-release-invalid']
+    accepted = module.document(record_path)
+    if any(accepted.get(key) != value for key, value in [('target', contract.get('target')), ('scope', contract.get('scope')), ('schema', record.get('schema'))]): return ['scope-lifecycle-accepted-release-identity-invalid']
+    argv = module.resolve(command.get('argv'), {'accepted_record': str(record_path), 'scope_contract': str(contract_path)})
+    if argv is None or argv[0] != 'bash': return ['scope-lifecycle-acceptance-validator-invalid']
+    script = module.reference(root, argv[1])
+    metadata = module.command_metadata(script) if script else {}
+    if metadata.get('id') != command.get('owner') or metadata.get('effects') != ['read-only'] or command.get('effects') != ['read-only']: return ['scope-lifecycle-acceptance-validator-invalid']
+    # Relative retained receipt references resolve in the owning repository. For
+    # copied target fixtures the scope-local accepted record remains the input.
+    args = ['bash', str(script), *argv[2:]]
+    if rehearsal_root is not None: args += ['--rehearsal-root', str(rehearsal_root)]
+    elif contract_path.is_relative_to(root): args += ['--root', str(root)]
+    try:
+        checked = subprocess.run(args, capture_output=True, text=True, check=False, timeout=30)
+        report = json.loads(checked.stdout)
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError): return ['scope-lifecycle-accepted-release-invalid']
+    return [] if checked.returncode == 0 and isinstance(report, dict) and report.get('verdict') == 'validated' else ['scope-lifecycle-accepted-release-invalid']
+
+
 def main():
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--target-root", type=Path, required=True)
+    parser.add_argument("--target-root", type=Path)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--rehearsal-root", type=Path)
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
+    if not unknown and args.target_root is not None and args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
+    if args.target_root is None:
+        print(json.dumps({"schema":"deploy/scope-lifecycle-inventory-report/v1","verdict":"failed","findings":[{"code":"scope-lifecycle-arguments-invalid"}]})); return 1
+    report = inspect(args.target_root, args.rehearsal_root, {} if unknown else None)
+    print(json.dumps(report, sort_keys=True))
+    return int(report["verdict"] != "passed")
+
+
+def inspect(target_root: Path, rehearsal_root: Path | None = None, index_override: dict | None = None) -> dict:
     codes: list[str] = []
-    index = load(args.target_root / "scope-index.yml") if not unknown else None
+    if rehearsal_root is not None and (not rehearsal_root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or not target_root.resolve().is_relative_to(rehearsal_root.resolve())):
+        return {"schema":"deploy/scope-lifecycle-inventory-report/v1","verdict":"failed","findings":[{"code":"scope-lifecycle-simulation-root-invalid"}]}
+    index = index_override if index_override is not None else load(target_root / "scope-index.yml")
     if not isinstance(index, dict) or index.get("schema") != "deploy/scope-lifecycle-inventory/v1":
         codes.append("scope-lifecycle-inventory-invalid")
     else:
@@ -119,8 +174,8 @@ def main():
                     codes.append("scope-lifecycle-entry-invalid")
                     continue
                 indexed[scope_id] = item
-                expected_contract, expected_binding = canonical_scope_paths(args.target_root, scope_id)
-                if item["declaration"] != expected_contract.relative_to(args.target_root).as_posix() or item["workload_binding"] != expected_binding.relative_to(args.target_root).as_posix():
+                expected_contract, expected_binding = canonical_scope_paths(target_root, scope_id)
+                if item["declaration"] != expected_contract.relative_to(target_root).as_posix() or item["workload_binding"] != expected_binding.relative_to(target_root).as_posix():
                     codes.append("scope-lifecycle-path-noncanonical")
                     continue
                 contract, binding = expected_contract, expected_binding
@@ -139,6 +194,8 @@ def main():
                     codes.append("scope-lifecycle-target-mismatch")
                 if contract_document.get("scope") != scope_id or binding_document.get("scope") != scope_id:
                     codes.append("scope-lifecycle-identity-mismatch")
+                if lifecycle in {"active", "accepted-historical"}:
+                    codes.extend(acceptance_codes(contract_document, contract, rehearsal_root))
                 declared_ownership = text_list(item.get("workload_ownership"))
                 bound_workloads = binding_workload_ids(binding_document)
                 if declared_ownership is None or bound_workloads is None or set(declared_ownership) != set(bound_workloads):
@@ -204,7 +261,7 @@ def main():
                         else:
                             active_owners[workload_id] = scope_id
 
-            discovered = discovered_scope_ids(args.target_root)
+            discovered = discovered_scope_ids(target_root)
             if discovered != set(indexed):
                 codes.append("scope-lifecycle-inventory-incomplete")
 
@@ -224,8 +281,7 @@ def main():
         "verdict": "passed" if not codes else "failed",
         "findings": [{"code": code} for code in dict.fromkeys(codes)],
     }
-    print(json.dumps(report, sort_keys=True))
-    return 0 if not codes else 1
+    return report
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.declaration-coverage.readme
-version: 2
+version: 3
 status: active
 created_on: "2026-10-06"
 updated_on: "2026-10-25"
@@ -32,7 +32,13 @@ bash scripts/repo/check-selection/smoke-test.sh
 It checks declared implementation/consumer paths, unique requirements, owners,
 expectations, check references, proof categories, valid explicit non-applicability
 and existing program/workload execution sources. It emits `covered` or `gap`.
-Coverage means the proof path exists; it does not mean those proofs passed.
+Coverage binds the proof to the selected program/image/scope, requires the
+canonical runnable program integration proof, and verifies generic check owner
+capabilities against exact supported arguments. Advertised acceptance routes
+must connect the collector, complete proof sequence, record validation,
+promotion and downstream owners; route templates use offline parser validation.
+Coverage means that implementation and proof contracts connect; it does not mean
+container or live proofs passed.
 
 The [schema and guide](../../../../../.agentic/04.deploy/schemas/change-impact.v1.guide.md)
 bridge the existing Declaration Coverage Standard to target scope declarations.

@@ -131,8 +131,10 @@ def rotate_and_replace(prepare: Any, secret_arn: str, receipt: Path) -> tuple[st
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path); parser.add_argument("--operation"); parser.add_argument("--secret-operation-id"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover", "recover-after-revocation", "recover-secret", "reconcile-secret"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
+    if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
     create = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)

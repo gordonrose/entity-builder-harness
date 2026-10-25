@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.smoke-test-core-server-persistence-image.readme
-version: 2
+version: 3
 status: draft
 created_on: "2026-10-23"
 updated_on: "2026-10-25"
@@ -42,3 +42,10 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 It rejects missing wrappers, package subpath exports, the PostgreSQL driver,
 entrypoint exports, and compiled shim targets. It does not replace the
 container qualification command or published-digest custody evidence.
+
+The payload regression also exercises the publication workflow's actual
+qualification block and image-builder shell with controlled command boundaries.
+The builder owns declaration coverage, scope health, runnable-program validation
+and composition; publication invokes it once before container qualification and
+provider credentials. Each required check still stops progression on failure.
+These local tests do not execute CI, publish an image or establish package custody.

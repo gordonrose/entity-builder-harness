@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.create-persistence-recovery-point.impl
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -33,8 +33,9 @@ def emit(verdict,*codes,facts=None):
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict=="available" else 1
 def main():
- p=argparse.ArgumentParser(add_help=False); p.add_argument("--snapshot-id"); p.add_argument("--json",action="store_true"); p.add_argument("--observe-only",action="store_true"); a,u=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False); p.add_argument("--snapshot-id"); p.add_argument("--json",action="store_true"); p.add_argument("--observe-only",action="store_true"); p.add_argument("--validate-arguments",action="store_true"); a,u=p.parse_known_args()
  if u or not isinstance(a.snapshot_id,str) or not PATTERN.fullmatch(a.snapshot_id): return emit("blocked","persistence-recovery-point-arguments-invalid")
+ if a.validate_arguments:print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
  m=load()
  if a.observe_only:return observe_or_create(m,a.snapshot_id,True)
  if not m.live_budget()[0]: return emit("blocked","target-budget-live-configuration-invalid")

@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.create-persistence-recovery-point
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -13,6 +13,7 @@ set -euo pipefail
 #   kind: script
 #   purpose: Run the fixed target-scoped persistence recovery-point command.
 #   portability: { class: internal, targets: [] }
+#   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.create-persistence-recovery-point.impl
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py
