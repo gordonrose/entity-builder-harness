@@ -120,6 +120,14 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
 SUCCESS = {
     "apply": "PERSISTENCE_MIGRATION_APPLIED",
 }
+REJECTION_CODES = {
+    "PERSISTENCE_MIGRATION_CONFIGURATION_INVALID",
+    "PERSISTENCE_MIGRATION_NOT_CONFIRMED",
+}
+FAILURE_CLASSES = {
+    "access_denied", "conflict", "constraint", "resource_not_found",
+    "timeout", "transaction_rolled_back", "transport", "validation", "unknown",
+}
 
 
 def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[bool, str]:
@@ -145,6 +153,48 @@ def accepted_message(message: object, expected: str) -> bool:
     except (json.JSONDecodeError, TypeError):
         return False
     return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
+
+
+def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, str] | None, str]:
+    """Extract only a closed safe rejection record from an unsuccessful task.
+
+    Task logs are untrusted provider evidence.  This deliberately parses their
+    JSON in memory and returns only the entrypoint's finite code/class values;
+    arbitrary message text, nested fields, credentials, and provider details
+    never become controller output or a repository artifact.
+    """
+    arn = task.get("taskArn")
+    if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
+        return None, "persistence-migration-evidence-unavailable"
+    stream = f"persistence-migration/persistence-migration/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    if not ok:
+        return None, code
+    messages = events.get("events") if isinstance(events, dict) else None
+    if not isinstance(messages, list):
+        return None, "aws-response-invalid"
+    for event in messages:
+        message = event.get("message") if isinstance(event, dict) else None
+        try:
+            value = json.loads(message) if isinstance(message, str) else None
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if not isinstance(value, dict) or set(value) - {"verdict", "code", "stage", "provider_failure_class"}:
+            continue
+        code_value, stage, failure_class = value.get("code"), value.get("stage"), value.get("provider_failure_class")
+        if (
+            value.get("verdict") != "rejected"
+            or not isinstance(code_value, str)
+            or code_value not in REJECTION_CODES
+            or stage not in {None, "migration"}
+            or (failure_class is not None and (not isinstance(failure_class, str) or failure_class not in FAILURE_CLASSES))
+        ):
+            continue
+        result = {"safe_result_code": code_value}
+        if isinstance(failure_class, str):
+            result["safe_provider_failure_class"] = failure_class
+        return result, "ok"
+    return None, "persistence-migration-rejection-not-confirmed"
 
 
 def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
@@ -221,7 +271,10 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str) -
     if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or type(containers[0].get("exitCode")) is not int:
         return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     if not task_exit(task):
-        return report("failed", "persistence-migration-unsuccessful-completion", facts=facts)
+        rejection, code = migration_log_rejection(task)
+        if rejection is not None:
+            return report("failed", "persistence-migration-unsuccessful-completion", "persistence-migration-safe-rejection-observed", facts={**facts, **rejection})
+        return report("failed", "persistence-migration-unsuccessful-completion", code, facts=facts)
     accepted, code = migration_log_accepted(task, operation)
     if not accepted:
         return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
