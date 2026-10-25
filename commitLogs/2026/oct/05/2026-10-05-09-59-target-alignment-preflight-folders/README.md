@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T15:43:22Z
-latest_commit_sha: 1cd616751f0658eca485411b2a942d0c29668d8b
-chat_duration: 1752233s (20:06:43:53)
+latest_commit_at_utc: 2026-10-25T15:54:11Z
+latest_commit_sha: b12f2d75
+chat_duration: 1752882s (20:06:54:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3249,6 +3249,17 @@ Summary: Replaced the double-escaped CloudFormation alert pattern after AWS vali
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T15:54:11Z - Commit recorded
+
+Commit: `b12f2d75`
+
+Message: fix(deploy): recover failed permissions change sets
+
+Summary: Corrected the permission update change-set allowlist and added safe failed-change-set retirement with regression coverage.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4106,6 +4117,13 @@ ADR impact: covered by session ADR disposition
   Summary: Replaced the double-escaped CloudFormation alert pattern after AWS validated it as a literal backslash requirement.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `b12f2d75`
+  Time UTC: 2026-10-25T15:54:11Z
+  Message: fix(deploy): recover failed permissions change sets
+  Summary: Corrected the permission update change-set allowlist and added safe failed-change-set retirement with regression coverage.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4129,9 +4147,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T15:43:22Z
-Latest commit SHA: 1cd616751f0658eca485411b2a942d0c29668d8b
-Chat duration: 1752233s (20:06:43:53)
+Latest commit at UTC: 2026-10-25T15:54:11Z
+Latest commit SHA: b12f2d75
+Chat duration: 1752882s (20:06:54:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
