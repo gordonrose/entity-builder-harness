@@ -38,7 +38,13 @@ export async function ensureBoundedLoginRole(pool: PostgreSqlConnectionPool, ide
   if (!before.exists) {
     await pool.query({ text: `CREATE ROLE ${quotedIdentifier(identity.username)} LOGIN NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT` });
   } else {
-    requireBoundedRole(before);
+    // A role from the password-era bootstrap may exist with PostgreSQL's
+    // default INHERIT attribute.  It is safe to converge that *reducing*
+    // setting only after rejecting every privilege that could broaden the
+    // role.  Refusing all legacy attributes here made the IAM migration
+    // non-idempotent; blindly altering the role would be worse.
+    requireNoElevatedRole(before);
+    await pool.query({ text: `ALTER ROLE ${quotedIdentifier(identity.username)} LOGIN NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT` });
   }
   await requireBoundedExistingRole(pool, identity, { requireLogin: true });
 }
@@ -74,7 +80,12 @@ async function roleFacts(pool: PostgreSqlConnectionPool, username: string): Prom
 }
 
 function requireBoundedRole(facts: RoleFacts, options: { readonly requireLogin?: boolean } = {}): void {
-  if (!facts.exists || facts.superuser || facts.create_role || facts.create_database || facts.replication || facts.bypass_rls || facts.inherit || (options.requireLogin === true && !facts.can_login)) throw new Error("PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED");
+  if (!facts.exists || facts.inherit || (options.requireLogin === true && !facts.can_login)) throw new Error("PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED");
+  requireNoElevatedRole(facts);
+}
+
+function requireNoElevatedRole(facts: RoleFacts): void {
+  if (!facts.exists || facts.superuser || facts.create_role || facts.create_database || facts.replication || facts.bypass_rls) throw new Error("PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED");
 }
 
 function quotedIdentifier(value: string): string {
