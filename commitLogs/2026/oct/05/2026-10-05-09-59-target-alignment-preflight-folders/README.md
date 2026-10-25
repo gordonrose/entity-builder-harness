@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T18:51:14Z
-latest_commit_sha: dadc6360
-chat_duration: 1763505s (20:09:51:45)
+latest_commit_at_utc: 2026-10-25T19:03:10Z
+latest_commit_sha: be024ef9
+chat_duration: 1764221s (20:10:03:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3326,6 +3326,17 @@ Raised: Corrected permission-surface change-set allowlist against the active sta
 
 Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that differed from the controller's stale CREATE-era allowlist. The controller now admits only the reviewed four task-role additions and exact IAM/RDS/secret/task/service modifications; it continues to reject network expansion and unrelated resources. No change set was executed while the guard was invalid.
 
+
+### 2026-10-25T19:03:10Z - Commit recorded
+
+Commit: `be024ef9`
+
+Message: fix(deploy): align persistence permission update review
+
+Summary: Replaces the stale CREATE-era permission-surface allowlist with the exact reviewed UPDATE delta for the active stack: four task-role additions plus explicit RDS/IAM/secret/task/service modifications. Fixed-control and controller regressions pass; the previously created change set remains unexecuted.
+
+ADR impact: No ADR: narrow safety correction to an existing governed controller.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4211,6 +4222,13 @@ Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that
   Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
   ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
 
+
+- Commit: `be024ef9`
+  Time UTC: 2026-10-25T19:03:10Z
+  Message: fix(deploy): align persistence permission update review
+  Summary: Replaces the stale CREATE-era permission-surface allowlist with the exact reviewed UPDATE delta for the active stack: four task-role additions plus explicit RDS/IAM/secret/task/service modifications. Fixed-control and controller regressions pass; the previously created change set remains unexecuted.
+  ADR impact: No ADR: narrow safety correction to an existing governed controller.
+
 ## Main Refresh Conflicts
 
 
@@ -4234,9 +4252,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T18:51:14Z
-Latest commit SHA: dadc6360
-Chat duration: 1763505s (20:09:51:45)
+Latest commit at UTC: 2026-10-25T19:03:10Z
+Latest commit SHA: be024ef9
+Chat duration: 1764221s (20:10:03:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
