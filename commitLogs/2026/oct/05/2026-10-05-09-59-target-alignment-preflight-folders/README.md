@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T16:04:28Z
-latest_commit_sha: 324e0680
-chat_duration: 1753499s (20:07:04:59)
+latest_commit_at_utc: 2026-10-25T18:51:14Z
+latest_commit_sha: dadc6360
+chat_duration: 1763505s (20:09:51:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3304,6 +3304,17 @@ Summary: Retained current implementation evidence: identity lifecycle, role-boun
 
 Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
 
+
+### 2026-10-25T18:51:14Z - Commit recorded
+
+Commit: `dadc6360`
+
+Message: feat(deploy): harden persistence IAM lifecycle
+
+Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
+
+ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4182,6 +4193,13 @@ Durable evidence: Authoritative current contracts: core-server-persistence decla
   Summary: Validated explicit observability activation separately from the database-permission phase and repaired its regression fixture topology.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `dadc6360`
+  Time UTC: 2026-10-25T18:51:14Z
+  Message: feat(deploy): harden persistence IAM lifecycle
+  Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
+  ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
+
 ## Main Refresh Conflicts
 
 
@@ -4205,9 +4223,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T16:04:28Z
-Latest commit SHA: 324e0680
-Chat duration: 1753499s (20:07:04:59)
+Latest commit at UTC: 2026-10-25T18:51:14Z
+Latest commit SHA: dadc6360
+Chat duration: 1763505s (20:09:51:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
