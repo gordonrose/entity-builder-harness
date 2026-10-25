@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T15:18:21Z
-latest_commit_sha: d9cd2362
-chat_duration: 1750732s (20:06:18:52)
+latest_commit_at_utc: 2026-10-25T15:33:22Z
+latest_commit_sha: 7d9aef87
+chat_duration: 1751633s (20:06:33:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3205,6 +3205,17 @@ Summary: Replaced the vulnerable vendor collector mirror with a pinned minimal s
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T15:33:22Z - Commit recorded
+
+Commit: `7d9aef87`
+
+Message: fix(deploy): validate collector custody receipt
+
+Summary: Corrected collector receipt check vocabulary so the final custody gate accepts the governed generic receipt.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4034,6 +4045,13 @@ ADR impact: covered by session ADR disposition
   Summary: Replaced the vulnerable vendor collector mirror with a pinned minimal source build, archive-integrity handoff, unprivileged scan, and private publication only after scan success.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `7d9aef87`
+  Time UTC: 2026-10-25T15:33:22Z
+  Message: fix(deploy): validate collector custody receipt
+  Summary: Corrected collector receipt check vocabulary so the final custody gate accepts the governed generic receipt.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4057,9 +4075,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T15:18:21Z
-Latest commit SHA: d9cd2362
-Chat duration: 1750732s (20:06:18:52)
+Latest commit at UTC: 2026-10-25T15:33:22Z
+Latest commit SHA: 7d9aef87
+Chat duration: 1751633s (20:06:33:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
