@@ -107,6 +107,10 @@ connect scope implementation verification and recovery
 - Summary: Second consecutive Goal turn confirms the same external WSL blocker
   Durable evidence: Revalidated 2026-10-25T11:37:46Z: cmd.exe /c ver exits1 with UtilAcceptVsock accept4 failed110; Docker29.8.1 client/server responds. Source worktree clean at b9b97d70; main/origin mainc884c321. Previous turn made progress by committing all source/evidence and verifying preservation; this turn makes no implementation progress. No independent authorized work remains before required container qualification and final merge. Goal remains active; pending user WSL reconnection request unchanged.
 
+
+- Summary: Third consecutive Goal turn satisfies blocked-state audit
+  Durable evidence: Revalidated 2026-10-25T11:39:01Z: cmd.exe /c ver still exits1 with UtilAcceptVsock accept4 failed110; Docker client/server29.8.1 responds. Same external WSL bridge failure persisted across the original progress turn and two automatic continuations. No independent implementation or local verification remains. Required current-tree container qualification and final merge remain unproved. Source b6d1b928, evidence2403d42f and verified preservation bundle are intact; worktree clean before this bookkeeping. The next lifecycle action is mark Goal blocked, not complete. Restore active WSL Windows-executable interoperation and resume; then run native build/smoke, retain evidence, perform governed final merge.
+
 ## Activity Log
 
 ### 2026-10-24T13:22:47Z - Session started
@@ -366,6 +370,13 @@ Durable evidence: Corrective checkpoint bundle verified: /home/owner/projects/.c
 Summary: Second consecutive Goal turn confirms the same external WSL blocker
 
 Durable evidence: Revalidated 2026-10-25T11:37:46Z: cmd.exe /c ver exits1 with UtilAcceptVsock accept4 failed110; Docker29.8.1 client/server responds. Source worktree clean at b9b97d70; main/origin mainc884c321. Previous turn made progress by committing all source/evidence and verifying preservation; this turn makes no implementation progress. No independent authorized work remains before required container qualification and final merge. Goal remains active; pending user WSL reconnection request unchanged.
+
+
+### 2026-10-25T11:39:36Z - Context hygiene
+
+Summary: Third consecutive Goal turn satisfies blocked-state audit
+
+Durable evidence: Revalidated 2026-10-25T11:39:01Z: cmd.exe /c ver still exits1 with UtilAcceptVsock accept4 failed110; Docker client/server29.8.1 responds. Same external WSL bridge failure persisted across the original progress turn and two automatic continuations. No independent implementation or local verification remains. Required current-tree container qualification and final merge remain unproved. Source b6d1b928, evidence2403d42f and verified preservation bundle are intact; worktree clean before this bookkeeping. The next lifecycle action is mark Goal blocked, not complete. Restore active WSL Windows-executable interoperation and resume; then run native build/smoke, retain evidence, perform governed final merge.
 
 ## Sub-Agent Activity
 
