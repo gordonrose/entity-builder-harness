@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-private-persistence-verifier-route-update
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]

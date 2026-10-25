@@ -193,6 +193,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Target-private collector custody was not yet an executable package route.
   Resolution: Added a contract-pinned ADOT collector package workflow; it mirrors only the immutable public source into the existing target-private ECR repository, validates non-secret startup configuration, scan/SBOM/provenance, and emits a custody receipt before it can be selected by a deployment.
 
+
+- Raised: The collector route was developed on a chat branch that diverged from newer accepted persistence work on local main.
+  Resolution: Resolved the integration by retaining main's newer accepted implementation for overlapping persistence controllers and entrypoints, preserving nonconflicting observability/collector custody artifacts, then rerunning collector, target, and deployment-control gates.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -435,6 +439,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Adopt target-private collector package custody.
   Rationale: The collector remains a sidecar dependency, not a deployment authority: its protected manual GitHub workflow may qualify and publish one pinned digest only. The persistence deploy controller will remain blocked until that receipt and digest are supplied.
 
+
+- Decision: Integrate collector custody on top of the accepted persistence baseline.
+  Rationale: Conflicting controller and runtime files take the newer main implementation; collector custody remains separately package-owned and its target gate verifies that it cannot be silently omitted.
+
 ## Context Hygiene
 
 
@@ -641,6 +649,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: A public ADOT OCI index is pinned by contract and package-tested structurally; the target catalogue now routes the collector through protected private custody. Static checks pass; publication and live observability proof remain pending.
   Durable evidence: Collector contract and config live under infra/04.deploy/03.product/image/core-server-persistence-observability-collector; workflow and guard live under .github/workflows and scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform.
+
+
+- Summary: The merge base was c884c321. Main contained newer accepted scope/recovery controls; the chat branch contained permissions and observability corrections plus collector custody. The final tree has no conflicts and targeted package, declaration, target, and deployment-control regressions pass.
+  Durable evidence: Durable details are in Git merge parents, collector custody artifacts, and this chat session log.
 
 ## Activity Log
 
@@ -2995,6 +3007,27 @@ Message: feat(deploy): add private collector custody route
 Summary: Added the target-private ADOT collector package contract, protected manual custody workflow, static guard and negative regression, plus target catalogue and declaration-gate routing. Local package, target, deployment-control, and retained-acceptance checks passed; publication and live observability proof remain pending.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:08:13Z - Issue
+
+Raised: The collector route was developed on a chat branch that diverged from newer accepted persistence work on local main.
+
+Resolution: Resolved the integration by retaining main's newer accepted implementation for overlapping persistence controllers and entrypoints, preserving nonconflicting observability/collector custody artifacts, then rerunning collector, target, and deployment-control gates.
+
+
+### 2026-10-25T14:08:13Z - Decision
+
+Decision: Integrate collector custody on top of the accepted persistence baseline.
+
+Rationale: Conflicting controller and runtime files take the newer main implementation; collector custody remains separately package-owned and its target gate verifies that it cannot be silently omitted.
+
+
+### 2026-10-25T14:08:13Z - Context hygiene
+
+Summary: The merge base was c884c321. Main contained newer accepted scope/recovery controls; the chat branch contained permissions and observability corrections plus collector custody. The final tree has no conflicts and targeted package, declaration, target, and deployment-control regressions pass.
+
+Durable evidence: Durable details are in Git merge parents, collector custody artifacts, and this chat session log.
 
 ## Sub-Agent Activity
 

@@ -4,7 +4,7 @@ id: product.plan.postgresql-relational-persistence-reference-v1
 version: 11
 status: draft
 created_on: "2026-09-25"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 03.product
 domain: persistence
 disciplines:
@@ -594,7 +594,7 @@ Stage 6 remains paused until current source/target facts and the concrete
 operation plan are reviewed and separately approved. The [bounded PostgreSQL
 restart plan](../../../aws/plans/implementation/postgresql-stage6-restart-2026-10-03.md)
 may govern this slice only after explicit adoption of the [bounded applicability
-clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+clause](../../../aws/standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 and approval of that execution plan. Otherwise the original full-route
 realization contract, normalized-adapter and compiler prerequisites remain.
 

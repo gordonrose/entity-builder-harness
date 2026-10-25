@@ -9,6 +9,8 @@ import os
 import subprocess
 import sys
 import time
+import uuid
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,11 +45,11 @@ def aws(*parts: str):
         return False, None, "aws-response-invalid"
 
 
-def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
+def report(verdict: str, *codes: str, facts: dict[str, object] | None = None, stream=None) -> int:
     value: dict[str, object] = {"schema": "deploy/persistence-migration-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts:
         value["facts"] = facts
-    print(json.dumps(value, sort_keys=True))
+    print(json.dumps(value, sort_keys=True), file=stream or sys.stdout)
     return 0 if verdict == "accepted" else 1
 
 
@@ -85,8 +87,9 @@ def timestamp(value: object) -> datetime | None:
     if not isinstance(value, str):
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed.astimezone(timezone.utc) if parsed.tzinfo is not None else None
+    except (ValueError, TypeError, OverflowError):
         return None
 
 
@@ -114,7 +117,12 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
     return "ok"
 
 
-SUCCESS = {"apply": "PERSISTENCE_MIGRATION_APPLIED"}
+SUCCESS = {
+    "apply": "PERSISTENCE_MIGRATION_APPLIED",
+    "rotate": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
+    "revoke": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
+    "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
+}
 
 
 def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[bool, str]:
@@ -125,18 +133,63 @@ def migration_log_accepted(task: dict[str, object], operation: str) -> tuple[boo
     ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
     if not ok:
         return False, code
-    messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)] if isinstance(events, dict) else []
+    messages = events.get("events") if isinstance(events, dict) else None
+    if not isinstance(messages, list): return False, "aws-response-invalid"
+    messages = [event.get("message") for event in messages if isinstance(event, dict)]
     expected = SUCCESS[operation]
-    if any(isinstance(message, str) and '"verdict":"accepted"' in message and f'"code":"{expected}"' in message for message in messages):
+    if any(accepted_message(message, expected) for message in messages):
         return True, "ok"
     return False, "persistence-migration-not-confirmed"
 
+
+def accepted_message(message: object, expected: str) -> bool:
+    try:
+        value = json.loads(message) if isinstance(message, str) else None
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
+
+
+def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
+    arns = []
+    family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
+    for state in ("RUNNING", "STOPPED"):
+        # AWS forbids combining startedBy with another ListTasks filter.
+        ok, listed, code = aws("ecs", "list-tasks", "--cluster", CLUSTER, "--family", family, "--desired-status", state)
+        values = listed.get("taskArns") if ok and isinstance(listed, dict) else None
+        if not isinstance(values, list) or listed.get("nextToken") or not all(isinstance(value, str) for value in values):
+            return None, "persistence-migration-observation-uncertain"
+        arns.extend(values)
+    arns = list(dict.fromkeys(arns))
+    matching = []
+    for offset in range(0, len(arns), 100):
+        batch = arns[offset:offset + 100]
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", *batch)
+        tasks = described.get("tasks") if ok and isinstance(described, dict) else None
+        if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or not all(isinstance(task, dict) and isinstance(task.get("taskArn"), str) for task in tasks) or {task["taskArn"] for task in tasks} != set(batch):
+            return None, "persistence-migration-observation-uncertain"
+        matching.extend(task["taskArn"] for task in tasks if task.get("startedBy") == operation)
+    return (matching[0], "ok") if len(matching) == 1 else (None, "persistence-migration-task-identity-unresolved")
+
+
+def task_evidence():
+    path = Path(__file__).resolve().parents[1] / "ecs-task-evidence.py"
+    spec = importlib.util.spec_from_file_location("persistence_ecs_task_evidence", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
+
+
+def task_operation_bound(task: dict, mode: str) -> bool:
+    return task_evidence().task_overrides_match(task, "persistence-migration", {"PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION": mode})
 
 def image_digest(task_definition: object) -> str | None:
     if not isinstance(task_definition, str):
         return None
     ok, definition, _ = aws("ecs", "describe-task-definition", "--task-definition", task_definition)
-    containers = definition.get("taskDefinition", {}).get("containerDefinitions", []) if ok and isinstance(definition, dict) else []
+    value = definition.get("taskDefinition") if ok and isinstance(definition, dict) else None
+    containers = value.get("containerDefinitions") if isinstance(value, dict) else None
     image = containers[0].get("image") if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
     return image.rsplit("@", 1)[1] if isinstance(image, str) and image.count("@") == 1 and image.rsplit("@", 1)[1].startswith("sha256:") else None
 
@@ -161,16 +214,20 @@ def qualified_digest(path: Path) -> str | None:
 
 
 def accepted_completion(task: dict[str, object], seconds: int, operation: str) -> int:
+    facts = {"migration_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
     observed_duration = duration(task)
     if observed_duration is None:
-        return report("blocked", "persistence-migration-duration-unavailable")
+        return report("uncertain", "persistence-migration-duration-unavailable", facts=facts)
     if observed_duration > seconds:
-        return report("blocked", "persistence-migration-completion-deadline-exceeded")
+        return report("failed", "persistence-migration-completion-deadline-exceeded", facts=facts)
+    containers = task.get("containers")
+    if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or type(containers[0].get("exitCode")) is not int:
+        return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     if not task_exit(task):
-        return report("blocked", "persistence-migration-unsuccessful-completion")
+        return report("failed", "persistence-migration-unsuccessful-completion", facts=facts)
     accepted, code = migration_log_accepted(task, operation)
     if not accepted:
-        return report("blocked", code)
+        return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
     arn = task.get("taskArn")
     digest = image_digest(task.get("taskDefinitionArn"))
     if not isinstance(arn, str) or digest is None:
@@ -190,12 +247,20 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str) -
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     parser.add_argument("--reconcile-task")
+    parser.add_argument("--reconcile-operation")
     parser.add_argument("--capture-completed-task")
     parser.add_argument("--qualified-receipt", type=Path)
+    parser.add_argument("--runtime-credential-operation", default="apply")
     args, unknown = parser.parse_known_args()
-    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None):
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.runtime_credential_operation not in SUCCESS:
         return report("blocked", "persistence-migration-arguments-invalid")
+    if args.reconcile_operation is not None and (args.reconcile_task is not None or args.capture_completed_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
+        return report("blocked", "persistence-migration-reconciliation-operation-invalid")
+    if args.validate_arguments:
+        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": {"proof_type":"migration","operation":args.runtime_credential_operation,"result_code":SUCCESS[args.runtime_credential_operation],"family":"kanbien-core-platform-persistence-migration","deadline_workload":"persistence-migration"}}))
+        return 0
     seconds = deadline()
     if seconds is None:
         return report("blocked", "persistence-migration-deadline-invalid")
@@ -209,46 +274,62 @@ def main() -> int:
     subnets = foundation.get("PrivateSubnetIds")
     if not all(isinstance(value, str) and value for value in (task_definition, security_group, subnets)):
         return report("blocked", "persistence-migration-network-or-task-definition-unavailable")
+    if args.reconcile_operation is not None:
+        args.reconcile_task, code = reconciliation_operation(args.reconcile_operation, task_definition)
+        if args.reconcile_task is None:
+            return report("uncertain", code, facts={"operation_id": args.reconcile_operation})
     if args.reconcile_task is not None:
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.reconcile_task)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
-        if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
-            return report("blocked", "persistence-migration-controller-observation-uncertain")
+        if not ok or not isinstance(listed, list) or len(listed) != 1 or not isinstance(listed[0], dict):
+            return report("uncertain", "persistence-migration-controller-observation-uncertain", facts={"migration_task": args.reconcile_task, "operation_id": args.reconcile_operation})
         task = listed[0]
+        if args.reconcile_operation is not None and task.get("startedBy") != args.reconcile_operation:
+            return report("blocked", "persistence-migration-reconciliation-operation-mismatch")
+        if not task_operation_bound(task, args.runtime_credential_operation):
+            return report("blocked", "persistence-migration-reconciliation-operation-binding-invalid")
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
-            return report("blocked", code)
-        return accepted_completion(task, seconds, "apply")
+            verdict = "pending" if code.endswith("-not-terminal") and task.get("lastStatus") in {"PROVISIONING", "PENDING", "ACTIVATING", "RUNNING", "DEACTIVATING", "STOPPING", "DEPROVISIONING"} else "blocked"
+            return report(verdict, code, facts={"migration_task": args.reconcile_task, "operation_id": args.reconcile_operation})
+        return accepted_completion(task, seconds, args.runtime_credential_operation)
     if args.capture_completed_task is not None:
         expected_digest = qualified_digest(args.qualified_receipt)
         if expected_digest is None:
             return report("blocked", "persistence-migration-historic-receipt-invalid")
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.capture_completed_task)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
-        task = listed[0] if len(listed) == 1 and isinstance(listed[0], dict) else None
-        if not isinstance(task, dict) or not historical_task_identity(task, expected_digest):
+        task = listed[0] if isinstance(listed, list) and len(listed) == 1 and isinstance(listed[0], dict) else None
+        if not isinstance(task, dict) or task.get("taskArn") != args.capture_completed_task or not historical_task_identity(task, expected_digest) or not task_operation_bound(task, args.runtime_credential_operation):
             return report("blocked", code if not ok else "persistence-migration-historic-task-identity-invalid")
-        return accepted_completion(task, seconds, "apply")
+        return accepted_completion(task, seconds, args.runtime_credential_operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
-    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network)
+    overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION", "value": args.runtime_credential_operation}]}]})
+    operation_id = "kp-" + uuid.uuid4().hex
+    # Flush identity before submission so a lost response has a read-only recovery path.
+    report("pending", "persistence-migration-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
+    sys.stderr.flush()
+    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--started-by", operation_id, "--client-token", operation_id, "--network-configuration", network, "--overrides", overrides)
     tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
-    if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
-        return report("blocked", code if not ok else "persistence-migration-not-started")
+    if not ok or not isinstance(tasks, list) or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
+        return report("failed" if ok and isinstance(started, dict) and isinstance(started.get("failures"), list) and started["failures"] else "uncertain", code if not ok else "persistence-migration-not-started", facts={"operation_id": operation_id})
     arn = tasks[0]["taskArn"]
     started_at = time.monotonic()
     current: dict[str, object] | None = None
     while time.monotonic() - started_at <= seconds:
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", arn)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
-        if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
-            return report("blocked", "persistence-migration-controller-observation-uncertain")
+        if not ok or not isinstance(listed, list) or len(listed) != 1 or not isinstance(listed[0], dict):
+            return report("uncertain", "persistence-migration-controller-observation-uncertain", facts={"migration_task": arn, "operation_id": operation_id})
         current = listed[0]
+        if current.get("taskArn") != arn or current.get("taskDefinitionArn") != task_definition or current.get("startedBy") != operation_id or not task_operation_bound(current, args.runtime_credential_operation):
+            return report("uncertain", "persistence-migration-controller-task-identity-mismatch", facts={"migration_task": arn, "operation_id": operation_id})
         if current.get("lastStatus") == "STOPPED":
             break
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
-        return report("blocked", "persistence-migration-controller-deadline-remote-task-still-running")
-    return accepted_completion(current, seconds, "apply")
+        return report("pending", "persistence-migration-controller-deadline-remote-task-still-running", facts={"migration_task": arn, "operation_id": operation_id})
+    return accepted_completion(current, seconds, args.runtime_credential_operation)
 
 
 if __name__ == "__main__":

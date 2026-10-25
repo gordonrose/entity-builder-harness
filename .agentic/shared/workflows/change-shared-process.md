@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: shared.workflows.change-shared-process
-version: 1
+version: 2
 status: active
 created_on: "2026-06-15"
-updated_on: "2026-10-22"
+updated_on: "2026-10-25"
 layer: 06.shared
 domain: process
 disciplines:
@@ -23,6 +23,8 @@ used_by:
 -->
 
 # Change Shared Process Workflow
+
+Follow the [shared change-completion principles](../standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
 
 ## Use When
 

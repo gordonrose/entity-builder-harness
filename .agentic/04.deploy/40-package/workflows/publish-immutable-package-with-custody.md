@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.package-custody-and-promotion
-version: 2
+version: 3
 status: active
 layer: 04.deploy
 domain: deployment.package-candidates
@@ -22,9 +22,12 @@ used_by:
   - id: deploy.schema.package-custody-receipt.v1
     path: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 -->
 # Publish Immutable Package With Custody
+
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
 
 ## Use when
 

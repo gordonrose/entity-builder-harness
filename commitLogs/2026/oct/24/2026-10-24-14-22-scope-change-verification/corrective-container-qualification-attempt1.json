@@ -1,0 +1,25 @@
+{
+  "evidence_class": "container-qualification",
+  "image_tag": "kanbien-core-server-persistence:scope-corrections-20261025",
+  "source_revision_label": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+  "scope": "uncommitted correction worktree; real disposable PostgreSQL/TLS containers",
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "checks": [
+    {
+      "check": "build",
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-corrections-20261025"
+      ],
+      "exit_code": 102,
+      "seconds": 29.97,
+      "log": "corrective-local-image-build-attempt1.log"
+    }
+  ]
+}

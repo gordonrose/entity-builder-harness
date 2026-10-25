@@ -1,0 +1,221 @@
+{
+  "schema": "repo/local-dependency-cache-reproduction/v1",
+  "first": {
+    "check_id": "local",
+    "check_key": "local:55c68d6ab5d81338",
+    "argv": [
+      "bash",
+      "scripts/local.sh"
+    ],
+    "stage": "local",
+    "effects": [
+      "read-only",
+      "writes-files"
+    ],
+    "evidence_class": "static",
+    "scopes": [
+      "synthetic-worker"
+    ],
+    "references": [
+      "consumer.ts",
+      "image.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/scope-index.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/00-declaration/acceptance-route-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/00-declaration/declaration-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/10-workload-binding/workload-binding.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/20-alignment/runtime-alignment-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/30-release-evidence/accepted-release.yml",
+      "infra/04.deploy/03.product/targets/synthetic/30-provider-realization/fixture.yml",
+      "program.yml",
+      "scripts",
+      "scripts/acceptance.sh",
+      "scripts/inventory.sh",
+      "scripts/live.sh",
+      "scripts/local.sh",
+      "scripts/package.sh",
+      "scripts/program.sh",
+      "scripts/repo/check-selection/checks.yml",
+      "scripts/repo/check-selection/local_cache.py",
+      "scripts/repo/check-selection/script.py",
+      "scripts/runnable-program.capability.yml",
+      "scripts/scope-inventory.capability.yml",
+      "src",
+      "src/main.ts"
+    ],
+    "status": "passed",
+    "runtime": {
+      "tools": [
+        "bash",
+        "python3",
+        "node"
+      ],
+      "environment": [
+        "LANG",
+        "PYTHONPATH"
+      ],
+      "node_packages": [
+        "pg"
+      ]
+    },
+    "parameters": {},
+    "applicability": {
+      "kind": "bound",
+      "program_id": "generic-server",
+      "image_id": "generic-server-image",
+      "target": "synthetic",
+      "scope": "synthetic-worker"
+    },
+    "input_digest": "70bbe8a89b01e03a3a3bba1047ae1c4d677af0e64376c4317ad79cedf8035c65",
+    "runtime_identity": {
+      "tools": {
+        "bash": {
+          "path": "/usr/bin/bash",
+          "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+          "size": 1540520,
+          "mtime_ns": 1770984968000000000
+        },
+        "node": {
+          "path": "/usr/bin/node",
+          "version": "v22.22.1",
+          "size": 26856,
+          "mtime_ns": 1773302731000000000
+        },
+        "python3": {
+          "path": "/usr/bin/python3.14",
+          "version": "Python 3.14.4",
+          "size": 7477160,
+          "mtime_ns": 1787222518000000000,
+          "pyyaml": {
+            "version": "6.0.3",
+            "path": "/usr/lib/python3/dist-packages/yaml",
+            "digest": "c48366c965a8b6fcd2869afd1d58279937a84a8410817b1fc2113317a8fad776"
+          }
+        }
+      },
+      "environment": {
+        "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+        "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+      },
+      "runner_python": {
+        "executable": "/usr/bin/python3",
+        "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+        "yaml_version": "6.0.3"
+      }
+    },
+    "evidence_key": "38b09ea75b6d947839e452571413e76abd82e23d876cde3c6faa7262ec0998af",
+    "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "exit_code": 0,
+    "evidence_source": "local-runner",
+    "executed_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "after_installed_file_deleted": {
+    "check_id": "local",
+    "check_key": "local:55c68d6ab5d81338",
+    "argv": [
+      "bash",
+      "scripts/local.sh"
+    ],
+    "stage": "local",
+    "effects": [
+      "read-only",
+      "writes-files"
+    ],
+    "evidence_class": "static",
+    "scopes": [
+      "synthetic-worker"
+    ],
+    "references": [
+      "consumer.ts",
+      "image.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/scope-index.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/00-declaration/acceptance-route-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/00-declaration/declaration-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/10-workload-binding/workload-binding.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/20-alignment/runtime-alignment-contract.yml",
+      "infra/04.deploy/03.product/targets/synthetic/20-scopes/synthetic-worker/30-release-evidence/accepted-release.yml",
+      "infra/04.deploy/03.product/targets/synthetic/30-provider-realization/fixture.yml",
+      "program.yml",
+      "scripts",
+      "scripts/acceptance.sh",
+      "scripts/inventory.sh",
+      "scripts/live.sh",
+      "scripts/local.sh",
+      "scripts/package.sh",
+      "scripts/program.sh",
+      "scripts/repo/check-selection/checks.yml",
+      "scripts/repo/check-selection/local_cache.py",
+      "scripts/repo/check-selection/script.py",
+      "scripts/runnable-program.capability.yml",
+      "scripts/scope-inventory.capability.yml",
+      "src",
+      "src/main.ts"
+    ],
+    "status": "passed",
+    "runtime": {
+      "tools": [
+        "bash",
+        "python3",
+        "node"
+      ],
+      "environment": [
+        "LANG",
+        "PYTHONPATH"
+      ],
+      "node_packages": [
+        "pg"
+      ]
+    },
+    "parameters": {},
+    "applicability": {
+      "kind": "bound",
+      "program_id": "generic-server",
+      "image_id": "generic-server-image",
+      "target": "synthetic",
+      "scope": "synthetic-worker"
+    },
+    "input_digest": "70bbe8a89b01e03a3a3bba1047ae1c4d677af0e64376c4317ad79cedf8035c65",
+    "runtime_identity": {
+      "tools": {
+        "bash": {
+          "path": "/usr/bin/bash",
+          "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law.",
+          "size": 1540520,
+          "mtime_ns": 1770984968000000000
+        },
+        "node": {
+          "path": "/usr/bin/node",
+          "version": "v22.22.1",
+          "size": 26856,
+          "mtime_ns": 1773302731000000000
+        },
+        "python3": {
+          "path": "/usr/bin/python3.14",
+          "version": "Python 3.14.4",
+          "size": 7477160,
+          "mtime_ns": 1787222518000000000,
+          "pyyaml": {
+            "version": "6.0.3",
+            "path": "/usr/lib/python3/dist-packages/yaml",
+            "digest": "c48366c965a8b6fcd2869afd1d58279937a84a8410817b1fc2113317a8fad776"
+          }
+        }
+      },
+      "environment": {
+        "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+        "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+      },
+      "runner_python": {
+        "executable": "/usr/bin/python3",
+        "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+        "yaml_version": "6.0.3"
+      }
+    },
+    "evidence_key": "38b09ea75b6d947839e452571413e76abd82e23d876cde3c6faa7262ec0998af",
+    "source_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "exit_code": 0,
+    "evidence_source": "trusted-worktree-cache",
+    "executed_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "forced_fresh_exit_code": 9,
+  "active_installation_modified": false
+}

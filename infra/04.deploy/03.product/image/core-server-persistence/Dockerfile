@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-25"
@@ -30,26 +30,24 @@ COPY platform/runtime/ ./platform/runtime/
 COPY platform/security/ ./platform/security/
 COPY platform/server/ ./platform/server/
 COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
-COPY platform/adapters/aws/observability/cloudwatch/ ./platform/adapters/aws/observability/cloudwatch/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
-COPY infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts ./infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
+COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
+COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
 RUN npm ci --ignore-scripts \
  && node_modules/.bin/tsc --project infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json --outDir /payload/artifacts --incremental false \
  && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root /payload/artifacts \
  && mkdir -p /payload/node_modules \
  && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/ \
- && mkdir -p /payload/node_modules/@opentelemetry \
- && cp -a node_modules/@opentelemetry/. /payload/node_modules/@opentelemetry/ \
- && NODE_PATH=/payload/node_modules node -e 'require("pg"); require("@opentelemetry/sdk-metrics"); require("@opentelemetry/exporter-metrics-otlp-proto")'
+ && NODE_PATH=/payload/node_modules node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root /payload/artifacts
 FROM ${RUNTIME_NODE_IMAGE}
 ARG SOURCE_COMMIT_SHA=unknown
 LABEL org.opencontainers.image.title="kanbien-core-server-persistence"

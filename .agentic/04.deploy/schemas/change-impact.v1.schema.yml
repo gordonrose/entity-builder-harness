@@ -1,0 +1,52 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.change-impact.v1
+#   version: 2
+#   status: active
+#   created_on: "2026-10-24"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines: [agentic, architecture, sre]
+#   kind: schema
+#   purpose: Bind the existing declaration requirement chain to actual target scope inputs, consumers and fixed proof check identities.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.compiler.declaration-coverage
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
+schema: deploy/change-impact-schema/v1
+embedded_in: deploy/target-scope-contract/v1
+field: change_impact
+required_fields: [schema, inputs, requirements]
+instance_schema: deploy/change-impact/v1
+inputs: existing repository-relative files or directories; directory matching requires a path-segment boundary
+requirements:
+  required_fields: [id, purpose, owner, required_by, declarations, expectation, local_proofs, package_proofs, target_proofs, run_proofs]
+  unique: id
+  required_by: nonempty existing repository-relative consumer paths
+  declarations: nonempty existing repository-relative implementation paths
+  expectation: non-secret description of the required value or shape
+  local_proofs: nonempty list of repository catalog check IDs at local stage
+  mandatory_local_proofs: [scope-inventory, runnable-program]
+  mandatory_scope_stages: at least one package_proofs, target_proofs and run_proofs check across the scope requirements
+  package_proofs: catalog check IDs at package stage
+  target_proofs: catalog check IDs at deploy stage
+  run_proofs: catalog check IDs at acceptance stage
+  not_applicable: empty later-stage lists require an explicit reason under the corresponding proof field; local proof cannot be waived
+catalog: scripts/repo/check-selection/checks.yml
+boundaries:
+  - coverage inspects paths and proof references; it does not execute a proof
+  - generic health, secret dependency and persistence applicability validators remain authoritative
+  - unsupported proof IDs are gaps rather than silently skipped requirements
+  - provider command identities and effects stay with their existing owners
+  - selection never grants execution authority or replaces stage-specific evidence
+
+check_contract:
+  applicability:
+    bound: program_id (or explicit program_ids); package adds image_id; deploy and acceptance add target and scope
+    generic: contract_schema and context_parameters consumed by argv; exact command-owned check-capability.yml required
+  mandatory_program_proof: canonical runnable_programs entry local_proof must occur in selected local argv
+  parameters: external-stage symbolic path parameters declare required=true and owning record schema; no local runtime parameter execution
+  acceptance_route: an advertised acceptance check route must equal the scope acceptance.route and its collector argv
+  runtime: local tools, environment names, optional repository config_inputs and declared node_packages installation closure are explicit cache identity inputs
+  cache: only unchanged successful local runner results in private per-worktree Git metadata; imported reports never qualify proof

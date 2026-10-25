@@ -1,0 +1,46 @@
+{
+  "schema": "session/local-container-qualification/v1",
+  "evidence_class": "container-qualification",
+  "source_revision_label": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+  "image_tag": "kanbien-core-server-persistence:scope-corrections-20261025",
+  "argv": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+    "--tag",
+    "kanbien-core-server-persistence:scope-corrections-20261025",
+    "--port",
+    "39457"
+  ],
+  "exit_code": 0,
+  "seconds": 88.14,
+  "log": "corrective-final-container-qualification.log",
+  "stored_credentials_changed": false,
+  "normal_docker_settings_changed": false,
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "reports": [
+    {
+      "schema": "deploy/local-public-qualification-report/v1",
+      "verdict": "bound",
+      "code": "same-local-engine-anonymous-config",
+      "stored_configuration": "untouched"
+    },
+    {
+      "schema": "deploy/local-public-qualification-report/v1",
+      "verdict": "passed",
+      "code": "existing-build-and-smoke-passed",
+      "evidence_class": "container-qualification",
+      "stored_configuration": "untouched"
+    }
+  ],
+  "image_observation": {
+    "exit_code": 0,
+    "value": "sha256:bae8a5180a179295c0a2f92f7ae41c55abe49470cb3ba8d8d2ce9f6af7b11ebd cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+    "stderr": ""
+  },
+  "result": "passed",
+  "scope": "real local build and disposable PostgreSQL/TLS smoke; no publication or live proof"
+}

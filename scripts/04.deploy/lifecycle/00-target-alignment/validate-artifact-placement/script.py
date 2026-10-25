@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.validate-artifact-placement
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -33,6 +33,9 @@ from pathlib import PurePosixPath
 
 
 KIND_PATTERNS = {
+    "cross-phase-workflow": r"^\.agentic/04\.deploy/workflows/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
+    "cross-phase-standard": r"^\.agentic/04\.deploy/standards/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
+    "aws-standard": r"^\.agentic/aws/standards/[a-z0-9]+(?:-[a-z0-9]+)*\.md$",
     "target-profile": r"^infra/04\.deploy/03\.product/targets/[a-z0-9-]+/00-target/target-profile\.yml$",
     "foundation-declaration": r"^infra/04\.deploy/03\.product/targets/[a-z0-9-]+/10-foundation/[a-z0-9-]+\.yml$",
     "scope-declaration": r"^infra/04\.deploy/03\.product/targets/[a-z0-9-]+/20-scopes/[a-z0-9-]+/00-declaration/[a-z0-9-]+-contract\.yml$",

@@ -4,7 +4,7 @@ id: deploy.workflows.readme
 version: 1
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -34,3 +34,4 @@ Current workflows:
 - [Compare declared requirements with live target](../00-target-alignment/workflows/compare-declared-requirements-with-live-target.md): governs fresh local-to-target comparison.
 - [Review and execute target update](../50-deploy/workflows/review-and-execute-target-update.md): deploys a reviewed candidate and hands its evidence to Run.
 - [Verify, accept or restore release](../60-run/workflows/verify-accept-or-restore-release.md): owns live proof, accepted-baseline recording and bounded recovery.
+- [Operational realization gate](operational-realization-gate.md): orders deployment proof and resolves provider-owned applicability before a live operation.

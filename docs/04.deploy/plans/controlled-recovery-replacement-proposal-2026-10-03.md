@@ -4,7 +4,7 @@ id: deploy.plan.controlled-recovery-replacement-2026-10-03
 version: 2
 status: draft
 created_on: "2026-10-03"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines: [architecture, agentic, sre]
@@ -51,8 +51,8 @@ baseline `0da085b5` clauses, still effective until approved implementation:
 
 | Instruction | Exact mandate to replace |
 | --- | --- |
-| `.agentic/01.harness/standards/operational-realization-gate.md`: Required Realization Contract, Mandatory Gate Sequence, Recovery and Retry Rules, Compliance | Universal contract/compiler and every preceding gate on every recovery. Substitute evidence needed for the approved operation. |
-| `.agentic/01.harness/workflows/operational-realization-gate.md`: Use When, Procedure 1–7, Stop Conditions | Complete graph/normalized-adapter/compiler prerequisites for every changed path. Permit in-scope diagnosis, repair and bounded recovery. |
+| `.agentic/04.deploy/standards/operational-realization-gate.md`: Required Realization Contract, Mandatory Gate Sequence, Recovery and Retry Rules, Compliance | Universal contract/compiler and every preceding gate on every recovery. Substitute evidence needed for the approved operation. |
+| `.agentic/04.deploy/workflows/operational-realization-gate.md`: Use When, Procedure 1–7, Stop Conditions | Complete graph/normalized-adapter/compiler prerequisites for every changed path. Permit in-scope diagnosis, repair and bounded recovery. |
 | `.agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md`:589–607 | Whole-route generic migration before Stage 6 may be proposed. Replace with the next PostgreSQL work package and actual task preflights; retain controller limits at 639–650 until specifically revised. |
 | `.agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md`:35–42,59–63,84–87,196; `.agentic/aws/README.md`:57–62 | Whole-estate/all-provider completion and feature freeze. Mark superseded and route to this scoped sequence. |
 | `docs/04.deploy/README.md`:29–32; `docs/04.deploy/plans/README.md`:36–38; `docs/04.deploy/plans/operational-realization-gate-programme.md`:46–63; `docs/04.deploy/plans/operational-realization-v2-programme.md`:24–28,70–93,116–130,182–196; `.agentic/01.harness/templates/operational-realization-contract.v1.guide.md`:82–94 | Add superseding applicability pointers so another entry point cannot revive the full graph/compiler programme or demand a new image for every diagnostic failure. Preserve real candidate proof, terminal-outcome checks and cleanup. |

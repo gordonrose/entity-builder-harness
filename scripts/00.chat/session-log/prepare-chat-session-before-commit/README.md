@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.script.session-log.prepare-chat-session-before-commit.readme
-  version: 1
+  version: 2
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 00.chat
   domain: session-log
   disciplines:
@@ -105,3 +105,9 @@ If present, this helper runs it after portable chat and harness drift checks.
 Set `CHAT_REPO_COMMIT_GATES_SCRIPT` to a different repository-relative path
 when a consumer repo needs to override the default hook. The older
 `LLM_WORKBENCH_OPTIONAL_COMMIT_GATE` variable remains a compatibility alias.
+
+The preparation hook declares `writes-files` because a repository extension may
+run authorized local tests that create temporary outputs. Invoke preparation
+through the governed runner only with the current task’s applicable local-test
+authorization (`--approved-action`); it is not an always-approved read-only gate.
+This metadata does not authorize committing, provider access or publication.

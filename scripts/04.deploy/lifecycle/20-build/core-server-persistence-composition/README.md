@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.guide.core-server-persistence-composition
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines:
@@ -31,10 +31,17 @@ This check proves only a local, provider-neutral composition boundary. It compil
 - the successor retains bootstrap release verification; and
 - shutdown closes the injected runtime.
 
-It deliberately does **not** select PostgreSQL, read credentials, construct a provider adapter, build an image, change a target declaration, or prove a cloud deployment. Those are later gated persistence-scope work.
+The server behavior proof injects a fake persistence runtime. Configuration tests validate the target-selected PostgreSQL settings using synthetic credentials and a fake driver. Neither part connects to a database, builds an image, or proves a cloud deployment.
 
 Run locally:
 
 ```bash
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
 ```
+
+The same check also validates the compiled runtime payload and the target-owned
+configuration shared by server, migration, and restored-record entrypoints.
+Sixty invalid-input cases prove rejection before pool creation using a fake
+driver; the positive configuration case preserves the 240-second migration
+statement deadline. These are local runtime tests, not database or container
+qualification.

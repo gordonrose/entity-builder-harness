@@ -1,0 +1,28 @@
+{
+  "evidence_class": "container-qualification",
+  "image_tag": "kanbien-core-server-persistence:scope-corrections-20261025",
+  "source_revision_label": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+  "scope": "uncommitted correction worktree; real disposable PostgreSQL/TLS containers",
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "checks": [
+    {
+      "check": "build",
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-corrections-20261025"
+      ],
+      "exit_code": 1,
+      "seconds": 29.76,
+      "log": "corrective-local-image-build.log"
+    }
+  ],
+  "retry_reason": "Docker engine responds; retry existing qualification after local context-directory allocation failure. No settings changed.",
+  "blocker": "Docker Desktop WSL credential helper: UtilAcceptVsock accept4 failed110, error getting credentials during public base-image resolution.",
+  "earlier_attempt": "corrective-container-qualification-attempt1.json"
+}

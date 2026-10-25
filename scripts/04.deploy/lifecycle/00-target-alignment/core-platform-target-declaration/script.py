@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import argparse
+import tempfile
 import json
 import re
 import subprocess
@@ -89,6 +90,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-root")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
+    parser.add_argument("--rehearsal-root", type=Path)
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if args.help:
         print("Usage: script.py [--target-root <path>] [--json]")
@@ -241,11 +244,11 @@ def check_foundation(root: Path) -> None:
             raise DeclarationFailure("cost-control-evidence-invalid")
 
 
-def check_scope(root: Path) -> None:
+def check_scope(root: Path, rehearsal_root: Path | None = None) -> None:
     scope_root = root / "20-scopes" / "bootstrap-runtime"
     inventory = Path(__file__).resolve().parents[5] / "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py"
     inventory_check = subprocess.run(
-        [sys.executable, str(inventory), "--target-root", str(root / "20-scopes"), "--json"],
+        [sys.executable, str(inventory), "--target-root", str(root / "20-scopes"), "--json"] + (["--rehearsal-root", str(rehearsal_root)] if rehearsal_root else []),
         capture_output=True, check=False, text=True,
     )
     if inventory_check.returncode != 0:
@@ -381,9 +384,9 @@ def check_scope(root: Path) -> None:
         raise DeclarationFailure("workload-execution-source-invalid")
 
 
-def check_accepted_release(root: Path) -> None:
-    evidence_root = root / "20-scopes" / "bootstrap-runtime" / "30-release-evidence"
-    record = mapping(evidence_root / "accepted-release.yml", "accepted-release-unreadable")
+def check_accepted_release(root: Path, *, record_path: Path | None = None, record_override: dict | None = None, evidence_class: str = "live") -> None:
+    evidence_root = record_path.parent if record_path is not None else root / "20-scopes" / "bootstrap-runtime" / "30-release-evidence"
+    record = record_override if record_override is not None else mapping(record_path or evidence_root / "accepted-release.yml", "accepted-release-unreadable")
     release = required_mapping(record, "release", "accepted-release-invalid")
     acceptance = required_mapping(record, "acceptance", "accepted-release-invalid")
     verification = required_mapping(release, "private_verification", "accepted-release-invalid")
@@ -392,8 +395,9 @@ def check_accepted_release(root: Path) -> None:
         record.get("schema") != "deploy/accepted-release/v1"
         or record.get("target") != TARGET
         or record.get("scope") != "bootstrap-runtime"
-        or record.get("status") != "accepted"
-        or not isinstance(release.get("source_revision"), str)
+        or record.get("status") != ("accepted" if evidence_class == "live" else "rehearsed")
+        or record.get("evidence_class", "live") != evidence_class
+        or not __import__("re").fullmatch(r"[a-f0-9]{40}", str(release.get("source_revision")))
         or not __import__("re").fullmatch(r"sha256:[a-f0-9]{64}", str(release.get("image_digest")))
         or not all(non_empty(release.get(field)) for field in ("runtime_stack", "service", "runtime_task_definition", "verifier_task_definition", "package_custody_reference"))
         or verification.get("verdict") != "accepted"
@@ -407,7 +411,11 @@ def check_accepted_release(root: Path) -> None:
     rehearsal_path = acceptance.get("last_rehearsal")
     if not non_empty(rehearsal_path):
         raise DeclarationFailure("accepted-release-rehearsal-missing")
+    if Path(rehearsal_path).is_absolute() or ".." in Path(rehearsal_path).parts or not (evidence_root / rehearsal_path).resolve().is_relative_to(evidence_root.resolve()):
+        raise DeclarationFailure("accepted-release-rehearsal-invalid")
     rehearsal = mapping(evidence_root / rehearsal_path, "accepted-release-rehearsal-unreadable")
+    if rehearsal.get("evidence_class", "live") != evidence_class:
+        raise DeclarationFailure("accepted-release-rehearsal-invalid")
     if rehearsal.get("schema") == "deploy/release-rehearsal-evidence/v1":
         restored = required_mapping(rehearsal, "restored_release_a", "accepted-release-rehearsal-invalid")
         restored_verification = required_mapping(restored, "private_verification", "accepted-release-rehearsal-invalid")
@@ -447,7 +455,11 @@ def check_accepted_release(root: Path) -> None:
     restoration_path = acceptance.get("last_restoration_rehearsal")
     if not non_empty(restoration_path):
         raise DeclarationFailure("accepted-release-restoration-rehearsal-missing")
+    if Path(restoration_path).is_absolute() or ".." in Path(restoration_path).parts or not (evidence_root / restoration_path).resolve().is_relative_to(evidence_root.resolve()):
+        raise DeclarationFailure("accepted-release-restoration-rehearsal-invalid")
     restoration = mapping(evidence_root / restoration_path, "accepted-release-restoration-rehearsal-unreadable")
+    if restoration.get("evidence_class", "live") != evidence_class:
+        raise DeclarationFailure("accepted-release-restoration-rehearsal-invalid")
     restored = required_mapping(restoration, "restored_release_a", "accepted-release-restoration-rehearsal-invalid")
     restored_verification = required_mapping(restored, "private_verification", "accepted-release-restoration-rehearsal-invalid")
     if (
@@ -508,12 +520,15 @@ def report(verdict: str, codes: tuple[str, ...]) -> str:
 def main() -> int:
     try:
         args = parse_args()
+        if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
         root = Path(args.target_root) if args.target_root else Path(__file__).resolve().parents[5] / "infra/04.deploy/03.product/targets" / TARGET
         profile = mapping(root / "00-target" / "target-profile.yml", "target-profile-unreadable")
         check_profile(profile)
         check_foundation(root)
-        check_scope(root)
-        check_accepted_release(root)
+        if args.rehearsal_root is not None and (not args.rehearsal_root.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.resolve().is_relative_to(args.rehearsal_root.resolve())):
+            raise DeclarationFailure("simulation-root-invalid")
+        check_scope(root, args.rehearsal_root)
+        check_accepted_release(root, evidence_class="simulated" if args.rehearsal_root else "live")
         check_pipeline(root)
         check_observability_mvp(root)
         print(report("repository-declaration-complete", ()))

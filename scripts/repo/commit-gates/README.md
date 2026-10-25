@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: repo.script.commit-gates.readme
-  version: 2
+  version: 4
   status: active
   created_on: "2026-07-04"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 06.shared
   domain: validation
   disciplines:
@@ -26,8 +26,20 @@ the chat commit boundary but do not belong inside portable `00.chat`.
 `00.chat` may call this hook when it exists. The hook owns the selection of
 repo-specific, harness-specific, deployment, or product checks.
 
-The metadata gates validate staged lifecycle edits and run
-`generate-index --all --strict --check-coverage` against the working-tree artifact
-inventory. Coverage includes declared headers outside required-header paths;
+The portable chat hook already validates staged lifecycle edits, deterministic
+process drift and governed command drift. This extension does not repeat those
+checks. It requires `generate-index --all --strict --check-coverage` against the
+working-tree artifact inventory, then runs `check-selection --staged
+--execute-local` for affected scope consumers. Coverage includes declared headers outside required-header paths;
 malformed or omitted declarations fail before commit. The hook does not edit
 headers or stage files.
+
+Required commands fail closed if missing. Unknown implementation impact remains
+an explicit gap. Package/live proof obligations remain deferred to their owning
+stages and cannot be satisfied by local check success.
+
+The ordinary selector invocation automatically retains and reuses successful local
+runner evidence in private per-worktree Git metadata. Its JSON output includes
+`local_report_path`. Relevant staged inputs must match the working tree before
+execution or reuse. Imported reports never grant proof, and unrelated source
+revision/session bookkeeping changes do not invalidate unchanged local checks.

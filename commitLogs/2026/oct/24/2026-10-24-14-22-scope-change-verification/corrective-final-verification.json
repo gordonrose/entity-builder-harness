@@ -1,0 +1,427 @@
+{
+  "schema": "session/final-corrective-verification/v1",
+  "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+  "runs": {
+    "mandatory_preparation": {
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 226.1,
+      "selection": {
+        "verdict": "passed",
+        "findings": [],
+        "checks": [
+          {
+            "check_id": "acceptance-route-regression",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "acceptance-route",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "acceptance-route",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "bootstrap-acceptance-regression",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "check-selection-regression",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "core-dependency-boundary",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "persistence-composition",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "persistence-payload-regression",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "persistence-provider-regression",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "runnable-program",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "scope-inventory",
+            "stage": "local",
+            "status": "passed",
+            "evidence_source": "local-runner"
+          },
+          {
+            "check_id": "bootstrap-container",
+            "stage": "package",
+            "status": "deferred",
+            "evidence_source": null
+          },
+          {
+            "check_id": "persistence-container",
+            "stage": "package",
+            "status": "deferred",
+            "evidence_source": null
+          },
+          {
+            "check_id": "bootstrap-target-alignment",
+            "stage": "deploy",
+            "status": "deferred",
+            "evidence_source": null
+          },
+          {
+            "check_id": "persistence-target-alignment",
+            "stage": "deploy",
+            "status": "deferred",
+            "evidence_source": null
+          },
+          {
+            "check_id": "bootstrap-acceptance",
+            "stage": "acceptance",
+            "status": "deferred",
+            "evidence_source": null
+          },
+          {
+            "check_id": "persistence-acceptance",
+            "stage": "acceptance",
+            "status": "deferred",
+            "evidence_source": null
+          }
+        ]
+      }
+    },
+    "combined_local": {
+      "argv": [
+        "bash",
+        "scripts/repo/check-selection/script.sh",
+        "--all",
+        "--stage",
+        "local",
+        "--execute-local",
+        "--json"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "seconds": 57.75,
+      "verdict": "passed",
+      "findings": [],
+      "checks": [
+        {
+          "check_id": "acceptance-route-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "local-runner"
+        },
+        {
+          "check_id": "acceptance-route",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "acceptance-route",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "artifact-placement-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "bootstrap-acceptance-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "check-selection-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "core-dependency-boundary",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "operational-realization-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-composition",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-payload-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-provider-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "runnable-program",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "scope-inventory",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "bootstrap-container",
+          "stage": "package",
+          "status": "deferred",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-container",
+          "stage": "package",
+          "status": "deferred",
+          "evidence_source": null
+        },
+        {
+          "check_id": "bootstrap-target-alignment",
+          "stage": "deploy",
+          "status": "deferred",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-target-alignment",
+          "stage": "deploy",
+          "status": "deferred",
+          "evidence_source": null
+        },
+        {
+          "check_id": "bootstrap-acceptance",
+          "stage": "acceptance",
+          "status": "deferred",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-acceptance",
+          "stage": "acceptance",
+          "status": "deferred",
+          "evidence_source": null
+        }
+      ]
+    },
+    "stage_boundary_negative": {
+      "argv": [
+        "bash",
+        "scripts/repo/check-selection/script.sh",
+        "--all",
+        "--stage",
+        "acceptance",
+        "--execute-local",
+        "--json"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "seconds": 23.55,
+      "verdict": "gap",
+      "findings": [
+        {
+          "check_id": "bootstrap-container",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "package"
+        },
+        {
+          "check_id": "persistence-container",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "package"
+        },
+        {
+          "check_id": "bootstrap-target-alignment",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "deploy"
+        },
+        {
+          "check_id": "persistence-target-alignment",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "deploy"
+        },
+        {
+          "check_id": "bootstrap-acceptance",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "acceptance"
+        },
+        {
+          "check_id": "persistence-acceptance",
+          "code": "required-proof-owned-by-stage-controller",
+          "stage": "acceptance"
+        }
+      ],
+      "checks": [
+        {
+          "check_id": "acceptance-route-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "acceptance-route",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "acceptance-route",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "artifact-placement-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "bootstrap-acceptance-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "check-selection-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "core-dependency-boundary",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "operational-realization-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-composition",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-payload-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "persistence-provider-regression",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "runnable-program",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "scope-inventory",
+          "stage": "local",
+          "status": "passed",
+          "evidence_source": "trusted-worktree-cache"
+        },
+        {
+          "check_id": "bootstrap-container",
+          "stage": "package",
+          "status": "pending",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-container",
+          "stage": "package",
+          "status": "pending",
+          "evidence_source": null
+        },
+        {
+          "check_id": "bootstrap-target-alignment",
+          "stage": "deploy",
+          "status": "pending",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-target-alignment",
+          "stage": "deploy",
+          "status": "pending",
+          "evidence_source": null
+        },
+        {
+          "check_id": "bootstrap-acceptance",
+          "stage": "acceptance",
+          "status": "pending",
+          "evidence_source": null
+        },
+        {
+          "check_id": "persistence-acceptance",
+          "stage": "acceptance",
+          "status": "pending",
+          "evidence_source": null
+        }
+      ]
+    }
+  },
+  "container_report": "corrective-final-container-qualification.json",
+  "metadata_report": "corrective-final-metadata.log",
+  "controlled_recovery_cases": 27,
+  "selection_note": "The all-scope pass added the collector directory to acceptance-route-regression references; that broader input identity correctly ran once. The subsequent stage-boundary pass reused all13 local results.",
+  "ci": "not-run",
+  "live": "not-run",
+  "publication": "not-run",
+  "main_integration": "pending governed final merge"
+}

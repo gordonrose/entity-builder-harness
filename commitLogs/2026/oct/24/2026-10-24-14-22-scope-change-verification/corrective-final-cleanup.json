@@ -1,0 +1,31 @@
+{
+  "temporary_configuration_directories_remaining": 0,
+  "containers": {
+    "exit_code": 0,
+    "remaining_count": 0,
+    "stderr": ""
+  },
+  "networks": {
+    "exit_code": 0,
+    "remaining_count": 1,
+    "stderr": ""
+  },
+  "volumes": {
+    "exit_code": 0,
+    "remaining_count": 0,
+    "stderr": ""
+  },
+  "network_observation": {
+    "qualification_log_finished_at": "2026-10-25T12:30:46.223371+00:00",
+    "qualification_duration_seconds": 88.14,
+    "remaining_networks": [
+      {
+        "exit_code": 0,
+        "observation": "kanbien-persistence-smoke-92997 2026-10-25 10:27:20.291609244 +0000 UTC 0",
+        "stderr": ""
+      }
+    ],
+    "mutations_performed": false
+  },
+  "disposition": "The one matching network predates qualification by two hours; preserved as unrelated. No disposable resource created during this qualification remains."
+}

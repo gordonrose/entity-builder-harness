@@ -17,6 +17,9 @@ used_by:
 -->
 # Verify, Accept or Restore Release
 
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
+
 ## Use When and Inputs
 
 Use after Deploy hands over a deployed candidate, its qualified receipt,

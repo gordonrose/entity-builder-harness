@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-active-workload-health-recovery
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -68,6 +68,7 @@ def copied_scope(target_root: Path, scope_id: str) -> None:
     shutil.copytree(source, destination)
     contract_path = destination / "00-declaration" / "declaration-contract.yml"
     contract = index(contract_path)
+    contract.pop("acceptance", None)  # This fixture exercises health/ownership, not release acceptance.
     contract["scope"] = scope_id
     contract["id"] = f"kanbien-core-platform-{scope_id}"
     write(contract_path, contract)

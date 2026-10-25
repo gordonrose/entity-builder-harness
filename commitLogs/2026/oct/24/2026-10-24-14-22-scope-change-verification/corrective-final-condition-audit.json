@@ -1,0 +1,506 @@
+{
+  "schema": "session/corrective-condition-audit/v1",
+  "audited_at": "2026-10-25T12:36:09.650466+00:00",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114",
+  "read_only_audit": true,
+  "suites_rerun": false,
+  "goal_complete": false,
+  "integration": {
+    "accepted_main": "c884c3216412633eac4ba09452abaeaa1071036e",
+    "head": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+    "current_main": "c884c3216412633eac4ba09452abaeaa1071036e",
+    "accepted_main_integrated": true,
+    "final_source_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+    "final_merge_to_main": "pending-final-evidence-commit-and-governed-merge",
+    "authorized_local_recovery_commit": "b7691802bf81dd16392e63e4b4622b1f6b031a52"
+  },
+  "original_seven_conditions": [
+    {
+      "id": 1,
+      "condition": "Clear ownership",
+      "status": "implemented-and-demonstrated",
+      "implementation": [
+        ".agentic/shared/standards/require-change-completion.md",
+        ".agentic/04.deploy/standards/operational-realization-gate.md",
+        ".agentic/04.deploy/workflows/operational-realization-gate.md",
+        ".agentic/aws/standards/operational-realization-applicability.md",
+        "docs/04.deploy/adrs/0042-separate-change-and-deployment-proof-ownership.md"
+      ],
+      "evidence": [
+        "ownership_static"
+      ],
+      "detail": "Shared completion, deployment proof and AWS procedure each have one owner; legacy harness paths are compatibility pointers.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 2,
+      "condition": "Connected implementation",
+      "status": "implemented-and-locally-demonstrated",
+      "implementation": [
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/checks.yml",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        ".agentic/04.deploy/schemas/change-impact.v1.schema.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"
+      ],
+      "evidence": [
+        "selector49",
+        "payload_final",
+        "acceptance15"
+      ],
+      "detail": "Consumer/schema/program/image/workload/provider references select mandatory checks. Missing implementation, binding, route or later-stage proof produces a gap; direct builders and provider preflights enforce declarations.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 3,
+      "condition": "Earlier failure detection",
+      "status": "implemented-and-demonstrated-including-current-container",
+      "implementation": [
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py"
+      ],
+      "evidence": [
+        "composition",
+        "payload_final",
+        "controllers28",
+        "acceptance15",
+        "container_final"
+      ],
+      "detail": "Static/local regression controls passed. Exact current source label cd9e60b8903a566b46ceab227a5aa3b911acb7a1 built and passed the owning disposable PostgreSQL/TLS smoke through the separately authorized credential-free same-engine recovery wrapper; no publication, CI or live infrastructure proof is claimed.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 4,
+      "condition": "Reliable continuation",
+      "status": "implemented-and-locally-demonstrated",
+      "implementation": [
+        ".agentic/04.deploy/standards/provider-async-conditions.md",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md"
+      ],
+      "evidence": [
+        "controllers28",
+        "acceptance15",
+        "preservation18"
+      ],
+      "detail": "Applicable controllers preserve exact operation/task/change-set/snapshot identities and distinguish pending/failed/uncertain; recapture preserves first retained receipt; no replay implied by interrupted observations.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 5,
+      "condition": "Efficient verification",
+      "status": "implemented-and-demonstrated-through-normal-workflow",
+      "implementation": [
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/local_cache.py",
+        "scripts/repo/check-selection/checks.yml",
+        "scripts/repo/commit-gates/script.sh",
+        "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"
+      ],
+      "evidence": [
+        "selector49",
+        "payload_final",
+        "combined_prepare"
+      ],
+      "detail": "Resolved command deduplication, exact relevant-input/runtime/stage/effect keys, private worktree trusted cache and ordinary hook integration; source revision remains provenance. No local reuse can replace package/live proof.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 6,
+      "condition": "Reuse beyond persistence",
+      "status": "implemented-and-demonstrated",
+      "implementation": [
+        "scripts/repo/check-selection/smoke-test.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "evidence": [
+        "selector49"
+      ],
+      "detail": "Synthetic dependency-bearing scope uses unchanged generic inventory/runnable validators; valid non-applicability accepted, missing/badly bound checks and unsupported requirements fail. AWS facts stay in provider owners.",
+      "implementation_references_checked": true
+    },
+    {
+      "id": 7,
+      "condition": "Evidence-based completion",
+      "status": "verification-complete-final-main-integration-pending",
+      "implementation": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/README.md",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-focused-checks.json",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-main-baseline.json"
+      ],
+      "evidence": [
+        "ownership_static",
+        "selector49",
+        "controllers28",
+        "acceptance15",
+        "payload_final",
+        "composition",
+        "combined_prepare",
+        "container_final",
+        "ci",
+        "live",
+        "preservation18"
+      ],
+      "detail": "All applicable implementation/verification conditions have current concrete references and passing static/local/container evidence. Final evidence retention and the authorized governed main merge remain open; CI/publication and fresh live acceptance are separate unperformed stages.",
+      "implementation_references_checked": true
+    }
+  ],
+  "corrective_six_findings": [
+    {
+      "id": 1,
+      "finding": "Authoritative harness changes select executable consumers",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/check-selection/local_cache.py",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "evidence": [
+        "selector49"
+      ],
+      "verified_cases": [
+        "change-impact schema selects transitive consumers",
+        "unmapped authoritative schema is gap",
+        "ordinary prose stays proportionate",
+        "consumer dependencies enter fingerprints"
+      ],
+      "implementation_references_checked": true
+    },
+    {
+      "id": 2,
+      "finding": "Proof capability matches intended subject",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+        "scripts/repo/check-selection/checks.yml",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/check-capability.yml",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/check-capability.yml"
+      ],
+      "evidence": [
+        "selector49"
+      ],
+      "verified_cases": [
+        "persistence cannot borrow bootstrap package/deploy/acceptance checks",
+        "declared integration proof mandatory",
+        "generic capability requires owning contract and consumed parameters",
+        "synthetic reuse succeeds without target exception"
+      ],
+      "implementation_references_checked": true
+    },
+    {
+      "id": 3,
+      "finding": "Valid ECS defaults preserved while consequential overrides reject",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
+      ],
+      "evidence": [
+        "controllers28"
+      ],
+      "verified_cases": [
+        "sanitized captured inferenceAcceleratorOverrides empty accepted",
+        "command/environment/identity/resource override mismatches reject",
+        "pending/failed/uncertain and exact continuation retained"
+      ],
+      "implementation_references_checked": true
+    },
+    {
+      "id": 4,
+      "finding": "Complete acceptance route established before deployment",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        ".agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+        "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py"
+      ],
+      "evidence": [
+        "acceptance15",
+        "bootstrap",
+        "payload_final",
+        "preservation18"
+      ],
+      "verified_cases": [
+        "actual required mode/command proof semantics and required-proof obligations",
+        "malformed routes/helpers return gaps without mutation",
+        "complete simulated capture/write/validate/promote/downstream chain",
+        "production rejects simulation",
+        "historical15 accepted without expired-task queries; current health/image/source/cleanup fresh"
+      ],
+      "implementation_references_checked": true
+    },
+    {
+      "id": 5,
+      "finding": "Recovery point suitability before provisioning",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
+      ],
+      "evidence": [
+        "controllers28",
+        "acceptance15"
+      ],
+      "verified_cases": [
+        "source resource incarnation+fixed record+snapshot identity binding",
+        "source creation <= record proof <= original snapshot time",
+        "earlier same-day snapshot rejects before mutation",
+        "valid suffixed follow-up snapshots and exact-operation observation retained"
+      ],
+      "implementation_references_checked": true
+    },
+    {
+      "id": 6,
+      "finding": "Ordinary local verification reuses trusted unchanged evidence",
+      "status": "implemented-and-regression-passed",
+      "implementation": [
+        "scripts/repo/check-selection/local_cache.py",
+        "scripts/repo/check-selection/script.py",
+        "scripts/repo/commit-gates/script.sh",
+        "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh"
+      ],
+      "evidence": [
+        "selector49",
+        "combined_prepare"
+      ],
+      "verified_cases": [
+        "actual repository hook reuses without supplied report",
+        "unrelated revision does not invalidate unchanged relevant inputs",
+        "source/dependency/config/environment/toolchain changes invalidate",
+        "failed/incomplete/untrusted report never qualifies",
+        "no cache extension to package/live stages"
+      ],
+      "implementation_references_checked": true
+    }
+  ],
+  "evidence": {
+    "ownership_static": {
+      "class": "static",
+      "result": "passed",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-whole-diff-review.json",
+        "corrective-static-headers.log",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-document-links.json",
+        "corrective-final-metadata.log"
+      ],
+      "detail": "Owner/reference preservation retained; latest global header log passes1331 artifacts. All implementation references in the seven conditions and six corrective findings exist."
+    },
+    "controllers28": {
+      "class": "local-runtime-mocked-provider",
+      "result": "passed",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-controllers-focused.log",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-focused-checks.json",
+        "corrective-normal-preparation.json"
+      ],
+      "detail": "28 focused groups; combined preparation selected provider regression passed. Includes captured harmless ECS defaults, consequential override rejection, same-day recovery chronology and exact-operation continuation."
+    },
+    "acceptance15": {
+      "class": "local-runtime-simulated",
+      "result": "passed",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-acceptance-focused.log",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-focused-checks.json"
+      ],
+      "detail": "15 full-route groups plus20 fresh-observation negatives and retained receipt tests; actual controllers, collector write, validator, promotion and downstream gates;0 historical ECS queries;18 protected files unchanged."
+    },
+    "bootstrap": {
+      "class": "local-runtime-simulated",
+      "result": "passed",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-focused-checks.json"
+      ],
+      "detail": "Writer uses actual inputs/owning validation, retains rehearsal identity, rejects stale/future/missing observation and simulation in ordinary production path."
+    },
+    "payload_final": {
+      "class": "local-runtime",
+      "result": "passed",
+      "references": [
+        "corrective-payload-final.log",
+        "corrective-final-verification.json",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-local-recovery-tests.json"
+      ],
+      "detail": "6 payload negatives; missing declaration and missing/unloadable acceptance helper block before later stages; invalid health blocks composition/Docker and repaired scope advances; workflow eight-command qualification runs once and failures stop progression. No container engine/provider invoked. Latest payload route additionally passes27 controlled same-engine anonymous-config recovery cases; no actual Docker in those fixture cases."
+    },
+    "composition": {
+      "class": "local-runtime",
+      "result": "passed",
+      "references": [
+        "corrective-normal-preparation.json",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/README.md"
+      ],
+      "detail": "Current combined preparation passed persistence-composition; underlying configuration test contains60 pre-pool negative entrypoint scenarios. Earlier qualified tree evidence is historical only."
+    },
+    "combined_prepare": {
+      "class": "static-and-local-runtime",
+      "result": "passed",
+      "references": [
+        "corrective-verification-runs.json",
+        "corrective-combined-checks.json",
+        "corrective-preparation-gates.log",
+        "corrective-final-verification.json"
+      ],
+      "detail": "Original ordinary preparation passed11 local checks then reused11. After the approved recovery addition, mandatory ordinary preparation passed11 checks in226.1s. Final --all passes13 local checks in57.75s:12 cached and acceptance-route-regression rerun for expanded declared references. Final acceptance-boundary negative returns expected exit1 in23.55s with all13 local results reused and exactly six owning-stage gaps."
+    },
+    "container_final": {
+      "class": "container-qualification",
+      "result": "passed",
+      "references": [
+        "corrective-final-container-qualification.json",
+        "corrective-final-container-qualification.log"
+      ],
+      "detail": "Exit0 in88.14s; existing build and PostgreSQL/TLS smoke passed on the same local Docker engine using a temporary anonymous configuration. Exact image sha256:bae8a5180a179295c0a2f92f7ae41c55abe49470cb3ba8d8d2ce9f6af7b11ebd cd9e60b8903a566b46ceab227a5aa3b911acb7a1. Stored credential/configuration values unchanged; no publication, CI or live infrastructure operations.",
+      "image_id": "sha256:bae8a5180a179295c0a2f92f7ae41c55abe49470cb3ba8d8d2ce9f6af7b11ebd",
+      "source_revision_label": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1"
+    },
+    "container_historical": {
+      "class": "container-qualification-historical",
+      "result": "passed-for-prior-tree-only",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/container-qualification.json",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/local-image-build.log",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/local-image-smoke.log"
+      ],
+      "detail": "Earlier image cd6d992c408f4052396097afc4f44a673b7b66fd9fd12ef7dc12e7e531c1f1c2 passed build+PostgreSQL/TLS smoke, label95b850d9. This does not qualify changed combined runtime source."
+    },
+    "ci": {
+      "class": "CI",
+      "result": "not-run",
+      "detail": "No CI dispatch/publication. Required package custody/CI gates remain at owning future release stage."
+    },
+    "live": {
+      "class": "live-infrastructure",
+      "result": "not-run",
+      "detail": "No cloud mutations, real secret operations or deployment. Existing genuine accepted evidence retained; no fresh live acceptance claimed."
+    },
+    "preservation18": {
+      "class": "static-byte-comparison",
+      "result": "passed",
+      "references": [
+        "corrective-final-protected-evidence.json"
+      ],
+      "detail": "All18 canonical accepted/proof/index files remain byte-identical to accepted main c884c3216412633eac4ba09452abaeaa1071036e."
+    },
+    "selector49": {
+      "class": "local-runtime",
+      "result": "passed",
+      "references": [
+        "corrective-normal-preparation.json",
+        "corrective-node-installation-tests.log",
+        "corrective-normal-reuse.json",
+        "corrective-stage-boundary.json",
+        "corrective-final-verification.json"
+      ],
+      "detail": "Current49-case suite is invoked unfiltered by the actual wrapper and passed in ordinary mandatory preparation after recovery additions. Earlier retained focused log is44 cases; the five new installation tests are covered by the retained seven-case focused log and full ordinary invocation. Final combined/stage gates retain cache and permission/stage boundaries."
+    },
+    "local_recovery": {
+      "class": "local-runtime-controlled-fixtures",
+      "result": "passed",
+      "references": [
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-local-recovery-tests.json",
+        "commitLogs/2026/oct/24/2026-10-24-14-22-scope-change-verification/corrective-local-recovery-tests.log"
+      ],
+      "detail": "27 controlled recovery cases and full payload route passed; real Docker was not called during fixture tests. Actual engine qualification is separately recorded as container_final."
+    }
+  },
+  "protected_evidence": {
+    "verdict": "passed",
+    "count": 18,
+    "report": "corrective-final-protected-evidence.json"
+  },
+  "container_requirement": {
+    "required": true,
+    "rationale": "The combined runtime source differs from the previously qualified package. Main integration changed actual PostgreSQL revocation execution, not only documentation/controller metadata. Package health contract requires disposable PostgreSQL container proof, and its owner expressly says payload fixtures do not replace it.",
+    "owners": [
+      "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md",
+      ".agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md",
+      ".agentic/shared/standards/require-change-completion.md"
+    ],
+    "changed_runtime": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts",
+    "diff_revisions": [
+      "93aa74906ad6534d62b23bdd42607c4b7fb0965d",
+      "171ea85eabea63eb51b967aac9d4a19f0c4ac82d"
+    ],
+    "behavior": "revokeRuntimeAccess SELECT now aliases pg_terminate_backend(pid) AS terminated and requires every returned row.terminated to be true. The packaged migration imports this function.",
+    "required_next": "Satisfied for the current combined source by exact-label local container qualification. Package custody/CI/publication and fresh live deployment/acceptance remain with their owning stages."
+  },
+  "practical_remaining_gaps": [
+    {
+      "id": "final-main-merge",
+      "required": true,
+      "state": "pending",
+      "detail": "Final evidence is retained here; commit it, satisfy promotion readiness, perform the authorized main merge, then verify Git ancestry, identical trees and clean worktrees."
+    }
+  ],
+  "not_claimed": [
+    "CI dispatch or published package custody",
+    "fresh live deployment/recovery/acceptance",
+    "final main integration of corrections"
+  ],
+  "audit_disposition": "All seven implementation/verification conditions and all six corrective findings are demonstrated at the authorized local/static/container stages. Goal stays incomplete until final evidence retention and authorized main integration are actually finished.",
+  "current_source_review": {
+    "manifest": "corrective-final-source-manifest.json",
+    "source_count": 154,
+    "post_corrective_source_paths": [
+      ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+      "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh"
+    ],
+    "expected_scope": "Four owning local qualification source/docs/test paths plus generated recognition only",
+    "unexpected_post_corrective_paths": [],
+    "container_label_matches_current_source_bytes": true,
+    "source_deleted": [],
+    "source_worktree_changes": [],
+    "no_new_unrelated_scope_changes": true
+  },
+  "local_cleanup": {
+    "qualification_temporary_configs_remaining": 0,
+    "qualification_containers_remaining": 0,
+    "qualification_volumes_remaining": 0,
+    "unrelated_network_preserved": "kanbien-persistence-smoke-92997",
+    "network_created_at_utc": "2026-10-25 10:27 UTC (minute precision reported by parent)",
+    "qualification_window_utc": "2026-10-25T12:29\u201312:30Z",
+    "evidence_origin": "parent read-only engine inspection; preexisting network preserved, no cleanup mutation by this audit",
+    "references": [
+      "corrective-final-cleanup.json"
+    ]
+  },
+  "selector_test_inventory": {
+    "count": 49,
+    "source": "scripts/repo/check-selection/smoke-test.py",
+    "new_installation_cases": {
+      "test_node_installation_bytes_modes_rename_and_removal_invalidate": 556,
+      "test_node_transitive_types_and_optional_installation_are_inputs": 574,
+      "test_node_workspace_links_track_target_and_reject_escape": 588,
+      "test_python_package_identity_includes_paths_modes_and_bytes": 603,
+      "test_node_checks_require_explicit_installation_declaration": 611
+    }
+  },
+  "audit_phase": "pre-promotion: final main integration must be verified from Git after this evidence commit"
+}

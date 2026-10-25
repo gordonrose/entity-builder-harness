@@ -1,0 +1,113 @@
+{
+  "source_revision_provenance": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+  "evidence_class": "focused-local-checkpoints",
+  "acceptance": {
+    "schema": "session/focused-verification-summary/v1",
+    "recorded_at": "2026-10-25T10:56:12.672438+00:00",
+    "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114",
+    "source": "Captured tool stdout and exit codes; log is a faithful transcription of final run output.",
+    "runs": [
+      {
+        "argv": [
+          "bash",
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh"
+        ],
+        "env": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "exit_code": 0,
+        "verdict": "passed",
+        "log": "corrective-acceptance-focused.log",
+        "tool_session": 86003,
+        "final_output_chunk": "899855",
+        "evidence_class": "local-runtime-simulated",
+        "groups": 15,
+        "current_observation_negative_cases": 20,
+        "historical_ecs_queries": 0,
+        "genuine_evidence_and_index_files_preserved": 18
+      },
+      {
+        "argv": [
+          "bash",
+          "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh"
+        ],
+        "env": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "exit_code": 0,
+        "verdict": "passed",
+        "stdout": "Active workload health/recovery inventory tests passed.\n",
+        "tool_session": 45072,
+        "final_output_chunk": "d520fa",
+        "evidence_class": "local-runtime"
+      },
+      {
+        "argv": [
+          "bash",
+          "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh",
+          "--json"
+        ],
+        "env": {
+          "PYTHONDONTWRITEBYTECODE": "1"
+        },
+        "exit_code": 0,
+        "report": {
+          "findings": [],
+          "schema": "deploy/target-declaration-report/v1",
+          "scope": "repository-declaration",
+          "target": "kanbien-core-platform",
+          "verdict": "repository-declaration-complete"
+        },
+        "tool_session": 11751,
+        "final_output_chunk": "d34a6a",
+        "evidence_class": "static"
+      }
+    ],
+    "limits": [
+      "No live AWS, secrets, image publication or infrastructure mutation.",
+      "Simulated route results are not live acceptance.",
+      "Genuine legacy acceptance records and15receipts remain unchanged.",
+      "Container and CI evidence not asserted by these tests."
+    ]
+  },
+  "bootstrap": {
+    "schema": "local-verification-result/v1",
+    "evidence_class": "simulated",
+    "command": "PYTHONDONTWRITEBYTECODE=1 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+    "exit_code": 0,
+    "stdout": [
+      "Core-platform release-contract tests passed.",
+      "Bootstrap acceptance writer passed: actual input contract, matching retained rehearsals, immutable identity changes, validation-before-write, metadata/mode preservation, atomic-write failures, exact custody capture, malformed arguments, fresh/reused exact-task observations, stale/future/missing observation rejection, and production rejection of simulation; canonical record unchanged.",
+      "Fixed core-platform target control tests passed."
+    ],
+    "provider_calls": "controlled mock responses only",
+    "canonical_accepted_record": "unchanged; asserted byte equality",
+    "post_test_change": "smoke wrapper metadata effects adds writes-files to reflect existing isolated fixtures; no behavior change"
+  },
+  "selector": {
+    "argv": [
+      "bash",
+      "scripts/repo/check-selection/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "tests": 44,
+    "log": "corrective-selector-focused.log"
+  },
+  "controllers": {
+    "argv": [
+      "bash",
+      "scripts/01.harness/run-governed-script.sh",
+      "--approved-action",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"
+    ],
+    "exit_code": 0,
+    "groups": 28,
+    "log": "corrective-controllers-focused.log",
+    "subsequent_focused_check": "malformed timestamp guards passed after correction; combined suite remains required"
+  },
+  "limits": [
+    "Focused checks are checkpoints; final combined preparation and container qualification follow.",
+    "Simulated provider observations are not live proof.",
+    "No CI dispatch, image publication, deployment, real secret operation or push."
+  ]
+}

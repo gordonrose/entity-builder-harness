@@ -1,0 +1,62 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.persistence-accepted-release.v1
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 04.deploy
+#   domain: deployment.release-lifecycle
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: schema
+#   purpose: Declare accepted release identity and explicitly separated simulated evidence.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.command.persistence-accepted-release.validate
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh
+schema: deploy/persistence-accepted-release-schema/v1
+record_schema: deploy/persistence-accepted-release/v1
+required_fields:
+- schema
+- target
+- scope
+- status
+- release
+- acceptance
+- provider_observation
+evidence_classes:
+- live
+- simulated
+legacy_evidence_class: live
+production_status: accepted
+simulation_status: rehearsed
+identity_fields:
+- source_revision
+- image_digest
+- runtime_task_definition
+- verifier_task_definition
+- package_custody_reference
+retention: Completed proof receipts remain immutable; validation never queries expired
+  historical tasks.
+required_proofs:
+- migration-apply
+- effective-privilege
+- server-replacement
+- server-replacement-read
+- credential-rotation
+- credential-revocation
+- credential-revocation-unready
+- credential-recovery
+- credential-recovery-health
+- credential-recovery-read
+- rollback-b-health
+- rollback-b-read
+- rollback-final-health
+- rollback-final-read
+- isolated-restore

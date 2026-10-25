@@ -1,0 +1,33 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.command.acceptance-route.capability
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 04.deploy
+#   domain: validation
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: configuration
+#   purpose: Declare the generic command owner supported context and exact argument contract.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: deploy.compiler.declaration-coverage
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py
+schema: repo/check-capability/v1
+owner: deploy.command.acceptance-route
+command: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh
+argv:
+- bash
+- scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh
+- --scope-contract
+- '{scope_contract}'
+- --json
+contract_schema: deploy/target-scope-contract/v1
+context_parameters:
+- scope_contract

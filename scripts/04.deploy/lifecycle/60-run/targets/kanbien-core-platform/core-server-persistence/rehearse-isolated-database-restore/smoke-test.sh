@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.isolated-persistence-restore
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -62,11 +62,14 @@ class TaskListFixture:
 
     def aws(self, *_args):
         self.calls.append(_args)
+        if _args[1] == "describe-tasks":
+            return True, {"tasks": [{"taskArn": "task-1", "startedBy": "synthetic-start"}]}, "ok"
+        assert "--started-by" not in _args, "startedBy cannot be combined with status filters"
         return True, {"taskArns": ["task-1"]}, "ok"
 
 tasks = TaskListFixture()
-assert module.verifier_tasks(tasks, "synthetic-start") == (["task-1"], "ok")
-assert [call[-1] for call in tasks.calls] == ["RUNNING", "STOPPED"]
+assert module.verifier_tasks(tasks, "synthetic-start", "synthetic-definition") == (["task-1"], "ok")
+assert [call[-1] for call in tasks.calls if call[1] == "list-tasks"] == ["RUNNING", "STOPPED"]
 
 first_restore = {"DbiResourceId": "db-RESTORE-A"}
 second_restore = {"DbiResourceId": "db-RESTORE-B"}

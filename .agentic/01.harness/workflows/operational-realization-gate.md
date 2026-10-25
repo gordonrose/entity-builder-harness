@@ -1,104 +1,23 @@
 <!-- agentic-artifact:
-  schema: agentic-artifact/v3
-  id: harness.workflow.operational-realization-gate
-  version: 2
-  status: active
-  created_on: "2026-09-27"
-  updated_on: "2026-10-20"
-  layer: 01.harness
-  domain: deployment.realization
-  disciplines:
-  - architecture
-  - security
-  - sre
-  kind: workflow
-  purpose: Govern complete provider-neutral operational realization before a live capability operation.
-  portability:
-    class: reusable
-    targets:
-    - entity-builder
-  used_by:
-  - id: harness.standard.operational-realization-gate
-    path: .agentic/01.harness/standards/operational-realization-gate.md
-  - id: harness.standard.delegated-execution-state
-    path: .agentic/01.harness/standards/delegated-execution-state.md
+schema: agentic-artifact/v3
+id: harness.workflow.operational-realization-gate
+version: 3
+status: active
+created_on: "2026-09-27"
+updated_on: "2026-10-25"
+layer: 01.harness
+domain: deployment.realization
+disciplines: [agentic, architecture, sre]
+kind: workflow
+purpose: Retain the legacy path as a compatibility pointer to deployment-owned authority.
+portability: { class: reusable, targets: [entity-builder] }
+used_by:
+- id: deploy.workflow.operational-realization-gate
+  path: .agentic/04.deploy/workflows/operational-realization-gate.md
 -->
-# Operational Realization Workflow
+# Operational Realization Workflow Compatibility Pointer
 
-## Use When
-
-Use this workflow before a capability first reaches a live target, before a
-new execution path, migration, queue consumer, or recovery path is introduced,
-and whenever its artifact, identity, configuration shape, connection, engine
-semantics, or mutation shape changes.
-
-## Bounded PostgreSQL Route
-
-For the explicitly adopted and execution-approved Kanbien/staging PostgreSQL
-slice, use the [standard's bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability).
-Its concrete operation/evidence matrix supplies the scoped inputs, ordered
-preflights, stop conditions and safe outputs in place of requiring new generic
-contract/compiler migration for the whole route. Record both approvals, the
-exact operation scope and applicable existing executable checks before acting.
-A failed required check pauses the affected operation, not authorized diagnosis
-or repair. Reconcile outcome and cleanup, diagnose, repair the relevant owner,
-rerun affected checks, prove prevention, qualify any changed image and resume
-the first incomplete stage within cumulative limits. Record each material
-failure and its resumed outcome using existing Stage 6/session records.
-Escalate only the plan's exhausted-boundary/new-effect/unsafe-recovery conditions;
-ordinary in-scope repairs require no repeated execution approval. This route
-cannot override a controller or target guard: demonstrate actual checkpoint,
-attempt, cleanup and budget behavior before requesting execution approval.
-Keep terminal/non-replay recovery and separate provider authority. Closeout
-includes acceptance evidence and completed failure/prevention records.
-Without both approvals, follow the normal procedure below.
-
-## Inputs
-
-- a versioned provider-neutral realization contract;
-- safe source and artifact evidence;
-- normalized facts produced by a separately governed provider adapter;
-- a reviewed change summary, where a provider mutation is proposed; and
-- current target approval under the owning provider execution workflow.
-
-## Procedure
-
-1. Copy the template and declare the complete execution graph. Do not use an
-   external resource name, provider type, credential value, endpoint, or raw
-   provider response in the contract.
-2. Use `npm run deployment:realization:validate -- --contract <path>
-   --validate-contract` to
-   reject missing graph edges, unsafe lifecycle/retry paths, insufficient proof
-   requirements, unknown assumptions, and provider leakage.
-3. Collect safe evidence in order: source, artifact, semantic integration,
-   live-read, change-set, execution preflight. A provider adapter may collect
-   target facts, but it must write normalized facts only.
-4. Re-run the compiler with normalized facts. It must show all prerequisite
-   gate evidence and every declared component binding passed before a provider
-   mutation is proposed.
-5. Obtain the separate target-specific authorization required to execute the
-   reviewed mutation. This generic workflow never grants cloud authority.
-6. If execution is delegated, bind the worker to a packet whose reports follow
-   `delegated-execution-state`. A non-complete state must name the current
-   gate, completed gates, evidence reference, next permitted action, and any
-   blocker. An asynchronous provider wait is `waiting-on-external-system`,
-   never `complete`.
-7. Run one labelled controlled execution. Record safe terminal evidence.
-8. If it reaches a terminal failure or stop, do not replay it. Define and
-   review a new recovery label and use the `recovery` gate. A recovery is never
-   a substitute for omitted preflight evidence.
-9. Record the final safe evidence location in the capability plan and update
-   the contract's proof states only after the relevant proof actually passes.
-
-## Stop Conditions
-
-Stop before any provider mutation if the compiler fails, evidence is stale or
-missing, an assumption is unknown, a dependency is undeclared, the change
-summary exceeds its allowed shape, a normalized fact conflicts with the
-contract, or the lifecycle permits replay.
-
-## Output
-
-The output is a contract ID, a safe structured validation result, and
-append-only evidence references. The provider-specific plan remains the source
-of target, cost, permission, rollback, and execution authority.
+The authoritative workflow is [owned by 04.deploy](../../04.deploy/workflows/operational-realization-gate.md).
+This retained path defines no additional requirements. The
+[migration plan](../../04.deploy/plans/migration/operational-realization-authority.md)
+records compatibility and validation.

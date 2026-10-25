@@ -24,6 +24,9 @@ release. The provider-specific workflow owns exact commands and inspection and
 mutation authority. An absent foundation or runtime requires its separately
 governed creation route; this workflow does not recreate the target.
 
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
+
 ## Inputs and Readiness
 
 Select the scope declaration, retained accepted release, runnable-program and

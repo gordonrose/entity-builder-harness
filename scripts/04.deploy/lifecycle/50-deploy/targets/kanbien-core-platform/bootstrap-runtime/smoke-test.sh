@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.target-controls
-#   version: 5
+#   version: 6
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     targets: []
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: aws.plan.kanbien-core-platform.release-rehearsal
 #     path: docs/aws/kanbien-core-platform-release-rehearsal-plan.md
@@ -66,122 +67,7 @@ bash "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/
 bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-accepted-workload-replacement/smoke-test.sh"
 bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/rehearse-private-verifier-fault/smoke-test.sh"
 
-accepted_receipt="$(mktemp)"; accepted_verification="$(mktemp)"; trap 'rm -f "$accepted_receipt" "$accepted_verification"' EXIT
-python3 - "$accepted_receipt" "$accepted_verification" <<'PY'
-import json, sys
-digest="sha256:" + "a" * 64
-revision="1" * 40
-json.dump({"schema":"deploy/package-custody-receipt/v1","target":"kanbien-core-platform","environment_class":"private-bootstrap","provider_region_alias":"aws-eu-west-1","candidate_id":"kanbien-core-server-candidate","package_contract_id":"kanbien-core-server-image","program_id":"kanbien-core-server","source_revision":revision,"image_digest":digest,"release_identity":"source-"+revision,"checked_at":"2026-10-20T21:15:49Z","checks":{"runnable_program_contract":"passed","dependency_boundary":"passed","delivery_access_static":"passed","delivery_access_live":"passed","local_image_smoke":"passed","ecr_scan":"passed","sbom":"passed","provenance_attestation":"passed"},"verdict":"qualified","receipt_reference":"github-actions-run:39464882266"}, open(sys.argv[1], "w"))
-json.dump({"schema":"deploy/private-runtime-verification-report/v1","target":"kanbien-core-platform","verdict":"accepted","findings":[{"code":"runtime-digest-and-private-verifier-accepted"}],"facts":{"source_revision":revision,"image_digest":digest,"runtime_task_definition":"runtime:2","verifier_task_definition":"verifier:2"}}, open(sys.argv[2], "w"))
-PY
-"$ACCEPT" --receipt "$accepted_receipt" --verification-report "$accepted_verification" --json | grep -q '"verdict": "ready-to-record"'
-
-python3 - "$ROOT" "$accepted_receipt" "$accepted_verification" <<'PY'
-import contextlib
-import importlib.util
-import io
-import json
-from pathlib import Path
-import subprocess
-import sys
-import tempfile
-from unittest.mock import patch
-import yaml
-
-sys.dont_write_bytecode = True
-root = Path(sys.argv[1])
-receipt_path, verification_path = map(Path, sys.argv[2:])
-spec = importlib.util.spec_from_file_location("accept_release", root / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py")
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-real_record = module.RECORD
-baseline = real_record.read_bytes()
-candidate = json.loads(receipt_path.read_text())
-accepted = json.loads(verification_path.read_text())
-
-
-def invoke(write=True):
-    argv = ["accept-release", "--receipt", str(receipt_path), "--verification-report", str(verification_path), "--json"]
-    if write:
-        argv.append("--write")
-    output = io.StringIO()
-    with patch.object(sys, "argv", argv), contextlib.redirect_stdout(output):
-        status = module.main()
-    return status, json.loads(output.getvalue())
-
-
-def blocked(code):
-    before = module.RECORD.read_bytes()
-    status, report = invoke()
-    assert status == 1 and report["verdict"] == "blocked", report
-    assert report["findings"] == [{"code": code}], report
-    assert module.RECORD.read_bytes() == before, "failed acceptance changed the retained baseline"
-
-
-with tempfile.TemporaryDirectory() as directory:
-    # Exercise the real command and custody validator against a private record copy.
-    module.RECORD = Path(directory) / "accepted-release.yml"
-    module.RECORD.write_bytes(baseline)
-    module.RECORD.chmod(0o640)
-    status, report = invoke(write=False)
-    assert status == 0 and report["verdict"] == "ready-to-record", report
-    assert module.RECORD.read_bytes() == baseline
-    status, report = invoke()
-    assert status == 0 and report["verdict"] == "recorded", report
-    generated = module.RECORD.read_text()
-    record = yaml.safe_load(generated)
-    release = record["release"]
-    assert release["package_custody_reference"] == candidate["receipt_reference"]
-    for key in ("source_revision", "image_digest", "runtime_task_definition", "verifier_task_definition"):
-        assert release[key] == accepted["facts"][key], key
-    assert record["cost_condition"] == yaml.safe_load(baseline)["cost_condition"]
-    before_metadata = module.record_metadata(baseline.decode())
-    after_metadata = module.record_metadata(generated)
-    assert after_metadata["version"] == before_metadata["version"] + 1
-    assert after_metadata["created_on"] == before_metadata["created_on"]
-    assert after_metadata["updated_on"] == record["acceptance"]["accepted_at"][:10]
-    assert module.RECORD.stat().st_mode & 0o777 == 0o640
-    metadata_check = subprocess.run(
-        ["bash", str(root / "scripts/01.harness/check-artifact-metadata-headers.sh"), "--proposed"],
-        input=json.dumps({str(real_record.relative_to(root)): generated}), text=True, capture_output=True, cwd=root,
-    )
-    assert metadata_check.returncode == 0, metadata_check.stdout + metadata_check.stderr
-
-    for invalid in (None, [], "accepted", 0, False, {}, {**accepted, "schema": "other/v1"}, {**accepted, "target": "other"}):
-        verification_path.write_text(json.dumps(invalid))
-        blocked("private-verification-report-invalid")
-    verification_path.write_text("{")
-    blocked("private-verification-report-unreadable")
-    verification_path.write_text(json.dumps({**accepted, "facts": []}))
-    blocked("private-verification-not-accepted")
-    verification_path.write_text(json.dumps({**accepted, "facts": {**accepted["facts"], "image_digest": "sha256:" + "b" * 64}}))
-    blocked("accepted-release-identity-mismatch")
-    verification_path.write_text(json.dumps(accepted))
-    receipt_path.write_text(json.dumps({**candidate, "receipt_reference": "invalid"}))
-    blocked("package-custody-receipt-invalid")
-    receipt_path.write_text(json.dumps(candidate))
-
-    real_run = subprocess.run
-
-    def replace_original_after_validation(command, **kwargs):
-        assert command[command.index("--receipt") + 1] != str(receipt_path)
-        result = real_run(command, **kwargs)
-        receipt_path.write_text(json.dumps({**candidate, "receipt_reference": "invalid"}))
-        return result
-
-    with patch.object(module.subprocess, "run", side_effect=replace_original_after_validation):
-        assert module.receipt(receipt_path) == candidate, "recording must retain the exact validated receipt"
-    receipt_path.write_text(json.dumps(candidate))
-
-    for operation in ("fsync", "replace"):
-        with patch.object(module.os, operation, side_effect=OSError("simulated write failure")):
-            blocked("accepted-release-record-write-failed")
-        assert not list(Path(directory).glob(".accepted-release.yml.*.tmp")), "failed write left a temporary record"
-    module.RECORD.write_text("schema: invalid\n")
-    blocked("accepted-release-record-invalid")
-
-assert real_record.read_bytes() == baseline, "isolated acceptance tests touched the real baseline"
-PY
+bash "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh"
 
 python3 - "$ROOT/infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml" <<'PY'
 import re

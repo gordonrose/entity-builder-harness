@@ -1,0 +1,6 @@
+{"verdict":"passed","evidence_class":"local-runtime","code":"persistence-payload-imports-resolved"}
+Persistence payload regression passed (6 broken-payload cases; no container or target access).
+Persistence package stage regression passed (declaration gap blocks before Docker).
+Persistence package stage regression passed (missing or unloadable acceptance helper returns structured gap).
+Persistence package stage regression passed (corrupt health blocks before composition/Docker; repaired declaration advances).
+Publication qualification passed: actual workflow/builder route runs eight commands once; all eight failures stop progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.

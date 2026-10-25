@@ -1,17 +1,17 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.script.declaration-coverage.readme
-version: 1
-status: draft
+version: 3
+status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
 - agentic
 - sre
 kind: capability-readme
-purpose: Reserve the offline capability home for declaration-contract coverage validation.
+purpose: Explain offline declaration coverage for implementation and proof references.
 portability:
   class: source-only
   targets: []
@@ -21,12 +21,27 @@ used_by:
 -->
 # Declaration Coverage
 
-This capability is not executable yet.
+The offline checker validates the requirement chain embedded in actual indexed
+`deploy/target-scope-contract/v1` declarations as `change_impact`.
 
-Its first script will validate a declaration contract offline: required fields,
-unique requirement IDs, declared source paths, proof-command references, and
-explicit scope exclusions. It will not call a provider, inspect AWS, read a
-secret, or mutate a target.
+```bash
+bash scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --json
+bash scripts/repo/check-selection/smoke-test.sh
+```
 
-Read the Declaration Coverage workflow and standard before implementing the
-validator.
+It checks declared implementation/consumer paths, unique requirements, owners,
+expectations, check references, proof categories, valid explicit non-applicability
+and existing program/workload execution sources. It emits `covered` or `gap`.
+Coverage binds the proof to the selected program/image/scope, requires the
+canonical runnable program integration proof, and verifies generic check owner
+capabilities against exact supported arguments. Advertised acceptance routes
+must connect the collector, complete proof sequence, record validation,
+promotion and downstream owners; route templates use offline parser validation.
+Coverage means that implementation and proof contracts connect; it does not mean
+container or live proofs passed.
+
+The [schema and guide](../../../../../.agentic/04.deploy/schemas/change-impact.v1.guide.md)
+bridge the existing Declaration Coverage Standard to target scope declarations.
+The repository check catalog owns commands and stage/effect classifications;
+existing generic health/secret/persistence validators own scope semantics.
+No provider calls, secret reads or target mutations occur here.

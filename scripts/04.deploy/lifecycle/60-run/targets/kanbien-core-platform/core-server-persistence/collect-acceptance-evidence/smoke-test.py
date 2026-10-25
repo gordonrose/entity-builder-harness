@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-acceptance-receipts
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -32,6 +32,7 @@ def load(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path); module = importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(module); return module
 collector = load("collector", BASE / "collect-acceptance-evidence/script.py")
 receipts = load("proof_receipts", BASE / "proof-receipts.py")
+receipts.EVIDENCE_CLASS = collector.EVIDENCE_CLASS = "simulated"
 
 candidate, rollback = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 required = {
@@ -104,3 +105,7 @@ try:
 finally:
     shutil.rmtree(directory)
 print("retained persistence acceptance receipt checks passed")
+
+# Current-state proof remains fresh even when historical task receipts are reused.
+import subprocess, sys
+subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("current-observations-test.py"))], check=True)

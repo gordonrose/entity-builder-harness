@@ -4,7 +4,7 @@ id: shared.standards.readme
 version: 2
 status: active
 created_on: "2026-06-19"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 06.shared
 domain: governance
 disciplines:
@@ -33,4 +33,4 @@ reuse.
   records shared by product and deployment controls.
 - `upstream-repo-bootstrap.md` - bootstrap reusable upstream repos from a
   source repo without leaking source-specific behavior.
-
+- [Require change completion](require-change-completion.md) - connected implementation, consumer impact, proportionate verification and evidence-based completion.

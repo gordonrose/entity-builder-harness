@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.layer.readme
-version: 2
+version: 3
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -59,3 +59,7 @@ and their proof paths. Target Alignment Preflight then compares that covered
 declaration with safe, fresh target facts. Their design and offline checks must
 be established before any provider read adapter or live target operation is
 added.
+
+## Completion and Proof Ownership
+
+[Shared change completion](../shared/standards/require-change-completion.md) owns cross-layer implementation and evidence principles. The [operational realization standard](standards/operational-realization-gate.md) owns deployment proof semantics, with lifecycle standards specifying their applicable evidence. [Provider owners](providers/README.md) retain exact procedures and authority.

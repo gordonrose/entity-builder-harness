@@ -102,6 +102,18 @@ def validate_receipt(path: Path) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
+def declaration_covered() -> bool:
+    """Offline coverage is compulsory before provider observation or mutation."""
+    checker = ROOT / "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py"
+    contract = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml"
+    try:
+        checked = subprocess.run([sys.executable, "-B", str(checker), "--scope-contract", str(contract), "--root", str(ROOT), "--json"], capture_output=True, text=True, timeout=30)
+        value = json.loads(checked.stdout)
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        return False
+    return checked.returncode == 0 and isinstance(value, dict) and value.get("verdict") == "covered" and value.get("findings") == []
+
+
 def foundation_outputs() -> tuple[dict[str, str] | None, str]:
     ok, data, code = aws("cloudformation", "describe-stacks", "--stack-name", FOUNDATION)
     stacks = data.get("Stacks") if ok and isinstance(data, dict) else None
@@ -135,7 +147,11 @@ def infrastructure_parameters(outputs: dict[str, str]) -> tuple[dict[str, str] |
     ]
     if len(selected) != 3 or {item.get("ServiceName") for item in selected} != INTERFACE_SERVICES:
         return None, "persistence-private-startup-endpoints-unavailable"
-    group_sets = {tuple(item.get("Groups", [{}])[0].get("GroupId") for _ in [0]) for item in selected if isinstance(item.get("Groups"), list) and len(item["Groups"]) == 1 and isinstance(item["Groups"][0], dict)}
+    if any(item.get("VpcId") != outputs["VpcId"] or item.get("VpcEndpointType") != "Interface" or item.get("PrivateDnsEnabled") is not True for item in selected):
+        return None, "persistence-private-startup-endpoint-posture-invalid"
+    if any(not isinstance(item.get("Groups"), list) or len(item["Groups"]) != 1 or not isinstance(item["Groups"][0], dict) for item in selected):
+        return None, "persistence-endpoint-security-group-unavailable"
+    group_sets = {(item["Groups"][0].get("GroupId"),) for item in selected}
     if len(group_sets) != 1 or len(next(iter(group_sets))) != 1 or not next(iter(group_sets))[0]:
         return None, "persistence-endpoint-security-group-unavailable"
     ok, prefix_lists, code = aws("ec2", "describe-managed-prefix-lists", "--filters", f"Name=prefix-list-name,Values=com.amazonaws.{REGION}.s3")
@@ -151,20 +167,63 @@ def infrastructure_parameters(outputs: dict[str, str]) -> tuple[dict[str, str] |
     }, "ok"
 
 
-def candidate_image(receipt: dict[str, Any]) -> tuple[bool, str]:
+def change_name_matches(value: object, expected: str) -> bool:
+    return value == expected or (isinstance(value, str) and value.startswith("arn:aws:cloudformation:") and value.split(":changeSet/", 1)[-1].split("/", 1)[0] == expected)
+
+
+def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, str]:
+    """Observe one named UPDATE; never create, execute, wait on, or replace it."""
+    ok, change, code = aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok or not isinstance(change, dict):
+        return "uncertain", code if not ok else "persistence-update-observation-invalid"
+    if not change_name_matches(change.get("ChangeSetName"), name):
+        return "blocked", "persistence-update-change-set-identity-invalid"
+    if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
+        return "pending", "persistence-update-review-pending"
+    if change.get("Status") in {"FAILED", "DELETE_COMPLETE", "DELETE_FAILED"}:
+        return "failed", "persistence-update-change-set-failed"
+    if not review(change):
+        return "blocked", "persistence-update-change-set-review-invalid"
+    execution = change.get("ExecutionStatus")
+    if execution in {"AVAILABLE", "EXECUTE_IN_PROGRESS"}:
+        return "pending", "persistence-update-execution-pending"
+    if execution != "EXECUTE_COMPLETE":
+        return "uncertain", "persistence-update-execution-state-unknown"
+    ok, observed, code = aws("cloudformation", "describe-stacks", "--stack-name", STACK)
+    stacks = observed.get("Stacks") if ok and isinstance(observed, dict) else None
+    if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
+        return "uncertain", "persistence-update-stack-observation-uncertain"
+    stack = stacks[0]
+    status = stack.get("StackStatus")
+    if status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS", "UPDATE_ROLLBACK_IN_PROGRESS", "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}:
+        return "pending", "persistence-update-stack-pending"
+    if status in {"UPDATE_FAILED", "UPDATE_ROLLBACK_FAILED", "UPDATE_ROLLBACK_COMPLETE", "DELETE_COMPLETE"}:
+        return "failed", "persistence-update-stack-failed"
+    params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+    if status != "UPDATE_COMPLETE" or any(params.get(key) != value for key, value in expected_parameters.items()):
+        return "uncertain", "persistence-update-completion-identity-unproven"
+    return "complete", "persistence-update-operation-complete"
+
+
+def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> dict[str, str]:
+    """One provider-owned mapping is shared by CREATE and its execution review."""
+    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+
+
+def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:
     digest = receipt.get("image_digest")
     if not isinstance(digest, str):
-        return False, "package-custody-receipt-invalid"
+        return None, "package-custody-receipt-invalid"
     ok, image, code = aws("ecr", "batch-get-image", "--repository-name", REPOSITORY, "--image-ids", f"imageDigest={digest}", "--accepted-media-types", "application/vnd.oci.image.index.v1+json")
     images = image.get("images") if ok and isinstance(image, dict) else None
     if not isinstance(images, list) or len(images) != 1 or not isinstance(images[0], dict) or not isinstance(images[0].get("imageManifest"), str):
-        return False, code if not ok else "persistence-candidate-image-index-unavailable"
+        return None, code if not ok else "persistence-candidate-image-index-unavailable"
     try:
         manifests = json.loads(images[0]["imageManifest"]).get("manifests", [])
     except (json.JSONDecodeError, AttributeError):
-        return False, "persistence-candidate-image-index-invalid"
+        return None, "persistence-candidate-image-index-invalid"
     if not isinstance(manifests, list):
-        return False, "persistence-candidate-image-index-invalid"
+        return None, "persistence-candidate-image-index-invalid"
     children = [
         item.get("digest") for item in manifests if isinstance(item, dict)
         and item.get("mediaType") == "application/vnd.oci.image.manifest.v1+json"
@@ -172,8 +231,15 @@ def candidate_image(receipt: dict[str, Any]) -> tuple[bool, str]:
         and isinstance(item.get("digest"), str)
     ]
     if len(children) != 1:
-        return False, "persistence-candidate-runnable-manifest-unavailable"
-    ok, scan, code = aws("ecr", "describe-image-scan-findings", "--repository-name", REPOSITORY, "--image-id", f"imageDigest={children[0]}", "--max-results", "1")
+        return None, "persistence-candidate-runnable-manifest-unavailable"
+    return children[0], "ok"
+
+
+def candidate_image(receipt: dict[str, Any]) -> tuple[bool, str]:
+    digest, code = candidate_runnable_manifest(receipt)
+    if digest is None:
+        return False, code
+    ok, scan, code = aws("ecr", "describe-image-scan-findings", "--repository-name", REPOSITORY, "--image-id", f"imageDigest={digest}", "--max-results", "1")
     status = scan.get("imageScanStatus", {}).get("status") if ok and isinstance(scan, dict) else None
     findings = scan.get("imageScanFindings", {}).get("findingSeverityCounts", {}) if ok and isinstance(scan, dict) else None
     if status != "COMPLETE" or not isinstance(findings, dict):
@@ -208,6 +274,8 @@ def main() -> int:
     receipt = validate_receipt(args.receipt)
     if receipt is None:
         return report("blocked", ["package-custody-receipt-invalid"])
+    if not declaration_covered():
+        return report("blocked", ["persistence-declaration-coverage-gap"])
     codes: list[str] = []
     outputs, code = foundation_outputs()
     if outputs is None:
