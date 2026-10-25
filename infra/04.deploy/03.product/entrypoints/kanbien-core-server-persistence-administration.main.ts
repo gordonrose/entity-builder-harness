@@ -277,7 +277,7 @@ function credentialObject(value: unknown): Credentials | undefined { try { const
 function identity(value: unknown): Identity | undefined { return typeof value === "string" && /^[a-z_][a-z0-9_]{0,62}$/.test(value) ? { username: value } : undefined; }
 function quotedIdentifier(value: string): string { if (!/^[a-z_][a-z0-9_]{0,62}$/.test(value)) throw new TypeError("PERSISTENCE_ROLE_IDENTIFIER_INVALID"); return `"${value}"`; }
 function providerCode(value: unknown): string | undefined { return typeof value === "object" && value !== null && typeof (value as { readonly code?: unknown }).code === "string" ? (value as { readonly code: string }).code : undefined; }
-function administrationFailureCode(error: unknown): string {
+export function administrationFailureCode(error: unknown): string {
   const message = error instanceof Error ? error.message : undefined;
   if (typeof message === "string" && /^PERSISTENCE_ADMINISTRATION_BOOTSTRAP_[A-Z_]+_(?:[0-9A-Z_]+)$/.test(message)) return message;
   if (
@@ -286,6 +286,10 @@ function administrationFailureCode(error: unknown): string {
     || message === "PERSISTENCE_ROLE_STATE_UNAVAILABLE"
     || message === "PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY"
     || message === "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_DML_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_PERMISSION_DENIAL_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_PERMISSION_UNEXPECTEDLY_PERMITTED"
+    || message === "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED"
     || message === "PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED"
     || message === "PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED"
     || (typeof message === "string" && /^PERSISTENCE_RUNTIME_(?:REVOCATION|RECOVERY)_[A-Z_]+_NOT_CONFIRMED$/.test(message))
