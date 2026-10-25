@@ -94,16 +94,19 @@ jobs:
         with:
           name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
           path: scan-input
-      - name: Require clean portable vulnerability scan of mirrored payload
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      - name: Install pinned portable scanner
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
         with:
-          scan-type: image
-          input: scan-input/observability-collector.scan-input.tar
-          severity: HIGH,CRITICAL
-          ignore-unfixed: 'false'
-          exit-code: '1'
-          format: json
-          output: observability-collector.trivy.json
+          version: v0.70.0
+          cache: true
+      - name: Require clean portable vulnerability scan of mirrored payload
+        run: |
+          trivy image --input scan-input/observability-collector.scan-input.tar \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed=false \
+            --exit-code 1 \
+            --format json \
+            --output observability-collector.trivy.json
       - name: Retain vulnerability scan artifact
         uses: actions/upload-artifact@v4
         with:
