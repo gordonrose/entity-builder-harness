@@ -86,7 +86,14 @@ module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-permissions-" + "a" * 12
 digest = "sha256:" + "a" * 64
 revision = "a" * 40
-assert "ServerTaskRole" not in module.ADDED and "ServerTaskRole" not in module.MODIFIED
+assert module.ADDED == {
+    "ServerTaskRole": "AWS::IAM::Role",
+    "MigrationTaskRole": "AWS::IAM::Role",
+    "AdministrationTaskRole": "AWS::IAM::Role",
+    "RestorationVerifierTaskRole": "AWS::IAM::Role",
+}
+assert module.MODIFIED["PersistenceDatabase"] == "AWS::RDS::DBInstance"
+assert "AdministrationSecurityGroup" not in module.ADDED and "AdministrationSecurityGroup" not in module.MODIFIED
 parameters = [
     {"ParameterKey": "ImageDigest", "ParameterValue": digest},
     {"ParameterKey": "SupportImageDigest", "ParameterValue": digest},
