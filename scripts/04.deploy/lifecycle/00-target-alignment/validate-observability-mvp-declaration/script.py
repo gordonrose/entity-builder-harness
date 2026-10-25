@@ -13,6 +13,11 @@
 #   kind: script
 #   purpose: Check the closed readiness-observation event, bounded metric catalogue, collector dependency, and two alarm policies before a target mutation.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.core-platform-target-declaration
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+#   - id: deploy.command.kanbien-core-platform.collect-persistence-acceptance-evidence
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
 #   effects: [read-only]
 from __future__ import annotations
 
@@ -107,7 +112,7 @@ def check(root: Path) -> None:
         raise Failure("observability-foundation-invalid")
     template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
     required_template_text = [
-        "ObservabilityCollectorImage:", "ObservabilityAlarmTopicArn:", "MonitoringEndpoint:", "ObservabilityCollectorConfiguration:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
+        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
     ]
     if any(item not in template for item in required_template_text):
         raise Failure("observability-provider-realization-invalid")

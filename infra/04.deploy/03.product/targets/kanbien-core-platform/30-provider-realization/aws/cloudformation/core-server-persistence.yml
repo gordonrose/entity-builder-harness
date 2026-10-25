@@ -33,7 +33,10 @@ Parameters:
   SupportImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   ObservabilityCollectorImage: { Type: String, AllowedPattern: '^.+@sha256:[a-f0-9]{64}$' }
-  ObservabilityAlarmTopicArn: { Type: String, AllowedPattern: '^arn:aws:sns:[a-z0-9-]+:[0-9]{12}:[A-Za-z0-9_-]+$' }
+  # Supplied only to the governed target-update route.  It is never retained
+  # in the repository or in accepted evidence; CloudFormation creates the
+  # target-owned topic and awaits the recipient's normal SNS confirmation.
+  ObservabilityAlertEmail: { Type: String, NoEcho: true, AllowedPattern: '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' }
   SourceRevision: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' }
 
 Resources:
@@ -229,24 +232,6 @@ Resources:
             Resource: [!Ref MigrationCredentialsSecret, !Ref OrdinaryMigrationCredentialsSecret, !Ref RuntimeCredentialsSecret]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
-  MonitoringEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      VpcId: !Ref VpcId
-      VpcEndpointType: Interface
-      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.monitoring'
-      PrivateDnsEnabled: true
-      SubnetIds: !Ref PrivateSubnetIds
-      SecurityGroupIds: [!Ref EndpointSecurityGroupId]
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action: monitoring:PutMetricData
-            Resource: '*'
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
-
   ObservabilityCollectorConfiguration:
     Type: AWS::SSM::Parameter
     DeletionPolicy: Retain
@@ -256,14 +241,11 @@ Resources:
       Type: String
       Tier: Standard
       DataType: text
-      Description: Non-secret target-owned OTLP metrics collector configuration for the core-server persistence readiness path.
+      Description: Non-secret target-owned ADOT EMF metrics collector configuration for the core-server persistence readiness path.
       Value: !Sub |
         extensions:
           health_check:
             endpoint: 127.0.0.1:13133
-          sigv4auth:
-            service: monitoring
-            region: ${AWS::Region}
         receivers:
           otlp:
             protocols:
@@ -278,15 +260,19 @@ Resources:
             send_batch_size: 100
             timeout: 10s
         exporters:
-          otlphttp/cloudwatch:
-            tls:
-              insecure: false
-            compression: gzip
-            metrics_endpoint: https://monitoring.${AWS::Region}.amazonaws.com/v1/metrics
-            auth:
-              authenticator: sigv4auth
+          # ADOT's AWS EMF exporter sends metrics through the existing private
+          # CloudWatch Logs endpoint.  It is not an OTLP HTTP CloudWatch API.
+          awsemf:
+            region: ${AWS::Region}
+            namespace: Kanbien/CorePlatform
+            log_group_name: ${LogGroupName}
+            log_stream_name: core-server-persistence-readiness-metrics
+            dimension_rollup_option: NoDimensionRollup
+            metric_declarations:
+              - dimensions: [[target, scope, workload, dependency, readiness]]
+                metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']
         service:
-          extensions: [health_check, sigv4auth]
+          extensions: [health_check]
           telemetry:
             logs:
               level: info
@@ -294,7 +280,7 @@ Resources:
             metrics:
               receivers: [otlp]
               processors: [memory_limiter, batch]
-              exporters: [otlphttp/cloudwatch]
+              exporters: [awsemf]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceDatabase:
@@ -356,8 +342,24 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - { Effect: Allow, Action: monitoring:PutMetricData, Resource: '*' }
+              # The collector emits allowlisted EMF metric records into one
+              # fixed stream under the existing target log group.  It does not
+              # receive generic CloudWatch or Secrets Manager authority.
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:core-server-persistence-readiness-metrics*' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityAlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: kanbien-core-platform-observability-alerts
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityAlertSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref ObservabilityAlarmTopic
+      Protocol: email
+      Endpoint: !Ref ObservabilityAlertEmail
   MigrationExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -504,8 +506,8 @@ Resources:
       Threshold: 1
       ComparisonOperator: LessThanThreshold
       TreatMissingData: breaching
-      AlarmActions: [!Ref ObservabilityAlarmTopicArn]
-      OKActions: [!Ref ObservabilityAlarmTopicArn]
+      AlarmActions: [!Ref ObservabilityAlarmTopic]
+      OKActions: [!Ref ObservabilityAlarmTopic]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   PersistenceDatabaseFreeStorageAlarm:
@@ -522,8 +524,8 @@ Resources:
       Threshold: 2147483648
       ComparisonOperator: LessThanThreshold
       TreatMissingData: notBreaching
-      AlarmActions: [!Ref ObservabilityAlarmTopicArn]
-      OKActions: [!Ref ObservabilityAlarmTopicArn]
+      AlarmActions: [!Ref ObservabilityAlarmTopic]
+      OKActions: [!Ref ObservabilityAlarmTopic]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   CoreServerPersistenceService:

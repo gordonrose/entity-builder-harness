@@ -11,6 +11,11 @@
 #   kind: observability-foundation-declaration
 #   purpose: Declare the target-owned non-secret collector, metric delivery, and alarm foundation required by the first readiness observability path.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.foundation.index
+#     path: infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml
+#   - id: deploy.command.validate-core-server-persistence-observability-mvp
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh
 schema: deploy/observability-foundation/v1
 target: kanbien-core-platform
 status: local-contract-validated-live-proof-required
@@ -22,8 +27,12 @@ collector:
   config_values: non-secret-only
   startup: start-before-application-container
   shutdown: application-stops-exporting-before-collector-task-termination
-  private_delivery: cloudwatch-monitoring-interface-endpoint
-  task_role: put-metric-data-only
+  # The ADOT EMF exporter creates the reviewed custom metric through
+  # CloudWatch Logs.  The existing target-private Logs endpoint is therefore
+  # the actual delivery dependency; a monitoring endpoint would not prove this
+  # exporter path and would add an unused recurring-cost resource.
+  private_delivery: cloudwatch-logs-interface-endpoint
+  task_role: scoped-cloudwatch-logs-put-events
 metric_sources:
   application: scope-contract:core-server-persistence.observability_mvp.metric_catalogue.application
   rds_native: scope-contract:core-server-persistence.observability_mvp.metric_catalogue.rds_native

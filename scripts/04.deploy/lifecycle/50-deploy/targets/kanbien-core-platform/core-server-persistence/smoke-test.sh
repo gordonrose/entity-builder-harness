@@ -73,6 +73,12 @@ with patch.object(prepare.subprocess, "run", return_value=Result()):
     assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
 with patch.object(prepare.subprocess, "run", side_effect=subprocess.TimeoutExpired(["aws"], 30)):
     assert prepare.aws("cloudformation", "describe-stacks") == (False, None, "aws-command-timeout")
+class MissingChangeSet:
+    returncode = 255
+    stdout = ""
+    stderr = "An error occurred (ChangeSetNotFoundException) when calling the DescribeChangeSet operation: named change set is absent"
+with patch.object(prepare.subprocess, "run", return_value=MissingChangeSet()):
+    assert prepare.aws("cloudformation", "describe-change-set") == (False, None, "aws-resource-missing")
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py" <<'PY'
 import importlib.util, sys
@@ -196,6 +202,12 @@ assert "OrdinaryMigrationCredentialsSecret" in template
 assert "PERSISTENCE_ADMINISTRATOR_CREDENTIALS" in template
 assert "PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS" not in template
 assert "SupportImageDigest" in template
+assert "MonitoringEndpoint:" not in template
+assert "awsemf:" in template
+assert "dimension_rollup_option: NoDimensionRollup" in template
+assert "ObservabilityAlertEmail:" in template
+assert "ObservabilityAlarmTopic:" in template
+assert "ObservabilityAlertSubscription:" in template
 migration_task = template[template.index("CoreServerPersistenceMigrationTaskDefinition:"):template.index("CoreServerPersistenceAdministrationTaskDefinition:")]
 assert "OrdinaryMigrationCredentialsSecret" in migration_task
 assert "!Ref MigrationCredentialsSecret" not in migration_task

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T13:27:35Z
+latest_commit_at_utc: 2026-10-25T13:30:47Z
 latest_commit_sha: HEAD
-chat_duration: 1744086s (20:04:28:06)
+chat_duration: 1744278s (20:04:31:18)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -180,6 +180,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Removed unnecessary unscoped OpenTelemetry closure copies
   Resolution: The second hosted build reached the Docker payload closure and established that protobufjs, long and related packages are not installed for the selected OpenTelemetry exporter. The supported runtime closure is pg plus the @opentelemetry tree. A clean temporary copied closure loads pg, sdk-metrics and exporter-metrics-otlp-proto.
+
+
+- Raised: Corrected observability collector delivery path
+  Resolution: The target template treated an OTLP HTTP URL as a CloudWatch exporter. AWS ADOT's supported application-metric route is OTLP to a task-local collector, then the awsemf exporter through the existing private Logs endpoint. Removed the unused monitoring endpoint design, narrowed collector task-role permissions to one EMF log stream, and require a target-owned SNS topic plus external confirmation before live acceptance.
+
+
+- Raised: Classified absent named change sets as a reconciled lifecycle state
+  Resolution: CloudFormation can report ChangeSetNotFoundException without the generic phrases recognized by the provider adapter. The preparation adapter now maps only that explicit condition to aws-resource-missing; target-control regression proves it. A change-set must still be reviewed before creation or execution.
 
 ## Decisions Made
 
@@ -617,6 +625,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Workflow 40197714861 passed repository gates and failed before AWS/ECR action at unsupported unscoped OTel dependency copies. Current closure test passes using only pg dependencies plus node_modules/@opentelemetry.
   Durable evidence: Dockerfile infra/04.deploy/03.product/image/core-server-persistence/Dockerfile now contains only actual installed runtime package copies. Hosted CI remains needed for end-to-end image smoke/publication.
+
+
+- Summary: Actual private support image sha256:bc9080d4ed02ad422100bd31ef17b213012de27bbb5a7c75f6b14ef77847a166 contains the administration program. The retained image sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3 passed the governed disposable PostgreSQL/TLS compatibility qualifier with it. Current stack has no observability parameters or target-owned SNS topic; only a staging topic exists and must not be reused.
+  Durable evidence: Package provenance is GitHub Actions run 40197961821; local qualification is governed by scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh; current stack facts were read from CloudFormation in eu-west-1.
 
 ## Activity Log
 
@@ -2897,6 +2909,38 @@ Summary: Workflow 40197714861 passed repository gates and failed before AWS/ECR 
 
 Durable evidence: Dockerfile infra/04.deploy/03.product/image/core-server-persistence/Dockerfile now contains only actual installed runtime package copies. Hosted CI remains needed for end-to-end image smoke/publication.
 
+
+### 2026-10-25T13:30:47Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): trim persistence image runtime closure
+
+Summary: Removed nonexistent unscoped dependency copies; isolated runtime closure now loads actual pg and OpenTelemetry modules.
+
+ADR impact: No ADR: package source-closure correction.
+
+
+### 2026-10-25T13:50:13Z - Issue
+
+Raised: Corrected observability collector delivery path
+
+Resolution: The target template treated an OTLP HTTP URL as a CloudWatch exporter. AWS ADOT's supported application-metric route is OTLP to a task-local collector, then the awsemf exporter through the existing private Logs endpoint. Removed the unused monitoring endpoint design, narrowed collector task-role permissions to one EMF log stream, and require a target-owned SNS topic plus external confirmation before live acceptance.
+
+
+### 2026-10-25T13:50:13Z - Issue
+
+Raised: Classified absent named change sets as a reconciled lifecycle state
+
+Resolution: CloudFormation can report ChangeSetNotFoundException without the generic phrases recognized by the provider adapter. The preparation adapter now maps only that explicit condition to aws-resource-missing; target-control regression proves it. A change-set must still be reviewed before creation or execution.
+
+
+### 2026-10-25T13:50:13Z - Context hygiene
+
+Summary: Actual private support image sha256:bc9080d4ed02ad422100bd31ef17b213012de27bbb5a7c75f6b14ef77847a166 contains the administration program. The retained image sha256:30ae014c800769d9929db265ada4efd06c4712ca2e48d73c7ba455e55b25b4e3 passed the governed disposable PostgreSQL/TLS compatibility qualifier with it. Current stack has no observability parameters or target-owned SNS topic; only a staging topic exists and must not be reused.
+
+Durable evidence: Package provenance is GitHub Actions run 40197961821; local qualification is governed by scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh; current stack facts were read from CloudFormation in eu-west-1.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3646,6 +3690,13 @@ Durable evidence: Dockerfile infra/04.deploy/03.product/image/core-server-persis
   Summary: Removed the nonexistent @protobufjs copy from the persistence image source closure after CI caught it before any AWS or ECR mutation.
   ADR impact: No ADR: narrow package assembly correction.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T13:30:47Z
+  Message: fix(deploy): trim persistence image runtime closure
+  Summary: Removed nonexistent unscoped dependency copies; isolated runtime closure now loads actual pg and OpenTelemetry modules.
+  ADR impact: No ADR: package source-closure correction.
+
 ## Main Refresh Conflicts
 
 
@@ -3669,9 +3720,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T13:27:35Z
+Latest commit at UTC: 2026-10-25T13:30:47Z
 Latest commit SHA: HEAD
-Chat duration: 1744086s (20:04:28:06)
+Chat duration: 1744278s (20:04:31:18)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

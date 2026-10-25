@@ -53,7 +53,13 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
         lowered = result.stderr.lower()
         if "accessdenied" in lowered or "not authorized" in lowered:
             return False, None, "aws-access-denied"
-        if "does not exist" in lowered or "not found" in lowered:
+        # CloudFormation describes an absent named change set with the
+        # service-specific ``ChangeSetNotFoundException`` token.  That is a
+        # normal create-or-reconcile lifecycle state, not an opaque provider
+        # failure; callers still reconcile the exact named change set before
+        # creating it.  Keep this classification narrow so unrelated AWS
+        # failures cannot be treated as safely absent resources.
+        if "changesetnotfound" in lowered or "does not exist" in lowered or "not found" in lowered:
             return False, None, "aws-resource-missing"
         return False, None, "aws-command-failed"
     try:
