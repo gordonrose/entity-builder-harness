@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T12:28:30Z
-latest_commit_sha: b7691802bf81dd16392e63e4b4622b1f6b031a52
-chat_duration: 83143s (00:23:05:43)
+latest_commit_at_utc: 2026-10-25T12:41:06Z
+latest_commit_sha: 2678b45bc63215143e62cac6815e1d6c0e7fec8a
+chat_duration: 83899s (00:23:18:19)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -477,6 +477,17 @@ Summary: All applicable implementation and verification conditions passed; final
 
 Durable evidence: Retained corrective-final-condition-audit.json, final source/protected hashes, final local/stage reports and real container qualification. Current image bae8a518 matches sourcecd9e60b8; all154 source hashes and18 protected evidence files verified. No source changes after qualification; final evidence-only commit pending. Main/originc884c321 clean after fetch. User authorized final local merge; no push, CI, publication or live mutation.
 
+
+### 2026-10-25T12:41:06Z - Commit recorded
+
+Commit: `2678b45bc63215143e62cac6815e1d6c0e7fec8a`
+
+Message: Record completed scope correction verification and container qualification
+
+Summary: All seven implementation/verification conditions and six corrections audited against current files/results.49 selector cases,28 provider groups,15 acceptance groups,60 configuration negatives,27 recovery cases,13 combined local checks and1331metadata headers passed. Real container build/PostgreSQL TLS smoke passed88.14s imagebae8a518/sourcecd9e60b8.154source hashes/18protected files verified. Only authorized final local main merge remains; no CI/live/publication claim.
+
+ADR impact: Evidence only; existing ADR0042 and package-owner recovery boundaries retained.
+
 ## Sub-Agent Activity
 
 
@@ -574,6 +585,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Summary: User-approved bounded package recovery uses anonymous temporary config with same local engine and reviewed owner hashes.27 controlled cases and full payload aggregate pass; mandatory preparation11 local checks pass226.1s; all1331 metadata headers pass; final peer review passes. Actual container qualification and final merge remain required.
   ADR impact: No new ADR: bounded recovery belongs to existing package owner and grants no publication or deployment authority.
 
+
+- Commit: `2678b45bc63215143e62cac6815e1d6c0e7fec8a`
+  Time UTC: 2026-10-25T12:41:06Z
+  Message: Record completed scope correction verification and container qualification
+  Summary: All seven implementation/verification conditions and six corrections audited against current files/results.49 selector cases,28 provider groups,15 acceptance groups,60 configuration negatives,27 recovery cases,13 combined local checks and1331metadata headers passed. Real container build/PostgreSQL TLS smoke passed88.14s imagebae8a518/sourcecd9e60b8.154source hashes/18protected files verified. Only authorized final local main merge remains; no CI/live/publication claim.
+  ADR impact: Evidence only; existing ADR0042 and package-owner recovery boundaries retained.
+
 ## Main Refresh Conflicts
 
 
@@ -652,9 +670,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T12:28:30Z
-Latest commit SHA: b7691802bf81dd16392e63e4b4622b1f6b031a52
-Chat duration: 83143s (00:23:05:43)
+Latest commit at UTC: 2026-10-25T12:41:06Z
+Latest commit SHA: 2678b45bc63215143e62cac6815e1d6c0e7fec8a
+Chat duration: 83899s (00:23:18:19)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
