@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:26:24Z
-latest_commit_sha: 7defa885fb1fece769b15f170af298953c25adfd
-chat_duration: 1747615s (20:05:26:55)
+latest_commit_at_utc: 2026-10-25T14:40:03Z
+latest_commit_sha: 7977430ab8ad19f9956125bdcd94e9ff153eb69c
+chat_duration: 1748434s (20:05:40:34)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3200,6 +3200,12 @@ Durable evidence: Durable target contract and workflow are in infra/04.deploy/03
 
 ## Commits
 
+- Commit: `7977430ab8ad19f9956125bdcd94e9ff153eb69c`
+  Time UTC: 2026-10-25T14:40:03Z
+  Message: fix(deploy): qualify retained collector mirror
+  Summary: Replaced anonymous public collector layer pulls with an immutable OCI index-to-private manifest identity proof, then qualifies and scans the retained exact private payload before custody evidence.
+  ADR impact: No ADR: bounded correction to an active target package custody route.
+
 
 
 - Commit: `9868be3a9bede808dd5bf3872d1a89fa64c62503`
@@ -4015,9 +4021,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:26:24Z
-Latest commit SHA: 7defa885fb1fece769b15f170af298953c25adfd
-Chat duration: 1747615s (20:05:26:55)
+Latest commit at UTC: 2026-10-25T14:40:03Z
+Latest commit SHA: 7977430ab8ad19f9956125bdcd94e9ff153eb69c
+Chat duration: 1748434s (20:05:40:34)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
