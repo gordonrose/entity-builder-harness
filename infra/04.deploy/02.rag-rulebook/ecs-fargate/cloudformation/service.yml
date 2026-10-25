@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: ECS Fargate service for the RAG rulebook staging app.
+Description: Retired RAG staging service; only zero-task teardown is permitted.
 
 Parameters:
   FoundationStackName:
@@ -16,7 +16,9 @@ Parameters:
     Description: Immutable image URI using repository@sha256:digest.
   DesiredCount:
     Type: Number
-    Default: 1
+    Default: 0
+    AllowedValues: [0]
+    Description: Hosted RAG is retired; positive task counts are prohibited.
   Cpu:
     Type: String
     Default: "256"

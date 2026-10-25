@@ -1,5 +1,7 @@
 schema: deploy/rag-rulebook-readiness-manifest/v1
 deployment:
+  status: retired
+  retirement_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement
   service_id: rag-rulebook-mcp
   environment: staging
   runtime_target: aws.ecs-fargate.rag-rulebook-staging
@@ -9,7 +11,7 @@ github:
   ref: refs/heads/main
   commit_sha: pending-remote-main-merge
   workflow_path: .github/workflows/deploy-rag-rulebook-staging.yml
-  workflow_name: Deploy RAG Rulebook Staging
+  workflow_name: Retired RAG Rulebook Staging
   trigger: workflow_dispatch
   environment:
     name: staging
@@ -26,7 +28,7 @@ github:
     environment_condition: staging
     trust_scoped_to_repository: true
     trust_scoped_to_ref: false
-    workflow_has_id_token_permission: true
+    workflow_has_id_token_permission: false
   artifact_provenance:
     attestation_required: true
     immutable_artifact_required: true
@@ -84,7 +86,7 @@ operations:
   token_budget_limit: "20000"
   throttle_strategy: return-429-with-retry-after
   rollback_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#rollback
-  disablement_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#disablement
+  disablement_runbook: .agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement
 checks:
   rag_rulebook_commit_gate_passed: false
   generated_sources_current: false

@@ -1,0 +1,51 @@
+{
+  "Vpcs": [
+    {
+      "OwnerId": "337159794548",
+      "InstanceTenancy": "default",
+      "CidrBlockAssociationSet": [
+        {
+          "AssociationId": "vpc-cidr-assoc-0cb020281c5090ed5",
+          "CidrBlock": "10.0.0.0/16",
+          "CidrBlockState": {
+            "State": "associated"
+          }
+        }
+      ],
+      "IsDefault": false,
+      "Tags": [
+        {
+          "Key": "project",
+          "Value": "kanbien"
+        },
+        {
+          "Key": "Name",
+          "Value": "project-vpc"
+        },
+        {
+          "Key": "domain",
+          "Value": "kanbien.com"
+        },
+        {
+          "Key": "ManagedBy",
+          "Value": "manual-now"
+        },
+        {
+          "Key": "Owner",
+          "Value": "Gordon"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Staging"
+        }
+      ],
+      "BlockPublicAccessStates": {
+        "InternetGatewayBlockMode": "off"
+      },
+      "VpcId": "vpc-0063b6c3d2d781f3c",
+      "State": "available",
+      "CidrBlock": "10.0.0.0/16",
+      "DhcpOptionsId": "dopt-0b8f3c03b4b7c6f28"
+    }
+  ]
+}

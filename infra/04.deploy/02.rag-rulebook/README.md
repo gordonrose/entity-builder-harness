@@ -4,7 +4,7 @@ id: infra.04-deploy.02-rag-rulebook.readme
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -26,40 +26,18 @@ used_by:
 -->
 # RAG/Rulebook Deploy Infra
 
-This directory is the concrete infrastructure implementation boundary for the
-first hosted RAG/rulebook service.
+The hosted staging deployment is retired. Harness context queries use
+`RAG_RULEBOOK_PROVIDER=local`; local service code, corpus and retrieval tooling
+remain supported. These infrastructure files preserve the resource ownership
+and safe teardown configuration; they are not an active deployment path.
 
-The first target is ECS Fargate behind an HTTPS boundary, deployed from GitHub
-Actions with OIDC and immutable service/corpus artifacts.
+- `image/` retains service image packaging for local use.
+- `ecs-fargate/cloudformation/` retains zero-task service configuration,
+  explicit log/secret retention and shared OIDC ownership.
+- `environments/staging/deploy-readiness.yml` marks the target retired.
+- The old GitHub workflow is inert and has no AWS permissions.
 
-This scaffold is repo-side deployment implementation. The files here do not
-mutate AWS by themselves, but the GitHub workflow and CloudFormation templates
-are intended to be executed only after deploy-readiness and AWS execution
-approval gates pass.
-
-## Layout
-
-- `image/` owns the container packaging boundary for the existing service.
-- `ecs-fargate/` owns ECS Fargate target definitions and future IaC.
-- `environments/` owns non-secret environment manifests used by deploy checks.
-- `github-actions/` owns reviewed deployment workflow templates and notes.
-
-Live GitHub workflow files still live in `.github/workflows/`. If a workflow is
-generated from or mirrored by an infra template, the relationship must be
-documented here and validated by a deploy-readiness check.
-
-## Boundaries
-
-- Service source remains in `.agentic/02.rag-rulebook/service/`.
-- Local service scripts remain in `scripts/02.rag-rulebook/`.
-- Deploy checks remain in `scripts/04.deploy/`.
-- Deploy source material and generated rules remain in `docs/04.deploy/`.
-- AWS operating workflows remain in `.agentic/aws/`.
-
-## Stop Conditions
-
-Do not deploy from this directory until the deploy-readiness manifest passes
-without planning overrides and names real, non-secret evidence for GitHub OIDC,
-AWS account and region, ECR repository, ECS cluster/service, ALB/TLS boundary,
-image digest, corpus package identity, health checks, rollback, logs, alarms,
-cost controls, and owner escalation.
+Follow [hosted staging retirement](../../../.agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement)
+for authorised teardown and evidence. Recommissioning requires a separate
+reviewed change and explicit approval. Historical deployment evidence remains
+in commit logs and Git history.

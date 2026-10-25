@@ -1,0 +1,108 @@
+{
+  "Subnets": [
+    {
+      "AvailabilityZoneId": "euw1-az2",
+      "MapCustomerOwnedIpOnLaunch": false,
+      "OwnerId": "337159794548",
+      "AssignIpv6AddressOnCreation": false,
+      "Ipv6CidrBlockAssociationSet": [],
+      "Tags": [
+        {
+          "Key": "Owner",
+          "Value": "Gordon"
+        },
+        {
+          "Key": "Name",
+          "Value": "project-subnet-public1-eu-west-1a"
+        },
+        {
+          "Key": "project",
+          "Value": "kanbien"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Staging"
+        },
+        {
+          "Key": "domain",
+          "Value": "kanbien.com"
+        },
+        {
+          "Key": "ManagedBy",
+          "Value": "manual-now"
+        }
+      ],
+      "SubnetArn": "arn:aws:ec2:eu-west-1:337159794548:subnet/subnet-05d385e4d57b18032",
+      "EnableDns64": false,
+      "Ipv6Native": false,
+      "PrivateDnsNameOptionsOnLaunch": {
+        "HostnameType": "ip-name",
+        "EnableResourceNameDnsARecord": false,
+        "EnableResourceNameDnsAAAARecord": false
+      },
+      "BlockPublicAccessStates": {
+        "InternetGatewayBlockMode": "off"
+      },
+      "SubnetId": "subnet-05d385e4d57b18032",
+      "State": "available",
+      "VpcId": "vpc-0063b6c3d2d781f3c",
+      "CidrBlock": "10.0.0.0/20",
+      "AvailableIpAddressCount": 4088,
+      "AvailabilityZone": "eu-west-1a",
+      "DefaultForAz": false,
+      "MapPublicIpOnLaunch": false
+    },
+    {
+      "AvailabilityZoneId": "euw1-az3",
+      "MapCustomerOwnedIpOnLaunch": false,
+      "OwnerId": "337159794548",
+      "AssignIpv6AddressOnCreation": false,
+      "Ipv6CidrBlockAssociationSet": [],
+      "Tags": [
+        {
+          "Key": "domain",
+          "Value": "kanbien.com"
+        },
+        {
+          "Key": "project",
+          "Value": "kanbien"
+        },
+        {
+          "Key": "ManagedBy",
+          "Value": "manual-now"
+        },
+        {
+          "Key": "Owner",
+          "Value": "Gordon"
+        },
+        {
+          "Key": "Name",
+          "Value": "project-subnet-public2-eu-west-1b"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Staging"
+        }
+      ],
+      "SubnetArn": "arn:aws:ec2:eu-west-1:337159794548:subnet/subnet-0397df802e31ff6fe",
+      "EnableDns64": false,
+      "Ipv6Native": false,
+      "PrivateDnsNameOptionsOnLaunch": {
+        "HostnameType": "ip-name",
+        "EnableResourceNameDnsARecord": false,
+        "EnableResourceNameDnsAAAARecord": false
+      },
+      "BlockPublicAccessStates": {
+        "InternetGatewayBlockMode": "off"
+      },
+      "SubnetId": "subnet-0397df802e31ff6fe",
+      "State": "available",
+      "VpcId": "vpc-0063b6c3d2d781f3c",
+      "CidrBlock": "10.0.16.0/20",
+      "AvailableIpAddressCount": 4089,
+      "AvailabilityZone": "eu-west-1b",
+      "DefaultForAz": false,
+      "MapPublicIpOnLaunch": false
+    }
+  ]
+}

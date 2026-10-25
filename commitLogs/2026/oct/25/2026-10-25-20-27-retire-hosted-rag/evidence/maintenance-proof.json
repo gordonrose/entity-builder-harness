@@ -1,0 +1,8 @@
+{
+  "preflightBranch": "agentic/preflight/chat-2026-10-25-20-27-retire-hosted-rag-deployme-dc8fbbd64775/20261025211459",
+  "preflightWorktree": "/tmp/agentic-main-refresh-preflight/chat-2026-10-25-20-27-retire-hosted-rag-deployme-dc8fbbd64775-20261025211459",
+  "preflightHead": "282a0581e426b79822063356a13b786cd697f335",
+  "acceptedTreeMatches": true,
+  "ancestorVerified": true,
+  "taskChecks": "remain mandatory after restore and approved guard correction"
+}

@@ -1,0 +1,25 @@
+{
+  "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonECS/current/eu-west-1/index.json",
+  "retrievedAt": "2026-10-25T20:38:01.946412+00:00",
+  "rates": [
+    {
+      "usageType": "EU-Fargate-EphemeralStorage-GB-Hours",
+      "description": "AWS Fargate - Ephemeral Storage - EU (Ireland)",
+      "unit": "GB-Hours",
+      "USD": "0.0001220000"
+    },
+    {
+      "usageType": "EU-Fargate-vCPU-Hours:perCPU",
+      "description": "AWS Fargate - vCPU  - EU (Ireland)",
+      "unit": "hours",
+      "USD": "0.0404800000"
+    },
+    {
+      "usageType": "EU-Fargate-GB-Hours",
+      "description": "AWS Fargate - Memory  - EU (Ireland)",
+      "unit": "hours",
+      "USD": "0.0044450000"
+    }
+  ],
+  "billingVerified": false
+}

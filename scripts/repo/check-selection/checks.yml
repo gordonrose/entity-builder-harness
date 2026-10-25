@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -16,6 +16,241 @@
 #     path: scripts/repo/check-selection/script.sh
 schema: repo/check-catalog/v1
 checks:
+  rag-retirement-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/verify-rag-rulebook-deploy-readiness/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - writes-files
+    owner: deploy.script.verify-rag-rulebook-deploy-readiness.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
+  rag-local-retrieval-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: rag-rulebook.script.query-local-context.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - RAG_REPO_ROOT
+      - RAG_SOURCE_COMMIT_SHA
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .agentic
+    - docs
+    - scripts/02.rag-rulebook
+    - scripts/01.harness/artifact-metadata
+  rag-source-projection-validation:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/check-source-projections/script.sh
+    - --current
+    - --projection-set
+    - projection.02.rag-rulebook.hosted-context-provider-contract
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: rag-rulebook.script.check-source-projections
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .agentic/02.rag-rulebook
+    - docs
+    - scripts/02.rag-rulebook/check-source-projections
+  rag-source-review-validation:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh
+    - --record
+    - .agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: rag-rulebook.script.validate-okf-source-material-reviews
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .agentic/02.rag-rulebook
+    - docs
+    - scripts/02.rag-rulebook/validate-okf-source-material-reviews
+  rag-source-derivation-validation:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/validate-derivation-reports/script.sh
+    - --report
+    - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: rag-rulebook.script.validate-derivation-reports
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .agentic/02.rag-rulebook
+    - docs
+    - scripts/02.rag-rulebook/validate-derivation-reports
+  rag-source-projection-scope-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: rag-rulebook.script.check-source-projections.scoped-smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/check-source-projections
+  rag-source-coverage-validation:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/check-source-material-coverage/script.sh
+    - --current
+    - --source
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: rag-rulebook.script.check-source-material-coverage
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - RAG_REPO_ROOT
+      - RAG_SOURCE_COMMIT_SHA
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .agentic/02.rag-rulebook
+    - docs
+    - scripts/02.rag-rulebook
+  rag-source-coverage-scope-regression:
+    argv:
+    - bash
+    - scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: rag-rulebook.script.check-source-material-coverage.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - RAG_REPO_ROOT
+      - RAG_SOURCE_COMMIT_SHA
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/02.rag-rulebook/check-source-material-coverage
   scope-inventory:
     argv:
     - bash
@@ -615,6 +850,52 @@ checks:
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
 repository_inputs:
+- inputs:
+  - .github/workflows/deploy-rag-rulebook-staging.yml
+  - infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
+  - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/foundation.yml
+  - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/service.yml
+  - infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/github-oidc-bootstrap.yml
+  - scripts/04.deploy/verify-rag-rulebook-deploy-readiness
+  checks:
+  - rag-retirement-regression
+- inputs:
+  - .agentic/02.rag-rulebook/README.md
+  - .agentic/02.rag-rulebook/plans/repo-plan.md
+  - .agentic/02.rag-rulebook/recognition-sources/generated
+  - docs/02.rag-rulebook/postman
+  - scripts/02.rag-rulebook/README.md
+  - scripts/02.rag-rulebook/query-context/README.md
+  - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+  checks:
+  - rag-local-retrieval-regression
+- inputs:
+  - .agentic/02.rag-rulebook/source-projections/v1.yml
+  - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  checks:
+  - rag-source-projection-validation
+  - rag-local-retrieval-regression
+- inputs:
+  - .agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+  checks:
+  - rag-source-review-validation
+- inputs:
+  - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+  checks:
+  - rag-source-derivation-validation
+- inputs:
+  - scripts/02.rag-rulebook/check-source-projections
+  checks:
+  - rag-source-projection-scope-regression
+  - rag-source-projection-validation
+- inputs:
+  - scripts/02.rag-rulebook/check-source-material-coverage
+  - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  checks:
+  - rag-source-coverage-scope-regression
+  - rag-source-coverage-validation
 - inputs:
   - scripts/repo/check-selection
   - scripts/repo/commit-gates

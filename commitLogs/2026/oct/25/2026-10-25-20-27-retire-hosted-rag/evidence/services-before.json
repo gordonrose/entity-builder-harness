@@ -1,0 +1,111 @@
+{
+  "services": [
+    {
+      "name": "rag-rulebook-staging",
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging",
+      "status": "ACTIVE",
+      "desired": 1,
+      "running": 1,
+      "pending": 0,
+      "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3",
+      "loadBalancers": [
+        {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+          "containerName": "rag-rulebook",
+          "containerPort": 3000
+        }
+      ],
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-05d385e4d57b18032",
+            "subnet-0397df802e31ff6fe"
+          ],
+          "securityGroups": [
+            "sg-0d351e31000a1a0e4"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "kanbien-staging-platform-shell",
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/kanbien-staging-platform-shell",
+      "status": "ACTIVE",
+      "desired": 1,
+      "running": 1,
+      "pending": 0,
+      "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell:24",
+      "loadBalancers": [
+        {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+          "containerName": "platform-shell",
+          "containerPort": 3000
+        }
+      ],
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-05d385e4d57b18032",
+            "subnet-0397df802e31ff6fe"
+          ],
+          "securityGroups": [
+            "sg-0e38bedffb1c3f67a"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "kanbien-staging-platform-shell-worker",
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/kanbien-staging-platform-shell-worker",
+      "status": "ACTIVE",
+      "desired": 0,
+      "running": 0,
+      "pending": 0,
+      "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell-worker:18",
+      "loadBalancers": [],
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-05d385e4d57b18032",
+            "subnet-0397df802e31ff6fe"
+          ],
+          "securityGroups": [
+            "sg-0b8a76379b41f4f63"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "service-platform",
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/service-platform",
+      "status": "ACTIVE",
+      "desired": 1,
+      "running": 0,
+      "pending": 0,
+      "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+      "loadBalancers": [
+        {
+          "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+          "containerName": "service-platform",
+          "containerPort": 3000
+        }
+      ],
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-05d385e4d57b18032",
+            "subnet-0397df802e31ff6fe"
+          ],
+          "securityGroups": [
+            "sg-0ef494aaaf57c4f37"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      }
+    }
+  ],
+  "failures": []
+}

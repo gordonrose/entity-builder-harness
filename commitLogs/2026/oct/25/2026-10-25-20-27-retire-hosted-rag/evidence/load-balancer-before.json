@@ -1,0 +1,34 @@
+{
+  "LoadBalancers": [
+    {
+      "LoadBalancerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357",
+      "DNSName": "kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com",
+      "CanonicalHostedZoneId": "Z32O12XQLNTSW2",
+      "CreatedTime": "2026-05-22T11:56:36.246000+00:00",
+      "LoadBalancerName": "kanbien-staging-alb",
+      "Scheme": "internet-facing",
+      "VpcId": "vpc-0063b6c3d2d781f3c",
+      "State": {
+        "Code": "active"
+      },
+      "Type": "application",
+      "AvailabilityZones": [
+        {
+          "ZoneName": "eu-west-1b",
+          "SubnetId": "subnet-0397df802e31ff6fe",
+          "LoadBalancerAddresses": []
+        },
+        {
+          "ZoneName": "eu-west-1a",
+          "SubnetId": "subnet-05d385e4d57b18032",
+          "LoadBalancerAddresses": []
+        }
+      ],
+      "SecurityGroups": [
+        "sg-08d590b0aee6e2e60"
+      ],
+      "IpAddressType": "ipv4",
+      "EnablePrefixForIpv6SourceNat": "off"
+    }
+  ]
+}

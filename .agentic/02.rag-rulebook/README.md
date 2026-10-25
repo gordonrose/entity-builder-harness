@@ -4,7 +4,7 @@ id: rag-rulebook.readme
 version: 1
 status: active
 created_on: "2026-06-25"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: rulebook
 disciplines:
@@ -34,6 +34,16 @@ This layer covers turning source material into structured rulebooks, defining
 intent and context-packet schemas, building indexes and graph relationships,
 chunking rulebook artifacts, and designing standalone retrieval services that
 can serve multiple domain corpora.
+
+## Current Retrieval Mode
+
+This repository uses local retrieval. The hosted `rag.kanbien.com` deployment
+is retired; do not recreate it from historical plans. Set
+`RAG_RULEBOOK_PROVIDER=local` in the private client config and use
+`query-context/script.sh --provider local` after building the local runtime.
+See `scripts/02.rag-rulebook/query-context/README.md` for the current setup.
+The local service code, corpora, indexing, and retrieval machinery remain
+supported. Hosted provider support is reusable code, not an active deployment.
 
 ## Boundary
 

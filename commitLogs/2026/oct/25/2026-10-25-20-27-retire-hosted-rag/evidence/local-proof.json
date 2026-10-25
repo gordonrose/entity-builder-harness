@@ -1,0 +1,57 @@
+{
+  "observed_at_utc": "2026-10-25T20:33:45.597937+00:00",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924",
+  "config": "~/.config/rag-rulebook/rag.env",
+  "provider": "local",
+  "provider_selected_from_default_config": true,
+  "cli_provider_override": false,
+  "configuration_change": {
+    "only_provider_assignment_changed": true,
+    "authentication_bytes_preserved": true,
+    "mode": "0600",
+    "authentication_values_recorded": false
+  },
+  "query": "Explain the local retrieval provider in scripts/02.rag-rulebook/query-context/README.md.",
+  "command": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/02.rag-rulebook/query-context/script.sh",
+    "--request-text",
+    "Explain the local retrieval provider in scripts/02.rag-rulebook/query-context/README.md.",
+    "--format",
+    "compact"
+  ],
+  "hosted_access_guard": {
+    "blocked_executables": [
+      "curl",
+      "aws"
+    ],
+    "attempts": 0,
+    "scope": "All hosted HTTP and secret lookup paths used by query-context/script.sh"
+  },
+  "packet_id": "packet.selector-fixture.49059d8e0caa9937",
+  "schema": "rag-rulebook/context-packet-compact/v1",
+  "selected_chunk_count": 6,
+  "citation_count": 2,
+  "routing": {
+    "classification_source": "request-context-plus-recognition-sources",
+    "continuity_reason": "No previous context packet supplied; current prompt is resolved from request context and available session continuity.",
+    "layer": "unknown",
+    "mode": "discovery",
+    "previous_packet_id": "",
+    "recognition_summary": {
+      "file-path": 1,
+      "intent-form": 1,
+      "user-intent": 1
+    },
+    "scope": "prompt",
+    "status": "ready",
+    "target_paths": [
+      "scripts/02.rag-rulebook/query-context/README.md"
+    ],
+    "task_type": "generate_retrieval_selector_fixture",
+    "workflow": "unknown"
+  },
+  "result": "pass"
+}

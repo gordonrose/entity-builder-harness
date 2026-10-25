@@ -1,0 +1,10 @@
+{
+  "billingVerified": false,
+  "hoursPerMonth": 730,
+  "vCPU": 0.25,
+  "memoryGiB": 0.5,
+  "computeUSDPerMonth": "9.0100250",
+  "onePublicIPv4USDPerMonth": "3.650",
+  "combinedUSDPerMonth": "12.6600250",
+  "basis": "Public on-demand rates; excludes discounts, credits, taxes, storage and variable traffic costs."
+}

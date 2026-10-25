@@ -1,0 +1,17 @@
+{
+  "taskDefinitions": [
+    {
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:1",
+      "status": "DELETE_IN_PROGRESS"
+    },
+    {
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:2",
+      "status": "DELETE_IN_PROGRESS"
+    },
+    {
+      "arn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3",
+      "status": "DELETE_IN_PROGRESS"
+    }
+  ],
+  "failures": []
+}

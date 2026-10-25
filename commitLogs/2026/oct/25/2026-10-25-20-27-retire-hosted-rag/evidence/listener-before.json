@@ -1,0 +1,36 @@
+{
+  "Listeners": [
+    {
+      "ListenerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750",
+      "LoadBalancerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357",
+      "Port": 443,
+      "Protocol": "HTTPS",
+      "Certificates": [
+        {
+          "CertificateArn": "arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631"
+        }
+      ],
+      "SslPolicy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+      "DefaultActions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+          "ForwardConfig": {
+            "TargetGroups": [
+              {
+                "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+                "Weight": 1
+              }
+            ],
+            "TargetGroupStickinessConfig": {
+              "Enabled": false
+            }
+          }
+        }
+      ],
+      "MutualAuthentication": {
+        "Mode": "off"
+      }
+    }
+  ]
+}

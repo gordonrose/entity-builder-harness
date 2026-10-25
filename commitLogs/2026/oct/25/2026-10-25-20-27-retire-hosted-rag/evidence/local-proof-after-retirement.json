@@ -1,0 +1,117 @@
+{
+  "observed_at_utc": "2026-10-25T20:45:59.405258+00:00",
+  "phase": "after AWS retirement and final source/provenance validation",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924",
+  "source_commit": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+  "config": "~/.config/rag-rulebook/rag.env",
+  "provider": "local",
+  "provider_selected_from_default_config": true,
+  "cli_provider_override": false,
+  "configuration_mode": "0600",
+  "authentication_values_recorded": false,
+  "query": "Explain the current local provider configuration after hosted retirement in docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md.",
+  "command": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/02.rag-rulebook/query-context/script.sh",
+    "--request-text",
+    "Explain the current local provider configuration after hosted retirement in docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md.",
+    "--format",
+    "compact"
+  ],
+  "hosted_access_guard": {
+    "blocked_executables": [
+      "curl",
+      "aws"
+    ],
+    "attempts": 0,
+    "scope": "All hosted HTTP and secret lookup paths used by query-context/script.sh"
+  },
+  "packet_id": "packet.selector-fixture.3a56d40ab6b7e731",
+  "schema": "rag-rulebook/context-packet-compact/v1",
+  "selected_chunk_count": 6,
+  "citation_count": 2,
+  "routing": {
+    "classification_source": "request-context-plus-recognition-sources",
+    "continuity_reason": "No previous context packet supplied; current prompt is resolved from request context and available session continuity.",
+    "layer": "02.rag-rulebook",
+    "mode": "discovery",
+    "previous_packet_id": "",
+    "recognition_summary": {
+      "evidence-family": 1,
+      "file-path": 1,
+      "intent-form": 1,
+      "user-intent": 1
+    },
+    "scope": "prompt",
+    "status": "ready",
+    "target_paths": [
+      "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md"
+    ],
+    "task_type": "generate_retrieval_selector_fixture",
+    "workflow": ".agentic/02.rag-rulebook/workflows/default.md"
+  },
+  "current_local_config_present_in_generated_source_chunks": true,
+  "current_source_sha256": "e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019",
+  "result": "pass",
+  "postIntakeProof": {
+    "observed_at_utc": "2026-10-25T21:30:19.826313+00:00",
+    "phase": "staged retirement after accepted-main refresh and cloud retirement",
+    "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924",
+    "source_commit": "282a0581e426b79822063356a13b786cd697f335",
+    "config": "~/.config/rag-rulebook/rag.env",
+    "provider": "local",
+    "provider_selected_from_default_config": true,
+    "cli_provider_override": false,
+    "configuration_mode": "0600",
+    "configuration_unchanged": true,
+    "authentication_values_recorded": false,
+    "query": "Explain the current local provider configuration after hosted retirement in docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md.",
+    "command": [
+      "bash",
+      "scripts/01.harness/run-governed-script.sh",
+      "--approved-action",
+      "scripts/02.rag-rulebook/query-context/script.sh",
+      "--request-text",
+      "Explain the current local provider configuration after hosted retirement in docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md.",
+      "--format",
+      "compact"
+    ],
+    "hosted_access_guard": {
+      "blocked_executables": [
+        "curl",
+        "aws"
+      ],
+      "attempts": 0,
+      "scope": "All hosted HTTP and secret lookup paths used by query-context/script.sh"
+    },
+    "packet_id": "packet.selector-fixture.2ea215addbeadf3d",
+    "schema": "rag-rulebook/context-packet-compact/v1",
+    "selected_chunk_count": 6,
+    "citation_count": 2,
+    "routing": {
+      "classification_source": "request-context-plus-recognition-sources",
+      "continuity_reason": "No previous context packet supplied; current prompt is resolved from request context and available session continuity.",
+      "layer": "02.rag-rulebook",
+      "mode": "discovery",
+      "previous_packet_id": "",
+      "recognition_summary": {
+        "evidence-family": 1,
+        "file-path": 1,
+        "intent-form": 1,
+        "user-intent": 1
+      },
+      "scope": "prompt",
+      "status": "ready",
+      "target_paths": [
+        "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md"
+      ],
+      "task_type": "generate_retrieval_selector_fixture",
+      "workflow": ".agentic/02.rag-rulebook/workflows/default.md"
+    },
+    "current_local_config_present_in_generated_source_chunks": true,
+    "current_source_sha256": "e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019",
+    "result": "pass"
+  }
+}

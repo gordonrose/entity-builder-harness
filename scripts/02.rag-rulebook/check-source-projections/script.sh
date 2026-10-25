@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.check-source-projections
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 02.rag-rulebook
 #   domain: validation
 #   disciplines:
@@ -87,7 +87,7 @@ ROOT = repo_root()
 
 def usage() -> str:
     return """Usage:
-  check-source-projections/script.sh --current [--json]
+  check-source-projections/script.sh --current [--projection-set <exact-id>] [--json]
   check-source-projections/script.sh --current --manifest <path> [--json]
 
 Checks the source projection manifest against current governed source material,
@@ -100,6 +100,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--current", action="store_true")
     parser.add_argument("--manifest", default=DEFAULT_MANIFEST)
+    parser.add_argument("--projection-set", action="append", default=[])
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
@@ -110,6 +111,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         print("ERROR: --current is required.", file=sys.stderr)
         print(usage(), end="", file=sys.stderr)
         sys.exit(2)
+    if len(args.projection_set) > 1:
+        parser.error("--projection-set must be supplied at most once")
+    args.projection_set = args.projection_set[0] if args.projection_set else None
     return args
 
 
@@ -502,6 +506,14 @@ def main(argv: list[str]) -> int:
         errors.append(f"duplicate projection set id: {set_id}")
 
     active_sets = [item for item in normalized_sets if item["status"] == "active"]
+    selected_sets = active_sets
+    if args.projection_set is not None:
+        selected_sets = [item for item in normalized_sets if item["id"] == args.projection_set]
+        if len(selected_sets) != 1:
+            errors.append(f"projection selector must match exactly one declared set: {args.projection_set}")
+        elif selected_sets[0]["status"] != "active":
+            errors.append(f"projection selector must name an active set: {args.projection_set}")
+            selected_sets = []
     declaration_sets = [
         item
         for item in normalized_sets
@@ -524,7 +536,7 @@ def main(argv: list[str]) -> int:
     for path in undeclared_derived_rules:
         errors.append(f"derived rule with source_derivation is not declared in active projection manifest: {path}")
 
-    for item in active_sets:
+    for item in selected_sets:
         source_paths = set(item["source_paths"])
         rule_paths = set(item["rule_paths"])
         report_paths = set(item["report_paths"])
@@ -537,9 +549,16 @@ def main(argv: list[str]) -> int:
         "schema": REPORT_SCHEMA,
         "ok": not errors,
         "manifest_path": manifest_path,
+        "validation_scope": {
+            "mode": "projection-set" if args.projection_set is not None else "all",
+            "projection_set_ids": [item["id"] for item in selected_sets],
+            "global_manifest_inventory_checked": True,
+            "all_content_checked": args.projection_set is None,
+        },
         "counts": {
             "projection_sets": len(normalized_sets),
             "active_projection_sets": len(active_sets),
+            "checked_projection_sets": len(selected_sets),
             "accepted_retirement_paths": len(accepted_retirements),
             "current_source_material_files": len(current_sources),
             "declared_source_material_files": len(declared_sources),
@@ -566,7 +585,8 @@ def main(argv: list[str]) -> int:
     else:
         print(
             "Source projections valid: "
-            f"{len(active_sets)} active projection set(s), "
+            f"scope={args.projection_set or 'all'}, "
+            f"{len(selected_sets)} checked active projection set(s), "
             f"{len(declared_sources)} source file(s), "
             f"{len(declared_rules)} rule projection(s)."
         )

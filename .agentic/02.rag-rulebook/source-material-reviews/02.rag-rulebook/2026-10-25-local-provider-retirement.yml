@@ -1,0 +1,160 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: rag-rulebook.source-material-review.02-rag-rulebook.2026-10-25-local-provider-retirement
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: review-record
+#   purpose: Record focused source review for explicit local retrieval after hosted retirement.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: rag-rulebook.source-material.hosted-context-provider-contract
+#     path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-10-25.02-rag-rulebook.local-provider-retirement
+status: accepted
+source_material:
+  path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  corpus_id: corpus.02.rag-rulebook
+  vertical: local-provider-selection-after-hosted-retirement
+  source_state: accepted
+  sha256: e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019
+  target_rule_paths:
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+  - architect
+  - agentic-engineer
+  - secops-engineer
+  - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+- iteration: 1
+  source_revision_summary: Focused current-mode and illustrative-example clarification after hosted retirement.
+    Generic hosted contract unchanged; this review does not certify live teardown or dormant hosted runtime.
+  reviewer_assessments:
+  - role: architect
+    reviewer: /root/local_retrieval/source_review
+    overall_score: 9.8
+    decision: pass
+    blocking_gaps: []
+    dimension_scores:
+      coverage: 9.8
+      necessity: 10
+      production_grade_gaps: 9.6
+      execution_variables: 9.8
+      human_readability: 9.8
+      machine_readability: 9.7
+      cost_optimization: 9.9
+      security: 9.8
+      performance: 9.7
+      token_optimization: 9.7
+    recommendations: []
+    evidence:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - scripts/02.rag-rulebook/query-context/README.md
+    - scripts/02.rag-rulebook/query-context/script.sh
+    - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    - Provider ownership and generic hosted boundaries remain unchanged; current local configuration and
+      illustrative hosted configuration are clearly separated.
+  - role: agentic-engineer
+    reviewer: /root/local_retrieval/source_review
+    overall_score: 9.7
+    decision: pass
+    blocking_gaps: []
+    dimension_scores:
+      coverage: 9.8
+      necessity: 9.9
+      production_grade_gaps: 9.6
+      execution_variables: 9.8
+      human_readability: 9.7
+      machine_readability: 9.7
+      cost_optimization: 9.8
+      security: 9.8
+      performance: 9.7
+      token_optimization: 9.6
+    recommendations: []
+    evidence:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - scripts/02.rag-rulebook/query-context/README.md
+    - scripts/02.rag-rulebook/query-context/script.sh
+    - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    - Exact provider variable and current setup reference match implementation; local proof records real
+      chunks and blocked hosted clients.
+  - role: secops-engineer
+    reviewer: /root/integration_review
+    overall_score: 9.8
+    decision: pass
+    blocking_gaps: []
+    dimension_scores:
+      coverage: 9.8
+      necessity: 9.8
+      production_grade_gaps: 9.7
+      execution_variables: 9.8
+      human_readability: 9.8
+      machine_readability: 9.8
+      cost_optimization: 9.7
+      security: 9.9
+      performance: 9.7
+      token_optimization: 9.8
+    recommendations: []
+    evidence:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - scripts/02.rag-rulebook/query-context/README.md
+    - scripts/02.rag-rulebook/query-context/script.sh
+    - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    - Private auth fields and permissions remain protected; explicit local avoids secret lookup and hosted
+      calls; generic hosted auth remains fail-closed.
+  - role: senior-sre
+    reviewer: /root/integration_review
+    overall_score: 9.7
+    decision: pass
+    blocking_gaps: []
+    dimension_scores:
+      coverage: 9.8
+      necessity: 9.8
+      production_grade_gaps: 9.7
+      execution_variables: 9.8
+      human_readability: 9.8
+      machine_readability: 9.8
+      cost_optimization: 9.8
+      security: 9.8
+      performance: 9.6
+      token_optimization: 9.7
+    recommendations: []
+    evidence:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - scripts/02.rag-rulebook/query-context/README.md
+    - scripts/02.rag-rulebook/query-context/script.sh
+    - scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    - Local freshness, rebuild, and stable gap boundaries remain intact; illustrative hosted support does
+      not authorize deployment.
+  cross_review_summary:
+    agreement:
+    - Current repository configuration selects local; generic hosted support remains separately governed.
+    - Source clarification is suitable for a bounded provenance refresh without rule semantic changes.
+    disagreement: []
+    unresolved_blockers: []
+  recommendation_handling:
+    applied: []
+    rejected: []
+  rerun_required: false
+final_decision:
+  status: accepted
+  summary: Four independent role assessments passed the focused source revision; no additional recommendations
+    or blockers.
+  accepted_source_sha256: e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019
+  accepted_at_utc: '2026-10-25T20:38:13Z'
+  required_before_derivation: []

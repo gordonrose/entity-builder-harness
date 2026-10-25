@@ -1,0 +1,5 @@
+{
+  "taskArns": [
+    "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-staging/4a7d956bdebb49e1ade9ddd4a5ca893f"
+  ]
+}

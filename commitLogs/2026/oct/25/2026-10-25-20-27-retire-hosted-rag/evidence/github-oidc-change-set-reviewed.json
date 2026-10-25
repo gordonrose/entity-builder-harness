@@ -1,0 +1,92 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "Delete",
+        "Action": "Remove",
+        "LogicalResourceId": "DeployRole",
+        "PhysicalResourceId": "github-rag-rulebook-staging-deploy",
+        "ResourceType": "AWS::IAM::Role",
+        "Scope": [],
+        "Details": []
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "GitHubOidcProvider",
+        "PhysicalResourceId": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com",
+        "ResourceType": "AWS::IAM::OIDCProvider",
+        "Replacement": "False",
+        "Scope": [
+          "DeletionPolicy",
+          "UpdateReplacePolicy"
+        ],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "UpdateReplacePolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "DeletionPolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ]
+      }
+    }
+  ],
+  "ChangeSetName": "rag-retire-deploy-role-20261025-a1",
+  "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/rag-retire-deploy-role-20261025-a1/8e8b5dc6-3495-48ca-9ae4-7fcd5350e148",
+  "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-github-oidc/648c7cb0-752e-11f1-b548-0a0c777ce413",
+  "StackName": "rag-rulebook-staging-github-oidc",
+  "Description": null,
+  "Parameters": [
+    {
+      "ParameterKey": "ExistingOidcProviderArn",
+      "ParameterValue": ""
+    },
+    {
+      "ParameterKey": "GitHubEnvironment",
+      "ParameterValue": "staging"
+    },
+    {
+      "ParameterKey": "DeployRoleName",
+      "ParameterValue": "github-rag-rulebook-staging-deploy"
+    },
+    {
+      "ParameterKey": "GitHubRepository",
+      "ParameterValue": "gordonrose/entity-builder-harness"
+    }
+  ],
+  "CreationTime": "2026-10-25T20:35:00.101000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [
+    "CAPABILITY_NAMED_IAM"
+  ],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null,
+  "StackDriftStatus": null,
+  "DeploymentMode": null,
+  "DeploymentConfig": {
+    "Mode": "STANDARD",
+    "DisableRollback": false
+  }
+}

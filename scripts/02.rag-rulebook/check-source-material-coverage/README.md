@@ -4,7 +4,7 @@ id: rag-rulebook.script.check-source-material-coverage.readme
 version: 1
 status: active
 created_on: "2026-06-27"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: rulebook
 disciplines:
@@ -61,6 +61,23 @@ be re-derived or explicitly gap-tracked.
 bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
 bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --json
 ```
+
+## Focused Source Proof
+
+For a change to one source, use its exact repository-relative path:
+
+```bash
+bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current \
+  --source docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+```
+
+The selector rejects unknown sources and repeated selectors. It still parses
+all coverage YAML and validates provenance structure and missing references,
+generates the complete index
+and chunks, and verifies every rule claimed by the selected source. A selected
+rule's other source-provenance dependencies remain subject to hash validation.
+JSON reports label the selected scope; a focused pass does not claim that other
+source hashes are current. Without `--source`, global validation is unchanged.
 
 ## What It Does Not Do
 

@@ -1,0 +1,25 @@
+{
+  "rag-rulebook-staging-foundation-TargetGroupArn": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-TaskRoleArn": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-TaskExecutionRoleArn": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-ServiceTokenSecretArn": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-ServiceSecurityGroupId": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-RepositoryUri": [],
+  "rag-rulebook-staging-foundation-LogGroupName": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-PublicSubnetIdsCsv": [
+    "rag-rulebook-staging-service"
+  ],
+  "rag-rulebook-staging-foundation-HostName": []
+}

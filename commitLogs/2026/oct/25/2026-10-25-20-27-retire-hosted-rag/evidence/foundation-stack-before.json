@@ -1,0 +1,135 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-foundation/3281f680-7544-11f1-a539-06e31f750d97",
+      "StackName": "rag-rulebook-staging-foundation",
+      "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/awscli-cloudformation-package-deploy-1782907118/e98d2bac-33df-4041-99ca-a085c92b6c36",
+      "Description": "Foundation resources for the RAG rulebook staging ECS Fargate service.",
+      "Parameters": [
+        {
+          "ParameterKey": "PublicSubnetIds",
+          "ParameterValue": "subnet-05d385e4d57b18032,subnet-0397df802e31ff6fe"
+        },
+        {
+          "ParameterKey": "ExistingAlbCanonicalHostedZoneId",
+          "ParameterValue": "Z32O12XQLNTSW2"
+        },
+        {
+          "ParameterKey": "EnvironmentName",
+          "ParameterValue": "staging"
+        },
+        {
+          "ParameterKey": "HostedZoneId",
+          "ParameterValue": "Z0909415EFV969Z95D5F"
+        },
+        {
+          "ParameterKey": "RepositoryName",
+          "ParameterValue": "rag-rulebook-service"
+        },
+        {
+          "ParameterKey": "ExistingHttpsListenerArn",
+          "ParameterValue": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750"
+        },
+        {
+          "ParameterKey": "ExistingAlbDnsName",
+          "ParameterValue": "kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com"
+        },
+        {
+          "ParameterKey": "ListenerRulePriority",
+          "ParameterValue": "40"
+        },
+        {
+          "ParameterKey": "VpcId",
+          "ParameterValue": "vpc-0063b6c3d2d781f3c"
+        },
+        {
+          "ParameterKey": "ServiceName",
+          "ParameterValue": "rag-rulebook-staging"
+        },
+        {
+          "ParameterKey": "ExistingAlbSecurityGroupId",
+          "ParameterValue": "sg-08d590b0aee6e2e60"
+        },
+        {
+          "ParameterKey": "LogRetentionDays",
+          "ParameterValue": "14"
+        },
+        {
+          "ParameterKey": "HostName",
+          "ParameterValue": "rag.kanbien.com"
+        }
+      ],
+      "CreationTime": "2026-07-01T11:58:39.145000+00:00",
+      "LastUpdatedTime": "2026-07-01T11:58:44.692000+00:00",
+      "RollbackConfiguration": {},
+      "StackStatus": "CREATE_COMPLETE",
+      "DisableRollback": false,
+      "DeploymentConfig": {
+        "Mode": "STANDARD",
+        "DisableRollback": false
+      },
+      "NotificationARNs": [],
+      "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "TargetGroupArn",
+          "OutputValue": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+          "ExportName": "rag-rulebook-staging-foundation-TargetGroupArn"
+        },
+        {
+          "OutputKey": "TaskRoleArn",
+          "OutputValue": "arn:aws:iam::337159794548:role/rag-rulebook-staging-task",
+          "ExportName": "rag-rulebook-staging-foundation-TaskRoleArn"
+        },
+        {
+          "OutputKey": "TaskExecutionRoleArn",
+          "OutputValue": "arn:aws:iam::337159794548:role/rag-rulebook-staging-task-execution",
+          "ExportName": "rag-rulebook-staging-foundation-TaskExecutionRoleArn"
+        },
+        {
+          "OutputKey": "ServiceTokenSecretArn",
+          "OutputValue": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rag-rulebook/staging/service-token-vpSnES",
+          "ExportName": "rag-rulebook-staging-foundation-ServiceTokenSecretArn"
+        },
+        {
+          "OutputKey": "ServiceSecurityGroupId",
+          "OutputValue": "sg-0d351e31000a1a0e4",
+          "ExportName": "rag-rulebook-staging-foundation-ServiceSecurityGroupId"
+        },
+        {
+          "OutputKey": "RepositoryUri",
+          "OutputValue": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/rag-rulebook-service",
+          "ExportName": "rag-rulebook-staging-foundation-RepositoryUri"
+        },
+        {
+          "OutputKey": "LogGroupName",
+          "OutputValue": "/aws/ecs/rag-rulebook-staging",
+          "ExportName": "rag-rulebook-staging-foundation-LogGroupName"
+        },
+        {
+          "OutputKey": "PublicSubnetIdsCsv",
+          "OutputValue": "subnet-05d385e4d57b18032,subnet-0397df802e31ff6fe",
+          "ExportName": "rag-rulebook-staging-foundation-PublicSubnetIdsCsv"
+        },
+        {
+          "OutputKey": "HostName",
+          "OutputValue": "rag.kanbien.com",
+          "ExportName": "rag-rulebook-staging-foundation-HostName"
+        }
+      ],
+      "Tags": [],
+      "EnableTerminationProtection": false,
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      },
+      "LastOperations": [
+        {
+          "OperationType": "CREATE_STACK",
+          "OperationId": "92e19ae9-a793-4add-abda-43ee11f55039"
+        }
+      ]
+    }
+  ]
+}

@@ -4,7 +4,7 @@ id: rag-rulebook.script.check-source-projections.readme
 version: 1
 status: active
 created_on: "2026-06-27"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: validation
 disciplines:
@@ -55,3 +55,19 @@ Smoke test:
 ```sh
 bash scripts/02.rag-rulebook/check-source-projections/smoke-test.sh
 ```
+
+For a focused change, select its exact active projection ID:
+
+```sh
+bash scripts/02.rag-rulebook/check-source-projections/script.sh --current \
+  --projection-set projection.02.rag-rulebook.hosted-context-provider-contract --json
+bash scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh
+```
+
+Scoped mode still checks the complete manifest shape, unique declarations,
+retirement alignment and source/rule inventory. It validates source hashes and
+report bindings for the selected active set. Unknown, duplicate and inactive
+selections fail. The report identifies its scope and does not claim that other
+sets have current content. Without the option, the existing global checks are
+unchanged. Record unrelated global failures separately; do not repair other
+owners' source hashes as part of a focused change.
