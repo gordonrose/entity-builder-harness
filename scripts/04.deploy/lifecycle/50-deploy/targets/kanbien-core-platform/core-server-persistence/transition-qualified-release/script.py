@@ -36,7 +36,7 @@ def reviewable(change, status, name, digest, revision):
     if not isinstance(change,dict) or status not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}: return False
     if not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"}: return False
     params={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
-    if params.get("ImageDigest")!=digest or params.get("RestoreVerifierImageDigest")!=digest or params.get("SourceRevision")!=revision: return False
+    if params.get("ImageDigest")!=digest or params.get("SupportImageDigest")!=digest or params.get("RestoreVerifierImageDigest")!=digest or params.get("SourceRevision")!=revision: return False
     changes=[x.get("ResourceChange",{}) for x in change.get("Changes",[]) if isinstance(x,dict)]
     return bool(changes) and {x.get("ResourceType") for x in changes} <= ALLOWED
 def wait_reviewable(prepare,name,status,digest,revision):
@@ -47,7 +47,7 @@ def wait_reviewable(prepare,name,status,digest,revision):
         if attempt<5: time.sleep(2)
     return None,"persistence-release-transition-not-reviewable"
 def reconcile(prepare,name,digest,revision):
-    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"RestoreVerifierImageDigest":digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision))
+    verdict,code=prepare.observe_update(name,{"ImageDigest":digest,"SupportImageDigest":digest,"RestoreVerifierImageDigest":digest,"SourceRevision":revision},lambda change:reviewable(change,"UPDATE_COMPLETE",name,digest,revision))
     return emit("transitioned" if verdict=="complete" else verdict,code,facts={"change_set":name,"image_digest":digest,"source_revision":revision})
 def main():
     parser=argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt",type=Path); parser.add_argument("--operation",choices=("update","rollback")); parser.add_argument("--json",action="store_true"); parser.add_argument("--reconcile",action="store_true")

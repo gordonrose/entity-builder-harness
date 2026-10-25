@@ -182,7 +182,7 @@ def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = N
                                     outcome="rejected", fallback_code="aws-command-failed")
         return report("failed", "persistence-change-set-creation-failed", *(finding,) if finding else (), facts=facts)
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    expected = {"ImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+    expected = {"ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
     if change.get("Status") != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "AVAILABLE" or any(parameters.get(key) != value for key, value in expected.items()):
         return report("uncertain", "persistence-change-set-review-identity-unproven", facts=facts)
     return report("created-awaiting-review", "persistence-change-set-ready-for-review", facts=facts)
