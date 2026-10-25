@@ -106,6 +106,7 @@ try {
   await roleCredentialRegression();
   await iamAuthenticationRegression();
   administrationDiagnosticRegression();
+  restoreDiagnosticRegression();
   targetTemplateRegression();
   assert.equal(globalThis.poolAttempts, 0);
   console.log(`Persistence configuration regression passed (${scenarios + 5} entrypoint failures before pool creation; migration deadline and TLS authority validated).`);
@@ -119,6 +120,16 @@ function administrationDiagnosticRegression() {
     "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED",
   ]) assert.equal(administration.administrationFailureCode(new Error(code)), code, "closed privilege-probe outcome must remain diagnostically distinct");
   assert.equal(administration.administrationFailureCode(new Error("password=synthetic-canary")), "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "unexpected provider detail must not enter a diagnostic code");
+}
+
+function restoreDiagnosticRegression() {
+  for (const [providerCode, diagnostic] of [
+    ["28P01", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED"],
+    ["42501", "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED"],
+    ["42P01", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE"],
+    ["ETIMEDOUT", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
+  ]) assert.equal(restore.restoreVerificationFailureCode({ code: providerCode }), diagnostic);
+  assert.equal(restore.restoreVerificationFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "raw provider detail must never become a diagnostic code");
 }
 
 async function rejectedBeforePool(run, env) {

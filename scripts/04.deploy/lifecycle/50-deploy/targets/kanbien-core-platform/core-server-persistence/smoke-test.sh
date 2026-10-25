@@ -58,6 +58,12 @@ with patch.object(prepare.subprocess, "run", return_value=Result()):
     assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
 with patch.object(prepare.subprocess, "run", side_effect=subprocess.TimeoutExpired(["aws"], 30)):
     assert prepare.aws("cloudformation", "describe-stacks") == (False, None, "aws-command-timeout")
+class Missing:
+    returncode = 255
+    stdout = ""
+    stderr = "An error occurred (NoSuchEntity) when calling the GetRolePolicy operation: policy cannot be found"
+with patch.object(prepare.subprocess, "run", return_value=Missing()):
+    assert prepare.aws("iam", "get-role-policy") == (False, None, "aws-resource-missing")
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py" <<'PY'
 import importlib.util, sys

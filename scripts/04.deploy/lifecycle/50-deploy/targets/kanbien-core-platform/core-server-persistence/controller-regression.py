@@ -250,6 +250,34 @@ class ControllerRegression(unittest.TestCase):
                 call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
                 self.assertEqual(result(call)[1]['verdict'],'uncertain')
 
+    def test_transition_failure_retains_allowlisted_diagnostic(self):
+        """A circuit-breaker failure survives controller reconciliation safely."""
+        module=load(DEPLOY/'transition-qualified-release/script.py')
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        digest='sha256:'+'a'*64; revision='a'*40; name='kanbien-core-platform-persistence-rollback-'+'a'*12
+        parameters=[{'ParameterKey':key,'ParameterValue':value} for key,value in {
+            'ImageDigest':digest,'SupportImageDigest':digest,
+            'RestoreVerifierImageDigest':digest,'SourceRevision':revision,
+        }.items()]
+        change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':parameters,'Changes':[{'ResourceChange':{'ResourceType':'AWS::ECS::TaskDefinition'}}]}
+        self.assertTrue(module.reviewable(change,'UPDATE_ROLLBACK_COMPLETE',name,digest,revision))
+        def response(parts):
+            if parts[1]=='describe-change-set': return True,change,'ok'
+            if parts[1]=='describe-stacks': return True,{'Stacks':[{'StackStatus':'UPDATE_ROLLBACK_COMPLETE','Parameters':parameters}]},'ok'
+            if parts[1]=='describe-stack-events': return True,{'StackEvents':[{'LogicalResourceId':'CoreServerPersistenceService','ResourceType':'AWS::ECS::Service','ResourceStatus':'UPDATE_FAILED','ResourceStatusReason':'ECS deployment circuit breaker triggered'}]},'ok'
+            raise AssertionError(f'unexpected mutation or observation: {parts}')
+        provider=Provider(response)
+        with tempfile.TemporaryDirectory() as directory, patch.object(prepare,'aws',provider.aws), patch.object(module,'DIAGNOSTIC_DIRECTORY',Path(directory)):
+            report=result(lambda:module.reconcile(prepare,name,digest,revision))[1]
+            path=Path(directory)/(name+'.json')
+            self.assertEqual(report['verdict'],'failed')
+            self.assertTrue(path.is_file())
+            saved=json.loads(path.read_text(encoding='utf-8'))
+            self.assertEqual(saved['operation_outcome'],'failed')
+            self.assertEqual(saved['facts']['resource_logical_id'],'CoreServerPersistenceService')
+            self.assertNotIn('ECS deployment circuit breaker triggered',path.read_text(encoding='utf-8'))
+        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
+
     def test_missing_executed_change_set_reconciles_through_matching_stack_only(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         expected={'ImageDigest':'sha256:'+'a'*64,'SupportImageDigest':'sha256:'+'a'*64,'RestoreVerifierImageDigest':'sha256:'+'a'*64,'SourceRevision':'a'*40}

@@ -133,6 +133,43 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
     return EVIDENCE_ROOT / succession.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml", value
 
 
+def qualified_rollback_compatibility(rollback: dict[str, str]) -> dict[str, str]:
+    """Require the separately archived proof for a qualified rollback image.
+
+    A package receipt alone says the image was qualified.  It cannot establish
+    that the image works against the corrected permission/configuration
+    boundary.  The generic succession controller owns the immutable archive;
+    this target collector only selects the one record whose exact immutable
+    identity is the supplied rollback receipt.
+    """
+    succession = succession_module()
+    directory = EVIDENCE_ROOT / succession.COMPATIBILITY_DIRECTORY
+    matches: list[tuple[Path, dict[str, Any]]] = []
+    try:
+        candidates = sorted(directory.glob("rollback-compatibility-*.yml"))
+    except OSError as error:
+        raise EvidenceFailure("acceptance-evidence-rollback-compatibility-unavailable") from error
+    for path in candidates:
+        try:
+            _, observed = succession.compatibility_record(EVIDENCE_ROOT, path.stem)
+        except succession.SuccessionFailure as error:
+            raise EvidenceFailure("acceptance-evidence-rollback-compatibility-invalid") from error
+        identity = observed["identity"]
+        predecessor = identity.get("qualified_predecessor") if isinstance(identity, dict) else None
+        if not isinstance(predecessor, dict):
+            continue
+        if predecessor.get("source_revision") == rollback["source_revision"] and predecessor.get("image_digest") == rollback["image_digest"] and predecessor.get("package_custody_reference") == rollback["receipt_reference"]:
+            matches.append((path, observed))
+    if len(matches) != 1:
+        raise EvidenceFailure("acceptance-evidence-rollback-compatibility-missing-or-ambiguous")
+    path, observed = matches[0]
+    try:
+        relative = path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError as error:
+        raise EvidenceFailure("acceptance-evidence-rollback-compatibility-invalid") from error
+    return {"id": path.stem, "path": relative, "sha256": observed["sha256"]}
+
+
 def report(verdict: str, *codes: str) -> int:
     print(json.dumps({"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)]}, sort_keys=True))
     return 0 if verdict in {"ready", "recorded"} else 1
@@ -620,6 +657,13 @@ def validate_record(record: object, *, evidence_class: str = "live") -> None:
     accepted_at = parsed_time(acceptance.get("accepted_at"))
     rollback = acceptance.get("rollback_release")
     if not isinstance(rollback, dict) or rollback.get("image_digest") == release.get("image_digest") or re.fullmatch(r"sha256:[a-f0-9]{64}", str(rollback.get("image_digest"))) is None: raise EvidenceFailure("accepted-release-rollback-identity-invalid")
+    if evidence_class == "live":
+        compatibility = acceptance.get("rollback_compatibility")
+        if not isinstance(compatibility, dict) or set(compatibility) != {"id", "path", "sha256"}:
+            raise EvidenceFailure("accepted-release-rollback-compatibility-missing")
+        expected = qualified_rollback_compatibility(rollback)
+        if compatibility != expected:
+            raise EvidenceFailure("accepted-release-rollback-compatibility-mismatch")
     proofs, database, replacement = provider.get("proofs"), provider.get("database"), provider.get("server_replacement")
     current = provider.get("current_service")
     if not all(isinstance(value, dict) for value in (proofs, database, replacement, current)): raise EvidenceFailure("accepted-release-observation-invalid")
@@ -688,6 +732,7 @@ def main() -> int:
             print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
         candidate, rollback = receipt(args.receipt), receipt(args.rollback_receipt)
         if candidate["image_digest"] == rollback["image_digest"]: raise EvidenceFailure("acceptance-evidence-rollback-identity-invalid")
+        compatibility = qualified_rollback_compatibility(rollback) if EVIDENCE_CLASS == "live" else None
         required = required_proofs(candidate, rollback)
         observed = parse_proof_receipts(args.proof_receipt, required, contract_deadlines())
         values = retained_context(args.proof_receipt, args.recovery_snapshot, args.server_replacement_original, args.server_replacement_successor)
@@ -708,7 +753,9 @@ def main() -> int:
         original = {"task_arn":task["arn"],"task_definition":task["definition"],"started_at":task["started_at"],"stopped_at":task["stopped_at"],"stopped_reason":task["stopped_reason"]}
         successor = {"task_arn":context["successor_task_arn"],"task_definition":context["runtime_task_definition"],"started_at":context["successor_started_at"],"stopped_at":None,"stopped_reason":None}
         stamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":{"accepted_at":stamp,"collector":"collect-acceptance-evidence","retained_for_restoration":True,"rollback_release":rollback},"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"server_replacement":{"original_task":original,"replacement_task":successor}}}
+        acceptance = {"accepted_at":stamp,"collector":"collect-acceptance-evidence","retained_for_restoration":True,"rollback_release":rollback}
+        if compatibility is not None: acceptance["rollback_compatibility"] = compatibility
+        record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":acceptance,"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"server_replacement":{"original_task":original,"replacement_task":successor}}}
         validate_record(record, evidence_class=EVIDENCE_CLASS)
         if args.write:
             if RECORD.exists(): raise EvidenceFailure("acceptance-evidence-record-already-exists")
