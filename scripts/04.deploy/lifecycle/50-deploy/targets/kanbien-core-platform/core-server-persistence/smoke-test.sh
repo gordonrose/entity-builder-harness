@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -44,7 +44,7 @@ import importlib.util, subprocess, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
+valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
 assert module.reviewable(valid, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable({**valid, "Changes":[{"ResourceChange":{"ResourceType":"AWS::S3::Bucket"}}]}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable(valid, "CREATE_COMPLETE", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
@@ -64,7 +64,7 @@ import importlib.util, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("route_update", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-route-update-" + "a" * 12
-change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
+change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
 assert module.route_update_reviewable(change, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 assert not module.route_update_reviewable({**change, "Changes":[{"ResourceChange":{"Action":"Modify","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 class Prepare:
@@ -98,15 +98,15 @@ assert module.DATABASE == "kanbien-core-platform-persistence"
 with patch.object(module, "aws", return_value=(True, {"Stacks": [{"StackStatus": "CREATE_COMPLETE"}]}, "ok")):
     assert module.failed_candidate_database() == (False, "persistence-failed-candidate-stack-not-retirable")
 
-with patch.object(module, "aws", return_value=(True, {"services": [{"desiredCount": 1, "runningCount": 0, "pendingCount": 0}]}, "ok")):
+with patch.object(module, "aws", return_value=(True, {"services": [{"serviceName":module.SERVICE,"serviceArn":f"arn:aws:ecs:{module.REGION}:337159794548:service/{module.CLUSTER}/{module.SERVICE}","desiredCount": 1, "runningCount": 0, "pendingCount": 0}]}, "ok")):
     assert module.no_active_service() == (False, "persistence-failed-candidate-service-still-active")
 
 database = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "PubliclyAccessible": False, "DeletionProtection": True, "DBInstanceArn": "arn:aws:rds:eu-west-1:337159794548:db:kanbien-core-platform-persistence"}]}
 with patch.object(module, "aws", side_effect=[(True, database, "ok"), (True, {"TagList": [{"Key": "Target", "Value": "staging"}]}, "ok")]):
     assert module.protected_target_database() == (False, "persistence-failed-candidate-database-target-mismatch")
 
-unlocked = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "PubliclyAccessible": False, "DeletionProtection": False}]}
-with patch.object(module, "aws", return_value=(True, unlocked, "ok")):
+unlocked = {"DBInstances": [{"DBInstanceIdentifier": module.DATABASE, "DBInstanceArn": "synthetic", "DBInstanceStatus": "available", "PubliclyAccessible": False, "DeletionProtection": False}]}
+with patch.object(module, "aws", side_effect=[(True, unlocked, "ok"), (True, {"TagList": [{"Key": "Target", "Value": "kanbien-core-platform"}]}, "ok")]):
     assert module.protected_target_database_after_unlock() == (True, "ok")
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py" <<'PY'
@@ -151,4 +151,5 @@ for group in ("ServerSecurityGroup", "MigrationSecurityGroup"):
     assert expected in template, f"{group} must permit private ECR artifact-layer retrieval"
 assert "GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup" in template, "the private verifier must have explicit egress to the candidate server"
 PY
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
 echo 'Core-server-persistence fixed target controls passed.'

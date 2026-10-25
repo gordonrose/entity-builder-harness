@@ -4,7 +4,7 @@ id: deploy.plan.local-to-proven-deployment-reliability
 version: 3
 status: draft
 created_on: "2026-09-27"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.realization
 disciplines:
@@ -32,7 +32,7 @@ completion boundary. The user terminated PostgreSQL Stage 6 and replaced the
 
 ## Confirmed decisions and completion boundary
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 is effective only after explicit adoption and approval of its concrete
 execution plan. Until then the current requirements remain effective.
 This programme's whole-estate adoption and replacement prerequisites do not

@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-migration
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-24"
+//   updated_on: "2026-10-25"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -15,25 +15,24 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { readFileSync } from "node:fs";
 import {
   createNodePostgreSqlConnectionPool,
   createPostgreSqlMigrationRunner,
   postgreSqlMigrationChecksum,
-  postgreSqlPersistenceConfiguration,
   postgreSqlPersistenceFoundationMigration,
   type PostgreSqlConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { persistenceConfiguration, persistenceCredentials, persistenceCertificateAuthority } from "./kanbien-core-server-persistence-configuration";
 import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
 import { revokeRuntimeAccess, runtimeCredentialOperation } from "./kanbien-core-server-persistence-runtime-credential";
 
 export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
-  const configuration = configurationFromEnvironment(env);
-  const credentials = credentialObject(env["PERSISTENCE_MIGRATION_CREDENTIALS"]);
-  const runtimeCredentials = credentialObject(env["PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS"]);
-  const certificateAuthority = certificateAuthorityFromEnvironment(env);
+  const configuration = persistenceConfiguration(env, "migration");
+  const credentials = persistenceCredentials(env["PERSISTENCE_MIGRATION_CREDENTIALS"]);
+  const runtimeCredentials = persistenceCredentials(env["PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS"]);
+  const certificateAuthority = persistenceCertificateAuthority(env);
   const operation = runtimeCredentialOperation(env["PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION"]);
-  if (configuration === undefined || credentials === undefined || runtimeCredentials === undefined || certificateAuthority === undefined || operation === undefined) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
+  if (configuration === undefined || credentials === undefined || runtimeCredentials === undefined || certificateAuthority === undefined || operation === undefined || credentials.username === runtimeCredentials.username) return rejected("PERSISTENCE_MIGRATION_CONFIGURATION_INVALID");
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
   let stage: "migration" | "runtime-access" = "migration";
   try {
@@ -69,7 +68,7 @@ export async function runKanbienCoreServerPersistenceMigration(env: NodeJS.Proce
  * transactions are rolled back so the proof leaves no probe data or table.
  */
 async function proveRuntimePrivilege(
-  configuration: ReturnType<typeof configurationFromEnvironment> & {},
+  configuration: ReturnType<typeof persistenceConfiguration> & {},
   credentials: { readonly username: string; readonly password: string },
   certificateAuthority: string,
 ): Promise<void> {
@@ -104,16 +103,6 @@ function providerCode(value: unknown): string | undefined {
     ? (value as { readonly code: string }).code
     : undefined;
 }
-function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
-  const host = text(env, "PERSISTENCE_POSTGRES_HOST"), database = text(env, "PERSISTENCE_POSTGRES_DATABASE"), schema = text(env, "PERSISTENCE_POSTGRES_SCHEMA"), reference = text(env, "PERSISTENCE_MIGRATION_SECRET_REFERENCE"), port = text(env, "PERSISTENCE_POSTGRES_PORT");
-  if (host === undefined || database === undefined || schema === undefined || reference === undefined || port === undefined || !/^\d+$/.test(port)) return undefined;
-  const checked = postgreSqlPersistenceConfiguration({ host, database, schema, runtimeCredentialSecretReference: reference, port: Number(port), maximumPoolSize: 1, connectionTimeoutMs: 5_000, idleTimeoutMs: 10_000, statementTimeoutMs: 240_000, tls: { mode: "verify-full", certificateAuthoritySource: "injected" } });
-  return checked.ok ? checked.value : undefined;
-}
-function certificateAuthorityFromEnvironment(env: NodeJS.ProcessEnv): string | undefined { const path = text(env, "PERSISTENCE_POSTGRES_CA_PATH"); try { return path?.startsWith("/app/assets/") ? readFileSync(path, "utf8") : undefined; } catch { return undefined; } }
-function text(env: NodeJS.ProcessEnv, key: string): string | undefined { const value = env[key]; return typeof value === "string" && value.trim() !== "" && value.trim() === value ? value : undefined; }
-function credentialObject(value: unknown): { readonly username: string; readonly password: string } | undefined { try { const parsed: unknown = typeof value === "string" ? JSON.parse(value) : undefined; if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined; const username = (parsed as { username?: unknown }).username, password = (parsed as { password?: unknown }).password; return typeof username === "string" && username.trim() !== "" && typeof password === "string" && password.length > 0 ? { username, password } : undefined; } catch { return undefined; } }
-
 /**
  * The migration credential owns database structure. It deliberately creates
  * and maintains a separate, minimally-granted runtime principal after the

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.smoke-test-core-server-persistence-image.readme
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -26,3 +26,19 @@ It does not use AWS, target secrets, target networking, or target data. A
 missing Docker engine is a failure for this command; the protected hosted image
 workflow is the required qualification route when a developer workstation lacks
 Docker.
+
+Before container qualification, the build checks every generated workspace
+export and loads the four guarded compiled entrypoints without starting them.
+The Docker build repeats import resolution against the assembled dependency
+payload, so missing external driver dependencies cannot be hidden by the
+workstation's installed packages.
+
+The local negative fixture command is:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh
+```
+
+It rejects missing wrappers, package subpath exports, the PostgreSQL driver,
+entrypoint exports, and compiled shim targets. It does not replace the
+container qualification command or published-digest custody evidence.

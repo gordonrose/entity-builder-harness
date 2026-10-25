@@ -4,7 +4,7 @@ id: deploy.plans.readme
 version: 4
 status: active
 created_on: "2026-09-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -23,7 +23,7 @@ used_by:
 -->
 # Deployment Implementation Plans
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/aws/standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 is effective only after explicit adoption and approval of its concrete
 execution plan. Until then the current requirements remain effective.
 The generic programme prerequisites below remain the default for other work.

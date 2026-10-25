@@ -1,0 +1,153 @@
+{"consumers": ["infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml", "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"], "findings": [], "inputs": ["package.json", "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence", "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml", "packages/core", "platform/contracts", "platform/config", "platform/health", "platform/observability", "platform/runtime", "platform/security", "platform/server", "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json", "infra/04.deploy/03.product/image/core-server-persistence", "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence", "platform/persistence", "platform/adapters/aws/persistence/postgresql", "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition", "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image", "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image", ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"], "references": [".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json", "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml", "infra/04.deploy/03.product/image/core-server-persistence", "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml", "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence", "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml", "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml", "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml", "package.json", "packages/core", "platform/adapters/aws/persistence/postgresql", "platform/config", "platform/contracts", "platform/health", "platform/observability", "platform/persistence", "platform/runtime", "platform/security", "platform/server", "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition", "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh", "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh", "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image", "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image", "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh", "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh", "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence", "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh", "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence", "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh", "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"], "required_checks": ["persistence-acceptance", "persistence-composition", "persistence-container", "persistence-payload-regression", "persistence-provider-regression", "persistence-target-alignment", "runnable-program", "scope-inventory"], "schema": "deploy/declaration-coverage-report/v1", "scope": "core-server-persistence", "target": "kanbien-core-platform", "verdict": "covered"}
+{"findings": [], "schema": "deploy/scope-lifecycle-inventory-report/v1", "target": "kanbien-core-platform", "verdict": "passed"}
+{"verdict":"passed","evidence_class":"local-runtime","code":"persistence-payload-imports-resolved"}
+Core-server persistence composition local runtime proof passed.
+Persistence configuration regression passed (60 entrypoint failures before pool creation; migration deadline and TLS authority validated).
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 5.32kB 0.0s done
+#1 DONE 0.1s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#2 DONE 1.8s
+
+#3 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#3 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e 0.1s done
+#3 CACHED
+
+#4 [internal] load metadata for gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
+#4 ...
+
+#5 [internal] load metadata for docker.io/library/node:22-bookworm-slim
+#5 DONE 0.8s
+
+#4 [internal] load metadata for gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
+#4 DONE 0.8s
+
+#6 [internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [stage-1 1/5] FROM gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f
+#7 resolve gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f 0.1s done
+#7 DONE 0.1s
+
+#8 [internal] load build context
+#8 transferring context: 41.45kB 0.1s done
+#8 DONE 0.1s
+
+#9 [build  1/26] FROM docker.io/library/node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d
+#9 resolve docker.io/library/node:22-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d 0.1s done
+#9 DONE 0.1s
+
+#10 [build  5/26] COPY platform/config/ ./platform/config/
+#10 CACHED
+
+#11 [build  4/26] COPY packages/core/ ./packages/core/
+#11 CACHED
+
+#12 [build 12/26] COPY platform/server/ ./platform/server/
+#12 CACHED
+
+#13 [build  3/26] COPY package.json package-lock.json ./
+#13 CACHED
+
+#14 [build  9/26] COPY platform/persistence/ ./platform/persistence/
+#14 CACHED
+
+#15 [build  2/26] WORKDIR /app
+#15 CACHED
+
+#16 [build 10/26] COPY platform/runtime/ ./platform/runtime/
+#16 CACHED
+
+#17 [build 13/26] COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
+#17 CACHED
+
+#18 [build 14/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
+#18 CACHED
+
+#19 [build  7/26] COPY platform/health/ ./platform/health/
+#19 CACHED
+
+#20 [build 11/26] COPY platform/security/ ./platform/security/
+#20 CACHED
+
+#21 [build  8/26] COPY platform/observability/ ./platform/observability/
+#21 CACHED
+
+#22 [build  6/26] COPY platform/contracts/ ./platform/contracts/
+#22 CACHED
+
+#23 [build 15/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
+#23 CACHED
+
+#24 [build 16/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
+#24 DONE 0.1s
+
+#25 [build 17/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts
+#25 DONE 0.1s
+
+#26 [build 18/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts
+#26 DONE 0.1s
+
+#27 [build 19/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
+#27 DONE 0.1s
+
+#28 [build 20/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts
+#28 DONE 0.1s
+
+#29 [build 21/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+#29 DONE 0.1s
+
+#30 [build 22/26] COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
+#30 DONE 0.1s
+
+#31 [build 23/26] COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
+#31 DONE 0.1s
+
+#32 [build 24/26] COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
+#32 DONE 0.1s
+
+#33 [build 25/26] COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs
+#33 DONE 0.1s
+
+#34 [build 26/26] RUN npm ci --ignore-scripts  && node_modules/.bin/tsc --project infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json --outDir /payload/artifacts --incremental false  && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root /payload/artifacts  && mkdir -p /payload/node_modules  && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/  && NODE_PATH=/payload/node_modules node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root /payload/artifacts
+#34 10.69
+#34 10.69 added 29 packages, and audited 50 packages in 8s
+#34 10.69
+#34 10.69 found 0 vulnerabilities
+#34 10.70 npm notice
+#34 10.70 npm notice New major version of npm available! 10.9.9 -> 12.2.1
+#34 10.70 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+#34 10.70 npm notice To update run: npm install -g npm@12.2.1
+#34 10.70 npm notice
+#34 27.91 {"verdict":"passed","evidence_class":"local-runtime","code":"persistence-payload-imports-resolved"}
+#34 DONE 28.0s
+
+#35 [stage-1 2/5] WORKDIR /app
+#35 CACHED
+
+#36 [stage-1 3/5] COPY --chown=nonroot:nonroot --from=build /payload/artifacts/ ./artifacts/
+#36 DONE 0.2s
+
+#37 [stage-1 4/5] COPY --chown=nonroot:nonroot --from=build /payload/node_modules/ ./artifacts/node_modules/
+#37 DONE 0.2s
+
+#38 [stage-1 5/5] COPY --chown=nonroot:nonroot platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt ./assets/rds-eu-west-1-bundle.crt
+#38 DONE 0.2s
+
+#39 exporting to image
+#39 exporting layers
+#39 exporting layers 0.4s done
+#39 exporting manifest sha256:944633e69962a618735f03672f579b130a8c52c240ac3ddf1c2bd61e9f630aaa 0.0s done
+#39 exporting config sha256:b91fc6997d89952430a0a5541839c834da64cb61392fc2b5214ecaf6b5a6ece4 0.0s done
+#39 exporting attestation manifest sha256:0a23346dfa9e9e0376e077bcb75c9fed44d521fce141d83a7d666bb9052a1028
+#39 exporting attestation manifest sha256:0a23346dfa9e9e0376e077bcb75c9fed44d521fce141d83a7d666bb9052a1028 0.0s done
+#39 exporting manifest list sha256:cd6d992c408f4052396097afc4f44a673b7b66fd9fd12ef7dc12e7e531c1f1c2 0.0s done
+#39 naming to docker.io/library/kanbien-core-server-persistence:scope-change-qualification done
+#39 unpacking to docker.io/library/kanbien-core-server-persistence:scope-change-qualification
+#39 unpacking to docker.io/library/kanbien-core-server-persistence:scope-change-qualification 0.4s done
+#39 DONE 1.2s
+Built local core-server persistence image: kanbien-core-server-persistence:scope-change-qualification

@@ -1,0 +1,3 @@
+WARNING: Plugin "/usr/local/lib/docker/cli-plugins/docker-sbom" is not valid: failed to fetch metadata: fork/exec /usr/local/lib/docker/cli-plugins/docker-sbom: no such file or directory
+{"verdict":"accepted","code":"PERSISTENCE_MIGRATION_APPLIED"}
+Core-server persistence image PostgreSQL/TLS/package smoke test passed.

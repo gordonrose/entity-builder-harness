@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -56,7 +56,7 @@ they are needed for repeatable operations.
 
 ## Implementation Plans
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 is effective only after explicit adoption and approval of its concrete
 execution plan. Until then the current requirements remain effective.
 That conditional route governs the named slice instead of the replacement
@@ -88,3 +88,7 @@ safety reason. Prefer deterministic scripts for repeatable AWS checks.
 Use an AWS ADR for durable decisions about environment shape, resource
 ownership, deployment targets, access boundaries, operational conventions, or
 infrastructure tradeoffs.
+
+## Provider Applicability
+
+The [operational realization applicability standard](standards/operational-realization-applicability.md) owns the existing operation-specific exception. Generic proof authority is the [deployment realization standard](../04.deploy/standards/operational-realization-gate.md); shared completion principles are [owned by 06.shared](../shared/standards/require-change-completion.md).

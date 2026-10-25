@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.command.build-core-server-persistence-image.prepare-runtime
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-23"
+//   updated_on: "2026-10-25"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [architecture, security, sre]
@@ -19,13 +19,9 @@
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path, { join, relative } from "node:path";
+import { runtimeEntrypoints, wrapperSource } from "./runtime-contract.mjs";
 const compiledRoot = parseCompiledRoot(process.argv.slice(2));
-for (const entrypoint of [
-  "kanbien-core-server-persistence.main.js",
-  "kanbien-core-server-persistence-verifier.main.js",
-  "kanbien-core-server-persistence-migration.main.js",
-  "kanbien-core-server-persistence-restore-verifier.main.js",
-]) {
+for (const entrypoint of Object.keys(runtimeEntrypoints).map((entry) => `${entry}.js`)) {
   const compiledEntrypoint = join(compiledRoot, "infra/04.deploy/03.product/entrypoints", entrypoint);
   if (!existsSync(compiledEntrypoint)) throw new Error(`Required compiled entrypoint is missing: ${entrypoint}`);
 }
@@ -42,23 +38,17 @@ const packages = {
   "@kanbien/platform-security": { ".": "platform/security/src/index.js" },
   "@kanbien/platform-server": { ".": "platform/server/src/index.js", "./main": "platform/server/src/main.js" },
 };
+// Check compiled exports before writing any shim.
+for (const exportsMap of Object.values(packages)) {
+  for (const target of Object.values(exportsMap)) {
+    if (!existsSync(join(compiledRoot, target))) throw new Error("Required compiled package export is missing.");
+  }
+}
 for (const [name, exportsMap] of Object.entries(packages)) writePackageShim(name, exportsMap);
-writeFileSync(join(compiledRoot, "kanbien-core-server-persistence.main.js"), [
-  'const { runKanbienCoreServerPersistenceMain } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.js");',
-  "void runKanbienCoreServerPersistenceMain().catch(() => { process.exitCode = 1; });", "",
-].join("\n"));
-writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-verifier.main.js"), [
-  'const { runKanbienCoreServerPersistenceVerifier } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.js");',
-  "void runKanbienCoreServerPersistenceVerifier().catch(() => { process.exitCode = 1; });", "",
-].join("\n"));
-writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-migration.main.js"), [
-  'const { runKanbienCoreServerPersistenceMigration } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.js");',
-  "void runKanbienCoreServerPersistenceMigration().catch(() => { process.exitCode = 1; });", "",
-].join("\n"));
-writeFileSync(join(compiledRoot, "kanbien-core-server-persistence-restore-verifier.main.js"), [
-  'const { runKanbienCoreServerPersistenceRestoreVerifier } = require("./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.js");',
-  "void runKanbienCoreServerPersistenceRestoreVerifier();",
-].join("\n"));
+writeFileSync(join(compiledRoot, "runtime-payload.json"), JSON.stringify({ required_imports: Object.entries(packages).flatMap(([name, exportsMap]) => Object.keys(exportsMap).map((key) => `${name}${key === "." ? "" : key.slice(1)}`)) }));
+for (const [entry, exported] of Object.entries(runtimeEntrypoints)) {
+  writeFileSync(join(compiledRoot, `${entry}.js`), wrapperSource(entry, exported));
+}
 function parseCompiledRoot(args) { if (args.length !== 2 || args[0] !== "--compiled-root" || args[1].length === 0) throw new Error("Usage: prepare-runtime.mjs --compiled-root <compiled-output-directory>"); return args[1]; }
 function writePackageShim(packageName, exportsMap) {
   const packageRoot = join(compiledRoot, "node_modules", ...packageName.split("/")); const packageExports = {};

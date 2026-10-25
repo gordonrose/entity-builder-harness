@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 04.deploy
   domain: infra.ci-cd
   disciplines:
@@ -45,7 +45,7 @@ Before running a mutating command, confirm:
 - Stop and ask again before destructive actions such as deleting resources,
   replacing persistent storage, revoking access broadly, or changing DNS in a
   way that could interrupt service. For an explicitly adopted and approved
-  [bounded PostgreSQL Stage 6 route](../../01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability),
+  [bounded PostgreSQL Stage 6 route](../standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability),
   positively owned disposable-restore cleanup expressly included in that
   approval uses its recovery allowance without asking again. Deleting the
   source database, backups or unrelated resources remains outside that scope.

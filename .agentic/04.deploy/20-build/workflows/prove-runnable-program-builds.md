@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.runnable-program-candidates
-version: 2
+version: 3
 status: active
 created_on: "2026-10-19"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -25,6 +25,9 @@ used_by:
   path: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
 -->
 # Prove Runnable Program Builds
+
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
 
 ## Use when
 

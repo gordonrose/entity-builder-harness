@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.script.commit-gates
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-07-04"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines:
@@ -19,6 +19,7 @@ set -euo pipefail
 #     targets: []
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: chat.script.session-log.prepare-chat-session-before-commit
 #     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh
@@ -28,18 +29,17 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
-run_if_executable() {
-  local path="$1"
-  shift
-
-  if [ -x "$path" ]; then
-    bash "$path" "$@"
+# Portable chat preparation already enforces deterministic process drift,
+# staged headers and governed command drift. Keep those checks at their owner.
+# The repository extension adds inventory coverage and focused implementation
+# verification once, and a required missing command is a failure.
+for required in scripts/01.harness/artifact-metadata/generate-index/script.sh scripts/repo/check-selection/script.sh; do
+  if [ ! -f "$required" ]; then
+    echo "ERROR: required repository gate is missing: $required" >&2
+    exit 1
   fi
-}
-
-run_if_executable "scripts/01.harness/check-deterministic-process-drift.sh" --staged
-run_if_executable "scripts/01.harness/artifact-metadata/check-headers/script.sh" --staged
-run_if_executable "scripts/01.harness/artifact-metadata/generate-index/script.sh" --all --strict --check-coverage > /dev/null
-run_if_executable "scripts/01.harness/check-governed-script-command-drift.sh"
+done
+bash scripts/01.harness/artifact-metadata/generate-index/script.sh --all --strict --check-coverage > /dev/null
+bash scripts/repo/check-selection/script.sh --staged --execute-local --json
 
 echo "Repository commit extension gates passed."

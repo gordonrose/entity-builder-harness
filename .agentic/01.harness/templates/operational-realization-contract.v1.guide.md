@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: harness.guide.operational-realization-contract.v1
-  version: 3
+  version: 4
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 01.harness
   domain: deployment.realization
   disciplines:
@@ -20,8 +20,8 @@
   used_by:
   - id: harness.schema.operational-realization-contract.v1
     path: .agentic/01.harness/templates/operational-realization-contract.v1.schema.yml
-  - id: harness.workflow.operational-realization-gate
-    path: .agentic/01.harness/workflows/operational-realization-gate.md
+  - id: deploy.workflow.operational-realization-gate
+    path: .agentic/04.deploy/workflows/operational-realization-gate.md
 -->
 # Operational Realization Contract v1 Guide
 
@@ -83,12 +83,10 @@ turning the generic contract into a provider-resource document.
 
 ## How to use it
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
-is effective only after explicit adoption and approval of its concrete
-execution plan. Until then the current requirements remain effective.
-Once effective, its operation matrix replaces mandatory creation of a new
-whole-route contract before proposing that slice. This guide remains binding
-whenever the normal generic contract/compiler route is used.
+The [deployment proof standard](../../04.deploy/standards/operational-realization-gate.md)
+owns this contract's semantics and resolves applicable provider-owned exceptions.
+This schema, guide and template retain their existing paths and IDs for
+compatibility; their location does not create separate harness proof authority.
 
 1. Copy the template and replace every placeholder with stable,
    provider-neutral identifiers.

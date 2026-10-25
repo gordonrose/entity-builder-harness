@@ -1,0 +1,147 @@
+Create a tracked Goal for the objective below, or continue the existing Goal if it already covers this work. Continue through implementation, verification and merge to main. Do not stop at a plan, intermediate commit or passing individual suite.
+
+GOAL
+
+Complete all six corrective findings from the review of:
+
+/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114
+
+The outcome must be a reusable harness that detects predictable integration failures before deployment, preserves completed evidence, selects the correct affected checks and avoids unnecessary repetition. Integrate the completed work into main.
+
+AUTHORISATION AND BOUNDARIES
+
+I authorise:
+- Continuing the existing in-scope uncommitted work.
+- Local implementation, fixtures, applicable tests and container qualification.
+- Integrating current main into the working branch.
+- Necessary checkpoint commits, conflict resolution and final merge to main.
+
+Do not request routine reapproval for those actions. Preserve unrelated work and follow the recorded session/worktree ownership.
+
+This is repository and verification work. Do not perform live cloud mutations, secret operations, image publication or deployment as part of this Goal. Use controlled fixtures and existing non-secret evidence for provider-boundary tests.
+
+FIRST: RECONCILE WITH ACCEPTED MAIN
+
+This worktree began at 95b850d9, before the final persistence corrections. Reconcile its changes with current main while preserving both sets of improvements.
+
+In particular, retain:
+- Durable per-proof receipts and acceptance using retained evidence.
+- Historical task-definition validation against the qualified image.
+- Server-replacement predecessor/successor receipts.
+- Recovery snapshot suffix support.
+- Revocation-result validation, including the SQL result alias.
+- Accepted persistence evidence and lifecycle ownership.
+
+Verify the combined implementation. Separate green results from the two branches do not establish that their integration works.
+
+REQUIRED CORRECTIONS
+
+1. Harness changes must select their executable consumers.
+
+Fix scripts/repo/check-selection/script.py and its catalogue so authoritative schemas/contracts cannot be exempted merely because they live under .agentic/.
+
+Repository check selection must follow discovered consumer relationships, including changes that affect a checker indirectly. Include those dependencies in evidence fingerprints.
+
+Reproduce and fix:
+  change-impact.v1.schema.yml changed
+  → selector reports passed with zero checks.
+
+A schema with no valid verification mapping must produce an explicit gap. Ordinary prose-only changes should retain proportionate verification.
+
+2. Proof checks must match the capability they claim to verify.
+
+Strengthen declaration coverage and check applicability.
+
+Checks must be bound to the intended program, image, scope or supported generic capability. Require the program’s declared integration proof to be represented in the selected verification.
+
+Reproduce and reject:
+  persistence scope
+  → bootstrap package/deploy/acceptance checks
+  → persistence integration proof omitted
+  → coverage reports covered.
+
+Support reuse through explicit contracts and parameters, rather than hardcoded target exceptions.
+
+3. Controllers must accept valid provider response shapes.
+
+Correct the migration, verifier and restore checks that require the overrides object to contain exactly containerOverrides.
+
+Actual saved ECS responses also contain harmless defaults such as:
+  inferenceAcceleratorOverrides: []
+
+Normalize explicitly permitted defaults while preserving strict checks on consequential command, identity, environment and resource overrides.
+
+Use sanitized captured provider responses alongside negative fixtures. Prove legitimate responses pass and meaningful mismatches fail. Keep pending, failed and uncertain outcomes distinct, and preserve exact-operation reconciliation.
+
+4. Establish the complete acceptance route before deployment.
+
+Repair catalogue commands with missing required arguments, including the persistence verifier’s missing mode.
+
+Connect the complete applicable proof sequence, collectors, accepted-release schema, validation gates and lifecycle promotion. A single successful verifier must not stand in for complete scope acceptance.
+
+Add an offline rehearsal that exercises:
+  resolved command/input contracts
+  → controlled provider observations
+  → retained proof receipts
+  → accepted-release writing and validation
+  → lifecycle promotion and downstream gates.
+
+Missing arguments, collectors, schemas or incompatible bindings must fail before publication or deployment.
+
+Keep simulated evidence explicitly distinguishable from genuine live evidence. Offline tests must never manufacture production acceptance.
+
+5. Reject unsuitable recovery points before provisioning a restore.
+
+Preserve main’s bounded snapshot suffix support.
+
+Bind the recovery point to the intended source, retained record and rehearsal. Verify that the known committed record precedes the recovery point before starting an expensive restore.
+
+Add a regression for:
+  earlier same-day snapshot
+  → later acceptance record
+  → restore request.
+
+Reject invalid ordering before any provider mutation. Valid same-day follow-up snapshots and exact-operation reconciliation must remain supported.
+
+6. Make local evidence reuse work in the ordinary verification route.
+
+Connect normal preparation/commit verification to retained local-check reports.
+
+Reuse only when the complete relevant inputs, dependencies, commands, toolchain/configuration where applicable, stage and evidence class match. Record source revision as provenance; an unrelated commit alone should not invalidate otherwise identical local proof.
+
+Changed relevant inputs must invalidate reuse. Failed, incomplete or untrusted reports must not qualify.
+
+Do not extend this cache into a substitute for current-state observations or the package/live stages’ own custody and evidence rules.
+
+VERIFICATION AND COMPLETION
+
+Use focused regression tests for each reproduced failure, followed by the required combined checks. Include malformed-input cases that return structured failures rather than tracebacks.
+
+Demonstrate reuse with a second synthetic dependency-bearing scope using the same generic machinery. Its missing or incorrectly bound checks must fail without adding a target-specific exception.
+
+Also prove:
+- Historical receipts remain usable when ECS no longer returns stopped tasks.
+- Current health, deployed identity and cleanup still receive fresh observations at their owning stage.
+- Interrupted operations reconcile without duplicate mutations.
+- Unchanged local checks are reused through the normal workflow.
+- Relevant changes invalidate that reuse.
+- The combined acceptance route works after integration with current main.
+
+Keep changes within the existing owners. Update contracts, scripts, fixtures, workflow instructions and metadata together. Do not expand this into a general repository reorganisation or new evidence-storage platform.
+
+After verification:
+- Review the complete diff for accidental losses or unrelated changes.
+- Commit the corrections and required session evidence.
+- Reconcile any newer main changes and rerun affected checks.
+- Merge into main through the governed route.
+- Confirm the merged commits and worktree state.
+
+Mark the Goal complete only when all six findings are resolved, their regressions pass, the integrated acceptance route is verified, and the changes are merged into main.
+
+Report progress as:
+- Findings resolved and remaining.
+- Checks actually executed and their outcomes.
+- Any specific blocker.
+- Integration status.
+
+Do not use percentage estimates or describe planned verification as completed proof. In the final report, give the merged commit IDs, evidence for each correction and any remaining limitations.

@@ -1,0 +1,182 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: repo.check-selection.catalog
+#   version: 1
+#   status: active
+#   created_on: "2026-10-24"
+#   updated_on: "2026-10-25"
+#   layer: 06.shared
+#   domain: validation
+#   disciplines: [agentic, security, sre]
+#   kind: configuration
+#   purpose: Bind stable verification identities to existing commands, effects, evidence classes and stage boundaries.
+#   portability: { class: source-only, targets: [] }
+#   used_by:
+#   - id: repo.command.check-selection
+#     path: scripts/repo/check-selection/script.sh
+schema: repo/check-catalog/v1
+checks:
+  scope-inventory:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+    - --target-root
+    - '{target_root}'
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.validate-active-workload-health-recovery
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+  runnable-program:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
+    - --contract
+    - '{program_contract}'
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.runnable-program-contract
+  core-dependency-boundary:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-dependency-boundary
+  persistence-composition:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-persistence-composition
+  persistence-provider-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
+  persistence-container:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh
+    stage: package
+    evidence_class: container-qualification
+    effects:
+    - network
+    - writes-files
+    owner: deploy.command.smoke-test-core-server-persistence-image
+  bootstrap-container:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+    stage: package
+    evidence_class: container-qualification
+    effects:
+    - network
+    - writes-files
+    owner: deploy.command.smoke-test-core-server-image
+  persistence-target-alignment:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh
+    stage: deploy
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.command.kanbien-core-platform.prepare-core-server-persistence-candidate
+  bootstrap-target-alignment:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh
+    stage: deploy
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.command.kanbien-core-platform.prepare-candidate
+  persistence-acceptance:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - aws-mutation
+    owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
+  bootstrap-acceptance:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - aws-mutation
+    owner: deploy.command.kanbien-core-platform.verify-candidate
+  check-selection-regression:
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+  persistence-payload-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-persistence-image-payload-fixture
+  artifact-placement-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.test.validate-artifact-placement
+  operational-realization-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/operational-realization-gate/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.test.operational-realization-gate
+repository_inputs:
+- inputs:
+  - scripts/repo/check-selection
+  - scripts/repo/commit-gates
+  - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+  - scripts/00.chat/session-log/prepare-chat-session-before-commit
+  checks:
+  - check-selection-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement
+  checks:
+  - artifact-placement-regression
+- inputs:
+  - scripts/04.deploy/operational-realization-gate
+  checks:
+  - operational-realization-regression

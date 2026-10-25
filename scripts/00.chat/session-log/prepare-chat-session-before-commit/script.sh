@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: chat.script.session-log.prepare-chat-session-before-commit
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-15"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 00.chat
 #   domain: session-log
 #   disciplines:
@@ -23,6 +23,7 @@ set -euo pipefail
 #     path: scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md
 #   effects:
 #   - read-only
+#   - writes-files
 
 # shellcheck source=../paths/lib.sh
 source "scripts/00.chat/session-log/paths/lib.sh"

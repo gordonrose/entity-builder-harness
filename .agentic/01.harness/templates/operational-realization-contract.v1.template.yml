@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 01.harness
 #   domain: deployment.realization
 #   disciplines:
@@ -18,8 +18,8 @@
 #     targets:
 #     - entity-builder
 #   used_by:
-#   - id: harness.workflow.operational-realization-gate
-#     path: .agentic/01.harness/workflows/operational-realization-gate.md
+#   - id: deploy.workflow.operational-realization-gate
+#     path: .agentic/04.deploy/workflows/operational-realization-gate.md
 schema: operational-realization-contract/v1
 id: replace-with-stable-capability-id
 version: 1

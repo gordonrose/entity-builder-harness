@@ -4,7 +4,7 @@ id: deploy.plan.operational-realization-v2-programme
 version: 3
 status: active
 created_on: "2026-09-27"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.realization
 disciplines:
@@ -25,7 +25,7 @@ used_by:
 
 ## Objective
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../../.agentic/aws/standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 is effective only after explicit adoption and approval of its concrete
 execution plan. Until then the current requirements remain effective.
 Once effective, it qualifies this programme's full-graph-first and blanket

@@ -40,19 +40,22 @@ def controls(m):
 def correct(restored,src,group):
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]; a=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; b=restored.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(restored.get("DBSubnetGroup"),dict) else None
  return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b
-def restore(m,sid,rid):
+def restore(m,sid,rid,observe_only=False):
  src,c=source(m); point,pc=snapshot(m,sid); ctl,cc=controls(m)
  if src is None:return emit("blocked",c)
  if point is None or point.get("Status")!="available" or point.get("Encrypted") is not True or point.get("DBInstanceIdentifier")!=DATABASE:return emit("blocked",pc if point is None else "persistence-recovery-point-invalid")
  if ctl is None:return emit("blocked",cc)
  value,status=db(m,rid)
  if value is None:
-  if status!="aws-resource-missing":return emit("blocked",status)
+  if status!="aws-resource-missing":return emit("uncertain",status)
+  if observe_only:return emit("uncertain","persistence-restore-operation-not-observed",facts={"snapshot":sid,"restored_database":rid})
   subnet=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; cls=src.get("DBInstanceClass")
   if not isinstance(subnet,str) or not isinstance(cls,str):return emit("blocked","persistence-restore-source-shape-invalid")
   ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--copy-tags-to-snapshot","--tags","Key=Target,Value=kanbien-core-platform","Key=Purpose,Value=isolated-persistence-restore-rehearsal")
-  return emit("blocked","persistence-restore-submitted-awaiting-provider-observation",facts={"snapshot":sid,"restored_database":rid}) if ok else emit("blocked",c)
- if value.get("DBInstanceStatus")!="available":return emit("blocked","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
+  return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid})
+ if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring"}:return emit("pending","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
+ if value.get("DBInstanceStatus") in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts={"snapshot":sid,"restored_database":rid})
+ if value.get("DBInstanceStatus")!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts={"snapshot":sid,"restored_database":rid})
  return emit("restored","persistence-restored-database-ready",facts={"snapshot":sid,"restored_database":rid}) if correct(value,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]) else emit("blocked","persistence-restored-database-posture-invalid")
 def task_def_valid(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None
@@ -65,28 +68,42 @@ def task_def_valid(m,arn):
 def task_duration(task):
  try:
   a=datetime.fromisoformat(task["startedAt"].replace("Z","+00:00")); b=datetime.fromisoformat(task["stoppedAt"].replace("Z","+00:00")); return int((b-a).total_seconds()) if b>=a else None
- except (KeyError,ValueError,TypeError):return None
+ except (KeyError,ValueError,TypeError,OverflowError):return None
 def accepted_log(m,arn):
- tid=arn.rsplit("/",1)[-1]; ok,d,_=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head"); xs=d.get("events") if ok and isinstance(d,dict) else []
- return isinstance(xs,list) and any(isinstance(x,dict) and isinstance(x.get("message"),str) and '"verdict":"accepted"' in x["message"] and '"code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"' in x["message"] for x in xs)
-def verifier_tasks(m,started):
- # ECS defaults list-tasks to RUNNING.  A recovery verifier normally has
- # already stopped by the time its controller reconciles, so consult both
- # states before deciding whether a new task is allowed.
- arns=[]
- for desired in ("RUNNING","STOPPED"):
-  ok,d,c=m.aws("ecs","list-tasks","--cluster",CLUSTER,"--started-by",started,"--desired-status",desired); xs=d.get("taskArns") if ok and isinstance(d,dict) else None
-  if not isinstance(xs,list):return None,c
-  if not all(isinstance(x,str) for x in xs):return None,"persistence-restoration-verifier-task-list-invalid"
-  arns.extend(xs)
- return list(dict.fromkeys(arns)),"ok"
+ tid=arn.rsplit("/",1)[-1]; ok,d,c=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head"); xs=d.get("events") if ok and isinstance(d,dict) else None
+ if not isinstance(xs,list):return "uncertain"
+ for event in xs:
+  try:value=json.loads(event.get("message", "")) if isinstance(event,dict) else None
+  except (json.JSONDecodeError,TypeError):continue
+  if isinstance(value,dict) and value.get("verdict")=="accepted" and value.get("code")=="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED":return "accepted"
+ return "pending"
+def verifier_tasks(m,operation,definition):
+ arns = []
+ family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
+ for state in ("RUNNING", "STOPPED"):
+     # AWS forbids combining startedBy with another ListTasks filter.
+     ok, listed, code = m.aws("ecs", "list-tasks", "--cluster", CLUSTER, "--family", family, "--desired-status", state)
+     values = listed.get("taskArns") if ok and isinstance(listed, dict) else None
+     if not isinstance(values, list) or listed.get("nextToken") or not all(isinstance(value, str) for value in values):
+         return None, "persistence-restoration-verifier-observation-uncertain"
+     arns.extend(values)
+ arns = list(dict.fromkeys(arns))
+ matching = []
+ for offset in range(0, len(arns), 100):
+     batch = arns[offset:offset + 100]
+     ok, described, code = m.aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", *batch)
+     tasks = described.get("tasks") if ok and isinstance(described, dict) else None
+     if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or {task.get("taskArn") for task in tasks if isinstance(task, dict)} != set(batch):
+         return None, "persistence-restoration-verifier-observation-uncertain"
+     matching.extend(task["taskArn"] for task in tasks if task.get("startedBy") == operation)
+ return matching,"ok"
 def restore_run_identity(restored):
  # A snapshot can be restored more than once.  The ECS started-by value must
  # identify this particular isolated database incarnation, not merely the
  # snapshot date, otherwise historical verifier tasks block a clean rerun.
  resource=restored.get("DbiResourceId") if isinstance(restored,dict) else None
  return f"kanbien-restore-{hashlib.sha256(resource.encode()).hexdigest()[:16]}" if isinstance(resource,str) and resource else None
-def verify(m,sid,rid):
+def verify(m,sid,rid,observe_only=False):
  src,c=source(m); ctl,cc=controls(m); restored,rc=db(m,rid)
  if src is None:return emit("blocked",c)
  if ctl is None:return emit("blocked",cc)
@@ -95,19 +112,31 @@ def verify(m,sid,rid):
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
  started=restore_run_identity(restored)
  if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
- arns,c=verifier_tasks(m,started)
- if arns is None:return emit("blocked",c)
+ arns,c=verifier_tasks(m,started,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
+ if arns is None:return emit("uncertain",c)
  if arns:
   ok,d,c=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*arns); xs=[x for x in d.get("tasks",[]) if isinstance(x,dict) and x.get("taskDefinitionArn")==td] if ok and isinstance(d,dict) else []
-  if len(xs)!=1:return emit("blocked","persistence-restoration-verifier-task-identity-ambiguous")
+  if len(arns)!=1 or len(xs)!=1 or d.get("failures"):return emit("uncertain","persistence-restoration-verifier-task-identity-ambiguous")
   t=xs[0]
-  if t.get("lastStatus")!="STOPPED":return emit("blocked","persistence-restoration-verifier-still-running")
+  facts={"snapshot":sid,"restored_database":rid,"operation_id":started}
+  if t.get("taskArn")!=arns[0] or t.get("startedBy")!=started:return emit("blocked","persistence-restoration-verifier-task-binding-invalid",facts=facts)
+  overrides=t.get("overrides",{}).get("containerOverrides",[]) if isinstance(t.get("overrides"),dict) and set(t["overrides"])=={"containerOverrides"} else []
+  expected_env={"PERSISTENCE_POSTGRES_HOST":endpoint,"PERSISTENCE_ACCEPTANCE_RECORD_ID":RECORD_ID,"PERSISTENCE_ACCEPTANCE_FACT_DIGEST":FACT_DIGEST}
+  actual_env={x.get("name"):x.get("value") for x in overrides[0].get("environment",[]) if isinstance(x,dict)} if len(overrides)==1 and isinstance(overrides[0],dict) and overrides[0].get("name")=="persistence-restoration-verifier" else {}
+  if actual_env!=expected_env or len(overrides[0].get("environment",[]))!=len(expected_env) or set(overrides[0])!={"name","environment"}:return emit("blocked","persistence-restoration-verifier-task-binding-invalid",facts=facts)
+  if t.get("lastStatus") in {"PROVISIONING","PENDING","ACTIVATING","RUNNING","DEACTIVATING","STOPPING","DEPROVISIONING"}:return emit("pending","persistence-restoration-verifier-still-running",facts=facts)
+  if t.get("lastStatus")!="STOPPED":return emit("uncertain","persistence-restoration-verifier-status-unknown",facts=facts)
   containers=t.get("containers"); exit_code=containers[0].get("exitCode") if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None; duration=task_duration(t); arn=t.get("taskArn")
-  return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={"snapshot":sid,"restored_database":rid,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration}) if type(exit_code) is int and exit_code==0 and duration is not None and duration<=DEADLINE and isinstance(arn,str) and accepted_log(m,arn) else emit("blocked","persistence-restoration-verifier-completion-invalid")
+  if type(exit_code) is not int or duration is None or not isinstance(arn,str):return emit("uncertain","persistence-restoration-verifier-completion-evidence-unavailable",facts=facts)
+  if exit_code!=0 or duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
+  evidence=accepted_log(m,arn)
+  if evidence!="accepted":return emit(evidence,"persistence-restoration-verifier-log-evidence-unavailable",facts=facts)
+  return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={**facts,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration})
+ if observe_only:return emit("uncertain","persistence-restoration-verifier-operation-not-observed",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
- ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--network-configuration",net,"--overrides",overrides)
- return emit("blocked","persistence-restoration-verifier-submitted-awaiting-provider-observation",facts={"snapshot":sid,"restored_database":rid}) if ok else emit("blocked",c)
-def cleanup(m,sid,rid):
+ ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
+ return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+def cleanup(m,sid,rid,observe_only=False):
  if not m.live_budget()[0]:return emit("blocked","target-budget-live-configuration-invalid")
  restored,c=db(m,rid)
  if restored is None:return emit("cleaned-up","persistence-restored-database-absent",facts={"snapshot":sid,"restored_database":rid}) if c=="aws-resource-missing" else emit("blocked",c)
@@ -115,10 +144,21 @@ def cleanup(m,sid,rid):
  if ctl is None:return emit("blocked",cc)
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]
  if attached!=[ctl["PersistenceRestoredDatabaseSecurityGroupId"]] or restored.get("PubliclyAccessible") is not False:return emit("blocked","persistence-restored-database-cleanup-target-invalid")
+ if restored.get("DBInstanceStatus")=="deleting":return emit("pending","persistence-restored-database-deletion-pending",facts={"snapshot":sid,"restored_database":rid})
+ if observe_only:return emit("uncertain","persistence-restored-database-deletion-not-observed",facts={"snapshot":sid,"restored_database":rid})
+ started=restore_run_identity(restored)
+ if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
+ tasks,code=verifier_tasks(m,started,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
+ if tasks is None:return emit("uncertain",code)
+ if tasks:
+  ok,described,code=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*tasks)
+  listed=described.get("tasks") if ok and isinstance(described,dict) else None
+  if not isinstance(listed,list) or len(listed)!=len(tasks) or described.get("failures"):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain")
+  if any(not isinstance(task,dict) or task.get("lastStatus")!="STOPPED" for task in listed):return emit("pending","persistence-restore-cleanup-verifier-still-running")
  ok,_,c=m.aws("rds","delete-db-instance","--db-instance-identifier",rid,"--skip-final-snapshot")
- return emit("blocked","persistence-restored-database-deletion-submitted",facts={"snapshot":sid,"restored_database":rid}) if ok else emit("blocked",c)
+ return emit("pending" if ok else "uncertain","persistence-restored-database-deletion-submitted" if ok else c,facts={"snapshot":sid,"restored_database":rid})
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--operation");p.add_argument("--snapshot-id");p.add_argument("--json",action="store_true");a,u=p.parse_known_args();rid=restore_id(a.snapshot_id) if isinstance(a.snapshot_id,str) else None
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--operation");p.add_argument("--snapshot-id");p.add_argument("--json",action="store_true");p.add_argument("--observe-only",action="store_true");a,u=p.parse_known_args();rid=restore_id(a.snapshot_id) if isinstance(a.snapshot_id,str) else None
  if u or a.operation not in {"restore","verify","cleanup"} or rid is None:return emit("blocked","persistence-isolated-restore-arguments-invalid")
- m=load();return restore(m,a.snapshot_id,rid) if a.operation=="restore" else verify(m,a.snapshot_id,rid) if a.operation=="verify" else cleanup(m,a.snapshot_id,rid)
+ m=load();return restore(m,a.snapshot_id,rid,a.observe_only) if a.operation=="restore" else verify(m,a.snapshot_id,rid,a.observe_only) if a.operation=="verify" else cleanup(m,a.snapshot_id,rid,a.observe_only)
 if __name__=="__main__":raise SystemExit(main())

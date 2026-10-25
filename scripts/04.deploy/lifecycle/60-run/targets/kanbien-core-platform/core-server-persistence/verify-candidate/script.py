@@ -8,6 +8,8 @@ import os
 import subprocess
 import sys
 import time
+import uuid
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -48,11 +50,11 @@ def aws(*parts: str):
         return False, None, "aws-response-invalid"
 
 
-def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
+def report(verdict: str, *codes: str, facts: dict[str, object] | None = None, stream=None) -> int:
     value: dict[str, object] = {"schema": "deploy/private-persistence-verification-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts:
         value["facts"] = facts
-    print(json.dumps(value, sort_keys=True))
+    print(json.dumps(value, sort_keys=True), file=stream or sys.stdout)
     return 0 if verdict == "accepted" else 1
 
 
@@ -114,7 +116,7 @@ def log_accepted(task: dict[str, object], expected: str) -> tuple[bool, str]:
     if not ok:
         return False, code
     messages = [event.get("message") for event in events.get("events", []) if isinstance(event, dict)] if isinstance(events, dict) else []
-    return (True, "ok") if any(isinstance(message, str) and '"verdict":"accepted"' in message and f'"code":"{expected}"' in message for message in messages) else (False, "private-persistence-verifier-evidence-mismatch")
+    return (True, "ok") if any(accepted_message(message, expected) for message in messages) else (False, "private-persistence-verifier-evidence-mismatch")
 
 
 def no_direct_database_credential(task_definition: str) -> bool:
@@ -130,17 +132,64 @@ def no_direct_database_credential(task_definition: str) -> bool:
     return not container.get("secrets") and not any(isinstance(name, str) and name.startswith("PERSISTENCE_POSTGRES") for name in names)
 
 
+def accepted_message(message: object, expected: str) -> bool:
+    try:
+        value = json.loads(message) if isinstance(message, str) else None
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
+
+
+def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
+    arns = []
+    family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
+    for state in ("RUNNING", "STOPPED"):
+        # AWS forbids combining startedBy with another ListTasks filter.
+        ok, listed, code = aws("ecs", "list-tasks", "--cluster", CLUSTER, "--family", family, "--desired-status", state)
+        values = listed.get("taskArns") if ok and isinstance(listed, dict) else None
+        if not isinstance(values, list) or listed.get("nextToken") or not all(isinstance(value, str) for value in values):
+            return None, "private-persistence-verifier-observation-uncertain"
+        arns.extend(values)
+    arns = list(dict.fromkeys(arns))
+    matching = []
+    for offset in range(0, len(arns), 100):
+        batch = arns[offset:offset + 100]
+        ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", *batch)
+        tasks = described.get("tasks") if ok and isinstance(described, dict) else None
+        if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or {task.get("taskArn") for task in tasks if isinstance(task, dict)} != set(batch):
+            return None, "private-persistence-verifier-observation-uncertain"
+        matching.extend(task["taskArn"] for task in tasks if task.get("startedBy") == operation)
+    return (matching[0], "ok") if len(matching) == 1 else (None, "private-persistence-verifier-task-identity-unresolved")
+
+
+def task_operation_bound(task: dict, mode: str) -> bool:
+    overrides = task.get("overrides")
+    containers = overrides.get("containerOverrides") if isinstance(overrides, dict) and set(overrides) == {"containerOverrides"} else None
+    if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict):
+        return False
+    container = containers[0]
+    expected = {"PERSISTENCE_VERIFIER_MODE": mode, "PERSISTENCE_ACCEPTANCE_RECORD_ID": RECORD_ID, "PERSISTENCE_ACCEPTANCE_FACT": FACT}
+    environment = container.get("environment")
+    if container.get("name") != "private-persistence-verifier" or set(container) - {"name", "environment"} or not isinstance(environment, list) or len(environment) != len(expected):
+        return False
+    return all(isinstance(item, dict) and set(item) == {"name", "value"} for item in environment) and {item["name"]: item["value"] for item in environment} == expected
+
+
 def accepted_completion(task: dict[str, object], seconds: int, mode: str) -> int:
+    facts = {"verifier_task": task.get("taskArn"), "operation_id": task.get("startedBy")}
     observed_duration = duration(task)
     if observed_duration is None:
-        return report("blocked", "private-persistence-verifier-duration-unavailable")
+        return report("uncertain", "private-persistence-verifier-duration-unavailable", facts=facts)
     if observed_duration > seconds:
-        return report("blocked", "private-persistence-verifier-completion-deadline-exceeded")
+        return report("failed", "private-persistence-verifier-completion-deadline-exceeded", facts=facts)
+    containers = task.get("containers")
+    if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or type(containers[0].get("exitCode")) is not int:
+        return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     if not exited_zero(task):
-        return report("blocked", "private-persistence-verifier-unsuccessful-completion")
+        return report("failed", "private-persistence-verifier-unsuccessful-completion", facts=facts)
     accepted, code = log_accepted(task, SUCCESS[mode])
     if not accepted:
-        return report("blocked", code)
+        return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
     arn = task.get("taskArn")
     return report("accepted", "private-persistence-verifier-accepted", facts={"mode": mode, "verifier_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed_duration})
 
@@ -149,10 +198,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--mode")
     parser.add_argument("--reconcile-task")
+    parser.add_argument("--reconcile-operation")
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.mode not in SUCCESS:
         return report("blocked", "private-persistence-verification-arguments-invalid")
+    if args.reconcile_operation is not None and (args.reconcile_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
+        return report("blocked", "private-persistence-verifier-reconciliation-operation-invalid")
     seconds = deadline()
     if seconds is None:
         return report("blocked", "private-persistence-verifier-deadline-invalid")
@@ -168,15 +220,24 @@ def main() -> int:
         return report("blocked", "private-persistence-verifier-network-or-task-definition-unavailable")
     if not no_direct_database_credential(task_definition):
         return report("blocked", "private-persistence-verifier-isolation-not-proven")
+    if args.reconcile_operation is not None:
+        args.reconcile_task, code = reconciliation_operation(args.reconcile_operation, task_definition)
+        if args.reconcile_task is None:
+            return report("uncertain", code, facts={"operation_id": args.reconcile_operation})
     if args.reconcile_task is not None:
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.reconcile_task)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
         if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
-            return report("blocked", "private-persistence-verifier-controller-observation-uncertain")
+            return report("uncertain", "private-persistence-verifier-controller-observation-uncertain", facts={"verifier_task": args.reconcile_task, "operation_id": args.reconcile_operation})
         task = listed[0]
+        if args.reconcile_operation is not None and task.get("startedBy") != args.reconcile_operation:
+            return report("blocked", "private-persistence-verifier-reconciliation-operation-mismatch")
+        if not task_operation_bound(task, args.mode):
+            return report("blocked", "private-persistence-verifier-reconciliation-operation-binding-invalid")
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
-            return report("blocked", code)
+            verdict = "pending" if code.endswith("-not-terminal") and task.get("lastStatus") in {"PROVISIONING", "PENDING", "ACTIVATING", "RUNNING", "DEACTIVATING", "STOPPING", "DEPROVISIONING"} else "blocked"
+            return report(verdict, code, facts={"verifier_task": args.reconcile_task, "operation_id": args.reconcile_operation})
         return accepted_completion(task, seconds, args.mode)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{group}],assignPublicIp=DISABLED}}"
     overrides = json.dumps({"containerOverrides": [{"name": "private-persistence-verifier", "environment": [
@@ -184,10 +245,14 @@ def main() -> int:
         {"name": "PERSISTENCE_ACCEPTANCE_RECORD_ID", "value": RECORD_ID},
         {"name": "PERSISTENCE_ACCEPTANCE_FACT", "value": FACT},
     ]}]})
-    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--network-configuration", network, "--overrides", overrides)
+    operation_id = "kp-" + uuid.uuid4().hex
+    # Flush identity before submission so a lost response has a read-only recovery path.
+    report("pending", "private-persistence-verifier-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
+    sys.stderr.flush()
+    ok, started, code = aws("ecs", "run-task", "--cluster", CLUSTER, "--task-definition", task_definition, "--launch-type", "FARGATE", "--count", "1", "--started-by", operation_id, "--client-token", operation_id, "--network-configuration", network, "--overrides", overrides)
     tasks = started.get("tasks", []) if ok and isinstance(started, dict) else []
     if not ok or len(tasks) != 1 or not isinstance(tasks[0], dict) or not isinstance(tasks[0].get("taskArn"), str):
-        return report("blocked", code if not ok else "private-persistence-verifier-not-started")
+        return report("uncertain" if not ok else "failed", code if not ok else "private-persistence-verifier-not-started", facts={"operation_id": operation_id})
     arn = tasks[0]["taskArn"]
     current: dict[str, object] | None = None
     started_at = time.monotonic()
@@ -195,13 +260,15 @@ def main() -> int:
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", arn)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
         if not ok or len(listed) != 1 or not isinstance(listed[0], dict):
-            return report("blocked", "private-persistence-verifier-controller-observation-uncertain")
+            return report("uncertain", "private-persistence-verifier-controller-observation-uncertain", facts={"verifier_task": arn, "operation_id": operation_id})
         current = listed[0]
+        if current.get("taskArn") != arn or current.get("taskDefinitionArn") != task_definition or current.get("startedBy") != operation_id or not task_operation_bound(current, args.mode):
+            return report("uncertain", "private-persistence-verifier-controller-task-identity-mismatch", facts={"verifier_task": arn, "operation_id": operation_id})
         if current.get("lastStatus") == "STOPPED":
             break
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
-        return report("blocked", "private-persistence-verifier-controller-deadline-remote-task-still-running")
+        return report("pending", "private-persistence-verifier-controller-deadline-remote-task-still-running", facts={"verifier_task": arn, "operation_id": operation_id})
     return accepted_completion(current, seconds, args.mode)
 
 
