@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T11:36:30Z
-latest_commit_sha: 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9
-chat_duration: 80023s (00:22:13:43)
+latest_commit_at_utc: 2026-10-25T11:58:34Z
+latest_commit_sha: 657806d5815b74d60c99c03449e7934e8209fae3
+chat_duration: 81347s (00:22:35:47)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -389,6 +389,17 @@ Raised: User-restored WSL probe passed but credential-helper qualification still
 
 Resolution: Resumed at user request. Initial cmd.exe ver and Docker engine exited0. Attempt5 native build from eea26951 failed with credential-helper WSLvsock error; version-only helper probe and later cmd.exe ver both failed, showing intermittent interoperation. No source/configuration/credential changes. Proposed bounded package-owner recovery using a temporary empty Docker configuration pinned to existing local engine and public images; approval requested under AGENTS.md missing-governance rule. Container qualification and final merge remain unproved.
 
+
+### 2026-10-25T11:58:34Z - Commit recorded
+
+Commit: `657806d5815b74d60c99c03449e7934e8209fae3`
+
+Message: Record intermittent WSL retry and pending local recovery decision
+
+Summary: User-requested retry observed initial WSL success but Docker credential-helper and subsequent Windows probes failed. All source unchanged. Bounded public-image local recovery proposal pending under repository governance; container qualification and final main merge incomplete.
+
+ADR impact: No new architecture decision; diagnostic evidence only.
+
 ## Sub-Agent Activity
 
 
@@ -464,6 +475,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Message: Record final local proof and unresolved WSL qualification blocker
   Summary: Retain Docker attempts3/4 and harmless Windows interoperation diagnostic. All corrective source proof is complete and source committed b6d1b928; current image qualification and final merge await restored WSL interoperation.
   ADR impact: No new architecture decision; verification/session evidence only.
+
+
+- Commit: `657806d5815b74d60c99c03449e7934e8209fae3`
+  Time UTC: 2026-10-25T11:58:34Z
+  Message: Record intermittent WSL retry and pending local recovery decision
+  Summary: User-requested retry observed initial WSL success but Docker credential-helper and subsequent Windows probes failed. All source unchanged. Bounded public-image local recovery proposal pending under repository governance; container qualification and final main merge incomplete.
+  ADR impact: No new architecture decision; diagnostic evidence only.
 
 ## Main Refresh Conflicts
 
@@ -543,9 +561,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T11:36:30Z
-Latest commit SHA: 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9
-Chat duration: 80023s (00:22:13:43)
+Latest commit at UTC: 2026-10-25T11:58:34Z
+Latest commit SHA: 657806d5815b74d60c99c03449e7934e8209fae3
+Chat duration: 81347s (00:22:35:47)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
