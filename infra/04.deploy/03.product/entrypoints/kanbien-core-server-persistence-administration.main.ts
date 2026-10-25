@@ -31,6 +31,7 @@ import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-
 type Credentials = { readonly username: string; readonly password: string };
 type Identity = PostgreSqlLoginIdentity;
 type AdministrationOperation = "bootstrap-identities" | "grant-runtime-application-access" | "confirm-runtime-iam-access" | "revoke-runtime" | "restore-runtime" | "prove-effective-privilege" | "observe-migration-state";
+type MigrationStateObservation = "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" | "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
 
 /**
  * This entrypoint is deliberately the only core-persistence program that may
@@ -72,8 +73,7 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
       return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED");
     }
     if (operation === "observe-migration-state") {
-      await observeMigrationState(pool, configuration.schema, migration.username);
-      return accepted("PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED");
+      return accepted(await observeMigrationState(pool, configuration.schema, migration.username));
     }
     await proveRuntimePrivilege(configuration, runtime, certificateAuthority, env);
     return accepted("PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN");
@@ -191,8 +191,10 @@ async function grantRuntimeApplicationAccess(pool: PostgreSqlConnectionPool, sch
  * Observe, but never repair, migration history after an unsuccessful or
  * interrupted controller. The migration runner is transaction-bound, so an
  * empty reviewed manifest is the sole state that permits a new submission.
+ * A complete checksum-matching history is accepted only as evidence that the
+ * prior migration already took effect; it never authorises a replay.
  */
-async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string): Promise<void> {
+async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string): Promise<MigrationStateObservation> {
   const history = `${quotedIdentifier(schemaName)}."platform_migration_history"`;
   const migration = quotedIdentifier(migrationUsername);
   const foundation = postgreSqlPersistenceFoundationMigration(schemaName);
@@ -217,11 +219,11 @@ async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName:
     try { await pool.query({ text: "ROLLBACK" }); } catch { /* preserve the safe original failure */ }
     throw error;
   }
-  if (observed.rows.length === 0) return;
+  if (observed.rows.length === 0) return "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED";
   if (
     observed.rows.length === expected.length
     && observed.rows.every((row, index) => row.migration_id === expected[index]?.id && row.checksum === expected[index]?.checksum)
-  ) throw new Error("PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED");
+  ) return "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
   throw new Error("PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED");
 }
 

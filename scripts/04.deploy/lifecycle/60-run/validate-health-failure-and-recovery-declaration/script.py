@@ -414,7 +414,7 @@ def check_migration_execution(item: dict[str, Any], required_dependencies: list[
         administration = observer.get("administrative_execution") if isinstance(observer, dict) else None
         allowed_operations = administration.get("allowed_operations") if isinstance(administration, dict) else None
         if (
-            set(fresh_state) != {"workload", "operation", "replay_permitted_result", "receipt"}
+            set(fresh_state) != {"workload", "operation", "replay_permitted_result", "applied_state_result", "receipt"}
             or not isinstance(observer, dict)
             or observer.get("workload_type") != "run-to-completion-task"
             or not isinstance(administration, dict)
@@ -424,6 +424,7 @@ def check_migration_execution(item: dict[str, Any], required_dependencies: list[
             or fresh_state.get("operation") != "observe-migration-state"
             or fresh_state.get("operation") not in allowed_operations
             or fresh_state.get("replay_permitted_result") != "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"
+            or fresh_state.get("applied_state_result") != "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED"
             or fresh_state.get("receipt") != "durable-task-receipt-required-before-retry"
         ):
             codes.append("migration-execution-fresh-state-observation-invalid")

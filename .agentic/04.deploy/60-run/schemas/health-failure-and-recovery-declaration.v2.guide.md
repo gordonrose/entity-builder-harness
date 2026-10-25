@@ -88,7 +88,10 @@ detects a changed manifest; it never proves whether an interrupted migration
 committed. The fresh observer is a distinct run-to-completion administrative
 workload for the same dependency. It is read-only, emits a durable task receipt,
 and permits a new migration submission only for its declared
-`PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED` result. An already-applied,
+`PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED` result. A complete,
+checksum-matching history instead produces
+`PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED`: it is durable evidence that
+the earlier migration took effect, but is not permission to replay it. A
 partial, inconsistent, or unavailable history is a release block—not evidence
 that an agent may replay the migration.
 

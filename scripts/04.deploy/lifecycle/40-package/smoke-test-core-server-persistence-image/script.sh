@@ -96,6 +96,7 @@ assert_safe_output "$rejected_output"
 grep -F '"code":"PERSISTENCE_ADMINISTRATION_ACCESS_DENIED"' <<<"$rejected_output" >/dev/null || fail 'restricted-administration-rejection-not-confirmed'
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED run_administration confirm-runtime-iam-access
 expect_code PERSISTENCE_MIGRATION_APPLIED docker run --rm "${common[@]}" -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration "$TAG" artifacts/kanbien-core-server-persistence-migration.main.js
+expect_code PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED run_administration observe-migration-state
 expect_code PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED run_administration grant-runtime-application-access
 expect_code PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN run_administration prove-effective-privilege
 docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke "$TAG" >/dev/null

@@ -237,6 +237,7 @@ def migration_workload(contract: dict[str, Any], binding: dict[str, Any]) -> Non
                 "workload": "persistence-administration",
                 "operation": "observe-migration-state",
                 "replay_permitted_result": "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED",
+                "applied_state_result": "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
                 "receipt": "durable-task-receipt-required-before-retry",
             },
             "compatibility_strategy": "expand-deploy-verify-contract-later",
@@ -399,6 +400,10 @@ def main() -> int:
     missing_state_observer = copy.deepcopy(migration_contract)
     del missing_state_observer["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]
     expect_failure(missing_state_observer, migration_binding, "migration-execution-fresh-state-observation-invalid")
+
+    missing_applied_state_result = copy.deepcopy(migration_contract)
+    del missing_applied_state_result["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]["applied_state_result"]
+    expect_failure(missing_applied_state_result, migration_binding, "migration-execution-fresh-state-observation-invalid")
 
     wrong_state_observer = copy.deepcopy(migration_contract)
     wrong_state_observer["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]["workload"] = "private-release-verifier"

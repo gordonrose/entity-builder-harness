@@ -36,7 +36,7 @@ receipts.EVIDENCE_CLASS = collector.EVIDENCE_CLASS = "simulated"
 
 candidate, rollback = "sha256:" + "a" * 64, "sha256:" + "b" * 64
 required = {
- "migration-apply": ("migration", "kanbien-core-platform-persistence-migration", candidate, "PERSISTENCE_MIGRATION_APPLIED", "persistence-migration"),
+ "migration-applied-state": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED", "persistence-administration"),
  "effective-privilege": ("administration", "kanbien-core-platform-persistence-administration", candidate, "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN", "persistence-administration"),
  "server-replacement": ("server-replacement", "kanbien-core-platform-core-server-persistence", candidate, "PERSISTENCE_SERVER_REPLACED", None),
  "server-replacement-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
@@ -52,7 +52,7 @@ required = {
  "rollback-final-read": ("verifier", "kanbien-core-platform-persistence-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RECORD_RETRIEVED", "private-release-verifier"),
  "isolated-restore": ("restore", "kanbien-core-platform-persistence-restoration-verifier", candidate, "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED", "persistence-restoration-verifier"),
 }
-operations = {"migration-apply":"apply","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","runtime-identity-initial-access":"confirm-runtime-iam-access","credential-revocation":"revoke-runtime","credential-revocation-unready":"health-unready","credential-recovery":"restore-runtime","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
+operations = {"migration-applied-state":"observe-migration-state","effective-privilege":"prove-effective-privilege","server-replacement":"controlled-replacement","server-replacement-read":"read","runtime-identity-initial-access":"confirm-runtime-iam-access","credential-revocation":"revoke-runtime","credential-revocation-unready":"health-unready","credential-recovery":"restore-runtime","credential-recovery-health":"health-ready","credential-recovery-read":"read","rollback-b-health":"health-ready","rollback-b-read":"read","rollback-final-health":"health-ready","rollback-final-read":"read","isolated-restore":"isolated-restore"}
 controllers={"administration":"run-administration","migration":"run-migration","verifier":"verify-candidate","restore":"rehearse-isolated-database-restore","server-replacement":"rehearse-server-replacement"}
 deadlines={"persistence-migration":300,"persistence-administration":300,"private-release-verifier":120,"persistence-restoration-verifier":120}
 directory = Path(tempfile.mkdtemp(prefix="persistence-proof-receipt-"))
@@ -82,7 +82,7 @@ try:
     succession = collector.succession_module()
     assert candidate_path.name == successor["release"]["id"] + ".yml"
     assert succession.candidate_identity(successor)[0:2] == (collector.TARGET, collector.SCOPE)
-    broken=directory/"migration-apply.json"; value=json.loads(broken.read_text()); value["task"]["exit_code"]=None; broken.write_text(json.dumps(value),encoding="utf-8")
+    broken=directory/"migration-applied-state.json"; value=json.loads(broken.read_text()); value["task"]["exit_code"]=None; broken.write_text(json.dumps(value),encoding="utf-8")
     try: collector.parse_proof_receipts(arguments,required,deadlines,directory)
     except collector.EvidenceFailure: pass
     else: raise AssertionError("incomplete retained task proof passed")
