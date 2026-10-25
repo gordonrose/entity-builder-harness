@@ -311,6 +311,17 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual(report['facts']['change_set'],'synthetic')
         self.assertTrue(all(isinstance(item['code'],str) for item in report['findings']))
 
+    def test_update_parameter_review_preserves_unowned_stack_values(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        digest='sha256:'+'a'*64
+        desired={'ImageDigest':digest,'SupportImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':'a'*40}
+        current={**desired,'EnableObservability':'false','ObservabilityCollectorImage':'collector-safe','ObservabilityAlertEmail':'alert-safe'}
+        self.assertTrue(prepare.update_parameters_match(current,desired,current))
+        changed={**current,'EnableObservability':'true'}
+        self.assertFalse(prepare.update_parameters_match(changed,desired,current))
+        self.assertFalse(prepare.update_parameters_match({key:value for key,value in current.items() if key!='ObservabilityAlertEmail'},desired,current))
+        self.assertFalse(prepare.update_parameters_match({**current,'Unexpected':'value'},desired,current))
+
     def test_declaration_gap_blocks_before_provider_calls(self):
         import subprocess
         prepare=load(DEPLOY/'prepare-candidate/script.py')

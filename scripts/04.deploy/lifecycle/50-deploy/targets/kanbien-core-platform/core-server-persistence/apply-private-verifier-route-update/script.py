@@ -67,6 +67,7 @@ def main() -> int:
     ok, stack, code = prepare.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
     if not ok or status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}: return report("blocked", code if not ok else "persistence-private-route-update-stack-not-healthy")
+    current_parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Stacks", [{}])[0].get("Parameters", []) if isinstance(item, dict)}
     ok, service, code = prepare.aws("ecs", "describe-services", "--cluster", prepare.CLUSTER if hasattr(prepare, "CLUSTER") else "kanbien-core-platform", "--services", "kanbien-core-platform-core-server-persistence")
     services = service.get("services", []) if ok and isinstance(service, dict) else []
     if len(services) != 1 or not isinstance(services[0], dict) or services[0].get("desiredCount") != 1 or services[0].get("runningCount") != 1: return report("blocked", "persistence-private-route-update-service-not-healthy")
@@ -85,7 +86,7 @@ def main() -> int:
     if change.get("ExecutionStatus") != "AVAILABLE": return reconcile(prepare, name, digest, revision)
     expected = prepare.candidate_parameters(foundation, infrastructure, receipt)
     actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if actual != expected: return report("blocked", "persistence-update-live-parameters-mismatch")
+    if not prepare.update_parameters_match(actual, expected, current_parameters): return report("blocked", "persistence-update-live-parameters-mismatch")
     ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok: return report("uncertain", code, facts={"change_set": name})
     return reconcile(prepare, name, digest, revision)
