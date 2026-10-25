@@ -99,7 +99,9 @@ jobs:
         with:
           version: v0.70.0
           cache: true
-      - name: Require clean portable vulnerability scan of mirrored payload
+      - name: Scan exact mirrored collector payload
+        id: vulnerability_scan
+        continue-on-error: true
         run: |
           trivy image --input scan-input/observability-collector.scan-input.tar \
             --severity HIGH,CRITICAL \
@@ -108,12 +110,16 @@ jobs:
             --format json \
             --output observability-collector.trivy.json
       - name: Retain vulnerability scan artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: kanbien-core-platform-observability-collector-vulnerability-scan-${{ github.run_id }}
           path: observability-collector.trivy.json
           if-no-files-found: error
           retention-days: 30
+      - name: Require clean portable vulnerability scan of mirrored payload
+        if: steps.vulnerability_scan.outcome != 'success'
+        run: exit 1
   complete-custody:
     needs: [qualify-and-publish, scan-mirrored-payload]
     permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
