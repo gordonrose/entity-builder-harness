@@ -6,7 +6,7 @@ task: Retire hosted RAG deployment and preserve local retrieval
 branch: chat/2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval
 worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
-status: in-progress
+status: completed
 raised_at_utc: 2026-10-25T20:27:45Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/25/rollout-2026-10-25T20-27-13-01a174be-f174-7c61-91e7-23bf619c5ef2.jsonl
@@ -15,9 +15,9 @@ transcript_source: exact-root-thread-id
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T21:40:15Z
-latest_commit_sha: 0f4f955b495d4dd92b70f9808afaebcdf7e27edf
-chat_duration: 4350s (00:01:12:30)
+latest_commit_at_utc: 2026-10-25T21:44:34Z
+latest_commit_sha: 889be42d397f395c4b6ce9b48e91c32eccd5a971
+chat_duration: 4609s (00:01:16:49)
 estimated_chat_tokens: 560775 estimated from chat transcript bytes (2243100 bytes; source: exact-root-thread-id)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -155,6 +155,28 @@ Summary: Retired dedicated RAG AWS resources, disabled redeployment, preserved e
 
 ADR impact: No new ADR; retirement follows the reviewed provider-specific lifecycle and existing local retrieval architecture.
 
+
+### 2026-10-25T21:44:33Z - Commit recorded
+
+Commit: `e173c1c1ffbeeab6403d89ab2ee23a7ca6af169e`
+
+Message: Merge hosted RAG retirement
+
+Summary: Validated retirement merged into main and pushed; remote main exactly matched this merge.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T21:44:34Z - Commit recorded
+
+Commit: `889be42d397f395c4b6ce9b48e91c32eccd5a971`
+
+Message: Merge main for final retirement session record
+
+Summary: Governed clean rehearsal/apply; exact tree identity with already tested and pushed retirement source, no content changes.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 
@@ -245,6 +267,20 @@ Summary: Final focused diff approved; exact scope validators retain global defau
   Summary: Retired dedicated RAG AWS resources, disabled redeployment, preserved explicit local retrieval and evidence; mandatory local checks pass with the two explicitly approved test corrections.
   ADR impact: No new ADR; retirement follows the reviewed provider-specific lifecycle and existing local retrieval architecture.
 
+
+- Commit: `e173c1c1ffbeeab6403d89ab2ee23a7ca6af169e`
+  Time UTC: 2026-10-25T21:44:33Z
+  Message: Merge hosted RAG retirement
+  Summary: Validated retirement merged into main and pushed; remote main exactly matched this merge.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `889be42d397f395c4b6ce9b48e91c32eccd5a971`
+  Time UTC: 2026-10-25T21:44:34Z
+  Message: Merge main for final retirement session record
+  Summary: Governed clean rehearsal/apply; exact tree identity with already tested and pushed retirement source, no content changes.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -258,9 +294,9 @@ Reason: Bounded retirement of one unused hosted deployment; local RAG architectu
 ## Session Metrics
 
 Raised at UTC: 2026-10-25T20:27:45Z
-Latest commit at UTC: 2026-10-25T21:40:15Z
-Latest commit SHA: 0f4f955b495d4dd92b70f9808afaebcdf7e27edf
-Chat duration: 4350s (00:01:12:30)
+Latest commit at UTC: 2026-10-25T21:44:34Z
+Latest commit SHA: 889be42d397f395c4b6ce9b48e91c32eccd5a971
+Chat duration: 4609s (00:01:16:49)
 Estimated chat tokens: 560775 estimated from chat transcript bytes (2243100 bytes; source: exact-root-thread-id)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -328,7 +364,7 @@ removed, and no Cost Explorer invoice reduction has yet been verified.
 - Source review/provenance, scoped projection/coverage proof, negative regressions, selector fixture, generic provider smoke and all 14 derivation reports: pass.
 - Post-retirement actual default-config query: pass, 6 chunks/2 citations/zero hosted attempts; see evidence/local-proof-after-retirement.json.
 - Global source checks still report 16 pre-existing stale hashes outside this task; baseline evidence retained and protected sources unchanged.
-- Accepted-main refresh and mandatory commit gate: pass. Main promotion/push: in progress.
+- Accepted-main refresh, mandatory commit gate, reviewed task commit, main promotion and push: pass. Final session bookkeeping is preserved separately below.
 - Final repository consumer search found no product/runtime endpoint consumer. The protected platform-shell manifest contains a dated September pre-deployment inventory snapshot listing RAG; it is explicitly historical and preserved. No GitHub repository or staging environment secrets exist.
 
 ### Mandatory commit gate baseline dependency
@@ -564,3 +600,45 @@ replacements plus the single approved fixture dependency line in protected
 source. Retirement/recovery source and preserved task scope remain unchanged;
 no unrelated implementation or unstaged edit exists. Final commit scope is the
 reviewed retirement, its provenance/evidence and the two approved test repairs.
+
+### 2026-10-25T21:44:34.391115+00:00 — Retirement completion and source integration
+
+Task commit `0f4f955b495d4dd92b70f9808afaebcdf7e27edf` was merged and pushed to
+main as `e173c1c1ffbeeab6403d89ab2ee23a7ca6af169e`; exact remote SHA equality
+was verified. Main and the chat worktree were clean. The old deployment workflow
+remained disabled_manually after the push. Its inert source, zero desired-count
+contract, retired readiness gate and removed deployment role prevent the old
+automation from recreating this deployment.
+
+Final cloud verification at 2026-10-25T21:40:56.802877+00:00 passed all 25 checks:
+dedicated service/foundation stacks, ECR/images, task definitions and RAG task
+capacity are absent; endpoint DNS is NXDOMAIN; dedicated roles/access paths are
+gone. Shared cluster, ALB/listener/rules, certificate, DNS zone, VPC/subnets and
+OIDC ownership remain unchanged. Protected service configuration remains intact.
+Service-platform returned to its original observed 1 desired / 0 running / 0
+pending state; earlier scheduler retry evidence remains in history. The retained
+bootstrap stack owns only its original shared OIDC provider.
+
+Retained/pending resources: existing logs at 14 days; service-token secret with
+30-day recovery and scheduled deletion on 2026-11-24; shared infrastructure and
+its OIDC bootstrap stack retained. No RAG task-definition deletions remain
+pending. Cost estimates and continuing shared/log costs are recorded above; no
+verified billing reduction is claimed.
+
+Final committed default-config local query at `a1150a3eeb96f1e942721f2cadb75768d4d2237d` passed
+with 6 chunks, 2 citations and zero hosted HTTP/AWS
+client attempts after a successful governed runtime rebuild. Private config
+remained unchanged at 0600; tracked source stayed clean. Local code/corpus and
+retrieval machinery remain available.
+
+Completion artifacts and passing-gate summary are retained at `/home/owner/projects/.chat-preservation/rag-fixture-decision-20261025T213221Z/completion-evidence`.
+The integration console's all-workspace reporter stopped on an unrelated old
+missing temporary worktree; raw Git registration was inspected and no entries
+were removed. The target-specific mandatory merge verifier returned eligible.
+No unrelated workspace or work was changed.
+
+For this final session record, the clean chat took in its just-pushed main merge
+through the governed rehearsal/apply flow. Preflight commit 889be42d had exactly
+the already tested source tree. This is session bookkeeping only; it does not
+change the implementation or cloud state. The final record is checkpointed and
+promoted using the user's existing merge/push authorization.
