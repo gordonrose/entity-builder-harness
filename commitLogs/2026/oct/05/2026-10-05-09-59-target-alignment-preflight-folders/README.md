@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T22:32:56Z
-latest_commit_sha: HEAD
-chat_duration: 1776807s (20:13:33:27)
+latest_commit_at_utc: 2026-10-25T23:11:55Z
+latest_commit_sha: ed781c64
+chat_duration: 1779146s (20:14:12:26)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -487,6 +487,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Use manifest-identity requalification for the retained collector mirror
   Rationale: No delivery-role permission expansion or public image-layer retry is required. The collector workflow proves the immutable public OCI index and selected platform manifest, requires the same content-addressed digest in private ECR, and qualifies/scans only that private payload. This is a bounded custody correction; no ADR is required because it changes an in-flight target package route rather than the architecture.
 
+
+- Decision: Closed isolated restore cleanup before correcting failure classification; retained proof is accepted only from a closed, allowlisted result envelope and all synthetic regression diagnostics stay outside durable evidence.
+  Rationale: Existing PostgreSQL persistence/recovery design; no new ADR required.
+
 ## Context Hygiene
 
 
@@ -717,6 +721,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
   Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
+
+
+- Summary: Safe restore verifier mapping, controller receipt handling, 24 validated live receipts, two validated operation diagnostics, and rollback compatibility record are the active carry-forward facts.
+  Durable evidence: Commits 8ff26fd6, 1b3d81cd, ed781c64; retained artifacts under infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.
 
 ## Activity Log
 
@@ -3480,6 +3488,53 @@ Summary: Retained governed persistence proof receipts, added qualified rollback-
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T23:11:55Z - Decision
+
+Decision: Closed isolated restore cleanup before correcting failure classification; retained proof is accepted only from a closed, allowlisted result envelope and all synthetic regression diagnostics stay outside durable evidence.
+
+Rationale: Existing PostgreSQL persistence/recovery design; no new ADR required.
+
+
+### 2026-10-25T23:11:55Z - Context hygiene
+
+Summary: Safe restore verifier mapping, controller receipt handling, 24 validated live receipts, two validated operation diagnostics, and rollback compatibility record are the active carry-forward facts.
+
+Durable evidence: Commits 8ff26fd6, 1b3d81cd, ed781c64; retained artifacts under infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `8ff26fd6`
+
+Message: fix: classify isolated restore verifier failures safely
+
+Summary: Added closed allowlisted restore failure mapping, causal machine-code handling, controller rejection receipts, and focused regression coverage.
+
+ADR impact: No ADR: bounded safe-diagnostic correction under the current persistence recovery decision.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `1b3d81cd`
+
+Message: test: isolate synthetic deployment diagnostics
+
+Summary: Kept controller-regression diagnostics in a temporary directory so synthetic tests cannot contaminate retained live-evidence storage.
+
+ADR impact: No ADR: test isolation correction.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `ed781c64`
+
+Message: evidence: retain persistence proof receipts
+
+Summary: Committed 24 integrity-validated live proof receipts, two safe operation diagnostics, and immutable qualified rollback-compatibility records.
+
+ADR impact: No ADR: durable evidence under the existing acceptance model.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4449,6 +4504,27 @@ ADR impact: covered by session ADR disposition
   Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `8ff26fd6`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: fix: classify isolated restore verifier failures safely
+  Summary: Added closed allowlisted restore failure mapping, causal machine-code handling, controller rejection receipts, and focused regression coverage.
+  ADR impact: No ADR: bounded safe-diagnostic correction under the current persistence recovery decision.
+
+
+- Commit: `1b3d81cd`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: test: isolate synthetic deployment diagnostics
+  Summary: Kept controller-regression diagnostics in a temporary directory so synthetic tests cannot contaminate retained live-evidence storage.
+  ADR impact: No ADR: test isolation correction.
+
+
+- Commit: `ed781c64`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: evidence: retain persistence proof receipts
+  Summary: Committed 24 integrity-validated live proof receipts, two safe operation diagnostics, and immutable qualified rollback-compatibility records.
+  ADR impact: No ADR: durable evidence under the existing acceptance model.
+
 ## Main Refresh Conflicts
 
 
@@ -4472,9 +4548,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T22:32:56Z
-Latest commit SHA: HEAD
-Chat duration: 1776807s (20:13:33:27)
+Latest commit at UTC: 2026-10-25T23:11:55Z
+Latest commit SHA: ed781c64
+Chat duration: 1779146s (20:14:12:26)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
