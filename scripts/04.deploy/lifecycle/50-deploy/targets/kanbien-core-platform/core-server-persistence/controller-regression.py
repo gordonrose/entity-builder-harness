@@ -327,6 +327,18 @@ class ControllerRegression(unittest.TestCase):
         self.assertNotIn('safe_result_code',report['facts'])
         self.assertNotIn('synthetic-canary',json.dumps(report))
 
+    def test_administration_completion_requires_a_closed_safe_result_record(self):
+        module=load(RUN/'run-administration/script.py')
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32}
+        expected=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED'})
+        provider=Provider(lambda parts:(True,{'events':[{'message':expected}]},'ok'))
+        with patch.object(module.MIGRATION,'aws',provider.aws):
+            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(True,'ok'))
+        unsafe=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','password':'synthetic-canary'})
+        provider=Provider(lambda parts:(True,{'events':[{'message':unsafe}]},'ok'))
+        with patch.object(module.MIGRATION,'aws',provider.aws):
+            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(False,'persistence-administration-not-confirmed'))
+
     def test_correction_parameters_remain_complete_and_unique(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest='sha256:'+'a'*64

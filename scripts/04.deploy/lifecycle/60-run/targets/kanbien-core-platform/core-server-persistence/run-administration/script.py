@@ -25,6 +25,7 @@ SUCCESS = {
     "revoke-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED",
     "restore-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED",
     "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
+    "observe-migration-state": "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED",
 }
 PROOF_CONTRACT = {
     operation: {
@@ -43,6 +44,7 @@ OPERATIONS = (
     "revoke-runtime",
     "restore-runtime",
     "prove-effective-privilege",
+    "observe-migration-state",
 )
 
 
@@ -95,7 +97,14 @@ def accepted_log(task: dict[str, object], operation: str) -> tuple[bool, str]:
     ok, events, code = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
     messages = [item.get("message") for item in events.get("events", []) if isinstance(item, dict)] if ok and isinstance(events, dict) else []
     expected = SUCCESS[operation]
-    return (True, "ok") if any(isinstance(message, str) and '"verdict":"accepted"' in message and f'"code":"{expected}"' in message for message in messages) else (False, code if not ok else "persistence-administration-not-confirmed")
+    for message in messages:
+        try:
+            record = json.loads(message) if isinstance(message, str) else None
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(record, dict) and set(record) == {"verdict", "code"} and record.get("verdict") == "accepted" and record.get("code") == expected:
+            return True, "ok"
+    return False, code if not ok else "persistence-administration-not-confirmed"
 
 
 def accept(task: dict[str, object], seconds: int, operation: str) -> int:

@@ -87,6 +87,7 @@ common=(--network "$network" -v "$temporary/ca.crt:/app/assets/test-ca.crt:ro" -
 administration_environment=( -e "PERSISTENCE_ADMINISTRATOR_CREDENTIALS={\"username\":\"core_administrator\",\"password\":\"${ADMIN_PASSWORD}\"}" -e PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-administrator -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime )
 run_administration() { docker run --rm "${common[@]}" "${administration_environment[@]}" -e "PERSISTENCE_ADMINISTRATION_OPERATION=$1" "$TAG" artifacts/kanbien-core-server-persistence-administration.main.js; }
 expect_code PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED run_administration bootstrap-identities
+expect_code PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED run_administration observe-migration-state
 # A rejected live entrypoint path must be inspected too. The restricted
 # administrator can connect but has no rds_iam ADMIN OPTION, so PostgreSQL
 # rejects the actual GRANT command while normal server error logging remains on.

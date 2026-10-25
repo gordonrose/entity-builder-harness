@@ -17,6 +17,8 @@
 
 import {
   createNodePostgreSqlConnectionPool,
+  postgreSqlMigrationChecksum,
+  postgreSqlPersistenceFoundationMigration,
   postgreSqlPersistenceConfiguration,
   type PostgreSqlConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
@@ -24,10 +26,11 @@ import { restoreRuntimeIamAccess, revokeRuntimeAccess } from "./kanbien-core-ser
 import { ensureBoundedLoginRole, ensureRdsIamAuthentication, type PostgreSqlLoginIdentity } from "./kanbien-core-server-persistence-role-credential";
 import { persistenceCertificateAuthority } from "./kanbien-core-server-persistence-configuration";
 import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
+import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
 
 type Credentials = { readonly username: string; readonly password: string };
 type Identity = PostgreSqlLoginIdentity;
-type AdministrationOperation = "bootstrap-identities" | "grant-runtime-application-access" | "confirm-runtime-iam-access" | "revoke-runtime" | "restore-runtime" | "prove-effective-privilege";
+type AdministrationOperation = "bootstrap-identities" | "grant-runtime-application-access" | "confirm-runtime-iam-access" | "revoke-runtime" | "restore-runtime" | "prove-effective-privilege" | "observe-migration-state";
 
 /**
  * This entrypoint is deliberately the only core-persistence program that may
@@ -67,6 +70,10 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
     if (operation === "restore-runtime") {
       await restoreRuntimeIamAccess(pool, runtime.username);
       return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED");
+    }
+    if (operation === "observe-migration-state") {
+      await observeMigrationState(pool, configuration.schema);
+      return accepted("PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED");
     }
     await proveRuntimePrivilege(configuration, runtime, certificateAuthority, env);
     return accepted("PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN");
@@ -180,6 +187,30 @@ async function grantRuntimeApplicationAccess(pool: PostgreSqlConnectionPool, sch
   }
 }
 
+/**
+ * Observe, but never repair, migration history after an unsuccessful or
+ * interrupted controller. The migration runner is transaction-bound, so an
+ * empty reviewed manifest is the sole state that permits a new submission.
+ */
+async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string): Promise<void> {
+  const history = `${quotedIdentifier(schemaName)}."platform_migration_history"`;
+  const foundation = postgreSqlPersistenceFoundationMigration(schemaName);
+  const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(schemaName);
+  const expected = [
+    { id: foundation.id, checksum: foundation.checksum },
+    { id: acceptance.id, checksum: postgreSqlMigrationChecksum(acceptance.statements) },
+  ];
+  const observed = await pool.query<{ readonly migration_id: string; readonly checksum: string }>({
+    text: `SELECT migration_id, checksum FROM ${history} ORDER BY migration_id ASC`,
+  });
+  if (observed.rows.length === 0) return;
+  if (
+    observed.rows.length === expected.length
+    && observed.rows.every((row, index) => row.migration_id === expected[index]?.id && row.checksum === expected[index]?.checksum)
+  ) throw new Error("PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED");
+  throw new Error("PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED");
+}
+
 async function proveRuntimePrivilege(
   configuration: ReturnType<typeof configurationFromEnvironment> & {},
   identity: Identity,
@@ -223,7 +254,7 @@ function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
   return checked.ok ? checked.value : undefined;
 }
 function administrationOperation(value: unknown): AdministrationOperation | undefined {
-  return value === undefined || value === "bootstrap-identities" ? "bootstrap-identities" : value === "grant-runtime-application-access" || value === "confirm-runtime-iam-access" || value === "revoke-runtime" || value === "restore-runtime" || value === "prove-effective-privilege" ? value : undefined;
+  return value === undefined || value === "bootstrap-identities" ? "bootstrap-identities" : value === "grant-runtime-application-access" || value === "confirm-runtime-iam-access" || value === "revoke-runtime" || value === "restore-runtime" || value === "prove-effective-privilege" || value === "observe-migration-state" ? value : undefined;
 }
 function text(env: NodeJS.ProcessEnv, key: string): string | undefined { const value = env[key]; return typeof value === "string" && value.trim() !== "" && value.trim() === value ? value : undefined; }
 function credentialObject(value: unknown): Credentials | undefined { try { const parsed: unknown = typeof value === "string" ? JSON.parse(value) : undefined; if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined; const username = (parsed as { username?: unknown }).username, password = (parsed as { password?: unknown }).password; return typeof username === "string" && /^[a-z_][a-z0-9_]{0,62}$/.test(username) && typeof password === "string" && password.length > 0 && !password.includes("\u0000") ? { username, password } : undefined; } catch { return undefined; } }
@@ -239,6 +270,8 @@ function administrationFailureCode(error: unknown): string {
     || message === "PERSISTENCE_ROLE_STATE_UNAVAILABLE"
     || message === "PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY"
     || message === "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"
+    || message === "PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED"
+    || message === "PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED"
     || (typeof message === "string" && /^PERSISTENCE_RUNTIME_(?:REVOCATION|RECOVERY)_[A-Z_]+_NOT_CONFIRMED$/.test(message))
   ) return message;
   const code = providerCode(error);
