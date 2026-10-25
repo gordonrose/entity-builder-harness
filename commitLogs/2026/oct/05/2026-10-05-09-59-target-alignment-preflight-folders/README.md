@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T15:33:22Z
-latest_commit_sha: 7d9aef87
-chat_duration: 1751633s (20:06:33:53)
+latest_commit_at_utc: 2026-10-25T15:39:53Z
+latest_commit_sha: 8c06510178790fdabc0fd3a8899085f867f947e8
+chat_duration: 1752024s (20:06:40:24)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3216,6 +3216,17 @@ Summary: Corrected collector receipt check vocabulary so the final custody gate 
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T15:39:53Z - Commit recorded
+
+Commit: `8c06510178790fdabc0fd3a8899085f867f947e8`
+
+Message: fix(deploy): bind permissions update to collector custody
+
+Summary: Require the reviewed permissions update to bind qualified collector custody and a non-retained alert recipient.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4052,6 +4063,13 @@ ADR impact: covered by session ADR disposition
   Summary: Corrected collector receipt check vocabulary so the final custody gate accepts the governed generic receipt.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `8c06510178790fdabc0fd3a8899085f867f947e8`
+  Time UTC: 2026-10-25T15:39:53Z
+  Message: fix(deploy): bind permissions update to collector custody
+  Summary: Require the reviewed permissions update to bind qualified collector custody and a non-retained alert recipient.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4075,9 +4093,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T15:33:22Z
-Latest commit SHA: 7d9aef87
-Chat duration: 1751633s (20:06:33:53)
+Latest commit at UTC: 2026-10-25T15:39:53Z
+Latest commit SHA: 8c06510178790fdabc0fd3a8899085f867f947e8
+Chat duration: 1752024s (20:06:40:24)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
