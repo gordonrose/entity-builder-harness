@@ -103,6 +103,10 @@ connect scope implementation verification and recovery
 - Summary: Clean committed corrective work preserved before external WSL reconnection
   Durable evidence: Corrective checkpoint bundle verified: /home/owner/projects/.chat-preservation/2026-10-25-scope-corrections-final-checkpoint.bundle; SHA-256 67b247ee8e0c2ba34aeec61a7b8efda8b58c21400492e2b484dd37223d78f000; covers source b6d1b928 and evidence 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9. No uncommitted task source remains. All13 combined local checks and11 normal cache reuse passed; active Goal still requires container qualification and final main merge.
 
+
+- Summary: Second consecutive Goal turn confirms the same external WSL blocker
+  Durable evidence: Revalidated 2026-10-25T11:37:46Z: cmd.exe /c ver exits1 with UtilAcceptVsock accept4 failed110; Docker29.8.1 client/server responds. Source worktree clean at b9b97d70; main/origin mainc884c321. Previous turn made progress by committing all source/evidence and verifying preservation; this turn makes no implementation progress. No independent authorized work remains before required container qualification and final merge. Goal remains active; pending user WSL reconnection request unchanged.
+
 ## Activity Log
 
 ### 2026-10-24T13:22:47Z - Session started
@@ -355,6 +359,13 @@ ADR impact: No new architecture decision; verification/session evidence only.
 Summary: Clean committed corrective work preserved before external WSL reconnection
 
 Durable evidence: Corrective checkpoint bundle verified: /home/owner/projects/.chat-preservation/2026-10-25-scope-corrections-final-checkpoint.bundle; SHA-256 67b247ee8e0c2ba34aeec61a7b8efda8b58c21400492e2b484dd37223d78f000; covers source b6d1b928 and evidence 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9. No uncommitted task source remains. All13 combined local checks and11 normal cache reuse passed; active Goal still requires container qualification and final main merge.
+
+
+### 2026-10-25T11:38:32Z - Context hygiene
+
+Summary: Second consecutive Goal turn confirms the same external WSL blocker
+
+Durable evidence: Revalidated 2026-10-25T11:37:46Z: cmd.exe /c ver exits1 with UtilAcceptVsock accept4 failed110; Docker29.8.1 client/server responds. Source worktree clean at b9b97d70; main/origin mainc884c321. Previous turn made progress by committing all source/evidence and verifying preservation; this turn makes no implementation progress. No independent authorized work remains before required container qualification and final merge. Goal remains active; pending user WSL reconnection request unchanged.
 
 ## Sub-Agent Activity
 
