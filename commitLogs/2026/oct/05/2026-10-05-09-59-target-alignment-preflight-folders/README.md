@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T20:58:11Z
+latest_commit_at_utc: 2026-10-25T22:32:56Z
 latest_commit_sha: HEAD
-chat_duration: 1771122s (20:11:58:42)
+chat_duration: 1776807s (20:13:33:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3469,6 +3469,17 @@ Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppr
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T22:32:56Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: --summary
+
+Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4431,6 +4442,13 @@ ADR impact: covered by session ADR disposition
   Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppress provider detail.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T22:32:56Z
+  Message: --summary
+  Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4454,9 +4472,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T20:58:11Z
+Latest commit at UTC: 2026-10-25T22:32:56Z
 Latest commit SHA: HEAD
-Chat duration: 1771122s (20:11:58:42)
+Chat duration: 1776807s (20:13:33:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
