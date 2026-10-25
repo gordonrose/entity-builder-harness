@@ -1,0 +1,19 @@
+{
+  "helper_path": "/usr/bin/docker-credential-desktop.exe",
+  "helper_target": "/Docker/host/bin/docker-credential-desktop.exe",
+  "helper_file": {
+    "exit_code": 0,
+    "stdout": "/Docker/host/bin/docker-credential-desktop.exe: PE32+ executable for MS Windows 6.01 (console), x86-64, 9 sections\n",
+    "stderr": ""
+  },
+  "helper_version": {
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "<3>WSL (11385 - ) ERROR: UtilAcceptVsock:273: accept4 failed 110\n"
+  },
+  "windows_version": {
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "<3>WSL (11433 - ) ERROR: UtilAcceptVsock:273: accept4 failed 110\n"
+  }
+}

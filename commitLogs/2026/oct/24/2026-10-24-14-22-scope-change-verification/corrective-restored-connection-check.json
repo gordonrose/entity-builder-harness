@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-10-25T11:51:04.029596+00:00",
+  "wsl_interoperation": {
+    "exit_code": 0,
+    "stdout": "\nMicrosoft Windows [Version 10.0.26300.9711]\n",
+    "stderr": "'\\\\wsl.localhost\\Ubuntu\\home\\owner\\projects\\.chat-worktrees\\entity-builder-harness-restart-3842312794\\chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114'\nCMD.EXE was started with the above path as the current directory.\nUNC paths are not supported.  Defaulting to Windows directory.\n"
+  },
+  "docker_engine": {
+    "exit_code": 0,
+    "stdout": "29.8.1 / 29.8.1\n",
+    "stderr": ""
+  }
+}

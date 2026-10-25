@@ -1,0 +1,25 @@
+{
+  "evidence_class": "container-qualification",
+  "source_revision_label": "eea2695195ba59c8a04b9da6e51e47feab7a1d07",
+  "image_tag": "kanbien-core-server-persistence:scope-corrections-20261025",
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "retry_reason": "User restored WSL interoperation; harmless Windows version probe and Docker engine both exit0.",
+  "checks": [
+    {
+      "check": "build",
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-corrections-20261025"
+      ],
+      "exit_code": 1,
+      "seconds": 37.71,
+      "log": "corrective-local-image-build-attempt5.log"
+    }
+  ]
+}

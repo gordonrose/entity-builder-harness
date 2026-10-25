@@ -65,6 +65,10 @@ connect scope implementation verification and recovery
 - Raised: WSL Windows-executable bridge still fails after Docker recovery
   Resolution: Fresh attempt4 passed repository preflight but image build failed at credential helper. Harmless cmd.exe /c ver independently exits1 with UtilAcceptVsock accept4 failed110; Docker engine/context queries succeed. Corrective source committed b6d1b928 and bookkeeping7f2d44ed; all local source proof complete. No bypass/config/secret operations. User asked to restore or reconnect active WSL session. Current-source container smoke and final main merge remain required; Goal active.
 
+
+- Raised: User-restored WSL probe passed but credential-helper qualification still failed
+  Resolution: Resumed at user request. Initial cmd.exe ver and Docker engine exited0. Attempt5 native build from eea26951 failed with credential-helper WSLvsock error; version-only helper probe and later cmd.exe ver both failed, showing intermittent interoperation. No source/configuration/credential changes. Proposed bounded package-owner recovery using a temporary empty Docker configuration pinned to existing local engine and public images; approval requested under AGENTS.md missing-governance rule. Container qualification and final merge remain unproved.
+
 ## Decisions Made
 
 
@@ -377,6 +381,13 @@ Durable evidence: Revalidated 2026-10-25T11:37:46Z: cmd.exe /c ver exits1 with U
 Summary: Third consecutive Goal turn satisfies blocked-state audit
 
 Durable evidence: Revalidated 2026-10-25T11:39:01Z: cmd.exe /c ver still exits1 with UtilAcceptVsock accept4 failed110; Docker client/server29.8.1 responds. Same external WSL bridge failure persisted across the original progress turn and two automatic continuations. No independent implementation or local verification remains. Required current-tree container qualification and final merge remain unproved. Source b6d1b928, evidence2403d42f and verified preservation bundle are intact; worktree clean before this bookkeeping. The next lifecycle action is mark Goal blocked, not complete. Restore active WSL Windows-executable interoperation and resume; then run native build/smoke, retain evidence, perform governed final merge.
+
+
+### 2026-10-25T11:57:05Z - Issue
+
+Raised: User-restored WSL probe passed but credential-helper qualification still failed
+
+Resolution: Resumed at user request. Initial cmd.exe ver and Docker engine exited0. Attempt5 native build from eea26951 failed with credential-helper WSLvsock error; version-only helper probe and later cmd.exe ver both failed, showing intermittent interoperation. No source/configuration/credential changes. Proposed bounded package-owner recovery using a temporary empty Docker configuration pinned to existing local engine and public images; approval requested under AGENTS.md missing-governance rule. Container qualification and final merge remain unproved.
 
 ## Sub-Agent Activity
 
