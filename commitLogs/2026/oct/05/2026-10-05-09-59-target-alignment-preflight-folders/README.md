@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:40:03Z
-latest_commit_sha: 7977430ab8ad19f9956125bdcd94e9ff153eb69c
-chat_duration: 1748434s (20:05:40:34)
+latest_commit_at_utc: 2026-10-25T14:45:34Z
+latest_commit_sha: 5ca0d67e4735c955bcb9ef59b6002e2d21b42785
+chat_duration: 1748765s (20:05:46:05)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3200,6 +3200,12 @@ Durable evidence: Durable target contract and workflow are in infra/04.deploy/03
 
 ## Commits
 
+- Commit: `5ca0d67e4735c955bcb9ef59b6002e2d21b42785`
+  Time UTC: 2026-10-25T14:45:34Z
+  Message: fix(deploy): pin collector platform manifest
+  Summary: Replaced the rate-limited runtime public registry metadata lookup with the already observed, reviewed public-index-to-Linux/AMD64 manifest mapping. The protected workflow now requires the exact private content digest, starts it safely, scans that payload without cloud credentials, then records custody only after a clean scan.
+  ADR impact: No ADR: bounded reliability correction to the active target package custody route.
+
 - Commit: `7977430ab8ad19f9956125bdcd94e9ff153eb69c`
   Time UTC: 2026-10-25T14:40:03Z
   Message: fix(deploy): qualify retained collector mirror
@@ -4021,9 +4027,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:40:03Z
-Latest commit SHA: 7977430ab8ad19f9956125bdcd94e9ff153eb69c
-Chat duration: 1748434s (20:05:40:34)
+Latest commit at UTC: 2026-10-25T14:45:34Z
+Latest commit SHA: 5ca0d67e4735c955bcb9ef59b6002e2d21b42785
+Chat duration: 1748765s (20:05:46:05)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
