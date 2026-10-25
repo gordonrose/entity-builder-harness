@@ -45,7 +45,7 @@ identity_fields:
 retention: Completed proof receipts remain immutable; validation never queries expired
   historical tasks.
 required_proofs:
-- migration-apply
+- migration-applied-state
 - effective-privilege
 - server-replacement
 - server-replacement-read

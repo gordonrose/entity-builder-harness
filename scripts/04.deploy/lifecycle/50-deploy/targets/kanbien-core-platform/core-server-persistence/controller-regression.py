@@ -330,14 +330,19 @@ class ControllerRegression(unittest.TestCase):
     def test_administration_completion_requires_a_closed_safe_result_record(self):
         module=load(RUN/'run-administration/script.py')
         task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32}
-        expected=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED'})
-        provider=Provider(lambda parts:(True,{'events':[{'message':expected}]},'ok'))
+        for result_code in ('PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED'):
+            expected=json.dumps({'verdict':'accepted','code':result_code})
+            provider=Provider(lambda parts:(True,{'events':[{'message':expected}]},'ok'))
+            with patch.object(module.MIGRATION,'aws',provider.aws):
+                self.assertEqual(module.accepted_log(task,'observe-migration-state'),(result_code,'ok'))
+        rejected=json.dumps({'verdict':'rejected','code':'PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED'})
+        provider=Provider(lambda parts:(True,{'events':[{'message':rejected}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
-            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(True,'ok'))
+            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(None,'persistence-administration-not-confirmed'))
         unsafe=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','password':'synthetic-canary'})
         provider=Provider(lambda parts:(True,{'events':[{'message':unsafe}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
-            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(False,'persistence-administration-not-confirmed'))
+            self.assertEqual(module.accepted_log(task,'observe-migration-state'),(None,'persistence-administration-not-confirmed'))
 
     def test_correction_parameters_remain_complete_and_unique(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')

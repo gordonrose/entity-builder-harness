@@ -70,7 +70,9 @@ def custody(path,digest):
 
 def hashes():
     files=[ROOT/RECORD,ROOT/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml',ROOT/TARGET/'20-scopes/scope-index.yml',*(ROOT/SCOPE/'30-release-evidence/proof-receipts').glob('*.json')]
-    assert len(files)==18,len(files)
+    # Durable live receipts accumulate as governed proofs complete. The
+    # rehearsal protects byte-for-byte preservation of the current set below;
+    # it must not assume a fixed historical receipt count.
     return {str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
 
 def route_tests():
@@ -92,11 +94,11 @@ def route_tests():
         argv=value['commands']['current-health']['argv'];position=argv.index('--mode');del argv[position:position+2]
     check_mutation(missing_mode,'acceptance-route-command-arguments-invalid')
     passed('missing actual required mode fails through declaration coverage')
-    check_mutation(lambda v:v['proofs']['credential-revocation'].__setitem__('command','migration-apply'),'acceptance-route-proof-command-contract-mismatch')
-    check_mutation(lambda v:v['proofs']['migration-apply'].pop('deadline_workload'),'acceptance-route-proof-command-contract-mismatch')
+    check_mutation(lambda v:v['proofs']['credential-revocation'].__setitem__('command','migration-state-observation'),'acceptance-route-proof-command-contract-mismatch')
+    check_mutation(lambda v:v['proofs']['migration-applied-state'].pop('deadline_workload'),'acceptance-route-proof-command-contract-mismatch')
     check_mutation(lambda v:v['proofs'].pop('isolated-restore'),'acceptance-route-required-proofs-mismatch',True)
     passed('valid wrong operation, missing proof contract and omitted required restore fail preflight')
-    check_mutation(lambda v:v['proofs']['migration-apply'].__setitem__('command',[]),'acceptance-route-proof-binding-invalid',True)
+    check_mutation(lambda v:v['proofs']['migration-applied-state'].__setitem__('command',[]),'acceptance-route-proof-binding-invalid',True)
     check_mutation(lambda v:v['commands']['collect'].__setitem__('effects',[]),'acceptance-route-command-owner-or-effects-mismatch',True)
     check_mutation(lambda v:v['commands']['collect'].__setitem__('owner','foreign.owner'),'acceptance-route-command-owner-or-effects-mismatch',True)
     check_mutation(lambda v:v['accepted_record'].__setitem__('schema_path','missing/schema.yml'),'acceptance-route-record-schema-missing',True)
@@ -219,10 +221,10 @@ def full_route():
         with patch.object(collector,'aws',side_effect=AssertionError('malformed input queried provider')):
             code,report=capture(collector,['--receipt']);assert code and report['findings'],report
             code,report=capture(collector,['--receipt',values['candidate_receipt'],'--rollback-receipt',values['rollback_receipt'],'--server-replacement-original',facts['original_task'],'--server-replacement-successor',facts['successor_task'],'--recovery-snapshot',facts['recovery_snapshot'],'--record-proof-receipt',facts['record_proof_receipt'],'--current-health-task',health,'--proof','server-replacement='+facts['original_task']]);assert code and report['findings']==[{'code':'acceptance-evidence-retained-proof-receipts-required'}],report
-            broken=yaml.safe_load(manifest.read_text());del broken['values']['proof_receipts']['migration-apply'];manifest.write_text(yaml.safe_dump(broken));code,report=capture(collector,['--inputs',str(manifest),'--json']);assert code and report['findings'],report
+            broken=yaml.safe_load(manifest.read_text());del broken['values']['proof_receipts']['migration-applied-state'];manifest.write_text(yaml.safe_dump(broken));code,report=capture(collector,['--inputs',str(manifest),'--json']);assert code and report['findings'],report
         passed('missing argument and incomplete retained proof set return structured pre-observation failures')
     assert hashes()==initial,'genuine accepted evidence changed'
-    passed('all 18 genuine accepted evidence and lifecycle files preserved byte-for-byte')
+    passed('all genuine accepted evidence and lifecycle files preserved byte-for-byte')
 
 if __name__=='__main__':
     route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))

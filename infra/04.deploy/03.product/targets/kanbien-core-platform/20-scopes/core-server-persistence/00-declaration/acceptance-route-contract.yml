@@ -59,14 +59,14 @@ inputs:
     owner: verify-candidate
     example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
 commands:
-  migration-apply:
+  migration-state-observation:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --migration-operation
-    - apply
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
+    - observe-migration-state
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
@@ -387,14 +387,14 @@ commands:
     effects:
     - read-only
 proofs:
-  migration-apply:
-    command: migration-apply
-    proof_type: migration
-    operation: apply
-    result_code: PERSISTENCE_MIGRATION_APPLIED
+  migration-applied-state:
+    command: migration-state-observation
+    proof_type: administration
+    operation: observe-migration-state
+    result_code: PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   effective-privilege:
     command: effective-privilege
     proof_type: administration

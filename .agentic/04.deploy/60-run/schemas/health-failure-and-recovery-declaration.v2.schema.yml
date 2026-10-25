@@ -157,11 +157,12 @@ migration_execution:
   interruption_policy: do-not-retry-uncertain-outcome
   unknown_outcome_policy: block-release-require-fresh-state-observation
   fresh_state_observation:
-    required_fields: [workload, operation, replay_permitted_result, receipt]
+    required_fields: [workload, operation, replay_permitted_result, applied_state_result, receipt]
     workload_type: run-to-completion-task
     credential_access_class: administrative
     operation: observe-migration-state
     replay_permitted_result: PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED
+    applied_state_result: PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED
     receipt: durable-task-receipt-required-before-retry
   compatibility_strategy: expand-deploy-verify-contract-later
   replay_handling:
