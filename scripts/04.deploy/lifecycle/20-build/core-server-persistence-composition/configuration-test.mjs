@@ -147,7 +147,12 @@ async function roleCredentialRegression() {
     return { rows: [] };
   } };
   await roleCredential.ensureBoundedLoginRole(inheritedPool, { username: "core_runtime" });
-  assert.equal(inheritedStatements.some((statement) => statement.text === 'ALTER ROLE "core_runtime" LOGIN NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT'), true, "a non-elevated legacy role must converge to the bounded IAM identity profile");
+  assert.equal(inheritedStatements.some((statement) => statement.text === 'ALTER ROLE "core_runtime" NOINHERIT'), true, "a non-elevated legacy role must converge to the bounded IAM identity profile");
+  await assert.rejects(
+    () => roleCredential.ensureBoundedLoginRole({ query: async () => ({ rows: [{ ...bounded, can_login: false }] }) }, { username: "core_runtime" }),
+    /PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY/,
+    "bootstrap must not undo an urgent NOLOGIN revocation",
+  );
   const elevatedPool = { query: async () => ({ rows: [{ ...bounded, create_role: true }] }) };
   await assert.rejects(() => roleCredential.ensureBoundedLoginRole(elevatedPool, { username: "core_runtime" }), /PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED/);
 }

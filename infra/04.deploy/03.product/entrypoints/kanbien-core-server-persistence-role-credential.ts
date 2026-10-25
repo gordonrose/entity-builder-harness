@@ -44,7 +44,14 @@ export async function ensureBoundedLoginRole(pool: PostgreSqlConnectionPool, ide
     // role.  Refusing all legacy attributes here made the IAM migration
     // non-idempotent; blindly altering the role would be worse.
     requireNoElevatedRole(before);
-    await pool.query({ text: `ALTER ROLE ${quotedIdentifier(identity.username)} LOGIN NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT` });
+    // NOLOGIN is the explicit urgent-revocation state. Bootstrap is not a
+    // recovery path and must never silently re-enable it; only restore-runtime
+    // may do so after proving that existing sessions were terminated.
+    if (!before.can_login) throw new Error("PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY");
+    // Leave an already bounded role untouched.  A constrained administrator
+    // can validate it but may not be permitted to rewrite all role attributes;
+    // only the legacy INHERIT setting needs convergence.
+    if (before.inherit) await pool.query({ text: `ALTER ROLE ${quotedIdentifier(identity.username)} NOINHERIT` });
   }
   await requireBoundedExistingRole(pool, identity, { requireLogin: true });
 }

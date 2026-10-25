@@ -237,6 +237,7 @@ function administrationFailureCode(error: unknown): string {
     message === "PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED"
     || message === "PERSISTENCE_RUNTIME_ROLE_MISSING"
     || message === "PERSISTENCE_ROLE_STATE_UNAVAILABLE"
+    || message === "PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY"
     || message === "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"
     || (typeof message === "string" && /^PERSISTENCE_RUNTIME_(?:REVOCATION|RECOVERY)_[A-Z_]+_NOT_CONFIRMED$/.test(message))
   ) return message;
