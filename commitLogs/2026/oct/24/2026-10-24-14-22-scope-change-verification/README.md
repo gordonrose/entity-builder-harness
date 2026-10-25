@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T12:02:58Z
-latest_commit_sha: 481ff0d412bb5e33e1be5701de1934a8bc57b561
-chat_duration: 81611s (00:22:40:11)
+latest_commit_at_utc: 2026-10-25T12:28:30Z
+latest_commit_sha: b7691802bf81dd16392e63e4b4622b1f6b031a52
+chat_duration: 83143s (00:23:05:43)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -455,6 +455,17 @@ Summary: Approved local package recovery implemented with passing controlled tes
 
 Durable evidence: Existing package owner now has qualify-local-public-images.sh plus27-case controlled fixture integrated into payload suite; full payload aggregate passes23.02s. Recovery binds same local Unix engine, strips Docker/build selectors, uses temporary anonymous registry entries without credentials/helper settings, exact reviewed owner hashes, preserves native child exit and interruption cleanup. Normal Docker configuration and native build/smoke owners unchanged. Recognition sources regenerated. No new ADR: bounded implementation within existing package owner. Actual Docker qualification and final merge remain required.
 
+
+### 2026-10-25T12:28:30Z - Commit recorded
+
+Commit: `b7691802bf81dd16392e63e4b4622b1f6b031a52`
+
+Message: Add governed credential-free local persistence qualification recovery
+
+Summary: User-approved bounded package recovery uses anonymous temporary config with same local engine and reviewed owner hashes.27 controlled cases and full payload aggregate pass; mandatory preparation11 local checks pass226.1s; all1331 metadata headers pass; final peer review passes. Actual container qualification and final merge remain required.
+
+ADR impact: No new ADR: bounded recovery belongs to existing package owner and grants no publication or deployment authority.
+
 ## Sub-Agent Activity
 
 
@@ -545,6 +556,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Summary: Attempt6 still fails before image build despite successful Docker helper version precondition. Recovery approval remains pending; current-source container smoke and final main merge remain incomplete.
   ADR impact: Diagnostic evidence only; no source or architecture change.
 
+
+- Commit: `b7691802bf81dd16392e63e4b4622b1f6b031a52`
+  Time UTC: 2026-10-25T12:28:30Z
+  Message: Add governed credential-free local persistence qualification recovery
+  Summary: User-approved bounded package recovery uses anonymous temporary config with same local engine and reviewed owner hashes.27 controlled cases and full payload aggregate pass; mandatory preparation11 local checks pass226.1s; all1331 metadata headers pass; final peer review passes. Actual container qualification and final merge remain required.
+  ADR impact: No new ADR: bounded recovery belongs to existing package owner and grants no publication or deployment authority.
+
 ## Main Refresh Conflicts
 
 
@@ -623,9 +641,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T12:02:58Z
-Latest commit SHA: 481ff0d412bb5e33e1be5701de1934a8bc57b561
-Chat duration: 81611s (00:22:40:11)
+Latest commit at UTC: 2026-10-25T12:28:30Z
+Latest commit SHA: b7691802bf81dd16392e63e4b4622b1f6b031a52
+Chat duration: 83143s (00:23:05:43)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
