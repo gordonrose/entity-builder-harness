@@ -7,11 +7,11 @@
   "goal_complete": false,
   "integration": {
     "accepted_main": "c884c3216412633eac4ba09452abaeaa1071036e",
-    "head": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+    "head": "7f2d44ed73ba15eb54b1b76aef21ac078e9d49c4",
     "current_main": "c884c3216412633eac4ba09452abaeaa1071036e",
     "accepted_main_integrated": true,
-    "final_source_commit": "pending",
-    "final_merge_to_main": "pending"
+    "final_source_commit": "b6d1b928cee29e9e27e88afaf6b563c175a6814e",
+    "final_merge_to_main": "pending-required-container-proof"
   },
   "original_seven_conditions": [
     {
@@ -349,10 +349,11 @@
       "class": "container-qualification",
       "result": "blocked-required",
       "references": [
-        "corrective-container-qualification.json",
-        "corrective-local-image-build.log"
+        "corrective-container-qualification-attempt4.json",
+        "corrective-local-image-build-attempt4.log",
+        "corrective-environment-diagnostic.json"
       ],
-      "detail": "Latest actual image build exit1 at Docker Desktop WSL credential helper (UtilAcceptVsock accept4 failed110; public base-image credential resolution). Final smoke not executed."
+      "detail": "Required local build still fails after user-confirmed Docker recovery; even harmless cmd.exe /c ver fails with WSL UtilAcceptVsock accept4 failed110. Native engine/context queries pass. Container smoke not executed."
     },
     "container_historical": {
       "class": "container-qualification-historical",
@@ -421,13 +422,13 @@
       "id": "final-container-proof",
       "required": true,
       "state": "blocked",
-      "detail": "Latest actual image build exit1 at Docker Desktop WSL credential helper (UtilAcceptVsock accept4 failed110; public base-image credential resolution). Final smoke not executed."
+      "detail": "Required local build still fails after user-confirmed Docker recovery; even harmless cmd.exe /c ver fails with WSL UtilAcceptVsock accept4 failed110. Native engine/context queries pass. Container smoke not executed."
     },
     {
-      "id": "final-commit-and-main-merge",
+      "id": "final-main-merge",
       "required": true,
       "state": "pending",
-      "detail": "Commit corrections/session evidence, reconcile any newer main, rerun affected gates if required, merge through governed route and confirm commit IDs/worktree state."
+      "detail": "Corrective source committed b6d1b928; final main merge awaits required container qualification. Latest fetched origin/main remains c884c321."
     }
   ],
   "not_claimed": [

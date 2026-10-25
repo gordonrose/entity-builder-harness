@@ -61,6 +61,10 @@ connect scope implementation verification and recovery
 - Raised: Final local container qualification is blocked by Docker Desktop credential-helper connection
   Resolution: First build failed local context-directory allocation; retry after healthy engine checks reached BuildKit but failed public-base-image credential lookup: WSL UtilAcceptVsock accept4 failed110. Repository preflight/composition passed; container smoke has not run. User asked to restore the local Docker/WSL connection. No credential configuration change or service restart performed; final qualification and merge remain pending while local verification continues.
 
+
+- Raised: WSL Windows-executable bridge still fails after Docker recovery
+  Resolution: Fresh attempt4 passed repository preflight but image build failed at credential helper. Harmless cmd.exe /c ver independently exits1 with UtilAcceptVsock accept4 failed110; Docker engine/context queries succeed. Corrective source committed b6d1b928 and bookkeeping7f2d44ed; all local source proof complete. No bypass/config/secret operations. User asked to restore or reconnect active WSL session. Current-source container smoke and final main merge remain required; Goal active.
+
 ## Decisions Made
 
 
@@ -322,6 +326,13 @@ Message: Connect scope proofs, recovery validation and trusted local verificatio
 Summary: All six corrective findings implemented; mandatory preparation11 and combined13 local checks pass; ordinary cache reuse11 and stage-boundary six required gaps demonstrated. Accepted-main evidence preserved. Current-tree container qualification blocked by Docker/WSL; final merge pending.
 
 ADR impact: Existing ADR0042 ownership retained; bounded corrections introduce no new architectural owner.
+
+
+### 2026-10-25T11:35:29Z - Issue
+
+Raised: WSL Windows-executable bridge still fails after Docker recovery
+
+Resolution: Fresh attempt4 passed repository preflight but image build failed at credential helper. Harmless cmd.exe /c ver independently exits1 with UtilAcceptVsock accept4 failed110; Docker engine/context queries succeed. Corrective source committed b6d1b928 and bookkeeping7f2d44ed; all local source proof complete. No bypass/config/secret operations. User asked to restore or reconnect active WSL session. Current-source container smoke and final main merge remain required; Goal active.
 
 ## Sub-Agent Activity
 

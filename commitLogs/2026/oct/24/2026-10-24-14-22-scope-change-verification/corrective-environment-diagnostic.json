@@ -1,0 +1,31 @@
+{
+  "schema": "session/local-environment-diagnostic/v1",
+  "observed_at": "2026-10-25T11:35:29.747956+00:00",
+  "secret_operations_performed": false,
+  "configuration_changes": false,
+  "service_restarts_by_agent": false,
+  "docker_version": {
+    "client": "29.8.1",
+    "server": "29.8.1",
+    "exit_code": 0
+  },
+  "docker_contexts": {
+    "current": "default",
+    "other": "desktop-linux",
+    "list_exit_code": 0
+  },
+  "context_directory": "Windows-backed directory readable after intermittent allocation failure",
+  "memory_available": "970Mi",
+  "swap_available": "4.0Ki",
+  "wsl_interop_socket_present": true,
+  "harmless_interop_probe": {
+    "argv": [
+      "cmd.exe",
+      "/c",
+      "ver"
+    ],
+    "exit_code": 1,
+    "stderr": "WSL ERROR: UtilAcceptVsock:273: accept4 failed 110"
+  },
+  "required_external_change": "Restore Windows executable interoperation in the active WSL/agent session; Docker engine restart alone did not restore it."
+}
