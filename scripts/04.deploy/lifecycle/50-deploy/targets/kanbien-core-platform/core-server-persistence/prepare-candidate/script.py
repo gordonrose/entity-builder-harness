@@ -207,7 +207,11 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
 
 def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> dict[str, str]:
     """One provider-owned mapping is shared by CREATE and its execution review."""
-    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+    # All executable programs in the template are part of one qualified image
+    # release.  Keep these bindings together so either CREATE or UPDATE cannot
+    # accidentally retain an obsolete support-program image while moving the
+    # server or restoration verifier to the candidate digest.
+    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
 
 
 def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:

@@ -21,7 +21,7 @@ def route_update_reviewable(change: object, stack_status: object, name: str, dig
     if not isinstance(change, dict) or stack_status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}: return False
     if not (change.get("ChangeSetName") == name or (isinstance(change.get("ChangeSetName"), str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/", 1)[-1].split("/", 1)[0] == name)) or change.get("Status") != "CREATE_COMPLETE" or change.get("ChangeSetType") not in {None, "UPDATE"}: return False
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if parameters.get("ImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision: return False
+    if parameters.get("ImageDigest") != digest or parameters.get("SupportImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision: return False
     changes = [item.get("ResourceChange", {}) for item in change.get("Changes", []) if isinstance(item, dict)]
     return len(changes) == 1 and changes[0].get("Action") == "Add" and changes[0].get("ResourceType") == "AWS::EC2::SecurityGroupEgress" and changes[0].get("LogicalResourceId") == "VerifierEgressToServer"
 
@@ -45,7 +45,7 @@ def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: s
     return None, last_code
 
 def reconcile(prepare, name, digest, revision):
-    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision))
+    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "SupportImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision))
     return report("updated" if verdict == "complete" else verdict, code, facts={"change_set": name, "candidate_image_digest": digest})
 
 def main() -> int:

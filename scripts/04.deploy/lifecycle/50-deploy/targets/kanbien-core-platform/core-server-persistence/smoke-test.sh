@@ -44,7 +44,7 @@ import importlib.util, subprocess, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
+valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SupportImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
 assert module.reviewable(valid, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable({**valid, "Changes":[{"ResourceChange":{"ResourceType":"AWS::S3::Bucket"}}]}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable(valid, "CREATE_COMPLETE", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
@@ -64,7 +64,7 @@ import importlib.util, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("route_update", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-route-update-" + "a" * 12
-change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
+change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SupportImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
 assert module.route_update_reviewable(change, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 assert not module.route_update_reviewable({**change, "Changes":[{"ResourceChange":{"Action":"Modify","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 class Prepare:

@@ -47,7 +47,7 @@ def reviewable(change: object, stack_status: object, expected: str, digest: str,
     if change.get("ChangeSetType") not in {None, "CREATE"}:
         return False
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if parameters.get("ImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision:
+    if parameters.get("ImageDigest") != digest or parameters.get("SupportImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision:
         return False
     types = {item.get("ResourceChange", {}).get("ResourceType") for item in change.get("Changes", []) if isinstance(item, dict)}
     return bool(types) and types <= ALLOWED_TYPES
@@ -125,7 +125,7 @@ def reconcile(module, expected: str, receipt: dict) -> int:
     if status in {"CREATE_FAILED", "ROLLBACK_FAILED", "ROLLBACK_COMPLETE", "DELETE_COMPLETE"}:
         return report("failed", "persistence-stack-creation-failed", facts=facts)
     params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
-    if status != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "EXECUTE_COMPLETE" or any(params.get(key) != value for key, value in (("ImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]))):
+    if status != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "EXECUTE_COMPLETE" or any(params.get(key) != value for key, value in (("ImageDigest", receipt["image_digest"]), ("SupportImageDigest", receipt["image_digest"]), ("RestoreVerifierImageDigest", receipt["image_digest"]), ("SourceRevision", receipt["source_revision"]))):
         return report("uncertain", "persistence-stack-completion-identity-unproven", facts=facts)
     return report("deployed-awaiting-migration", "persistence-create-change-set-executed", facts=facts)
 

@@ -74,7 +74,7 @@ class ControllerRegression(unittest.TestCase):
     def test_exact_change_set_and_restore_image_parameter(self):
         module = load(DEPLOY / 'deploy-candidate/script.py')
         digest, revision, name = 'sha256:'+'a'*64, 'a'*40, 'candidate-name'
-        good = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ChangeSetType': 'CREATE', 'Parameters': [{'ParameterKey': key, 'ParameterValue': value} for key, value in [('ImageDigest',digest),('RestoreVerifierImageDigest',digest),('SourceRevision',revision)]], 'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
+        good = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ChangeSetType': 'CREATE', 'Parameters': [{'ParameterKey': key, 'ParameterValue': value} for key, value in [('ImageDigest',digest),('SupportImageDigest',digest),('RestoreVerifierImageDigest',digest),('SourceRevision',revision)]], 'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
         self.assertTrue(module.reviewable(good, 'REVIEW_IN_PROGRESS', name, digest, revision))
         for bad in [{**good,'ChangeSetName':name+'-other'}, {**good,'Parameters':good['Parameters'][:1]+good['Parameters'][2:]}]:
             self.assertFalse(module.reviewable(bad,'REVIEW_IN_PROGRESS',name,digest,revision))
@@ -127,7 +127,7 @@ class ControllerRegression(unittest.TestCase):
         module=load(DEPLOY/'deploy-candidate/script.py')
         digest='sha256:'+'a'*64;revision='a'*40;name='kanbien-core-platform-persistence-create-'+'a'*12
         receipt={'image_digest':digest,'source_revision':revision}
-        expected={'ImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision}
+        expected={'ImageDigest':digest,'SupportImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision}
         for status in ('EXECUTE_IN_PROGRESS','EXECUTE_COMPLETE'):
             change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':status,'ChangeSetType':'CREATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()],'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
             def response(parts):
@@ -210,7 +210,7 @@ class ControllerRegression(unittest.TestCase):
     def test_change_set_submission_reconciliation_is_observation_only(self):
         module=load(DEPLOY/'create-change-set/script.py');prepare=load(DEPLOY/'prepare-candidate/script.py')
         receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40};name='synthetic-create'
-        params=[{'ParameterKey':key,'ParameterValue':value} for key,value in {'ImageDigest':receipt['image_digest'],'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision']}.items()]
+        params=[{'ParameterKey':key,'ParameterValue':value} for key,value in {'ImageDigest':receipt['image_digest'],'SupportImageDigest':receipt['image_digest'],'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision']}.items()]
         with tempfile.TemporaryDirectory() as directory:
             diagnostic=Path(directory)/'synthetic-diagnostic.json'
             for status,verdict in [('CREATE_PENDING','pending'),('FAILED','failed'),('CREATE_COMPLETE','created-awaiting-review')]:
@@ -230,7 +230,7 @@ class ControllerRegression(unittest.TestCase):
         prepare=load(DEPLOY/'prepare-candidate/script.py');digest='sha256:'+'a'*64;revision='a'*40
         for name,success in [('transition-qualified-release','transitioned'),('apply-private-verifier-route-update','updated'),('apply-restoration-verifier-surface','applied')]:
             module=load(DEPLOY/name/'script.py');change_name='synthetic-operation'
-            params={'ImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision}
+            params={'ImageDigest':digest,'SupportImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision}
             if name=='apply-restoration-verifier-surface':
                 changes=[{'ResourceChange':{'LogicalResourceId':item,'ResourceType':'AWS::EC2::SecurityGroup','Action':'Add'}} for item in module.ADDED]
             elif name=='apply-private-verifier-route-update':changes=[{'ResourceChange':{'LogicalResourceId':'VerifierEgressToServer','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]
@@ -299,6 +299,8 @@ class ControllerRegression(unittest.TestCase):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest='sha256:'+'a'*64
         parameters=prepare.candidate_parameters({'RepositoryUri':'synthetic-image'},{'PrivateSubnetIds':'subnet-safe'},{'image_digest':digest,'source_revision':'a'*40})
+        self.assertEqual(parameters['ImageDigest'],digest)
+        self.assertEqual(parameters['SupportImageDigest'],digest)
         self.assertEqual(parameters['RestoreVerifierImageDigest'],digest)
         surface=load(DEPLOY/'apply-restoration-verifier-surface/script.py')
         values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest'},{'ParameterKey':'RestoreVerifierImageDigest'}]},digest)
@@ -331,7 +333,7 @@ class ControllerRegression(unittest.TestCase):
         digest,revision='sha256:'+'a'*64,'a'*40
         receipt={'image_digest':digest,'source_revision':revision}
         name='kanbien-core-platform-persistence-create-'+digest[7:19]
-        expected={'ImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision,'PrivateSubnetIds':'subnet-safe','EndpointSecurityGroupId':'sg-safe'}
+        expected={'ImageDigest':digest,'SupportImageDigest':digest,'RestoreVerifierImageDigest':digest,'SourceRevision':revision,'PrivateSubnetIds':'subnet-safe','EndpointSecurityGroupId':'sg-safe'}
         for key in ('PrivateSubnetIds','EndpointSecurityGroupId'):
             wrong={**expected,key:'unrelated'}
             change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ChangeSetType':'CREATE','Parameters':[{'ParameterKey':k,'ParameterValue':v} for k,v in wrong.items()],'Changes':[{'ResourceChange':{'ResourceType':'AWS::RDS::DBInstance'}}]}
