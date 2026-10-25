@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T11:30:03Z
-latest_commit_sha: b6d1b928cee29e9e27e88afaf6b563c175a6814e
-chat_duration: 79636s (00:22:07:16)
+latest_commit_at_utc: 2026-10-25T11:36:30Z
+latest_commit_sha: 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9
+chat_duration: 80023s (00:22:13:43)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -98,6 +98,10 @@ connect scope implementation verification and recovery
 
 - Summary: All six corrective implementations and combined local checks pass; Docker qualification remains required before merge.
   Durable evidence: Retain corrective-condition-audit.json, corrective-combined-checks.json, normal-reuse and stage-boundary reports, source hashes and protected18 comparison. Current source includes accepted main171ea85e; root mainc884c321 clean. No CI/live/push. Docker credential-helper restoration pending; checkpoint source now under direct authorization.
+
+
+- Summary: Clean committed corrective work preserved before external WSL reconnection
+  Durable evidence: Corrective checkpoint bundle verified: /home/owner/projects/.chat-preservation/2026-10-25-scope-corrections-final-checkpoint.bundle; SHA-256 67b247ee8e0c2ba34aeec61a7b8efda8b58c21400492e2b484dd37223d78f000; covers source b6d1b928 and evidence 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9. No uncommitted task source remains. All13 combined local checks and11 normal cache reuse passed; active Goal still requires container qualification and final main merge.
 
 ## Activity Log
 
@@ -334,6 +338,24 @@ Raised: WSL Windows-executable bridge still fails after Docker recovery
 
 Resolution: Fresh attempt4 passed repository preflight but image build failed at credential helper. Harmless cmd.exe /c ver independently exits1 with UtilAcceptVsock accept4 failed110; Docker engine/context queries succeed. Corrective source committed b6d1b928 and bookkeeping7f2d44ed; all local source proof complete. No bypass/config/secret operations. User asked to restore or reconnect active WSL session. Current-source container smoke and final main merge remain required; Goal active.
 
+
+### 2026-10-25T11:36:30Z - Commit recorded
+
+Commit: `2403d42f79c0fa2d6727d3d62822f6b999b8cbf9`
+
+Message: Record final local proof and unresolved WSL qualification blocker
+
+Summary: Retain Docker attempts3/4 and harmless Windows interoperation diagnostic. All corrective source proof is complete and source committed b6d1b928; current image qualification and final merge await restored WSL interoperation.
+
+ADR impact: No new architecture decision; verification/session evidence only.
+
+
+### 2026-10-25T11:36:35Z - Context hygiene
+
+Summary: Clean committed corrective work preserved before external WSL reconnection
+
+Durable evidence: Corrective checkpoint bundle verified: /home/owner/projects/.chat-preservation/2026-10-25-scope-corrections-final-checkpoint.bundle; SHA-256 67b247ee8e0c2ba34aeec61a7b8efda8b58c21400492e2b484dd37223d78f000; covers source b6d1b928 and evidence 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9. No uncommitted task source remains. All13 combined local checks and11 normal cache reuse passed; active Goal still requires container qualification and final main merge.
+
 ## Sub-Agent Activity
 
 
@@ -402,6 +424,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Message: Connect scope proofs, recovery validation and trusted local verification
   Summary: All six corrective findings implemented; mandatory preparation11 and combined13 local checks pass; ordinary cache reuse11 and stage-boundary six required gaps demonstrated. Accepted-main evidence preserved. Current-tree container qualification blocked by Docker/WSL; final merge pending.
   ADR impact: Existing ADR0042 ownership retained; bounded corrections introduce no new architectural owner.
+
+
+- Commit: `2403d42f79c0fa2d6727d3d62822f6b999b8cbf9`
+  Time UTC: 2026-10-25T11:36:30Z
+  Message: Record final local proof and unresolved WSL qualification blocker
+  Summary: Retain Docker attempts3/4 and harmless Windows interoperation diagnostic. All corrective source proof is complete and source committed b6d1b928; current image qualification and final merge await restored WSL interoperation.
+  ADR impact: No new architecture decision; verification/session evidence only.
 
 ## Main Refresh Conflicts
 
@@ -481,9 +510,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T11:30:03Z
-Latest commit SHA: b6d1b928cee29e9e27e88afaf6b563c175a6814e
-Chat duration: 79636s (00:22:07:16)
+Latest commit at UTC: 2026-10-25T11:36:30Z
+Latest commit SHA: 2403d42f79c0fa2d6727d3d62822f6b999b8cbf9
+Chat duration: 80023s (00:22:13:43)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
