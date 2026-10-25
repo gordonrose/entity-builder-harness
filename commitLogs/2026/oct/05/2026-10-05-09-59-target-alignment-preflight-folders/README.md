@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:45:34Z
-latest_commit_sha: 5ca0d67e4735c955bcb9ef59b6002e2d21b42785
-chat_duration: 1748765s (20:05:46:05)
+latest_commit_at_utc: 2026-10-25T14:49:53Z
+latest_commit_sha: f5890f9a82cae7e8c46a24c8b01acf9dee234c50
+chat_duration: 1749024s (20:05:50:24)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3200,6 +3200,12 @@ Durable evidence: Durable target contract and workflow are in infra/04.deploy/03
 
 ## Commits
 
+- Commit: `f5890f9a82cae7e8c46a24c8b01acf9dee234c50`
+  Time UTC: 2026-10-25T14:49:53Z
+  Message: fix(deploy): scan exact collector payload
+  Summary: Replaced the scanner action's ineffective tar-input route with an explicitly pinned Trivy installation and command that scans the exported private image tar. Final custody remains blocked until that exact scan passes.
+  ADR impact: No ADR: bounded correction to the active target package custody route.
+
 - Commit: `5ca0d67e4735c955bcb9ef59b6002e2d21b42785`
   Time UTC: 2026-10-25T14:45:34Z
   Message: fix(deploy): pin collector platform manifest
@@ -4027,9 +4033,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:45:34Z
-Latest commit SHA: 5ca0d67e4735c955bcb9ef59b6002e2d21b42785
-Chat duration: 1748765s (20:05:46:05)
+Latest commit at UTC: 2026-10-25T14:49:53Z
+Latest commit SHA: f5890f9a82cae7e8c46a24c8b01acf9dee234c50
+Chat duration: 1749024s (20:05:50:24)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
