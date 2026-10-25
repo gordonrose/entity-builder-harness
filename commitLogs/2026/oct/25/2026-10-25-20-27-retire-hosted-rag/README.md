@@ -15,9 +15,9 @@ transcript_source: exact-root-thread-id
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T21:16:59Z
-latest_commit_sha: 282a0581e426b79822063356a13b786cd697f335
-chat_duration: 2954s (00:00:49:14)
+latest_commit_at_utc: 2026-10-25T21:40:15Z
+latest_commit_sha: 0f4f955b495d4dd92b70f9808afaebcdf7e27edf
+chat_duration: 4350s (00:01:12:30)
 estimated_chat_tokens: 560775 estimated from chat transcript bytes (2243100 bytes; source: exact-root-thread-id)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -144,6 +144,17 @@ Summary: Governed no-stash recovery preserved all 116 task paths, refreshed to r
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T21:40:15Z - Commit recorded
+
+Commit: `0f4f955b495d4dd92b70f9808afaebcdf7e27edf`
+
+Message: retire hosted RAG and preserve local retrieval
+
+Summary: Retired dedicated RAG AWS resources, disabled redeployment, preserved explicit local retrieval and evidence; mandatory local checks pass with the two explicitly approved test corrections.
+
+ADR impact: No new ADR; retirement follows the reviewed provider-specific lifecycle and existing local retrieval architecture.
+
 ## Sub-Agent Activity
 
 
@@ -227,6 +238,13 @@ Summary: Final focused diff approved; exact scope validators retain global defau
   Summary: Governed no-stash recovery preserved all 116 task paths, refreshed to reviewed accepted main f02f6fc4, and restored the exact verified replay tree. User-approved qualification guard correction follows accepted-byte intake.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `0f4f955b495d4dd92b70f9808afaebcdf7e27edf`
+  Time UTC: 2026-10-25T21:40:15Z
+  Message: retire hosted RAG and preserve local retrieval
+  Summary: Retired dedicated RAG AWS resources, disabled redeployment, preserved explicit local retrieval and evidence; mandatory local checks pass with the two explicitly approved test corrections.
+  ADR impact: No new ADR; retirement follows the reviewed provider-specific lifecycle and existing local retrieval architecture.
+
 ## Main Refresh Conflicts
 
 - None recorded yet.
@@ -240,9 +258,9 @@ Reason: Bounded retirement of one unused hosted deployment; local RAG architectu
 ## Session Metrics
 
 Raised at UTC: 2026-10-25T20:27:45Z
-Latest commit at UTC: 2026-10-25T21:16:59Z
-Latest commit SHA: 282a0581e426b79822063356a13b786cd697f335
-Chat duration: 2954s (00:00:49:14)
+Latest commit at UTC: 2026-10-25T21:40:15Z
+Latest commit SHA: 0f4f955b495d4dd92b70f9808afaebcdf7e27edf
+Chat duration: 4350s (00:01:12:30)
 Estimated chat tokens: 560775 estimated from chat transcript bytes (2243100 bytes; source: exact-root-thread-id)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
