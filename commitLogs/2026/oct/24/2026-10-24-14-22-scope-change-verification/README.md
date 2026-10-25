@@ -131,6 +131,10 @@ connect scope implementation verification and recovery
 - Summary: Approved local package recovery implemented with passing controlled tests
   Durable evidence: Existing package owner now has qualify-local-public-images.sh plus27-case controlled fixture integrated into payload suite; full payload aggregate passes23.02s. Recovery binds same local Unix engine, strips Docker/build selectors, uses temporary anonymous registry entries without credentials/helper settings, exact reviewed owner hashes, preserves native child exit and interruption cleanup. Normal Docker configuration and native build/smoke owners unchanged. Recognition sources regenerated. No new ADR: bounded implementation within existing package owner. Actual Docker qualification and final merge remain required.
 
+
+- Summary: All applicable implementation and verification conditions passed; final governed main merge remains
+  Durable evidence: Retained corrective-final-condition-audit.json, final source/protected hashes, final local/stage reports and real container qualification. Current image bae8a518 matches sourcecd9e60b8; all154 source hashes and18 protected evidence files verified. No source changes after qualification; final evidence-only commit pending. Main/originc884c321 clean after fetch. User authorized final local merge; no push, CI, publication or live mutation.
+
 ## Activity Log
 
 ### 2026-10-24T13:22:47Z - Session started
@@ -465,6 +469,13 @@ Message: Add governed credential-free local persistence qualification recovery
 Summary: User-approved bounded package recovery uses anonymous temporary config with same local engine and reviewed owner hashes.27 controlled cases and full payload aggregate pass; mandatory preparation11 local checks pass226.1s; all1331 metadata headers pass; final peer review passes. Actual container qualification and final merge remain required.
 
 ADR impact: No new ADR: bounded recovery belongs to existing package owner and grants no publication or deployment authority.
+
+
+### 2026-10-25T12:38:49Z - Context hygiene
+
+Summary: All applicable implementation and verification conditions passed; final governed main merge remains
+
+Durable evidence: Retained corrective-final-condition-audit.json, final source/protected hashes, final local/stage reports and real container qualification. Current image bae8a518 matches sourcecd9e60b8; all154 source hashes and18 protected evidence files verified. No source changes after qualification; final evidence-only commit pending. Main/originc884c321 clean after fetch. User authorized final local merge; no push, CI, publication or live mutation.
 
 ## Sub-Agent Activity
 
@@ -807,3 +818,25 @@ Corrective Goal remains **active**. All six corrective findings now have passing
 - Required current combined-tree Docker qualification is blocked before base-image resolution by Docker Desktop WSL credential-helper failure (UtilAcceptVsock accept4 failed110). Smoke has not run. Main integration changed packaged revocation SQL/result handling, so historical container success does not cover the combined source.
 
 Executed results and timings: [corrective-verification-runs.json](corrective-verification-runs.json). Complete selected command/input identities: [corrective-combined-checks.json](corrective-combined-checks.json). Container failure: [corrective-container-qualification.json](corrective-container-qualification.json). CI and live operations were not run. Checkpoint the verified source under direct user authorization; retain Goal active and defer final merge until required container proof succeeds. The pending request is for restoration of Docker/WSL connectivity, not Git permission.
+
+
+### Final qualification and promotion checkpoint
+
+All six corrections and the seven original implementation/verification conditions have been audited against current source and actual results. The pre-promotion audit is [corrective-final-condition-audit.json](corrective-final-condition-audit.json). Final main integration remains the only completion step; the Goal is not complete at this checkpoint.
+
+| Correction | Owning implementation | Executed proof |
+| --- | --- | --- |
+| Authoritative changes reach consumers | `scripts/repo/check-selection/` and its catalog | Current 49-case suite passed; schema mapping, consumer closure and explicit gaps covered. |
+| Checks match declared capabilities | `declaration-coverage/` and owner `check-capability.yml` files | Wrong-scope checks and omitted integration proof rejected; second synthetic dependency-bearing scope passes generic machinery. |
+| Valid provider responses normalize safely | Provider-owned `ecs-task-evidence.py` and persistence controllers | 28 controller groups pass captured harmless defaults, consequential mismatch rejection and continuation cases. |
+| Complete acceptance route precedes deployment | `validate-acceptance-route/`, scope routes, retained-proof collector, accepted validators and promotion | 15 full-route rehearsal groups plus fresh-observation negatives pass; simulation cannot become production acceptance. |
+| Recovery-point suitability before restore | `rehearse-isolated-database-restore/` | Earlier snapshots reject before mutation; valid suffixed snapshots and exact-operation reconciliation pass. |
+| Ordinary local evidence reuse | `scripts/repo/check-selection/local_cache.py` and normal preparation hook | Normal workflow reuse demonstrated; relevant input changes invalidate; final stage boundary reused all 13 local results but retained six owning-stage gaps. |
+
+Final mandatory preparation passed 11 local checks in 226.1 seconds after the approved recovery addition. Final combined selection passed 13 checks in 57.75 seconds; 12 reused evidence, while acceptance-route regression reran for a broader collector input reference. The acceptance-stage negative returned expected exit 1 in 23.55 seconds, with all 13 local checks reused and six later-stage requirements enforced. Static metadata passed all 1,331 artifacts. See [corrective-final-verification.json](corrective-final-verification.json) and [corrective-final-local-checks.json](corrective-final-local-checks.json).
+
+Real local container qualification **passed** in 88.14 seconds using the explicitly approved package recovery. Existing build and PostgreSQL/TLS smoke commands passed against image `sha256:bae8a5180a179295c0a2f92f7ae41c55abe49470cb3ba8d8d2ce9f6af7b11ebd`, labelled source `cd9e60b8903a566b46ceab227a5aa3b911acb7a1`. The temporary anonymous Docker configuration was removed; normal settings and stored credentials were unchanged. No disposable containers or volumes remain from this run. A matching network created two hours earlier was preserved as unrelated. See [container proof](corrective-final-container-qualification.json) and [cleanup observations](corrective-final-cleanup.json).
+
+All 154 changed source entries match the qualified source label, and all 18 protected accepted evidence/lifecycle files remain byte-identical to main `c884c321`. The complete diff has no unrelated or deleted source paths. [Final source hashes](corrective-final-source-manifest.json) and [protected evidence](corrective-final-protected-evidence.json) bind this checkpoint.
+
+CI, publication and fresh live infrastructure evidence were not performed or claimed. Those future-stage requirements remain with their owners. Local merge authorization is already explicit. After recording this evidence commit and the narrow session checkpoint, run promotion readiness from the clean root integration worktree, merge with `--no-ff`, and verify ancestry, matching trees and both worktrees clean. The root merge SHA will be reported from Git; the promotion owner requires no recursive post-merge chat bookkeeping commit.

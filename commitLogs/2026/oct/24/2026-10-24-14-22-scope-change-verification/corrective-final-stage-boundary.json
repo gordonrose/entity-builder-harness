@@ -1,0 +1,1817 @@
+{
+  "affected_consumers": [
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+  ],
+  "changed_inputs": [],
+  "checks": [
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_ids": [
+          "kanbien-core-server",
+          "kanbien-core-server-persistence"
+        ]
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh"
+      ],
+      "check_id": "acceptance-route-regression",
+      "check_key": "acceptance-route-regression:64bc39ddec550419",
+      "effects": [
+        "read-only",
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "f4a977bf28c6b9579ce905b9a45937035b4e3092dfbc9f580bea2f7eed1244ba",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "exit_code": 0,
+      "input_digest": "bc4aac4328f54effb389e41eacb31fa342eddc7f1a57f16327993a655478efd7",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime",
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 363,
+      "references_sha256": "f1d4a80f039ee480eedf5abe1a3a6d63053e4211e1743d40be3b8c43ba0edfe2"
+    },
+    {
+      "applicability": {
+        "context_parameters": [
+          "scope_contract"
+        ],
+        "contract_schema": "deploy/target-scope-contract/v1",
+        "kind": "generic"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh",
+        "--scope-contract",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+        "--json"
+      ],
+      "check_id": "acceptance-route",
+      "check_key": "acceptance-route:285cd4e68fec295a",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "93f9307a62dea20c4b9ef73a442d4ad1bdefe1b5784859cb7ad01a36d1dbb465",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "85eeb1f9431b21eefe4d2b1c8a4fb27b0caefd6eca6181227e5e9b4173df9d06",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 302,
+      "references_sha256": "12313daf492e6e5d915992eae9251e334df7f9cf67128e2945166075018c1c3e"
+    },
+    {
+      "applicability": {
+        "context_parameters": [
+          "scope_contract"
+        ],
+        "contract_schema": "deploy/target-scope-contract/v1",
+        "kind": "generic"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh",
+        "--scope-contract",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "--json"
+      ],
+      "check_id": "acceptance-route",
+      "check_key": "acceptance-route:3773d53401f233a1",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "9e93a2be432cf2053a5d50b05a063d7053ae4e0e8579080a65625c543976c512",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "32ee30429e787f143f42126019b22d1e666a5c9df103eb6d93f05bfebd5e17ec",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 295,
+      "references_sha256": "ae3fc8f03038b88bc732f2781f170fb4468cdc92e52dbe9ea58d20e2da46d99d"
+    },
+    {
+      "applicability": {},
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh"
+      ],
+      "check_id": "artifact-placement-regression",
+      "check_key": "artifact-placement-regression:ffa6b4bc4e2543c7",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "58548faff3be8519a98d0bc25915d6d2ad6b4712649ac9fa99c5762a3aceddad",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+      "exit_code": 0,
+      "input_digest": "55162b619e6aa3e328d3623b01cfa00403d6d1ed8de6d5e17d3b70b7fadc2996",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 13,
+      "references_sha256": "c54597be629066956d34c3b86aa21257bc19164ad89b0698db0fb0be464004e6"
+    },
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_id": "kanbien-core-server"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh"
+      ],
+      "check_id": "bootstrap-acceptance-regression",
+      "check_key": "bootstrap-acceptance-regression:2403035382c9b528",
+      "effects": [
+        "read-only",
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "6090afc3e943e7721934bc09167eb4a23b7ed34635a068866a287f2a4af9a379",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "06b2ce0afc1bf3bc8de2baa2d42d428ed1a486a2c205aeb4660f92465f36447f",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 303,
+      "references_sha256": "9fa5c866a6a6f9e61977900bac846ece6afb47edea5749bd96d4071350c960d9"
+    },
+    {
+      "applicability": {},
+      "argv": [
+        "bash",
+        "scripts/repo/check-selection/smoke-test.sh"
+      ],
+      "check_id": "check-selection-regression",
+      "check_key": "check-selection-regression:93569ff9dc8478e1",
+      "effects": [
+        "read-only",
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "4e4423a4641b9fb619ff2746fd37c9b7e6d1efee0d8d4a4455d60a791883b759",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "8c3f1c634b51ae93888049e3c06db6b8b0371f43c2730cad20e4856a08f53735",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt",
+          ".npmrc",
+          ".node-version",
+          ".nvmrc"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED",
+          "NODE_OPTIONS",
+          "NODE_PATH",
+          "TS_NODE_PROJECT",
+          "TS_NODE_COMPILER_OPTIONS"
+        ],
+        "node_packages": [
+          "pg",
+          "@types/node",
+          "typescript"
+        ],
+        "tools": [
+          "bash",
+          "python3",
+          "node",
+          "npm",
+          "typescript"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "NODE_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "NODE_PATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_COMPILER_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_PROJECT": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "737c0db53fb6847e9f018328fc82678abd62609cec4153341b7567b28fc0ec04",
+          "packages": [
+            "node_modules/@types/node",
+            "node_modules/pg",
+            "node_modules/pg-cloudflare",
+            "node_modules/pg-connection-string",
+            "node_modules/pg-int8",
+            "node_modules/pg-pool",
+            "node_modules/pg-protocol",
+            "node_modules/pg-types",
+            "node_modules/pgpass",
+            "node_modules/postgres-array",
+            "node_modules/postgres-bytea",
+            "node_modules/postgres-date",
+            "node_modules/postgres-interval",
+            "node_modules/split2",
+            "node_modules/typescript",
+            "node_modules/undici-types",
+            "node_modules/xtend"
+          ]
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "node": {
+            "digest": "d0efb6fcb9d023ba4e2b160ec2384dc28fe4f17732141ef47f676828fa960505",
+            "mode": 493,
+            "path": "/usr/bin/node",
+            "version": "v22.22.1"
+          },
+          "npm": {
+            "digest": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+            "mode": 493,
+            "path": "/usr/share/nodejs/npm/bin/npm-cli.js",
+            "version": "9.2.0"
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          },
+          "typescript": {
+            "digest": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+            "mode": 493,
+            "path": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114/node_modules/typescript/bin/tsc",
+            "version": "Version 5.9.3"
+          }
+        }
+      },
+      "scopes": [],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 408,
+      "references_sha256": "693f2fa5c4e47fe270cafc424c0c675775a00f359885444148c58c5744276b60"
+    },
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_id": "kanbien-core-server"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh"
+      ],
+      "check_id": "core-dependency-boundary",
+      "check_key": "core-dependency-boundary:75a3c7169b1c060c",
+      "effects": [
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "f0ae3693d2d303d2b31788e9694a0c5b34c8b89deec1e57af968f03c83ba6e4b",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "4db4f9cdf84e7867d5f453d5ede7f91f1be2d85bcabcd6c7a19c7b2be90a9028",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt",
+          ".npmrc",
+          ".node-version",
+          ".nvmrc"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED",
+          "NODE_OPTIONS",
+          "NODE_PATH",
+          "TS_NODE_PROJECT",
+          "TS_NODE_COMPILER_OPTIONS"
+        ],
+        "node_packages": [
+          "@types/node",
+          "typescript"
+        ],
+        "tools": [
+          "bash",
+          "python3",
+          "node",
+          "npm",
+          "typescript"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "NODE_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "NODE_PATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_COMPILER_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_PROJECT": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "2e4405203813a944c48f30d9d27b88efb73510a36071a5fdb7617807aac98af2",
+          "packages": [
+            "node_modules/@types/node",
+            "node_modules/typescript",
+            "node_modules/undici-types"
+          ]
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "node": {
+            "digest": "d0efb6fcb9d023ba4e2b160ec2384dc28fe4f17732141ef47f676828fa960505",
+            "mode": 493,
+            "path": "/usr/bin/node",
+            "version": "v22.22.1"
+          },
+          "npm": {
+            "digest": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+            "mode": 493,
+            "path": "/usr/share/nodejs/npm/bin/npm-cli.js",
+            "version": "9.2.0"
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          },
+          "typescript": {
+            "digest": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+            "mode": 493,
+            "path": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114/node_modules/typescript/bin/tsc",
+            "version": "Version 5.9.3"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 311,
+      "references_sha256": "1de95eaf96ad188e6363a387a8ef4c98b789461ea87481f1ab61b50399615db6"
+    },
+    {
+      "applicability": {},
+      "argv": [
+        "bash",
+        "scripts/04.deploy/operational-realization-gate/smoke-test.sh"
+      ],
+      "check_id": "operational-realization-regression",
+      "check_key": "operational-realization-regression:f029a296c0b4ee5b",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "be5c1526e09b620907eab2a64b75c4f8804d9a637e09a0c575dfb05c60ceb06b",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "171ea85eabea63eb51b967aac9d4a19f0c4ac82d",
+      "exit_code": 0,
+      "input_digest": "e7e1ee8406f38eb7479ec2b16a74df2dad222fa93c155d77aff7c5c0f871a0aa",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 24,
+      "references_sha256": "3f75dce481105f10d751085d6117a60bdcd9d18dfe1def34f1d791d26c672638"
+    },
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh"
+      ],
+      "check_id": "persistence-composition",
+      "check_key": "persistence-composition:f70d0fb629adb6c6",
+      "effects": [
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "c3aeb699c57dd2abb7fcc9921f83eef8677de1674894dfdbef36132ccff808d6",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "e7023cd15745e5628e22702b1f37ae4c503fbf0368301e1abd38f66d4a0f53a7",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt",
+          ".npmrc",
+          ".node-version",
+          ".nvmrc"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED",
+          "NODE_OPTIONS",
+          "NODE_PATH",
+          "TS_NODE_PROJECT",
+          "TS_NODE_COMPILER_OPTIONS"
+        ],
+        "node_packages": [
+          "pg",
+          "@types/node",
+          "typescript"
+        ],
+        "tools": [
+          "bash",
+          "python3",
+          "node",
+          "npm",
+          "typescript"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "NODE_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "NODE_PATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_COMPILER_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_PROJECT": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "737c0db53fb6847e9f018328fc82678abd62609cec4153341b7567b28fc0ec04",
+          "packages": [
+            "node_modules/@types/node",
+            "node_modules/pg",
+            "node_modules/pg-cloudflare",
+            "node_modules/pg-connection-string",
+            "node_modules/pg-int8",
+            "node_modules/pg-pool",
+            "node_modules/pg-protocol",
+            "node_modules/pg-types",
+            "node_modules/pgpass",
+            "node_modules/postgres-array",
+            "node_modules/postgres-bytea",
+            "node_modules/postgres-date",
+            "node_modules/postgres-interval",
+            "node_modules/split2",
+            "node_modules/typescript",
+            "node_modules/undici-types",
+            "node_modules/xtend"
+          ]
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "node": {
+            "digest": "d0efb6fcb9d023ba4e2b160ec2384dc28fe4f17732141ef47f676828fa960505",
+            "mode": 493,
+            "path": "/usr/bin/node",
+            "version": "v22.22.1"
+          },
+          "npm": {
+            "digest": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+            "mode": 493,
+            "path": "/usr/share/nodejs/npm/bin/npm-cli.js",
+            "version": "9.2.0"
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          },
+          "typescript": {
+            "digest": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+            "mode": 493,
+            "path": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114/node_modules/typescript/bin/tsc",
+            "version": "Version 5.9.3"
+          }
+        }
+      },
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 300,
+      "references_sha256": "c84fb4bb93a8bea814bd0bec88be07ba5aa84683ee4c9dfd7c7bb04ddbab88bb"
+    },
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh"
+      ],
+      "check_id": "persistence-payload-regression",
+      "check_key": "persistence-payload-regression:1f14a288645b0db8",
+      "effects": [
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "a6ac0482e28dcb19d3a74368be0b5c9843b7799bf823bf86bc2fc646ccefdacb",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "363058a7401407b18b2520bf1b70d675703a2bd8e8b9834a6385748b42da49f7",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt",
+          ".npmrc",
+          ".node-version",
+          ".nvmrc"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED",
+          "NODE_OPTIONS",
+          "NODE_PATH",
+          "TS_NODE_PROJECT",
+          "TS_NODE_COMPILER_OPTIONS"
+        ],
+        "node_packages": [
+          "pg",
+          "@types/node",
+          "typescript"
+        ],
+        "tools": [
+          "bash",
+          "python3",
+          "node",
+          "npm",
+          "typescript"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "NODE_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "NODE_PATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_COMPILER_OPTIONS": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "TS_NODE_PROJECT": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "737c0db53fb6847e9f018328fc82678abd62609cec4153341b7567b28fc0ec04",
+          "packages": [
+            "node_modules/@types/node",
+            "node_modules/pg",
+            "node_modules/pg-cloudflare",
+            "node_modules/pg-connection-string",
+            "node_modules/pg-int8",
+            "node_modules/pg-pool",
+            "node_modules/pg-protocol",
+            "node_modules/pg-types",
+            "node_modules/pgpass",
+            "node_modules/postgres-array",
+            "node_modules/postgres-bytea",
+            "node_modules/postgres-date",
+            "node_modules/postgres-interval",
+            "node_modules/split2",
+            "node_modules/typescript",
+            "node_modules/undici-types",
+            "node_modules/xtend"
+          ]
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "node": {
+            "digest": "d0efb6fcb9d023ba4e2b160ec2384dc28fe4f17732141ef47f676828fa960505",
+            "mode": 493,
+            "path": "/usr/bin/node",
+            "version": "v22.22.1"
+          },
+          "npm": {
+            "digest": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+            "mode": 493,
+            "path": "/usr/share/nodejs/npm/bin/npm-cli.js",
+            "version": "9.2.0"
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          },
+          "typescript": {
+            "digest": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0",
+            "mode": 493,
+            "path": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114/node_modules/typescript/bin/tsc",
+            "version": "Version 5.9.3"
+          }
+        }
+      },
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 301,
+      "references_sha256": "04bee343ae74bba830ef19a70b602da79cb704cafc97a27d62783d19298fe49e"
+    },
+    {
+      "applicability": {
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"
+      ],
+      "check_id": "persistence-provider-regression",
+      "check_key": "persistence-provider-regression:1582282d0fc2baac",
+      "effects": [
+        "read-only",
+        "writes-files"
+      ],
+      "evidence_class": "local-runtime",
+      "evidence_key": "d10b01b9bc24e0ec5086a3e4060749855b59c864afe5d1eaf779d68dd9c5fd2c",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "c5736dfc0c2c3ea9335f4649e4bf0e3bdf4d33ed541decf0ae680eedefdeaad7",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 294,
+      "references_sha256": "094f55445bf0b234dd65916a8a61672a81a05a789f94ec396b985d7d3cbd23c3"
+    },
+    {
+      "applicability": {
+        "context_parameters": [
+          "program_contract"
+        ],
+        "contract_schema": "deploy/runnable-program-contract/v1",
+        "kind": "generic"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh",
+        "--contract",
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "--json"
+      ],
+      "check_id": "runnable-program",
+      "check_key": "runnable-program:33289e86082bd0fa",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "3c236f4dd9399ef66bff18b22d7028e365b9b2ce1cbf90f1227ad4986d6219ed",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "6cb3ca0723abd33ab4327bb875f3d3cd4606d3f6fe4d7b75d54174018c0c53fa",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime",
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 358,
+      "references_sha256": "27f2748710a65ae2ebc487bb0afaa57fddb355d511f4e629b5a4d0a46974775e"
+    },
+    {
+      "applicability": {
+        "context_parameters": [
+          "target_root"
+        ],
+        "contract_schema": "deploy/target-scope-contract/v1",
+        "kind": "generic"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh",
+        "--target-root",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes",
+        "--json"
+      ],
+      "check_id": "scope-inventory",
+      "check_key": "scope-inventory:f29c115d0a63d452",
+      "effects": [
+        "read-only"
+      ],
+      "evidence_class": "static",
+      "evidence_key": "9f349e38def956b5fc8d832cd9527ad38952975dcbc4f0af46432737d18ea7fc",
+      "evidence_source": "trusted-worktree-cache",
+      "executed_revision": "50121bf938a4ad7c6a5624bbd7c3a07b3dd024b1",
+      "exit_code": 0,
+      "input_digest": "16d68a167c2131fce003c6a2132f748ab8265bfef86b078f7a2f5201ef03018e",
+      "parameters": {},
+      "runtime": {
+        "config_inputs": [
+          ".python-version",
+          "pyproject.toml",
+          "requirements.txt"
+        ],
+        "environment": [
+          "PATH",
+          "LANG",
+          "LC_ALL",
+          "PYTHONPATH",
+          "PYTHONHOME",
+          "PYTHONHASHSEED"
+        ],
+        "tools": [
+          "bash",
+          "python3"
+        ]
+      },
+      "runtime_identity": {
+        "environment": {
+          "LANG": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "LC_ALL": "99fed2d548c2eb1022f4067f97fe838a2c3ea60ee0e0f53086788505c3ababad",
+          "PATH": "16cf79fb66bb369645d1e790a4a2a2b49b56d2e65e2c9d8063da0b93d0e0b4bc",
+          "PYTHONHASHSEED": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONHOME": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74",
+          "PYTHONPATH": "5a42f60a790863f8c06e57327bf7116900a94dc23154b1e785a0b734d7afaf74"
+        },
+        "node_installation": {
+          "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "packages": []
+        },
+        "runner_python": {
+          "executable": "/usr/bin/python3",
+          "version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+          "yaml_version": "6.0.3"
+        },
+        "tools": {
+          "bash": {
+            "digest": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd",
+            "mode": 493,
+            "path": "/usr/bin/bash",
+            "version": "GNU bash, version 5.3.9(1)-release (x86_64-pc-linux-gnu)\nCopyright (C) 2025 Free Software Foundation, Inc.\nLicense GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\nThis is free software; you are free to change and redistribute it.\nThere is NO WARRANTY, to the extent permitted by law."
+          },
+          "python3": {
+            "digest": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+            "mode": 493,
+            "path": "/usr/bin/python3.14",
+            "pyyaml": {
+              "digest": "378622fffea6359f32f547afb526e23a38a70ee4459a353e5dab653957955548",
+              "path": "/usr/lib/python3/dist-packages/yaml",
+              "version": "6.0.3"
+            },
+            "version": "Python 3.14.4"
+          }
+        }
+      },
+      "scopes": [
+        "bootstrap-runtime",
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "local",
+      "status": "passed",
+      "references_count": 378,
+      "references_sha256": "1c1e413075bf63558f1fae05990670875d8da622f55ebba187dac11bff84673a"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh"
+      ],
+      "check_id": "bootstrap-container",
+      "check_key": "bootstrap-container:0562848516ec2c1e",
+      "effects": [
+        "network",
+        "writes-files"
+      ],
+      "evidence_class": "container-qualification",
+      "evidence_key": "23ce8a122cfd666b613523a346027c563ce96ae45cf90bdf6899253e5902ca6f",
+      "input_digest": "092e5a5b68ad64a31bda2aad515d5969eee1b022fa202048142fbf713ef1df87",
+      "parameters": {},
+      "runtime": {},
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "package",
+      "status": "pending",
+      "references_count": 299,
+      "references_sha256": "4f7776201509432a1b7b0213893dff7e2413aff2ceb3c20d3896f0e685e5aae8"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-persistence-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh"
+      ],
+      "check_id": "persistence-container",
+      "check_key": "persistence-container:bdbe1761bb259c7e",
+      "effects": [
+        "network",
+        "writes-files"
+      ],
+      "evidence_class": "container-qualification",
+      "evidence_key": "da5208239dc45eb28143fb870f789b0d0448c2bdccac791c332551dfa3b525a7",
+      "input_digest": "439be0a3a6f838cd0e56e96c7852ccfb28e2abd57bae77d17904b729d61c8cd4",
+      "parameters": {},
+      "runtime": {},
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "package",
+      "status": "pending",
+      "references_count": 291,
+      "references_sha256": "19f5f3e23617aba65cc51b39334490cdfd8dc55f3f136a73bacbc9e65aaa63ee"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server",
+        "scope": "bootstrap-runtime",
+        "target": "kanbien-core-platform"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh"
+      ],
+      "check_id": "bootstrap-target-alignment",
+      "check_key": "bootstrap-target-alignment:2539e6348a1bce26",
+      "effects": [
+        "network"
+      ],
+      "evidence_class": "live",
+      "evidence_key": "4469dd755f4a4d78a04e2a5f8abc595289aa2fdaeabfa3796385ed795ffe299d",
+      "input_digest": "95d806c1dc37a9a9d19e04f04511a35c8c47aa8275ea4ec573d2d01a3a1fbb8c",
+      "parameters": {},
+      "runtime": {},
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "deploy",
+      "status": "pending",
+      "references_count": 299,
+      "references_sha256": "42eb2db1044706c3d531e52ecd0339eb522822571ba23d5fe6805bc7264890a9"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-persistence-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence",
+        "scope": "core-server-persistence",
+        "target": "kanbien-core-platform"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh"
+      ],
+      "check_id": "persistence-target-alignment",
+      "check_key": "persistence-target-alignment:1cd6f1e9fbfb6425",
+      "effects": [
+        "network"
+      ],
+      "evidence_class": "live",
+      "evidence_key": "b0fe3c4e2646c549b94484206de847444a143587f092c6fd732ddb1a55f5ad6c",
+      "input_digest": "e500ee69912bd078239a9c12129c8e96793b5ff55b596025053fd0735be44301",
+      "parameters": {},
+      "runtime": {},
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "deploy",
+      "status": "pending",
+      "references_count": 292,
+      "references_sha256": "897f2deede680ab76f5df4d7dd76e1cdddf0b0cfb5874877716b39e60d5dc7d8"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server",
+        "scope": "bootstrap-runtime",
+        "target": "kanbien-core-platform"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh",
+        "--inputs",
+        "{acceptance_inputs}",
+        "--write",
+        "--json"
+      ],
+      "check_id": "bootstrap-acceptance",
+      "check_key": "bootstrap-acceptance:28d402c8eff36acf",
+      "effects": [
+        "writes-files"
+      ],
+      "evidence_class": "live",
+      "evidence_key": "247007a0b0802cb7e4e6045ada6532fff9341ee93e1e06249f4c747b4f6a76b2",
+      "input_digest": "1eda0d6ca8e52a9640cd77b25919670f1f2b9e65f582a016252553b7629fb447",
+      "parameters": {
+        "acceptance_inputs": {
+          "kind": "path",
+          "required": true,
+          "schema": "deploy/acceptance-inputs/v1"
+        }
+      },
+      "runtime": {},
+      "scopes": [
+        "bootstrap-runtime"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "acceptance",
+      "status": "pending",
+      "references_count": 299,
+      "references_sha256": "e70dc2401b4b1e3e5eb22be9436b791e5870670705691b40ba27d38ce2c7c543"
+    },
+    {
+      "applicability": {
+        "image_id": "kanbien-core-server-persistence-image",
+        "kind": "bound",
+        "program_id": "kanbien-core-server-persistence",
+        "scope": "core-server-persistence",
+        "target": "kanbien-core-platform"
+      },
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh",
+        "--inputs",
+        "{acceptance_inputs}",
+        "--write",
+        "--json"
+      ],
+      "check_id": "persistence-acceptance",
+      "check_key": "persistence-acceptance:7514499e586db1cc",
+      "effects": [
+        "network",
+        "writes-files"
+      ],
+      "evidence_class": "live",
+      "evidence_key": "e592ce5b2361080c4aa448a65dea41459e48e9c49d43449b5324d2daf0f399cf",
+      "input_digest": "ec90a0fec16e270f107387bb36cdeebedb9ec9325ef173d963f5e700430006ca",
+      "parameters": {
+        "acceptance_inputs": {
+          "kind": "path",
+          "required": true,
+          "schema": "deploy/acceptance-inputs/v1"
+        }
+      },
+      "runtime": {},
+      "scopes": [
+        "core-server-persistence"
+      ],
+      "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+      "stage": "acceptance",
+      "status": "pending",
+      "references_count": 292,
+      "references_sha256": "f16ecd729090ff9c29ba0b12f456d8448a1a78c981043e1435b990c6295d4116"
+    }
+  ],
+  "findings": [
+    {
+      "check_id": "bootstrap-container",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "package"
+    },
+    {
+      "check_id": "persistence-container",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "package"
+    },
+    {
+      "check_id": "bootstrap-target-alignment",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "deploy"
+    },
+    {
+      "check_id": "persistence-target-alignment",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "deploy"
+    },
+    {
+      "check_id": "bootstrap-acceptance",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "acceptance"
+    },
+    {
+      "check_id": "persistence-acceptance",
+      "code": "required-proof-owned-by-stage-controller",
+      "stage": "acceptance"
+    }
+  ],
+  "limitations": [
+    "Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.",
+    "Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.",
+    "Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller."
+  ],
+  "local_report_path": "/home/owner/projects/entity-builder-harness-restart/.git/worktrees/chat_2026-10-24-14-22-connect-scope-implementation-verification-and-recovery-2752075114/agentic-local-checks/latest-report.json",
+  "non_applicable": [],
+  "schema": "repo/check-selection-report/v1",
+  "scopes": [
+    {
+      "consumers": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml"
+      ],
+      "findings": [],
+      "inputs": [
+        "package.json",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+        "packages/core",
+        "platform/contracts",
+        "platform/config",
+        "platform/health",
+        "platform/observability",
+        "platform/runtime",
+        "platform/security",
+        "platform/server",
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json",
+        "infra/04.deploy/03.product/image/core-server",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime"
+      ],
+      "references": [
+        ".agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml",
+        ".agentic/04.deploy/60-run/schemas/accepted-release.v1.schema.yml",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json",
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "infra/04.deploy/03.product/image/core-server",
+        "infra/04.deploy/03.product/image/core-server/image-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+        "package.json",
+        "packages/core",
+        "platform/config",
+        "platform/contracts",
+        "platform/health",
+        "platform/observability",
+        "platform/runtime",
+        "platform/security",
+        "platform/server",
+        "platform/server/src/configuration",
+        "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh",
+        "scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/check-capability.yml",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/validate-accepted-release/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/check-capability.yml",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/check-capability.yml",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"
+      ],
+      "required_checks": [
+        "acceptance-route",
+        "acceptance-route-regression",
+        "bootstrap-acceptance",
+        "bootstrap-acceptance-regression",
+        "bootstrap-container",
+        "bootstrap-target-alignment",
+        "core-dependency-boundary",
+        "runnable-program",
+        "scope-inventory"
+      ],
+      "schema": "deploy/declaration-coverage-report/v1",
+      "scope": "bootstrap-runtime",
+      "target": "kanbien-core-platform",
+      "verdict": "covered"
+    },
+    {
+      "consumers": [
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+      ],
+      "findings": [],
+      "inputs": [
+        "package.json",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "packages/core",
+        "platform/contracts",
+        "platform/config",
+        "platform/health",
+        "platform/observability",
+        "platform/runtime",
+        "platform/security",
+        "platform/server",
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json",
+        "infra/04.deploy/03.product/image/core-server-persistence",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence",
+        "platform/persistence",
+        "platform/adapters/aws/persistence/postgresql",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml"
+      ],
+      "references": [
+        ".agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml",
+        ".agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json",
+        "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "package.json",
+        "packages/core",
+        "platform/adapters/aws/persistence/postgresql",
+        "platform/config",
+        "platform/contracts",
+        "platform/health",
+        "platform/observability",
+        "platform/persistence",
+        "platform/runtime",
+        "platform/security",
+        "platform/server",
+        "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/check-capability.yml",
+        "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/check-capability.yml",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/check-capability.yml",
+        "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh"
+      ],
+      "required_checks": [
+        "acceptance-route",
+        "acceptance-route-regression",
+        "persistence-acceptance",
+        "persistence-composition",
+        "persistence-container",
+        "persistence-payload-regression",
+        "persistence-provider-regression",
+        "persistence-target-alignment",
+        "runnable-program",
+        "scope-inventory"
+      ],
+      "schema": "deploy/declaration-coverage-report/v1",
+      "scope": "core-server-persistence",
+      "target": "kanbien-core-platform",
+      "verdict": "covered"
+    }
+  ],
+  "source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+  "stage": "acceptance",
+  "verdict": "gap"
+}
