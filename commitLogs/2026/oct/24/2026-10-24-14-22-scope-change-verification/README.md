@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-10-24T13:22:47Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 3803698
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-25T10:06:43Z
+latest_commit_sha: 93aa74906ad6534d62b23bdd42607c4b7fb0965d
+chat_duration: 74636s (00:20:43:56)
+estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -115,6 +115,17 @@ Summary: Checkpoint existing implementation before accepted-main integration
 
 Durable evidence: Prior audit and reports are historical; six review findings remain open. Corrective request and progress matrix are in the current session record. Combine branch behavior before claiming verification.
 
+
+### 2026-10-25T10:06:43Z - Commit recorded
+
+Commit: `93aa74906ad6534d62b23bdd42607c4b7fb0965d`
+
+Message: chore: checkpoint scope verification before main reconciliation
+
+Summary: Preserve prior implementation and six-finding corrective request before integrating accepted main. Mandatory preparation gates passed; whitespace and metadata rechecked. Direct user commit/merge authorization recorded.
+
+ADR impact: ADR 0042 retained.
+
 ## Sub-Agent Activity
 
 
@@ -162,7 +173,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `93aa74906ad6534d62b23bdd42607c4b7fb0965d`
+  Time UTC: 2026-10-25T10:06:43Z
+  Message: chore: checkpoint scope verification before main reconciliation
+  Summary: Preserve prior implementation and six-finding corrective request before integrating accepted main. Mandatory preparation gates passed; whitespace and metadata rechecked. Direct user commit/merge authorization recorded.
+  ADR impact: ADR 0042 retained.
 
 ## Main Refresh Conflicts
 
@@ -177,12 +194,12 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-25T10:06:43Z
+Latest commit SHA: 93aa74906ad6534d62b23bdd42607c4b7fb0965d
+Chat duration: 74636s (00:20:43:56)
+Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
