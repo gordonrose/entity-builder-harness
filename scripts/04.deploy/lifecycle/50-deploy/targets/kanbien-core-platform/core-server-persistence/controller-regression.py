@@ -250,6 +250,20 @@ class ControllerRegression(unittest.TestCase):
                 call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
                 self.assertEqual(result(call)[1]['verdict'],'uncertain')
 
+    def test_missing_executed_change_set_reconciles_through_matching_stack_only(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        expected={'ImageDigest':'sha256:'+'a'*64,'SupportImageDigest':'sha256:'+'a'*64,'RestoreVerifierImageDigest':'sha256:'+'a'*64,'SourceRevision':'a'*40}
+        params=[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()]
+        for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_COMPLETE','complete'),('UPDATE_ROLLBACK_COMPLETE','uncertain')]:
+            provider=Provider(lambda parts: (False,None,'aws-resource-missing') if parts[1]=='describe-change-set' else (True,{'Stacks':[{'StackStatus':status,'Parameters':params}]},'ok'))
+            with patch.object(prepare,'aws',provider.aws):
+                self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True)[0],verdict)
+            self.assertEqual([parts[1] for parts in provider.calls],['describe-change-set','describe-stacks'])
+        wrong=[{'ParameterKey':key,'ParameterValue':value} for key,value in {**expected,'ImageDigest':'sha256:'+'b'*64}.items()]
+        provider=Provider(lambda parts: (False,None,'aws-resource-missing') if parts[1]=='describe-change-set' else (True,{'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Parameters':wrong}]},'ok'))
+        with patch.object(prepare,'aws',provider.aws):
+            self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True)[0],'uncertain')
+
     def test_retirement_reobserves_exact_stack_and_never_repeats_effects(self):
         module=load(DEPLOY/'retire-failed-candidate/script.py')
         identity=f'arn:aws:cloudformation:{module.REGION}:337159794548:stack/{module.STACK}/synthetic'
