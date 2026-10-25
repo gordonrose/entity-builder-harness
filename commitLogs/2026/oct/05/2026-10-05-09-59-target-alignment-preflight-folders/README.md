@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T13:30:47Z
-latest_commit_sha: HEAD
-chat_duration: 1744278s (20:04:31:18)
+latest_commit_at_utc: 2026-10-25T13:52:02Z
+latest_commit_sha: f8a16e683911c6906ca834e45f48ee70025601f1
+chat_duration: 1745553s (20:04:52:33)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2941,6 +2941,17 @@ Summary: Actual private support image sha256:bc9080d4ed02ad422100bd31ef17b213012
 
 Durable evidence: Package provenance is GitHub Actions run 40197961821; local qualification is governed by scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh; current stack facts were read from CloudFormation in eu-west-1.
 
+
+### 2026-10-25T13:52:02Z - Commit recorded
+
+Commit: `f8a16e683911c6906ca834e45f48ee70025601f1`
+
+Message: fix(deploy): correct observability delivery route
+
+Summary: Corrected ADOT delivery to use EMF through the existing private Logs endpoint, declared target-owned notification binding, and classified named absent change sets safely; local target and observability gates pass.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3697,6 +3708,13 @@ Durable evidence: Package provenance is GitHub Actions run 40197961821; local qu
   Summary: Removed nonexistent unscoped dependency copies; isolated runtime closure now loads actual pg and OpenTelemetry modules.
   ADR impact: No ADR: package source-closure correction.
 
+
+- Commit: `f8a16e683911c6906ca834e45f48ee70025601f1`
+  Time UTC: 2026-10-25T13:52:02Z
+  Message: fix(deploy): correct observability delivery route
+  Summary: Corrected ADOT delivery to use EMF through the existing private Logs endpoint, declared target-owned notification binding, and classified named absent change sets safely; local target and observability gates pass.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3720,9 +3738,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T13:30:47Z
-Latest commit SHA: HEAD
-Chat duration: 1744278s (20:04:31:18)
+Latest commit at UTC: 2026-10-25T13:52:02Z
+Latest commit SHA: f8a16e683911c6906ca834e45f48ee70025601f1
+Chat duration: 1745553s (20:04:52:33)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
