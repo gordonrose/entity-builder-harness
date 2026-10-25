@@ -137,8 +137,13 @@ def check(root: Path) -> None:
     ):
         raise Failure("observability-collector-package-contract-invalid")
     template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
+    # Observability is an independently activated target concern.  Its
+    # implementation must remain complete and conditionally composed, but a
+    # database-permission transition must not claim notification delivery or
+    # couple its recovery to collector activation.
     required_template_text = [
-        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
+        "EnableObservability:", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
+        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "Condition: ObservabilityEnabled", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !If [ObservabilityEnabled, !GetAtt ServerTaskRole.Arn, !Ref AWS::NoValue]", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
     ]
     if any(item not in template for item in required_template_text):
         raise Failure("observability-provider-realization-invalid")

@@ -13,6 +13,9 @@ set -euo pipefail
 #   kind: script
 #   purpose: Prove the observability MVP gate rejects unsafe schedules, unbounded event fields, missing application metrics, and indistinct alarm silence policy.
 #   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.command.validate-core-server-persistence-observability-mvp
+#     path: scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh
 #   effects: [read-only, writes-files]
 ROOT="$(git rev-parse --show-toplevel)"
 SCRIPT="$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh"
@@ -22,7 +25,18 @@ trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 
 pass() { bash "$SCRIPT" --target-root "$1" --json | grep -q '"verdict": "valid"'; }
 fail() { local expected="$1" root="$2"; local output; if output="$(bash "$SCRIPT" --target-root "$root" --json 2>&1)"; then echo "expected failure $expected" >&2; exit 1; fi; [[ "$output" == *"$expected"* ]] || { echo "$output" >&2; exit 1; }; }
-fixture() { local root="$TEMPORARY_DIRECTORY/$1"; cp -R "$SOURCE" "$root"; printf '%s' "$root"; }
+fixture() {
+  local fixture_root="$TEMPORARY_DIRECTORY/$1"
+  local root="$fixture_root/targets/kanbien-core-platform"
+  mkdir -p "$(dirname "$root")"
+  cp -R "$SOURCE" "$root"
+  # The target validator resolves the collector package contract from the
+  # provider-realisation parent.  Preserve that relationship in every fixture
+  # so a mutation is rejected for its own reason rather than a missing
+  # neighbouring contract.
+  cp -R "$ROOT/infra/04.deploy/03.product/image" "$fixture_root/image"
+  printf '%s' "$root"
+}
 
 pass "$SOURCE"
 
