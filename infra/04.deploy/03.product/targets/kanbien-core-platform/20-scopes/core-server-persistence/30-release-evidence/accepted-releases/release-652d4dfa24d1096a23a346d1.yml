@@ -1,0 +1,17 @@
+schema: deploy/accepted-release-history/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: accepted
+release:
+  id: release-652d4dfa24d1096a23a346d1
+  source_revision: e6b430e07556b6fce8a0dbb0870aa3b24446e246
+  image_digest: sha256:c49ec2aa0c6bb1d74ec34fc423224549bee619344f77cedc4e03e60cda0e064e
+  contract_revisions:
+    status: legacy-not-recorded
+  proof_set_sha256: legacy-not-recorded
+predecessor: null
+evidence:
+  path: accepted-release.yml
+  sha256: sha256:39840944b004b20c3767abc0ab1fb9b001b70e98f7ea141b6497fec70cd8f6e1
+  kind: legacy-accepted-record
+

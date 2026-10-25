@@ -1,0 +1,53 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.release-succession-v1
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.release-lifecycle
+#   disciplines: [security, sre]
+#   kind: schema
+#   purpose: Define the portable facts that bind an accepted successor to its immutable evidence and atomic current-release reference.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.command.release-succession
+#     path: scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+schema: deploy/release-succession-schema/v1
+records:
+  rollback_compatibility:
+    schema: deploy/release-rollback-compatibility/v1
+    required: [target, scope, status, historical_release, rollback, proof, proof_set]
+    historical_release_required: [release_id, source_revision, image_digest]
+    rollback_required: [id, configuration_contract, permission_contract, workloads, proof_set_sha256]
+    proof_required: [qualified_at, receipt_count]
+    intent: additive-fresh-proof-for-a-retained-image-not-retroactive-acceptance
+  candidate:
+    schema: deploy/release-candidate/v1
+    required: [target, scope, status, release, proof, proof_set]
+    release_required: [id, source_revision, image_digest, configuration_contract, permission_contract, proof_set_sha256]
+    contract_required: [path, sha256]
+    proof_required: [accepted_at, receipt_count]
+    proof_set_entry_required: [path, sha256]
+  immutable_history:
+    schema: deploy/accepted-release-history/v1
+    required: [target, scope, status, release, predecessor, evidence]
+    evidence_required: [path, sha256, kind]
+    legacy_contract_status: legacy-not-recorded
+  current_reference:
+    schema: deploy/release-current-ref/v1
+    required: [target, scope, status, release_id, record, predecessor, promoted_at]
+    record_required: [path, sha256]
+promotion:
+  expected_predecessor: required
+  rejects: [stale, conflicting, malformed, incomplete, altered, cross-target, cross-scope]
+  idempotency: same-successor-and-recorded-predecessor
+  interruption_recovery: validate-archive-then-advance-current-reference
+rollback_compatibility:
+  source: release-candidates
+  immutable_archive: rollback-compatibility
+  required_before_selecting_legacy_retained_image: true
+  preserves: [least-privilege-runtime-grants, separate-administration-identity, protected-migration-history, revocation]
+  forbids: [re-broaden-runtime-grants, inject-administrator-into-ordinary-migration, replay-completed-migration, undo-revocation]
+

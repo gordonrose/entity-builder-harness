@@ -1,0 +1,11 @@
+schema: deploy/release-current-ref/v1
+target: kanbien-core-platform
+scope: core-server-persistence
+status: active
+release_id: release-652d4dfa24d1096a23a346d1
+record:
+  path: accepted-releases/release-652d4dfa24d1096a23a346d1.yml
+  sha256: sha256:f26dec4041c209583623ceeafb204aa691fca8f582dea507dde46e679f0916b5
+predecessor: null
+promoted_at: '2026-10-25T11:18:54.873930Z'
+

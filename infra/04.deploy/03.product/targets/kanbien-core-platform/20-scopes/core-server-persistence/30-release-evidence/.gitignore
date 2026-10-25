@@ -1,0 +1,3 @@
+# Runtime mutual-exclusion file for the local, repository-governed promotion command.
+.release-succession.lock
+
