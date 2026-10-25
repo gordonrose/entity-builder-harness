@@ -59,25 +59,25 @@ inputs:
     owner: verify-candidate
     example: arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/cccccccccccccccccccccccccccccccc
 commands:
-  migration-apply:
+  migration-state-observation:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --runtime-credential-operation
-    - apply
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
+    - observe-migration-state
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
   effective-privilege:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --runtime-credential-operation
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
     - prove-effective-privilege
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
@@ -103,25 +103,25 @@ commands:
     effects:
     - aws-mutation
     - writes-files
-  credential-rotation:
+  runtime-identity-initial-access:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --runtime-credential-operation
-    - rotate
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
+    - confirm-runtime-iam-access
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
   credential-revocation:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --runtime-credential-operation
-    - revoke
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
+    - revoke-runtime
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
@@ -139,11 +139,11 @@ commands:
   credential-recovery:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
-    - --runtime-credential-operation
-    - rotate
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
+    - --operation
+    - restore-runtime
     - --json
-    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-migration
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
     - writes-files
@@ -248,18 +248,17 @@ commands:
     effects:
     - aws-mutation
     - writes-files
-  credential-rotate-route:
+  runtime-identity-access-route:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh
-    - --receipt
-    - '{candidate_receipt}'
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh
     - --operation
-    - rotate
+    - confirm-runtime-iam-access
     - --json
-    owner: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
+    owner: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
     effects:
     - aws-mutation
+    - writes-files
   credential-revoke-recover-route:
     argv:
     - bash
@@ -388,22 +387,22 @@ commands:
     effects:
     - read-only
 proofs:
-  migration-apply:
-    command: migration-apply
-    proof_type: migration
-    operation: apply
-    result_code: PERSISTENCE_MIGRATION_APPLIED
+  migration-applied-state:
+    command: migration-state-observation
+    proof_type: administration
+    operation: observe-migration-state
+    result_code: PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   effective-privilege:
     command: effective-privilege
-    proof_type: migration
+    proof_type: administration
     operation: prove-effective-privilege
     result_code: PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   server-replacement:
     command: server-replacement
     proof_type: server-replacement
@@ -420,22 +419,22 @@ proofs:
     image_role: candidate
     family: kanbien-core-platform-persistence-verifier
     deadline_workload: private-release-verifier
-  credential-rotation:
-    command: credential-rotation
-    proof_type: migration
-    operation: rotate
-    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+  runtime-identity-initial-access:
+    command: runtime-identity-initial-access
+    proof_type: administration
+    operation: confirm-runtime-iam-access
+    result_code: PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   credential-revocation:
     command: credential-revocation
-    proof_type: migration
-    operation: revoke
-    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED
+    proof_type: administration
+    operation: revoke-runtime
+    result_code: PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   credential-revocation-unready:
     command: credential-revocation-unready
     proof_type: verifier
@@ -446,12 +445,12 @@ proofs:
     deadline_workload: private-release-verifier
   credential-recovery:
     command: credential-recovery
-    proof_type: migration
-    operation: rotate
-    result_code: PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED
+    proof_type: administration
+    operation: restore-runtime
+    result_code: PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED
     image_role: candidate
-    family: kanbien-core-platform-persistence-migration
-    deadline_workload: persistence-migration
+    family: kanbien-core-platform-persistence-administration
+    deadline_workload: persistence-administration
   credential-recovery-health:
     command: credential-recovery-health
     proof_type: verifier

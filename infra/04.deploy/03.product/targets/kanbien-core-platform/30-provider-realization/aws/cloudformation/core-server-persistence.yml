@@ -32,7 +32,11 @@ Parameters:
   ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   SupportImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
-  EnableObservability: { Type: String, Default: 'false', AllowedValues: ['true', 'false'] }
+  # A collector sidecar would share this task definition's ServerTaskRole,
+  # which has RDS IAM access for core_runtime.  Keep the historical scaffold
+  # inert until the observability slice supplies a separately isolated
+  # collector workload, task role, security group, and private route.
+  EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false'] }
   ObservabilityCollectorImage: { Type: String, Default: '', AllowedPattern: '^$|^.+@sha256:[a-f0-9]{64}$' }
   # Supplied only to the governed target-update route.  It is never retained
   # in the repository or in accepted evidence; CloudFormation creates the
@@ -198,6 +202,11 @@ Resources:
         ExcludePunctuation: true
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   RuntimeCredentialsSecret:
+    # Retain the formerly injected credential while the governed IAM cutover
+    # proves the new workload replacement.  No task or endpoint policy may
+    # read it after that cutover; a separate retirement action owns deletion.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: kanbien-core-platform-persistence-runtime
@@ -208,6 +217,10 @@ Resources:
         ExcludePunctuation: true
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   OrdinaryMigrationCredentialsSecret:
+    # See RuntimeCredentialsSecret. This legacy password secret is retained
+    # only for incident/accounting evidence and controlled retirement.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: kanbien-core-platform-persistence-ordinary-migration
@@ -233,7 +246,9 @@ Resources:
           - Effect: Allow
             Principal: '*'
             Action: secretsmanager:GetSecretValue
-            Resource: [!Ref MigrationCredentialsSecret, !Ref OrdinaryMigrationCredentialsSecret, !Ref RuntimeCredentialsSecret]
+            # Only the administration task may retrieve the retained master
+            # secret. Runtime and migration use task-role RDS IAM tokens.
+            Resource: [!Ref MigrationCredentialsSecret]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   ObservabilityCollectorConfiguration:
@@ -310,6 +325,7 @@ Resources:
       CopyTagsToSnapshot: true
       DeletionProtection: true
       AutoMinorVersionUpgrade: true
+      EnableIAMDatabaseAuthentication: true
       EnableCloudwatchLogsExports: [postgresql, upgrade]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
@@ -334,19 +350,22 @@ Resources:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref RuntimeCredentialsSecret }
               - !If
                 - ObservabilityEnabled
                 - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
                 - !Ref AWS::NoValue
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   ServerTaskRole:
-    Condition: ObservabilityEnabled
     Type: AWS::IAM::Role
     Properties:
       RoleName: kanbien-core-platform-persistence-server-observability
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
+        - PolicyName: connect-as-runtime-database-identity
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: rds-db:connect, Resource: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
         - PolicyName: deliver-reviewed-readiness-metrics
           PolicyDocument:
             Version: '2012-10-17'
@@ -377,14 +396,25 @@ Resources:
       RoleName: kanbien-core-platform-persistence-migration-execution
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
-        - PolicyName: pull-log-and-read-ordinary-migration-secret
+        - PolicyName: pull-and-log-only
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref OrdinaryMigrationCredentialsSecret }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  MigrationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-migration-task
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: connect-as-migration-database-identity
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: rds-db:connect, Resource: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_schema_migration' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   AdministrationExecutionRole:
     Type: AWS::IAM::Role
@@ -392,14 +422,29 @@ Resources:
       RoleName: kanbien-core-platform-persistence-administration-execution
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
-        - PolicyName: pull-log-and-read-administration-bound-secrets
+        - PolicyName: pull-log-and-read-administrator-secret
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: [!Ref MigrationCredentialsSecret, !Ref OrdinaryMigrationCredentialsSecret, !Ref RuntimeCredentialsSecret] }
+              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref MigrationCredentialsSecret }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  AdministrationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-administration-task
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        # This narrowly permits the administration task's explicit
+        # effective-privilege probe. It cannot retrieve a runtime password and
+        # it cannot authenticate as the migration identity.
+        - PolicyName: prove-runtime-iam-effective-privilege
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: rds-db:connect, Resource: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   VerifierExecutionRole:
     Type: AWS::IAM::Role
@@ -422,14 +467,22 @@ Resources:
       RoleName: kanbien-core-platform-persistence-restoration-verifier-execution
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
-        - PolicyName: pull-log-and-read-runtime-secret
+        - PolicyName: pull-and-log-only
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: secretsmanager:GetSecretValue, Resource: !Ref RuntimeCredentialsSecret }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+  RestorationVerifierTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-persistence-restoration-verifier-task
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      # The restore controller attaches one exact, temporary rds-db:connect
+      # policy for the newly restored database resource ID and removes it
+      # during governed cleanup. No permanent source-database grant exists.
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   CoreServerPersistenceTaskDefinition:
@@ -441,7 +494,7 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt ServerExecutionRole.Arn
-      TaskRoleArn: !If [ObservabilityEnabled, !GetAtt ServerTaskRole.Arn, !Ref AWS::NoValue]
+      TaskRoleArn: !GetAtt ServerTaskRole.Arn
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
@@ -465,7 +518,9 @@ Resources:
               - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
               - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
               - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-              - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
+              - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+              - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
+              - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: core_runtime }
               - { Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER, Value: cloudwatch-otel }
               - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://127.0.0.1:4318/v1/metrics }
               - { Name: PLATFORM_OBSERVABILITY_METRICS_REGION, Value: !Ref 'AWS::Region' }
@@ -490,8 +545,9 @@ Resources:
               - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
               - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
               - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-              - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
-          Secrets: [{ Name: PERSISTENCE_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }]
+              - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+              - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
+              - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: core_runtime }
           HealthCheck:
             Command: [CMD, /nodejs/bin/node, -e, 'fetch("http://127.0.0.1:3000/livez").then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))']
             Interval: 10
@@ -573,6 +629,7 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt MigrationExecutionRole.Arn
+      TaskRoleArn: !GetAtt MigrationTaskRole.Arn
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
@@ -587,9 +644,9 @@ Resources:
             - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
             - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
             - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-            - { Name: PERSISTENCE_MIGRATION_SECRET_REFERENCE, Value: !Ref OrdinaryMigrationCredentialsSecret }
-          Secrets:
-            - { Name: PERSISTENCE_MIGRATION_CREDENTIALS, ValueFrom: !Ref OrdinaryMigrationCredentialsSecret }
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_schema_migration' }
+            - { Name: PERSISTENCE_MIGRATION_DATABASE_USERNAME, Value: core_schema_migration }
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-migration } }
 
   CoreServerPersistenceAdministrationTaskDefinition:
@@ -601,6 +658,7 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt AdministrationExecutionRole.Arn
+      TaskRoleArn: !GetAtt AdministrationTaskRole.Arn
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
@@ -615,11 +673,17 @@ Resources:
             - { Name: PERSISTENCE_POSTGRES_PORT, Value: !GetAtt PersistenceDatabase.Endpoint.Port }
             - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
             - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            # The administration task has a narrowly scoped, declared runtime
+            # identity probe. Its separate execution role retrieves the
+            # administrator secret; this task role can only prove the runtime
+            # identity's effective database access.
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
             - { Name: PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE, Value: !Ref MigrationCredentialsSecret }
+            - { Name: PERSISTENCE_MIGRATION_DATABASE_USERNAME, Value: core_schema_migration }
+            - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: core_runtime }
           Secrets:
             - { Name: PERSISTENCE_ADMINISTRATOR_CREDENTIALS, ValueFrom: !Ref MigrationCredentialsSecret }
-            - { Name: PERSISTENCE_ADMINISTRATION_MIGRATION_CREDENTIALS, ValueFrom: !Ref OrdinaryMigrationCredentialsSecret }
-            - { Name: PERSISTENCE_ADMINISTRATION_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-administration } }
 
   CoreServerPersistenceVerifierTaskDefinition:
@@ -652,6 +716,7 @@ Resources:
       Cpu: '256'
       Memory: '512'
       ExecutionRoleArn: !GetAtt RestorationVerifierExecutionRole.Arn
+      TaskRoleArn: !GetAtt RestorationVerifierTaskRole.Arn
       RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
       ContainerDefinitions:
@@ -665,8 +730,13 @@ Resources:
             - { Name: PERSISTENCE_POSTGRES_PORT, Value: '5432' }
             - { Name: PERSISTENCE_POSTGRES_DATABASE, Value: kanbienpersistence }
             - { Name: PERSISTENCE_POSTGRES_SCHEMA, Value: platform }
-            - { Name: PERSISTENCE_RUNTIME_SECRET_REFERENCE, Value: !Ref RuntimeCredentialsSecret }
-          Secrets: [{ Name: PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS, ValueFrom: !Ref RuntimeCredentialsSecret }]
+            - { Name: PERSISTENCE_POSTGRES_IAM_REGION, Value: !Ref 'AWS::Region' }
+            # The restoration controller supplies an exact rds-db identity
+            # for the freshly restored instance in its task override. A
+            # source-database ARN here would accidentally authorise the wrong
+            # incarnation before the controller can establish that boundary.
+            - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: restoration-identity-supplied-at-governed-task-run }
+            - { Name: PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME, Value: core_runtime }
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: persistence-restoration-verifier } }
 
 Outputs:
@@ -686,6 +756,7 @@ Outputs:
   PersistenceMigrationSecurityGroupId: { Value: !Ref MigrationSecurityGroup }
   PersistenceAdministrationSecurityGroupId: { Value: !Ref AdministrationSecurityGroup }
   PersistenceRestorationVerifierSecurityGroupId: { Value: !Ref RestorationVerifierSecurityGroup }
+  PersistenceRestorationVerifierTaskRoleName: { Value: !Ref RestorationVerifierTaskRole }
   PersistenceRestoredDatabaseSecurityGroupId: { Value: !Ref RestoredDatabaseSecurityGroup }
   ObservabilityCollectorConfigurationParameter: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorConfiguration }
   CoreServerPostgreSqlReadinessAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }

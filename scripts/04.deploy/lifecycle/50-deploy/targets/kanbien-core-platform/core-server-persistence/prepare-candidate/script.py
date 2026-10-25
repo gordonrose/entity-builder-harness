@@ -174,6 +174,28 @@ def change_name_matches(value: object, expected: str) -> bool:
 def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, str]:
     """Observe one named UPDATE; never create, execute, wait on, or replace it."""
     ok, change, code = aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok and code == "aws-resource-missing":
+        # CloudFormation removes an executed change set.  When a controller
+        # loses its response after execution, retain the no-retry boundary but
+        # still recognize the exact candidate parameter identity on the stack.
+        # A missing change set alone never proves execution or completion.
+        stack_ok, observed, stack_code = aws("cloudformation", "describe-stacks", "--stack-name", STACK)
+        stacks = observed.get("Stacks") if stack_ok and isinstance(observed, dict) else None
+        if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
+            return "uncertain", "persistence-update-stack-observation-uncertain" if stack_ok else stack_code
+        stack = stacks[0]
+        params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+        if any(params.get(key) != value for key, value in expected_parameters.items()):
+            return "uncertain", "persistence-update-missing-change-set-identity-unproven"
+        status = stack.get("StackStatus")
+        if status in {"UPDATE_IN_PROGRESS", "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"}:
+            return "pending", "persistence-update-executed-stack-pending"
+        if status == "UPDATE_COMPLETE":
+            return "complete", "persistence-update-operation-complete"
+        # Do not attach an absent named change set to an unrelated failed or
+        # rollback stack operation.  A known executed change set follows the
+        # explicit terminal path below; this branch remains conservative.
+        return "uncertain", "persistence-update-missing-change-set-status-unproven"
     if not ok or not isinstance(change, dict):
         return "uncertain", code if not ok else "persistence-update-observation-invalid"
     if not change_name_matches(change.get("ChangeSetName"), name):
@@ -207,7 +229,30 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
 
 def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> dict[str, str]:
     """One provider-owned mapping is shared by CREATE and its execution review."""
-    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+    # All executable programs in the template are part of one qualified image
+    # release.  Keep these bindings together so either CREATE or UPDATE cannot
+    # accidentally retain an obsolete support-program image while moving the
+    # server or restoration verifier to the candidate digest.
+    return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
+
+
+def update_parameters_match(actual: object, desired: object, current: object) -> bool:
+    """Accept only a complete UPDATE parameter map with bounded ownership.
+
+    CloudFormation describes all template parameters for an UPDATE, including
+    values retained through ``UsePreviousValue`` or template defaults.  A
+    controller owns only its explicit candidate parameters, but must prove all
+    other returned parameters stayed exactly at the pre-update stack value.
+    """
+    if not isinstance(actual, dict) or not isinstance(desired, dict) or not isinstance(current, dict):
+        return False
+    if not all(isinstance(key, str) and isinstance(value, str) for mapping in (actual, desired, current) for key, value in mapping.items()):
+        return False
+    if set(actual) != set(current) or not set(desired) <= set(actual):
+        return False
+    return all(actual.get(key) == value for key, value in desired.items()) and all(
+        actual.get(key) == current.get(key) for key in set(actual) - set(desired)
+    )
 
 
 def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:

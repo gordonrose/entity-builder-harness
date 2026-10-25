@@ -28,7 +28,7 @@ export function persistenceConfiguration(env: NodeJS.ProcessEnv, purpose: "serve
   const host = environmentText(env, "PERSISTENCE_POSTGRES_HOST");
   const database = environmentText(env, "PERSISTENCE_POSTGRES_DATABASE");
   const schema = environmentText(env, "PERSISTENCE_POSTGRES_SCHEMA");
-  const reference = environmentText(env, purpose === "migration" ? "PERSISTENCE_MIGRATION_SECRET_REFERENCE" : "PERSISTENCE_RUNTIME_SECRET_REFERENCE");
+  const reference = environmentText(env, "PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE");
   const port = environmentText(env, "PERSISTENCE_POSTGRES_PORT");
   if (host === undefined || database === undefined || schema === undefined || reference === undefined || port === undefined || !/^\d+$/.test(port)) return undefined;
   const checked = postgreSqlPersistenceConfiguration({

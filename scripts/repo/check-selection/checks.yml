@@ -551,6 +551,69 @@ checks:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release
     - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
     - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration
+  deployment-operation-diagnostics-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.deployment-operation-diagnostics.wrapper
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh
+    - scripts/04.deploy/shared/safe-command-diagnostics.sh
+    - scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh
+    - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml
+    - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.guide.md
+    - .agentic/04.deploy/standards/safe-command-diagnostics.md
+    - .agentic/shared/standards/require-safe-diagnostic-record.md
+  collector-package-custody-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    owner: deploy.test.kanbien-core-platform.core-server-persistence-observability-collector-package-custody
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
 repository_inputs:
 - inputs:
   - scripts/repo/check-selection
@@ -579,3 +642,30 @@ repository_inputs:
   - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration
   checks:
   - bootstrap-acceptance-regression
+- inputs:
+  - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py
+  - scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.sh
+  - scripts/04.deploy/shared/safe-command-diagnostics.sh
+  - scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh
+  - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml
+  - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.guide.md
+  - .agentic/04.deploy/standards/safe-command-diagnostics.md
+  - .agentic/shared/standards/require-safe-diagnostic-record.md
+  checks:
+  - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set
+  - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py
+  - .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/README.md
+  checks:
+  - persistence-provider-regression
+  - deployment-operation-diagnostics-regression
+- inputs:
+  - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
+  - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  checks:
+  - collector-package-custody-regression
+  - deployment-operation-diagnostics-regression

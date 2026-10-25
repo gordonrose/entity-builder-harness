@@ -44,7 +44,7 @@ import importlib.util, subprocess, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("candidate_deploy", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
+valid = {"ChangeSetName":"arn:aws:cloudformation:eu-west-1:337159794548:changeSet/kanbien-core-platform-persistence-create-aaaaaaaaaaaa/x","Status":"CREATE_COMPLETE","ChangeSetType":"CREATE","Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SupportImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}],"Changes":[{"ResourceChange":{"ResourceType":"AWS::RDS::DBInstance"}}]}
 assert module.reviewable(valid, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable({**valid, "Changes":[{"ResourceChange":{"ResourceType":"AWS::S3::Bucket"}}]}, "REVIEW_IN_PROGRESS", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
 assert not module.reviewable(valid, "CREATE_COMPLETE", "kanbien-core-platform-persistence-create-aaaaaaaaaaaa", "sha256:" + "a" * 64, "a" * 40)
@@ -64,7 +64,7 @@ import importlib.util, sys
 from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("route_update", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-route-update-" + "a" * 12
-change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
+change = {"ChangeSetName": name, "Status":"CREATE_COMPLETE", "ChangeSetType":"UPDATE", "Parameters":[{"ParameterKey":"ImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SupportImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":"sha256:" + "a" * 64},{"ParameterKey":"SourceRevision","ParameterValue":"a" * 40}], "Changes":[{"ResourceChange":{"Action":"Add","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}
 assert module.route_update_reviewable(change, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 assert not module.route_update_reviewable({**change, "Changes":[{"ResourceChange":{"Action":"Modify","ResourceType":"AWS::EC2::SecurityGroupEgress","LogicalResourceId":"VerifierEgressToServer"}}]}, "CREATE_COMPLETE", name, "sha256:" + "a" * 64, "a" * 40)
 class Prepare:
@@ -86,7 +86,14 @@ module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 name = "kanbien-core-platform-persistence-permissions-" + "a" * 12
 digest = "sha256:" + "a" * 64
 revision = "a" * 40
-assert "ServerTaskRole" not in module.ADDED and "ServerTaskRole" not in module.MODIFIED
+assert module.ADDED == {
+    "ServerTaskRole": "AWS::IAM::Role",
+    "MigrationTaskRole": "AWS::IAM::Role",
+    "AdministrationTaskRole": "AWS::IAM::Role",
+    "RestorationVerifierTaskRole": "AWS::IAM::Role",
+}
+assert module.MODIFIED["PersistenceDatabase"] == "AWS::RDS::DBInstance"
+assert "AdministrationSecurityGroup" not in module.ADDED and "AdministrationSecurityGroup" not in module.MODIFIED
 parameters = [
     {"ParameterKey": "ImageDigest", "ParameterValue": digest},
     {"ParameterKey": "SupportImageDigest", "ParameterValue": digest},
@@ -113,6 +120,37 @@ class Prepare:
 prepare = Prepare()
 observed, code = module.wait_for_review(prepare, name, "UPDATE_COMPLETE", digest, revision)
 assert observed is None and code == "persistence-database-permission-surface-change-set-failed" and prepare.calls == 1
+PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py" <<'PY'
+import importlib.util, json, sys, tempfile
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location("change_set", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+name = "kanbien-core-platform-persistence-create-" + "a" * 12
+receipt = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
+with tempfile.TemporaryDirectory() as directory:
+    # The repository evidence directory is intentionally not writable by this
+    # sandbox identity. Keep production fail-closed, and exercise the same
+    # governed-location rule with a disposable writable evidence root.
+    module.DIAGNOSTIC_DIRECTORY = Path(directory) / "operation-diagnostics"
+    module.DIAGNOSTIC_DIRECTORY.mkdir()
+    assert module.diagnostic_path_is_governed(module.DIAGNOSTIC_DIRECTORY / (name + ".json"))
+    assert not module.diagnostic_path_is_governed(Path("/tmp/unsafe-diagnostic.json"))
+    assert module.diagnostics_ready(module.DIAGNOSTIC_DIRECTORY / (name + ".json"))
+    class Provider:
+        def aws(self, *parts):
+            if parts[1] == "describe-change-set":
+                return True, {"Status": "FAILED", "StatusReason": "Property validation error at Properties.ContainerDefinitions[0].Image password=synthetic-only"}, "ok"
+            if parts[1] == "describe-stack-events":
+                return True, {"StackEvents": [{"LogicalResourceId": "ServerTask", "ResourceType": "AWS::ECS::TaskDefinition", "ResourceStatus": "CREATE_FAILED", "ResourceStatusReason": "Property validation error at Properties.ContainerDefinitions[0].Image password=synthetic-only"}]}, "ok"
+            raise AssertionError(parts)
+    path = module.DIAGNOSTIC_DIRECTORY / "failure.json"
+    assert module.retain_diagnostic(Provider(), name=name, receipt=receipt, path=path, original_code="persistence-change-set-creation-failed", outcome="rejected", fallback_code="aws-command-failed") is None
+    value = json.loads(path.read_text())
+    assert value["classification"]["code"] == "provider-property-rejection"
+    assert value["facts"]["property_path"] == "Properties.ContainerDefinitions"
+    assert "synthetic-only" not in path.read_text()
+    assert value["next_action"]["decision"] == "inspect-retained-evidence"
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py" <<'PY'
 import importlib.util, sys

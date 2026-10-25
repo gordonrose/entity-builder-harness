@@ -70,8 +70,11 @@ Do not discover a substitute procedure in a historical plan.
 
 An interrupted response or failed wait is an uncertain operation: inspect the
 existing operation through the governed provider read route before repeating
-an effect. Retain safe operation references in existing logs and receipts. A
-deterministic name alone does not make a retry safe.
+an effect. Retain a safe deployment-operation diagnostic and its opaque
+evidence reference before cleanup or deletion. The report must preserve the
+original failure, say whether the provider outcome is known, and name only the
+next permitted observation or retry decision. A deterministic name alone does
+not make a retry safe.
 
 Output a deployed candidate and its safe evidence for Run. Only Run-stage
 verification and acceptance may advance the accepted baseline.

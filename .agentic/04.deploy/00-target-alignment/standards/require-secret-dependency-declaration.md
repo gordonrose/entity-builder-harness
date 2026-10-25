@@ -4,7 +4,7 @@ id: deploy.standard.require-secret-dependency-declaration
 version: 5
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.secret-management
 disciplines: [agentic, security, sre]
@@ -56,6 +56,16 @@ binding owns concrete provider references and role policies; the portable scope
 declaration links through `target_reference_id`. Target alignment may verify a
 reference exists and is usable without reading or reporting its contents.
 
+Some providers support short-lived workload-identity tokens instead of an
+injected database password. Those are declared separately in
+`configuration.workload_identity_dependencies`, with the same owner,
+authorised-workload, access-class, delivery, authentication lifecycle, revocation, retirement,
+failure, and diagnostic boundaries. The declaration contains only an opaque
+authentication reference ID, never a token. Provider binding and live proof
+must still establish the matching task identity and effective access. A
+migration executor may use a matching `migration` workload identity instead
+of a migration secret, but it may not silently omit authentication.
+
 Access grants, rotation, revocation, and retirement are separate parts of the
 contract. `access_grant` names accountable ownership and a declared
 access-class boundary; its policy text and fixed boundary value are not proof
@@ -68,6 +78,14 @@ proof exist. Rotation does not authorise replay of a completed task. The future
 PostgreSQL route must govern credential/secret/task coordination, permitted
 interruption, partial-failure recovery, and fresh-connection meaningful
 operation from the replacement task.
+
+Workload identity has a different lifecycle from a startup-injected password.
+Its declaration must state provider-managed task-role renewal, per-new-
+connection token generation, existing-session behaviour, and the fact that
+ordinary token expiry does not itself require workload replacement. Urgent
+revocation is separate: it changes permission, handles established sessions,
+and needs fresh provider and effective-access evidence. A successful IAM login
+does not, by itself, prove renewal, revocation, replacement, or remediation.
 
 `revocation` must block new starts, stop any active authorised workload, and
 require later observation that both new access and established sessions are

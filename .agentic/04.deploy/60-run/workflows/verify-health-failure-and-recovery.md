@@ -4,7 +4,7 @@ id: deploy.workflow.verify-health-failure-and-recovery
 version: 8
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -50,7 +50,8 @@ provider or target commands.
    proof requirements: retained data after replacement, compatible image
    restoration, and isolated database restoration. Do not let evidence for one
    operation substitute for either of the others. Before accepting verifier or
-   migration evidence, confirm the declared repeat, concurrent, conflicting,
+   migration evidence, confirm the declared read-only fresh-state observer,
+   durable observer receipt before any replay, repeat, concurrent, conflicting,
    lost-response, and cleanup/replay behaviours were covered by the applicable
    local and package proof; do not infer them from one successful execution.
 <!-- deterministic-check: allow reason="the target-specific release and verification controls perform the provider reads; this workflow routes the required human decision" -->
@@ -71,7 +72,8 @@ Stop rather than guess when liveness and readiness are indistinguishable,
 selected dependencies are absent from readiness/failure behaviour, a diagnostic
 would disclose sensitive data, uncertain work could be replayed automatically,
 or a deferred live proof lacks an owner, follow-up, and review boundary.
-Also stop when migration execution lacks one of its separate persistence
+Also stop when migration execution lacks its separately bound fresh-state
+observer or a durable observer receipt before replay, lacks one of its separate persistence
 recovery requirements, when an image rollback claims database reversal, or
 when a restore would alter its source database. Also stop when a verifier could
 silently recreate or overwrite its acceptance record, clean up before the

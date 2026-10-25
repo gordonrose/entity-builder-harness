@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 7
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -146,7 +146,10 @@ value = yaml.safe_load(path.read_text(encoding="utf-8"))
 value["acceptance"].pop("last_rehearsal")
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
-expect_failure "accepted-release-rehearsal-missing" "$missing_rehearsal"
+# Active-scope inventory is deliberately invoked before the bootstrap-specific
+# accepted-release reader, so this malformed historical proof fails through
+# the governing inventory route.
+expect_failure "active-workload-health-recovery-inventory-invalid" "$missing_rehearsal"
 
 missing_restoration_rehearsal="$(copy_fixture missing-restoration-rehearsal)"
 python3 - "$missing_restoration_rehearsal/20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml" <<'PY'
@@ -159,7 +162,7 @@ value = yaml.safe_load(path.read_text(encoding="utf-8"))
 value["acceptance"].pop("last_restoration_rehearsal")
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
-expect_failure "accepted-release-restoration-rehearsal-missing" "$missing_restoration_rehearsal"
+expect_failure "active-workload-health-recovery-inventory-invalid" "$missing_restoration_rehearsal"
 
 mismatched_verifier_evidence="$(copy_fixture mismatched-verifier-evidence)"
 python3 - "$mismatched_verifier_evidence/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml" <<'PY'
@@ -272,5 +275,63 @@ value["scopes"].append({
 path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
 PY
 expect_failure "active-workload-health-recovery-inventory-invalid" "$binding_without_declaration"
+
+admin_probe="$(copy_fixture administration-runtime-probe)"
+python3 - "$admin_probe/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+needle = "  CoreServerPersistenceAdministrationTaskDefinition:\n"
+start = text.index(needle)
+end = text.index("\n  CoreServerPersistenceVerifierTaskDefinition:", start)
+section = text[start:end]
+section = section.replace(
+    "Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime'",
+    "Value: restoration-identity-supplied-at-governed-task-run",
+    1,
+)
+path.write_text(text[:start] + section + text[end:], encoding="utf-8")
+PY
+expect_failure "persistence-administration-runtime-probe-binding-invalid" "$admin_probe"
+
+verifier_database_access="$(copy_fixture verifier-database-access)"
+python3 - "$verifier_database_access/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+needle = "  CoreServerPersistenceVerifierTaskDefinition:\n"
+start = text.index(needle)
+end = text.index("\n  CoreServerPersistenceRestorationVerifierTaskDefinition:", start)
+section = text[start:end].replace(
+    "      ExecutionRoleArn: !GetAtt VerifierExecutionRole.Arn",
+    "      ExecutionRoleArn: !GetAtt VerifierExecutionRole.Arn\n      TaskRoleArn: !GetAtt ServerTaskRole.Arn",
+    1,
+)
+path.write_text(text[:start] + section + text[end:], encoding="utf-8")
+PY
+expect_failure "persistence-verifier-direct-database-access-prohibited" "$verifier_database_access"
+
+restore_source_identity="$(copy_fixture restore-source-identity)"
+python3 - "$restore_source_identity/30-provider-realization/aws/cloudformation/core-server-persistence.yml" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+needle = "  CoreServerPersistenceRestorationVerifierTaskDefinition:\n"
+start = text.index(needle)
+end = text.index("\nOutputs:", start)
+section = text[start:end].replace(
+    "Value: restoration-identity-supplied-at-governed-task-run",
+    "Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime'",
+    1,
+)
+path.write_text(text[:start] + section + text[end:], encoding="utf-8")
+PY
+expect_failure "persistence-restoration-identity-binding-invalid" "$restore_source_identity"
 
 echo "Core-platform target declaration tests passed."

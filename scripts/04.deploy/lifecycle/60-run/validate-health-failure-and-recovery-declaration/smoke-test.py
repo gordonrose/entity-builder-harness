@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -184,6 +184,35 @@ def server_mediated_verifier(contract: dict[str, Any]) -> None:
 def migration_workload(contract: dict[str, Any], binding: dict[str, Any]) -> None:
     server_mediated_verifier(contract)
     contract["health_recovery"]["workloads"].append({
+        "id": "persistence-administration",
+        "workload_type": "run-to-completion-task",
+        "binding": "persistence-administration-task",
+        "required_workloads": [],
+        "completion": {
+            "deadline_seconds": 300,
+            "success": {"exit_code": 0, "result_code": "PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED"},
+            "interruption": {"policy": "stop-and-escalate"},
+            "retry_policy": "no-automatic-retries",
+        },
+        "administrative_execution": {
+            "dependency": "persistence",
+            "credential_access_class": "administrative",
+            "runtime_identity_probe": {"dependency": "persistence", "credential_access_class": "runtime", "purpose": "effective-runtime-identity-privilege-proof"},
+            "allowed_operations": ["observe-migration-state"],
+        },
+        "proof": {
+            "local": {"status": "passed", "command": "scripts/04.deploy/administration-local-proof/script.sh"},
+            "package": {"status": "passed", "command": "scripts/04.deploy/administration-package-proof/script.sh"},
+            "completion": {"status": "passed", "evidence_reference": "../30-release-evidence/rehearsals/accepted.yml", "exit_code": 0, "result_code": "PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED", "fresh_after": "2026-10-22T18:40:03Z", "observed_at": "2026-10-22T18:41:22Z"},
+        },
+    })
+    binding["workloads"].append({
+        "id": "persistence-administration-task",
+        "workload_type": "run-to-completion-task",
+        "runtime_class": "task",
+        "execution": {"kind": "compiled-entrypoint", "source_reference": "infra/04.deploy/03.product/entrypoints/persistence-administration.main.ts", "command_description": "node artifacts/persistence-administration.main.js"},
+    })
+    contract["health_recovery"]["workloads"].append({
         "id": "persistence-migration",
         "workload_type": "run-to-completion-task",
         "binding": "persistence-migration-task",
@@ -204,6 +233,13 @@ def migration_workload(contract: dict[str, Any], binding: dict[str, Any]) -> Non
             "transaction_boundary": "per-migration-atomic-where-supported",
             "interruption_policy": "do-not-retry-uncertain-outcome",
             "unknown_outcome_policy": "block-release-require-fresh-state-observation",
+            "fresh_state_observation": {
+                "workload": "persistence-administration",
+                "operation": "observe-migration-state",
+                "replay_permitted_result": "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED",
+                "applied_state_result": "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
+                "receipt": "durable-task-receipt-required-before-retry",
+            },
             "compatibility_strategy": "expand-deploy-verify-contract-later",
             "replay_handling": {
                 "already_applied_checksum_match": "no-op-record-accepted-state",
@@ -327,39 +363,51 @@ def main() -> int:
     expect_failure(wrong_replacement_verifier, migration_binding, "persistence-recovery-server-replacement-invalid")
 
     concurrent_migration = copy.deepcopy(migration_contract)
-    concurrent_migration["health_recovery"]["workloads"][2]["migration_execution"]["executor"] = "multiple"
+    concurrent_migration["health_recovery"]["workloads"][3]["migration_execution"]["executor"] = "multiple"
     expect_failure(concurrent_migration, migration_binding, "migration-execution-executor-invalid")
 
     missing_lock_bound = copy.deepcopy(migration_contract)
-    missing_lock_bound["health_recovery"]["workloads"][2]["migration_execution"]["lock_wait_seconds"] = 0
+    missing_lock_bound["health_recovery"]["workloads"][3]["migration_execution"]["lock_wait_seconds"] = 0
     expect_failure(missing_lock_bound, migration_binding, "migration-execution-lock-wait-invalid")
 
     unknown_retry = copy.deepcopy(migration_contract)
-    unknown_retry["health_recovery"]["workloads"][2]["migration_execution"]["unknown_outcome_policy"] = "retry-automatically"
+    unknown_retry["health_recovery"]["workloads"][3]["migration_execution"]["unknown_outcome_policy"] = "retry-automatically"
     expect_failure(unknown_retry, migration_binding, "migration-execution-unknown-outcome-policy-invalid")
 
     deadline_shorter_than_execution = copy.deepcopy(migration_contract)
-    deadline_shorter_than_execution["health_recovery"]["workloads"][2]["completion"]["deadline_seconds"] = 30
+    deadline_shorter_than_execution["health_recovery"]["workloads"][3]["completion"]["deadline_seconds"] = 30
     expect_failure(deadline_shorter_than_execution, migration_binding, "migration-execution-deadline-too-short")
 
     incompatible_migration = copy.deepcopy(migration_contract)
-    incompatible_migration["health_recovery"]["workloads"][2]["migration_execution"]["compatibility_strategy"] = "contract-before-deploy"
+    incompatible_migration["health_recovery"]["workloads"][3]["migration_execution"]["compatibility_strategy"] = "contract-before-deploy"
     expect_failure(incompatible_migration, migration_binding, "migration-execution-compatibility-invalid")
 
     missing_replay_handling = copy.deepcopy(migration_contract)
-    del missing_replay_handling["health_recovery"]["workloads"][2]["migration_execution"]["replay_handling"]
+    del missing_replay_handling["health_recovery"]["workloads"][3]["migration_execution"]["replay_handling"]
     expect_failure(missing_replay_handling, migration_binding, "migration-execution-replay-handling-invalid")
 
     checksum_mismatch_retry = copy.deepcopy(migration_contract)
-    checksum_mismatch_retry["health_recovery"]["workloads"][2]["migration_execution"]["replay_handling"]["checksum_mismatch"] = "apply-anyway"
+    checksum_mismatch_retry["health_recovery"]["workloads"][3]["migration_execution"]["replay_handling"]["checksum_mismatch"] = "apply-anyway"
     expect_failure(checksum_mismatch_retry, migration_binding, "migration-execution-replay-handling-invalid")
 
     already_applied_replay = copy.deepcopy(migration_contract)
-    already_applied_replay["health_recovery"]["workloads"][2]["migration_execution"]["replay_handling"]["already_applied_checksum_match"] = "apply-again"
+    already_applied_replay["health_recovery"]["workloads"][3]["migration_execution"]["replay_handling"]["already_applied_checksum_match"] = "apply-again"
     expect_failure(already_applied_replay, migration_binding, "migration-execution-replay-handling-invalid")
 
     concurrent_apply = copy.deepcopy(migration_contract)
-    concurrent_apply["health_recovery"]["workloads"][2]["migration_execution"]["replay_handling"]["concurrent_executor"] = "wait-and-retry"
+    concurrent_apply["health_recovery"]["workloads"][3]["migration_execution"]["replay_handling"]["concurrent_executor"] = "wait-and-retry"
+
+    missing_state_observer = copy.deepcopy(migration_contract)
+    del missing_state_observer["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]
+    expect_failure(missing_state_observer, migration_binding, "migration-execution-fresh-state-observation-invalid")
+
+    missing_applied_state_result = copy.deepcopy(migration_contract)
+    del missing_applied_state_result["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]["applied_state_result"]
+    expect_failure(missing_applied_state_result, migration_binding, "migration-execution-fresh-state-observation-invalid")
+
+    wrong_state_observer = copy.deepcopy(migration_contract)
+    wrong_state_observer["health_recovery"]["workloads"][3]["migration_execution"]["fresh_state_observation"]["workload"] = "private-release-verifier"
+    expect_failure(wrong_state_observer, migration_binding, "migration-execution-fresh-state-observation-invalid")
     expect_failure(concurrent_apply, migration_binding, "migration-execution-replay-handling-invalid")
 
     direct_credentials = copy.deepcopy(mediated_verifier)

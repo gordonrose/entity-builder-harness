@@ -27,22 +27,29 @@ const compiled = resolve(process.argv[2]);
 const fakeDriver = join(compiled, "node_modules/pg");
 fs.mkdirSync(fakeDriver, { recursive: true });
 fs.writeFileSync(join(fakeDriver, "index.js"), 'exports.Pool = class { constructor() { globalThis.poolAttempts += 1; throw new Error("database-access-before-validation"); } };');
+const fakeSigner = join(compiled, "node_modules/@aws-sdk/rds-signer");
+fs.mkdirSync(fakeSigner, { recursive: true });
+fs.writeFileSync(join(fakeSigner, "index.js"), 'exports.Signer = class { async getAuthToken() { return "synthetic-token"; } };');
 globalThis.poolAttempts = 0;
 const require = createRequire(join(compiled, "configuration-test.cjs"));
 const entrypoints = join(compiled, "infra/04.deploy/03.product/entrypoints");
 const config = require(join(entrypoints, "kanbien-core-server-persistence-configuration.js"));
 const server = require(join(entrypoints, "kanbien-core-server-persistence.main.js"));
 const migration = require(join(entrypoints, "kanbien-core-server-persistence-migration.main.js"));
+const administration = require(join(entrypoints, "kanbien-core-server-persistence-administration.main.js"));
+const roleCredential = require(join(entrypoints, "kanbien-core-server-persistence-role-credential.js"));
+const iamAuthentication = require(join(entrypoints, "kanbien-core-server-persistence-iam-authentication.js"));
 const restore = require(join(entrypoints, "kanbien-core-server-persistence-restore-verifier.main.js"));
 const valid = {
   PERSISTENCE_POSTGRES_HOST: "postgres", PERSISTENCE_POSTGRES_PORT: "5432",
   PERSISTENCE_POSTGRES_DATABASE: "kanbienpersistence", PERSISTENCE_POSTGRES_SCHEMA: "platform",
-  PERSISTENCE_RUNTIME_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-runtime",
-  PERSISTENCE_MIGRATION_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-migration",
-  PERSISTENCE_RUNTIME_CREDENTIALS: JSON.stringify({ username: "core_runtime", password: "synthetic-runtime" }),
-  PERSISTENCE_MIGRATION_CREDENTIALS: JSON.stringify({ username: "core_migration", password: "synthetic-migration" }),
-  PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS: JSON.stringify({ username: "core_runtime", password: "synthetic-runtime" }),
-  PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS: JSON.stringify({ username: "core_runtime", password: "synthetic-runtime" }),
+  PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-1",
+  PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: "arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-ABCDEFGHIJKLMNOP/core_runtime",
+  PERSISTENCE_RUNTIME_DATABASE_USERNAME: "core_runtime",
+  PERSISTENCE_MIGRATION_DATABASE_USERNAME: "core_schema_migration",
+  PERSISTENCE_ADMINISTRATOR_CREDENTIALS: JSON.stringify({ username: "core_administrator", password: "synthetic-administrator" }),
+  PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE: "arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-administrator",
+  PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME: "core_runtime",
   PERSISTENCE_POSTGRES_CA_PATH: "/app/assets/fixture.crt",
   PERSISTENCE_ACCEPTANCE_RECORD_ID: "core-persistence-config-fixture",
   PERSISTENCE_ACCEPTANCE_FACT_DIGEST: "a".repeat(64),
@@ -75,28 +82,44 @@ try {
   })) {
     for (const value of values) {
       const env = { ...valid, [key]: value };
-      for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) {
+      for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, administration.runKanbienCoreServerPersistenceAdministration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) {
         await rejectedBeforePool(run, env); scenarios += 1;
       }
     }
   }
   for (const [run, key] of [
-    [server.runKanbienCoreServerPersistenceMain, "PERSISTENCE_RUNTIME_CREDENTIALS"],
-    [migration.runKanbienCoreServerPersistenceMigration, "PERSISTENCE_MIGRATION_CREDENTIALS"],
-    [migration.runKanbienCoreServerPersistenceMigration, "PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS"],
-    [restore.runKanbienCoreServerPersistenceRestoreVerifier, "PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS"],
+    [server.runKanbienCoreServerPersistenceMain, "PERSISTENCE_RUNTIME_DATABASE_USERNAME"],
+    [migration.runKanbienCoreServerPersistenceMigration, "PERSISTENCE_MIGRATION_DATABASE_USERNAME"],
+    [administration.runKanbienCoreServerPersistenceAdministration, "PERSISTENCE_ADMINISTRATOR_CREDENTIALS"],
+    [administration.runKanbienCoreServerPersistenceAdministration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME"],
+    [administration.runKanbienCoreServerPersistenceAdministration, "PERSISTENCE_MIGRATION_DATABASE_USERNAME"],
+    [restore.runKanbienCoreServerPersistenceRestoreVerifier, "PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME"],
   ]) {
-    for (const value of ["not-json", "[]", JSON.stringify({ username: "bad role", password: "synthetic-canary" }), JSON.stringify({ username: "core_runtime", password: "synthetic\u0000canary" })]) {
+    for (const value of ["", "bad role", "core_runtime\u0000canary"]) {
       await rejectedBeforePool(run, { ...valid, [key]: value }); scenarios += 1;
     }
   }
-  await rejectedBeforePool(migration.runKanbienCoreServerPersistenceMigration, { ...valid, PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS: valid.PERSISTENCE_MIGRATION_CREDENTIALS });
-  await rejectedBeforePool(migration.runKanbienCoreServerPersistenceMigration, { ...valid, PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION: "unknown" });
+  await rejectedBeforePool(migration.runKanbienCoreServerPersistenceMigration, { ...valid, PERSISTENCE_MIGRATION_OPERATION: "unknown" });
+  await rejectedBeforePool(administration.runKanbienCoreServerPersistenceAdministration, { ...valid, PERSISTENCE_RUNTIME_DATABASE_USERNAME: valid.PERSISTENCE_MIGRATION_DATABASE_USERNAME });
   certificateText = "not-a-certificate";
-  for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) await rejectedBeforePool(run, valid);
+  for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, administration.runKanbienCoreServerPersistenceAdministration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) await rejectedBeforePool(run, valid);
+  await roleCredentialRegression();
+  await iamAuthenticationRegression();
+  administrationDiagnosticRegression();
+  targetTemplateRegression();
   assert.equal(globalThis.poolAttempts, 0);
   console.log(`Persistence configuration regression passed (${scenarios + 5} entrypoint failures before pool creation; migration deadline and TLS authority validated).`);
 } finally { fs.readFileSync = originalRead; }
+
+function administrationDiagnosticRegression() {
+  for (const code of [
+    "PERSISTENCE_RUNTIME_DML_NOT_CONFIRMED",
+    "PERSISTENCE_RUNTIME_PERMISSION_DENIAL_NOT_CONFIRMED",
+    "PERSISTENCE_RUNTIME_PERMISSION_UNEXPECTEDLY_PERMITTED",
+    "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED",
+  ]) assert.equal(administration.administrationFailureCode(new Error(code)), code, "closed privilege-probe outcome must remain diagnostically distinct");
+  assert.equal(administration.administrationFailureCode(new Error("password=synthetic-canary")), "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "unexpected provider detail must not enter a diagnostic code");
+}
 
 async function rejectedBeforePool(run, env) {
   const savedError = console.error, savedCode = process.exitCode;
@@ -108,7 +131,56 @@ async function rejectedBeforePool(run, env) {
     assert.equal(process.exitCode, 1, "invalid input must fail closed");
     assert.equal(globalThis.poolAttempts, 0, "invalid input must not construct a driver pool");
     const diagnostics = errors.join("\n");
-    assert.match(diagnostics, /configuration-invalid|credentials-invalid|CONFIGURATION_INVALID|tls-authority-unavailable/);
+    assert.match(diagnostics, /configuration-invalid|iam-authentication-invalid|credentials-invalid|CONFIGURATION_INVALID|tls-authority-unavailable|ADMINISTRATION_CONFIGURATION_INVALID/);
     assert.equal(diagnostics.includes("synthetic"), false, "diagnostics must not include credential values");
   } finally { console.error = savedError; process.exitCode = savedCode; }
+}
+
+async function roleCredentialRegression() {
+  const absent = { exists: false, can_login: false, superuser: false, create_role: false, create_database: false, replication: false, bypass_rls: false, inherit: false };
+  const bounded = { ...absent, exists: true, can_login: true };
+  const statements = [];
+  const pool = { query: async (statement) => {
+    statements.push(statement);
+    const text = statement.text;
+    if (text.startsWith("SELECT EXISTS")) return { rows: [statements.filter((item) => item.text.startsWith("SELECT EXISTS")).length === 1 ? absent : bounded] };
+    return { rows: [] };
+  } };
+  await roleCredential.ensureBoundedLoginRole(pool, { username: "core_runtime" });
+  const ddl = statements.map((statement) => statement.text).join("\n");
+  assert.equal(ddl.includes("PASSWORD"), false, "role identity DDL must not carry a credential or verifier");
+  assert.equal(ddl.includes("SCRAM-SHA-256"), false, "a verifier is sensitive credential material too");
+  const inheritedStatements = [];
+  const inherited = { ...bounded, inherit: true };
+  const inheritedPool = { query: async (statement) => {
+    inheritedStatements.push(statement);
+    if (statement.text.startsWith("SELECT EXISTS")) return { rows: [inheritedStatements.filter((item) => item.text.startsWith("SELECT EXISTS")).length === 1 ? inherited : bounded] };
+    return { rows: [] };
+  } };
+  await roleCredential.ensureBoundedLoginRole(inheritedPool, { username: "core_runtime" });
+  assert.equal(inheritedStatements.some((statement) => statement.text === 'ALTER ROLE "core_runtime" NOINHERIT'), true, "a non-elevated legacy role must converge to the bounded IAM identity profile");
+  await assert.rejects(
+    () => roleCredential.ensureBoundedLoginRole({ query: async () => ({ rows: [{ ...bounded, can_login: false }] }) }, { username: "core_runtime" }),
+    /PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY/,
+    "bootstrap must not undo an urgent NOLOGIN revocation",
+  );
+  const elevatedPool = { query: async () => ({ rows: [{ ...bounded, create_role: true }] }) };
+  await assert.rejects(() => roleCredential.ensureBoundedLoginRole(elevatedPool, { username: "core_runtime" }), /PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED/);
+}
+
+async function iamAuthenticationRegression() {
+  const configuration = config.persistenceConfiguration(valid, "server");
+  assert.ok(configuration);
+  const local = iamAuthentication.persistenceIamAuthentication({ ...valid, NODE_ENV: "test", PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN: "synthetic-test-token" }, configuration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME");
+  assert.equal(await local.authenticationToken(), "synthetic-test-token", "The disposable route must be explicit and test-only.");
+  const production = iamAuthentication.persistenceIamAuthentication({ ...valid, NODE_ENV: "production", PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN: "synthetic-test-token" }, configuration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME");
+  assert.notEqual(await production.authenticationToken(), "synthetic-test-token", "A local qualification token must never override the production signer.");
+}
+
+function targetTemplateRegression() {
+  const template = originalRead("infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml", "utf8");
+  assert.equal(template.includes("PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN"), false, "The target realization must reject the local-token test escape by never declaring it.");
+  assert.equal(/Name:\s*NODE_ENV,\s*Value:\s*test/.test(template), false, "The target realization must never deploy a test runtime marker.");
+  assert.equal(template.includes("PERSISTENCE_RUNTIME_CREDENTIALS"), false, "The deployed server must not receive the retired runtime password secret.");
+  assert.equal(template.includes("PERSISTENCE_MIGRATION_CREDENTIALS"), false, "The deployed migration task must not receive the retired migration password secret.");
 }

@@ -45,13 +45,13 @@ def source(m):
  return (v,"ok") if isinstance(s,dict) and s.get("desiredCount")==1 and s.get("runningCount")==1 else (None,c if not ok else "persistence-restore-source-service-not-healthy")
 def controls(m):
  s,c=outputs(m,STACK); f,_=outputs(m,FOUNDATION)
- needed={"CoreServerPersistenceRestorationVerifierTaskDefinitionArn","PersistenceRestorationVerifierSecurityGroupId","PersistenceRestoredDatabaseSecurityGroupId"}
+ needed={"CoreServerPersistenceRestorationVerifierTaskDefinitionArn","PersistenceRestorationVerifierSecurityGroupId","PersistenceRestoredDatabaseSecurityGroupId","PersistenceRestorationVerifierTaskRoleName"}
  if not isinstance(s,dict) or not needed<=s.keys() or any(not s[k] for k in needed):return None,"persistence-restore-control-surface-unavailable"
  if not isinstance(f,dict) or not isinstance(f.get("PrivateSubnetIds"),str) or not f["PrivateSubnetIds"]:return None,"persistence-restore-private-network-unavailable"
  s["PrivateSubnetIds"]=f["PrivateSubnetIds"];return s,"ok"
 def correct(restored,src,group):
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]; a=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; b=restored.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(restored.get("DBSubnetGroup"),dict) else None
- return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b
+ return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b
 def parsed_time(value):
  if not isinstance(value,str):return None
  try:
@@ -132,7 +132,36 @@ def task_def_valid(m,arn):
  c=cs[0]; environment=c.get("environment",[]); secret_entries=c.get("secrets",[])
  if not isinstance(environment,list) or not isinstance(secret_entries,list) or not all(isinstance(item,dict) and isinstance(item.get("name"),str) for item in environment+secret_entries):return False
  env={x["name"]:x.get("value") for x in environment}; secrets={x["name"] for x in secret_entries}
- return c.get("name")=="persistence-restoration-verifier" and c.get("command")==["artifacts/kanbien-core-server-persistence-restore-verifier.main.js"] and secrets=={"PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS"} and "PERSISTENCE_POSTGRES_HOST" not in env and env.get("PERSISTENCE_POSTGRES_DATABASE")=="kanbienpersistence" and env.get("PERSISTENCE_POSTGRES_SCHEMA")=="platform"
+ required={"PERSISTENCE_POSTGRES_PORT":"5432","PERSISTENCE_POSTGRES_DATABASE":"kanbienpersistence","PERSISTENCE_POSTGRES_SCHEMA":"platform","PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME":"core_runtime","PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE":"restoration-identity-supplied-at-governed-task-run"}
+ return c.get("name")=="persistence-restoration-verifier" and c.get("command")==["artifacts/kanbien-core-server-persistence-restore-verifier.main.js"] and not secrets and "PERSISTENCE_POSTGRES_HOST" not in env and all(env.get(key)==value for key,value in required.items()) and isinstance(env.get("PERSISTENCE_POSTGRES_IAM_REGION"),str)
+
+def restore_identity_resource(restored):
+ resource=restored.get("DbiResourceId") if isinstance(restored,dict) else None
+ return f"arn:aws:rds-db:eu-west-1:337159794548:dbuser:{resource}/core_runtime" if isinstance(resource,str) and resource else None
+
+def temporary_restore_identity_policy(m, controls, restored, observe_only=False):
+ """Grant only this restored instance; do not retain source-database access."""
+ resource=restore_identity_resource(restored); role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ if not isinstance(resource,str) or not isinstance(role,str) or not role:return "persistence-restoration-identity-binding-unavailable",None
+ name="kanbien-core-platform-restoration-verifier-current-instance"
+ policy={"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"rds-db:connect","Resource":resource}]}
+ ok,value,code=m.aws("iam","get-role-policy","--role-name",role,"--policy-name",name)
+ if ok:
+  actual=value.get("PolicyDocument") if isinstance(value,dict) else None
+  return ("ok",resource) if actual==policy else ("persistence-restoration-temporary-identity-policy-mismatch",None)
+ if code!="aws-resource-missing":return code,None
+ if observe_only:return "persistence-restoration-temporary-identity-policy-not-observed",None
+ ok,_,code=m.aws("iam","put-role-policy","--role-name",role,"--policy-name",name,"--policy-document",json.dumps(policy,separators=(",",":")))
+ return ("persistence-restoration-temporary-identity-policy-submitted",resource) if ok else (code,None)
+
+def remove_temporary_restore_identity_policy(m, controls, observe_only=False):
+ role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ if not isinstance(role,str) or not role:return "persistence-restoration-identity-binding-unavailable"
+ name="kanbien-core-platform-restoration-verifier-current-instance";ok,_,code=m.aws("iam","get-role-policy","--role-name",role,"--policy-name",name)
+ if not ok:return "ok" if code=="aws-resource-missing" else code
+ if observe_only:return "persistence-restoration-temporary-identity-policy-removal-not-observed"
+ ok,_,code=m.aws("iam","delete-role-policy","--role-name",role,"--policy-name",name)
+ return "persistence-restoration-temporary-identity-policy-removal-submitted" if ok else code
 def task_image_digest(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
  return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
@@ -181,6 +210,8 @@ def verify(m,sid,rid,observe_only=False):
  if restored is None or not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked",rc if restored is None else "persistence-restored-database-posture-invalid")
  endpoint=restored.get("Endpoint",{}).get("Address") if isinstance(restored.get("Endpoint"),dict) else None; td=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
+ identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,observe_only)
+ if identity_status!="ok":return emit("pending" if identity_status.endswith("submitted") else "uncertain" if identity_status.endswith("not-observed") else "blocked",identity_status,facts={"snapshot":sid,"restored_database":rid})
  started=restore_run_identity(restored)
  if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
  arns,c=verifier_tasks(m,started,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
@@ -191,7 +222,7 @@ def verify(m,sid,rid,observe_only=False):
   t=xs[0]
   facts={"snapshot":sid,"restored_database":rid,"operation_id":started}
   if t.get("taskArn")!=arns[0] or t.get("startedBy")!=started:return emit("blocked","persistence-restoration-verifier-task-binding-invalid",facts=facts)
-  expected_env={"PERSISTENCE_POSTGRES_HOST":endpoint,"PERSISTENCE_ACCEPTANCE_RECORD_ID":RECORD_ID,"PERSISTENCE_ACCEPTANCE_FACT_DIGEST":FACT_DIGEST}
+  expected_env={"PERSISTENCE_POSTGRES_HOST":endpoint,"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE":identity_reference,"PERSISTENCE_ACCEPTANCE_RECORD_ID":RECORD_ID,"PERSISTENCE_ACCEPTANCE_FACT_DIGEST":FACT_DIGEST}
   if not task_evidence().task_overrides_match(t,"persistence-restoration-verifier",expected_env):return emit("blocked","persistence-restoration-verifier-task-binding-invalid",facts=facts)
   if t.get("lastStatus") in {"PROVISIONING","PENDING","ACTIVATING","RUNNING","DEACTIVATING","STOPPING","DEPROVISIONING"}:return emit("pending","persistence-restoration-verifier-still-running",facts=facts)
   if t.get("lastStatus")!="STOPPED":return emit("uncertain","persistence-restoration-verifier-status-unknown",facts=facts)
@@ -207,7 +238,7 @@ def verify(m,sid,rid,observe_only=False):
   except Exception:return emit("blocked","persistence-restoration-verifier-receipt-persistence-failed")
   return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={**facts,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration,"proof_receipt":str(path.relative_to(ROOT))})
  if observe_only:return emit("uncertain","persistence-restoration-verifier-operation-not-observed",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
- net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
+ net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
  return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
 def cleanup(m,sid,rid,observe_only=False):
@@ -229,6 +260,8 @@ def cleanup(m,sid,rid,observe_only=False):
   listed=described.get("tasks") if ok and isinstance(described,dict) else None
   if not isinstance(listed,list) or len(listed)!=len(tasks) or described.get("failures"):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain")
   if any(not isinstance(task,dict) or task.get("lastStatus")!="STOPPED" for task in listed):return emit("pending","persistence-restore-cleanup-verifier-still-running")
+ removed=remove_temporary_restore_identity_policy(m,ctl,observe_only)
+ if removed!="ok":return emit("pending" if removed.endswith("submitted") else "uncertain" if removed.endswith("not-observed") else "blocked",removed,facts={"snapshot":sid,"restored_database":rid})
  ok,_,c=m.aws("rds","delete-db-instance","--db-instance-identifier",rid,"--skip-final-snapshot")
  return emit("pending" if ok else "uncertain","persistence-restored-database-deletion-submitted" if ok else c,facts={"snapshot":sid,"restored_database":rid})
 def main():

@@ -4,7 +4,7 @@ id: deploy.standards.health-failure-and-recovery-declaration
 version: 9
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.runtime-safety
 disciplines: [security, sre]
@@ -76,7 +76,10 @@ A run-to-completion task that changes dependency structure must declare
 `migration_execution`: one executor, bounded lock and execution waits, an
 ordered immutable/checksummed manifest, transaction boundary, an interruption
 policy that never retries an uncertain outcome automatically, and a release
-block pending fresh state observation. It must also state that a
+block pending fresh state observation. That observation is a separately bound,
+read-only administrative task for the same dependency. It must produce a
+durable receipt before replay and permit replay only when the reviewed
+migration-history state says it is safe. It must also state that a
 checksum-matching rerun is a recorded no-op, a checksum mismatch blocks the
 release, and a concurrent executor is rejected before apply. Its compatibility
 strategy is expand → deploy → verify → contract later. The supported secret

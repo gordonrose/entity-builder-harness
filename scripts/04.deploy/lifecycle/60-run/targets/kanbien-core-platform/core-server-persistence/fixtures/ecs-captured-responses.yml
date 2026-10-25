@@ -39,7 +39,7 @@ tasks:
       containerOverrides:
       - name: persistence-migration
         environment:
-        - name: PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION
+        - name: PERSISTENCE_MIGRATION_OPERATION
           value: prove-effective-privilege
       inferenceAcceleratorOverrides: []
   verifier:

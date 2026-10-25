@@ -4,7 +4,7 @@ id: deploy.standards.persistence-diagnostic-mapping
 version: 3
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-23"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.persistence-diagnostics
 disciplines: [security, sre, agentic]
@@ -32,7 +32,9 @@ workload consequence and proof. A long-running server keeps process liveness
 separate from dependency readiness. A completion task fails completion or
 blocks acceptance as appropriate; it never gains HTTP readiness or an
 unbounded reconnect loop. An uncertain migration outcome blocks release and
-requires fresh state observation before replay.
+requires a declared, read-only fresh-state observation with a durable receipt
+before replay. Its replay-permitted result must be explicit; arbitrary task
+completion or a parsed provider log is not permission to submit again.
 
 Every mapped workload handles `persistence.unclassified-failure` by stopping
 and escalating. Diagnostic records use a closed field set, controlled summary
