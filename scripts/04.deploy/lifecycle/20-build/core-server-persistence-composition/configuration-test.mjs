@@ -105,10 +105,21 @@ try {
   for (const run of [server.runKanbienCoreServerPersistenceMain, migration.runKanbienCoreServerPersistenceMigration, administration.runKanbienCoreServerPersistenceAdministration, restore.runKanbienCoreServerPersistenceRestoreVerifier]) await rejectedBeforePool(run, valid);
   await roleCredentialRegression();
   await iamAuthenticationRegression();
+  administrationDiagnosticRegression();
   targetTemplateRegression();
   assert.equal(globalThis.poolAttempts, 0);
   console.log(`Persistence configuration regression passed (${scenarios + 5} entrypoint failures before pool creation; migration deadline and TLS authority validated).`);
 } finally { fs.readFileSync = originalRead; }
+
+function administrationDiagnosticRegression() {
+  for (const code of [
+    "PERSISTENCE_RUNTIME_DML_NOT_CONFIRMED",
+    "PERSISTENCE_RUNTIME_PERMISSION_DENIAL_NOT_CONFIRMED",
+    "PERSISTENCE_RUNTIME_PERMISSION_UNEXPECTEDLY_PERMITTED",
+    "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED",
+  ]) assert.equal(administration.administrationFailureCode(new Error(code)), code, "closed privilege-probe outcome must remain diagnostically distinct");
+  assert.equal(administration.administrationFailureCode(new Error("password=synthetic-canary")), "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED", "unexpected provider detail must not enter a diagnostic code");
+}
 
 async function rejectedBeforePool(run, env) {
   const savedError = console.error, savedCode = process.exitCode;
