@@ -1,0 +1,30 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.builder-config
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence.observability
+#   disciplines: [security, sre]
+#   kind: collector-build-configuration
+#   purpose: Build only the OpenTelemetry components used by the target-owned readiness metric path.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.dockerfile
+#     path: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile
+dist:
+  name: kanbien-observability-collector
+  description: Minimal collector for the core-server-persistence readiness signal.
+  output_path: /output
+  otelcol_version: 0.163.0
+receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.163.0
+processors:
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.163.0
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.163.0
+exporters:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.163.0
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.163.0

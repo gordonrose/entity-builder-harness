@@ -87,9 +87,9 @@ pipelines:
     provider_identity: github-kanbien-core-platform-delivery
     package_destination: kanbien-core-platform/core-server
     provider_region_alias: aws-eu-west-1
-    permitted_operations: [require-declared-sidecar-source-manifest, require-private-immutable-mirror, qualify-pinned-sidecar, vulnerability-scan, sbom, provenance-attestation, write-safe-package-custody-receipt]
+    permitted_operations: [build-minimal-pinned-sidecar, qualify-non-secret-startup, scan-qualified-archive, publish-private-immutable-image, sbom, provenance-attestation, write-safe-package-custody-receipt]
     outputs: [immutable-image-digest, package-custody-receipt]
     used_by_scopes: [core-server-persistence]
     receipt_contract: .agentic/04.deploy/40-package/schemas/package-custody-receipt.v1.schema.yml
-    required_proofs: [source-identity, configuration-startup, delivery-access-coverage, vulnerability-scan, sbom, provenance-attestation, immutable-digest, custody-receipt]
+    required_proofs: [source-identity, minimal-source-build, configuration-startup, archive-integrity, delivery-access-coverage, vulnerability-scan, sbom, provenance-attestation, immutable-digest, custody-receipt]
     deployment_boundary: target-bound-deploy-capability-not-this-pipeline

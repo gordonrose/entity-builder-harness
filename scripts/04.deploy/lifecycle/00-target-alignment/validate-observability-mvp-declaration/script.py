@@ -114,15 +114,25 @@ def check(root: Path) -> None:
         root.parent.parent / "image" / "core-server-persistence-observability-collector" / "image-contract.yml",
         "observability-collector-package-contract-unreadable",
     )
+    collector_source = mapping(collector_contract.get("source"), "observability-collector-package-contract-invalid")
+    collector_upstream = mapping(collector_source.get("upstream_release"), "observability-collector-package-contract-invalid")
+    collector_builder = mapping(collector_source.get("builder_image"), "observability-collector-package-contract-invalid")
+    collector_files = mapping(collector_source.get("source_files"), "observability-collector-package-contract-invalid")
     if (
         collector_contract.get("schema") != "deploy/sidecar-image-contract/v1"
         or collector_contract.get("target") != TARGET
         or collector_contract.get("scope") != SCOPE
         or collector_contract.get("candidate_id") != "observability-collector"
         or collector_contract.get("package_contract_id") != "core-server-persistence-observability-collector-image"
-        or collector_contract.get("program_id") != "aws-otel-collector"
-        or mapping(collector_contract.get("source"), "observability-collector-package-contract-invalid").get("immutable_digest") != "sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e"
+        or collector_contract.get("program_id") != "kanbien-observability-collector"
+        or collector_source.get("kind") != "minimal-custom-collector-build"
+        or collector_upstream != {"repository": "open-telemetry/opentelemetry-collector-releases", "version": "v0.163.0", "contrib_manifest_sha256": "0bd72a020e0b8414c85df56fd5dcc1ebd05f160a8bbe03f8fb2c53a1248218e8"}
+        or collector_builder != {"reference": "docker.io/library/golang@sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba", "go_version": "1.26.10"}
+        or collector_files != {"dockerfile": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile", "component_manifest": "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/builder-config.yaml"}
+        or collector_source.get("selected_components") != ["otlp-http-receiver", "memory-limiter", "batch", "aws-emf-exporter", "health-check"]
+        or collector_source.get("identity_proof") != "reviewed-upstream-release-manifest-and-pinned-builder-image"
         or mapping(collector_contract.get("destination"), "observability-collector-package-contract-invalid").get("selection") != "private-ecr-immutable-digest"
+        or mapping(collector_contract.get("destination"), "observability-collector-package-contract-invalid").get("precondition") != "exact-qualified-archive-must-pass-unprivileged-scan-before-private-publication"
         or mapping(collector_contract.get("runtime"), "observability-collector-package-contract-invalid").get("exporter") != "aws-emf-cloudwatch-logs"
     ):
         raise Failure("observability-collector-package-contract-invalid")

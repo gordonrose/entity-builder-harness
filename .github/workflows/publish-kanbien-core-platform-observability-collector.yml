@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: github.workflow.publish-kanbien-core-platform-observability-collector
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -9,7 +9,7 @@
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
 #   kind: ci-workflow
-#   purpose: Qualify and mirror the pinned ADOT collector to target-private ECR without deploying it.
+#   purpose: Build, qualify, scan, attest, and then publish the minimal collector to target-private ECR without deploying it.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.contract
@@ -18,25 +18,13 @@ name: Publish Kanbien Core Platform Observability Collector
 on: { workflow_dispatch: {} }
 permissions: { contents: read }
 concurrency: { group: kanbien-core-platform-observability-collector-publication, cancel-in-progress: false }
-env:
-  # This contract-pinned public OCI index and its reviewed Linux/AMD64 manifest
-  # selection are retained in the image contract. The protected job requires
-  # that exact manifest in private ECR, then scans only the local payload.
-  COLLECTOR_SOURCE_IMAGE: public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
-  COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST: sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31
+
 jobs:
-  qualify-and-publish:
-    permissions: { contents: read, id-token: write }
+  build-and-qualify:
     outputs:
-      image_digest: ${{ steps.image.outputs.digest }}
-    env:
-      AWS_REGION: eu-west-1
-      AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
-      ECR_REPOSITORY: kanbien-core-platform/core-server
-      ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
+      archive_sha256: ${{ steps.archive.outputs.sha256 }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    environment: kanbien-core-platform
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
@@ -47,59 +35,63 @@ jobs:
           bash scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/validate-delivery-access/script.sh --json
-      - uses: aws-actions/configure-aws-credentials@v4
-        with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
-      - name: Prove fixed delivery read access
-        run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-      - name: Require declared private collector manifest
-        id: source
+      - name: Build the declared minimal collector source
         run: |
           set -euo pipefail
-          [[ "$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
-          aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageDigest="$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" --query 'imageDetails[0].imageDigest' --output text | grep -Fx "$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST"
-          echo "platform_manifest_digest=$COLLECTOR_SOURCE_PLATFORM_MANIFEST_DIGEST" >> "$GITHUB_OUTPUT"
-      - name: Qualify exact private collector startup
-        id: image
+          docker build --pull --platform linux/amd64 \
+            --file infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile \
+            --tag kanbien-observability-collector:qualification .
+      - name: Qualify exact collector startup with non-secret configuration
         run: |
           set -euo pipefail
-          collector_private_image="$ECR_URI@${{ steps.source.outputs.platform_manifest_digest }}"
           name="kanbien-observability-collector-qualification-$GITHUB_RUN_ID"
-          docker pull "$collector_private_image"
-          docker run --detach --rm --name "$name" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges -e "AOT_CONFIG_CONTENT=$(cat infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml)" "$collector_private_image" >/dev/null
+          docker run --detach --rm --name "$name" --read-only \
+            --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL \
+            --security-opt no-new-privileges \
+            -e "AOT_CONFIG_CONTENT=$(cat infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml)" \
+            kanbien-observability-collector:qualification >/dev/null
           trap 'docker logs "$name" || true; docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
           sleep 5
           test "$(docker inspect --format '{{.State.Running}}' "$name")" = true
           ! docker logs "$name" 2>&1 | grep -Ei 'error.*(config|awsemf)|failed.*(config|awsemf)'
           docker rm -f "$name" >/dev/null
           trap - EXIT
-          docker save "$collector_private_image" -o "$RUNNER_TEMP/observability-collector.scan-input.tar"
-          echo "digest=${{ steps.source.outputs.platform_manifest_digest }}" >> "$GITHUB_OUTPUT"
-      - name: Export exact private image for unprivileged scan
+      - name: Export exact qualified collector archive
+        id: archive
+        run: |
+          set -euo pipefail
+          docker save kanbien-observability-collector:qualification -o "$RUNNER_TEMP/observability-collector.scan-input.tar"
+          sha256sum "$RUNNER_TEMP/observability-collector.scan-input.tar" | awk '{print "sha256=" $1}' >> "$GITHUB_OUTPUT"
+      - name: Export exact qualified image for unprivileged scan
         uses: actions/upload-artifact@v4
         with:
           name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
           path: ${{ runner.temp }}/observability-collector.scan-input.tar
           if-no-files-found: error
           retention-days: 1
-  scan-mirrored-payload:
-    needs: qualify-and-publish
+
+  scan-qualified-payload:
+    needs: build-and-qualify
     permissions: { contents: read }
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Retrieve exact private image scan input
+      - name: Retrieve exact qualified collector archive
         uses: actions/download-artifact@v4
         with:
           name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
           path: scan-input
+      - name: Verify collector archive provenance
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum scan-input/observability-collector.scan-input.tar | awk '{print $1}')"
+          test "$actual" = "${{ needs.build-and-qualify.outputs.archive_sha256 }}"
       - name: Install pinned portable scanner
         uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
         with:
           version: v0.70.0
           cache: true
-      - name: Scan exact mirrored collector payload
+      - name: Scan exact qualified collector payload
         id: vulnerability_scan
         continue-on-error: true
         run: |
@@ -117,32 +109,55 @@ jobs:
           path: observability-collector.trivy.json
           if-no-files-found: error
           retention-days: 30
-      - name: Require clean portable vulnerability scan of mirrored payload
+      - name: Require clean portable vulnerability scan of qualified payload
         if: steps.vulnerability_scan.outcome != 'success'
         run: exit 1
+
   complete-custody:
-    needs: [qualify-and-publish, scan-mirrored-payload]
+    needs: [build-and-qualify, scan-qualified-payload]
     permissions: { contents: read, id-token: write, attestations: write, artifact-metadata: write }
     env:
       AWS_REGION: eu-west-1
       AWS_ROLE_ARN: arn:aws:iam::337159794548:role/github-kanbien-core-platform-delivery
       ECR_REPOSITORY: kanbien-core-platform/core-server
       ECR_URI: 337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server
-      IMAGE_DIGEST: ${{ needs.qualify-and-publish.outputs.image_digest }}
+      CANDIDATE_TAG: observability-collector-${{ github.sha }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: kanbien-core-platform
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
+      - name: Retrieve scanned collector archive
+        uses: actions/download-artifact@v4
+        with:
+          name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
+          path: scan-input
+      - name: Verify archive is the scanned qualified payload
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum scan-input/observability-collector.scan-input.tar | awk '{print $1}')"
+          test "$actual" = "${{ needs.build-and-qualify.outputs.archive_sha256 }}"
+          docker load --input scan-input/observability-collector.scan-input.tar
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
+      - name: Prove fixed delivery read access
+        run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish exact scanned collector to private ECR
+        id: image
+        run: |
+          set -euo pipefail
+          docker tag kanbien-observability-collector:qualification "$ECR_URI:$CANDIDATE_TAG"
+          docker push "$ECR_URI:$CANDIDATE_TAG"
+          digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$CANDIDATE_TAG" --query 'imageDetails[0].imageDigest' --output text)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: ${{ env.ECR_URI }}@${{ env.IMAGE_DIGEST }}
+          image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
           format: spdx-json
           output-file: ${{ runner.temp }}/observability-collector.sbom.spdx.json
           upload-artifact: false
@@ -151,18 +166,20 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
-          subject-digest: ${{ env.IMAGE_DIGEST }}
+          subject-digest: ${{ steps.image.outputs.digest }}
           push-to-registry: true
           create-storage-record: false
       - name: Attest collector SBOM
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
-          subject-digest: ${{ env.IMAGE_DIGEST }}
+          subject-digest: ${{ steps.image.outputs.digest }}
           sbom-path: ${{ runner.temp }}/observability-collector.sbom.spdx.json
           push-to-registry: true
           create-storage-record: false
       - name: Write and validate safe collector custody receipt
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
         run: |
           set -euo pipefail
           receipt="$RUNNER_TEMP/observability-collector-package-custody-receipt.json"
@@ -173,14 +190,14 @@ jobs:
             'schema': 'deploy/package-custody-receipt/v1', 'target': 'kanbien-core-platform',
             'environment_class': 'private-persistence-candidate', 'provider_region_alias': 'aws-eu-west-1',
             'candidate_id': 'observability-collector', 'package_contract_id': 'core-server-persistence-observability-collector-image',
-            'program_id': 'aws-otel-collector', 'source_revision': os.environ['GITHUB_SHA'],
+            'program_id': 'kanbien-observability-collector', 'source_revision': os.environ['GITHUB_SHA'],
             'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
             'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
+            'checks': {'runnable_program_contract':'passed','minimal_source_build':'passed','configuration_startup':'passed','delivery_access_static':'passed','delivery_access_live':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
             'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
           }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
           PY
-          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$receipt" --expected-target kanbien-core-platform --expected-candidate observability-collector --expected-package-contract core-server-persistence-observability-collector-image --expected-program aws-otel-collector --json
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$receipt" --expected-target kanbien-core-platform --expected-candidate observability-collector --expected-package-contract core-server-persistence-observability-collector-image --expected-program kanbien-observability-collector --json
       - name: Upload safe collector custody evidence
         uses: actions/upload-artifact@v4
         with:

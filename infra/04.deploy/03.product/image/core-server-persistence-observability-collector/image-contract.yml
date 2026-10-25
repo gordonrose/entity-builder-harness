@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.image.core-server-persistence-observability-collector.contract
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -9,7 +9,7 @@
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
 #   kind: image-contract
-#   purpose: Pin, qualify, and mirror the ADOT collector sidecar before the target can select it by private immutable digest.
+#   purpose: Build, qualify, scan, and publish the minimal collector sidecar before the target can select it by private immutable digest.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.pipeline.kanbien-core-platform.observability-collector-package-custody
@@ -21,24 +21,25 @@ target: kanbien-core-platform
 scope: core-server-persistence
 candidate_id: observability-collector
 package_contract_id: core-server-persistence-observability-collector-image
-program_id: aws-otel-collector
+program_id: kanbien-observability-collector
 source:
-  registry: public.ecr.aws
-  repository: aws-observability/aws-otel-collector
-  # The public OCI index was read on 2026-10-25 and its Linux/AMD64 selection
-  # recorded below. The package workflow does not depend on an availability or
-  # rate-limit-prone public registry lookup: it uses only that exact manifest
-  # already retained in target-private ECR.
-  immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e
-  selected_platform:
-    os: linux
-    architecture: amd64
-    immutable_manifest_digest: sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31
-  identity_proof: reviewed-pinned-source-index-resolution-and-private-manifest-digest-match
+  kind: minimal-custom-collector-build
+  upstream_release:
+    repository: open-telemetry/opentelemetry-collector-releases
+    version: v0.163.0
+    contrib_manifest_sha256: 0bd72a020e0b8414c85df56fd5dcc1ebd05f160a8bbe03f8fb2c53a1248218e8
+  builder_image:
+    reference: docker.io/library/golang@sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba
+    go_version: 1.26.10
+  source_files:
+    dockerfile: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile
+    component_manifest: infra/04.deploy/03.product/image/core-server-persistence-observability-collector/builder-config.yaml
+  selected_components: [otlp-http-receiver, memory-limiter, batch, aws-emf-exporter, health-check]
+  identity_proof: reviewed-upstream-release-manifest-and-pinned-builder-image
 destination:
   repository: kanbien-core-platform/core-server
   selection: private-ecr-immutable-digest
-  precondition: exact-selected-platform-manifest-already-private
+  precondition: exact-qualified-archive-must-pass-unprivileged-scan-before-private-publication
 runtime:
   configuration_source: target-owned-ssm-parameter-non-secret
   configuration_environment: AOT_CONFIG_CONTENT
@@ -46,5 +47,5 @@ runtime:
   exporter: aws-emf-cloudwatch-logs
   application_failure_effect: bounded-telemetry-failure-only
 qualification:
-  required_checks: [source-identity, configuration-startup, vulnerability-scan, sbom, provenance-attestation]
+  required_checks: [source-identity, minimal-source-build, configuration-startup, vulnerability-scan, sbom, provenance-attestation]
   receipt_schema: deploy/package-custody-receipt/v1

@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.core-server-persistence-observability-collector-package-custody
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-25"
@@ -23,14 +23,16 @@ GUARD="$ROOT/scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platfor
 WORKFLOW="$ROOT/.github/workflows/publish-kanbien-core-platform-observability-collector.yml"
 CONTRACT="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 CONFIG="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
+DOCKERFILE="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile"
+COMPONENT_MANIFEST="$ROOT/infra/04.deploy/03.product/image/core-server-persistence-observability-collector/builder-config.yaml"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null
-cp "$WORKFLOW" "$TMP/wrong-private-manifest.yml"
-sed -i 's#sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31#sha256:0000000000000000000000000000000000000000000000000000000000000000#' "$TMP/wrong-private-manifest.yml"
-if python3 "$GUARD" --workflow "$TMP/wrong-private-manifest.yml" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null 2>&1; then
-  echo 'collector custody guard accepted a wrong declared private manifest' >&2
+cp "$WORKFLOW" "$TMP/wrong-archive-boundary.yml"
+sed -i 's#scan-qualified-payload#scan-untrusted-payload#g' "$TMP/wrong-archive-boundary.yml"
+if python3 "$GUARD" --workflow "$TMP/wrong-archive-boundary.yml" --contract "$CONTRACT" --config "$CONFIG" --dockerfile "$DOCKERFILE" --component-manifest "$COMPONENT_MANIFEST" --json >/dev/null 2>&1; then
+  echo 'collector custody guard accepted a missing qualified-archive boundary' >&2
   exit 1
 fi
 cp "$WORKFLOW" "$TMP/workflow.yml"
@@ -40,9 +42,9 @@ if python3 "$GUARD" --workflow "$TMP/workflow.yml" --contract "$CONTRACT" --conf
   exit 1
 fi
 cp "$CONTRACT" "$TMP/contract.yml"
-sed -i 's#sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e#sha256:0000000000000000000000000000000000000000000000000000000000000000#' "$TMP/contract.yml"
-if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$TMP/contract.yml" --config "$CONFIG" --json >/dev/null 2>&1; then
-  echo 'collector custody guard accepted a mutable or wrong source identity' >&2
+sed -i 's#0bd72a020e0b8414c85df56fd5dcc1ebd05f160a8bbe03f8fb2c53a1248218e8#0000000000000000000000000000000000000000000000000000000000000000#' "$TMP/contract.yml"
+if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$TMP/contract.yml" --config "$CONFIG" --dockerfile "$DOCKERFILE" --component-manifest "$COMPONENT_MANIFEST" --json >/dev/null 2>&1; then
+  echo 'collector custody guard accepted a wrong upstream manifest identity' >&2
   exit 1
 fi
 cp "$CONFIG" "$TMP/config.yml"
@@ -52,9 +54,15 @@ if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$TMP
   exit 1
 fi
 cp "$WORKFLOW" "$TMP/unprivileged-scan-boundary.yml"
-sed -i '/scan-mirrored-payload:/a\    permissions: { contents: read, id-token: write }' "$TMP/unprivileged-scan-boundary.yml"
-if python3 "$GUARD" --workflow "$TMP/unprivileged-scan-boundary.yml" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null 2>&1; then
+sed -i '/scan-qualified-payload:/a\    permissions: { contents: read, id-token: write }' "$TMP/unprivileged-scan-boundary.yml"
+if python3 "$GUARD" --workflow "$TMP/unprivileged-scan-boundary.yml" --contract "$CONTRACT" --config "$CONFIG" --dockerfile "$DOCKERFILE" --component-manifest "$COMPONENT_MANIFEST" --json >/dev/null 2>&1; then
   echo 'collector custody guard accepted privileged third-party scan execution' >&2
+  exit 1
+fi
+cp "$DOCKERFILE" "$TMP/Dockerfile"
+sed -i 's#--config=env:AOT_CONFIG_CONTENT#--config=/untrusted/config.yml#' "$TMP/Dockerfile"
+if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$CONFIG" --dockerfile "$TMP/Dockerfile" --component-manifest "$COMPONENT_MANIFEST" --json >/dev/null 2>&1; then
+  echo 'collector custody guard accepted an undeclared configuration startup route' >&2
   exit 1
 fi
 echo 'Collector package-custody workflow tests passed.'
