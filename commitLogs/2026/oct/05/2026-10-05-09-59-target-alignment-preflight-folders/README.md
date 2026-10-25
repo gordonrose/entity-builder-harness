@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T13:24:11Z
-latest_commit_sha: a7d45b7a
-chat_duration: 1743882s (20:04:24:42)
+latest_commit_at_utc: 2026-10-25T13:27:35Z
+latest_commit_sha: HEAD
+chat_duration: 1744086s (20:04:28:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -176,6 +176,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Fixed package source-closure copy of a nonexistent protobuf scope
   Resolution: CI package build reached Docker assembly after every declaration/target/receipt gate passed, then failed before AWS mutation because Dockerfile copied node_modules/@protobufjs even though the lockfile provides unscoped protobufjs. Removed only that nonexistent copy. Local governed build reached the known Docker Desktop/WSL credential-helper failure before Docker could build; CI remains the package authority.
+
+
+- Raised: Removed unnecessary unscoped OpenTelemetry closure copies
+  Resolution: The second hosted build reached the Docker payload closure and established that protobufjs, long and related packages are not installed for the selected OpenTelemetry exporter. The supported runtime closure is pg plus the @opentelemetry tree. A clean temporary copied closure loads pg, sdk-metrics and exporter-metrics-otlp-proto.
 
 ## Decisions Made
 
@@ -609,6 +613,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Workflow 40197461616 passed all repository gates, then Docker build failed at cp node_modules/@protobufjs/.; package closure now copies protobufjs unscoped. Local Docker is externally blocked at dockerfile frontend credential helper with WSL UtilAcceptVsock timeout.
   Durable evidence: Next required evidence is a successful CI package workflow on the source-closure fix; no ECR image or AWS target resource changed in either failed workflow.
+
+
+- Summary: Workflow 40197714861 passed repository gates and failed before AWS/ECR action at unsupported unscoped OTel dependency copies. Current closure test passes using only pg dependencies plus node_modules/@opentelemetry.
+  Durable evidence: Dockerfile infra/04.deploy/03.product/image/core-server-persistence/Dockerfile now contains only actual installed runtime package copies. Hosted CI remains needed for end-to-end image smoke/publication.
 
 ## Activity Log
 
@@ -2864,6 +2872,31 @@ Summary: Workflow 40197461616 passed all repository gates, then Docker build fai
 
 Durable evidence: Next required evidence is a successful CI package workflow on the source-closure fix; no ECR image or AWS target resource changed in either failed workflow.
 
+
+### 2026-10-25T13:27:35Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): correct persistence image closure
+
+Summary: Removed the nonexistent @protobufjs copy from the persistence image source closure after CI caught it before any AWS or ECR mutation.
+
+ADR impact: No ADR: narrow package assembly correction.
+
+
+### 2026-10-25T13:30:03Z - Issue
+
+Raised: Removed unnecessary unscoped OpenTelemetry closure copies
+
+Resolution: The second hosted build reached the Docker payload closure and established that protobufjs, long and related packages are not installed for the selected OpenTelemetry exporter. The supported runtime closure is pg plus the @opentelemetry tree. A clean temporary copied closure loads pg, sdk-metrics and exporter-metrics-otlp-proto.
+
+
+### 2026-10-25T13:30:03Z - Context hygiene
+
+Summary: Workflow 40197714861 passed repository gates and failed before AWS/ECR action at unsupported unscoped OTel dependency copies. Current closure test passes using only pg dependencies plus node_modules/@opentelemetry.
+
+Durable evidence: Dockerfile infra/04.deploy/03.product/image/core-server-persistence/Dockerfile now contains only actual installed runtime package copies. Hosted CI remains needed for end-to-end image smoke/publication.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3606,6 +3639,13 @@ Durable evidence: Next required evidence is a successful CI package workflow on 
   Summary: Corrected only the mutable current accepted-release pointer to hash the exact immutable history bytes; succession validation and target smoke now pass.
   ADR impact: No ADR: this is an integrity-pointer correction under existing release-succession design.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T13:27:35Z
+  Message: fix(deploy): correct persistence image closure
+  Summary: Removed the nonexistent @protobufjs copy from the persistence image source closure after CI caught it before any AWS or ECR mutation.
+  ADR impact: No ADR: narrow package assembly correction.
+
 ## Main Refresh Conflicts
 
 
@@ -3629,9 +3669,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T13:24:11Z
-Latest commit SHA: a7d45b7a
-Chat duration: 1743882s (20:04:24:42)
+Latest commit at UTC: 2026-10-25T13:27:35Z
+Latest commit SHA: HEAD
+Chat duration: 1744086s (20:04:28:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
