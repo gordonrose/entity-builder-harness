@@ -65,6 +65,7 @@ def main():
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return emit("blocked","persistence-release-transition-preconditions-not-proven")
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
     if not ok or status not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
+    current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict)}
     ok,service,code=prepare.aws("ecs","describe-services","--cluster",CLUSTER,"--services",SERVICE); services=service.get("services",[]) if ok and isinstance(service,dict) else []
     if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or services[0].get("runningCount")!=1: return emit("blocked","persistence-release-transition-service-not-healthy")
     outputs,code=prepare.foundation_outputs(); infra,code2=prepare.infrastructure_parameters(outputs) if outputs else (None,code)
@@ -83,7 +84,7 @@ def main():
     if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(prepare,name,digest,revision)
     expected=prepare.candidate_parameters(outputs,infra,receipt)
     actual={item.get("ParameterKey"):item.get("ParameterValue") for item in change.get("Parameters",[]) if isinstance(item,dict)}
-    if actual!=expected:return emit("blocked","persistence-update-live-parameters-mismatch")
+    if not prepare.update_parameters_match(actual,expected,current_parameters):return emit("blocked","persistence-update-live-parameters-mismatch")
     ok,_,code=prepare.aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",name)
     if not ok:return emit("uncertain",code,facts={"change_set":name})
     return reconcile(prepare,name,digest,revision)

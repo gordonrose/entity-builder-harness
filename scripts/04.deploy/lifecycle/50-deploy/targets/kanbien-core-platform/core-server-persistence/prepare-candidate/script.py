@@ -214,6 +214,25 @@ def candidate_parameters(outputs: dict, infrastructure: dict, receipt: dict) -> 
     return {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{REGION}:{ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": outputs["RepositoryUri"], "ImageDigest": receipt["image_digest"], "SupportImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
 
 
+def update_parameters_match(actual: object, desired: object, current: object) -> bool:
+    """Accept only a complete UPDATE parameter map with bounded ownership.
+
+    CloudFormation describes all template parameters for an UPDATE, including
+    values retained through ``UsePreviousValue`` or template defaults.  A
+    controller owns only its explicit candidate parameters, but must prove all
+    other returned parameters stayed exactly at the pre-update stack value.
+    """
+    if not isinstance(actual, dict) or not isinstance(desired, dict) or not isinstance(current, dict):
+        return False
+    if not all(isinstance(key, str) and isinstance(value, str) for mapping in (actual, desired, current) for key, value in mapping.items()):
+        return False
+    if set(actual) != set(current) or not set(desired) <= set(actual):
+        return False
+    return all(actual.get(key) == value for key, value in desired.items()) and all(
+        actual.get(key) == current.get(key) for key in set(actual) - set(desired)
+    )
+
+
 def candidate_runnable_manifest(receipt: dict[str, Any]) -> tuple[str | None, str]:
     digest = receipt.get("image_digest")
     if not isinstance(digest, str):
