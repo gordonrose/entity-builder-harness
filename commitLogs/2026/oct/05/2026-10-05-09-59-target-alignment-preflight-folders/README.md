@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T15:41:53Z
-latest_commit_sha: 50009a89da1782ad7575d1346a0de88dcf3b0466
-chat_duration: 1752144s (20:06:42:24)
+latest_commit_at_utc: 2026-10-25T15:43:22Z
+latest_commit_sha: 1cd616751f0658eca485411b2a942d0c29668d8b
+chat_duration: 1752233s (20:06:43:53)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3238,6 +3238,17 @@ Summary: Corrected the CloudFormation alert-address regex after AWS rejected the
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T15:43:22Z - Commit recorded
+
+Commit: `1cd616751f0658eca485411b2a942d0c29668d8b`
+
+Message: fix(deploy): use portable alert address pattern
+
+Summary: Replaced the double-escaped CloudFormation alert pattern after AWS validated it as a literal backslash requirement.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4088,6 +4099,13 @@ ADR impact: covered by session ADR disposition
   Summary: Corrected the CloudFormation alert-address regex after AWS rejected the POSIX character-class form before change-set creation.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `1cd616751f0658eca485411b2a942d0c29668d8b`
+  Time UTC: 2026-10-25T15:43:22Z
+  Message: fix(deploy): use portable alert address pattern
+  Summary: Replaced the double-escaped CloudFormation alert pattern after AWS validated it as a literal backslash requirement.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4111,9 +4129,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T15:41:53Z
-Latest commit SHA: 50009a89da1782ad7575d1346a0de88dcf3b0466
-Chat duration: 1752144s (20:06:42:24)
+Latest commit at UTC: 2026-10-25T15:43:22Z
+Latest commit SHA: 1cd616751f0658eca485411b2a942d0c29668d8b
+Chat duration: 1752233s (20:06:43:53)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
