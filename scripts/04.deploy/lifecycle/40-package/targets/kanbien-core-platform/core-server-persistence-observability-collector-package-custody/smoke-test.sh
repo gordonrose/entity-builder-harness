@@ -46,7 +46,7 @@ if python3 "$GUARD" --workflow "$WORKFLOW" --contract "$CONTRACT" --config "$TMP
   exit 1
 fi
 cp "$WORKFLOW" "$TMP/unprivileged-scan-boundary.yml"
-sed -i '/scan-pinned-public-source:/a\    permissions: { contents: read, id-token: write }' "$TMP/unprivileged-scan-boundary.yml"
+sed -i '/scan-mirrored-payload:/a\    permissions: { contents: read, id-token: write }' "$TMP/unprivileged-scan-boundary.yml"
 if python3 "$GUARD" --workflow "$TMP/unprivileged-scan-boundary.yml" --contract "$CONTRACT" --config "$CONFIG" --json >/dev/null 2>&1; then
   echo 'collector custody guard accepted privileged third-party scan execution' >&2
   exit 1

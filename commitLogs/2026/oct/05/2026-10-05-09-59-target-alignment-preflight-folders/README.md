@@ -205,6 +205,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: ECR Basic scanning cannot inspect the mirrored ADOT collector image.
   Resolution: AWS reported UnsupportedImageError for the image's OS/package-manager. The custody requirement remains mandatory: a dedicated unprivileged job now runs a pinned portable scanner against the same pinned public source before the protected AWS publication job can run.
 
+
+- Raised: The unprivileged portable scanner was rate-limited by Public ECR before it could inspect the pinned image.
+  Resolution: Changed the route so the protected mirror job exports the exact target-private digest as a short-retention scan-input artifact; a separate unprivileged job scans that local artifact, and final custody/attestation waits for the scan. No failed run produced an accepted receipt or deployment.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -455,6 +459,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Separate third-party vulnerability scanning from cloud credentials.
   Rationale: The scanner job has only contents-read permission and the public immutable source reference. It has no OIDC permission, AWS role, target Environment, or private ECR URI. The protected publication job depends on its successful result. Custody receipts accept exactly one explicit scanner proof: legacy ECR-native or portable vulnerability scan.
 
+
+- Decision: Scan the exact mirrored collector payload out of band from AWS credentials.
+  Rationale: The artifact handoff ties the scanner to the exact digest produced by the protected mirror job while keeping the third-party scanner unprivileged. The final protected job may issue receipt and attestations only after the scan-job dependency passes.
+
 ## Context Hygiene
 
 
@@ -673,6 +681,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Collector GitHub runs 40200948509 and 40201291933 both reached private mirroring but failed only at ECR Basic Scan: UnsupportedImageError. The trusted fix uses pinned Trivy action ed142fd in an unprivileged public-source job and keeps credentialed package publication separate. Local package receipt, collector guard, declaration, and privilege-boundary tests pass.
   Durable evidence: Scanner boundary lives in the collector workflow; generic receipt vocabulary and regression live under .agentic/04.deploy/40-package and scripts/04.deploy/lifecycle/40-package/package-custody-receipt.
+
+
+- Summary: Runs 40200948509 and 40201291933 established successful collector startup/mirror but ECR Basic scan unsupported; run 40201922054 established portable scanner cannot anonymously pull Public ECR due rate limit. The new three-job workflow scans a short-retention Docker-save artifact of the private immutable image with no AWS access, then finalizes custody only on scan success.
+  Durable evidence: Workflow contract and static boundary guard remain under collector package custody; generic receipt validation records only safe scan verdict vocabulary.
 
 ## Activity Log
 
@@ -3116,6 +3128,27 @@ Message: fix(deploy): isolate collector vulnerability scan
 Summary: Replaced unsupported ECR Basic scanning with a pinned portable scanner in a separate unprivileged public-source job, while preserving protected OIDC publication as a dependent job. Receipt validation now allows exactly one explicit native or portable scanner proof.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T14:25:22Z - Issue
+
+Raised: The unprivileged portable scanner was rate-limited by Public ECR before it could inspect the pinned image.
+
+Resolution: Changed the route so the protected mirror job exports the exact target-private digest as a short-retention scan-input artifact; a separate unprivileged job scans that local artifact, and final custody/attestation waits for the scan. No failed run produced an accepted receipt or deployment.
+
+
+### 2026-10-25T14:25:22Z - Decision
+
+Decision: Scan the exact mirrored collector payload out of band from AWS credentials.
+
+Rationale: The artifact handoff ties the scanner to the exact digest produced by the protected mirror job while keeping the third-party scanner unprivileged. The final protected job may issue receipt and attestations only after the scan-job dependency passes.
+
+
+### 2026-10-25T14:25:22Z - Context hygiene
+
+Summary: Runs 40200948509 and 40201291933 established successful collector startup/mirror but ECR Basic scan unsupported; run 40201922054 established portable scanner cannot anonymously pull Public ECR due rate limit. The new three-job workflow scans a short-retention Docker-save artifact of the private immutable image with no AWS access, then finalizes custody only on scan success.
+
+Durable evidence: Workflow contract and static boundary guard remain under collector package custody; generic receipt validation records only safe scan verdict vocabulary.
 
 ## Sub-Agent Activity
 

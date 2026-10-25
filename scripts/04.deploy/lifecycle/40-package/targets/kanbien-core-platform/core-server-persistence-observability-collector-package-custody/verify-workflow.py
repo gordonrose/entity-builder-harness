@@ -30,7 +30,7 @@ DEFAULT_WORKFLOW = ROOT / ".github/workflows/publish-kanbien-core-platform-obser
 DEFAULT_CONTRACT = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
 DEFAULT_CONFIG = ROOT / "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml"
 SOURCE = "public.ecr.aws/aws-observability/aws-otel-collector@sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e"
-REQUIRED = ("workflow_dispatch:", "scan-pinned-public-source:", "needs: scan-pinned-public-source", "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
+REQUIRED = ("workflow_dispatch:", "scan-mirrored-payload:", "needs: qualify-and-publish", "needs: [qualify-and-publish, scan-mirrored-payload]", "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25", "environment: kanbien-core-platform", "id-token: write", "attestations: write", "refs/heads/main", "aws-actions/configure-aws-credentials@v4", "aws-actions/amazon-ecr-login@v2", "actions/attest@v4", "actions/upload-artifact@v4", SOURCE, "AOT_CONFIG_CONTENT", "core-server-persistence-package-custody/validate-delivery-access/script.sh", "package-custody-receipt/script.sh")
 FORBIDDEN = ("aws cloudformation", "aws ecs", "aws lambda", "terraform apply", "aws ecr describe-image-scan-findings")
 
 def main() -> int:
@@ -52,7 +52,7 @@ def main() -> int:
         codes.append("collector-custody-workflow-incomplete")
     if any(item in workflow.lower() for item in FORBIDDEN):
         codes.append("collector-custody-workflow-target-mutation-present")
-    scan_job = workflow.split("  qualify-and-publish:", 1)[0]
+    scan_job = workflow.split("  scan-mirrored-payload:", 1)[1].split("  complete-custody:", 1)[0] if "  scan-mirrored-payload:" in workflow and "  complete-custody:" in workflow else ""
     if any(item in scan_job for item in ("id-token:", "AWS_ROLE_ARN", "environment: kanbien-core-platform", "ECR_URI:")):
         codes.append("collector-custody-unprivileged-scan-boundary-invalid")
     if not all(item in contract for item in ("registry: public.ecr.aws", "repository: aws-observability/aws-otel-collector", "immutable_digest: sha256:7968fb60db6a2390a47ba6a2df029745638486e285c9b2487da1b722d0855a3e", "aws-emf-cloudwatch-logs")):
