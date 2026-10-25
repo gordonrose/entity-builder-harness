@@ -4,7 +4,7 @@ id: rag-rulebook.script.query-context.readme
 version: 1
 status: active
 created_on: "2026-07-07"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: runtime
 disciplines:
@@ -34,6 +34,13 @@ provider and returns a validated context packet.
 Callers should not know about AWS, bearer tokens, Secrets Manager, or local
 provider env files. Those details belong to `02.rag-rulebook`.
 
+## Current Repository Configuration
+
+The `rag.kanbien.com` deployment is retired. Use explicit local retrieval for
+this repository, including when old hosted authentication fields remain in a
+private client config. Keep those values private; local mode does not resolve
+the secret or contact the hosted endpoint.
+
 ## Provider Modes
 
 - `--provider hosted` calls the hosted RAG/rulebook service and fails closed if
@@ -59,39 +66,37 @@ The default local config path is:
 
 The file must not be group- or world-readable. Use permissions such as `0600`.
 
-Example variable names:
+Set the provider explicitly in the private config:
 
 ```bash
-RAG_RULEBOOK_PROVIDER=hosted
-RAG_RULEBOOK_BASE_URL=https://rag.kanbien.com
-RAG_RULEBOOK_AUTH_MODE=bearer
-RAG_RULEBOOK_AWS_PROFILE=gordon-kanbien
-RAG_RULEBOOK_AWS_REGION=eu-west-1
-RAG_RULEBOOK_TOKEN_SECRET_ARN=arn:aws:secretsmanager:...
-RAG_RULEBOOK_TOKEN=...
-RAG_RULEBOOK_LOCAL_FALLBACK=dev-only
+RAG_RULEBOOK_PROVIDER=local
 ```
 
-Do not commit real token values.
+When updating an existing file, change only this provider assignment and
+preserve authentication values and its private permissions. Do not display,
+copy into evidence, or commit those values. Avoid `auto` for this retired
+repository deployment because retained hosted auth could select hosted mode.
+
+The reusable provider still supports separately governed hosted services via
+`RAG_RULEBOOK_BASE_URL`, `RAG_RULEBOOK_AUTH_MODE`, `RAG_RULEBOOK_AWS_PROFILE`,
+`RAG_RULEBOOK_AWS_REGION`, `RAG_RULEBOOK_TOKEN_SECRET_ARN`, and
+`RAG_RULEBOOK_TOKEN`. Their presence does not override explicit `local` mode.
 
 ## Usage
 
-```bash
-bash scripts/02.rag-rulebook/query-context/script.sh \
-  --request-text "Explain the RAG provider contract" \
-  --provider hosted \
-  --format compact \
-  --pretty
-```
-
-Local mode:
+Build the local runtime, then query it through the provider boundary:
 
 ```bash
+bash scripts/02.rag-rulebook/build-local-runtime/script.sh --pretty
 bash scripts/02.rag-rulebook/query-context/script.sh \
   --provider local \
   --request-text "Explain the RAG provider contract in docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml" \
   --pretty
 ```
+
+Omit `--provider local` only when the private config explicitly selects local
+(or no provider config exists, so the command defaults to local). Rebuild the
+runtime when freshness checks report changed inputs.
 
 ## Security
 

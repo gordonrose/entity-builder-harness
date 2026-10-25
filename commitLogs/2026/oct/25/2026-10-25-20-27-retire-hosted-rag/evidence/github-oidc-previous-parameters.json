@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "ExistingOidcProviderArn",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "GitHubEnvironment",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "DeployRoleName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "GitHubRepository",
+    "UsePreviousValue": true
+  }
+]

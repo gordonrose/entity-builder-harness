@@ -1,0 +1,74 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-service/f5d36e60-754a-11f1-8ff0-06a67858397b",
+      "StackName": "rag-rulebook-staging-service",
+      "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/rag-retire-stop-20261025-a1/44643ad4-f4bb-4e75-970d-85fa32e028d1",
+      "Description": "ECS Fargate service for the RAG rulebook staging app.",
+      "Parameters": [
+        {
+          "ParameterKey": "ClusterArn",
+          "ParameterValue": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
+        },
+        {
+          "ParameterKey": "ServiceName",
+          "ParameterValue": "rag-rulebook-staging"
+        },
+        {
+          "ParameterKey": "Memory",
+          "ParameterValue": "512"
+        },
+        {
+          "ParameterKey": "FoundationStackName",
+          "ParameterValue": "rag-rulebook-staging-foundation"
+        },
+        {
+          "ParameterKey": "Cpu",
+          "ParameterValue": "256"
+        },
+        {
+          "ParameterKey": "DesiredCount",
+          "ParameterValue": "0"
+        },
+        {
+          "ParameterKey": "ImageUri",
+          "ParameterValue": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/rag-rulebook-service@sha256:b58ee3a5ef2bedbb661bdfb4ba9f051ecc463f2569d57e806f00859f7ddca3cb"
+        }
+      ],
+      "CreationTime": "2026-07-01T12:47:03.816000+00:00",
+      "LastUpdatedTime": "2026-10-25T20:36:25.921000+00:00",
+      "RollbackConfiguration": {},
+      "StackStatus": "UPDATE_COMPLETE",
+      "DisableRollback": false,
+      "DeploymentConfig": {
+        "Mode": "STANDARD",
+        "DisableRollback": false
+      },
+      "NotificationARNs": [],
+      "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "ServiceArn",
+          "OutputValue": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging"
+        },
+        {
+          "OutputKey": "TaskDefinitionArn",
+          "OutputValue": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3"
+        }
+      ],
+      "Tags": [],
+      "EnableTerminationProtection": false,
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      },
+      "LastOperations": [
+        {
+          "OperationType": "UPDATE_STACK",
+          "OperationId": "5e3e379c-0f72-4f8e-aba4-136131eb2bce"
+        }
+      ]
+    }
+  ]
+}

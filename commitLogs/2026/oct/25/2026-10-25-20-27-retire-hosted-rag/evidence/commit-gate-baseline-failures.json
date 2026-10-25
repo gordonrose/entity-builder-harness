@@ -1,0 +1,145 @@
+{
+  "observedAt": "2026-10-25T20:57:15.972834+00:00",
+  "sourceRevision": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+  "verdict": "gap",
+  "findings": [
+    {
+      "check_id": "acceptance-route-regression",
+      "code": "required-check-failed"
+    },
+    {
+      "check_id": "persistence-payload-regression",
+      "code": "required-check-failed"
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "acceptance-route-regression",
+      "status": "failed",
+      "exit_code": 1
+    },
+    {
+      "check_id": "acceptance-route",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "acceptance-route",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "bootstrap-acceptance-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "check-selection-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "core-dependency-boundary",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "persistence-composition",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "persistence-payload-regression",
+      "status": "failed",
+      "exit_code": 1
+    },
+    {
+      "check_id": "persistence-provider-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-local-retrieval-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-retirement-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-coverage-scope-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-coverage-validation",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-derivation-validation",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-projection-scope-regression",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-projection-validation",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "rag-source-review-validation",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "runnable-program",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "scope-inventory",
+      "status": "passed",
+      "exit_code": 0
+    },
+    {
+      "check_id": "bootstrap-container",
+      "status": "deferred",
+      "reason": "required-before-package"
+    },
+    {
+      "check_id": "persistence-container",
+      "status": "deferred",
+      "reason": "required-before-package"
+    },
+    {
+      "check_id": "bootstrap-target-alignment",
+      "status": "deferred",
+      "reason": "required-before-deploy"
+    },
+    {
+      "check_id": "persistence-target-alignment",
+      "status": "deferred",
+      "reason": "required-before-deploy"
+    },
+    {
+      "check_id": "bootstrap-acceptance",
+      "status": "deferred",
+      "reason": "required-before-acceptance"
+    },
+    {
+      "check_id": "persistence-acceptance",
+      "status": "deferred",
+      "reason": "required-before-acceptance"
+    }
+  ],
+  "protectedSourcesModified": false,
+  "acceptedMain": "905983c37794cbe63c27eb77cb247350107721a8",
+  "note": "Mandatory catalog validation found pre-existing acceptance administration receipt mismatch (fixed upstream) and stale public-image recovery owner hashes (also stale upstream). No failed check bypassed; no task commit created."
+}

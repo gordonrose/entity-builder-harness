@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 02.rag-rulebook
 #   domain: rulebook
 #   disciplines:
@@ -93,18 +93,21 @@ ROOT = repo_root()
 
 def usage() -> str:
     return """Usage:
-  check-source-material-coverage/script.sh --current [--json]
+  check-source-material-coverage/script.sh --current [--source <exact-repo-path>] [--json]
 
 Checks governed source material under the numbered corpus source-material
 roots. Each non-README Markdown source must have at least one governed outcome:
 structured rule YAML, source-to-rule derivation report, or corpus-gap evidence.
 Structured rule outcomes must be present in the generated index and chunk set.
+--source scopes proof to one existing source while retaining global YAML/reference
+checks and all provenance dependencies of its rules. The default checks all sources.
 """
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--current", action="store_true")
+    parser.add_argument("--source", action="append", default=[])
     parser.add_argument("--json", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
@@ -115,6 +118,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         print("ERROR: --current is required.", file=sys.stderr)
         print(usage(), end="", file=sys.stderr)
         sys.exit(2)
+    if len(args.source) > 1:
+        parser.error("--source must be supplied at most once")
+    args.source = args.source[0] if args.source else None
     return args
 
 
@@ -200,6 +206,7 @@ def validate_source_derivation(
     data: dict[str, Any],
     source_paths: set[str],
     errors: list[str],
+    check_hashes: bool = True,
 ) -> None:
     if not source_paths:
         return
@@ -253,8 +260,8 @@ def validate_source_derivation(
         if not isinstance(sha256, str) or len(sha256) != 64:
             errors.append(f"{owner}.sha256 must be a 64-character SHA-256 hex string")
             continue
-        current_sha256 = file_sha256(path)
-        if sha256 != current_sha256:
+        current_sha256 = file_sha256(path) if check_hashes else None
+        if check_hashes and sha256 != current_sha256:
             errors.append(
                 f"{rule_path}.source_derivation.source_material hash is stale for {path}: "
                 f"expected {sha256}, current {current_sha256}"
@@ -274,7 +281,7 @@ def source_material_files() -> list[str]:
     ]
 
 
-def load_rule_source_refs(errors: list[str]) -> dict[str, list[str]]:
+def load_rule_source_refs(errors: list[str], selected_source: str | None = None) -> dict[str, list[str]]:
     by_source: dict[str, list[str]] = defaultdict(list)
     for path in list_files(RULE_ROOTS, {".yml", ".yaml"}):
         data = load_yaml(path, errors)
@@ -288,7 +295,10 @@ def load_rule_source_refs(errors: list[str]) -> dict[str, list[str]]:
                     errors.append(f"{rule_path} references missing source material: {value}")
                 source_paths.add(value)
                 by_source[value].append(rule_path)
-        validate_source_derivation(rule_path, data, source_paths, errors)
+        validate_source_derivation(
+            rule_path, data, source_paths, errors,
+            check_hashes=selected_source is None or selected_source in source_paths,
+        )
     return {key: sorted(set(values)) for key, values in by_source.items()}
 
 
@@ -408,15 +418,19 @@ def main(argv: list[str]) -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
-    sources = source_material_files()
-    rule_refs_by_source = load_rule_source_refs(errors)
+    all_sources = source_material_files()
+    if args.source is not None and args.source not in all_sources:
+        print(f"ERROR: --source must name an existing canonical governed source: {args.source}", file=sys.stderr)
+        return 2
+    sources = [args.source] if args.source is not None else all_sources
+    rule_refs_by_source = load_rule_source_refs(errors, args.source)
     derivation_reports_by_source, derivation_rules_by_source = load_derivation_coverage(errors)
     corpus_gaps_by_source, corpus_gap_rules_by_source = load_corpus_gap_coverage(errors)
     index, chunks = generate_index_and_chunks()
     indexed_rules = indexed_rule_paths(index)
     chunked_rules = chunked_rule_paths(chunks)
 
-    known_sources = set(sources)
+    known_sources = set(all_sources)
     for source in sorted(set(rule_refs_by_source) | set(corpus_gaps_by_source) | set(derivation_reports_by_source)):
         if source not in known_sources and not repo_path(source).exists():
             errors.append(f"coverage record references missing source material: {source}")
@@ -466,6 +480,7 @@ def main(argv: list[str]) -> int:
     report = {
         "schema": REPORT_SCHEMA,
         "ok": not errors,
+        "scope": {"mode": "source" if args.source else "all", "source": args.source},
         "source_roots": SOURCE_ROOTS,
         "rule_roots": RULE_ROOTS,
         "counts": {
@@ -491,7 +506,8 @@ def main(argv: list[str]) -> int:
         for warning in warnings:
             print(f"WARNING: {warning}", file=sys.stderr)
     else:
-        print(f"Source material coverage valid: {len(sources)} source file(s).")
+        scope_label = f"source {args.source}" if args.source else "all sources"
+        print(f"Source material coverage valid ({scope_label}): {len(sources)} source file(s).")
         for warning in warnings:
             print(f"WARNING: {warning}", file=sys.stderr)
     return 0 if not errors else 1

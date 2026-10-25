@@ -211,3 +211,36 @@ jobs:
             ${{ runner.temp }}/observability-collector.sbom.spdx.json
           if-no-files-found: error
           retention-days: 30
+
+  retain-safe-failure-diagnostic:
+    needs: [build-and-qualify, scan-qualified-payload, complete-custody]
+    if: ${{ always() && (needs.build-and-qualify.result == 'failure' || needs.scan-qualified-payload.result == 'failure' || needs.complete-custody.result == 'failure') }}
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Write safe package failure diagnostic
+        env:
+          BUILD_RESULT: ${{ needs.build-and-qualify.result }}
+          SCAN_RESULT: ${{ needs.scan-qualified-payload.result }}
+          CUSTODY_RESULT: ${{ needs.complete-custody.result }}
+        run: |
+          set -euo pipefail
+          report="$RUNNER_TEMP/observability-collector-package-failure-diagnostic.json"
+          python3 scripts/04.deploy/shared/deployment-operation-diagnostics.py record \
+            --target kanbien-core-platform --scope core-server-persistence \
+            --operation-id "collector-package-${GITHUB_RUN_ID}" --stage package \
+            --original-code collector-package-workflow-failed --exit-status 1 \
+            --outcome failed --classification package-workflow-failed \
+            --evidence-reference "github-actions-artifact:kanbien-core-platform-observability-collector-package-failure-${GITHUB_RUN_ID}" \
+            --next-decision inspect-retained-evidence --report "$report" \
+            --fact artifact_identity=observability-collector
+      - name: Retain safe package failure diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: kanbien-core-platform-observability-collector-package-failure-${{ github.run_id }}
+          path: ${{ runner.temp }}/observability-collector-package-failure-diagnostic.json
+          if-no-files-found: error
+          retention-days: 30

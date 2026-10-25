@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -199,6 +199,12 @@ def require_list(data: dict, path: str, *, min_count: int = 1, allowed: set[str]
 
 
 def validate(data: dict) -> None:
+    if get(data, "deployment.status") == "retired":
+        block(
+            "deployment.status",
+            "hosted deployment is retired",
+            "Use local retrieval. Recommissioning requires a separately reviewed and approved change.",
+        )
     if data.get("schema") != "deploy/rag-rulebook-readiness-manifest/v1":
         block(
             "schema",

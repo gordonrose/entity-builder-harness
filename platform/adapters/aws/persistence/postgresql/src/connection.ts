@@ -7,6 +7,13 @@ export interface PostgreSqlConnectionCredentials {
   readonly certificateAuthority: string;
 }
 
+/** Supplies one opaque provider authentication value for each physical client. */
+export interface PostgreSqlTokenConnectionCredentials {
+  readonly username: string;
+  readonly authenticationToken: () => Promise<string>;
+  readonly certificateAuthority: string;
+}
+
 export interface PostgreSqlStatement {
   readonly text: string;
   readonly values?: readonly unknown[];
@@ -35,6 +42,29 @@ export function createNodePostgreSqlConnectionPool(
     database: configuration.database,
     user: credentials.username,
     password: credentials.password,
+    max: configuration.maximumPoolSize,
+    connectionTimeoutMillis: configuration.connectionTimeoutMs,
+    idleTimeoutMillis: configuration.idleTimeoutMs,
+    options: `-c statement_timeout=${configuration.statementTimeoutMs}`,
+    ssl: {
+      rejectUnauthorized: true,
+      ca: credentials.certificateAuthority,
+      servername: configuration.host,
+    },
+  });
+  return nodePoolAdapter(pool);
+}
+
+export function createNodePostgreSqlTokenConnectionPool(
+  configuration: PostgreSqlPersistenceConfiguration,
+  credentials: PostgreSqlTokenConnectionCredentials,
+): PostgreSqlConnectionPool {
+  const pool = new Pool({
+    host: configuration.host,
+    port: configuration.port,
+    database: configuration.database,
+    user: credentials.username,
+    password: credentials.authenticationToken,
     max: configuration.maximumPoolSize,
     connectionTimeoutMillis: configuration.connectionTimeoutMs,
     idleTimeoutMillis: configuration.idleTimeoutMs,

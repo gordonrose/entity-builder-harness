@@ -4,7 +4,7 @@ id: rag-rulebook.scripts.readme
 version: 2
 status: active
 created_on: "2026-06-25"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: scripts
 disciplines:
@@ -93,7 +93,9 @@ validation, and standalone service adapters.
 - `query-context/script.sh` is the RAG-owned provider boundary for callers. It
   selects hosted, local, or auto provider mode, loads local hosted auth from
   `~/.config/rag-rulebook/rag.env`, redacts secrets, fails closed on hosted auth
-  errors, and delegates local mode to `query-local-context/script.sh`.
+  errors, and delegates local mode to `query-local-context/script.sh`. This
+  repository explicitly uses `RAG_RULEBOOK_PROVIDER=local`; the former hosted
+  deployment is retired.
 - `run-local-service/script.sh` starts the thin local HTTP service for the MSP
   API surface: `GET /health`, `GET /version`, and `POST /context/query`.
 - `build-service-image/script.sh` builds the governed local container image for

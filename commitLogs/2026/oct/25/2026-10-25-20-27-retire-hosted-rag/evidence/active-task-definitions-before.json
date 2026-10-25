@@ -1,0 +1,5 @@
+{
+  "taskDefinitionArns": [
+    "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3"
+  ]
+}

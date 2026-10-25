@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -256,6 +256,66 @@ grep -q -- "--trust-session-routing requires governed lifecycle proof fields" "$
   cat "$TMP_DIR/trust-without-proof.err" >&2
   exit 1
 }
+
+python3 - <<'PYTEST'
+import json
+from pathlib import Path
+collection = json.loads(Path("docs/02.rag-rulebook/postman/rag-rulebook-service.postman_collection.json").read_text())
+variables = {item["key"]: item["value"] for item in collection["variable"]}
+assert variables["baseUrl"] == "http://127.0.0.1:3000", "Postman must target the retained local service"
+assert not variables["ragToken"], "Postman must not contain credentials"
+PYTEST
+
+# Explicit local config must bypass both hosted HTTP and hosted secret lookup,
+# even when retained authentication configuration could otherwise select hosted.
+LOCAL_CONFIG="$TMP_DIR/local.rag.env"
+cat > "$LOCAL_CONFIG" <<EOF
+RAG_RULEBOOK_PROVIDER=local
+RAG_RULEBOOK_BASE_URL=https://retired-hosted.invalid
+RAG_RULEBOOK_AUTH_MODE=bearer
+RAG_RULEBOOK_TOKEN_SECRET_ARN=retained-secret-must-not-be-read
+EOF
+chmod 600 "$LOCAL_CONFIG"
+NETWORK_GUARD_DIR="$TMP_DIR/no-hosted-network"
+mkdir "$NETWORK_GUARD_DIR"
+for tool in curl aws; do
+  cat > "$NETWORK_GUARD_DIR/$tool" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "unexpected hosted client invocation" >> "$RAG_NETWORK_GUARD_LOG"
+exit 97
+SH
+  chmod 700 "$NETWORK_GUARD_DIR/$tool"
+done
+for local_case in configured-local explicit-local; do
+  provider_args=()
+  query_config="$LOCAL_CONFIG"
+  if [ "$local_case" = explicit-local ]; then
+    provider_args=(--provider local)
+    query_config="$TMP_DIR/retained-hosted.rag.env"
+    sed "s/RAG_RULEBOOK_PROVIDER=local/RAG_RULEBOOK_PROVIDER=hosted/" \
+      "$LOCAL_CONFIG" > "$query_config"
+    chmod 600 "$query_config"
+  fi
+  PATH="$NETWORK_GUARD_DIR:$PATH" RAG_NETWORK_GUARD_LOG="$TMP_DIR/network-attempts" \
+    bash scripts/02.rag-rulebook/query-context/script.sh \
+    --config "$query_config" "${provider_args[@]}" \
+    --runtime-dir "$RUNTIME_DIR" \
+    --request-text "Explain the local retrieval provider in scripts/02.rag-rulebook/query-context/README.md." \
+    --format compact > "$TMP_DIR/$local_case.json"
+  python3 - "$TMP_DIR/$local_case.json" <<'PYTEST'
+import json
+import sys
+from pathlib import Path
+packet = json.loads(Path(sys.argv[1]).read_text())
+assert packet["schema"] == "rag-rulebook/context-packet-compact/v1"
+assert packet["selected_chunks"], "local query must return real corpus chunks"
+assert packet["citations"], "local query must cite real sources"
+PYTEST
+done
+if [ -e "$TMP_DIR/network-attempts" ]; then
+  echo "ERROR: local provider invoked a hosted client." >&2
+  exit 1
+fi
 
 python3 - "$RUNTIME_DIR/manifest.json" <<'PY'
 from __future__ import annotations

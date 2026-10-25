@@ -70,3 +70,29 @@ outcome or precise blocker in existing Stage 6/session records. At closeout
 provide both PostgreSQL acceptance evidence and those completed records.
 Keep evidence safe and append-only. Other capabilities use the normal
 contract/compiler route; generic schemas and compiler guarantees are unchanged.
+
+
+## Bounded Hosted RAG Retirement
+
+For the explicitly approved retirement of `rag-rulebook-staging` in account
+`337159794548`, `eu-west-1`, the [hosted staging retirement procedure](../workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement)
+provides the operation-scoped proof path. Adoption requires the user's explicit
+authority to retire dedicated resources and to add this focused missing control;
+the session log records that authority before execution. This grants no authority
+for unrelated targets or renewed deployment.
+
+This teardown introduces no new runtime artifact, database semantics, or
+business-state migration. Its reviewed live inventory, dependency/owner checks,
+local retrieval proof with hosted access denied, live-template comparison,
+CloudFormation change-set allowlist and protected-resource before/after checks
+replace deployment artifact/entrypoint qualification and whole-route compiler
+migration prerequisites for this retirement only. Applicable executable gates,
+source checks, explicit approvals, narrow resource ownership and secret handling
+remain mandatory. CloudFormation owns resource updates/deletions; retained logs,
+scheduled secret deletion and preservation of the shared OIDC provider are
+required lifecycle outcomes. Failed/uncertain actions pause their dependants
+until reconciled; bounded retries retain terminal evidence and new labels.
+
+The procedure owns exact ordering, deletion scope, retained/pending accounting,
+and stop conditions. PostgreSQL applicability, other live targets and generic
+realization contracts/compiler guarantees remain unchanged.

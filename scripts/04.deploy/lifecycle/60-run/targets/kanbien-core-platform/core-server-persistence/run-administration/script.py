@@ -21,10 +21,41 @@ ACCOUNT, REGION = "337159794548", "eu-west-1"
 SUCCESS = {
     "bootstrap-identities": "PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED",
     "grant-runtime-application-access": "PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED",
-    "rotate-runtime": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
-    "revoke-runtime": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
+    "confirm-runtime-iam-access": "PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED",
+    "revoke-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED",
+    "restore-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED",
     "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
+    "observe-migration-state": (
+        "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED",
+        "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
+    ),
 }
+PROOF_RESULT = {
+    **{operation: result for operation, result in SUCCESS.items() if isinstance(result, str)},
+    # The acceptance route is deliberately the applied-manifest branch. The
+    # controller may also record replay permission for an empty history, but
+    # that result is not evidence that a migration was applied.
+    "observe-migration-state": "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED",
+}
+PROOF_CONTRACT = {
+    operation: {
+        "proof_type": "administration",
+        "operation": operation,
+        "result_code": PROOF_RESULT[operation],
+        "family": "kanbien-core-platform-persistence-administration",
+        "deadline_workload": "persistence-administration",
+    }
+    for operation in SUCCESS
+}
+OPERATIONS = (
+    "bootstrap-identities",
+    "grant-runtime-application-access",
+    "confirm-runtime-iam-access",
+    "revoke-runtime",
+    "restore-runtime",
+    "prove-effective-privilege",
+    "observe-migration-state",
+)
 
 
 def module(path: Path, name: str):
@@ -68,15 +99,23 @@ def current_task(task: dict[str, object], requested: str, definition: str) -> st
     return "ok" if task.get("lastStatus") == "STOPPED" else "persistence-administration-reconciliation-task-not-terminal"
 
 
-def accepted_log(task: dict[str, object], operation: str) -> tuple[bool, str]:
+def accepted_log(task: dict[str, object], operation: str) -> tuple[str | None, str]:
     arn = task.get("taskArn")
     if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
-        return False, "persistence-administration-evidence-unavailable"
+        return None, "persistence-administration-evidence-unavailable"
     stream = f"persistence-administration/persistence-administration/{arn.rsplit('/', 1)[-1]}"
     ok, events, code = MIGRATION.aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
     messages = [item.get("message") for item in events.get("events", []) if isinstance(item, dict)] if ok and isinstance(events, dict) else []
     expected = SUCCESS[operation]
-    return (True, "ok") if any(isinstance(message, str) and '"verdict":"accepted"' in message and f'"code":"{expected}"' in message for message in messages) else (False, code if not ok else "persistence-administration-not-confirmed")
+    allowed = {expected} if isinstance(expected, str) else set(expected)
+    for message in messages:
+        try:
+            record = json.loads(message) if isinstance(message, str) else None
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(record, dict) and set(record) == {"verdict", "code"} and record.get("verdict") == "accepted" and record.get("code") in allowed:
+            return record["code"], "ok"
+    return None, code if not ok else "persistence-administration-not-confirmed"
 
 
 def accept(task: dict[str, object], seconds: int, operation: str) -> int:
@@ -87,29 +126,36 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
         return report("blocked", "persistence-administration-completion-deadline-exceeded")
     if not MIGRATION.task_exit(task):
         return report("blocked", "persistence-administration-unsuccessful-completion")
-    ok, code = accepted_log(task, operation)
-    if not ok:
+    result_code, code = accepted_log(task, operation)
+    if result_code is None:
         return report("blocked", code)
     digest = MIGRATION.image_digest(task.get("taskDefinitionArn"))
     arn = task.get("taskArn")
     if not isinstance(digest, str) or not isinstance(arn, str):
         return report("blocked", "persistence-administration-receipt-identity-unavailable")
     try:
-        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=SUCCESS[operation], context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
+        receipt = RECEIPTS.make(proof_type="administration", operation=operation, task=task, image_digest=digest, result_code=result_code, context={"completion_deadline_seconds": seconds, "completion_duration_seconds": observed}, controller="run-administration", collected_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         path = RECEIPTS.persist(receipt)
     except Exception:
         return report("blocked", "persistence-administration-receipt-persistence-failed")
-    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT))})
+    return report("accepted", "persistence-administration-applied", facts={"operation": operation, "safe_result_code": result_code, "administration_task": arn.rsplit("/", 1)[-1], "completion_deadline_seconds": seconds, "completion_duration_seconds": observed, "proof_receipt": str(path.relative_to(ROOT))})
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--operation", choices=sorted(SUCCESS))
+    # Keep this literal tuple beside the controller contract.  The declaration
+    # coverage gate intentionally reads the controller's permitted operations
+    # without executing it, so a computed dictionary view is insufficient.
+    parser.add_argument("--operation", choices=OPERATIONS)
     parser.add_argument("--reconcile-task")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.operation is None or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)):
         return report("blocked", "persistence-administration-arguments-invalid")
+    if args.validate_arguments:
+        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": PROOF_CONTRACT[args.operation]}, sort_keys=True))
+        return 0
     seconds = deadline()
     if seconds is None:
         return report("blocked", "persistence-administration-deadline-invalid")

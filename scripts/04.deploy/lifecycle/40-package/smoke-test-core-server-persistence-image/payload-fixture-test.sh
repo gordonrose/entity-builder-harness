@@ -84,6 +84,7 @@ print('Persistence package stage regression passed (declaration gap blocks befor
 # cannot reach composition or Docker even when the requirement chain is covered.
 (fixture / coverage / 'script.sh').write_text('#!/usr/bin/env bash\nprintf \'%s\\n\' \'{"verdict":"covered"}\'\n')
 capabilities = (
+    'scripts/04.deploy/lifecycle/60-run/release-succession',
     'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery',
     'scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration',
     'scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration',

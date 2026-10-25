@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.schema.deployment-operation-diagnostic.v1
+#   version: 1
+#   status: draft
+#   created_on: "2026-10-25"
+#   updated_on: "2026-10-25"
+#   layer: 04.deploy
+#   domain: deployment.diagnostics
+#   disciplines: [security, sre, agentic]
+#   kind: schema
+#   purpose: Define retained safe diagnostics for one build, package, deployment, or run operation.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   used_by:
+#   - id: deploy.shared.deployment-operation-diagnostics
+#     path: scripts/04.deploy/shared/deployment-operation-diagnostics.py
+schema: deploy/deployment-operation-diagnostic-schema/v1
+report_schema: deploy/deployment-operation-diagnostic/v1
+companion_guide: .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.guide.md
+required_fields:
+  - schema
+  - target
+  - scope
+  - operation_id
+  - stage
+  - observed_at
+  - original_failure
+  - operation_outcome
+  - classification
+  - evidence
+  - next_action
+  - collection
+allowed_stages:
+  - target-alignment
+  - build
+  - package
+  - deploy
+  - run
+  - acceptance
+allowed_operation_outcomes:
+  - rejected
+  - failed
+  - pending
+  - unknown
+allowed_next_decisions:
+  - observe-current-operation
+  - inspect-retained-evidence
+  - correct-and-create-new-operation
+  - stop-and-escalate
+  - retry-read-only-observation
+allowed_collection_statuses:
+  - collected
+  - unavailable
+  - failed
+allowed_fact_fields:
+  - artifact_identity
+  - change_set_id
+  - provider_status
+  - property_path
+  - resource_logical_id
+  - resource_type
+prohibited_values:
+  - secret values
+  - credentials
+  - tokens
+  - connection strings
+  - endpoint addresses
+  - email addresses
+  - account identifiers
+  - raw provider response bodies
+  - request or response headers

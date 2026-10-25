@@ -11,32 +11,42 @@
 //   kind: code
 //   purpose: Execute the explicitly administrative PostgreSQL role, grant, rotation, revocation, and effective-access operations outside ordinary migrations.
 //   portability: { class: internal, targets: [kanbien-core-platform] }
+//   used_by:
+//   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
+//     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { readFileSync } from "node:fs";
 import {
   createNodePostgreSqlConnectionPool,
+  postgreSqlMigrationChecksum,
+  postgreSqlPersistenceFoundationMigration,
   postgreSqlPersistenceConfiguration,
   type PostgreSqlConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { revokeRuntimeAccess } from "./kanbien-core-server-persistence-runtime-credential";
+import { restoreRuntimeIamAccess, revokeRuntimeAccess } from "./kanbien-core-server-persistence-runtime-credential";
+import { ensureBoundedLoginRole, ensureRdsIamAuthentication, type PostgreSqlLoginIdentity } from "./kanbien-core-server-persistence-role-credential";
+import { persistenceCertificateAuthority } from "./kanbien-core-server-persistence-configuration";
+import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
+import { kanbienCoreServerPersistenceAcceptanceMigration } from "./kanbien-core-server-persistence-postgresql";
 
 type Credentials = { readonly username: string; readonly password: string };
-type AdministrationOperation = "bootstrap-identities" | "grant-runtime-application-access" | "rotate-runtime" | "revoke-runtime" | "prove-effective-privilege";
+type Identity = PostgreSqlLoginIdentity;
+type AdministrationOperation = "bootstrap-identities" | "grant-runtime-application-access" | "confirm-runtime-iam-access" | "revoke-runtime" | "restore-runtime" | "prove-effective-privilege" | "observe-migration-state";
+type MigrationStateObservation = "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED" | "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
 
 /**
  * This entrypoint is deliberately the only core-persistence program that may
- * create roles, alter passwords, transfer ownership, or grant/revoke the
+ * create roles, transfer ownership, or grant/revoke the
  * runtime role's database access. Ordinary migrations receive only the
  * bounded schema-owner identity and cannot invoke these operations.
  */
 export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = configurationFromEnvironment(env);
   const administrator = credentialObject(env["PERSISTENCE_ADMINISTRATOR_CREDENTIALS"]);
-  const migration = credentialObject(env["PERSISTENCE_ADMINISTRATION_MIGRATION_CREDENTIALS"]);
-  const runtime = credentialObject(env["PERSISTENCE_ADMINISTRATION_RUNTIME_CREDENTIALS"]);
-  const certificateAuthority = certificateAuthorityFromEnvironment(env);
+  const migration = identity(env["PERSISTENCE_MIGRATION_DATABASE_USERNAME"]);
+  const runtime = identity(env["PERSISTENCE_RUNTIME_DATABASE_USERNAME"]);
+  const certificateAuthority = persistenceCertificateAuthority(env);
   const operation = administrationOperation(env["PERSISTENCE_ADMINISTRATION_OPERATION"]);
-  if (configuration === undefined || administrator === undefined || migration === undefined || runtime === undefined || certificateAuthority === undefined || operation === undefined) {
+  if (configuration === undefined || administrator === undefined || migration === undefined || runtime === undefined || certificateAuthority === undefined || operation === undefined || administrator.username === migration.username || administrator.username === runtime.username || migration.username === runtime.username) {
     return rejected("PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID");
   }
   const pool = createNodePostgreSqlConnectionPool(configuration, { ...administrator, certificateAuthority });
@@ -46,21 +56,29 @@ export async function runKanbienCoreServerPersistenceAdministration(env: NodeJS.
       return accepted("PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED");
     }
     if (operation === "grant-runtime-application-access") {
-      await grantRuntimeApplicationAccess(pool, configuration.schema, runtime.username);
+      await grantRuntimeApplicationAccess(pool, configuration.schema, migration.username, runtime.username);
       return accepted("PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED");
     }
-    if (operation === "rotate-runtime") {
-      await rotateRuntimePassword(pool, runtime);
-      return accepted("PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED");
+    if (operation === "confirm-runtime-iam-access") {
+      await ensureBoundedLoginRole(pool, runtime);
+      await ensureRdsIamAuthentication(pool, runtime);
+      return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED");
     }
     if (operation === "revoke-runtime") {
       await revokeRuntimeAccess(pool, runtime.username);
-      return accepted("PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED");
+      return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED");
     }
-    await proveRuntimePrivilege(configuration, runtime, certificateAuthority);
+    if (operation === "restore-runtime") {
+      await restoreRuntimeIamAccess(pool, runtime.username);
+      return accepted("PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED");
+    }
+    if (operation === "observe-migration-state") {
+      return accepted(await observeMigrationState(pool, configuration.schema, migration.username));
+    }
+    await proveRuntimePrivilege(configuration, runtime, certificateAuthority, env);
     return accepted("PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN");
-  } catch {
-    return rejected("PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED");
+  } catch (error) {
+    return rejected(administrationFailureCode(error));
   } finally {
     await pool.end();
   }
@@ -70,42 +88,68 @@ async function bootstrapIdentities(
   pool: PostgreSqlConnectionPool,
   databaseName: string,
   schemaName: string,
-  migration: Credentials,
-  runtime: Credentials,
+  migration: Identity,
+  runtime: Identity,
 ): Promise<void> {
   const database = quotedIdentifier(databaseName);
   const schema = quotedIdentifier(schemaName);
   const migrationRole = quotedIdentifier(migration.username);
   const runtimeRole = quotedIdentifier(runtime.username);
-  await ensureLoginRole(pool, migration);
-  await ensureLoginRole(pool, runtime);
-  await pool.query({ text: `REVOKE ALL PRIVILEGES ON DATABASE ${database} FROM ${runtimeRole}` });
-  await pool.query({ text: `GRANT CONNECT ON DATABASE ${database} TO ${migrationRole}, ${runtimeRole}` });
-  await pool.query({ text: `CREATE SCHEMA IF NOT EXISTS ${schema} AUTHORIZATION ${migrationRole}` });
-  await pool.query({ text: `ALTER SCHEMA ${schema} OWNER TO ${migrationRole}` });
-  await pool.query({ text: `GRANT USAGE, CREATE ON SCHEMA ${schema} TO ${migrationRole}` });
-  await pool.query({ text: `REVOKE ALL ON SCHEMA ${schema} FROM ${runtimeRole}` });
-  await pool.query({ text: `GRANT USAGE ON SCHEMA ${schema} TO ${runtimeRole}` });
-  await pool.query({ text: `CREATE TABLE IF NOT EXISTS ${schema}."platform_migration_history" (migration_id text PRIMARY KEY, checksum text NOT NULL, tool_version text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)` });
-  await transferRelationOwnership(pool, schemaName, migration.username);
-  await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${schema} FROM ${runtimeRole}` });
-  await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${schema} FROM ${runtimeRole}` });
-  await pool.query({ text: `REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA ${schema} FROM ${runtimeRole}` });
-  // Do not set broad runtime default privileges. Each future migration must
-  // grant only the operations needed by the object it introduces; this keeps
-  // migration history and future administrative relations non-writable.
-  await pool.query({ text: `ALTER DEFAULT PRIVILEGES FOR ROLE ${migrationRole} IN SCHEMA ${schema} REVOKE ALL ON TABLES FROM ${runtimeRole}` });
-  await pool.query({ text: `ALTER DEFAULT PRIVILEGES FOR ROLE ${migrationRole} IN SCHEMA ${schema} REVOKE ALL ON SEQUENCES FROM ${runtimeRole}` });
-  await pool.query({ text: `ALTER DEFAULT PRIVILEGES FOR ROLE ${migrationRole} IN SCHEMA ${schema} REVOKE EXECUTE ON FUNCTIONS FROM ${runtimeRole}` });
+  let stage = "identity-boundary";
+  try {
+    await ensureBoundedLoginRole(pool, migration);
+    await ensureBoundedLoginRole(pool, runtime);
+    stage = "iam-membership";
+    await ensureRdsIamAuthentication(pool, migration);
+    await ensureRdsIamAuthentication(pool, runtime);
+    stage = "database-access";
+    await pool.query({ text: `REVOKE ALL PRIVILEGES ON DATABASE ${database} FROM ${runtimeRole}` });
+    await pool.query({ text: `GRANT CONNECT ON DATABASE ${database} TO ${migrationRole}, ${runtimeRole}` });
+    await pool.query({ text: `GRANT CREATE ON DATABASE ${database} TO ${migrationRole}` });
+    stage = "schema-ownership";
+    await bootstrapMigrationOwnedSchema(pool, schemaName, migration.username, runtime.username);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("PERSISTENCE_ADMINISTRATION_BOOTSTRAP_")) throw error;
+    throw new Error(`PERSISTENCE_ADMINISTRATION_BOOTSTRAP_${stage.toUpperCase().replace(/-/g, "_")}_${providerCode(error) ?? "NOT_CONFIRMED"}`);
+  }
 }
 
-async function ensureLoginRole(pool: PostgreSqlConnectionPool, credentials: Credentials): Promise<void> {
-  const role = quotedIdentifier(credentials.username);
-  const exists = await pool.query<{ readonly exists: boolean }>({ text: "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = $1) AS exists", values: [credentials.username] });
-  const password = quotedLiteral(credentials.password);
-  await pool.query({ text: exists.rows[0]?.exists === true
-    ? `ALTER ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT PASSWORD ${password}`
-    : `CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT PASSWORD ${password}` });
+async function bootstrapMigrationOwnedSchema(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string, runtimeUsername: string): Promise<void> {
+  const schema = quotedIdentifier(schemaName);
+  const migration = quotedIdentifier(migrationUsername);
+  const runtime = quotedIdentifier(runtimeUsername);
+  let stage = "transaction";
+  await pool.query({ text: "BEGIN" });
+  try {
+    stage = "create-schema";
+    await pool.query({ text: `CREATE SCHEMA IF NOT EXISTS ${schema}` });
+    stage = "migration-history";
+    await pool.query({ text: `CREATE TABLE IF NOT EXISTS ${schema}."platform_migration_history" (migration_id text PRIMARY KEY, checksum text NOT NULL, tool_version text NOT NULL, applied_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP)` });
+    stage = "relation-ownership";
+    await pool.query({ text: `GRANT USAGE, CREATE ON SCHEMA ${schema} TO ${migration}` });
+    await transferRelationOwnership(pool, schemaName, migrationUsername);
+    await pool.query({ text: `ALTER SCHEMA ${schema} OWNER TO ${migration}` });
+    // The administrator explicitly assumes only the bounded schema-owner role
+    // for post-bootstrap object policy. The server never receives structural
+    // ownership or database-wide administration privileges.
+    await pool.query({ text: `SET LOCAL ROLE ${migration}` });
+    stage = "runtime-boundary";
+    await pool.query({ text: `REVOKE ALL ON SCHEMA ${schema} FROM ${runtime}` });
+    await pool.query({ text: `GRANT USAGE ON SCHEMA ${schema} TO ${runtime}` });
+    await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${schema} FROM ${runtime}` });
+    await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${schema} FROM ${runtime}` });
+    await pool.query({ text: `REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA ${schema} FROM ${runtime}` });
+    // Do not set broad runtime default privileges. Each future migration must
+    // grant only the operations needed by the object it introduces; this keeps
+    // migration history and future administrative relations non-writable.
+    await pool.query({ text: `ALTER DEFAULT PRIVILEGES IN SCHEMA ${schema} REVOKE ALL ON TABLES FROM ${runtime}` });
+    await pool.query({ text: `ALTER DEFAULT PRIVILEGES IN SCHEMA ${schema} REVOKE ALL ON SEQUENCES FROM ${runtime}` });
+    await pool.query({ text: `ALTER DEFAULT PRIVILEGES IN SCHEMA ${schema} REVOKE EXECUTE ON FUNCTIONS FROM ${runtime}` });
+    await pool.query({ text: "COMMIT" });
+  } catch (error) {
+    try { await pool.query({ text: "ROLLBACK" }); } catch { /* preserve the safe original failure */ }
+    throw new Error(`PERSISTENCE_ADMINISTRATION_BOOTSTRAP_SCHEMA_${stage.toUpperCase().replace(/-/g, "_")}_${providerCode(error) ?? "NOT_CONFIRMED"}`);
+  }
 }
 
 async function transferRelationOwnership(pool: PostgreSqlConnectionPool, schemaName: string, owner: string): Promise<void> {
@@ -124,26 +168,75 @@ async function transferRelationOwnership(pool: PostgreSqlConnectionPool, schemaN
   if (functions.rows[0]?.count !== "0") throw new Error("PERSISTENCE_ADMINISTRATION_FUNCTION_OWNERSHIP_REVIEW_REQUIRED");
 }
 
-async function grantRuntimeApplicationAccess(pool: PostgreSqlConnectionPool, schemaName: string, runtimeUsername: string): Promise<void> {
+async function grantRuntimeApplicationAccess(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string, runtimeUsername: string): Promise<void> {
   const schema = quotedIdentifier(schemaName);
+  const migration = quotedIdentifier(migrationUsername);
   const runtime = quotedIdentifier(runtimeUsername);
   const applicationTable = `${schema}."core_server_persistence_acceptance"`;
-  await pool.query({ text: `REVOKE ALL PRIVILEGES ON ${schema}."platform_migration_history" FROM ${runtime}` });
-  await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${schema} FROM ${runtime}` });
-  await pool.query({ text: `REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA ${schema} FROM ${runtime}` });
-  await pool.query({ text: `GRANT SELECT, INSERT, UPDATE, DELETE ON ${applicationTable} TO ${runtime}` });
+  await pool.query({ text: "BEGIN" });
+  try {
+    await pool.query({ text: `SET LOCAL ROLE ${migration}` });
+    await pool.query({ text: `REVOKE ALL PRIVILEGES ON ${schema}."platform_migration_history" FROM ${runtime}` });
+    await pool.query({ text: `REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ${schema} FROM ${runtime}` });
+    await pool.query({ text: `REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA ${schema} FROM ${runtime}` });
+    await pool.query({ text: `GRANT SELECT, INSERT, UPDATE, DELETE ON ${applicationTable} TO ${runtime}` });
+    await pool.query({ text: "COMMIT" });
+  } catch (error) {
+    try { await pool.query({ text: "ROLLBACK" }); } catch { /* preserve the safe original failure */ }
+    throw error;
+  }
 }
 
-async function rotateRuntimePassword(pool: PostgreSqlConnectionPool, credentials: Credentials): Promise<void> {
-  await pool.query({ text: `ALTER ROLE ${quotedIdentifier(credentials.username)} LOGIN PASSWORD ${quotedLiteral(credentials.password)}` });
+/**
+ * Observe, but never repair, migration history after an unsuccessful or
+ * interrupted controller. The migration runner is transaction-bound, so an
+ * empty reviewed manifest is the sole state that permits a new submission.
+ * A complete checksum-matching history is accepted only as evidence that the
+ * prior migration already took effect; it never authorises a replay.
+ */
+async function observeMigrationState(pool: PostgreSqlConnectionPool, schemaName: string, migrationUsername: string): Promise<MigrationStateObservation> {
+  const history = `${quotedIdentifier(schemaName)}."platform_migration_history"`;
+  const migration = quotedIdentifier(migrationUsername);
+  const foundation = postgreSqlPersistenceFoundationMigration(schemaName);
+  const acceptance = kanbienCoreServerPersistenceAcceptanceMigration(schemaName);
+  const expected = [
+    { id: foundation.id, checksum: foundation.checksum },
+    { id: acceptance.id, checksum: postgreSqlMigrationChecksum(acceptance.statements) },
+  ];
+  await pool.query({ text: "BEGIN READ ONLY" });
+  let observed: { readonly rows: readonly { readonly migration_id: string; readonly checksum: string }[] };
+  try {
+    // The history is owned by the constrained migration identity. The
+    // administrative task assumes that already-governed role only inside a
+    // read-only transaction; it neither reuses migration credentials nor gains
+    // authority to alter schema state through this observation path.
+    await pool.query({ text: `SET LOCAL ROLE ${migration}` });
+    observed = await pool.query<{ readonly migration_id: string; readonly checksum: string }>({
+      text: `SELECT migration_id, checksum FROM ${history} ORDER BY migration_id ASC`,
+    });
+    await pool.query({ text: "ROLLBACK" });
+  } catch (error) {
+    try { await pool.query({ text: "ROLLBACK" }); } catch { /* preserve the safe original failure */ }
+    throw error;
+  }
+  if (observed.rows.length === 0) return "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED";
+  if (
+    observed.rows.length === expected.length
+    && observed.rows.every((row, index) => row.migration_id === expected[index]?.id && row.checksum === expected[index]?.checksum)
+  ) return "PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED";
+  throw new Error("PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED");
 }
 
 async function proveRuntimePrivilege(
   configuration: ReturnType<typeof configurationFromEnvironment> & {},
-  credentials: Credentials,
+  identity: Identity,
   certificateAuthority: string,
+  env: NodeJS.ProcessEnv,
 ): Promise<void> {
-  const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
+  const credentials = persistenceIamAuthentication({ ...env, PERSISTENCE_RUNTIME_DATABASE_USERNAME: identity.username }, configuration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME");
+  if (credentials === undefined) throw new Error("PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED");
+  const { createNodePostgreSqlTokenConnectionPool } = await import("@kanbien/platform-adapter-aws-persistence-postgresql");
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   const table = `"${configuration.schema}"."core_server_persistence_acceptance"`;
   const history = `"${configuration.schema}"."platform_migration_history"`;
   const client = await pool.connect();
@@ -177,14 +270,33 @@ function configurationFromEnvironment(env: NodeJS.ProcessEnv) {
   return checked.ok ? checked.value : undefined;
 }
 function administrationOperation(value: unknown): AdministrationOperation | undefined {
-  return value === undefined || value === "bootstrap-identities" ? "bootstrap-identities" : value === "grant-runtime-application-access" || value === "rotate-runtime" || value === "revoke-runtime" || value === "prove-effective-privilege" ? value : undefined;
+  return value === undefined || value === "bootstrap-identities" ? "bootstrap-identities" : value === "grant-runtime-application-access" || value === "confirm-runtime-iam-access" || value === "revoke-runtime" || value === "restore-runtime" || value === "prove-effective-privilege" || value === "observe-migration-state" ? value : undefined;
 }
-function certificateAuthorityFromEnvironment(env: NodeJS.ProcessEnv): string | undefined { const path = text(env, "PERSISTENCE_POSTGRES_CA_PATH"); try { return path?.startsWith("/app/assets/") ? readFileSync(path, "utf8") : undefined; } catch { return undefined; } }
 function text(env: NodeJS.ProcessEnv, key: string): string | undefined { const value = env[key]; return typeof value === "string" && value.trim() !== "" && value.trim() === value ? value : undefined; }
-function credentialObject(value: unknown): Credentials | undefined { try { const parsed: unknown = typeof value === "string" ? JSON.parse(value) : undefined; if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined; const username = (parsed as { username?: unknown }).username, password = (parsed as { password?: unknown }).password; return typeof username === "string" && /^[a-z_][a-z0-9_]{0,62}$/.test(username) && typeof password === "string" && password.length > 0 ? { username, password } : undefined; } catch { return undefined; } }
+function credentialObject(value: unknown): Credentials | undefined { try { const parsed: unknown = typeof value === "string" ? JSON.parse(value) : undefined; if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return undefined; const username = (parsed as { username?: unknown }).username, password = (parsed as { password?: unknown }).password; return typeof username === "string" && /^[a-z_][a-z0-9_]{0,62}$/.test(username) && typeof password === "string" && password.length > 0 && !password.includes("\u0000") ? { username, password } : undefined; } catch { return undefined; } }
+function identity(value: unknown): Identity | undefined { return typeof value === "string" && /^[a-z_][a-z0-9_]{0,62}$/.test(value) ? { username: value } : undefined; }
 function quotedIdentifier(value: string): string { if (!/^[a-z_][a-z0-9_]{0,62}$/.test(value)) throw new TypeError("PERSISTENCE_ROLE_IDENTIFIER_INVALID"); return `"${value}"`; }
-function quotedLiteral(value: string): string { if (value.length === 0 || value.includes("\u0000")) throw new TypeError("PERSISTENCE_CREDENTIAL_INVALID"); return `'${value.replaceAll("'", "''")}'`; }
 function providerCode(value: unknown): string | undefined { return typeof value === "object" && value !== null && typeof (value as { readonly code?: unknown }).code === "string" ? (value as { readonly code: string }).code : undefined; }
+export function administrationFailureCode(error: unknown): string {
+  const message = error instanceof Error ? error.message : undefined;
+  if (typeof message === "string" && /^PERSISTENCE_ADMINISTRATION_BOOTSTRAP_[A-Z_]+_(?:[0-9A-Z_]+)$/.test(message)) return message;
+  if (
+    message === "PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_ROLE_MISSING"
+    || message === "PERSISTENCE_ROLE_STATE_UNAVAILABLE"
+    || message === "PERSISTENCE_ROLE_REACTIVATION_REQUIRES_EXPLICIT_RECOVERY"
+    || message === "PERSISTENCE_RUNTIME_IAM_ACCESS_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_DML_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_PERMISSION_DENIAL_NOT_CONFIRMED"
+    || message === "PERSISTENCE_RUNTIME_PERMISSION_UNEXPECTEDLY_PERMITTED"
+    || message === "PERSISTENCE_RUNTIME_ADMINISTRATION_UNEXPECTEDLY_PERMITTED"
+    || message === "PERSISTENCE_MIGRATION_STATE_ALREADY_APPLIED"
+    || message === "PERSISTENCE_MIGRATION_STATE_REVIEW_REQUIRED"
+    || (typeof message === "string" && /^PERSISTENCE_RUNTIME_(?:REVOCATION|RECOVERY)_[A-Z_]+_NOT_CONFIRMED$/.test(message))
+  ) return message;
+  const code = providerCode(error);
+  return code === "42501" ? "PERSISTENCE_ADMINISTRATION_ACCESS_DENIED" : code === "28P01" ? "PERSISTENCE_ADMINISTRATION_CREDENTIAL_REJECTED" : "PERSISTENCE_ADMINISTRATION_NOT_CONFIRMED";
+}
 function accepted(code: string): void { console.log(JSON.stringify({ verdict: "accepted", code })); }
 function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
 if (typeof require !== "undefined" && require.main === module) void runKanbienCoreServerPersistenceAdministration();

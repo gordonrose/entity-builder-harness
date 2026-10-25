@@ -1,0 +1,31 @@
+{
+  "head": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+  "acceptedMain": "f02f6fc438e471c3e81fde3925ac3c3079a63077",
+  "mismatches": [
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "expected": "1158439bf8d20bea3aa760fad51e37ce9292520ad41cac5010ad54df9644a8d0",
+      "actual": "edf6f303c61b7d196f86147800eb8f461c94929b3f7eb55e83099e5b851e299b"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "expected": "b371b545c336e1e8e1baa5a2d59cbb24cc1bd45fdfdce79c580e8a563f5e652f",
+      "actual": "de93ae7595b398a68cc3a12c6b3fbe93a365029d6ac9dc9d0f9984869afed090"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+      "expected": "fcdcbfe1dee81fea5205937edf3cdbf3491fdd4f30a5eaf7e91acc04f3bfe8a0",
+      "actual": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003"
+    }
+  ],
+  "protectedGuardStagedChange": false,
+  "unstagedPaths": [],
+  "stagedPathCount": 114,
+  "observedAt": "2026-10-25T21:07:12.836981+00:00",
+  "previousGoalTurn": "progress: accepted main advanced and reviewed proposal was renewed against its changed bytes",
+  "currentGoalTurn": "no further authorized progress: same protected-scope permission blocker revalidated",
+  "consecutiveBlockedGoalTurns": 3,
+  "userApprovalReceived": false,
+  "archiveIntegrity": "verified",
+  "goalDisposition": "blocked after three consecutive equivalent blockers; full objective retained"
+}

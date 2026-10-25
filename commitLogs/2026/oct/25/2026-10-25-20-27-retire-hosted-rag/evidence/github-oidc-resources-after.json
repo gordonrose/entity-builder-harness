@@ -1,0 +1,14 @@
+{
+  "StackResourceSummaries": [
+    {
+      "LogicalResourceId": "GitHubOidcProvider",
+      "PhysicalResourceId": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com",
+      "ResourceType": "AWS::IAM::OIDCProvider",
+      "LastUpdatedTimestamp": "2026-10-25T20:40:26.044000+00:00",
+      "ResourceStatus": "UPDATE_COMPLETE",
+      "DriftInformation": {
+        "StackResourceDriftStatus": "NOT_CHECKED"
+      }
+    }
+  ]
+}

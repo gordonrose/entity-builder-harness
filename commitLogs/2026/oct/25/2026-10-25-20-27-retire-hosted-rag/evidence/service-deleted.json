@@ -1,0 +1,73 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-service/f5d36e60-754a-11f1-8ff0-06a67858397b",
+      "StackName": "rag-rulebook-staging-service",
+      "Description": "ECS Fargate service for the RAG rulebook staging app.",
+      "Parameters": [
+        {
+          "ParameterKey": "ClusterArn",
+          "ParameterValue": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
+        },
+        {
+          "ParameterKey": "ServiceName",
+          "ParameterValue": "rag-rulebook-staging"
+        },
+        {
+          "ParameterKey": "Memory",
+          "ParameterValue": "512"
+        },
+        {
+          "ParameterKey": "FoundationStackName",
+          "ParameterValue": "rag-rulebook-staging-foundation"
+        },
+        {
+          "ParameterKey": "Cpu",
+          "ParameterValue": "256"
+        },
+        {
+          "ParameterKey": "DesiredCount",
+          "ParameterValue": "0"
+        },
+        {
+          "ParameterKey": "ImageUri",
+          "ParameterValue": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/rag-rulebook-service@sha256:b58ee3a5ef2bedbb661bdfb4ba9f051ecc463f2569d57e806f00859f7ddca3cb"
+        }
+      ],
+      "CreationTime": "2026-07-01T12:47:03.816000+00:00",
+      "DeletionTime": "2026-10-25T20:37:49.236000+00:00",
+      "LastUpdatedTime": "2026-10-25T20:36:25.921000+00:00",
+      "RollbackConfiguration": {},
+      "StackStatus": "DELETE_COMPLETE",
+      "DisableRollback": false,
+      "DeploymentConfig": {
+        "Mode": "STANDARD",
+        "DisableRollback": false
+      },
+      "NotificationARNs": [],
+      "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "ServiceArn",
+          "OutputValue": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging"
+        },
+        {
+          "OutputKey": "TaskDefinitionArn",
+          "OutputValue": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3"
+        }
+      ],
+      "Tags": [],
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      },
+      "LastOperations": [
+        {
+          "OperationType": "DELETE_STACK",
+          "OperationId": "44a49ff9-cf05-4de0-8bdb-1ff50103a4d5"
+        }
+      ]
+    }
+  ]
+}

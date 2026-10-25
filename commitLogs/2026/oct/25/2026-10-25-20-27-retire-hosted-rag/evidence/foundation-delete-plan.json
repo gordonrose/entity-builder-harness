@@ -1,0 +1,102 @@
+{
+  "stackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-foundation/3281f680-7544-11f1-a539-06e31f750d97",
+  "verifiedResourceInventory": {
+    "StackResourceSummaries": [
+      {
+        "LogicalResourceId": "DnsAlias",
+        "PhysicalResourceId": "rag.kanbien.com",
+        "ResourceType": "AWS::Route53::RecordSet",
+        "LastUpdatedTimestamp": "2026-07-01T11:59:18.244000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "HostRule",
+        "PhysicalResourceId": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/c6bd685ed248975f",
+        "ResourceType": "AWS::ElasticLoadBalancingV2::ListenerRule",
+        "LastUpdatedTimestamp": "2026-07-01T11:59:05.324000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "LogGroup",
+        "PhysicalResourceId": "/aws/ecs/rag-rulebook-staging",
+        "ResourceType": "AWS::Logs::LogGroup",
+        "LastUpdatedTimestamp": "2026-10-25T20:36:01.927000+00:00",
+        "ResourceStatus": "UPDATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "Repository",
+        "PhysicalResourceId": "rag-rulebook-service",
+        "ResourceType": "AWS::ECR::Repository",
+        "LastUpdatedTimestamp": "2026-10-25T20:36:03.547000+00:00",
+        "ResourceStatus": "UPDATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "ServiceSecurityGroup",
+        "PhysicalResourceId": "sg-0d351e31000a1a0e4",
+        "ResourceType": "AWS::EC2::SecurityGroup",
+        "LastUpdatedTimestamp": "2026-07-01T11:58:55.617000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "ServiceTokenSecret",
+        "PhysicalResourceId": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rag-rulebook/staging/service-token-vpSnES",
+        "ResourceType": "AWS::SecretsManager::Secret",
+        "LastUpdatedTimestamp": "2026-10-25T20:36:01.864000+00:00",
+        "ResourceStatus": "UPDATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "TargetGroup",
+        "PhysicalResourceId": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+        "ResourceType": "AWS::ElasticLoadBalancingV2::TargetGroup",
+        "LastUpdatedTimestamp": "2026-07-01T11:59:03.181000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "TaskExecutionRole",
+        "PhysicalResourceId": "rag-rulebook-staging-task-execution",
+        "ResourceType": "AWS::IAM::Role",
+        "LastUpdatedTimestamp": "2026-07-01T11:59:07.233000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "TaskRole",
+        "PhysicalResourceId": "rag-rulebook-staging-task",
+        "ResourceType": "AWS::IAM::Role",
+        "LastUpdatedTimestamp": "2026-07-01T11:59:05.399000+00:00",
+        "ResourceStatus": "CREATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      }
+    ]
+  },
+  "retainedLogicalIds": [
+    "LogGroup",
+    "ServiceTokenSecret"
+  ],
+  "reviewedAt": "2026-10-25T20:39:05.385222+00:00"
+}

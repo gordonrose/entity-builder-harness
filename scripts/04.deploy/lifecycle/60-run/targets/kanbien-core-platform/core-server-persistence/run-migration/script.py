@@ -119,9 +119,14 @@ def current_reconciliation_task(task: dict[str, object], requested_arn: str, tas
 
 SUCCESS = {
     "apply": "PERSISTENCE_MIGRATION_APPLIED",
-    "rotate": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
-    "revoke": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
-    "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
+}
+REJECTION_CODES = {
+    "PERSISTENCE_MIGRATION_CONFIGURATION_INVALID",
+    "PERSISTENCE_MIGRATION_NOT_CONFIRMED",
+}
+FAILURE_CLASSES = {
+    "access_denied", "conflict", "constraint", "resource_not_found",
+    "timeout", "transaction_rolled_back", "transport", "validation", "unknown",
 }
 
 
@@ -148,6 +153,48 @@ def accepted_message(message: object, expected: str) -> bool:
     except (json.JSONDecodeError, TypeError):
         return False
     return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == expected
+
+
+def migration_log_rejection(task: dict[str, object]) -> tuple[dict[str, str] | None, str]:
+    """Extract only a closed safe rejection record from an unsuccessful task.
+
+    Task logs are untrusted provider evidence.  This deliberately parses their
+    JSON in memory and returns only the entrypoint's finite code/class values;
+    arbitrary message text, nested fields, credentials, and provider details
+    never become controller output or a repository artifact.
+    """
+    arn = task.get("taskArn")
+    if not isinstance(arn, str) or not arn.rsplit("/", 1)[-1]:
+        return None, "persistence-migration-evidence-unavailable"
+    stream = f"persistence-migration/persistence-migration/{arn.rsplit('/', 1)[-1]}"
+    ok, events, code = aws("logs", "get-log-events", "--log-group-name", LOG_GROUP, "--log-stream-name", stream, "--start-from-head")
+    if not ok:
+        return None, code
+    messages = events.get("events") if isinstance(events, dict) else None
+    if not isinstance(messages, list):
+        return None, "aws-response-invalid"
+    for event in messages:
+        message = event.get("message") if isinstance(event, dict) else None
+        try:
+            value = json.loads(message) if isinstance(message, str) else None
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if not isinstance(value, dict) or set(value) - {"verdict", "code", "stage", "provider_failure_class"}:
+            continue
+        code_value, stage, failure_class = value.get("code"), value.get("stage"), value.get("provider_failure_class")
+        if (
+            value.get("verdict") != "rejected"
+            or not isinstance(code_value, str)
+            or code_value not in REJECTION_CODES
+            or stage not in {None, "migration"}
+            or (failure_class is not None and (not isinstance(failure_class, str) or failure_class not in FAILURE_CLASSES))
+        ):
+            continue
+        result = {"safe_result_code": code_value}
+        if isinstance(failure_class, str):
+            result["safe_provider_failure_class"] = failure_class
+        return result, "ok"
+    return None, "persistence-migration-rejection-not-confirmed"
 
 
 def reconciliation_operation(operation: str, definition: str) -> tuple[str | None, str]:
@@ -182,7 +229,7 @@ def task_evidence():
 
 
 def task_operation_bound(task: dict, mode: str) -> bool:
-    return task_evidence().task_overrides_match(task, "persistence-migration", {"PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION": mode})
+    return task_evidence().task_overrides_match(task, "persistence-migration", {"PERSISTENCE_MIGRATION_OPERATION": mode})
 
 def image_digest(task_definition: object) -> str | None:
     if not isinstance(task_definition, str):
@@ -224,7 +271,10 @@ def accepted_completion(task: dict[str, object], seconds: int, operation: str) -
     if not isinstance(containers, list) or len(containers) != 1 or not isinstance(containers[0], dict) or type(containers[0].get("exitCode")) is not int:
         return report("uncertain", "persistence-task-exit-evidence-unavailable", facts=facts)
     if not task_exit(task):
-        return report("failed", "persistence-migration-unsuccessful-completion", facts=facts)
+        rejection, code = migration_log_rejection(task)
+        if rejection is not None:
+            return report("failed", "persistence-migration-unsuccessful-completion", "persistence-migration-safe-rejection-observed", facts={**facts, **rejection})
+        return report("failed", "persistence-migration-unsuccessful-completion", code, facts=facts)
     accepted, code = migration_log_accepted(task, operation)
     if not accepted:
         return report("uncertain" if code.startswith("aws-") else "pending", code, facts=facts)
@@ -252,14 +302,14 @@ def main() -> int:
     parser.add_argument("--reconcile-operation")
     parser.add_argument("--capture-completed-task")
     parser.add_argument("--qualified-receipt", type=Path)
-    parser.add_argument("--runtime-credential-operation", default="apply")
+    parser.add_argument("--migration-operation", default="apply")
     args, unknown = parser.parse_known_args()
-    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.runtime_credential_operation not in SUCCESS:
+    if unknown or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)) or (args.capture_completed_task is not None and not isinstance(args.capture_completed_task, str)) or (args.reconcile_task is not None and args.capture_completed_task is not None) or (args.capture_completed_task is not None and args.qualified_receipt is None) or (args.capture_completed_task is None and args.qualified_receipt is not None) or args.migration_operation not in SUCCESS:
         return report("blocked", "persistence-migration-arguments-invalid")
     if args.reconcile_operation is not None and (args.reconcile_task is not None or args.capture_completed_task is not None or re.fullmatch(r"kp-[a-f0-9]{32}", args.reconcile_operation) is None):
         return report("blocked", "persistence-migration-reconciliation-operation-invalid")
     if args.validate_arguments:
-        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": {"proof_type":"migration","operation":args.runtime_credential_operation,"result_code":SUCCESS[args.runtime_credential_operation],"family":"kanbien-core-platform-persistence-migration","deadline_workload":"persistence-migration"}}))
+        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": {"proof_type":"migration","operation":args.migration_operation,"result_code":SUCCESS[args.migration_operation],"family":"kanbien-core-platform-persistence-migration","deadline_workload":"persistence-migration"}}))
         return 0
     seconds = deadline()
     if seconds is None:
@@ -286,13 +336,13 @@ def main() -> int:
         task = listed[0]
         if args.reconcile_operation is not None and task.get("startedBy") != args.reconcile_operation:
             return report("blocked", "persistence-migration-reconciliation-operation-mismatch")
-        if not task_operation_bound(task, args.runtime_credential_operation):
+        if not task_operation_bound(task, args.migration_operation):
             return report("blocked", "persistence-migration-reconciliation-operation-binding-invalid")
         code = current_reconciliation_task(task, args.reconcile_task, task_definition)
         if code != "ok":
             verdict = "pending" if code.endswith("-not-terminal") and task.get("lastStatus") in {"PROVISIONING", "PENDING", "ACTIVATING", "RUNNING", "DEACTIVATING", "STOPPING", "DEPROVISIONING"} else "blocked"
             return report(verdict, code, facts={"migration_task": args.reconcile_task, "operation_id": args.reconcile_operation})
-        return accepted_completion(task, seconds, args.runtime_credential_operation)
+        return accepted_completion(task, seconds, args.migration_operation)
     if args.capture_completed_task is not None:
         expected_digest = qualified_digest(args.qualified_receipt)
         if expected_digest is None:
@@ -300,11 +350,11 @@ def main() -> int:
         ok, described, code = aws("ecs", "describe-tasks", "--cluster", CLUSTER, "--tasks", args.capture_completed_task)
         listed = described.get("tasks", []) if ok and isinstance(described, dict) else []
         task = listed[0] if isinstance(listed, list) and len(listed) == 1 and isinstance(listed[0], dict) else None
-        if not isinstance(task, dict) or task.get("taskArn") != args.capture_completed_task or not historical_task_identity(task, expected_digest) or not task_operation_bound(task, args.runtime_credential_operation):
+        if not isinstance(task, dict) or task.get("taskArn") != args.capture_completed_task or not historical_task_identity(task, expected_digest) or not task_operation_bound(task, args.migration_operation):
             return report("blocked", code if not ok else "persistence-migration-historic-task-identity-invalid")
-        return accepted_completion(task, seconds, args.runtime_credential_operation)
+        return accepted_completion(task, seconds, args.migration_operation)
     network = f"awsvpcConfiguration={{subnets=[{subnets}],securityGroups=[{security_group}],assignPublicIp=DISABLED}}"
-    overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION", "value": args.runtime_credential_operation}]}]})
+    overrides = json.dumps({"containerOverrides": [{"name": "persistence-migration", "environment": [{"name": "PERSISTENCE_MIGRATION_OPERATION", "value": args.migration_operation}]}]})
     operation_id = "kp-" + uuid.uuid4().hex
     # Flush identity before submission so a lost response has a read-only recovery path.
     report("pending", "persistence-migration-submission-prepared", facts={"operation_id": operation_id}, stream=sys.stderr)
@@ -322,14 +372,14 @@ def main() -> int:
         if not ok or not isinstance(listed, list) or len(listed) != 1 or not isinstance(listed[0], dict):
             return report("uncertain", "persistence-migration-controller-observation-uncertain", facts={"migration_task": arn, "operation_id": operation_id})
         current = listed[0]
-        if current.get("taskArn") != arn or current.get("taskDefinitionArn") != task_definition or current.get("startedBy") != operation_id or not task_operation_bound(current, args.runtime_credential_operation):
+        if current.get("taskArn") != arn or current.get("taskDefinitionArn") != task_definition or current.get("startedBy") != operation_id or not task_operation_bound(current, args.migration_operation):
             return report("uncertain", "persistence-migration-controller-task-identity-mismatch", facts={"migration_task": arn, "operation_id": operation_id})
         if current.get("lastStatus") == "STOPPED":
             break
         time.sleep(5)
     if current is None or current.get("lastStatus") != "STOPPED":
         return report("pending", "persistence-migration-controller-deadline-remote-task-still-running", facts={"migration_task": arn, "operation_id": operation_id})
-    return accepted_completion(current, seconds, args.runtime_credential_operation)
+    return accepted_completion(current, seconds, args.migration_operation)
 
 
 if __name__ == "__main__":

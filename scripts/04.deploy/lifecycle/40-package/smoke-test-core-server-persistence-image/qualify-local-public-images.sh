@@ -48,7 +48,7 @@ def public_owners(root):
     # This optional recovery is qualified only for these reviewed owner bytes.
     # Fail closed on owner changes instead of interpreting arbitrary shell or
     # Dockerfile forms; normal package qualification remains independent.
-    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': '5443e3c13b8122b49e82e16ea8f2a814be9c4036feefcd210d452f781d6e7832', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': '1158439bf8d20bea3aa760fad51e37ce9292520ad41cac5010ad54df9644a8d0', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'b371b545c336e1e8e1baa5a2d59cbb24cc1bd45fdfdce79c580e8a563f5e652f', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': 'fcdcbfe1dee81fea5205937edf3cdbf3491fdd4f30a5eaf7e91acc04f3bfe8a0'}
+    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': '5443e3c13b8122b49e82e16ea8f2a814be9c4036feefcd210d452f781d6e7832', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': 'edf6f303c61b7d196f86147800eb8f461c94929b3f7eb55e83099e5b851e299b', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'de93ae7595b398a68cc3a12c6b3fbe93a365029d6ac9dc9d0f9984869afed090', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003'}
     for path, digest in reviewed.items():
         if hashlib.sha256((root/path).read_bytes()).hexdigest()!=digest:
             fail('local-public-recovery-owner-review-required')

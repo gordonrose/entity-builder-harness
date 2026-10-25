@@ -4,7 +4,7 @@ id: infra.04-deploy.02-rag-rulebook.github-actions.readme
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -26,33 +26,15 @@ used_by:
 -->
 # GitHub Actions
 
-This directory will own reviewed deployment workflow templates and deployment
-workflow notes for the RAG/rulebook ECS Fargate target.
+`.github/workflows/deploy-rag-rulebook-staging.yml` is an inert retirement
+tombstone: its only job is always skipped, it grants no token permissions and
+contains no deployment commands or AWS credential setup. Disable the workflow
+in GitHub as part of the governed retirement. Preserve its run history and the
+shared GitHub environment.
 
-Live GitHub workflows belong in `.github/workflows/`. Templates or source
-workflow definitions may live here when they are used to keep the live workflow
-aligned with the infra and deploy-readiness model.
+The retired staging manifest cannot pass deployment readiness. Harness context
+retrieval uses `RAG_RULEBOOK_PROVIDER=local`. Recommissioning needs a separately
+reviewed and explicitly approved change; old workflow revisions are historical
+evidence, not an authorised deployment route.
 
-Required future proof:
-
-- protected GitHub environment
-- OIDC permission and AWS role assumption
-- no long-lived AWS keys
-- immutable image and corpus package identity
-- deploy-readiness gate before AWS mutation
-- ECS service stability and post-deploy context-query smoke test
-- rollback and disablement evidence
-
-## Current Workflow
-
-The first deploy workflow is:
-
-```bash
-.github/workflows/deploy-rag-rulebook-staging.yml
-```
-
-It is manual-only, targets the protected `staging` GitHub environment, assumes
-AWS through OIDC, applies the staging foundation stack, builds and pushes the
-service image to ECR, resolves the immutable image digest, deploys the ECS
-service stack, waits for service stability, and checks
-`https://rag.kanbien.com/health`.
+See [hosted staging retirement](../../../../.agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement).

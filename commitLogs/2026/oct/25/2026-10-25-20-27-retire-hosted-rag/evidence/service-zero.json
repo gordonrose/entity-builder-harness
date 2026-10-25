@@ -1,0 +1,12 @@
+{
+  "services": [
+    {
+      "name": "rag-rulebook-staging",
+      "status": "ACTIVE",
+      "desired": 0,
+      "running": 0,
+      "pending": 0
+    }
+  ],
+  "failures": []
+}

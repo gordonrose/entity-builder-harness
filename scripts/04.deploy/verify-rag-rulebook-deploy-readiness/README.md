@@ -4,7 +4,7 @@ id: deploy.script.verify-rag-rulebook-deploy-readiness.readme
 version: 1
 status: active
 created_on: "2026-06-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -65,9 +65,11 @@ The current staging manifest lives at:
 infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
 ```
 
-It is expected to remain blocked until the remote `main` commit, protected
-GitHub environment, OIDC role, immutable image digest, ECS service evidence,
-runtime artifact hashes, rollback target, and health check proof exist.
+It declares `deployment.status: retired` and remains blocked even if all other
+readiness evidence is valid. Recommissioning requires a separately reviewed and
+approved change. The preserved fields document the former target and are not
+current deployment authority. Other candidate manifests still require remote
+commit, protected environment, identity, immutable artifact and runtime proof.
 
 The manifest names the concrete deployment candidate:
 

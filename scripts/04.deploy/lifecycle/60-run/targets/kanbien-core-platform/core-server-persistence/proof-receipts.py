@@ -39,9 +39,9 @@ SCOPE = "core-server-persistence"
 ROOT = Path(__file__).resolve().parents[7]
 RECEIPTS = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts"
 SCHEMA = "deploy/persistence-proof-receipt/v1"
-ALLOWED_PROOFS = {"migration", "verifier", "restore", "server-replacement"}
+ALLOWED_PROOFS = {"administration", "migration", "verifier", "restore", "server-replacement"}
 EVIDENCE_CLASS = "live"
-OPERATIONS = {"migration": {"apply", "rotate", "revoke", "prove-effective-privilege"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
+OPERATIONS = {"administration": {"bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege", "observe-migration-state"}, "migration": {"apply"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
 TASK_ARN_PREFIX = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"
 
 
@@ -75,7 +75,7 @@ def _context(proof_type: str, value: object) -> dict[str, Any]:
     """Allowlist non-secret facts needed to understand a completed proof."""
     if not isinstance(value, dict):
         raise ReceiptError("persistence-proof-receipt-context-invalid")
-    if proof_type == "migration":
+    if proof_type in {"administration", "migration"}:
         allowed = {"completion_deadline_seconds", "completion_duration_seconds"}
         if set(value) != allowed or any(type(value[key]) is not int or value[key] < 0 for key in allowed):
             raise ReceiptError("persistence-proof-receipt-context-invalid")

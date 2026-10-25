@@ -1,0 +1,30 @@
+[
+  {
+    "ParameterKey": "ClusterArn",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ServiceName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "Memory",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "FoundationStackName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "Cpu",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "DesiredCount",
+    "ParameterValue": "0"
+  },
+  {
+    "ParameterKey": "ImageUri",
+    "UsePreviousValue": true
+  }
+]

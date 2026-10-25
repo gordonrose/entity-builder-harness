@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.workflows.chat-refresh-from-main
-  version: 1
+  version: 2
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-25"
   layer: 00.chat
   domain: main-refresh
   disciplines:
@@ -139,8 +139,9 @@ The classifier reports state; the workflow decides what is allowed.
   session log. Preserve the session log. If the incoming `main` overlap
   includes the current session log, stop.
 - `repo-work`: dirty paths include normal repository work. Create a governed
-  checkpoint commit before refresh if the user approves. Do not stash by
-  default.
+  checkpoint commit before refresh if the user approves. If a proven baseline
+  failure prevents the first checkpoint, the bounded preserved-replay path
+  below may apply. Do not stash by default.
 - `unsupported-dirty`: stop. The workflow does not own this recovery.
 
 ## Checkpoint And Rehearsed Refresh
@@ -207,6 +208,71 @@ refresh should be rehearsed before mutating the active chat worktree.
    the preflight branch, or apply the refresh while stopped.
 7. After applying the refresh, run the relevant layer checks before any task commit or
    promotion to `main`.
+
+## Preserved Replay Before The First Task Commit
+
+This narrow recovery applies only when the current chat has no task commits,
+all approved task changes are staged, no unstaged or untracked non-ignored files
+remain, and its HEAD is an ancestor of a pinned accepted `main`/remote-main SHA.
+Independent evidence must identify a pre-existing baseline gate failure; accepted
+incoming work or a separately approved focused correction must address it.
+Existing approval must cover writes, main integration and that correction.
+This path preserves the same chat branch/worktree and does not waive any gate.
+
+<!-- deterministic-check: allow reason="the approved ephemeral recovery helper verifies exact refs, NUL-delimited path scope, hashes, clean three-way replay and restored blobs; existing refresh/import commands enforce clean targets" -->
+1. Freeze task writers. Record the original branch, HEAD, accepted incoming SHA,
+   session-log path/ownership and exact NUL-delimited staged file list. Confirm
+   `git merge-base --is-ancestor <old-head> <incoming-sha>`, no unresolved index
+   entries, no unstaged/untracked files, and explicit ownership of every path.
+   Only regular file paths and recorded deletions are supported; reject broad
+   directories, symlinks, submodules, renames and unexplained overlaps.
+2. Before changing work, create a unique durable private export using
+   `scripts/00.chat/export/worktree-diff/script.sh --base <old-head> --output <new-zip>`.
+   Preserve the binary full-index staged patch, raw index, status and path list
+   alongside it. Verify archive readability, file modes/content, deletion
+   records and SHA-256 hashes against the live worktree/index. Do not overwrite
+   an earlier preservation copy. Keep required ignored evidence separately.
+3. Rehearse replay on the exact incoming SHA, using either a detached temporary
+   worktree or a new temporary `GIT_INDEX_FILE`: `git read-tree <incoming-sha>`,
+   `git apply --cached --3way <saved-binary-patch>`, verify `git ls-files -u` is
+   empty, then `git write-tree`. A replay conflict stops this route; do not
+   force, omit or resolve hunks here. Materialize only the saved task paths from
+   the reviewed tree into a durable replay directory, preserving blob bytes,
+   executable modes and deletions. Verify every replay path against that tree.
+   Unchanged incoming paths must match the accepted tree exactly; every overlap
+   must preserve both independently reviewed changes. Never copy an old whole
+   file over incoming accepted edits. The replay session log must still name
+   the original chat branch/worktree, not the temporary replay location.
+4. Recheck the pinned refs, complete path list, status, index and file hashes
+   immediately before release; any writer drift stops recovery. Only after both
+   preservation copies are independently verified, temporarily restore those
+   exact saved paths with `git restore --source=<old-head> --staged --worktree --
+   <explicit-paths>`. This releases the worktree for maintenance while retaining
+   verified task copies. Require a clean worktree; never use reset, stash, clean,
+   force operations, or modify any path outside that recorded set.
+5. Run the existing clean rehearsal/apply commands against the pinned incoming
+   SHA. Verify the rehearsed tree equals that accepted tree and its ancestry
+   includes the old HEAD; no task content belongs in this maintenance merge.
+   Use the absolute preserved session log for audit while its new file is
+   temporarily absent. This recovery's maintenance checks are preservation,
+   ancestry, exact tree identity and the existing refresh script checks; the
+   previously failed task gates remain pending, with their failure evidence.
+6. Restore only the saved task paths through
+   `scripts/00.chat/recovery/import-active-paths-to-chat-worktree/script.sh`,
+   passing the explicit replay directory and its absolute session-log path.
+   The helper requires the original recorded chat worktree to be clean and
+   stages the imported paths. Verify its branch/HEAD, exact staged path set,
+   blob/mode identities against the replay tree and zero unstaged/untracked
+   differences. Apply any separately approved baseline correction only after
+   this accepted-byte intake, then run every original mandatory task gate.
+   No task commit or promotion is allowed until those gates pass.
+
+Record the old/incoming/promoted SHAs, archive/replay locations and hashes,
+reviewed overlaps, check evidence and restored session ownership. Keep failed
+check evidence and preservation copies; this route grants no cleanup authority.
+If any check or import fails, stop its dependants, preserve all copies and report
+exact remaining state. No history rewrite, protected-file repair, unrelated-work
+change or new session/worktree ownership is implied by this recovery.
 
 ## Recommended Active-Branch Flow
 

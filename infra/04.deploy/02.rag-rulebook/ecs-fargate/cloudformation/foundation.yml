@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Foundation resources for the RAG rulebook staging ECS Fargate service.
+Description: Retired RAG staging foundation; retained for governed teardown only.
 
 Parameters:
   EnvironmentName:
@@ -40,6 +40,8 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref RepositoryName
+      # Explicitly authorised retirement includes all image digests.
+      EmptyOnDelete: true
       ImageScanningConfiguration:
         ScanOnPush: true
       ImageTagMutability: IMMUTABLE
@@ -64,12 +66,17 @@ Resources:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       LogGroupName: /aws/ecs/rag-rulebook-staging
       RetentionInDays: !Ref LogRetentionDays
 
   ServiceTokenSecret:
     Type: AWS::SecretsManager::Secret
+    # Schedule deletion separately after stack deletion, with recovery.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       Name: rag-rulebook/staging/service-token
       Description: Bearer token for the staging RAG rulebook API until Cognito auth is implemented.

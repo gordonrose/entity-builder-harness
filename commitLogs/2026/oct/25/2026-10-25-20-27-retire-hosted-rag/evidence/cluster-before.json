@@ -1,0 +1,19 @@
+{
+  "clusters": [
+    {
+      "clusterArn": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
+      "clusterName": "kanbien-staging",
+      "status": "ACTIVE",
+      "registeredContainerInstancesCount": 0,
+      "runningTasksCount": 2,
+      "pendingTasksCount": 0,
+      "activeServicesCount": 4,
+      "statistics": [],
+      "tags": [],
+      "settings": [],
+      "capacityProviders": [],
+      "defaultCapacityProviderStrategy": []
+    }
+  ],
+  "failures": []
+}

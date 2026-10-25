@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Bootstrap GitHub Actions OIDC deployment role for the RAG rulebook staging service.
+
+Parameters:
+  GitHubRepository:
+    Type: String
+    Default: gordonrose/entity-builder-harness
+    AllowedPattern: "^[^/ ]+/[^/ ]+$"
+  GitHubEnvironment:
+    Type: String
+    Default: staging
+  DeployRoleName:
+    Type: String
+    Default: github-rag-rulebook-staging-deploy
+  ExistingOidcProviderArn:
+    Type: String
+    Default: ""
+    Description: Optional existing token.actions.githubusercontent.com OIDC provider ARN.
+
+Conditions:
+  CreateOidcProvider: !Equals [!Ref ExistingOidcProviderArn, ""]
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Condition: CreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+
+
+Outputs:
+  OidcProviderArn:
+    Description: OIDC provider ARN used by the deployment role.
+    Value: !If
+      - CreateOidcProvider
+      - !Ref GitHubOidcProvider
+      - !Ref ExistingOidcProviderArn
+

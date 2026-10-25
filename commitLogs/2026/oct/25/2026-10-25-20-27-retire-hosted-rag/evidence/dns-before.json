@@ -1,0 +1,11 @@
+[
+  {
+    "Name": "rag.kanbien.com.",
+    "Type": "A",
+    "AliasTarget": {
+      "HostedZoneId": "Z32O12XQLNTSW2",
+      "DNSName": "kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com.",
+      "EvaluateTargetHealth": true
+    }
+  }
+]

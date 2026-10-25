@@ -44,6 +44,9 @@ SERVICE = "kanbien-core-platform-core-server-persistence"
 DATABASE = "kanbien-core-platform-persistence"
 LOG_GROUP = "/aws/ecs/kanbien-core-platform"
 RECORD = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/accepted-release.yml"
+# The collector and retained-receipt validator use one target-owned durable
+# evidence root.  Tests and controllers must not infer a second location.
+EVIDENCE_ROOT = RECORD.parent
 TASK_ARN = re.compile(rf"^arn:aws:ecs:{REGION}:{ACCOUNT}:task/{CLUSTER}/[0-9a-f]{{32}}$")
 SNAPSHOT = re.compile(r"^kanbien-core-platform-persistence-recovery-[0-9]{8}(?:-[a-z0-9]{1,8})?$")
 TASKS: dict[str, dict[str, Any]] = {}
@@ -51,6 +54,83 @@ TASKS: dict[str, dict[str, Any]] = {}
 
 class EvidenceFailure(Exception):
     pass
+
+
+def succession_module():
+    """Load the one generic release-succession authority; do not fork it."""
+    path = ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+    spec = importlib.util.spec_from_file_location("release_succession", path)
+    value = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(value)
+    return value
+
+
+def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]], accepted_at: str) -> tuple[Path, dict[str, Any]]:
+    """Build, but do not publish, a succession-compatible candidate record.
+
+    Publishing remains the generic succession controller's responsibility.  A
+    candidate is bound to the two target-owned contracts and hashes of the
+    already validated retained receipts, so a later acceptance cannot silently
+    substitute proof files or contract revisions.
+    """
+    succession = succession_module()
+    source_revision = package.get("source_revision")
+    image_digest = package.get("image_digest")
+    if not isinstance(source_revision, str) or not re.fullmatch(r"[a-f0-9]{40}", source_revision) or not isinstance(image_digest, str) or re.fullmatch(r"sha256:[a-f0-9]{64}", image_digest) is None:
+        raise EvidenceFailure("acceptance-evidence-package-receipt-invalid")
+    receipt_set: dict[str, dict[str, str]] = {}
+    for name, binding in proofs.items():
+        relative = binding.get("receipt") if isinstance(binding, dict) else None
+        if not isinstance(name, str) or not name or not isinstance(relative, str):
+            raise EvidenceFailure("acceptance-evidence-proof-reference-invalid")
+        path = (ROOT / relative).resolve()
+        try:
+            path.relative_to(EVIDENCE_ROOT.resolve() / "proof-receipts")
+            raw = path.read_bytes()
+        except (OSError, ValueError):
+            raise EvidenceFailure("acceptance-evidence-proof-reference-invalid") from None
+        receipt_set[name] = {"path": relative, "sha256": succession.sha256_bytes(raw)}
+    if not receipt_set:
+        raise EvidenceFailure("acceptance-evidence-proof-reference-invalid")
+    contract_paths = {
+        "configuration_contract": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "permission_contract": "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+    }
+    contracts: dict[str, dict[str, str]] = {}
+    for key, relative in contract_paths.items():
+        try:
+            contracts[key] = {"path": relative, "sha256": succession.sha256_bytes((ROOT / relative).read_bytes())}
+        except OSError as error:
+            raise EvidenceFailure("acceptance-evidence-contract-unreadable") from error
+    identity = {
+        "target": TARGET,
+        "scope": SCOPE,
+        "source_revision": source_revision,
+        "image_digest": image_digest,
+        **contracts,
+        "proof_set_sha256": succession.sha256_bytes(succession.canonical(receipt_set)),
+    }
+    value: dict[str, Any] = {
+        "schema": succession.CANDIDATE_SCHEMA,
+        "target": TARGET,
+        "scope": SCOPE,
+        "status": "verified",
+        "release": {
+            "id": succession.release_id(identity),
+            "source_revision": source_revision,
+            "image_digest": image_digest,
+            **contracts,
+            "proof_set_sha256": identity["proof_set_sha256"],
+        },
+        "proof": {"accepted_at": accepted_at, "receipt_count": len(receipt_set)},
+        "proof_set": receipt_set,
+    }
+    try:
+        succession.candidate_identity(value)
+    except succession.SuccessionFailure as error:
+        raise EvidenceFailure("acceptance-evidence-candidate-record-invalid") from error
+    return EVIDENCE_ROOT / succession.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml", value
 
 
 def report(verdict: str, *codes: str) -> int:
@@ -124,9 +204,9 @@ def contract_deadlines() -> dict[str, int]:
             continue
         completion = workload.get("completion")
         value = completion.get("deadline_seconds") if isinstance(completion, dict) else None
-        if workload["id"] in {"private-release-verifier", "persistence-migration", "persistence-restoration-verifier"} and type(value) is int and value > 0:
+        if workload["id"] in {"private-release-verifier", "persistence-migration", "persistence-administration", "persistence-restoration-verifier"} and type(value) is int and value > 0:
             deadlines[workload["id"]] = value
-    if set(deadlines) != {"private-release-verifier", "persistence-migration", "persistence-restoration-verifier"}:
+    if set(deadlines) != {"private-release-verifier", "persistence-migration", "persistence-administration", "persistence-restoration-verifier"}:
         raise EvidenceFailure("acceptance-evidence-scope-contract-invalid")
     return deadlines
 
@@ -275,7 +355,13 @@ def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, 
     if set(result) != set(required):
         raise EvidenceFailure("acceptance-evidence-proof-receipt-set-invalid")
     observed: dict[str, dict[str, Any]] = {}
-    controllers = {"migration": "run-migration", "verifier": "verify-candidate", "restore": "rehearse-isolated-database-restore", "server-replacement": "rehearse-server-replacement"}
+    controllers = {
+        "administration": "run-administration",
+        "migration": "run-migration",
+        "verifier": "verify-candidate",
+        "restore": "rehearse-isolated-database-restore",
+        "server-replacement": "rehearse-server-replacement",
+    }
     operations = {name: proof["operation"] for name, proof in route_contract()["proofs"].items()}
     for name, (kind, family, expected_digest, code, workload) in required.items():
         item = result[name]

@@ -4,7 +4,7 @@ id: rag-rulebook.plan.repo
 version: 1
 status: active
 created_on: "2026-06-25"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: rulebook
 disciplines:
@@ -22,6 +22,14 @@ used_by:
   path: .agentic/02.rag-rulebook/workflows/default.md
 -->
 # RAG/Rulebook Repo Plan
+
+## Current Deployment Status (2026-10-25)
+
+The hosted staging deployment at `rag.kanbien.com` is retired. Current agents
+must use local context retrieval with `RAG_RULEBOOK_PROVIDER=local`, as described
+in `scripts/02.rag-rulebook/query-context/README.md`. The hosted milestones
+below are historical implementation context and do not authorise redeployment.
+Local code, corpora, runtime builds, and context queries remain supported.
 
 ## Goal
 

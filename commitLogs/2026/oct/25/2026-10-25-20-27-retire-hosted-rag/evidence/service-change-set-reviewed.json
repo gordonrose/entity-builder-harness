@@ -1,0 +1,94 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Service",
+        "PhysicalResourceId": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging",
+        "ResourceType": "AWS::ECS::Service",
+        "Replacement": "False",
+        "Scope": [
+          "Properties"
+        ],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "DesiredCount",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "ParameterReference",
+            "CausingEntity": "DesiredCount"
+          },
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "DesiredCount",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Dynamic",
+            "ChangeSource": "DirectModification"
+          }
+        ]
+      }
+    }
+  ],
+  "ChangeSetName": "rag-retire-stop-20261025-a1",
+  "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/rag-retire-stop-20261025-a1/44643ad4-f4bb-4e75-970d-85fa32e028d1",
+  "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-service/f5d36e60-754a-11f1-8ff0-06a67858397b",
+  "StackName": "rag-rulebook-staging-service",
+  "Description": null,
+  "Parameters": [
+    {
+      "ParameterKey": "ClusterArn",
+      "ParameterValue": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging"
+    },
+    {
+      "ParameterKey": "ServiceName",
+      "ParameterValue": "rag-rulebook-staging"
+    },
+    {
+      "ParameterKey": "Memory",
+      "ParameterValue": "512"
+    },
+    {
+      "ParameterKey": "FoundationStackName",
+      "ParameterValue": "rag-rulebook-staging-foundation"
+    },
+    {
+      "ParameterKey": "Cpu",
+      "ParameterValue": "256"
+    },
+    {
+      "ParameterKey": "DesiredCount",
+      "ParameterValue": "0"
+    },
+    {
+      "ParameterKey": "ImageUri",
+      "ParameterValue": "337159794548.dkr.ecr.eu-west-1.amazonaws.com/rag-rulebook-service@sha256:b58ee3a5ef2bedbb661bdfb4ba9f051ecc463f2569d57e806f00859f7ddca3cb"
+    }
+  ],
+  "CreationTime": "2026-10-25T20:34:57.674000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [
+    "CAPABILITY_NAMED_IAM"
+  ],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null,
+  "StackDriftStatus": null,
+  "DeploymentMode": null,
+  "DeploymentConfig": {
+    "Mode": "STANDARD",
+    "DisableRollback": false
+  }
+}

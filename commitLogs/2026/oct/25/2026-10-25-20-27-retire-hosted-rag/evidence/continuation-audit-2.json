@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-25T21:05:35.175757+00:00",
+  "previousGoalTurn": "progress: cloud retirement, local proof, reviewed implementation and durable preservation completed",
+  "continuationOutcome": "accepted upstream advanced; renewed proposal review, protected approval still pending",
+  "consecutiveBlockedGoalTurns": 2,
+  "head": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+  "acceptedMain": "f02f6fc438e471c3e81fde3925ac3c3079a63077",
+  "activeRagTaskDefinitionCount": 0,
+  "pendingDeletionTaskDefinitionRevisions": [
+    1,
+    2,
+    3
+  ],
+  "protectedSourcesModified": false,
+  "originalProposal": "superseded for current upstream; retained as history",
+  "currentProposal": "/home/owner/projects/.chat-preservation/rag-retirement-20261025T205716Z/proposed-protected-guard-correction-f02f6fc4/three-reviewed-hashes.patch",
+  "isolatedRecoveryCasesPassed": 27,
+  "realDockerCalls": 0,
+  "userApprovalReceived": false,
+  "committedMergedPushed": false
+}

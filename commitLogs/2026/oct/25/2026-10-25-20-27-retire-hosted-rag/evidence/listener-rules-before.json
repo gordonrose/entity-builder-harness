@@ -1,0 +1,132 @@
+{
+  "Rules": [
+    {
+      "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/c919a1528f7565d3",
+      "Priority": "10",
+      "Conditions": [
+        {
+          "Field": "host-header",
+          "Values": [
+            "kanbien.com"
+          ],
+          "HostHeaderConfig": {
+            "Values": [
+              "kanbien.com"
+            ]
+          }
+        }
+      ],
+      "Actions": [
+        {
+          "Type": "redirect",
+          "RedirectConfig": {
+            "Protocol": "HTTPS",
+            "Port": "#{port}",
+            "Host": "www.kanbien.com",
+            "Path": "/#{path}",
+            "Query": "#{query}",
+            "StatusCode": "HTTP_301"
+          }
+        }
+      ],
+      "IsDefault": false,
+      "Transforms": []
+    },
+    {
+      "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/bdb7877508883aeb",
+      "Priority": "20",
+      "Conditions": [
+        {
+          "Field": "host-header",
+          "Values": [
+            "staging.platform.kanbien.com"
+          ],
+          "HostHeaderConfig": {
+            "Values": [
+              "staging.platform.kanbien.com"
+            ]
+          }
+        }
+      ],
+      "Actions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+          "ForwardConfig": {
+            "TargetGroups": [
+              {
+                "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+                "Weight": 1
+              }
+            ],
+            "TargetGroupStickinessConfig": {
+              "Enabled": false
+            }
+          }
+        }
+      ],
+      "IsDefault": false,
+      "Transforms": []
+    },
+    {
+      "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/c6bd685ed248975f",
+      "Priority": "40",
+      "Conditions": [
+        {
+          "Field": "host-header",
+          "Values": [
+            "rag.kanbien.com"
+          ],
+          "HostHeaderConfig": {
+            "Values": [
+              "rag.kanbien.com"
+            ]
+          }
+        }
+      ],
+      "Actions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+          "ForwardConfig": {
+            "TargetGroups": [
+              {
+                "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+                "Weight": 1
+              }
+            ],
+            "TargetGroupStickinessConfig": {
+              "Enabled": false
+            }
+          }
+        }
+      ],
+      "IsDefault": false,
+      "Transforms": []
+    },
+    {
+      "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/2a19e2d4d6c8870c",
+      "Priority": "default",
+      "Conditions": [],
+      "Actions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+          "ForwardConfig": {
+            "TargetGroups": [
+              {
+                "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+                "Weight": 1
+              }
+            ],
+            "TargetGroupStickinessConfig": {
+              "Enabled": false
+            }
+          }
+        }
+      ],
+      "IsDefault": true,
+      "Transforms": []
+    }
+  ]
+}

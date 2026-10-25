@@ -11,7 +11,7 @@ set -euo pipefail
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Govern bounded runtime PostgreSQL credential rotation and revocation recovery rehearsal.
+#   purpose: Govern bounded runtime PostgreSQL IAM-identity revocation and recovery rehearsal; normal token expiry does not cause workload replacement.
 #   portability: { class: internal, targets: [] }
 #   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:

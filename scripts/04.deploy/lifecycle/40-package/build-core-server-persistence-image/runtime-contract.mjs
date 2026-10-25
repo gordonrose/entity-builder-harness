@@ -22,6 +22,7 @@ export const runtimeEntrypoints = {
   "kanbien-core-server-persistence.main": "runKanbienCoreServerPersistenceMain",
   "kanbien-core-server-persistence-verifier.main": "runKanbienCoreServerPersistenceVerifier",
   "kanbien-core-server-persistence-migration.main": "runKanbienCoreServerPersistenceMigration",
+  "kanbien-core-server-persistence-administration.main": "runKanbienCoreServerPersistenceAdministration",
   "kanbien-core-server-persistence-restore-verifier.main": "runKanbienCoreServerPersistenceRestoreVerifier",
 };
 export function wrapperSource(entry, exported) {

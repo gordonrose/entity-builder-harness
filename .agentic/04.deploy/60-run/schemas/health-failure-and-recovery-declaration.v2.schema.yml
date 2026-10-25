@@ -4,7 +4,7 @@
 #   version: 8
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -147,6 +147,7 @@ migration_execution:
     - transaction_boundary
     - interruption_policy
     - unknown_outcome_policy
+    - fresh_state_observation
     - compatibility_strategy
     - replay_handling
   credential_access_class: migration
@@ -155,6 +156,14 @@ migration_execution:
   transaction_boundary: per-migration-atomic-where-supported
   interruption_policy: do-not-retry-uncertain-outcome
   unknown_outcome_policy: block-release-require-fresh-state-observation
+  fresh_state_observation:
+    required_fields: [workload, operation, replay_permitted_result, applied_state_result, receipt]
+    workload_type: run-to-completion-task
+    credential_access_class: administrative
+    operation: observe-migration-state
+    replay_permitted_result: PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED
+    applied_state_result: PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED
+    receipt: durable-task-receipt-required-before-retry
   compatibility_strategy: expand-deploy-verify-contract-later
   replay_handling:
     required_fields: [already_applied_checksum_match, checksum_mismatch, concurrent_executor]

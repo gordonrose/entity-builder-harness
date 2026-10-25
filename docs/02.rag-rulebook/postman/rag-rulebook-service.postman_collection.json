@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "5f6f7253-1da2-4b68-a0e8-8ec45625d3d8",
     "name": "RAG Rulebook Service",
-    "description": "Smoke-test collection for the hosted RAG/rulebook service. Keep ragToken local to Postman; do not commit real tokens.",
+    "description": "Smoke-test collection for the local RAG/rulebook service. Keep ragToken local to Postman; do not commit real tokens.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -251,7 +251,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://rag.kanbien.com",
+      "value": "http://127.0.0.1:3000",
       "type": "string"
     },
     {

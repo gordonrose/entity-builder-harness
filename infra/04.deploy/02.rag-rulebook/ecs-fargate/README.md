@@ -4,7 +4,7 @@ id: infra.04-deploy.02-rag-rulebook.ecs-fargate.readme
 version: 1
 status: active
 created_on: "2026-06-30"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -26,40 +26,15 @@ used_by:
 -->
 # ECS Fargate
 
-This directory will own ECS Fargate implementation artifacts for the
-RAG/rulebook service.
+The hosted staging RAG target is retired. Local harness retrieval remains
+supported and explicitly selects `RAG_RULEBOOK_PROVIDER=local`.
 
-Future files in this directory should define or reference:
+`cloudformation/` preserves the zero-task service configuration, safe foundation
+teardown policies, and ownership of the shared GitHub OIDC provider. The staging
+readiness manifest marks this target retired; the old deployment workflow is
+inert. Do not recreate it as a fallback for local retrieval.
 
-- ECS cluster, service, task definition, and deployment controller
-- ECR repository and immutable image digest input
-- task execution role and task role
-- VPC, subnets, security groups, target group, listener, TLS certificate, and
-  DNS boundary
-- CloudWatch logs, metrics, alarms, and service health checks
-- rollback target and rollback authority
-- cost, capacity, quota, and rate-limit controls
-
-Do not add a deployable AWS target here unless the deploy-readiness checker can
-validate its manifest and block unsafe execution.
-
-## Current MSP Target
-
-The current staging target is defined under `cloudformation/` and reuses the
-existing `kanbien-staging-alb` HTTPS boundary with a new host rule for
-`rag.kanbien.com`.
-
-The split is:
-
-- `cloudformation/github-oidc-bootstrap.yml`: one-time GitHub OIDC deployment
-  role bootstrap.
-- `cloudformation/foundation.yml`: ECR, log group, service token secret, task
-  roles, target group, ALB host rule, and Route53 alias.
-- `cloudformation/service.yml`: immutable image-digest ECS task definition and
-  Fargate service.
-
-The staging deploy-readiness manifest is:
-
-```bash
-infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml
-```
+Use the [CloudFormation retirement notes](cloudformation/README.md) and
+[governed retirement procedure](../../../../.agentic/aws/workflows/deploy-rag-rulebook-service.md#hosted-staging-retirement).
+Historical deployment instructions and resource evidence remain in Git history
+and commit logs.

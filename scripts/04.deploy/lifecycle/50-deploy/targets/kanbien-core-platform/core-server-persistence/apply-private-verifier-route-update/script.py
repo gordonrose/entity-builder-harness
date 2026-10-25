@@ -21,7 +21,7 @@ def route_update_reviewable(change: object, stack_status: object, name: str, dig
     if not isinstance(change, dict) or stack_status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}: return False
     if not (change.get("ChangeSetName") == name or (isinstance(change.get("ChangeSetName"), str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/", 1)[-1].split("/", 1)[0] == name)) or change.get("Status") != "CREATE_COMPLETE" or change.get("ChangeSetType") not in {None, "UPDATE"}: return False
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if parameters.get("ImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision: return False
+    if parameters.get("ImageDigest") != digest or parameters.get("SupportImageDigest") != digest or parameters.get("RestoreVerifierImageDigest") != digest or parameters.get("SourceRevision") != revision: return False
     changes = [item.get("ResourceChange", {}) for item in change.get("Changes", []) if isinstance(item, dict)]
     return len(changes) == 1 and changes[0].get("Action") == "Add" and changes[0].get("ResourceType") == "AWS::EC2::SecurityGroupEgress" and changes[0].get("LogicalResourceId") == "VerifierEgressToServer"
 
@@ -45,7 +45,7 @@ def reviewed_change_set(prepare: object, name: str, stack_status: str, digest: s
     return None, last_code
 
 def reconcile(prepare, name, digest, revision):
-    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision))
+    verdict, code = prepare.observe_update(name, {"ImageDigest": digest, "SupportImageDigest": digest, "RestoreVerifierImageDigest": digest, "SourceRevision": revision}, lambda change: route_update_reviewable(change, "UPDATE_COMPLETE", name, digest, revision))
     return report("updated" if verdict == "complete" else verdict, code, facts={"change_set": name, "candidate_image_digest": digest})
 
 def main() -> int:
@@ -67,6 +67,7 @@ def main() -> int:
     ok, stack, code = prepare.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
     status = stack.get("Stacks", [{}])[0].get("StackStatus") if ok and isinstance(stack, dict) else None
     if not ok or status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}: return report("blocked", code if not ok else "persistence-private-route-update-stack-not-healthy")
+    current_parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Stacks", [{}])[0].get("Parameters", []) if isinstance(item, dict)}
     ok, service, code = prepare.aws("ecs", "describe-services", "--cluster", prepare.CLUSTER if hasattr(prepare, "CLUSTER") else "kanbien-core-platform", "--services", "kanbien-core-platform-core-server-persistence")
     services = service.get("services", []) if ok and isinstance(service, dict) else []
     if len(services) != 1 or not isinstance(services[0], dict) or services[0].get("desiredCount") != 1 or services[0].get("runningCount") != 1: return report("blocked", "persistence-private-route-update-service-not-healthy")
@@ -85,7 +86,7 @@ def main() -> int:
     if change.get("ExecutionStatus") != "AVAILABLE": return reconcile(prepare, name, digest, revision)
     expected = prepare.candidate_parameters(foundation, infrastructure, receipt)
     actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if actual != expected: return report("blocked", "persistence-update-live-parameters-mismatch")
+    if not prepare.update_parameters_match(actual, expected, current_parameters): return report("blocked", "persistence-update-live-parameters-mismatch")
     ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok: return report("uncertain", code, facts={"change_set": name})
     return reconcile(prepare, name, digest, revision)

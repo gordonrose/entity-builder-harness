@@ -34,7 +34,7 @@ if (typeof buildOutput !== "string" || buildOutput.length === 0) {
 const program = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.js")));
 const serverMain = await import(pathToFileUrl(join(buildOutput, "platform/server/src/main.js")));
 const verifier = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-verifier.main.js")));
-const migration = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.js")));
+const identityLifecycle = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runtime-credential.js")));
 const releaseIdentity = { sourceCommitSha: "local-persistence-composition-proof-2026.10.23" };
 const recordId = "core-persistence-acceptance-0001";
 const factDigest = "a".repeat(64);
@@ -42,7 +42,7 @@ const factDigest = "a".repeat(64);
 await proveUnavailableDependency();
 await proveAvailableDependency();
 await proveHealthVerifierModes();
-await proveRuntimeCredentialRevocationOperation();
+await proveRuntimeIdentityRevocationAndRestoration();
 
 console.log("Core-server persistence composition local runtime proof passed.");
 
@@ -97,13 +97,19 @@ async function proveHealthVerifierModes() {
   }
 }
 
-async function proveRuntimeCredentialRevocationOperation() {
-  if (migration.runtimeCredentialOperation(undefined) !== "apply" || migration.runtimeCredentialOperation("rotate") !== "rotate" || migration.runtimeCredentialOperation("revoke") !== "revoke" || migration.runtimeCredentialOperation("prove-effective-privilege") !== "prove-effective-privilege" || migration.runtimeCredentialOperation("unsafe") !== undefined) throw new Error("Migration credential operation parsing is not fail-closed.");
+async function proveRuntimeIdentityRevocationAndRestoration() {
   const queries = [];
-  await migration.revokeRuntimeAccess({ query: async (statement) => { queries.push(statement); return { rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: true }] : [] }; } }, "core_runtime");
-  if (queries.length !== 2 || !queries[0].text.includes('ALTER ROLE "core_runtime" NOLOGIN') || !queries[1].text.includes("pg_terminate_backend(pid) AS terminated") || JSON.stringify(queries).includes("password")) throw new Error("Runtime credential revocation did not use the bounded no-login and session-termination sequence.");
-  await migration.revokeRuntimeAccess({ query: async () => ({ rows: [] }) }, "core_runtime");
-  await migration.revokeRuntimeAccess({ query: async (statement) => ({ rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: false }] : [] }) }, "core_runtime").then(() => { throw new Error("Runtime credential revocation accepted an unconfirmed termination."); }, () => undefined);
+  await identityLifecycle.revokeRuntimeAccess({ query: async (statement) => { queries.push(statement); return { rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: true }] : [] }; } }, "core_runtime");
+  if (queries.length !== 3 || !queries[0].text.includes('REVOKE rds_iam FROM "core_runtime"') || !queries[1].text.includes('ALTER ROLE "core_runtime" NOLOGIN') || !queries[2].text.includes("pg_terminate_backend(pid) AS terminated") || /password|scram/i.test(JSON.stringify(queries))) throw new Error("Runtime identity revocation did not use the bounded IAM-membership, no-login, and session-termination sequence.");
+  await identityLifecycle.revokeRuntimeAccess({ query: async () => ({ rows: [] }) }, "core_runtime");
+  await identityLifecycle.revokeRuntimeAccess({ query: async (statement) => ({ rows: statement.text.includes("pg_terminate_backend") ? [{ terminated: false }] : [] }) }, "core_runtime").then(() => { throw new Error("Runtime identity revocation accepted an unconfirmed termination."); }, () => undefined);
+  const restored = [];
+  let restoredLogin = false;
+  await identityLifecycle.restoreRuntimeIamAccess({ query: async (statement) => { restored.push(statement); if (statement.text === 'ALTER ROLE "core_runtime" LOGIN') restoredLogin = true; return { rows: statement.text.startsWith("SELECT pg_has_role") ? [{ member: true }] : [{ exists: true, can_login: restoredLogin, superuser: false, create_role: false, create_database: false, replication: false, bypass_rls: false, inherit: false }] }; } }, "core_runtime");
+  if (restored.length !== 5 || !restored[0].text.startsWith("SELECT EXISTS") || restored[0].values?.[0] !== "core_runtime" || restored[1].text !== 'ALTER ROLE "core_runtime" LOGIN' || !restored[2].text.startsWith("SELECT EXISTS") || !restored[3].text.includes('GRANT rds_iam TO "core_runtime"') || !restored[4].text.startsWith("SELECT pg_has_role") || /password|scram/i.test(JSON.stringify(restored))) throw new Error("Runtime identity restoration did not verify the bounded role before enabling login and restoring IAM membership.");
+  const widened = [];
+  await identityLifecycle.restoreRuntimeIamAccess({ query: async (statement) => { widened.push(statement); return { rows: [{ exists: true, can_login: false, superuser: false, create_role: false, create_database: true, replication: false, bypass_rls: false, inherit: false }] }; } }, "core_runtime").then(() => { throw new Error("Runtime identity restoration enabled a widened role."); }, () => undefined);
+  if (widened.length !== 1 || !widened[0].text.startsWith("SELECT EXISTS")) throw new Error("Runtime identity restoration did not stop before enabling a widened role.");
 }
 
 async function captureConsole(run) {

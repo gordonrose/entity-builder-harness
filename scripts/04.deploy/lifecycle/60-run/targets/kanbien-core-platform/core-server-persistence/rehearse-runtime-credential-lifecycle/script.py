@@ -1,25 +1,22 @@
 #!/usr/bin/env python3
-"""Govern one bounded runtime PostgreSQL credential lifecycle rehearsal."""
+"""Govern one bounded runtime IAM-access revocation and recovery rehearsal.
+
+The directory keeps its historical name so accepted route references remain
+resolvable.  It no longer rotates, reads, writes, or transports a long-lived
+database credential.  Runtime access is restored by the RDS IAM role and a
+new task.
+"""
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import json
-import os
-import stat
 import subprocess
-import tempfile
-import uuid
-import sys
-import re
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[8]
-STACK = "kanbien-core-platform-core-server-persistence"
-RUNTIME_SECRET_OUTPUT = "RuntimeCredentialsSecretArn"
 CHILD_CHECKPOINT: dict[str, Any] | None = None
-SECRET_CHECKPOINT: dict[str, str] | None = None
 
 def module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -32,10 +29,7 @@ def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) ->
     if verdict == "blocked" and CHILD_CHECKPOINT is not None and CHILD_CHECKPOINT.get("verdict") in {"pending", "failed", "uncertain"}:
         verdict = CHILD_CHECKPOINT["verdict"]
         facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
-    if verdict in {"blocked", "uncertain", "pending", "failed"} and SECRET_CHECKPOINT is not None:
-        facts = {**(facts or {}), "secret_checkpoint": SECRET_CHECKPOINT}
-        if verdict == "blocked": verdict = "uncertain"
-    body: dict[str, object] = {"schema": "deploy/persistence-runtime-credential-lifecycle-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
+    body: dict[str, object] = {"schema": "deploy/persistence-runtime-identity-lifecycle-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts: body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
     return 0 if verdict in {"accepted", "prepared"} else 1
@@ -64,50 +58,9 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
     if not succeeded:
         observed = observed if isinstance(observed, dict) else {}
         raw = observed.get("facts") if isinstance(observed.get("facts"), dict) else {}
-        safe = {key: value for key, value in raw.items() if key in {"operation_id", "migration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
+        safe = {key: value for key, value in raw.items() if key in {"operation", "administration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
         CHILD_CHECKPOINT = {"command": path, "verdict": observed.get("verdict") if observed.get("verdict") in {"pending", "failed", "uncertain"} else "uncertain", "facts": safe}
     return body if succeeded and isinstance(body, dict) else None
-
-def outputs(prepare: Any) -> tuple[dict[str, str] | None, str]:
-    ok, data, code = prepare.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
-    stacks = data.get("Stacks") if ok and isinstance(data, dict) else None
-    if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict): return None, code if not ok else "persistence-credential-lifecycle-stack-outputs-unavailable"
-    values = {item.get("OutputKey"): item.get("OutputValue") for item in stacks[0].get("Outputs", []) if isinstance(item, dict) and isinstance(item.get("OutputKey"), str) and isinstance(item.get("OutputValue"), str)}
-    return values, "ok"
-
-def current_secret_version(prepare: Any, secret_arn: str) -> tuple[str | None, str]:
-    ok, data, code = prepare.aws("secretsmanager", "describe-secret", "--secret-id", secret_arn)
-    versions = data.get("VersionIdsToStages") if ok and isinstance(data, dict) else None
-    if not isinstance(versions, dict): return None, code if not ok else "persistence-credential-lifecycle-secret-metadata-unavailable"
-    current = [version for version, stages in versions.items() if isinstance(version, str) and isinstance(stages, list) and stages == ["AWSCURRENT"]]
-    return (current[0], "ok") if len(current) == 1 else (None, "persistence-credential-lifecycle-current-secret-version-ambiguous")
-
-def advance_secret(prepare: Any, secret_arn: str) -> tuple[str | None, str]:
-    global SECRET_CHECKPOINT
-    ok, generated, code = prepare.aws("secretsmanager", "get-random-password", "--password-length", "32", "--exclude-punctuation")
-    password = generated.get("RandomPassword") if ok and isinstance(generated, dict) else None
-    if not isinstance(password, str) or not password: return None, code if not ok else "persistence-credential-lifecycle-password-generation-unavailable"
-    path: str | None = None
-    try:
-        descriptor, path = tempfile.mkstemp(prefix="kanbien-runtime-credential-", suffix=".json")
-        os.fchmod(descriptor, stat.S_IRUSR | stat.S_IWUSR)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle: json.dump({"username": "core_runtime", "password": password}, handle, separators=(",", ":"))
-        operation_id = str(uuid.uuid4())
-        SECRET_CHECKPOINT = {"secret_operation_id": operation_id}
-        print(json.dumps({"verdict": "pending", "facts": SECRET_CHECKPOINT}), file=sys.stderr, flush=True)
-        try:
-            completed = subprocess.run(["aws", "secretsmanager", "put-secret-value", "--secret-id", secret_arn, "--client-request-token", operation_id, "--secret-string", f"file://{path}", "--profile", prepare.PROFILE, "--region", prepare.REGION, "--output", "json"], capture_output=True, text=True, timeout=30)
-        except subprocess.TimeoutExpired:
-            return None, "persistence-credential-lifecycle-secret-version-write-uncertain"
-        if completed.returncode != 0: return None, "persistence-credential-lifecycle-secret-version-write-failed"
-        try: response = json.loads(completed.stdout or "{}")
-        except json.JSONDecodeError: return None, "persistence-credential-lifecycle-secret-version-write-response-invalid"
-        version = response.get("VersionId") if isinstance(response, dict) else None
-        return (version, "ok") if version == operation_id else (None, "persistence-credential-lifecycle-secret-version-write-response-invalid")
-    finally:
-        if path is not None:
-            try: os.unlink(path)
-            except FileNotFoundError: pass
 
 def healthy(verify: str) -> bool:
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh", "--mode", verify, "--json") is not None
@@ -119,63 +72,39 @@ def administer(operation: str) -> bool:
 def replace(receipt: Path) -> bool:
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh", "--receipt", str(receipt), "--json") is not None
 
-def rotate_and_replace(prepare: Any, secret_arn: str, receipt: Path) -> tuple[str | None, str]:
-    version, code = advance_secret(prepare, secret_arn)
-    if version is None: return None, code
-    # An unconfirmed administration task may have changed the database role. Do not
-    # revert the secret automatically: block and require fresh observation.
-    if not administer("rotate-runtime"): return version, "persistence-credential-lifecycle-rotation-administration-not-confirmed"
-    if not replace(receipt): return version, "persistence-credential-lifecycle-rotation-replacement-not-confirmed"
-    if not healthy("health-ready") or not healthy("read"): return version, "persistence-credential-lifecycle-rotation-meaningful-operation-not-confirmed"
-    return version, "ok"
+def recover(receipt: Path) -> str:
+    """Restore only the bounded IAM identity after proven denied readiness."""
+    if not administer("restore-runtime"):
+        return "persistence-runtime-identity-recovery-not-confirmed"
+    if not replace(receipt):
+        return "persistence-runtime-identity-recovery-replacement-not-confirmed"
+    if not healthy("health-ready") or not healthy("read"):
+        return "persistence-runtime-identity-recovery-meaningful-operation-not-confirmed"
+    return "ok"
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation"); parser.add_argument("--secret-operation-id"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation", choices=("revoke-and-recover", "recover-after-revocation")); parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
-    if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover", "recover-after-revocation", "recover-secret", "reconcile-secret"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
+    if unknown or args.receipt is None or args.operation is None: return report("blocked", "persistence-runtime-identity-lifecycle-arguments-invalid")
     if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
     create = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)
-    if receipt is None or not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return report("blocked", "persistence-credential-lifecycle-preconditions-not-proven")
-    values, code = outputs(prepare); secret_arn = values.get(RUNTIME_SECRET_OUTPUT) if isinstance(values, dict) else None
-    if not isinstance(secret_arn, str) or not secret_arn: return report("blocked", code if values is None else "persistence-credential-lifecycle-runtime-secret-unavailable")
-    if args.operation == "reconcile-secret":
-        if not isinstance(args.secret_operation_id, str) or re.fullmatch(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", args.secret_operation_id) is None:
-            return report("blocked", "persistence-secret-reconciliation-operation-invalid")
-        version, code = current_secret_version(prepare, secret_arn)
-        if version != args.secret_operation_id:
-            return report("uncertain", "persistence-secret-reconciliation-not-current", facts={"secret_operation_id": args.secret_operation_id})
-        return report("prepared", "persistence-runtime-credential-secret-observed-migration-required", facts={"secret_operation_id": version})
-    if args.secret_operation_id is not None:
-        return report("blocked", "persistence-secret-reconciliation-operation-invalid")
-    prior_version, code = current_secret_version(prepare, secret_arn)
-    if prior_version is None: return report("blocked", code)
-    baseline_mode = "health-unready" if args.operation in {"recover-after-revocation", "recover-secret"} else "health-ready"
-    if not healthy(baseline_mode):
-        return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-proven" if baseline_mode == "health-unready" else "persistence-credential-lifecycle-baseline-health-not-proven")
-    if args.operation == "rotate":
-        version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
-        return report("accepted", "persistence-runtime-credential-rotation-proved", facts={"prior_secret_version": prior_version, "replacement_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "replacement_secret_version": version})
+    if receipt is None or not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return report("blocked", "persistence-runtime-identity-lifecycle-preconditions-not-proven")
     if args.operation == "recover-after-revocation":
-        # This continuation is intentionally distinct from revoke-and-recover:
-        # it may only follow freshly proved denied readiness and must never
-        # replay the destructive revocation migration.
         if not healthy("health-unready"):
-            return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-proven", facts={"prior_secret_version": prior_version})
-        version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
-        return report("accepted", "persistence-runtime-credential-recovery-proved", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
-    if args.operation == "recover-secret":
-        # This is deliberately a single, recorded mutation boundary.  The
-        # next governed action must reconcile a matching administrator rotation;
-        # callers must not issue another secret version as a retry.
-        version, code = advance_secret(prepare, secret_arn)
-        return report("prepared", "persistence-runtime-credential-secret-advanced-administration-required", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
-    if not administer("revoke-runtime"): return report("blocked", "persistence-credential-lifecycle-revocation-not-confirmed", facts={"prior_secret_version": prior_version})
-    if not replace(args.receipt) or not healthy("health-unready"): return report("blocked", "persistence-credential-lifecycle-revocation-denial-not-confirmed", facts={"prior_secret_version": prior_version})
-    version, code = rotate_and_replace(prepare, secret_arn, args.receipt)
-    return report("accepted", "persistence-runtime-credential-revocation-and-recovery-proved", facts={"prior_secret_version": prior_version, "recovery_secret_version": version}) if code == "ok" else report("blocked", code, facts={"prior_secret_version": prior_version, "recovery_secret_version": version})
+            return report("blocked", "persistence-runtime-identity-revocation-denial-not-proven")
+        code = recover(args.receipt)
+        return report("accepted", "persistence-runtime-identity-recovery-proved") if code == "ok" else report("blocked", code)
+    if not healthy("health-ready"):
+        return report("blocked", "persistence-runtime-identity-baseline-health-not-proven")
+    if not administer("revoke-runtime"):
+        return report("blocked", "persistence-runtime-identity-revocation-not-confirmed")
+    if not replace(args.receipt) or not healthy("health-unready"):
+        return report("blocked", "persistence-runtime-identity-revocation-denial-not-proven")
+    code = recover(args.receipt)
+    return report("accepted", "persistence-runtime-identity-revocation-and-recovery-proved") if code == "ok" else report("blocked", code)
 
 if __name__ == "__main__": raise SystemExit(main())
