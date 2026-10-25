@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-20
 latest_context_packet_id: packet.selector-fixture.0542d2100919bd68
 latest_context_packet_routing_summary: prompt=01.harness/execution/change-harness; shared and deploy owners applied per file
 latest_context_packet_at_utc: 2026-10-24T13:26:41Z
-latest_commit_at_utc: 2026-10-25T10:20:42Z
-latest_commit_sha: 171ea85eabea63eb51b967aac9d4a19f0c4ac82d
-chat_duration: 75475s (00:20:57:55)
+latest_commit_at_utc: 2026-10-25T11:30:03Z
+latest_commit_sha: b6d1b928cee29e9e27e88afaf6b563c175a6814e
+chat_duration: 79636s (00:22:07:16)
 estimated_chat_tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -312,6 +312,17 @@ Summary: All six corrective implementations and combined local checks pass; Dock
 
 Durable evidence: Retain corrective-condition-audit.json, corrective-combined-checks.json, normal-reuse and stage-boundary reports, source hashes and protected18 comparison. Current source includes accepted main171ea85e; root mainc884c321 clean. No CI/live/push. Docker credential-helper restoration pending; checkpoint source now under direct authorization.
 
+
+### 2026-10-25T11:30:03Z - Commit recorded
+
+Commit: `b6d1b928cee29e9e27e88afaf6b563c175a6814e`
+
+Message: Connect scope proofs, recovery validation and trusted local verification
+
+Summary: All six corrective findings implemented; mandatory preparation11 and combined13 local checks pass; ordinary cache reuse11 and stage-boundary six required gaps demonstrated. Accepted-main evidence preserved. Current-tree container qualification blocked by Docker/WSL; final merge pending.
+
+ADR impact: Existing ADR0042 ownership retained; bounded corrections introduce no new architectural owner.
+
 ## Sub-Agent Activity
 
 
@@ -373,6 +384,13 @@ Summary: Added early declaration/connectivity/parameter checks, pending/failed/u
   Message: Merge main and preserve persistence evidence and recovery controls
   Summary: Integrated accepted main c884c321 through tested rehearsal; all six conflicts resolved, 18 evidence files preserved, combined controller and acceptance baseline checks passed.
   ADR impact: covered by session ADR disposition
+
+
+- Commit: `b6d1b928cee29e9e27e88afaf6b563c175a6814e`
+  Time UTC: 2026-10-25T11:30:03Z
+  Message: Connect scope proofs, recovery validation and trusted local verification
+  Summary: All six corrective findings implemented; mandatory preparation11 and combined13 local checks pass; ordinary cache reuse11 and stage-boundary six required gaps demonstrated. Accepted-main evidence preserved. Current-tree container qualification blocked by Docker/WSL; final merge pending.
+  ADR impact: Existing ADR0042 ownership retained; bounded corrections introduce no new architectural owner.
 
 ## Main Refresh Conflicts
 
@@ -452,9 +470,9 @@ Reason: Durable separation of shared completion, deployment proof and provider p
 ## Session Metrics
 
 Raised at UTC: 2026-10-24T13:22:47Z
-Latest commit at UTC: 2026-10-25T10:20:42Z
-Latest commit SHA: 171ea85eabea63eb51b967aac9d4a19f0c4ac82d
-Chat duration: 75475s (00:20:57:55)
+Latest commit at UTC: 2026-10-25T11:30:03Z
+Latest commit SHA: b6d1b928cee29e9e27e88afaf6b563c175a6814e
+Chat duration: 79636s (00:22:07:16)
 Estimated chat tokens: 950925 estimated from chat transcript bytes (3803698 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/24/rollout-2026-10-24T14-20-43-01a16e12-1d6d-7c80-a970-dca7aac68b22.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
