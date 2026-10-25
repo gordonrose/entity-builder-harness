@@ -84,6 +84,10 @@ connect scope implementation verification and recovery
 - Decision: Remove duplicated publication qualification at its existing owner
   Rationale: The persistence publication workflow now delegates declaration coverage, scope health, runnable validation and composition once to its image builder. Custody/access and real container qualification remain separate mandatory checks before provider credentials. Existing workflow validator checks the connected order.
 
+
+- Decision: User authorized the bounded local Docker recovery procedure
+  Rationale: Direct answer: Add and run the local recovery procedure. Add executable recovery under existing persistence package owner using temporary empty Docker configuration and same local engine for public-image build/smoke. Preserve normal settings/stored credentials; no secret operations, CI publication or live changes. Applicable local tests, checkpoints and final merge remain authorized. Goal resumed; required container proof and final merge remain open.
+
 ## Context Hygiene
 
 
@@ -122,6 +126,10 @@ connect scope implementation verification and recovery
 
 - Summary: Resumed Goal blocked audit passes after three consecutive turns
   Durable evidence: 2026-10-25T12:03:41Z: latest native build remains failed with WSL credential-helper error despite version probe exit0; daemon confirms no scope-corrections-20261025 image exists. Same external qualification blocker persisted through user-requested attempt5, automatic attempt6, and this current-state audit. Worktree was clean at650674df; main/origin c884c321 unchanged. No independent source/test work remains. All six corrections and13 combined local checks remain verified. Required container proof and final main merge incomplete. No approval received for proposed package-owner recovery using temporary empty Docker configuration; AGENTS.md requires that governed recovery decision. Next lifecycle action: blocked, not complete. Resume after stable native helper recovery or explicit approval for the bounded recovery procedure.
+
+
+- Summary: Approved local package recovery implemented with passing controlled tests
+  Durable evidence: Existing package owner now has qualify-local-public-images.sh plus27-case controlled fixture integrated into payload suite; full payload aggregate passes23.02s. Recovery binds same local Unix engine, strips Docker/build selectors, uses temporary anonymous registry entries without credentials/helper settings, exact reviewed owner hashes, preserves native child exit and interruption cleanup. Normal Docker configuration and native build/smoke owners unchanged. Recognition sources regenerated. No new ADR: bounded implementation within existing package owner. Actual Docker qualification and final merge remain required.
 
 ## Activity Log
 
@@ -432,6 +440,20 @@ ADR impact: Diagnostic evidence only; no source or architecture change.
 Summary: Resumed Goal blocked audit passes after three consecutive turns
 
 Durable evidence: 2026-10-25T12:03:41Z: latest native build remains failed with WSL credential-helper error despite version probe exit0; daemon confirms no scope-corrections-20261025 image exists. Same external qualification blocker persisted through user-requested attempt5, automatic attempt6, and this current-state audit. Worktree was clean at650674df; main/origin c884c321 unchanged. No independent source/test work remains. All six corrections and13 combined local checks remain verified. Required container proof and final main merge incomplete. No approval received for proposed package-owner recovery using temporary empty Docker configuration; AGENTS.md requires that governed recovery decision. Next lifecycle action: blocked, not complete. Resume after stable native helper recovery or explicit approval for the bounded recovery procedure.
+
+
+### 2026-10-25T12:10:35Z - Decision
+
+Decision: User authorized the bounded local Docker recovery procedure
+
+Rationale: Direct answer: Add and run the local recovery procedure. Add executable recovery under existing persistence package owner using temporary empty Docker configuration and same local engine for public-image build/smoke. Preserve normal settings/stored credentials; no secret operations, CI publication or live changes. Applicable local tests, checkpoints and final merge remain authorized. Goal resumed; required container proof and final merge remain open.
+
+
+### 2026-10-25T12:24:07Z - Context hygiene
+
+Summary: Approved local package recovery implemented with passing controlled tests
+
+Durable evidence: Existing package owner now has qualify-local-public-images.sh plus27-case controlled fixture integrated into payload suite; full payload aggregate passes23.02s. Recovery binds same local Unix engine, strips Docker/build selectors, uses temporary anonymous registry entries without credentials/helper settings, exact reviewed owner hashes, preserves native child exit and interruption cleanup. Normal Docker configuration and native build/smoke owners unchanged. Recognition sources regenerated. No new ADR: bounded implementation within existing package owner. Actual Docker qualification and final merge remain required.
 
 ## Sub-Agent Activity
 

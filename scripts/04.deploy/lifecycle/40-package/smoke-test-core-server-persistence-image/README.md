@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.smoke-test-core-server-persistence-image.readme
-version: 3
+version: 4
 status: draft
 created_on: "2026-10-23"
 updated_on: "2026-10-25"
@@ -49,3 +49,50 @@ The builder owns declaration coverage, scope health, runnable-program validation
 and composition; publication invokes it once before container qualification and
 provider credentials. Each required check still stops progression on failure.
 These local tests do not execute CI, publish an image or establish package custody.
+
+
+## Local public-image recovery
+
+When native qualification fails because the workstation Docker credential helper
+is unavailable, an explicitly authorized local recovery can isolate the client
+configuration for this package's public images:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh --tag kanbien-core-server-persistence:local-public-recovery --port 39456
+```
+
+The wrapper resolves the effective Docker context or host before isolation,
+requires a local Unix socket, and compares the original engine ID with the
+isolated connection before building and after each stage. It clears inherited
+Docker, Buildx and BuildKit selectors, then pins the same socket and the default
+local builder. It invokes the existing governed image build followed by the
+existing image smoke, preserving their preflights and stopping on failure.
+Child failure exits retain the original numeric status.
+
+The private temporary Docker configuration contains only empty anonymous
+`auths` entries for Docker Hub and `gcr.io`; it contains no credentials,
+credential-helper settings or copied normal configuration. These entries
+suppress Docker's automatic native-helper discovery. The temporary directory
+is removed on success, failure or interruption; stored configuration, credentials,
+context selection and daemon settings are not changed. Raw configuration and
+socket/engine identifiers are not printed by this wrapper.
+
+This optional recovery accepts only the reviewed canonical builder, smoke,
+Dockerfile and image-contract bytes. It derives and validates their public
+frontend, Node, pinned distroless and PostgreSQL image declarations. Any owner
+change fails with `local-public-recovery-owner-review-required`; review those
+changes and deliberately update the wrapper's reviewed hashes before using this
+recovery again. The normal package commands remain available independently.
+Private registries, alternate builders, arbitrary build flags and publication
+are outside this procedure. A successful run is local container qualification,
+not CI, published custody or live target proof.
+
+The payload suite includes `local-public-recovery-test.py`, which substitutes
+controlled Docker and command boundaries and proves binding, ordering, failure
+status, original-configuration preservation and temporary cleanup without
+contacting an engine. Docker's documented selection and configuration behavior
+is described in [Docker CLI configuration](https://docs.docker.com/reference/cli/docker/)
+and [Build tool variables](https://docs.docker.com/build/building/variables/).
+Anonymous entries prevent auto-detection as implemented by
+[Docker's configuration loader](https://github.com/docker/cli/blob/master/cli/config/config.go)
+and [ContainsAuth](https://github.com/docker/cli/blob/master/cli/config/configfile/file.go).

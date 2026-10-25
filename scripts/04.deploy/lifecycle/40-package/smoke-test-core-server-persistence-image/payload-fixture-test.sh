@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-image-payload-fixture
-#   version: 2
+#   version: 3
 #   status: draft
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-25"
@@ -146,3 +146,5 @@ print('Persistence package stage regression passed (corrupt health blocks before
 PY
 
 python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py"
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py"

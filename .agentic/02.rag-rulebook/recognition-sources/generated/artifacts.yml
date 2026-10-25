@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1322
-  term_count: 2672
+  indexed_artifacts: 1324
+  term_count: 2676
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -12298,6 +12298,18 @@ terms:
   canonical_id: deploy.command.smoke-test-core-server-persistence-image.readme
   evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md
   confidence_weight: 1
+- term: deploy.test.local-public-persistence-recovery
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.local-public-persistence-recovery
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.local-public-persistence-recovery
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py
+  confidence_weight: 1
 - term: deploy.test.core-server-persistence-image-payload-fixture
   category: artifact-id
   match_type: exact
@@ -12321,6 +12333,18 @@ terms:
   match_type: exact
   canonical_id: deploy.test.core-server-persistence-publication-qualification
   evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py
+  confidence_weight: 1
+- term: deploy.command.qualify-local-public-persistence-images
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.qualify-local-public-persistence-images
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.qualify-local-public-persistence-images
+  evidence_path: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh
   confidence_weight: 1
 - term: deploy.command.smoke-test-core-server-persistence-image
   category: artifact-id
