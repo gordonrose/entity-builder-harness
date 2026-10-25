@@ -36,7 +36,7 @@ Parameters:
   # Supplied only to the governed target-update route.  It is never retained
   # in the repository or in accepted evidence; CloudFormation creates the
   # target-owned topic and awaits the recipient's normal SNS confirmation.
-  ObservabilityAlertEmail: { Type: String, NoEcho: true, AllowedPattern: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$' }
+  ObservabilityAlertEmail: { Type: String, NoEcho: true, AllowedPattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}$' }
   SourceRevision: { Type: String, AllowedPattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$' }
 
 Resources:
