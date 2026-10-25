@@ -47,6 +47,7 @@ ADDED = {
     "EndpointIngressFromAdministration": "AWS::EC2::SecurityGroupIngress",
     "OrdinaryMigrationCredentialsSecret": "AWS::SecretsManager::Secret",
     "AdministrationExecutionRole": "AWS::IAM::Role",
+    "ServerTaskRole": "AWS::IAM::Role",
     "CoreServerPersistenceAdministrationTaskDefinition": "AWS::ECS::TaskDefinition",
     "ObservabilityCollectorConfiguration": "AWS::SSM::Parameter",
     "ObservabilityAlarmTopic": "AWS::SNS::Topic",
@@ -56,7 +57,6 @@ ADDED = {
 }
 MODIFIED = {
     "ServerExecutionRole": "AWS::IAM::Role",
-    "ServerTaskRole": "AWS::IAM::Role",
     "SecretsManagerEndpoint": "AWS::EC2::VPCEndpoint",
     "MigrationExecutionRole": "AWS::IAM::Role",
     "CoreServerPersistenceMigrationTaskDefinition": "AWS::ECS::TaskDefinition",
@@ -169,6 +169,12 @@ def wait_for_review(prepare: object, name: str, status: str, digest: str, revisi
         ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
         if not ok:
             return None, code
+        if isinstance(change, dict) and change.get("Status") == "FAILED":
+            # The provider may retain a failed, unexecuted change set.  Its
+            # status is safe to expose as a fixed diagnostic category, but the
+            # provider's raw reason can contain user-supplied parameter values
+            # and is intentionally not copied into durable reports.
+            return None, "persistence-database-permission-surface-change-set-failed"
         if reviewable(change, status, name, digest, revision, collector_image):
             return change, "ok"
         if attempt < 5:
@@ -208,7 +214,28 @@ def main() -> int:
         return report("blocked", "persistence-database-permission-surface-service-not-healthy")
     name = f"kanbien-core-platform-persistence-permissions-{receipt['image_digest'][7:19]}"
     collector_image = f"{COLLECTOR_ECR_URI}@{collector['image_digest']}"
-    ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    ok, existing, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if ok and isinstance(existing, dict) and existing.get("Status") == "FAILED":
+        # This exact digest-derived name can only be an unexecuted review
+        # artifact for the candidate presently being considered.  Retire it
+        # before preparing a fresh review; never delete a successful or
+        # executing change set.
+        deleted, _, delete_code = prepare.aws(
+            "cloudformation", "delete-change-set", "--stack-name", STACK, "--change-set-name", name
+        )
+        if not deleted:
+            return report("blocked", delete_code)
+        for attempt in range(6):
+            present, _, present_code = prepare.aws(
+                "cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name
+            )
+            if not present and present_code == "aws-resource-missing":
+                ok, code = False, present_code
+                break
+            if attempt < 5:
+                time.sleep(2)
+        else:
+            return report("blocked", "persistence-database-permission-surface-failed-change-set-not-retired")
     if not ok:
         if code != "aws-resource-missing":
             return report("blocked", code)
