@@ -169,6 +169,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Acceptance required every historical ECS stopped-task record to remain queryable at the end of a multi-step rehearsal. ECS retention then aged out an already-proved replacement task and would have forced unrelated rehearsals.
   Resolution: Each completed persistence proof now writes an allowlisted, integrity-checked durable receipt before reporting success. Acceptance consumes those retained receipts for historical proof while independently observing current service, database, recovery-point, cleanup, and budget state. One narrowly necessary replacement was repeated only after the old provider record had already expired; no migration, credential lifecycle, image update, or restore was repeated.
 
+
+- Raised: Corrected current release-reference hash mismatch before package qualification
+  Resolution: The immutable historical record had two trailing newlines while current-accepted-release.yml named the canonical one-newline rendering. The release-succession gate blocked safely before AWS/ECR actions. Preserved the history; updated only the current pointer to its actual retained SHA-256; validate-current and target smoke pass.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -403,6 +407,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Authorize end-to-end core-server-persistence execution
   Rationale: The user supplied standing authorization for the bounded kanbien-core-platform persistence slice: repository and target changes, AWS provisioning, publication, deployment, live recovery proofs, commits, integration with main, and push. The work remains limited to this target, the USD 100 monthly ceiling, and existing protected gates.
 
+
+- Decision: Repair mutable release reference without rewriting accepted history
+  Rationale: Current release references must hash the exact immutable bytes they name. A pointer-only correction restores validation while preserving historical acceptance truth.
+
 ## Context Hygiene
 
 
@@ -589,6 +597,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: The current packet adds governed runtime credential rotation/revocation operations, verifier health modes and package/live-controller coverage. The local Docker PostgreSQL/TLS proof initially exposed unhandled pg idle-client errors on revoke; the reusable adapter now handles that boundary and all relevant local gates pass.
   Durable evidence: Durable source: core-server-persistence entrypoints, lifecycle controls, adapter connection test, package smoke; generated local evidence is not a release receipt.
+
+
+- Summary: Workflow 40197069234 failed before AWS mutation at release-succession validation; actual history SHA is 91bbb624... and original current pointer incorrectly declared f26dec40...
+  Durable evidence: Exact proof root: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/. The next workflow must qualify and publish an immutable support image before retained-image compatibility can proceed.
 
 ## Activity Log
 
@@ -2797,6 +2809,27 @@ Message: feat(deploy): retain persistence acceptance proofs
 Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
 
 ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
+
+
+### 2026-10-25T13:23:15Z - Issue
+
+Raised: Corrected current release-reference hash mismatch before package qualification
+
+Resolution: The immutable historical record had two trailing newlines while current-accepted-release.yml named the canonical one-newline rendering. The release-succession gate blocked safely before AWS/ECR actions. Preserved the history; updated only the current pointer to its actual retained SHA-256; validate-current and target smoke pass.
+
+
+### 2026-10-25T13:23:15Z - Decision
+
+Decision: Repair mutable release reference without rewriting accepted history
+
+Rationale: Current release references must hash the exact immutable bytes they name. A pointer-only correction restores validation while preserving historical acceptance truth.
+
+
+### 2026-10-25T13:23:15Z - Context hygiene
+
+Summary: Workflow 40197069234 failed before AWS mutation at release-succession validation; actual history SHA is 91bbb624... and original current pointer incorrectly declared f26dec40...
+
+Durable evidence: Exact proof root: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/. The next workflow must qualify and publish an immutable support image before retained-image compatibility can proceed.
 
 ## Sub-Agent Activity
 
