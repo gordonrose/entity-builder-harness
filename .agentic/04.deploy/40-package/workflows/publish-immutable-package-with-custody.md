@@ -48,6 +48,10 @@ publishes an immutable package or records package evidence.
    delivery system's evidence artifact and summary.
 6. Link a target's pipeline catalogue record to the executable workflow and
    receipt contract. Do not use that record as deployment authority.
+7. When package qualification or publication fails, retain a separate safe
+   deployment-operation diagnostic in the delivery system. It preserves the
+   failed operation and bounded next action without becoming a qualified
+   package receipt or exposing raw command/provider output.
 
 ## Stop conditions
 

@@ -48,6 +48,14 @@ observe the fixed digest-derived name without submitting again:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh --receipt "$receipt" --reconcile --json
 ```
 
+If CloudFormation rejects creation, the controller retains a
+`deploy/deployment-operation-diagnostic/v1` report under the scope's governed
+release evidence before any failed review artifact is removed. It contains only
+the operation identity, safe classified provider finding, safe resource/property
+facts when available, outcome, evidence reference, and next governed action.
+It does not retain `StatusReason` or raw events. An unavailable diagnosis is
+recorded as unavailable; it is not a reason to infer a cause or retry CREATE.
+
 Review the fixed CREATE change set. It may create only the declared private
 RDS, Secrets Manager, ECS, IAM, Cloud Map, security-group and Secrets Manager
 endpoint resources. Verify its digest and source revision match the receipt,
@@ -65,7 +73,8 @@ are independently observed complete. Reconcile without executing again:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh --receipt "$receipt" --approved-change-set "$change_set" --reconcile --json
 ```
 
-Follow `.agentic/04.deploy/standards/provider-async-conditions.md` for outcome
+Follow `.agentic/04.deploy/standards/provider-async-conditions.md` and
+`.agentic/04.deploy/standards/safe-command-diagnostics.md` for outcome
 meaning. `failed` requires positively observed terminal failure; `uncertain`
 retains the operation identity when observation cannot prove the result. Both
 remain unaccepted. Do not delete, retry, or submit another change set merely

@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines:
@@ -34,6 +34,19 @@ else
 fi
 [[ "$status" -eq 17 ]]
 [[ "$output" == *'DIAGNOSTIC_CODE=TEST_CHILD_FAILURE'* ]]
-[[ "$output" == *'token=[REDACTED]'* ]]
+[[ "$output" == *'CHILD_OUTPUT=not-retained-unstructured-output'* ]]
 [[ "$output" != *'controlled-secret'* ]]
+report="$(mktemp)"
+trap 'rm -f "$report"' EXIT
+if output="$(safe_command_deployment_diagnostic TEST_CHILD_FAILURE package 'controlled child failed' 'inspect fixture' test-target test-scope test-operation github-actions-artifact:diagnostics-test "$report" -- bash -c 'printf "token=controlled-secret\\n"; exit 17' 2>&1)"; then
+  echo 'ERROR: safe deployment diagnostic accepted a failed child command.' >&2
+  exit 1
+else
+  status=$?
+fi
+[[ "$status" -eq 17 ]]
+[[ "$output" == *'DIAGNOSTIC_COLLECTION_STATUS=collected'* ]]
+[[ "$output" != *'controlled-secret'* ]]
+python3 "$ROOT/scripts/04.deploy/shared/deployment-operation-diagnostics.py" validate --report "$report" >/dev/null
+[[ "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["original_failure"]["exit_status"])' "$report")" == 17 ]]
 echo 'Safe command diagnostics smoke test passed.'

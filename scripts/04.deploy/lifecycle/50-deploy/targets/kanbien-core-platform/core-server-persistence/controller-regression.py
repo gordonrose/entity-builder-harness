@@ -211,13 +211,20 @@ class ControllerRegression(unittest.TestCase):
         module=load(DEPLOY/'create-change-set/script.py');prepare=load(DEPLOY/'prepare-candidate/script.py')
         receipt={'image_digest':'sha256:'+'a'*64,'source_revision':'a'*40};name='synthetic-create'
         params=[{'ParameterKey':key,'ParameterValue':value} for key,value in {'ImageDigest':receipt['image_digest'],'RestoreVerifierImageDigest':receipt['image_digest'],'SourceRevision':receipt['source_revision']}.items()]
-        for status,verdict in [('CREATE_PENDING','pending'),('FAILED','failed'),('CREATE_COMPLETE','created-awaiting-review')]:
-            provider=Provider(lambda parts:(True,{'ChangeSetName':name,'Status':status,'ExecutionStatus':'AVAILABLE','Parameters':params},'ok'))
-            provider.change_name_matches=prepare.change_name_matches
-            self.assertEqual(result(lambda:module.reconcile(provider,name,receipt))[1]['verdict'],verdict)
-            self.assertEqual([parts[1] for parts in provider.calls],['describe-change-set'])
-        provider=Provider(lambda parts:(False,None,'aws-command-timeout'))
-        self.assertEqual(result(lambda:module.reconcile(provider,name,receipt))[1]['verdict'],'uncertain')
+        with tempfile.TemporaryDirectory() as directory:
+            diagnostic=Path(directory)/'synthetic-diagnostic.json'
+            for status,verdict in [('CREATE_PENDING','pending'),('FAILED','failed'),('CREATE_COMPLETE','created-awaiting-review')]:
+                provider=Provider(lambda parts:(True,{'ChangeSetName':name,'Status':status,'ExecutionStatus':'AVAILABLE','Parameters':params},'ok'))
+                provider.change_name_matches=prepare.change_name_matches
+                self.assertEqual(result(lambda:module.reconcile(provider,name,receipt,diagnostic))[1]['verdict'],verdict)
+                expected = ['describe-change-set']
+                if status == 'FAILED':
+                    # A rejected named change set receives bounded read-only
+                    # diagnosis before its safe evidence report is retained.
+                    expected += ['describe-change-set', 'describe-stack-events']
+                self.assertEqual([parts[1] for parts in provider.calls],expected)
+            provider=Provider(lambda parts:(False,None,'aws-command-timeout'))
+            self.assertEqual(result(lambda:module.reconcile(provider,name,receipt,diagnostic))[1]['verdict'],'uncertain')
 
     def test_update_controllers_reconcile_without_mutation(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py');digest='sha256:'+'a'*64;revision='a'*40
