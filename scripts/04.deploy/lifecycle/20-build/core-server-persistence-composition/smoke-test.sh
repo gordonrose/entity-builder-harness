@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.core-server-persistence-composition
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -31,4 +31,7 @@ TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
 
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/build.sh --out-dir "$TEMPORARY_DIRECTORY"
+node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
 node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$TEMPORARY_DIRECTORY"
+node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"

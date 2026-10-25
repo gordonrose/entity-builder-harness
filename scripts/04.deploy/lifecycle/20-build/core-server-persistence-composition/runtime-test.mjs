@@ -2,10 +2,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-composition-runtime
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-24"
+//   updated_on: "2026-10-25"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -24,45 +24,11 @@
 //     path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
 
 import { request as httpRequest } from "node:http";
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { join } from "node:path";
 
 const buildOutput = process.argv[2];
 if (typeof buildOutput !== "string" || buildOutput.length === 0) {
   throw new Error("Usage: runtime-test.mjs <compiled-output-directory>");
-}
-
-const packages = {
-  "@kanbien/core": {
-    ".": "packages/core/src/index.js",
-    "./audit": "packages/core/src/audit/index.js",
-    "./authn": "packages/core/src/authn/index.js",
-    "./authz": "packages/core/src/authz/index.js",
-    "./config": "packages/core/src/config/index.js",
-    "./diagnostics": "packages/core/src/diagnostics/index.js",
-    "./events": "packages/core/src/events/index.js",
-    "./i18n": "packages/core/src/i18n/index.js",
-    "./logging": "packages/core/src/logging/index.js",
-    "./monitoring": "packages/core/src/monitoring/index.js",
-    "./queues": "packages/core/src/queues/index.js",
-    "./shared": "packages/core/src/shared/index.js",
-    "./tenancy": "packages/core/src/tenancy/index.js",
-    "./validation": "packages/core/src/validation/index.js",
-  },
-  "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
-  "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },
-  "@kanbien/platform-health": { ".": "platform/health/src/index.js" },
-  "@kanbien/platform-observability": { ".": "platform/observability/src/index.js" },
-  "@kanbien/platform-runtime": { ".": "platform/runtime/src/index.js" },
-  "@kanbien/platform-security": { ".": "platform/security/src/index.js" },
-  "@kanbien/platform-server": {
-    ".": "platform/server/src/index.js",
-    "./main": "platform/server/src/main.js",
-  },
-};
-
-for (const [packageName, exportsMap] of Object.entries(packages)) {
-  writePackageShim(packageName, exportsMap);
 }
 
 const program = await import(pathToFileUrl(join(buildOutput, "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.js")));
@@ -209,20 +175,6 @@ function assertJson(response, expectedStatus, expectedBody, explanation) {
   if (response.body !== JSON.stringify(expectedBody)) {
     throw new Error(`${explanation}: response body did not match the safe contract.`);
   }
-}
-
-function writePackageShim(packageName, exportsMap) {
-  const packageRoot = join(buildOutput, "node_modules", ...packageName.split("/"));
-  const packageExports = {};
-  for (const [exportName, targetPath] of Object.entries(exportsMap)) {
-    const shimPath = exportName === "." ? join(packageRoot, "index.js") : join(packageRoot, exportName.slice(2), "index.js");
-    mkdirSync(dirname(shimPath), { recursive: true });
-    const target = join(buildOutput, targetPath);
-    const modulePath = relative(dirname(shimPath), target).replaceAll("\\\\", "/");
-    writeFileSync(shimPath, `module.exports = require(${JSON.stringify(modulePath.startsWith(".") ? modulePath : `./${modulePath}`)});\n`);
-    packageExports[exportName] = exportName === "." ? "./index.js" : `./${exportName.slice(2)}/index.js`;
-  }
-  writeFileSync(join(packageRoot, "package.json"), `${JSON.stringify({ name: packageName, type: "commonjs", exports: packageExports }, null, 2)}\n`);
 }
 
 function pathToFileUrl(path) {

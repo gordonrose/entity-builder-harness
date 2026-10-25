@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.deployment-artifact-placement-and-naming
-version: 1
+version: 2
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -146,6 +146,12 @@ scripts/04.deploy/lifecycle/<phase>/targets/<target>/<scope>/<clear-action>/
 Generic scripts omit `targets/<target>/<scope>` only when they truly accept no
 target-specific facts. Do not give a target-bound script a free-form target
 argument merely to avoid this path.
+
+Cross-phase standards and workflows whose authority spans lifecycle phases
+remain in `.agentic/04.deploy/standards/` and `workflows/`; validate these with
+`cross-phase-standard` or `cross-phase-workflow`. Provider-wide AWS standards
+use `.agentic/aws/standards/` and kind `aws-standard`. These kinds do not replace
+the lifecycle kinds for artifacts that have one primary phase.
 
 Existing paths remain valid until a governed migration moves them. This standard
 does not authorise a blanket rename.

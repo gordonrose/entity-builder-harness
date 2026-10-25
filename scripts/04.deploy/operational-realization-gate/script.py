@@ -7,7 +7,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -23,8 +23,8 @@
 #   effects:
 #   - read-only
 #   used_by:
-#   - id: harness.workflow.operational-realization-gate
-#     path: .agentic/01.harness/workflows/operational-realization-gate.md
+#   - id: deploy.workflow.operational-realization-gate
+#     path: .agentic/04.deploy/workflows/operational-realization-gate.md
 
 from __future__ import annotations
 

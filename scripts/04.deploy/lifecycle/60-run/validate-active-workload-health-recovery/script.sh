@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.validate-active-workload-health-recovery
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -14,6 +14,7 @@ set -euo pipefail
 #   purpose: Validate every indexed scope lifecycle, active workload ownership, health/recovery declarations, and explicit retiring legacy exception for a target.
 #   portability: { class: reusable, targets: [entity-builder] }
 #   effects: [read-only]
+#   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
 #   - id: deploy.command.core-platform-target-declaration
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh

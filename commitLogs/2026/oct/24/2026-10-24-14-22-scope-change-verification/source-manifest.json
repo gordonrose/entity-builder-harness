@@ -1,0 +1,437 @@
+{
+  "base_revision": "95b850d91c573fb8c09f0c048a53f1409f6c1618",
+  "branch": "chat/2026-10-24-14-22-connect-scope-implementation-verification-and-recovery",
+  "captured_at_utc": "2026-10-24T14:03:41.665887+00:00",
+  "uncommitted": true,
+  "scope": "changed task source and governance files; session evidence excluded to avoid self-reference",
+  "files": [
+    {
+      "path": ".agentic/01.harness/standards/delegated-execution-state.md",
+      "sha256": "b724571ba8d0b9d989aa14321a38f5e0f655dc8a3661edf6108f01b15dcda257"
+    },
+    {
+      "path": ".agentic/01.harness/standards/operational-realization-gate.md",
+      "sha256": "f89a1328f42854f9b3c79f1716024ed4a16f8279d4ddaa7a03e121a2d20d4ecc"
+    },
+    {
+      "path": ".agentic/01.harness/templates/operational-realization-contract.v1.guide.md",
+      "sha256": "65f8177ad04ee103aaa12fa8fe12f99965998173395912222239bfb71c1a785b"
+    },
+    {
+      "path": ".agentic/01.harness/templates/operational-realization-contract.v1.template.yml",
+      "sha256": "1f4a2482359ea2b69d9b959ae293636fa63903d8b773f56b1cd37db72ccd8268"
+    },
+    {
+      "path": ".agentic/01.harness/workflows/change-harness.md",
+      "sha256": "f2aa8fa73c3db749eeb68f8cf3e2c0d02105269685a70ddeaa8cbcd9ff5c3495"
+    },
+    {
+      "path": ".agentic/01.harness/workflows/operational-realization-gate.md",
+      "sha256": "966be2ab69a1a7a94ba8e76800d99f644178f820a6b70a169f131ed123ea6c06"
+    },
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "sha256": "18f7b26a82a8da43afbe732fd131579114fa2405d8962e7b873059348cb90fdb"
+    },
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
+      "sha256": "6a4d5b20af17a0c103235a422dca4f36c89ddd8fb59e8c74732430aa4fc31ffb"
+    },
+    {
+      "path": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
+      "sha256": "4830c9337f064dafd787a02f6cf5de325140dc5c0fe9794f86c7895ffbdbafe7"
+    },
+    {
+      "path": ".agentic/03.product/workflows/platform-runtime-implementation.md",
+      "sha256": "8a3294aba0e55095864f9e7f7be29a51d804b60cf30bebeecd04afe0c44a5395"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md",
+      "sha256": "fb61732f4d4de5fede39443ffa72ca7538d88104bb9d4b4c9b90dd89a866117c"
+    },
+    {
+      "path": ".agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md",
+      "sha256": "52e403891077376fd32ff19aca1f4e5bfc3b6dc8ba95301178077004edce1e0c"
+    },
+    {
+      "path": ".agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md",
+      "sha256": "7c314c93f9c87152a29d837fc26f0b8eb50db3e08251474826da08f9d13026c8"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+      "sha256": "5dc2dcd8648ed1dee7075cff701b3682fb7c1a55846732f09db251a867e14a69"
+    },
+    {
+      "path": ".agentic/04.deploy/README.md",
+      "sha256": "72f79a1a3f23ccbfa338a94eb8fa9381e2274b88cf6c38fff580b646bad7c5ba"
+    },
+    {
+      "path": ".agentic/04.deploy/plans/migration/operational-realization-authority.md",
+      "sha256": "394f1589c52aa5ec784dfd423fee830acbf92637ebb63129f47689a5d39306b3"
+    },
+    {
+      "path": ".agentic/04.deploy/providers/README.md",
+      "sha256": "a960b8453458a2c8dad245d3f509397c00235037fa62450b7e9971947f03f5a4"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/change-impact.v1.guide.md",
+      "sha256": "85ab4a5be3854667eb8f074622b3c246e18742d4cc29f9aaa76dadbceea3f54b"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/change-impact.v1.schema.yml",
+      "sha256": "6217de058fe3a7732557668421f0f4993b4c4cc3b83c1b7539803d3e96f29af5"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/README.md",
+      "sha256": "af9ae49e7e5c9f7547095dadb3a00fa2eef5f914cca3ba89407690784ced0e95"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/declaration-coverage.md",
+      "sha256": "27ed8e9801885b18efd53ac7bbbde1687c19c6fa8916e396f06ac71b78ca27ae"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md",
+      "sha256": "2dc69cbbc8be1f926cab758797b97dff84ce88e754ae1bcaf241b0e20b13c106"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/operational-realization-gate.md",
+      "sha256": "4da6a4a2ebc28406101efaf1c05521d7711b7fd862b783a9422c7bfc9e4cbe96"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/provider-async-conditions.md",
+      "sha256": "c6060ff3ecefaea38e08e120cb917d41cc93a5cf905114154211e15501cbb807"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/README.md",
+      "sha256": "e7d6dd2c60308aac83eb6fea059961ec28ffdd5c1380da33ad42a1944146b467"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/declaration-coverage.md",
+      "sha256": "9a5856d332c61d9cab18c16bae9d39d1217d34bd88725e377a27fd1f3f099685"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/operational-realization-gate.md",
+      "sha256": "6ba17315e84c2ab05d4c13ac978eb81fd94f2973328952066b1a069cd3061e7d"
+    },
+    {
+      "path": ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+      "sha256": "5ce26060b943e464f27d47a1ec49daf754f6eae15434aabeda30d7823fc9d108"
+    },
+    {
+      "path": ".agentic/aws/README.md",
+      "sha256": "64128b1a456a2a78f6a5fb5366a274202b2f3633141c9b8ca3a9abd805f90a9f"
+    },
+    {
+      "path": ".agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md",
+      "sha256": "7edd6aaf9b0c440d72037a5ac0c5584228a01b6fe6c47b004b80b324114a71af"
+    },
+    {
+      "path": ".agentic/aws/standards/operational-realization-applicability.md",
+      "sha256": "df0c241998b4041876eb17f6fe60d3c3892cc7b87523b4970167ab888c8c73ad"
+    },
+    {
+      "path": ".agentic/aws/workflows/execute-approved-aws-change.md",
+      "sha256": "a0116af479dcf8c729f6e783d0b65c92a68634831856d983a7393090a22b29cc"
+    },
+    {
+      "path": ".agentic/shared/standards/README.md",
+      "sha256": "711c9224591409b176cf9343529b5d5d06971da647cc295b18cc13026eee59c8"
+    },
+    {
+      "path": ".agentic/shared/standards/require-change-completion.md",
+      "sha256": "0a70089006fca8f586fb153e7e9ef65b0df22e9e8c85956f9cf4a3b07e064372"
+    },
+    {
+      "path": ".agentic/shared/workflows/change-shared-process.md",
+      "sha256": "f194733b015d4f9b1501f6e34d6dfe8d11e860fce8b8dc8f13a907c982e57f24"
+    },
+    {
+      "path": "docs/04.deploy/README.md",
+      "sha256": "b950fb201d74208d5475b13f5eaffa662201cebbfebf6fd2086626a5cfd29d68"
+    },
+    {
+      "path": "docs/04.deploy/adrs/0042-separate-change-and-deployment-proof-ownership.md",
+      "sha256": "b36c790a9d84a526cfa242fd0c39019eef2c025cbbdd22bc00e15aa3eeddf734"
+    },
+    {
+      "path": "docs/04.deploy/adrs/README.md",
+      "sha256": "4088d965251e375f69fd384aad7e22f6a902ac0300ebe630b7055b799b3d585c"
+    },
+    {
+      "path": "docs/04.deploy/plans/README.md",
+      "sha256": "dec1caa019fd7513cd851e42a26a1f6142ed1fd1527015bc7b693d98fa577e71"
+    },
+    {
+      "path": "docs/04.deploy/plans/controlled-recovery-replacement-proposal-2026-10-03.md",
+      "sha256": "16179331418d4692f6fabb96a4e2075a9ce5752ff41accac604e3b0ac9347bcc"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-gate-programme.md",
+      "sha256": "88dc1ad149af44ffb32d5a43c2d963f8a84169d88dab73cee6cd2877fedc7f78"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-v2-programme.md",
+      "sha256": "b1101e8c2eb58a0702ecd00f4d6c9e139628a488f8e1d9e1390ee836fbf09a2f"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+      "sha256": "949587ef7aa34f382540aae759d9d11ef06b5eab7943236d7285f9dc00cb5efe"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
+      "sha256": "57b2022a72642e5dca5f9b2c9f7877807f951a62e98b2b7a8826e4a5582d9f89"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+      "sha256": "4c30c68c8262198f1e78a67cb0e522ea8c9f1cdb3b1ae317855b8049f1c889c3"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+      "sha256": "f780dc95a544dcdce6acdcc878d5c6c3a271d31ee524f97f19e6c390bd73f394"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+      "sha256": "dc364ad842073cef6328f5988884894befb21c388fb1956f007a8131538dae8b"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "sha256": "f0b93589af8588730e46a1b50f56314a6a4e5d309f476bb09513c2249d4b70ec"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+      "sha256": "e12780f0a544453cee16bcccba04c0eb41533d00c0da9eba227ddc47a1272b20"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+      "sha256": "7f0e2b674068264484e1bf5cf88013364d5c580f33abdcd73e462912be19e6bd"
+    },
+    {
+      "path": "package.json",
+      "sha256": "d18458813b2ae1c7b9bf3080143c5183fd74ce6895cb7688bde4e64963aaf610"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md",
+      "sha256": "e2067dc4d2693519eaa014c19376bd95daff049bc6b4ebcdee24da0cc0f2f79a"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+      "sha256": "92059f8dfaa5e73334a030ec340074de512c08a73d345700d5d38cd91c62c289"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md",
+      "sha256": "7789352a64cf834d8ced431ecd1e36715be439714f3644d7f9e81e0a4fe52613"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+      "sha256": "f88e6e98140bfe5b683a7ed78f3d4aa5fdf303342cfc3ff1af32a295c340e50a"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh",
+      "sha256": "55df92ac8e199a3fffc5fc99fb6558cc1e0708e295a2452e36162bad7b66fbfc"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py",
+      "sha256": "81ba837caf17d308530feb90746a65e239c20fefbe21d20ad8e0b73fe4a87e3b"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh",
+      "sha256": "d970469e8f990e4259d369e62e24bb9320467158d81f5293c6dd978b62252ee3"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/README.md",
+      "sha256": "dff460a40d8bded3da117d0fd1fde691f4637d009a84a08503e2f82e1b313614"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+      "sha256": "08dcbc6193b674c51d1496f2e73bc6286e86a8f47e2bae7fd317fdcc923664bd"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs",
+      "sha256": "47671a936581e4afcc909fee2b634234f5b040525874a0f44d34c2aada72d426"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+      "sha256": "214b905b3808a9a80951c4be4eb21de7ca21924bc0fcf48818bff14af7b3488d"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+      "sha256": "df6288998e82d171f652faaeb52da95392a598865a1ab1c9a638af1af6431ac4"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs",
+      "sha256": "b3731bac619caa7fa905997941353b7a0ab86ac9b0860037e42937f40aa71371"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+      "sha256": "f44e4c9870e656ff10c7ee0bc803c632807cd37826f2d648e6eee619b7960050"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs",
+      "sha256": "e1d977014053c83550f2cfd53eeae67c8b130d6135a4187151fcd312bfe17f42"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md",
+      "sha256": "4be4a3ae07327c0a10d5beec135a54a52f032f253dacfb9ea6a2068151b72d4a"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+      "sha256": "1480308da3b8a75d2bd47f8943320642052212dccdf548222b1e1a483a3e6686"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "sha256": "887f589b4e798f006a4adf978303e8944615ef483ecb1364a7f6ec6473b6aaee"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py",
+      "sha256": "a85ce435b2c4965960de5db9b72d80f390410fee3b6b723e78c1a5b861b3a444"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh",
+      "sha256": "f69fe638702c255e68b4702f7fcacff317226cf96b4c118b219a1dfc11ea663f"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py",
+      "sha256": "4eebbd0f1b314b8f0cf994b0d33c94d92aec97b13fc6aca08ed4a5b83b2a5be1"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh",
+      "sha256": "4287742a47b92d5eb0c0bad8bd51751503e80bc27bd23b7dc19f172d6a1352d3"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+      "sha256": "9367bf32b81f9fc785515f851148e8497cb776fd29c7fd60563907a19e9a4497"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
+      "sha256": "cc36d20ca6364dd9bda6657aadbf9cbcdf33d4435b259868f36601f4c4689d21"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh",
+      "sha256": "2daedf1ca2692c5daf7f3589c003a886c314dd9698aaf159565208ea3b5e7864"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py",
+      "sha256": "98825b34153e2b4f25db46f6d5548412f65f8ad9119b4f4cf4664a8d1b483f81"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh",
+      "sha256": "63bfe91edb06bee288e4ffbc63876d1968da8fb1bb84b4b106b17654d3b92c59"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+      "sha256": "a4b9fb24a915582d00433f941c9558a72ad1d10c6b7abc8b3ce3c599ff80eba5"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh",
+      "sha256": "3936aab96129c3153ad53ef17e8394e4d2d13f1731fdb72e7988aae48b935bef"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py",
+      "sha256": "a2630fc71aee9fec9e3328af7845dd55f84a8faeb9696f1469704b234d2c3488"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh",
+      "sha256": "5fa71712dcf42a63259981d4cb22af8034c22d66552a19fab1798419bbb7e240"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+      "sha256": "5ac44e9957e87a8bbef1864b5e380f12f9062049f95f603b7ad0828c46515822"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+      "sha256": "95533f2f0fb3e9a27229398539fe1c05f16e6f541eaf45af00d02e9f602cb01f"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh",
+      "sha256": "dcf7f834ce684e2881940f110b9fc1d014e92b4e4217a2cb0f316e72aa557e4a"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py",
+      "sha256": "722d784d124405b4eb36688efc5a437e50e490b8f02fc88ac64c08cc0b3e141f"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh",
+      "sha256": "a8aef161ca9131f6aed81a397f06dea779a117fa56a1a165fed74c776974deaf"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+      "sha256": "e8753b8ce92153e73dcec99395185585ce8e0130f5b82111c982464672d6ccce"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh",
+      "sha256": "b21d25a5076b359807505b9361bc74b609286d2943bfb6d15426b9524eecb927"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh",
+      "sha256": "0d5492522c3c18e50b00c78689804f35acd34897bab896fc27c28d7187288e85"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+      "sha256": "c70805511e97fc77aff06f0ee91e22086c3d5cc33d03246477fbd2c432d99c9f"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+      "sha256": "2a81814e55038c26b817d684e23bb649914d5ed28aaf5a551b5e4139791c2df2"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py",
+      "sha256": "0b8e769a94265d3aad3466e9a4ffbce65124048595df3ea8778efa0c60fc9e68"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh",
+      "sha256": "a5497f05fd69421a1597742977f47c80c81fe4203a3d7acf542d9acbce34ab15"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py",
+      "sha256": "bd069a817b5709fab623abdf15cbe36390098ef71a4cbb70fe56cb3399190fd4"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh",
+      "sha256": "167780727b2b600f5d88a4b0ff7395482077b7b115e3a833d380778319368227"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+      "sha256": "c0d5f8f44e9275372e975e4f2219ed707d79f2870bca766ee2843598cf957273"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+      "sha256": "b12f4b94b1e9827f501ca442857230d96a2d5a96b48a5757d534c57fa09a37cf"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/script.py",
+      "sha256": "0f225f669a24dd7444388ad168302032a9e268ff750f0e20e7d6d50d190bfc40"
+    },
+    {
+      "path": "scripts/repo/check-selection/README.md",
+      "sha256": "1092474d265cf5589ee71d58bce3f31be8f2b3f0dcbad0b890a434c15a7e8f38"
+    },
+    {
+      "path": "scripts/repo/check-selection/checks.yml",
+      "sha256": "8cf35b89d1616d76ebc26ce5c825366e63e839cae9bcbbefdab2087c761e070b"
+    },
+    {
+      "path": "scripts/repo/check-selection/script.py",
+      "sha256": "4cfcdb4e2aa76781cd3af2329fe94106ca44cb5679c3eddddcbf4deafe848863"
+    },
+    {
+      "path": "scripts/repo/check-selection/script.sh",
+      "sha256": "b3014c07474a393ced3724b0635226421d93cab197f976728973154f31fee4ed"
+    },
+    {
+      "path": "scripts/repo/check-selection/smoke-test.py",
+      "sha256": "d6f3fe33001c1c4874eecb7ff44e8b72862ccc193e3d757039aa68d4584da3ed"
+    },
+    {
+      "path": "scripts/repo/check-selection/smoke-test.sh",
+      "sha256": "99547fce370ae913275a9608a184f089ab9961d60bfe9d98ffe3b9052f45c5aa"
+    },
+    {
+      "path": "scripts/repo/commit-gates/README.md",
+      "sha256": "572495c6e5a96399793c923325a86d0b50b3357f130581442016ac12a1ceeb9f"
+    },
+    {
+      "path": "scripts/repo/commit-gates/script.sh",
+      "sha256": "080b57e84277711f2a8b4cfe0e891ee67aa1f5eacbd888d0ad4fc79bb3e43b19"
+    }
+  ]
+}

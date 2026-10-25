@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.declaration-coverage
-version: 1
-status: draft
+version: 2
+status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -73,3 +73,19 @@ identity, network path, persistence need, queue, rollback requirement, or
 operational signal, update the affected declaration contract before treating
 the work as covered. Existing contracts may be extended only within their
 declared scope; a new capability or dependency requires a new bounded scope.
+
+## Executable scope coverage
+
+For supported `deploy/target-scope-contract/v1` declarations, the additive
+[change impact contract](../schemas/change-impact.v1.guide.md) connects each
+requirement to affected inputs and catalogued proof checks. The existing
+scope-health, secret and diagnostic validators retain ownership of their
+constraints. The declaration-coverage command validates the chain, and the
+repository selector discovers consumers without granting the selected checks'
+effects. Unsupported requirements and uncovered impact are explicit gaps.
+Valid non-applicability remains distinct from absent declarations or proof.
+
+The [shared standard](../../shared/standards/require-change-completion.md)
+owns completion principles; [deployment realization](operational-realization-gate.md)
+owns proof semantics and stage order. Required later-stage evidence remains
+blocking even when local coverage passes.

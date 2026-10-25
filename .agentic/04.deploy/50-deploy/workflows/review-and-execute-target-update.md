@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.release-update-and-recovery
-version: 3
+version: 4
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -23,6 +23,9 @@ Use this workflow when a selected target already has an accepted healthy
 release. The provider-specific workflow owns exact commands and inspection and
 mutation authority. An absent foundation or runtime requires its separately
 governed creation route; this workflow does not recreate the target.
+
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
 
 ## Inputs and Readiness
 

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.validate-artifact-placement
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [agentic, architecture]
@@ -36,3 +36,10 @@ expect_fail generic-workflow .agentic/04.deploy/workflows/release-flow.md
 expect_fail scope-declaration infra/04.deploy/03.product/targets/example/scopes/server/declaration-contract.yml
 expect_fail provider-template infra/04.deploy/03.product/targets/example/30-provider-realization/aws/server.yml
 expect_fail lifecycle-script scripts/04.deploy/lifecycle/50-deploy/targets/example/review/script.sh
+
+expect_pass cross-phase-standard .agentic/04.deploy/standards/operational-realization-gate.md
+expect_pass cross-phase-workflow .agentic/04.deploy/workflows/operational-realization-gate.md
+expect_pass aws-standard .agentic/aws/standards/operational-realization-applicability.md
+expect_fail cross-phase-standard .agentic/01.harness/standards/operational-realization-gate.md
+expect_fail cross-phase-workflow .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
+expect_fail aws-standard .agentic/04.deploy/standards/operational-realization-applicability.md

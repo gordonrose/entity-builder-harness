@@ -1,0 +1,6 @@
+{
+  "evidence_class": "static",
+  "check": "changed repository Markdown relative file links",
+  "checked": 96,
+  "findings": []
+}

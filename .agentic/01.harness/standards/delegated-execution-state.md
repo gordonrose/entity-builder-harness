@@ -4,7 +4,7 @@ id: harness.standards.delegated-execution-state
 version: 1
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 01.harness
 domain: delegation
 disciplines:
@@ -19,8 +19,8 @@ portability:
 used_by:
 - id: deploy.plan.execution.kanbien-core-platform-bootstrap
   path: .agentic/04.deploy/plans/execution/kanbien-core-platform-bootstrap.md
-- id: harness.workflow.operational-realization-gate
-  path: .agentic/01.harness/workflows/operational-realization-gate.md
+- id: deploy.workflow.operational-realization-gate
+  path: .agentic/04.deploy/workflows/operational-realization-gate.md
 -->
 # Delegated Execution State
 

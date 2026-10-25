@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-proof-receipts
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -55,6 +55,11 @@ with tempfile.TemporaryDirectory() as directory:
     module.RECEIPTS = Path(directory)
     stored = module.persist(valid)
     assert stored.exists() and module.persist(valid) == stored
+    original_bytes = stored.read_bytes()
+    repeated = copy.deepcopy(valid)
+    repeated['provenance']['collected_at'] = '2026-10-25T15:00:24Z'
+    repeated['integrity']['payload_sha256'] = module.digest({key: value for key, value in repeated.items() if key != 'integrity'})
+    assert module.persist(repeated) == stored and stored.read_bytes() == original_bytes
     conflict = copy.deepcopy(valid); conflict["context"]["record_id"] = "other"; conflict["integrity"]["payload_sha256"] = module.digest({key: value for key, value in conflict.items() if key != "integrity"})
     try:
         module.persist(conflict)

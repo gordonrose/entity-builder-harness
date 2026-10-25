@@ -12,7 +12,7 @@ def emit(v,*codes,facts=None):
  if facts:r["facts"]=facts
  print(json.dumps(r,sort_keys=True));return 0 if v=="applied" else 1
 def review(change,name,digest):
- if not isinstance(change,dict) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"} or name not in str(change.get("ChangeSetName","")):return False
+ if not isinstance(change,dict) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"} or not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)):return False
  params={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
  if params.get("RestoreVerifierImageDigest")!=digest:return False
  seen=set()
@@ -20,27 +20,39 @@ def review(change,name,digest):
   c=x.get("ResourceChange",{}) if isinstance(x,dict) else {};seen.add(c.get("LogicalResourceId"))
   if c.get("LogicalResourceId") not in ADDED or c.get("Action")!="Add" or c.get("ResourceType") not in {"AWS::EC2::SecurityGroup","AWS::EC2::SecurityGroupIngress","AWS::EC2::SecurityGroupEgress","AWS::IAM::Role","AWS::ECS::TaskDefinition"}:return False
  return seen==ADDED
+def surface_parameters(state,digest):
+ return [{"ParameterKey":x["ParameterKey"],"UsePreviousValue":True} for x in state.get("Parameters",[]) if isinstance(x,dict) and isinstance(x.get("ParameterKey"),str) and x["ParameterKey"]!="RestoreVerifierImageDigest"] + [{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":digest}]
+def reconcile(m,name,digest):
+ verdict,code=m.observe_update(name,{"RestoreVerifierImageDigest":digest},lambda change:review(change,name,digest))
+ return emit("applied" if verdict=="complete" else verdict,code,facts={"change_set":name,"restore_verifier_image_digest":digest})
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--json",action="store_true");a,u=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");a,u=p.parse_known_args()
  if u or a.receipt is None:return emit("blocked","persistence-restoration-surface-arguments-invalid")
  m=load();receipt=m.validate_receipt(a.receipt)
- if receipt is None or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
+ if receipt is None:return emit("blocked","package-custody-receipt-invalid")
+ digest=receipt["image_digest"];name=f"kanbien-core-platform-persistence-restore-surface-{digest[7:19]}"
+ if a.reconcile:return reconcile(m,name,digest)
+ if not m.declaration_covered() or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
  ok,stack,code=m.aws("cloudformation","describe-stacks","--stack-name",STACK);items=stack.get("Stacks") if ok and isinstance(stack,dict) else None; state=items[0] if isinstance(items,list) and len(items)==1 and isinstance(items[0],dict) else None
  if not isinstance(state,dict) or state.get("StackStatus") not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}:return emit("blocked",code if not ok else "persistence-restoration-surface-stack-not-healthy")
  digest=receipt["image_digest"];name=f"kanbien-core-platform-persistence-restore-surface-{digest[7:19]}"
  ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
  if not ok:
   if code!="aws-resource-missing":return emit("blocked",code)
-  params=[{"ParameterKey":x["ParameterKey"],"UsePreviousValue":True} for x in state.get("Parameters",[]) if isinstance(x,dict) and isinstance(x.get("ParameterKey"),str)] + [{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":digest}]
+  params=surface_parameters(state,digest)
   with tempfile.NamedTemporaryFile(mode="w",suffix=".json") as f:
    json.dump(params,f);f.flush();ok,_,code=m.aws("cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE","--template-body",f"file://{TEMPLATE}","--parameters",f"file://{f.name}","--capabilities","CAPABILITY_NAMED_IAM")
-  if not ok:return emit("blocked",code)
+  if not ok:return emit("uncertain",code,facts={"change_set":name})
   for _ in range(6):
    time.sleep(2);ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
    if ok and isinstance(change,dict) and change.get("Status")!="CREATE_PENDING":break
- if not review(change,name,digest):return emit("blocked","persistence-restoration-surface-change-set-not-reviewable")
+ if not review(change,name,digest):return reconcile(m,name,digest)
+ if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(m,name,digest)
+ expected={x.get("ParameterKey"):x.get("ParameterValue") for x in state.get("Parameters",[]) if isinstance(x,dict)};expected["RestoreVerifierImageDigest"]=digest
+ actual={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
+ if actual!=expected:return emit("blocked","persistence-restoration-surface-parameters-mismatch")
  ok,_,code=m.aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",name)
- if not ok:return emit("blocked",code)
- wait=subprocess.run(["aws","cloudformation","wait","stack-update-complete","--stack-name",STACK,"--profile",m.PROFILE,"--region",m.REGION],capture_output=True,text=True)
- return emit("applied","persistence-restoration-surface-update-executed",facts={"change_set":name,"restore_verifier_image_digest":digest}) if wait.returncode==0 else emit("blocked","persistence-restoration-surface-update-not-complete")
+ if not ok:return emit("uncertain",code,facts={"change_set":name})
+ return reconcile(m,name,digest)
+
 if __name__=="__main__":raise SystemExit(main())

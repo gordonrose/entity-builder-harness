@@ -1,0 +1,126 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.acceptance-route
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 04.deploy
+#   domain: deployment.release-lifecycle
+#   disciplines:
+#   - architecture
+#   - security
+#   - sre
+#   kind: deployment-contract
+#   purpose: Bind the complete applicable acceptance proof sequence, collector, record
+#     validation, lifecycle promotion and downstream gates.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: deploy.compiler.acceptance-route
+#     path: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py
+schema: deploy/acceptance-route/v1
+target: kanbien-core-platform
+scope: bootstrap-runtime
+program_id: kanbien-core-server
+image_id: kanbien-core-server-image
+inputs_schema: .agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml
+inputs:
+  candidate_receipt:
+    kind: path
+    owner: package-custody
+    example: /tmp/qualified-package.json
+  verification_report:
+    kind: path
+    owner: verify-candidate
+    example: /tmp/private-verification.json
+  rehearsal:
+    kind: path
+    owner: release-rehearsal
+    example: /tmp/release-rehearsal.yml
+  restoration_rehearsal:
+    kind: path
+    owner: restoration-rehearsal
+    example: /tmp/restoration-rehearsal.yml
+commands:
+  private-verification:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.verify-candidate
+    effects:
+    - aws-mutation
+  collect:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+    - --inputs
+    - '{acceptance_inputs}'
+    - --write
+    - --json
+    owner: deploy.command.kanbien-core-platform.accept-release.wrapper
+    effects:
+    - writes-files
+  validate-record:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/validate-accepted-release/script.sh
+    - --record
+    - '{accepted_record}'
+    - --json
+    owner: deploy.command.accepted-release.validate
+    effects:
+    - read-only
+  promote:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh
+    - --scope-contract
+    - '{scope_contract}'
+    - --json
+    owner: deploy.command.promote-accepted-scope
+    effects:
+    - read-only
+    - writes-files
+  scope-inventory:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+    - --target-root
+    - '{target_root}'
+    - --json
+    owner: deploy.command.validate-active-workload-health-recovery
+    effects:
+    - read-only
+  target-declaration:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh
+    - --target-root
+    - '{target_directory}'
+    - --json
+    owner: deploy.command.core-platform-target-declaration
+    effects:
+    - read-only
+proofs:
+  private-verification:
+    command: private-verification
+    proof_type: private-runtime-verification
+    operation: verify
+    result_code: runtime-digest-and-private-verifier-accepted
+    image_role: candidate
+sequence: []
+collector: collect
+accepted_record:
+  schema: deploy/accepted-release/v1
+  schema_path: .agentic/04.deploy/60-run/schemas/accepted-release.v1.schema.yml
+  path: 30-release-evidence/accepted-release.yml
+  validator: validate-record
+promotion: promote
+downstream:
+- scope-inventory
+- target-declaration

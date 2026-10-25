@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: product.workflow.platform-runtime-implementation
-version: 3
+version: 4
 status: active
 created_on: "2026-07-10"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 03.product
 domain: platform-runtime
 disciplines:
@@ -23,6 +23,8 @@ used_by:
   path: docs/03.product/rules/platform/layers/platform.yml
 -->
 # Platform Runtime Implementation Workflow
+
+Follow the [shared change-completion principles](../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
 
 ## Use When
 

@@ -1,0 +1,44 @@
+{
+  "evidence_class": "static",
+  "artifact_headers": {
+    "exit_code": 0,
+    "files": 1297
+  },
+  "artifact_index": {
+    "exit_code": 0,
+    "summary": {
+      "artifacts": 1297,
+      "duplicate_ids": 0,
+      "legacy_artifacts": 0,
+      "skipped": 0,
+      "v2_artifacts": 2,
+      "v3_artifacts": 1295
+    },
+    "coverage": {
+      "declared_artifacts": 1297,
+      "indexed_declared_artifacts": 1297,
+      "missing_paths": [],
+      "scope": "tracked-and-untracked"
+    }
+  },
+  "recognition_generation_check": {
+    "exit_code": 0,
+    "generated_sources": 2
+  },
+  "recognition_validation": {
+    "exit_code": 0,
+    "sources": 7,
+    "terms": 2910
+  },
+  "process_checks": "process-checks.json",
+  "ownership_migration": {
+    "standard": "passed with retained compatibility pointer",
+    "workflow": "passed with retained compatibility pointer"
+  },
+  "commands": [
+    "bash scripts/01.harness/artifact-metadata/check-headers/script.sh --all",
+    "bash scripts/01.harness/artifact-metadata/generate-index/script.sh --all --strict --check-coverage",
+    "bash scripts/02.rag-rulebook/generate-recognition-sources/script.sh --check",
+    "bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh"
+  ],
+  "exit_code": 0,
+  "seconds": 23.02,
+  "evidence_class": "local-runtime-controlled-fixtures",
+  "log": "corrective-local-recovery-tests.log",
+  "new_controlled_cases": 27,
+  "real_docker_called": false
+}

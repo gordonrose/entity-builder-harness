@@ -9,12 +9,17 @@ import os
 import stat
 import subprocess
 import tempfile
+import uuid
+import sys
+import re
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[8]
 STACK = "kanbien-core-platform-core-server-persistence"
 RUNTIME_SECRET_OUTPUT = "RuntimeCredentialsSecretArn"
+CHILD_CHECKPOINT: dict[str, Any] | None = None
+SECRET_CHECKPOINT: dict[str, str] | None = None
 
 def module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -24,6 +29,12 @@ def module(path: Path, name: str):
     return value
 
 def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) -> int:
+    if verdict == "blocked" and CHILD_CHECKPOINT is not None and CHILD_CHECKPOINT.get("verdict") in {"pending", "failed", "uncertain"}:
+        verdict = CHILD_CHECKPOINT["verdict"]
+        facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
+    if verdict in {"blocked", "uncertain", "pending", "failed"} and SECRET_CHECKPOINT is not None:
+        facts = {**(facts or {}), "secret_checkpoint": SECRET_CHECKPOINT}
+        if verdict == "blocked": verdict = "uncertain"
     body: dict[str, object] = {"schema": "deploy/persistence-runtime-credential-lifecycle-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts: body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
@@ -37,14 +48,25 @@ def last_report(stdout: str) -> dict[str, Any] | None:
     return None
 
 def child(path: str, *args: str) -> dict[str, Any] | None:
+    global CHILD_CHECKPOINT
+    CHILD_CHECKPOINT = None
     try:
         completed = subprocess.run(["bash", str(ROOT / path), *args], cwd=ROOT, capture_output=True, text=True, timeout=180)
-    except subprocess.TimeoutExpired:
-        # A child controller may already have submitted a task.  Stop safely;
-        # the target workflow requires reconciliation of that exact task.
-        return None
-    body = last_report(completed.stdout)
-    return body if completed.returncode == 0 and isinstance(body, dict) else None
+        body = last_report(completed.stdout)
+        fallback = last_report(completed.stderr)
+        succeeded = completed.returncode == 0
+    except subprocess.TimeoutExpired as error:
+        # Preserve only a parsed safe controller receipt, never raw child output.
+        stdout = error.stdout.decode("utf-8", errors="replace") if isinstance(error.stdout, bytes) else error.stdout or ""
+        stderr = error.stderr.decode("utf-8", errors="replace") if isinstance(error.stderr, bytes) else error.stderr or ""
+        body, fallback, succeeded = last_report(stdout), last_report(stderr), False
+    observed = body or fallback
+    if not succeeded:
+        observed = observed if isinstance(observed, dict) else {}
+        raw = observed.get("facts") if isinstance(observed.get("facts"), dict) else {}
+        safe = {key: value for key, value in raw.items() if key in {"operation_id", "migration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
+        CHILD_CHECKPOINT = {"command": path, "verdict": observed.get("verdict") if observed.get("verdict") in {"pending", "failed", "uncertain"} else "uncertain", "facts": safe}
+    return body if succeeded and isinstance(body, dict) else None
 
 def outputs(prepare: Any) -> tuple[dict[str, str] | None, str]:
     ok, data, code = prepare.aws("cloudformation", "describe-stacks", "--stack-name", STACK)
@@ -61,6 +83,7 @@ def current_secret_version(prepare: Any, secret_arn: str) -> tuple[str | None, s
     return (current[0], "ok") if len(current) == 1 else (None, "persistence-credential-lifecycle-current-secret-version-ambiguous")
 
 def advance_secret(prepare: Any, secret_arn: str) -> tuple[str | None, str]:
+    global SECRET_CHECKPOINT
     ok, generated, code = prepare.aws("secretsmanager", "get-random-password", "--password-length", "32", "--exclude-punctuation")
     password = generated.get("RandomPassword") if ok and isinstance(generated, dict) else None
     if not isinstance(password, str) or not password: return None, code if not ok else "persistence-credential-lifecycle-password-generation-unavailable"
@@ -69,12 +92,18 @@ def advance_secret(prepare: Any, secret_arn: str) -> tuple[str | None, str]:
         descriptor, path = tempfile.mkstemp(prefix="kanbien-runtime-credential-", suffix=".json")
         os.fchmod(descriptor, stat.S_IRUSR | stat.S_IWUSR)
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle: json.dump({"username": "core_runtime", "password": password}, handle, separators=(",", ":"))
-        completed = subprocess.run(["aws", "secretsmanager", "put-secret-value", "--secret-id", secret_arn, "--secret-string", f"file://{path}", "--profile", prepare.PROFILE, "--region", prepare.REGION, "--output", "json"], capture_output=True, text=True)
+        operation_id = str(uuid.uuid4())
+        SECRET_CHECKPOINT = {"secret_operation_id": operation_id}
+        print(json.dumps({"verdict": "pending", "facts": SECRET_CHECKPOINT}), file=sys.stderr, flush=True)
+        try:
+            completed = subprocess.run(["aws", "secretsmanager", "put-secret-value", "--secret-id", secret_arn, "--client-request-token", operation_id, "--secret-string", f"file://{path}", "--profile", prepare.PROFILE, "--region", prepare.REGION, "--output", "json"], capture_output=True, text=True, timeout=30)
+        except subprocess.TimeoutExpired:
+            return None, "persistence-credential-lifecycle-secret-version-write-uncertain"
         if completed.returncode != 0: return None, "persistence-credential-lifecycle-secret-version-write-failed"
         try: response = json.loads(completed.stdout or "{}")
         except json.JSONDecodeError: return None, "persistence-credential-lifecycle-secret-version-write-response-invalid"
         version = response.get("VersionId") if isinstance(response, dict) else None
-        return (version, "ok") if isinstance(version, str) and version else (None, "persistence-credential-lifecycle-secret-version-write-response-invalid")
+        return (version, "ok") if version == operation_id else (None, "persistence-credential-lifecycle-secret-version-write-response-invalid")
     finally:
         if path is not None:
             try: os.unlink(path)
@@ -101,15 +130,26 @@ def rotate_and_replace(prepare: Any, secret_arn: str, receipt: Path) -> tuple[st
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation"); parser.add_argument("--secret-operation-id"); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
-    if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover", "recover-after-revocation", "recover-secret"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
+    if unknown or args.receipt is None or args.operation not in {"rotate", "revoke-and-recover", "recover-after-revocation", "recover-secret", "reconcile-secret"}: return report("blocked", "persistence-credential-lifecycle-arguments-invalid")
+    if args.validate_arguments: print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[]})); return 0
     prepare = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py", "prepare")
     create = module(ROOT / "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py", "create")
     receipt = prepare.validate_receipt(args.receipt)
     if receipt is None or not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return report("blocked", "persistence-credential-lifecycle-preconditions-not-proven")
     values, code = outputs(prepare); secret_arn = values.get(RUNTIME_SECRET_OUTPUT) if isinstance(values, dict) else None
     if not isinstance(secret_arn, str) or not secret_arn: return report("blocked", code if values is None else "persistence-credential-lifecycle-runtime-secret-unavailable")
+    if args.operation == "reconcile-secret":
+        if not isinstance(args.secret_operation_id, str) or re.fullmatch(r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", args.secret_operation_id) is None:
+            return report("blocked", "persistence-secret-reconciliation-operation-invalid")
+        version, code = current_secret_version(prepare, secret_arn)
+        if version != args.secret_operation_id:
+            return report("uncertain", "persistence-secret-reconciliation-not-current", facts={"secret_operation_id": args.secret_operation_id})
+        return report("prepared", "persistence-runtime-credential-secret-observed-migration-required", facts={"secret_operation_id": version})
+    if args.secret_operation_id is not None:
+        return report("blocked", "persistence-secret-reconciliation-operation-invalid")
     prior_version, code = current_secret_version(prepare, secret_arn)
     if prior_version is None: return report("blocked", code)
     baseline_mode = "health-unready" if args.operation in {"recover-after-revocation", "recover-secret"} else "health-ready"

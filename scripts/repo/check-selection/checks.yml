@@ -1,0 +1,581 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: repo.check-selection.catalog
+#   version: 2
+#   status: active
+#   created_on: "2026-10-24"
+#   updated_on: "2026-10-25"
+#   layer: 06.shared
+#   domain: validation
+#   disciplines: [agentic, security, sre]
+#   kind: configuration
+#   purpose: Bind stable verification identities to existing commands, effects, evidence classes and stage boundaries.
+#   portability: { class: source-only, targets: [] }
+#   used_by:
+#   - id: repo.command.check-selection
+#     path: scripts/repo/check-selection/script.sh
+schema: repo/check-catalog/v1
+checks:
+  scope-inventory:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh
+    - --target-root
+    - '{target_root}'
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.validate-active-workload-health-recovery
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+    - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+    applicability:
+      kind: generic
+      contract_schema: deploy/target-scope-contract/v1
+      context_parameters:
+      - target_root
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    capability: scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/check-capability.yml
+  runnable-program:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh
+    - --contract
+    - '{program_contract}'
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.runnable-program-contract
+    applicability:
+      kind: generic
+      contract_schema: deploy/runnable-program-contract/v1
+      context_parameters:
+      - program_contract
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    capability: scripts/04.deploy/lifecycle/20-build/runnable-program-contract/check-capability.yml
+  core-dependency-boundary:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-dependency-boundary
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - '@types/node'
+      - typescript
+    inputs:
+    - package.json
+    - package-lock.json
+    - infra/04.deploy/03.product/entrypoints
+  persistence-composition:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-persistence-composition
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - pg
+      - '@types/node'
+      - typescript
+    inputs:
+    - package.json
+    - package-lock.json
+    - infra/04.deploy/03.product/entrypoints
+  persistence-provider-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  persistence-container:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh
+    stage: package
+    evidence_class: container-qualification
+    effects:
+    - network
+    - writes-files
+    owner: deploy.command.smoke-test-core-server-persistence-image
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+      image_id: kanbien-core-server-persistence-image
+  bootstrap-container:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+    stage: package
+    evidence_class: container-qualification
+    effects:
+    - network
+    - writes-files
+    owner: deploy.command.smoke-test-core-server-image
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+      image_id: kanbien-core-server-image
+  persistence-target-alignment:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh
+    stage: deploy
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.command.kanbien-core-platform.prepare-core-server-persistence-candidate
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+      image_id: kanbien-core-server-persistence-image
+      target: kanbien-core-platform
+      scope: core-server-persistence
+  bootstrap-target-alignment:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/prepare-candidate/script.sh
+    stage: deploy
+    evidence_class: live
+    effects:
+    - network
+    owner: deploy.command.kanbien-core-platform.prepare-candidate
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+      image_id: kanbien-core-server-image
+      target: kanbien-core-platform
+      scope: bootstrap-runtime
+  persistence-acceptance:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
+    - --inputs
+    - '{acceptance_inputs}'
+    - --write
+    - --json
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - network
+    - writes-files
+    owner: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance.wrapper
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+      image_id: kanbien-core-server-persistence-image
+      target: kanbien-core-platform
+      scope: core-server-persistence
+    parameters:
+      acceptance_inputs:
+        kind: path
+        required: true
+        schema: deploy/acceptance-inputs/v1
+    acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+  bootstrap-acceptance:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh
+    - --inputs
+    - '{acceptance_inputs}'
+    - --write
+    - --json
+    stage: acceptance
+    evidence_class: live
+    effects:
+    - writes-files
+    owner: deploy.command.kanbien-core-platform.accept-release.wrapper
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+      image_id: kanbien-core-server-image
+      target: kanbien-core-platform
+      scope: bootstrap-runtime
+    parameters:
+      acceptance_inputs:
+        kind: path
+        required: true
+        schema: deploy/acceptance-inputs/v1
+    acceptance_route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
+  check-selection-regression:
+    argv:
+    - bash
+    - scripts/repo/check-selection/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: repo.test.check-selection.wrapper
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - pg
+      - '@types/node'
+      - typescript
+    inputs:
+    - package.json
+    - package-lock.json
+    - infra/04.deploy/03.product/entrypoints
+  persistence-payload-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.core-server-persistence-image-payload-fixture
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - pg
+      - '@types/node'
+      - typescript
+    inputs:
+    - package.json
+    - package-lock.json
+    - infra/04.deploy/03.product/entrypoints
+    - .github/workflows/publish-kanbien-core-platform-core-server-persistence.yml
+    - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py
+  artifact-placement-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.test.validate-artifact-placement
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  operational-realization-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/operational-realization-gate/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.test.operational-realization-gate
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+  acceptance-route:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh
+    - --scope-contract
+    - '{scope_contract}'
+    - --json
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: deploy.command.acceptance-route
+    applicability:
+      kind: generic
+      contract_schema: deploy/target-scope-contract/v1
+      context_parameters:
+      - scope_contract
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    capability: scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/check-capability.yml
+  acceptance-route-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.persistence-acceptance-route
+    applicability:
+      kind: bound
+      program_ids:
+      - kanbien-core-server
+      - kanbien-core-server-persistence
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release
+    - scripts/04.deploy/lifecycle/60-run/promote-accepted-scope
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes
+  bootstrap-acceptance-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.kanbien-core-platform.bootstrap-acceptance-writer.wrapper
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
+    - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration
+repository_inputs:
+- inputs:
+  - scripts/repo/check-selection
+  - scripts/repo/commit-gates
+  - scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage
+  - scripts/00.chat/session-log/prepare-chat-session-before-commit
+  checks:
+  - check-selection-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement
+  checks:
+  - artifact-placement-regression
+- inputs:
+  - scripts/04.deploy/operational-realization-gate
+  checks:
+  - operational-realization-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/validate-acceptance-route
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence
+  checks:
+  - acceptance-route-regression
+- inputs:
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release
+  - scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration
+  checks:
+  - bootstrap-acceptance-regression

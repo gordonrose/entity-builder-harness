@@ -4,7 +4,7 @@ id: deploy.corpus.readme
 version: 3
 status: active
 created_on: "2026-06-26"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: infra.ci-cd
 disciplines:
@@ -26,7 +26,7 @@ used_by:
 -->
 # 04.deploy Corpus
 
-For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../.agentic/01.harness/standards/operational-realization-gate.md#bounded-postgresql-stage-6-applicability)
+For Kanbien/staging PostgreSQL Stage 6 only, the [bounded applicability clause](../../.agentic/aws/standards/operational-realization-applicability.md#bounded-postgresql-stage-6-applicability)
 is effective only after explicit adoption and approval of its concrete
 execution plan. Until then the current requirements remain effective.
 Use its operation evidence for that slice; all other target-provider work
@@ -35,7 +35,7 @@ retains the normal realization prerequisite described below.
 This directory is the RAG-readable deploy corpus package for `corpus.04.deploy`.
 
 Target-provider workflows for deploy work live under `.agentic/aws/`; the
-provider-neutral [Operational Realization Gate](../../.agentic/01.harness/workflows/operational-realization-gate.md)
+provider-neutral [Operational Realization Gate](../../.agentic/04.deploy/workflows/operational-realization-gate.md)
 lives in the harness because it applies before a target-provider workflow. This
 directory contains source material, deployment ADRs, and structured rules that
 the RAG/rulebook service can index, chunk, cite, and evaluate.

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.declaration-coverage
-version: 2
-status: draft
+version: 3
+status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-22"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.declaration-coverage
 disciplines:
@@ -25,6 +25,11 @@ used_by:
   path: scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md
 -->
 # Declaration Coverage
+
+Follow [shared change completion](../../shared/standards/require-change-completion.md)
+and the [deployment proof authority](../standards/operational-realization-gate.md).
+The [change impact guide](../schemas/change-impact.v1.guide.md) defines the
+supported bridge from a scope declaration to consumers and check references.
 
 ## Use When
 
@@ -50,9 +55,14 @@ dependency, or release safety property.
    When a workload needs injected secret material, also follow
    `00-target-alignment/workflows/declare-secret-dependency.md`; record an
    explicit empty secret-dependency list when it does not.
-<!-- deterministic-check: allow reason="A future declaration-contract checker can verify referenced paths and commands; until it exists, a reviewer must assess the selected scope and expectation meaning." -->
-4. Confirm that all referenced local declarations and proof commands exist and
-   that the expected value or shape is non-secret and unambiguous.
+4. Validate the supported scope contract and its additive `change_impact`
+   requirements using `scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh --scope-contract <path> --json`.
+   Use `scripts/repo/check-selection/script.sh --paths <changed-paths> --json`
+   to discover affected consumers and required existing checks. The check
+   catalog owns fixed commands, effects, stages and evidence classes. Coverage
+   validates the requirement chain; it does not execute proof commands or grant
+   provider operations. Select package, deploy and acceptance stages separately;
+   their required proof cannot be replaced by local results.
 5. Report `covered` only when every in-scope requirement has a complete chain.
    Otherwise report `gap` with the missing chain element and stop before Target
    Alignment or implementation.

@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.workflow.verify-accept-or-restore-release
-version: 3
+version: 4
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -16,6 +16,9 @@ used_by:
   path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
 -->
 # Verify, Accept or Restore Release
+
+Follow the [shared change-completion principles](../../../shared/standards/require-change-completion.md) for consumer impact, selected verification, continuation and evidence reporting.
+The [deployment proof standard](../../standards/operational-realization-gate.md) owns cross-phase proof requirements; this workflow applies its stage-specific controls.
 
 ## Use When and Inputs
 

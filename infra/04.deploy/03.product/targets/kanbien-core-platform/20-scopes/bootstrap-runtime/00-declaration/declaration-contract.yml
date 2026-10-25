@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.bootstrap-runtime.contract
-#   version: 10
+#   version: 12
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -25,11 +25,13 @@ target: kanbien-core-platform
 scope: bootstrap-runtime
 status: healthy-runtime-accepted
 owner: platform-runtime
+acceptance:
+  route: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml
 program:
   id: kanbien-core-server
   contract: infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
   image_contract: infra/04.deploy/03.product/image/core-server/image-contract.yml
-  local_proof: scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh
+  local_proof: scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/smoke-test.sh
 workload:
   operation: controlled-update-or-restoration
   runtime_selection: ecs-fargate-private-immutable-digest
@@ -165,3 +167,51 @@ excludes:
   - queues-and-workers
   - provider-adapters
   - full-observability-delivery
+
+change_impact:
+  schema: deploy/change-impact/v1
+  inputs:
+  - package.json
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime
+  - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
+  - packages/core
+  - platform/contracts
+  - platform/config
+  - platform/health
+  - platform/observability
+  - platform/runtime
+  - platform/security
+  - platform/server
+  - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server.tsconfig.json
+  - infra/04.deploy/03.product/image/core-server
+  - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime
+  requirements:
+  - id: runtime-implementation-and-release-proof
+    purpose: Keep the declared runtime, dependent contracts, package and deployment
+      consumers connected to their existing checks.
+    owner: platform-runtime
+    required_by:
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml
+    declarations:
+    - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml
+    - infra/04.deploy/03.product/entrypoints/runnable-program-index.yml
+    - infra/04.deploy/03.product/image/core-server/image-contract.yml
+    expectation: Every declared implementation exists; local checks do not substitute
+      for qualified package or target evidence.
+    local_proofs:
+    - scope-inventory
+    - runnable-program
+    - core-dependency-boundary
+    - acceptance-route
+    - acceptance-route-regression
+    - bootstrap-acceptance-regression
+    package_proofs:
+    - bootstrap-container
+    target_proofs:
+    - bootstrap-target-alignment
+    run_proofs:
+    - bootstrap-acceptance

@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.smoke-test-core-server-persistence-image
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -61,12 +61,12 @@ if ! restore_output="$(docker run --rm "${common[@]}" -e "PERSISTENCE_RESTORE_RU
   exit 1
 fi
 printf '%s\n' "$restore_output" | grep -F '"code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"' >/dev/null
-docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("CREATE TABLE platform.runtime_must_not_create (id text)").then(()=>{process.exitCode=1}).catch(()=>{}).finally(()=>pool.end());'
+docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("CREATE TABLE platform.runtime_must_not_create (id text)").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="42501")process.exitCode=1;}).finally(()=>pool.end());'
 runtime_rotated='{"username":"core_runtime","password":"runtime-rotated-password"}'; runtime_recovered='{"username":"core_runtime","password":"runtime-recovered-password"}'
 if ! rotation_output="$(docker run --rm "${common[@]}" -e "PERSISTENCE_MIGRATION_CREDENTIALS=$migration" -e "PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS=$runtime_rotated" -e PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION=rotate -e PERSISTENCE_MIGRATION_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-migration "$TAG" artifacts/kanbien-core-server-persistence-migration.main.js 2>&1)"; then printf '%s\n' "$rotation_output" >&2; exit 1; fi
 printf '%s\n' "$rotation_output" | grep -F '"code":"PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED"' >/dev/null
 # The old password must no longer create a new connection after rotation.
-docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("SELECT 1").then(()=>{process.exitCode=1}).catch(()=>{}).finally(()=>pool.end());'
+docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="28P01")process.exitCode=1;}).finally(()=>pool.end());'
 docker rm -f "$server" >/dev/null
 docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e "PERSISTENCE_RUNTIME_CREDENTIALS=$runtime_rotated" -e PERSISTENCE_RUNTIME_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke-rotated "$TAG" >/dev/null
 node - "$PORT" <<'NODE'
@@ -77,7 +77,7 @@ printf '%s\n' "$revoke_output" | grep -F '"code":"PERSISTENCE_RUNTIME_CREDENTIAL
 node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; let last = 'unreachable'; for (let attempt = 0; attempt < 80; attempt += 1) { const [live, ready] = await Promise.all([fetch(`${base}/livez`).catch(() => undefined), fetch(`${base}/readyz`).catch(() => undefined)]); last = `live-${live?.status ?? 'unreachable'}-ready-${ready?.status ?? 'unreachable'}`; if (live?.status === 200 && ready !== undefined && ready.status !== 200) process.exit(0); await new Promise((resolve) => setTimeout(resolve, 250)); } throw new Error(`revoked-server-did-not-remain-live-and-become-unready:${last}`);
 NODE
-docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-rotated-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("SELECT 1").then(()=>{process.exitCode=1}).catch(()=>{}).finally(()=>pool.end());'
+docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e RUNTIME_PASSWORD=runtime-rotated-password "$TAG" -e 'const {Pool}=require("pg"); const fs=require("fs"); const pool=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.RUNTIME_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}}); pool.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(!["28000","28P01"].includes(error.code))process.exitCode=1;}).finally(()=>pool.end());'
 if ! recovery_output="$(docker run --rm "${common[@]}" -e "PERSISTENCE_MIGRATION_CREDENTIALS=$migration" -e "PERSISTENCE_RUNTIME_BOOTSTRAP_CREDENTIALS=$runtime_recovered" -e PERSISTENCE_RUNTIME_CREDENTIAL_OPERATION=rotate -e PERSISTENCE_MIGRATION_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-migration "$TAG" artifacts/kanbien-core-server-persistence-migration.main.js 2>&1)"; then printf '%s\n' "$recovery_output" >&2; exit 1; fi
 printf '%s\n' "$recovery_output" | grep -F '"code":"PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED"' >/dev/null
 docker rm -f "$server" >/dev/null

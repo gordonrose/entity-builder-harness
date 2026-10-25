@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: harness.workflows.change-harness
-version: 1
+version: 2
 status: active
 created_on: "2026-06-20"
-updated_on: "2026-10-22"
+updated_on: "2026-10-25"
 layer: 01.harness
 domain: governance
 disciplines:
@@ -30,6 +30,7 @@ layer: harness
 purpose: Govern changes to AGENTS.md, CLAUDE.md, .agentic structure, routing, workflows, skills, agents, gates, adapters, and instruction/token rules.
 
 rules:
+  - Follow `.agentic/shared/standards/require-change-completion.md` for connected implementation, consumer impact, proportionate verification, and completion evidence.
   - Keep AGENTS.md as a router only.
   - Consult .agentic/01.harness/standards/agentic-artifact-standards.md before adding or changing harness artifacts.
   - Consult .agentic/01.harness/standards/document-artifact-placement.md before adding or moving document artifacts, corpus material, ADRs, plans, rules, or rule packs.

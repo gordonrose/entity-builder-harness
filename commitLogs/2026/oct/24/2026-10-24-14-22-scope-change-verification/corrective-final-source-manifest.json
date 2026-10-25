@@ -1,0 +1,778 @@
+{
+  "schema": "repo/changed-source-manifest/v1",
+  "baseline": "c884c3216412633eac4ba09452abaeaa1071036e",
+  "qualified_source_revision": "cd9e60b8903a566b46ceab227a5aa3b911acb7a1",
+  "scope": "final combined correction and approved local recovery; session records excluded",
+  "sources": [
+    {
+      "path": ".agentic/01.harness/standards/delegated-execution-state.md",
+      "sha256": "c75ad52a47225a16ea3cdd7901e2036e1a762b228094222d39b9735f7f16875e",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/01.harness/standards/operational-realization-gate.md",
+      "sha256": "c67793863a78dc5d0d84152d9939a51577335aab5f80369a2e5c58473961e59f",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/01.harness/templates/operational-realization-contract.v1.guide.md",
+      "sha256": "c248fa356b2db19fde411658d53f55df1fe002bd478e1a7f3a787f1ac416f240",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/01.harness/templates/operational-realization-contract.v1.template.yml",
+      "sha256": "8772f82c9deb25c1698484829e6f1016052d7808e493d89246ef476829f6234c",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/01.harness/workflows/change-harness.md",
+      "sha256": "c094da83f36bec8e29631fe615592e760626be4a4afb96bcb63e4ea35cc4a045",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/01.harness/workflows/operational-realization-gate.md",
+      "sha256": "64dde33327a65adb8e1ff60a602ee3729f1f038f9fd329802e5bc096e0dd7d07",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "sha256": "02df88a49b68f9bc2c2d1fed3f33ba8168f49b6ca7dbf9bc7725b063da5112ed",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml",
+      "sha256": "9cd5925d752ffd5e2f1ae68b5945caef19de38c4ae636697a8ab15c1712c80df",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/03.product/plans/implementation/postgresql-relational-persistence-reference-v1.md",
+      "sha256": "b6c64ca5ae5ba2c116be041470d4c047eb3ed758f243afbde704a0cc7a90837a",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/03.product/workflows/platform-runtime-implementation.md",
+      "sha256": "a9758b740adc7753c8975dad991531266ed6b4828ea0017bf2a2288dc070106e",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/20-build/workflows/prove-runnable-program-builds.md",
+      "sha256": "a6f8526903287b553824e14b58147558fedb66cb5c0c09deca141d3ec65a282a",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/40-package/workflows/publish-immutable-package-with-custody.md",
+      "sha256": "da5517e9a25d1efe85902188f566df295eeed19d2ab7cd44fe9dd09bdae58d3e",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md",
+      "sha256": "4f3b165f7fca6c69f69125b4e11b3f9e34746de336174fe7cebf413acd1c2c16",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/schemas/acceptance-inputs.v1.schema.yml",
+      "sha256": "3ab8bd2e8c611755550a7ce2c628357a8b296d0aecb940c85cc4ef66ee091049",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/schemas/accepted-release.v1.schema.yml",
+      "sha256": "2229d88e2ca37e17d52c3f27277b40090f6740e353e37a7555705a2d9cbb2ca5",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml",
+      "sha256": "f47ef404106dbf2aa1d484d3bb288ff696b35159afd509c08363fd8ce62d9bd6",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md",
+      "sha256": "5d35035279bd5aa075dcb321662e6d7efee07639c7b401b97db28e0176533b0a",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+      "sha256": "5529ff657e2f562b736c8e6de930a004e168b4a594ce5c2b01adde68e584f3c5",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/README.md",
+      "sha256": "54dcd866d4a7b0f30b7d8d4141ce922a0c55662d05b4cd847d83e1963e32b30a",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/plans/migration/operational-realization-authority.md",
+      "sha256": "d21bab784451be8e7fe49f62ed0f65f8988de96f7f3f8f88645cb7bc6bdd3cca",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/providers/README.md",
+      "sha256": "07260a272c5d86b326112f6dc65384e186cdb8e1347879e20978d6b257bbe41b",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/change-impact.v1.guide.md",
+      "sha256": "05a1259f17d22349bb1b0bd472efa4de086975bc4b9c0581418a103ec3a9e457",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/schemas/change-impact.v1.schema.yml",
+      "sha256": "f08f38d89db439ac53c1686842a91645b3b4ad57292aefd3724b7e0784495844",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/README.md",
+      "sha256": "7a0fc93f1271ed0494818fb9db6303840b38a8052a2efe3fd1f6c6c314b5fcb9",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/declaration-coverage.md",
+      "sha256": "546aeead5eda387c78b569d3b1921808b8994c9b1eb835b03cfe40a1ec9cde63",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/deployment-artifact-placement-and-naming.md",
+      "sha256": "187e0b25eabb2c29d9df2f88d82bb560e305729b8ce9302c78600d1215682689",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/operational-realization-gate.md",
+      "sha256": "84a6c784e41c9e364824718682858ea432b2e49865afad0f1f293b5e09cf473c",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/standards/provider-async-conditions.md",
+      "sha256": "220c012a1af1709559fdf8dbd645fe03c15778ff0efaacdb88a53b4c7becaa1f",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/README.md",
+      "sha256": "baf9663f9a89878e0d1a9961efad26db23b33b159567092f4f84aed97c2ab707",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/declaration-coverage.md",
+      "sha256": "3a7f05126a940c4b072fa389db7ff278c6ad565b76b9b1a64dc64c2bc5c408f1",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/04.deploy/workflows/operational-realization-gate.md",
+      "sha256": "b8806d7182aa4866bedf32a7085b9ca0107fa5609940e88bc669d2e90d23dc09",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+      "sha256": "cc3a8da26256b8d462e8698ea35066e9b8a9c642165985a664a1cdf46f5046ca",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+      "sha256": "ef7dbdcf6b7f33ceb175e23140fea4f146296b1dd6cf94ca162674a56245aaf7",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/README.md",
+      "sha256": "091078d769857da48b3de0d1236ca7a75ab101508c2313abdb862cbd8ae91bdb",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/plans/implementation/local-to-proven-deployment-reliability.md",
+      "sha256": "4ff69e6fa45c4b6ad1e7d8a6939f298a6ed50389cdc49ffab0aee86194f8f3bf",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/standards/operational-realization-applicability.md",
+      "sha256": "45e6366c3267ebc648134c745289ead5bfc0572f345e74250ea5cc064d80dce3",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/aws/workflows/execute-approved-aws-change.md",
+      "sha256": "9e79f772825336d12d3722b35cbeb2d08535895ceacb03359585c1edf3cc655b",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/shared/standards/README.md",
+      "sha256": "fc2208197017d8680a55913c0c98b667f75b40f3e47d6ab4886a9234bf481603",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/shared/standards/require-change-completion.md",
+      "sha256": "7410ababbb9a5ee45d95874a856cf34475ad65064532a749af37195cf4a47338",
+      "mode": "0o644"
+    },
+    {
+      "path": ".agentic/shared/workflows/change-shared-process.md",
+      "sha256": "7a34db889b4bf059b32448f45031be0ef60c5f6d8fb76754f61ac182a56e5e47",
+      "mode": "0o644"
+    },
+    {
+      "path": ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+      "sha256": "889efef78964bff22eb74e40764f645578fcf6c02e80b3997ba003b784ad62e8",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/README.md",
+      "sha256": "6af0dfe4bfbbafa7a4777b29672b43e25e0e7ccef220bbf575ed2f0c57fe9908",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/adrs/0042-separate-change-and-deployment-proof-ownership.md",
+      "sha256": "1f965e2a58ceb3fb5c818a987f6569749632f0eab772c81c75015d822adefc36",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/adrs/README.md",
+      "sha256": "eb68ac451d348ece7565312880b72f792641494ef122c65884baf1c7850c3894",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/plans/README.md",
+      "sha256": "98fdd922010b3f725aa7103a7f959087dc4c6279d5839dc33525dcbac7e1e72f",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/plans/controlled-recovery-replacement-proposal-2026-10-03.md",
+      "sha256": "d2fd771441210ed4896123023030bde1da8a6198d7b239d9e5fac9db96500058",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-gate-programme.md",
+      "sha256": "656bdc85630a0634959293bf2c68df493a10634d42fc6405096e493f6c3d467c",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/04.deploy/plans/operational-realization-v2-programme.md",
+      "sha256": "549e5f4eb4b3ebf78deeee235467ebdb0117a1ddd204dea164bb5a0d0594e8f1",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts",
+      "sha256": "6ade66e8f218d3feaaeeea1744b6dfdf89c0f2939bd4f349c196a35e1e568e78",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
+      "sha256": "58f2430ef922b7185ed92983b877864b9d5ac2ace5d7d100eaaab004400e26c2",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+      "sha256": "c251f5c97dc860c3235d55d1d7a81880d9d8ba82bd944c8828ace36be5f51108",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+      "sha256": "83482f4821fb0b24d907bebd5b310346ea568c4f80d79a07a10534759af61672",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+      "sha256": "2827c57c7fbe9c84afc5418f8163c863fbaaeda3b034ab05104cce3c62aec21f",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "sha256": "b371b545c336e1e8e1baa5a2d59cbb24cc1bd45fdfdce79c580e8a563f5e652f",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml",
+      "sha256": "3172825f2e427d7161a7fa82046ab80140560eb58bb32c6ce08786677a68364b",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+      "sha256": "d23f06e9d6fab48f4f117312452fb7e5789add9622e1879cd6b51c63de5d52bc",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+      "sha256": "8c1c5719a7da7743fc8e55bc947656b41f4311a208fb2a0a1c965089d8db1160",
+      "mode": "0o644"
+    },
+    {
+      "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+      "sha256": "7ab932859124f0b9dfffb0478641e7610a8aae3bf2ac9206479655b1fedeaea4",
+      "mode": "0o644"
+    },
+    {
+      "path": "package.json",
+      "sha256": "d18458813b2ae1c7b9bf3080143c5183fd74ce6895cb7688bde4e64963aaf610",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/README.md",
+      "sha256": "1838484d5b21c9f57f82e348cacc43f5b41a0403c2480f6cc1a9b5058c08842b",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh",
+      "sha256": "01a8a8504382cad913cd94c57e5d22630027bf322e8c802cc45dac2b7d8e13c4",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py",
+      "sha256": "b9e28527d8da0170173caff4d02c7d05f2cf67ee4ee595c90dd8374a490d7b22",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh",
+      "sha256": "4ddd84671333afb1b1ce6f4a2681082396ec629789674e87c6c19bc9fcdf5b5d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/README.md",
+      "sha256": "9c37b43a701416e503cf97ae2351aaeb2f8773cde6d9f107757f322eac1eda8d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+      "sha256": "bfaf85f6806d6be76258fd658d189ea9d37f98eca1d71c25fa38a0cd1838b66e",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh",
+      "sha256": "5e6ce6a1fa57faabf551b8e16c37cb18cd779d3905a36fd4f4b25232bd2b950f",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/script.py",
+      "sha256": "c634fffd4acaa81c98d18334a6239849544a205c7fad1c32da07a063b569a831",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement/smoke-test.sh",
+      "sha256": "81489b5b4cd0f969fd3f69d9b79021a6cc9f24e5925d01176a0a96285ed28498",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/README.md",
+      "sha256": "a657f760b530bbc5e0c4d8ea51488e7ced658cb827b5672f7ac7414997f070c5",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+      "sha256": "12f651750d220286a1be6ac9bce25082ebbbaa9cd8eb9c5fec9426479c467abd",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs",
+      "sha256": "6c160c2fb016e9251ff174ce5d83e5f4cfd137ebba57dbc91f7453139cce10bc",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+      "sha256": "46f5dd968f49f3920f026e50e1f59fe2c9dd4379a2e3008347ffdc7758953a22",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/check-capability.yml",
+      "sha256": "c6efea66a6006a6d0591a5151bdf35543bffa33e7656c77181d54cbeb28d4870",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+      "sha256": "b605ffb1aef91b4d772bc4fef8867f63a80a951bd134cce003f49fe585387613",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/runtime-contract.mjs",
+      "sha256": "1afd638d4e3338935f71dd2c7182e785a2299f42123b70eaebd08d65b94cbea2",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+      "sha256": "5443e3c13b8122b49e82e16ea8f2a814be9c4036feefcd210d452f781d6e7832",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs",
+      "sha256": "8c86fd74e96aa7d6c694df5a88eee835c349f9379750debde425189948acfa44",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/README.md",
+      "sha256": "4713500b8aaf7039be71f8651d270228ef909f27c911083092aa5cfb7bace24b",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py",
+      "sha256": "ea8efdb2e1ca3dc0ae3a8696e27d5b5d98df516c20d494984ec0905aa7b5c30a",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+      "sha256": "dcce1914019c299c56acc25089fef55ebfb4089c93586d7e8979a8a6db278768",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+      "sha256": "c4a54337548e42a12b7ed228b283d5ab7665074d99d18e79a441507d9416ed67",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+      "sha256": "075f9dfd86a82edf7542cf5929c857551c5c34fbd17831d517491a06153c2c2c",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "sha256": "1158439bf8d20bea3aa760fad51e37ce9292520ad41cac5010ad54df9644a8d0",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+      "sha256": "ed8a7fdfce764fe49219b6cd9b526b7c8294bd7cbc116935602d0232d8573ae4",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+      "sha256": "48e1470e06b021a0c94ffa56b518fc73d504c45332fe198a9763fb89f47d90c6",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py",
+      "sha256": "a85ce435b2c4965960de5db9b72d80f390410fee3b6b723e78c1a5b861b3a444",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh",
+      "sha256": "2a648d8bbefd13d074747fa93f33697a61c58ffe6fc7f6efd2a098d427ff1e63",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py",
+      "sha256": "4eebbd0f1b314b8f0cf994b0d33c94d92aec97b13fc6aca08ed4a5b83b2a5be1",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh",
+      "sha256": "811fe44f06b7bba80b27955381152a95983ace7331d09c382ee4afd4ca4805bf",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+      "sha256": "7dca85c1793cebd2707f3f55c4f951d9c94d92303347b6281f86c2ae6e5241c0",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
+      "sha256": "cc36d20ca6364dd9bda6657aadbf9cbcdf33d4435b259868f36601f4c4689d21",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh",
+      "sha256": "8e68094d69d6035ab545e3c6571ac37400e83cdb83a9e2fc1506bc216b7d2690",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py",
+      "sha256": "98825b34153e2b4f25db46f6d5548412f65f8ad9119b4f4cf4664a8d1b483f81",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh",
+      "sha256": "6779e27c4a2ed03a0cb8a9391316621e1d8e45edc2fc805fd25b1e152be152fb",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+      "sha256": "a4b9fb24a915582d00433f941c9558a72ad1d10c6b7abc8b3ce3c599ff80eba5",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.sh",
+      "sha256": "3cfbcce861243d12ec812573e0644c605fb9f27dbfa7090fadb2cad946283821",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.py",
+      "sha256": "a2630fc71aee9fec9e3328af7845dd55f84a8faeb9696f1469704b234d2c3488",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh",
+      "sha256": "7578863ad5236f24c4f684f4ac68d0c5b3ac1f4121cf3ea6ad5bdb4b526506a2",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+      "sha256": "90da54b3dc6b2632cd1c03f1aee5eb3fbda939b1d3026752e17a158e57ab86b7",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+      "sha256": "347c33e05fb5afedf6d7a30130b1c1d62c56b0196a200d4fc200d60562ec2983",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh",
+      "sha256": "2660c10d0a38e15b4d09b30d4a60b3bd8576a723ae300d819893a6fa7c19b054",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py",
+      "sha256": "f4cb68b3436b72f7619e38161fea6147bfc0668537bc8238f845a426edffed89",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh",
+      "sha256": "a948f82bff80252b1c0d9b376c6460b75e745cc5c6eb6214aceb9d1da264f97f",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.py",
+      "sha256": "f591b9e7289394bccd74665d2d608f46f722857e6d513fc3c84d83d585b2b66e",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/script.sh",
+      "sha256": "71a229087d063697b20c082ab96ad1f086e6c691ec8d5803e3228f34689d3aa6",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.py",
+      "sha256": "c297f19492d821aae22215ad9275ca299e251388c884e856cc70fc05f53ee1f8",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/accept-release/smoke-test.sh",
+      "sha256": "e4bd641a98b0dad92ff4016a7e2a2967c76041606339a8177f9066ff19992414",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/validate-accepted-release/script.py",
+      "sha256": "79930e71cd0e9dd26fd6dedab16cf01e176f0929724a35372039e6b16e28431d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/validate-accepted-release/script.sh",
+      "sha256": "4e46025c6c014259d4f3e26fb939553d76dc37018552db25bc30be54c7613142",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/script.sh",
+      "sha256": "54d7a5e3f15afdd2bb723f1e5adba4ce01574cc387e9f66aed2be41d2ae31b3d",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/verify-candidate/verify.py",
+      "sha256": "86ed38e8904b0bcaebc54d1d66f9e34724e89281bcf49f1197ba559c60913e14",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/controller-fixtures.py",
+      "sha256": "fd5356f1c7c2262a92f4cfd0d522d67185baff33920148a978e56082ec76499b",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+      "sha256": "171076d3ee9ea26731a03b61071309028ab2c039778ae98778701787219f00d5",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh",
+      "sha256": "9a1a72f15fb1fb37bd262f41022bc143559ba6f655f6bbf660ed8a2fbd563f14",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/current-observations-test.py",
+      "sha256": "bf28e98e8c9ce2f4e592b95443769a0ff1ef6e12ff805c47a15e71c6cc2b184d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+      "sha256": "18043f0d38c1243d16172eedf6e22b96b1b05cba7a430f73f5013ab262fe4181",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh",
+      "sha256": "7b214ee2ea3fda428c764e674f127c770eb17b0490c9f43f8372617b342571ac",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py",
+      "sha256": "9d444ab3eece4c95fdf3d9eb39c41d020642c135237c1bd592131ade6ba910c6",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.py",
+      "sha256": "25a69a1be8dd537d98b00467944075914cd41f2f159d5183c924d5f1ec5294d8",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh",
+      "sha256": "bb8faa27a5f1b06823df10891e5031de979069699e1151a819924d929569dbc8",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py",
+      "sha256": "7c7b43762405d34270485b8b95acc7376f1b717c7aaac66f6509ec1b9914b0cb",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/fixtures/ecs-captured-responses.yml",
+      "sha256": "34a60855e4cc16a838a83da383a3dea69a5354296271f43ef0bfe93b26e70ac3",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py",
+      "sha256": "5d25410cc1f1063d9a2d94eb15a1a11cc041f7f23d767423e7349deb401fc865",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py",
+      "sha256": "1a24e87678d9d83c62991cf6dfd048f8abe9278acdac469b56f61500d1e0d6bb",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+      "sha256": "559f94bf1daa5afaf7fb5a5ec8a0a895ee9445bc27c1843b4055b859941b4c3a",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh",
+      "sha256": "049a6455333a11eb14000bfe30e7889827ddc597a352ac92d230b5b2d52dbe00",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh",
+      "sha256": "7b79c58c46e5367b14e1d610cf8088baaf3d38c5f3cc19e29c65a5d98af6843f",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+      "sha256": "9c4bf67ad6a416bee04b25fd511fe058cb470adf6ab84818e350e9d6f151f4f0",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+      "sha256": "da9a1fe9eb7605b7f5f9380f2314216b27b33fb8374a18e4cb2f70e394259a56",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py",
+      "sha256": "93985e581887839297c6c1fe2bdb6814359791e3719979575f2d43fbf3c55fbe",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh",
+      "sha256": "05f08da8197f97df1f402a97b263f27494da938c6f4510cbe674e8b2306af3b8",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py",
+      "sha256": "2a6e6a3cc23e7b030e269bd399eca8573a64d8cf63b67339c51e02f93a44a377",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh",
+      "sha256": "9677810548676f678650aab108069e65d946cefda06b531b177752da34f161d5",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+      "sha256": "4a5f5bbcc6ae0b6eedfd5dbf7068c57c50e90b6c36bdd416b617a561c01dc9af",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh",
+      "sha256": "bec754a8e983777a07a9b912f4e59446dba1e2cca2ef65c0b0b839efc9f74a0e",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+      "sha256": "43123fa3ce2c829bfaffbc660bbd74bcd19853a4cf86c5597c2f58f1fd8334d4",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+      "sha256": "5ae41f67d25506d7db6846fe275ec62cc6b04ec831ec0d2a16901c63f094b098",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/check-capability.yml",
+      "sha256": "dd773770328c496296a0077b1568bf4116aa3ce055baa2f3d75a4a5eb5168e94",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+      "sha256": "faae1d016f4f01f66e3355b5b424ed4c3ea5f952357905b23b31b07d31026d3a",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh",
+      "sha256": "291b80598e88abe8cb790e55a1d0c799c13c55846ffcbf5929b478d502a70d98",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/check-capability.yml",
+      "sha256": "868d5ab428277b9e00edcd0052aa8a4037bdca755dc61926dc05124c90ba5d39",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py",
+      "sha256": "6258cd7602e4c41a5fd1138e694b9ac6b6c8074dc77940cbf976072ec68b5f1a",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh",
+      "sha256": "9d106160c3e9614957604a89a456e278a7c5b39b9b053d66136e1eb1860a51a7",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.py",
+      "sha256": "66c12c6609b6e9c4b18e85e3d442fcae0c17824911f054502f0a031e632dab69",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/04.deploy/operational-realization-gate/script.py",
+      "sha256": "d33e9b863e72110c15a7b920a3971eae26d1c6fea278823c6ed4879b65684d63",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/README.md",
+      "sha256": "c23fd537a394a1b2ed082731fb6afbbbc2b94bd97ff59427e5a38a88b5936cc8",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/checks.yml",
+      "sha256": "5573889ad1807543b9ff1a73e845f75ec557d5657bbce36651f76124b12eb047",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/local_cache.py",
+      "sha256": "035a07ff2f4a228c0592e59e1af0f0493b43171abc3bea9f4105c9d9b705385d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/script.py",
+      "sha256": "3eb3e7c7f29047db1ff2faaf4a1854ecc2501a06204965f4290f2790027d139d",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/script.sh",
+      "sha256": "de18ed58422b24743a2268e9bd540c51e6a8fb4e3b2d69e8bcffebbd139e7024",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/repo/check-selection/smoke-test.py",
+      "sha256": "a6587d1682984ca3a162e5eb2c91b10f544da13e5787b3d9fe63873c71681f69",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/check-selection/smoke-test.sh",
+      "sha256": "ae1354f8ee8dddfea1c3bc4f2dc8c45d567837eb214c85cd710eca9acd27825f",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/repo/commit-gates/README.md",
+      "sha256": "d68cf8dcba98140d8a6d3186b6cd2b859ee9bc31a70fa23f58fea7a8181c9ec1",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/repo/commit-gates/script.sh",
+      "sha256": "fdebb99cdb823b4ba7ba4e725fbe7fa9a66abcb368b7de75cb4229ab1fef035e",
+      "mode": "0o755"
+    }
+  ]
+}

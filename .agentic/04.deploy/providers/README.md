@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.providers.readme
-version: 1
+version: 2
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.provider-adapters
 disciplines:
@@ -26,3 +26,5 @@ used_by:
 Provider adapters will live here only after their migration or adoption plan is
 approved. The current AWS adapter boundary remains `.agentic/aws/`; do not
 copy, move, or replace it from this directory during the transition bootstrap.
+
+Current provider-owned applicability: [AWS operational realization applicability](../../aws/standards/operational-realization-applicability.md). The provider-neutral [proof standard](../standards/operational-realization-gate.md) remains authoritative for generic contract and gate semantics.

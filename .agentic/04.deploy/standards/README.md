@@ -4,7 +4,7 @@ id: deploy.standards.readme
 version: 1
 status: active
 created_on: "2026-10-06"
-updated_on: "2026-10-21"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.governance
 disciplines:
@@ -36,3 +36,4 @@ Current standards:
 - [Require fresh safe target evidence](../00-target-alignment/standards/require-fresh-safe-target-evidence.md) and `provider-async-conditions.md`: define target comparison and condition handling.
 - [Require immutable package custody](../40-package/standards/require-immutable-package-custody.md): defines package identity and qualification evidence.
 - [Retain accepted release for restoration](../60-run/standards/retain-accepted-release-for-restoration.md): defines retained baseline and bounded restoration rules.
+- [Operational realization gate](operational-realization-gate.md): cross-phase deployment proof authority; shared completion principles remain in `06.shared`, and provider procedures remain with their provider.

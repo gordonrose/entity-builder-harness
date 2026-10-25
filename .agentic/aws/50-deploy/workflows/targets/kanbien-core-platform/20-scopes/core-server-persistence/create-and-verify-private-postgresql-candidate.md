@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 1
+version: 4
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-24"
+updated_on: "2026-10-25"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -41,6 +41,13 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh --receipt "$receipt" --json
 ```
 
+Change-set submission is asynchronous too. After an interrupted submission,
+observe the fixed digest-derived name without submitting again:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh --receipt "$receipt" --reconcile --json
+```
+
 Review the fixed CREATE change set. It may create only the declared private
 RDS, Secrets Manager, ECS, IAM, Cloud Map, security-group and Secrets Manager
 endpoint resources. Verify its digest and source revision match the receipt,
@@ -51,10 +58,19 @@ controls match the template. Execute only the exact returned change-set name:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh --receipt "$receipt" --approved-change-set "$change_set" --json
 ```
 
-The command may take time for RDS creation. A failed wait or interrupted
-response is an uncertain provider operation: inspect that named stack through
-the governed AWS state workflow before any further mutation. Do not delete,
-retry, or submit another change set merely because a client response was lost.
+Creation returns `pending` until that exact approved change set and its stack
+are independently observed complete. Reconcile without executing again:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh --receipt "$receipt" --approved-change-set "$change_set" --reconcile --json
+```
+
+Follow `.agentic/04.deploy/standards/provider-async-conditions.md` for outcome
+meaning. `failed` requires positively observed terminal failure; `uncertain`
+retains the operation identity when observation cannot prove the result. Both
+remain unaccepted. Do not delete, retry, or submit another change set merely
+because a client response was lost. CREATE review requires the exact change-set
+name, source revision, and both server and restore-verifier image digests.
 
 ## Run Proof
 
@@ -87,8 +103,16 @@ automatically.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --json > "$migration_report"
 ```
 
-If the controller is interrupted after submitting a task, do **not** invoke the
-no-argument command again. Reconcile only the exact already-submitted task.
+The controller flushes a safe operation receipt to stderr before task submission
+and emits one final JSON report on stdout. Retain both streams. If interrupted,
+do **not** invoke the no-argument command again. Reconcile the already-submitted
+task. If its ARN was lost, use the emitted operation ID with
+`--reconcile-operation "$operation_id"` instead of `--reconcile-task`.
+That route searches running and stopped tasks and never launches a replacement;
+missing or ambiguous discovery remains `uncertain`. Discovery uses family and
+status filters, then checks `startedBy` on described tasks; AWS requires
+[`startedBy` to be the only ListTasks filter](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ListTasks.html),
+so it is never combined with a desired-status filter.
 The control accepts it only when its task ARN belongs to this target cluster,
 its task definition matches the current candidate, it is terminal, it exited
 successfully within the declared deadline, and its safe acceptance log is
@@ -109,7 +133,8 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 ```
 
 If the verifier controller is interrupted after task submission, do **not** run
-another verifier blindly. Reconcile the exact task only. The command requires
+another verifier blindly. Reconcile the exact task only, or use its pre-submission
+stderr receipt's `--reconcile-operation "$operation_id"` if the ARN was lost. The command requires
 the current verifier task definition, terminal status, successful completion
 within the declared deadline, no direct database credential, and the expected
 mode-specific safe acceptance log.
@@ -126,23 +151,63 @@ migration, and a private create/read proof establish a candidate only.
 ## Isolated Native Database Restore
 
 Create one named encrypted recovery point after the retained synthetic record
-and release/replacement evidence exist. The recovery point is native RDS
+and release/replacement evidence exist. Supply `--record-proof-receipt` with a
+retained successful `verify-candidate` create/read receipt for the exact record.
+The controller requires the record observation to finish no later than the
+snapshot's original creation time (or creation time when no original time is
+present). It also matches the source database resource ID and rejects a proof
+from before the current source database incarnation. An earlier snapshot from
+the same day therefore blocks before provisioning; the bounded suffix permits
+a fresh follow-up snapshot after the record exists. The recovery point is native RDS
 evidence, not a source-database mutation. The restoration route derives its
 temporary database identifier from that snapshot; it restores it in the same
 private subnets but with a distinct security group. Its one-shot verifier gets
 the ordinary runtime credential and can reach only the restored copy, never
-the source database. A controller interruption is reconciled by repeating the
-same operation and snapshot identifier; the command never chooses a new
-snapshot, target, database, or task identity.
+the source database. After initial submission, reconcile with the same operation
+and snapshot identifier **plus `--observe-only`**. This mode performs no restore,
+task launch or deletion, even when discovery has not caught up or retained task
+evidence has expired. The command never chooses a new snapshot, target,
+database, or task identity. Preserve accepted proof before temporary task
+discovery expires; missing proof requires governed diagnosis, never replay.
 
 ```bash
 snapshot=kanbien-core-platform-persistence-recovery-YYYYMMDD-<bounded-rehearsal-suffix>
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --json
-# Re-observe until the same named temporary database is ready, then:
+record_proof=<retained-create-or-read-proof-receipt-path>
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh --snapshot-id "$snapshot" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/create-recovery-point/script.sh --snapshot-id "$snapshot" --observe-only --json
+# Continue only after that same snapshot is observed available:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --record-proof-receipt "$record_proof" --json
+# Re-observe the existing operation without submitting it again:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation restore --snapshot-id "$snapshot" --record-proof-receipt "$record_proof" --observe-only --json
+# Once that database is ready, submit its one-shot verifier:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation verify --snapshot-id "$snapshot" --json
+# Reconcile that existing verifier until its strict task-bound evidence is accepted:
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation verify --snapshot-id "$snapshot" --observe-only --json
 # Retire only that derived temporary database after the evidence is retained:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
 ```
+
+New restores retain source, snapshot, record and proof-digest tags. Continue
+with the same snapshot and record receipt; existing resources with absent or
+mismatched tags cannot establish that rehearsal, and observation never submits
+another restore. Snapshot time and immutable source identity follow the
+[AWS DBSnapshot response contract](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DBSnapshot.html).
+Simulated receipts cannot authorize the ordinary restoration path. Previously
+retained genuine restore receipts remain valid historical acceptance evidence.
+
+Cleanup reports `pending` while the exact database is deleting and does not
+submit deletion again; re-observe with `--operation cleanup --observe-only`.
+The recovery-point control likewise re-observes its exact snapshot and separates
+creating, failed, available and unknown outcomes. A restore-verifier task must
+match the current database incarnation, task definition, started-by identity,
+and expected record overrides; only a parsed accepted JSON record in that task's
+log establishes proof. Missing logs remain pending evidence without rerunning a
+completed task. Cleanup refuses a still-running verifier. The shared ECS task
+evidence parser permits the captured empty `inferenceAcceleratorOverrides`
+default, while command, role, resource and environment differences still fail.
+The [ECS override contract](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskOverride.html)
+and the sanitized `fixtures/ecs-captured-responses.yml` fixture document that
+provider boundary; derived restore fixtures are explicitly simulated.
 
 The restore verifier requires a qualified image containing its reviewed
 entrypoint and the corresponding provider control surface. Until both are
@@ -154,7 +219,9 @@ verifier or direct the migration task at a restored database.
 After `create` has retained the synthetic record, replace exactly the current
 healthy candidate server task. This command cannot select another target,
 service, or task. It requires a matching qualified receipt and live target
-budget, records the original and replacement task identities, and stops if ECS
+budget, binds the actual task-definition image and source revision plus the
+running OCI digest to that receipt before any stop, records the original and
+replacement task identities, and stops if ECS
 does not restore one distinct healthy task using the unchanged candidate task
 definition. It does not create or read a record itself: follow it with a fresh
 private `read` verifier so the data-survival evidence is explicit.
@@ -197,6 +264,19 @@ revocation migration.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-after-revocation --json
 ```
 
+A secret write uses a generated request token as its version identity and emits
+that non-secret token before submission. If its response was interrupted, use
+only metadata observation; this does not generate or write another secret and
+does not launch a verifier or migration:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation reconcile-secret --secret-operation-id "$secret_operation_id" --json
+```
+
+`prepared` means that exact version is current and the matching migration is
+still required. An absent or superseded version is `uncertain`; never rotate
+again as a substitute for observing the first write.
+
 If the provider observer itself is interrupted after the denied-state proof,
 the following explicit boundary may advance exactly one secret version. Its
 `prepared` verdict requires the next action to be the matching `rotate`
@@ -205,6 +285,12 @@ migration reconciliation; never invoke it again as a retry.
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-secret --json
 ```
+
+The outer credential-lifecycle report preserves the child controller's safe
+checkpoint and `pending`, `failed` or `uncertain` outcome, including a timeout
+while its response is captured. Reconcile that child's operation before moving
+to the next existing continuation; never restart the whole rotation or
+revocation merely because a child observation was interrupted.
 
 This command creates no new persistent AWS resource.  It never prints or
 records a credential value: only secret-version identifiers, task identities,
@@ -223,6 +309,12 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --json
 ```
 
+After an interrupted update or rollback, repeat the same operation and receipt
+with `--reconcile`. It observes only that named change set and its stack; it
+never creates or executes a change set. Pending changes, terminal rollback
+failure and missing observations are distinct. Completed updates require exact
+current digest/source parameters before reporting `transitioned`.
+
 ## Failed Creation Cleanup
 
 An initial candidate that never reaches acceptance may roll back until RDS
@@ -230,12 +322,22 @@ deletion protection stops CloudFormation. Do not manually remove resources or
 reuse the failed stack. Once the named stack is `ROLLBACK_FAILED`, the database
 is the exact target-tagged candidate instance, and the candidate service has
 zero desired, running and pending tasks, the fixed cleanup command first
-removes deletion protection from that failed candidate only, then deletes the
-stack. CloudFormation retains its final native snapshot under the template's
-snapshot policy; do not discard it as part of this control.
+removes deletion protection from that failed candidate only and retains its
+exact stack ARN in a safe receipt. Observe that identity, then use the explicit
+continuation to advance to deletion after repeating database ownership and
+service quiescence checks. It never repeats an unlock or a deletion already
+observed in progress. CloudFormation's snapshot retention policy remains
+required; the controller's deletion result is not proof that a final native
+snapshot is available, so retain separate recovery-point evidence. Even an
+observed `DELETE_COMPLETE` remains `pending` with `stack_deletion: confirmed`
+and `final_snapshot_proof: separately-required`; this controller cannot report
+full retirement or recovery completion without that separate required proof.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh --approved-failed-stack kanbien-core-platform-core-server-persistence --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh --approved-failed-stack kanbien-core-platform-core-server-persistence --reconcile-stack-id "$retirement_stack_id" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh --approved-failed-stack kanbien-core-platform-core-server-persistence --continue-stack-id "$retirement_stack_id" --json
+# Observe the same retained ARN until DELETE_COMPLETE; never resubmit deletion.
 ```
 
 If the control cannot prove the failed state, exact target tag, quiesced
@@ -254,3 +356,90 @@ or any other resource.
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh --receipt "$receipt" --json
 ```
+
+After an interrupted private-route correction, pass the same receipt with
+`--reconcile`; it observes the reviewed correction without creating or executing
+it again. Both qualified image digests and every foundation parameter must
+match before initial execution.
+
+## Bounded Restoration Verifier Surface Correction
+
+For an existing candidate missing the isolated restoration surface, the fixed
+`apply-restoration-verifier-surface` control may add only its enumerated restore
+security groups, network rules, execution role and task definition. It preserves
+all other current stack parameters and supplies one qualified restore image
+digest. It must reject any additional change. This is a separate approved
+provider correction, not permission to change the source database or credentials.
+Use the same receipt plus `--reconcile` after interruption; observation contains
+no mutation. The normal CREATE includes this surface already.
+
+## Applicable Controller Continuation Audit
+
+All commands below belong to this workflow's existing persistence scope. Their
+safe continuation preserves the original operation identity and existing effect
+permissions. A `pending`, `failed`, or `uncertain` result never means acceptance.
+
+| Controller | Observation or continuation boundary |
+| --- | --- |
+| `prepare-candidate` | Read-only preflight; offline declaration coverage precedes provider observation. |
+| `create-change-set` | Same receipt with `--reconcile`; never resubmits the fixed CREATE. |
+| `deploy-candidate` | Same receipt/change-set with `--reconcile`; never executes again. |
+| `run-migration`, `verify-candidate` | Exact `--reconcile-task` or pre-submission `--reconcile-operation`; no new task. |
+| `create-recovery-point` | Same snapshot with `--observe-only`; absence stays uncertain. |
+| `rehearse-isolated-database-restore` | Same operation/snapshot with `--observe-only`; no restore, launch or deletion. |
+| `rehearse-server-replacement` | `--reconcile-original-task`; no second stop, and no reuse across task definitions. |
+| `rehearse-runtime-credential-lifecycle` | Preserve child checkpoint; reconcile exact child task or secret version metadata, then follow the existing continuation boundary. |
+| `transition-qualified-release` | Same operation/receipt with `--reconcile`; no repeated UPDATE execution. |
+| `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
+| `apply-restoration-verifier-surface` | Same receipt with `--reconcile`; no repeated surface update. |
+| `retire-failed-candidate` | Retained exact stack ARN with `--reconcile-stack-id`; explicit `--continue-stack-id` advances only the incomplete deletion stage after safety checks. |
+
+The regression suite at
+`scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py`
+uses synthetic provider responses to exercise these boundaries. It is local
+controller evidence; it establishes no container qualification, CI result,
+provider state, native snapshot availability or live recovery success.
+
+
+## Acceptance route and retained evidence
+
+The authoritative route is the scope's
+`00-declaration/acceptance-route-contract.yml`. It binds the actual controller
+arguments, fifteen required retained proofs, qualified candidate/rollback
+identities, collector, accepted-record schema, owning validator, lifecycle
+promotion and downstream gates. The generic declaration preflight checks this
+template before package construction or provider mutation through each command's
+read-only `--validate-arguments` capability. A missing required mode, collector,
+schema or proof route blocks there; future live receipts are required only at
+the acceptance stage.
+
+After every run proof completes, retain a `deploy/acceptance-inputs/v1` manifest
+with `target: kanbien-core-platform`, `scope: core-server-persistence`, and
+`values` matching the route's typed inputs: the qualified candidate and rollback
+receipts, the fifteen-name `proof_receipts` mapping, original/successor task
+identities, exact recovery snapshot, successful retained source-record proof,
+and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
+Use paths to existing controller receipts. Missing ECS history is not permission
+to synthesize a receipt or replay a completed mutation.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --inputs "$acceptance_inputs" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --inputs "$acceptance_inputs" --write --json
+bash scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.sh --record infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/accepted-release.yml --json
+```
+
+The collector validates historical receipts offline and separately observes
+fresh readiness, deployed immutable identity, database/snapshot binding, budget
+and removal of the temporary restoration database. It refuses to overwrite an
+existing accepted record. Retained receipt integrity is not an attestation of
+trust: provenance must be genuine live controller observation. The existing
+accepted record and its fifteen receipts remain usable unchanged after ECS
+stopped-task expiry; new collection still requires the fresh observations.
+
+For a newly accepted candidate, follow the provider-neutral
+`govern-scope-lifecycle.md` promotion command and then the route's inventory and
+target-declaration gates. The local regression wrapper
+`scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh`
+exercises actual controller receipt capture, collection, record validation,
+promotion and downstream validation with controlled observations. Its temporary
+records are explicitly simulated and are rejected by production validation.

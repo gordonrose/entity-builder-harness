@@ -1,0 +1,20 @@
+[
+  {
+    "name": "process",
+    "exit_code": 0,
+    "stdout": "No deterministic process drift found.\n",
+    "stderr": ""
+  },
+  {
+    "name": "command",
+    "exit_code": 0,
+    "stdout": "No governed script command drift found.\n",
+    "stderr": ""
+  },
+  {
+    "name": "whitespace",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

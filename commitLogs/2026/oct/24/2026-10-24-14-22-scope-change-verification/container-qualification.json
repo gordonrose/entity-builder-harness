@@ -1,0 +1,46 @@
+{
+  "evidence_class": "container-qualification",
+  "scope": "local disposable PostgreSQL/TLS, uncommitted worktree",
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "image": {
+    "id": "sha256:cd6d992c408f4052396097afc4f44a673b7b66fd9fd12ef7dc12e7e531c1f1c2",
+    "repo_digests": [
+      "kanbien-core-server-persistence@sha256:cd6d992c408f4052396097afc4f44a673b7b66fd9fd12ef7dc12e7e531c1f1c2"
+    ],
+    "source_revision_label": "95b850d91c573fb8c09f0c048a53f1409f6c1618"
+  },
+  "checks": [
+    {
+      "check": "image-build",
+      "exit_code": 0,
+      "seconds": 59.48,
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-change-qualification"
+      ],
+      "log": "local-image-build.log"
+    },
+    {
+      "check": "image-smoke",
+      "exit_code": 0,
+      "seconds": 33.0,
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-change-qualification",
+        "--port",
+        "39456"
+      ],
+      "log": "local-image-smoke.log"
+    }
+  ]
+}

@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.core-platform-target-declaration
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     targets: []
 #   effects:
 #   - read-only
+#   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
 #   - id: deploy.test.core-platform-target-declaration
 #     path: scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/smoke-test.sh

@@ -8,10 +8,10 @@ state, the exact task definition/image and the safe application result.
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.library.kanbien-core-platform.persistence-proof-receipts
-#   version: 1
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -29,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -39,6 +40,8 @@ ROOT = Path(__file__).resolve().parents[7]
 RECEIPTS = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts"
 SCHEMA = "deploy/persistence-proof-receipt/v1"
 ALLOWED_PROOFS = {"migration", "verifier", "restore", "server-replacement"}
+EVIDENCE_CLASS = "live"
+OPERATIONS = {"migration": {"apply", "rotate", "revoke", "prove-effective-privilege"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
 TASK_ARN_PREFIX = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"
 
 
@@ -102,15 +105,18 @@ def validate(receipt: object) -> dict[str, Any]:
     if set(receipt) != allowed or receipt.get("schema") != SCHEMA or receipt.get("target") != TARGET or receipt.get("scope") != SCOPE:
         raise ReceiptError("persistence-proof-receipt-identity-invalid")
     proof_type = receipt.get("proof_type")
-    if proof_type not in ALLOWED_PROOFS:
+    if not isinstance(proof_type, str) or proof_type not in ALLOWED_PROOFS:
         raise ReceiptError("persistence-proof-receipt-proof-type-invalid")
-    _string(receipt.get("operation"), "operation")
+    if not isinstance(receipt.get("operation"), str) or receipt["operation"] not in OPERATIONS[proof_type]:
+        raise ReceiptError("persistence-proof-receipt-operation-invalid")
     task = receipt.get("task")
     base_task_fields = {"arn", "definition", "image_digest", "started_at", "stopped_at", "terminal_status", "exit_code", "result_code"}
     if not isinstance(task, dict) or (set(task) != base_task_fields and set(task) != base_task_fields | {"stopped_reason"}):
         raise ReceiptError("persistence-proof-receipt-task-invalid")
     for field in ("arn", "definition", "image_digest", "terminal_status", "result_code"):
         _string(task.get(field), f"task-{field}")
+    if re.fullmatch(re.escape(TASK_ARN_PREFIX) + r"[0-9a-f]{32}", task["arn"]) is None:
+        raise ReceiptError("persistence-proof-receipt-task-arn-invalid")
     _timestamp(task.get("started_at"), "task-started-at")
     _timestamp(task.get("stopped_at"), "task-stopped-at")
     if task["terminal_status"] != "STOPPED" or type(task.get("exit_code")) is not int:
@@ -119,8 +125,10 @@ def validate(receipt: object) -> dict[str, Any]:
         raise ReceiptError("persistence-proof-receipt-terminal-invalid")
     _context(proof_type, receipt.get("context"))
     provenance = receipt.get("provenance")
-    if not isinstance(provenance, dict) or set(provenance) != {"controller", "collection_method", "collected_at"}:
+    if not isinstance(provenance, dict) or set(provenance) not in ({"controller", "collection_method", "collected_at"}, {"controller", "collection_method", "collected_at", "evidence_class"}):
         raise ReceiptError("persistence-proof-receipt-provenance-invalid")
+    if not isinstance(provenance.get("evidence_class", "live"), str) or provenance.get("evidence_class", "live") not in {"live", "simulated"}:
+        raise ReceiptError("persistence-proof-receipt-evidence-class-invalid")
     for field in ("controller", "collection_method", "collected_at"):
         _string(provenance.get(field), f"provenance-{field}")
     integrity = receipt.get("integrity")
@@ -133,7 +141,7 @@ def validate(receipt: object) -> dict[str, Any]:
 
 
 def make(*, proof_type: str, operation: str, task: dict[str, object], image_digest: str, result_code: str, context: dict[str, object], controller: str, collected_at: str) -> dict[str, Any]:
-    if proof_type not in ALLOWED_PROOFS:
+    if not isinstance(proof_type, str) or proof_type not in ALLOWED_PROOFS:
         raise ReceiptError("persistence-proof-receipt-proof-type-invalid")
     containers = task.get("containers")
     container = containers[0] if isinstance(containers, list) and len(containers) == 1 and isinstance(containers[0], dict) else None
@@ -155,7 +163,7 @@ def make(*, proof_type: str, operation: str, task: dict[str, object], image_dige
             "stopped_reason": task.get("stoppedReason", ""),
         },
         "context": context,
-        "provenance": {"controller": controller, "collection_method": "ecs-terminal-task+task-definition+safe-log", "collected_at": collected_at},
+        "provenance": {"controller": controller, "collection_method": "ecs-terminal-task+task-definition+safe-log", "collected_at": collected_at, "evidence_class": EVIDENCE_CLASS},
     }
     body["integrity"] = {"algorithm": "sha256", "payload_sha256": digest(body)}
     return validate(body)
@@ -172,7 +180,12 @@ def persist(receipt: dict[str, Any]) -> Path:
             existing = validate(json.loads(destination.read_text(encoding="utf-8")))
         except (OSError, UnicodeError, json.JSONDecodeError, ReceiptError) as error:
             raise ReceiptError("persistence-proof-receipt-existing-invalid") from error
-        if existing != validated:
+        # Re-observing the same completed proof must preserve the first receipt.
+        # Collection time is provenance, not a new execution or proof identity.
+        def substantive(value):
+            return {**{key: item for key, item in value.items() if key not in {"integrity", "provenance"}},
+                    "provenance": {**{key: item for key, item in value["provenance"].items() if key != "collected_at"}, "evidence_class": value["provenance"].get("evidence_class", "live")}}
+        if substantive(existing) != substantive(validated):
             raise ReceiptError("persistence-proof-receipt-conflict")
         return destination
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=RECEIPTS, prefix=f".{destination.name}.", suffix=".tmp", delete=False) as handle:

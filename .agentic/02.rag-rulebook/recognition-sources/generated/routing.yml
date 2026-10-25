@@ -25,7 +25,7 @@
 #   - id: rag-rulebook.policy.retrieval-selector.v1.dimension.prompt
 #     path: .agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml
 #   created_on: '2026-06-25'
-#   updated_on: '2026-10-22'
+#   updated_on: "2026-10-25"
 
 schema: rag-rulebook/recognition-source/v1
 source_id: recognition.generated.routing
@@ -53,8 +53,8 @@ source_artifacts:
 generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.sh
   --source routing --output .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
 generation_summary:
-  term_count: 138
-  workflow_files: 47
+  term_count: 143
+  workflow_files: 50
   corpus_ids: 12
   mode_terms: 9
 terms:
@@ -514,6 +514,18 @@ terms:
   canonical_id: 04.deploy.workflow.review-and-execute-target-update
   evidence_path: .agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md
   confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/declare-persistence-diagnostic-mapping.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.declare-persistence-diagnostic-mapping
+  evidence_path: .agentic/04.deploy/60-run/workflows/declare-persistence-diagnostic-mapping.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.govern-scope-lifecycle
+  evidence_path: .agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md
+  confidence_weight: 1
 - term: .agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md
   category: workflow-name
   match_type: exact
@@ -531,6 +543,12 @@ terms:
   match_type: exact
   canonical_id: 04.deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
+  confidence_weight: 1
+- term: .agentic/04.deploy/workflows/operational-realization-gate.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.operational-realization-gate
+  evidence_path: .agentic/04.deploy/workflows/operational-realization-gate.md
   confidence_weight: 1
 - term: .agentic/aws/workflows/README.md
   category: workflow-name
@@ -736,6 +754,12 @@ terms:
   canonical_id: 04.deploy.workflow.declaration-coverage
   evidence_path: .agentic/04.deploy/workflows/declaration-coverage.md
   confidence_weight: 1
+- term: declare-persistence-diagnostic-mapping.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.declare-persistence-diagnostic-mapping
+  evidence_path: .agentic/04.deploy/60-run/workflows/declare-persistence-diagnostic-mapping.md
+  confidence_weight: 1
 - term: declare-secret-dependency.md
   category: workflow-name
   match_type: exact
@@ -765,6 +789,12 @@ terms:
   match_type: exact
   canonical_id: aws.workflow.execute-approved-aws-change
   evidence_path: .agentic/aws/workflows/execute-approved-aws-change.md
+  confidence_weight: 1
+- term: govern-scope-lifecycle.md
+  category: workflow-name
+  match_type: exact
+  canonical_id: 04.deploy.workflow.govern-scope-lifecycle
+  evidence_path: .agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md
   confidence_weight: 1
 - term: implement-backend-architecture-guideline.md
   category: workflow-name
