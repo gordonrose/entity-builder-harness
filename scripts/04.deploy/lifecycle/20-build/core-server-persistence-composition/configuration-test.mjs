@@ -139,6 +139,15 @@ async function roleCredentialRegression() {
   const ddl = statements.map((statement) => statement.text).join("\n");
   assert.equal(ddl.includes("PASSWORD"), false, "role identity DDL must not carry a credential or verifier");
   assert.equal(ddl.includes("SCRAM-SHA-256"), false, "a verifier is sensitive credential material too");
+  const inheritedStatements = [];
+  const inherited = { ...bounded, inherit: true };
+  const inheritedPool = { query: async (statement) => {
+    inheritedStatements.push(statement);
+    if (statement.text.startsWith("SELECT EXISTS")) return { rows: [inheritedStatements.filter((item) => item.text.startsWith("SELECT EXISTS")).length === 1 ? inherited : bounded] };
+    return { rows: [] };
+  } };
+  await roleCredential.ensureBoundedLoginRole(inheritedPool, { username: "core_runtime" });
+  assert.equal(inheritedStatements.some((statement) => statement.text === 'ALTER ROLE "core_runtime" LOGIN NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT'), true, "a non-elevated legacy role must converge to the bounded IAM identity profile");
   const elevatedPool = { query: async () => ({ rows: [{ ...bounded, create_role: true }] }) };
   await assert.rejects(() => roleCredential.ensureBoundedLoginRole(elevatedPool, { username: "core_runtime" }), /PERSISTENCE_ROLE_PRIVILEGE_BOUNDARY_NOT_CONFIRMED/);
 }
