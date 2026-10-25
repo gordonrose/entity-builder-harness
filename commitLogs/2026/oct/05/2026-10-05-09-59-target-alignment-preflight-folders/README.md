@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:53:24Z
-latest_commit_sha: 3536df5a9a6461f35f02d7ca3e02e2337efa55ec
-chat_duration: 1749235s (20:05:53:55)
+latest_commit_at_utc: 2026-10-25T15:18:21Z
+latest_commit_sha: d9cd2362
+chat_duration: 1750732s (20:06:18:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3194,6 +3194,17 @@ Summary: Collector run 40202249108 failed at public layer download only. The exa
 
 Durable evidence: Durable target contract and workflow are in infra/04.deploy/03.product/image/core-server-persistence-observability-collector and .github/workflows/publish-kanbien-core-platform-observability-collector.yml; run logs remain GitHub Actions evidence.
 
+
+### 2026-10-25T15:18:21Z - Commit recorded
+
+Commit: `d9cd2362`
+
+Message: fix(deploy): build minimal observability collector
+
+Summary: Replaced the vulnerable vendor collector mirror with a pinned minimal source build, archive-integrity handoff, unprivileged scan, and private publication only after scan success.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4016,6 +4027,13 @@ Durable evidence: Durable target contract and workflow are in infra/04.deploy/03
   Summary: Collector custody now mirrors the pinned source, exports the exact private image as a one-day scan input, scans that payload in an unprivileged job, and only afterward issues the protected SBOM/provenance/receipt. No scan result or failed attempt is accepted as custody evidence.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `d9cd2362`
+  Time UTC: 2026-10-25T15:18:21Z
+  Message: fix(deploy): build minimal observability collector
+  Summary: Replaced the vulnerable vendor collector mirror with a pinned minimal source build, archive-integrity handoff, unprivileged scan, and private publication only after scan success.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4039,9 +4057,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:53:24Z
-Latest commit SHA: 3536df5a9a6461f35f02d7ca3e02e2337efa55ec
-Chat duration: 1749235s (20:05:53:55)
+Latest commit at UTC: 2026-10-25T15:18:21Z
+Latest commit SHA: d9cd2362
+Chat duration: 1750732s (20:06:18:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
