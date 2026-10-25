@@ -119,6 +119,10 @@ connect scope implementation verification and recovery
 - Summary: Second resumed Goal turn: helper version success does not restore Docker qualification
   Durable evidence: Native attempt6 from clean23128b56 failed after34.2s with identical credential-helper WSLvsock error, despite same-process helper version probe exit0. No smoke started; existing Docker configuration unchanged. Latest fetch succeeded; main remainsc884c321. This evidence means version-only success is insufficient reason to launch further retries. Required current image proof and final merge remain incomplete; bounded package-owner public-image recovery approval is pending. No independent implementation work remains.
 
+
+- Summary: Resumed Goal blocked audit passes after three consecutive turns
+  Durable evidence: 2026-10-25T12:03:41Z: latest native build remains failed with WSL credential-helper error despite version probe exit0; daemon confirms no scope-corrections-20261025 image exists. Same external qualification blocker persisted through user-requested attempt5, automatic attempt6, and this current-state audit. Worktree was clean at650674df; main/origin c884c321 unchanged. No independent source/test work remains. All six corrections and13 combined local checks remain verified. Required container proof and final main merge incomplete. No approval received for proposed package-owner recovery using temporary empty Docker configuration; AGENTS.md requires that governed recovery decision. Next lifecycle action: blocked, not complete. Resume after stable native helper recovery or explicit approval for the bounded recovery procedure.
+
 ## Activity Log
 
 ### 2026-10-24T13:22:47Z - Session started
@@ -421,6 +425,13 @@ Message: Record native qualification failure after successful helper probe
 Summary: Attempt6 still fails before image build despite successful Docker helper version precondition. Recovery approval remains pending; current-source container smoke and final main merge remain incomplete.
 
 ADR impact: Diagnostic evidence only; no source or architecture change.
+
+
+### 2026-10-25T12:04:22Z - Context hygiene
+
+Summary: Resumed Goal blocked audit passes after three consecutive turns
+
+Durable evidence: 2026-10-25T12:03:41Z: latest native build remains failed with WSL credential-helper error despite version probe exit0; daemon confirms no scope-corrections-20261025 image exists. Same external qualification blocker persisted through user-requested attempt5, automatic attempt6, and this current-state audit. Worktree was clean at650674df; main/origin c884c321 unchanged. No independent source/test work remains. All six corrections and13 combined local checks remain verified. Required container proof and final main merge incomplete. No approval received for proposed package-owner recovery using temporary empty Docker configuration; AGENTS.md requires that governed recovery decision. Next lifecycle action: blocked, not complete. Resume after stable native helper recovery or explicit approval for the bounded recovery procedure.
 
 ## Sub-Agent Activity
 
