@@ -5,7 +5,7 @@
 #   version: 9
 #   status: active
 #   created_on: "2026-10-21"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.runtime-safety
 #   disciplines: [agentic, security, sre]
@@ -180,7 +180,7 @@ def validate_v2(contract: dict[str, Any], source: Path | None, binding: dict[str
                 if completion.get("retry_policy") not in {"no-automatic-retries", "bounded-idempotent-retry"}: codes.append("task-retry-policy-invalid")
             if not isinstance(item.get("required_workloads"), list) or not all(non_empty(value) for value in item.get("required_workloads", [])): codes.append("task-required-workloads-invalid")
             check_server_mediated_dependency_proof(item, required, workloads, codes)
-            check_migration_execution(item, required, codes)
+            check_migration_execution(item, required, workloads, codes)
             check_v2_proof(item, "completion", source, codes)
     if len(identities) != len(set(identities)): codes.append("workload-id-invalid")
     all_ids=set(identities)
@@ -375,7 +375,7 @@ def check_server_mediated_dependency_proof(
         codes.append("server-mediated-dependency-proof-cleanup-invalid")
 
 
-def check_migration_execution(item: dict[str, Any], required_dependencies: list[Any], codes: list[str]) -> None:
+def check_migration_execution(item: dict[str, Any], required_dependencies: list[Any], workloads: list[Any], codes: list[str]) -> None:
     """Require a bounded, single-executor, non-speculative migration declaration."""
     migration = item.get("migration_execution")
     if migration is None:
@@ -407,6 +407,26 @@ def check_migration_execution(item: dict[str, Any], required_dependencies: list[
         codes.append("migration-execution-interruption-policy-invalid")
     if declared.get("unknown_outcome_policy") != "block-release-require-fresh-state-observation":
         codes.append("migration-execution-unknown-outcome-policy-invalid")
+    fresh_state = mapping(declared.get("fresh_state_observation"), "migration-execution-fresh-state-observation-invalid", codes)
+    if fresh_state is not None:
+        observer_id = fresh_state.get("workload")
+        observer = next((candidate for candidate in workloads if isinstance(candidate, dict) and candidate.get("id") == observer_id), None)
+        administration = observer.get("administrative_execution") if isinstance(observer, dict) else None
+        allowed_operations = administration.get("allowed_operations") if isinstance(administration, dict) else None
+        if (
+            set(fresh_state) != {"workload", "operation", "replay_permitted_result", "receipt"}
+            or not isinstance(observer, dict)
+            or observer.get("workload_type") != "run-to-completion-task"
+            or not isinstance(administration, dict)
+            or administration.get("dependency") != declared.get("dependency")
+            or administration.get("credential_access_class") != "administrative"
+            or not isinstance(allowed_operations, list)
+            or fresh_state.get("operation") != "observe-migration-state"
+            or fresh_state.get("operation") not in allowed_operations
+            or fresh_state.get("replay_permitted_result") != "PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED"
+            or fresh_state.get("receipt") != "durable-task-receipt-required-before-retry"
+        ):
+            codes.append("migration-execution-fresh-state-observation-invalid")
     if declared.get("compatibility_strategy") != "expand-deploy-verify-contract-later":
         codes.append("migration-execution-compatibility-invalid")
     replay_handling = mapping(declared.get("replay_handling"), "migration-execution-replay-handling-invalid", codes)

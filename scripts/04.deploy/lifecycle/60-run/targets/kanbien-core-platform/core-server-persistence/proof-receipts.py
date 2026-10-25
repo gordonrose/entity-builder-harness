@@ -41,7 +41,7 @@ RECEIPTS = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-s
 SCHEMA = "deploy/persistence-proof-receipt/v1"
 ALLOWED_PROOFS = {"administration", "migration", "verifier", "restore", "server-replacement"}
 EVIDENCE_CLASS = "live"
-OPERATIONS = {"administration": {"bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege"}, "migration": {"apply"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
+OPERATIONS = {"administration": {"bootstrap-identities", "grant-runtime-application-access", "confirm-runtime-iam-access", "revoke-runtime", "restore-runtime", "prove-effective-privilege", "observe-migration-state"}, "migration": {"apply"}, "verifier": {"create", "read", "health-ready", "health-unready", "cleanup"}, "restore": {"isolated-restore"}, "server-replacement": {"controlled-replacement"}}
 TASK_ARN_PREFIX = "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/"
 
 

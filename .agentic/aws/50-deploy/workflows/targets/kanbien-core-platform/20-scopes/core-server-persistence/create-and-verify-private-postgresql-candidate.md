@@ -144,6 +144,21 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 # decision: do not restore an image across a changed permission contract.
 ```
 
+#### Migration interruption or unsuccessful completion
+
+Do not rerun an unsuccessful, timed-out, or interrupted migration merely
+because its task has stopped. First reconcile that task through the named
+migration controller. If the outcome remains non-accepted, use the separate
+read-only administrative observer. It compares the reviewed immutable manifest
+with the migration-history table and writes a durable receipt. Only its
+`PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED` result permits a later fresh
+migration submission; an already-applied, partial, changed, or unavailable
+history remains a release block and needs governed review.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation observe-migration-state --json > migration_state_observation_report.json
+```
+
 At the update boundary ECS replaces the image-bound service task. The service
 is not acceptable merely because it is running: its private readiness and a
 meaningful verifier operation must pass after the administration/migration/
