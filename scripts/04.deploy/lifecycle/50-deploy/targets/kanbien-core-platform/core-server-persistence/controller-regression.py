@@ -309,6 +309,24 @@ class ControllerRegression(unittest.TestCase):
         replace.assert_called_once_with(receipt)
         self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])
 
+    def test_migration_rejection_preserves_only_closed_safe_log_facts(self):
+        module=load(RUN/'run-migration/script.py')
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'startedBy':'kp-'+'b'*32,'lastStatus':'STOPPED','containers':[{'exitCode':1}],'startedAt':'2026-10-24T10:00:00Z','stoppedAt':'2026-10-24T10:00:02Z'}
+        safe=json.dumps({'verdict':'rejected','code':'PERSISTENCE_MIGRATION_NOT_CONFIRMED','stage':'migration','provider_failure_class':'access_denied'})
+        provider=Provider(lambda parts:(True,{'events':[{'message':safe}]},'ok'))
+        with patch.object(module,'aws',provider.aws):
+            report=result(lambda:module.accepted_completion(task,120,'apply'))[1]
+        self.assertEqual(report['verdict'],'failed')
+        self.assertEqual(report['facts']['safe_result_code'],'PERSISTENCE_MIGRATION_NOT_CONFIRMED')
+        self.assertEqual(report['facts']['safe_provider_failure_class'],'access_denied')
+        unsafe=json.dumps({'verdict':'rejected','code':'PERSISTENCE_MIGRATION_NOT_CONFIRMED','stage':'migration','password':'synthetic-canary'})
+        provider=Provider(lambda parts:(True,{'events':[{'message':unsafe}]},'ok'))
+        with patch.object(module,'aws',provider.aws):
+            report=result(lambda:module.accepted_completion(task,120,'apply'))[1]
+        self.assertEqual(report['verdict'],'failed')
+        self.assertNotIn('safe_result_code',report['facts'])
+        self.assertNotIn('synthetic-canary',json.dumps(report))
+
     def test_correction_parameters_remain_complete_and_unique(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
         digest='sha256:'+'a'*64
