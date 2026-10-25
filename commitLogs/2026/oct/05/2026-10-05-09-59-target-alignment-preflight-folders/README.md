@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T13:52:02Z
-latest_commit_sha: f8a16e683911c6906ca834e45f48ee70025601f1
-chat_duration: 1745553s (20:04:52:33)
+latest_commit_at_utc: 2026-10-25T14:06:16Z
+latest_commit_sha: df2ca76296f4ccae7d5b752d7ae0725c1a689e07
+chat_duration: 1746407s (20:05:06:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -2985,6 +2985,17 @@ Summary: A public ADOT OCI index is pinned by contract and package-tested struct
 
 Durable evidence: Collector contract and config live under infra/04.deploy/03.product/image/core-server-persistence-observability-collector; workflow and guard live under .github/workflows and scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform.
 
+
+### 2026-10-25T14:06:16Z - Commit recorded
+
+Commit: `df2ca76296f4ccae7d5b752d7ae0725c1a689e07`
+
+Message: feat(deploy): add private collector custody route
+
+Summary: Added the target-private ADOT collector package contract, protected manual custody workflow, static guard and negative regression, plus target catalogue and declaration-gate routing. Local package, target, deployment-control, and retained-acceptance checks passed; publication and live observability proof remain pending.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3748,6 +3759,13 @@ Durable evidence: Collector contract and config live under infra/04.deploy/03.pr
   Summary: Corrected ADOT delivery to use EMF through the existing private Logs endpoint, declared target-owned notification binding, and classified named absent change sets safely; local target and observability gates pass.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `df2ca76296f4ccae7d5b752d7ae0725c1a689e07`
+  Time UTC: 2026-10-25T14:06:16Z
+  Message: feat(deploy): add private collector custody route
+  Summary: Added the target-private ADOT collector package contract, protected manual custody workflow, static guard and negative regression, plus target catalogue and declaration-gate routing. Local package, target, deployment-control, and retained-acceptance checks passed; publication and live observability proof remain pending.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3771,9 +3789,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T13:52:02Z
-Latest commit SHA: f8a16e683911c6906ca834e45f48ee70025601f1
-Chat duration: 1745553s (20:04:52:33)
+Latest commit at UTC: 2026-10-25T14:06:16Z
+Latest commit SHA: df2ca76296f4ccae7d5b752d7ae0725c1a689e07
+Chat duration: 1746407s (20:05:06:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
