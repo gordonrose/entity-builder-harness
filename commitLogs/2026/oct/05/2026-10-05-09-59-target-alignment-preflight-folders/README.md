@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T14:06:16Z
-latest_commit_sha: df2ca76296f4ccae7d5b752d7ae0725c1a689e07
-chat_duration: 1746407s (20:05:06:47)
+latest_commit_at_utc: 2026-10-25T14:09:06Z
+latest_commit_sha: 0360770f7c82b090716c445dba31e7226b1de95a
+chat_duration: 1746577s (20:05:09:37)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3029,6 +3029,17 @@ Summary: The merge base was c884c321. Main contained newer accepted scope/recove
 
 Durable evidence: Durable details are in Git merge parents, collector custody artifacts, and this chat session log.
 
+
+### 2026-10-25T14:09:06Z - Commit recorded
+
+Commit: `0360770f7c82b090716c445dba31e7226b1de95a`
+
+Message: Merge main into chat branch
+
+Summary: Integrated the newer accepted persistence implementation from main with the collector custody route. Resolved only genuine overlaps by retaining main's newer controller/runtime implementation and reran collector, observability, target, and fixed deployment-controller checks successfully.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3799,6 +3810,13 @@ Durable evidence: Durable details are in Git merge parents, collector custody ar
   Summary: Added the target-private ADOT collector package contract, protected manual custody workflow, static guard and negative regression, plus target catalogue and declaration-gate routing. Local package, target, deployment-control, and retained-acceptance checks passed; publication and live observability proof remain pending.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `0360770f7c82b090716c445dba31e7226b1de95a`
+  Time UTC: 2026-10-25T14:09:06Z
+  Message: Merge main into chat branch
+  Summary: Integrated the newer accepted persistence implementation from main with the collector custody route. Resolved only genuine overlaps by retaining main's newer controller/runtime implementation and reran collector, observability, target, and fixed deployment-controller checks successfully.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -3822,9 +3840,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T14:06:16Z
-Latest commit SHA: df2ca76296f4ccae7d5b752d7ae0725c1a689e07
-Chat duration: 1746407s (20:05:06:47)
+Latest commit at UTC: 2026-10-25T14:09:06Z
+Latest commit SHA: 0360770f7c82b090716c445dba31e7226b1de95a
+Chat duration: 1746577s (20:05:09:37)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
