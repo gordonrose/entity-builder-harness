@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-24T16:05:00Z
-latest_commit_sha: 21d02a53
-chat_duration: 1667131s (19:07:05:31)
+latest_commit_at_utc: 2026-10-25T13:24:11Z
+latest_commit_sha: a7d45b7a
+chat_duration: 1743882s (20:04:24:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -172,6 +172,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Corrected current release-reference hash mismatch before package qualification
   Resolution: The immutable historical record had two trailing newlines while current-accepted-release.yml named the canonical one-newline rendering. The release-succession gate blocked safely before AWS/ECR actions. Preserved the history; updated only the current pointer to its actual retained SHA-256; validate-current and target smoke pass.
+
+
+- Raised: Fixed package source-closure copy of a nonexistent protobuf scope
+  Resolution: CI package build reached Docker assembly after every declaration/target/receipt gate passed, then failed before AWS mutation because Dockerfile copied node_modules/@protobufjs even though the lockfile provides unscoped protobufjs. Removed only that nonexistent copy. Local governed build reached the known Docker Desktop/WSL credential-helper failure before Docker could build; CI remains the package authority.
 
 ## Decisions Made
 
@@ -601,6 +605,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Workflow 40197069234 failed before AWS mutation at release-succession validation; actual history SHA is 91bbb624... and original current pointer incorrectly declared f26dec40...
   Durable evidence: Exact proof root: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/. The next workflow must qualify and publish an immutable support image before retained-image compatibility can proceed.
+
+
+- Summary: Workflow 40197461616 passed all repository gates, then Docker build failed at cp node_modules/@protobufjs/.; package closure now copies protobufjs unscoped. Local Docker is externally blocked at dockerfile frontend credential helper with WSL UtilAcceptVsock timeout.
+  Durable evidence: Next required evidence is a successful CI package workflow on the source-closure fix; no ECR image or AWS target resource changed in either failed workflow.
 
 ## Activity Log
 
@@ -2831,6 +2839,31 @@ Summary: Workflow 40197069234 failed before AWS mutation at release-succession v
 
 Durable evidence: Exact proof root: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/. The next workflow must qualify and publish an immutable support image before retained-image compatibility can proceed.
 
+
+### 2026-10-25T13:24:11Z - Commit recorded
+
+Commit: `a7d45b7a`
+
+Message: fix(deploy): reconcile current release reference
+
+Summary: Corrected only the mutable current accepted-release pointer to hash the exact immutable history bytes; succession validation and target smoke now pass.
+
+ADR impact: No ADR: this is an integrity-pointer correction under existing release-succession design.
+
+
+### 2026-10-25T13:26:58Z - Issue
+
+Raised: Fixed package source-closure copy of a nonexistent protobuf scope
+
+Resolution: CI package build reached Docker assembly after every declaration/target/receipt gate passed, then failed before AWS mutation because Dockerfile copied node_modules/@protobufjs even though the lockfile provides unscoped protobufjs. Removed only that nonexistent copy. Local governed build reached the known Docker Desktop/WSL credential-helper failure before Docker could build; CI remains the package authority.
+
+
+### 2026-10-25T13:26:59Z - Context hygiene
+
+Summary: Workflow 40197461616 passed all repository gates, then Docker build failed at cp node_modules/@protobufjs/.; package closure now copies protobufjs unscoped. Local Docker is externally blocked at dockerfile frontend credential helper with WSL UtilAcceptVsock timeout.
+
+Durable evidence: Next required evidence is a successful CI package workflow on the source-closure fix; no ECR image or AWS target resource changed in either failed workflow.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -3566,6 +3599,13 @@ Durable evidence: Exact proof root: infra/04.deploy/03.product/targets/kanbien-c
   Summary: Record durable task-proof receipts, accepted persistence release evidence, and lifecycle promotion without relying on aged ECS task records.
   ADR impact: No ADR: bounded evidence-retention and lifecycle-control completion within the approved PostgreSQL persistence slice.
 
+
+- Commit: `a7d45b7a`
+  Time UTC: 2026-10-25T13:24:11Z
+  Message: fix(deploy): reconcile current release reference
+  Summary: Corrected only the mutable current accepted-release pointer to hash the exact immutable history bytes; succession validation and target smoke now pass.
+  ADR impact: No ADR: this is an integrity-pointer correction under existing release-succession design.
+
 ## Main Refresh Conflicts
 
 
@@ -3589,9 +3629,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-24T16:05:00Z
-Latest commit SHA: 21d02a53
-Chat duration: 1667131s (19:07:05:31)
+Latest commit at UTC: 2026-10-25T13:24:11Z
+Latest commit SHA: a7d45b7a
+Chat duration: 1743882s (20:04:24:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

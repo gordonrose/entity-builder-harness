@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -47,9 +47,8 @@ RUN npm ci --ignore-scripts \
  && node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root /payload/artifacts \
  && mkdir -p /payload/node_modules \
  && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/ \
- && mkdir -p /payload/node_modules/@opentelemetry /payload/node_modules/@protobufjs \
+ && mkdir -p /payload/node_modules/@opentelemetry \
  && cp -a node_modules/@opentelemetry/. /payload/node_modules/@opentelemetry/ \
- && cp -a node_modules/@protobufjs/. /payload/node_modules/@protobufjs/ \
  && cp -a node_modules/protobufjs node_modules/long node_modules/ajv node_modules/fast-deep-equal node_modules/fast-uri node_modules/json-schema-traverse node_modules/require-from-string /payload/node_modules/ \
  && NODE_PATH=/payload/node_modules node -e 'require("pg"); require("@opentelemetry/sdk-metrics"); require("@opentelemetry/exporter-metrics-otlp-proto")'
 FROM ${RUNTIME_NODE_IMAGE}
