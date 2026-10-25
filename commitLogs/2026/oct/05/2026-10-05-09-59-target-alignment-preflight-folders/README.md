@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T19:03:10Z
-latest_commit_sha: be024ef9
-chat_duration: 1764221s (20:10:03:41)
+latest_commit_at_utc: 2026-10-25T22:32:56Z
+latest_commit_sha: HEAD
+chat_duration: 1776807s (20:13:33:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -220,6 +220,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Corrected permission-surface change-set allowlist against the active stack baseline
   Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that differed from the controller's stale CREATE-era allowlist. The controller now admits only the reviewed four task-role additions and exact IAM/RDS/secret/task/service modifications; it continues to reject network expansion and unrelated resources. No change set was executed while the guard was invalid.
+
+
+- Raised: IAM bootstrap rejected legacy non-elevated role
+  Resolution: The first governed bootstrap task stopped with the safe PERSISTENCE_ADMINISTRATION_BOOTSTRAP_IDENTITY_BOUNDARY_NOT_CONFIRMED result because the pre-existing runtime role retained PostgreSQL INHERIT. Corrected the role helper to reject elevated legacy roles but safely converge a non-elevated legacy identity to NOINHERIT without any credential SQL; local composition and target declaration checks pass.
+
+
+- Raised: Package qualification exposed over-broad role convergence
+  Resolution: Hosted package run 40225491937 failed before AWS credentials, ECR, scan, or publication because the first convergence implementation rewrote already-bounded fixture roles under a constrained administrator. Narrowed convergence to only the legacy INHERIT attribute; bootstrap now refuses to reactivate NOLOGIN, reserving activation for explicit restore-runtime. Local Docker remains unavailable due host credential-helper failure; hosted package qualification remains authoritative.
 
 ## Decisions Made
 
@@ -3337,6 +3345,141 @@ Summary: Replaces the stale CREATE-era permission-surface allowlist with the exa
 
 ADR impact: No ADR: narrow safety correction to an existing governed controller.
 
+
+### 2026-10-25T19:17:42Z - Issue
+
+Raised: IAM bootstrap rejected legacy non-elevated role
+
+Resolution: The first governed bootstrap task stopped with the safe PERSISTENCE_ADMINISTRATION_BOOTSTRAP_IDENTITY_BOUNDARY_NOT_CONFIRMED result because the pre-existing runtime role retained PostgreSQL INHERIT. Corrected the role helper to reject elevated legacy roles but safely converge a non-elevated legacy identity to NOINHERIT without any credential SQL; local composition and target declaration checks pass.
+
+
+### 2026-10-25T19:18:27Z - Commit recorded
+
+Commit: `6c33ab8f`
+
+Message: fix(deploy): converge legacy IAM runtime role
+
+Summary: Normalizes only a non-elevated inherited password-era runtime role to the bounded no-inherit IAM login profile; retains rejection of elevated roles and proves no password or verifier SQL is emitted.
+
+ADR impact: No ADR: bounded implementation correction under the existing IAM lifecycle decision.
+
+
+### 2026-10-25T19:25:39Z - Issue
+
+Raised: Package qualification exposed over-broad role convergence
+
+Resolution: Hosted package run 40225491937 failed before AWS credentials, ECR, scan, or publication because the first convergence implementation rewrote already-bounded fixture roles under a constrained administrator. Narrowed convergence to only the legacy INHERIT attribute; bootstrap now refuses to reactivate NOLOGIN, reserving activation for explicit restore-runtime. Local Docker remains unavailable due host credential-helper failure; hosted package qualification remains authoritative.
+
+
+### 2026-10-25T19:26:24Z - Commit recorded
+
+Commit: `cfa2bd60`
+
+Message: fix(deploy): preserve IAM revocation boundary
+
+Summary: Narrows legacy role convergence to INHERIT only, retains fail-closed elevated-role checks, and prevents bootstrap from undoing NOLOGIN revocation; adds regression coverage.
+
+ADR impact: No ADR: a focused correction within the existing IAM lifecycle model.
+
+
+### 2026-10-25T19:34:55Z - Commit recorded
+
+Commit: `52b0a15c`
+
+Message: fix(deploy): bind persistence support image
+
+Summary: Binds the persistence server, support program, and restoration verifier to one qualified immutable digest for create and update paths; change-set review and reconciliation now reject a support-image mismatch.
+
+ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+### 2026-10-25T19:40:11Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): preserve update parameter state
+
+Summary: Makes qualified persistence update review verify all controller-owned parameters and preserve every unowned CloudFormation parameter from the healthy stack, including template defaults.
+
+ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+### 2026-10-25T19:43:31Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): reconcile executed update change sets
+
+Summary: Recognizes CloudFormation's removed executed change set only when the current stack proves the exact candidate parameter identity; retains no-retry and mismatch uncertainty.
+
+ADR impact: No ADR: bounded reconciliation correction for an existing provider lifecycle.
+
+
+### 2026-10-25T19:51:46Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): classify migration task failures
+
+Summary: Parses only closed migration rejection codes and failure classes from terminal task logs; raw task output and sensitive fields remain excluded from controller reports.
+
+ADR impact: No ADR: bounded safe-diagnostics correction under existing deployment standards.
+
+
+### 2026-10-25T20:06:29Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: Require a read-only, receipt-backed migration-history observation before a failed persistence migration can be replayed.
+
+Summary: Adds the state observer across the runnable administration program, reusable health contract, exact AWS workflow, package proof, and controller regression coverage.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:24:33Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): observe migration state as owner
+
+Summary: Repaired the migration-state observer so the constrained administrator assumes the migration owner only within a read-only transaction. Local composition, lifecycle controller, health/recovery, secret and diagnostic validations passed; Docker Desktop credential-helper failure prevents local package build before Docker starts.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:45:16Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): retain applied migration state evidence
+
+Summary: Accepted migration-state observation distinguishes replay permission from already-applied evidence and routes the durable receipt into acceptance.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:58:11Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): classify persistence privilege probe outcomes
+
+Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppress provider detail.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T22:32:56Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: --summary
+
+Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4229,6 +4372,83 @@ ADR impact: No ADR: narrow safety correction to an existing governed controller.
   Summary: Replaces the stale CREATE-era permission-surface allowlist with the exact reviewed UPDATE delta for the active stack: four task-role additions plus explicit RDS/IAM/secret/task/service modifications. Fixed-control and controller regressions pass; the previously created change set remains unexecuted.
   ADR impact: No ADR: narrow safety correction to an existing governed controller.
 
+
+- Commit: `6c33ab8f`
+  Time UTC: 2026-10-25T19:18:27Z
+  Message: fix(deploy): converge legacy IAM runtime role
+  Summary: Normalizes only a non-elevated inherited password-era runtime role to the bounded no-inherit IAM login profile; retains rejection of elevated roles and proves no password or verifier SQL is emitted.
+  ADR impact: No ADR: bounded implementation correction under the existing IAM lifecycle decision.
+
+
+- Commit: `cfa2bd60`
+  Time UTC: 2026-10-25T19:26:24Z
+  Message: fix(deploy): preserve IAM revocation boundary
+  Summary: Narrows legacy role convergence to INHERIT only, retains fail-closed elevated-role checks, and prevents bootstrap from undoing NOLOGIN revocation; adds regression coverage.
+  ADR impact: No ADR: a focused correction within the existing IAM lifecycle model.
+
+
+- Commit: `52b0a15c`
+  Time UTC: 2026-10-25T19:34:55Z
+  Message: fix(deploy): bind persistence support image
+  Summary: Binds the persistence server, support program, and restoration verifier to one qualified immutable digest for create and update paths; change-set review and reconciliation now reject a support-image mismatch.
+  ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:40:11Z
+  Message: fix(deploy): preserve update parameter state
+  Summary: Makes qualified persistence update review verify all controller-owned parameters and preserve every unowned CloudFormation parameter from the healthy stack, including template defaults.
+  ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:43:31Z
+  Message: fix(deploy): reconcile executed update change sets
+  Summary: Recognizes CloudFormation's removed executed change set only when the current stack proves the exact candidate parameter identity; retains no-retry and mismatch uncertainty.
+  ADR impact: No ADR: bounded reconciliation correction for an existing provider lifecycle.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:51:46Z
+  Message: fix(deploy): classify migration task failures
+  Summary: Parses only closed migration rejection codes and failure classes from terminal task logs; raw task output and sensitive fields remain excluded from controller reports.
+  ADR impact: No ADR: bounded safe-diagnostics correction under existing deployment standards.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:06:29Z
+  Message: Require a read-only, receipt-backed migration-history observation before a failed persistence migration can be replayed.
+  Summary: Adds the state observer across the runnable administration program, reusable health contract, exact AWS workflow, package proof, and controller regression coverage.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:24:33Z
+  Message: fix(deploy): observe migration state as owner
+  Summary: Repaired the migration-state observer so the constrained administrator assumes the migration owner only within a read-only transaction. Local composition, lifecycle controller, health/recovery, secret and diagnostic validations passed; Docker Desktop credential-helper failure prevents local package build before Docker starts.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:45:16Z
+  Message: fix(deploy): retain applied migration state evidence
+  Summary: Accepted migration-state observation distinguishes replay permission from already-applied evidence and routes the durable receipt into acceptance.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:58:11Z
+  Message: fix(deploy): classify persistence privilege probe outcomes
+  Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppress provider detail.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T22:32:56Z
+  Message: --summary
+  Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4252,9 +4472,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T19:03:10Z
-Latest commit SHA: be024ef9
-Chat duration: 1764221s (20:10:03:41)
+Latest commit at UTC: 2026-10-25T22:32:56Z
+Latest commit SHA: HEAD
+Chat duration: 1776807s (20:13:33:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -40,11 +40,29 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
     const row = result.rows[0];
     if (row?.record_id === expected.recordId && row.fact_digest === expected.factDigest) return accepted("KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED");
     return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH");
-  } catch {
-    return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE");
+  } catch (error) {
+    return rejected(restoreVerificationFailureCode(error));
   } finally {
     await pool.end();
   }
+}
+
+/**
+ * This verifier deliberately emits a closed, non-secret diagnostic taxonomy.
+ * PostgreSQL errors often include endpoint, role, SQL, or credential material;
+ * none of that crosses the task's safe result boundary.  The categories are
+ * enough for the governed controller to distinguish a retryable path outage
+ * from a configuration/identity or restore-content correction.
+ */
+export function restoreVerificationFailureCode(error: unknown): string {
+  const code = typeof error === "object" && error !== null && "code" in error && typeof (error as { readonly code?: unknown }).code === "string"
+    ? (error as { readonly code: string }).code
+    : undefined;
+  if (code === "28P01" || code === "28000") return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
+  if (code === "42501") return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
+  if (code === "3D000" || code === "42P01") return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
+  if (code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENOTFOUND") return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
+  return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
 }
 
 function expectedRecord(env: NodeJS.ProcessEnv): { readonly recordId: string; readonly factDigest: string } | undefined {

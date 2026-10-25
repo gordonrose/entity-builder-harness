@@ -59,7 +59,7 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
         # failure; callers still reconcile the exact named change set before
         # creating it.  Keep this classification narrow so unrelated AWS
         # failures cannot be treated as safely absent resources.
-        if "changesetnotfound" in lowered or "does not exist" in lowered or "not found" in lowered:
+        if "changesetnotfound" in lowered or "does not exist" in lowered or "not found" in lowered or "cannot be found" in lowered:
             return False, None, "aws-resource-missing"
         return False, None, "aws-command-failed"
     try:

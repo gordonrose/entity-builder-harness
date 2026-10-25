@@ -207,7 +207,15 @@ def verify(m,sid,rid,observe_only=False):
  src,c=source(m); ctl,cc=controls(m); restored,rc=db(m,rid)
  if src is None:return emit("blocked",c)
  if ctl is None:return emit("blocked",cc)
- if restored is None or not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked",rc if restored is None else "persistence-restored-database-posture-invalid")
+ if restored is None:return emit("blocked",rc)
+ # A restore normally appears as ``creating`` before it has an endpoint. That
+ # is an in-flight governed operation, not a malformed restored target. Do
+ # not turn a normal provider lifecycle state into a false hard failure.
+ status=restored.get("DBInstanceStatus")
+ if status in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring"}:return emit("pending","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
+ if status in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts={"snapshot":sid,"restored_database":rid})
+ if status!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts={"snapshot":sid,"restored_database":rid})
+ if not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked","persistence-restored-database-posture-invalid")
  endpoint=restored.get("Endpoint",{}).get("Address") if isinstance(restored.get("Endpoint"),dict) else None; td=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
  identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,observe_only)

@@ -22,7 +22,10 @@ ROOT="$(git rev-parse --show-toplevel)"
 RESTORE_SCRIPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
 
 python3 -B - "$RESTORE_SCRIPT" <<'PY'
+import contextlib
 import importlib.util
+import io
+import json
 import sys
 
 spec = importlib.util.spec_from_file_location("isolated_restore", sys.argv[1])
@@ -82,5 +85,18 @@ second_restore = {"DbiResourceId": "db-RESTORE-B"}
 assert module.restore_run_identity(first_restore) != module.restore_run_identity(second_restore)
 assert module.restore_run_identity(first_restore).startswith("kanbien-restore-")
 assert module.restore_run_identity({}) is None
+
+# A normal RDS restore reports ``creating`` before it has an endpoint.  The
+# controller must preserve that as an in-flight operation instead of claiming
+# an invalid restored posture.
+original_source, original_controls, original_db = module.source, module.controls, module.db
+module.source = lambda _m: ({"DBInstanceIdentifier": module.DATABASE}, "ok")
+module.controls = lambda _m: ({"PersistenceRestoredDatabaseSecurityGroupId": "sg-fixture"}, "ok")
+module.db = lambda _m, _identifier: ({"DBInstanceStatus": "creating"}, "ok")
+output = io.StringIO()
+with contextlib.redirect_stdout(output):
+    assert module.verify(object(), "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2", True) == 1
+module.source, module.controls, module.db = original_source, original_controls, original_db
+assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restore-still-provisioning"}]
 print("isolated persistence restore verifier task-definition checks passed")
 PY
