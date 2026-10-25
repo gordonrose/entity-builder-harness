@@ -115,6 +115,10 @@ connect scope implementation verification and recovery
 - Summary: Third consecutive Goal turn satisfies blocked-state audit
   Durable evidence: Revalidated 2026-10-25T11:39:01Z: cmd.exe /c ver still exits1 with UtilAcceptVsock accept4 failed110; Docker client/server29.8.1 responds. Same external WSL bridge failure persisted across the original progress turn and two automatic continuations. No independent implementation or local verification remains. Required current-tree container qualification and final merge remain unproved. Source b6d1b928, evidence2403d42f and verified preservation bundle are intact; worktree clean before this bookkeeping. The next lifecycle action is mark Goal blocked, not complete. Restore active WSL Windows-executable interoperation and resume; then run native build/smoke, retain evidence, perform governed final merge.
 
+
+- Summary: Second resumed Goal turn: helper version success does not restore Docker qualification
+  Durable evidence: Native attempt6 from clean23128b56 failed after34.2s with identical credential-helper WSLvsock error, despite same-process helper version probe exit0. No smoke started; existing Docker configuration unchanged. Latest fetch succeeded; main remainsc884c321. This evidence means version-only success is insufficient reason to launch further retries. Required current image proof and final merge remain incomplete; bounded package-owner public-image recovery approval is pending. No independent implementation work remains.
+
 ## Activity Log
 
 ### 2026-10-24T13:22:47Z - Session started
@@ -399,6 +403,13 @@ Message: Record intermittent WSL retry and pending local recovery decision
 Summary: User-requested retry observed initial WSL success but Docker credential-helper and subsequent Windows probes failed. All source unchanged. Bounded public-image local recovery proposal pending under repository governance; container qualification and final main merge incomplete.
 
 ADR impact: No new architecture decision; diagnostic evidence only.
+
+
+### 2026-10-25T12:02:11Z - Context hygiene
+
+Summary: Second resumed Goal turn: helper version success does not restore Docker qualification
+
+Durable evidence: Native attempt6 from clean23128b56 failed after34.2s with identical credential-helper WSLvsock error, despite same-process helper version probe exit0. No smoke started; existing Docker configuration unchanged. Latest fetch succeeded; main remainsc884c321. This evidence means version-only success is insufficient reason to launch further retries. Required current image proof and final merge remain incomplete; bounded package-owner public-image recovery approval is pending. No independent implementation work remains.
 
 ## Sub-Agent Activity
 

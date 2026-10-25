@@ -1,0 +1,32 @@
+{
+  "evidence_class": "container-qualification",
+  "source_revision_label": "23128b56a9b41312817ce305d4fda436519eccbc",
+  "image_tag": "kanbien-core-server-persistence:scope-corrections-20261025",
+  "published": false,
+  "ci": false,
+  "live_infrastructure": false,
+  "retry_reason": "Fresh Docker helper version probe succeeds; same-process precondition retained; normal configuration unchanged.",
+  "helper_probe": {
+    "exit_code": 0,
+    "stdout": "docker-credential-wincred (github.com/docker/docker-credential-helpers) v0.9.9\n",
+    "stderr": ""
+  },
+  "checks": [
+    {
+      "check": "build",
+      "argv": [
+        "bash",
+        "scripts/01.harness/run-governed-script.sh",
+        "--approved-action",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "--tag",
+        "kanbien-core-server-persistence:scope-corrections-20261025"
+      ],
+      "exit_code": 1,
+      "seconds": 34.2,
+      "log": "corrective-local-image-build-attempt6.log"
+    }
+  ],
+  "result": "blocked-required",
+  "failure_excerpt": "WSL ERROR: UtilAcceptVsock:273: accept4 failed110; error getting credentials during docker/dockerfile:1.7 resolution"
+}
