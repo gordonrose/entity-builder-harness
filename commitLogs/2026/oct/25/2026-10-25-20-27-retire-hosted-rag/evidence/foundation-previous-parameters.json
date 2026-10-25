@@ -1,0 +1,54 @@
+[
+  {
+    "ParameterKey": "PublicSubnetIds",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ExistingAlbCanonicalHostedZoneId",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "EnvironmentName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "HostedZoneId",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "RepositoryName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ExistingHttpsListenerArn",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ExistingAlbDnsName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ListenerRulePriority",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "VpcId",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ServiceName",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "ExistingAlbSecurityGroupId",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "LogRetentionDays",
+    "UsePreviousValue": true
+  },
+  {
+    "ParameterKey": "HostName",
+    "UsePreviousValue": true
+  }
+]

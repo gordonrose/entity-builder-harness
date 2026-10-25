@@ -1,0 +1,29 @@
+{
+  "stackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-service/f5d36e60-754a-11f1-8ff0-06a67858397b",
+  "verifiedResourceInventory": {
+    "StackResourceSummaries": [
+      {
+        "LogicalResourceId": "Service",
+        "PhysicalResourceId": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging",
+        "ResourceType": "AWS::ECS::Service",
+        "LastUpdatedTimestamp": "2026-10-25T20:37:06.097000+00:00",
+        "ResourceStatus": "UPDATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "TaskDefinition",
+        "PhysicalResourceId": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3",
+        "ResourceType": "AWS::ECS::TaskDefinition",
+        "LastUpdatedTimestamp": "2026-07-09T10:33:12.619000+00:00",
+        "ResourceStatus": "UPDATE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      }
+    ]
+  },
+  "retainedLogicalIds": [],
+  "reviewedAt": "2026-10-25T20:37:48.478298+00:00"
+}

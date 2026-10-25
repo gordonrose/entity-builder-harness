@@ -1,0 +1,149 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: rag-rulebook.derivation-report.02-rag-rulebook.2026-10-25-local-provider-retirement
+#   version: 1
+#   status: active
+#   created_on: '2026-10-25'
+#   updated_on: '2026-10-25'
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines:
+#   - agentic
+#   - architecture
+#   - security
+#   - sre
+#   kind: derivation-report
+#   purpose: Record provenance refresh for current local retrieval while preserving the
+#     reusable provider contract.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: rag-rulebook.source-material.hosted-context-provider-contract
+#     path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.02.rag-rulebook.2026-10-25.local-provider-retirement
+status: accepted
+source_change:
+  change_type: updated
+  approved_source_state: approved
+  changed_paths:
+  - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  summary: Clarify current local provider selection after rag.kanbien.com retirement; preserve generic
+    hosted semantics as illustrative separately-authorised configuration.
+  source_review: .agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+target:
+  corpus_id: corpus.02.rag-rulebook
+  owner_layer: 02.rag-rulebook
+  expected_rule_paths:
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  affected_rule_paths:
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  affected_rulesets: []
+  affected_evaluations:
+  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+  affected_corpus_gaps: []
+semantic_review:
+  source_claims:
+  - claim_id: local-current-mode
+    summary: Explicit local configuration is the current repository mode; retained hosted credentials
+      do not change that selection.
+    evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  - claim_id: generic-contract-preserved
+    summary: Provider ownership, secret redaction, hosted auth failures, and governed fallback semantics
+      remain unchanged.
+    evidence_path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  conflicts:
+    status: none-found
+    search_scope:
+    - docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+    - scripts/02.rag-rulebook/query-context/script.sh
+    items: []
+  drift:
+    status: expected
+    items:
+    - Retired deployment URL removed from the operational example; historical July derivation remains
+      unchanged.
+    - Existing local configuration and fallback rules already cover explicit local selection. Refresh
+      provenance only; no generic rule semantic changes.
+  ownership:
+    status: ok
+    notes:
+    - Provider selection belongs to corpus.02.rag-rulebook; cloud retirement remains owned by the AWS
+      workflow.
+proposed_updates:
+  rules:
+  - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations: []
+  notes:
+  - Refresh source hash/report pointer; preserve all existing rule semantics and historical July report.
+  - Existing provider fixture proves reusable provider context; local smoke proves current configuration
+    without hosted calls.
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+  - .cache/02.rag-rulebook/rulebook-index.json
+  - .cache/02.rag-rulebook/rulebook-chunks.json
+validation:
+  required_checks:
+  - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+  - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+  - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set projection.02.rag-rulebook.hosted-context-provider-contract
+  - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+  - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+    --json
+  - bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+  - bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+  - bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+  - bash scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh
+  checks_run:
+  - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+    result: passed
+  - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set
+      projection.02.rag-rulebook.hosted-context-provider-contract
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source
+      docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
+    result: passed
+  - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
+      --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/query-context/smoke-test.sh
+    result: passed
+  - command: bash scripts/02.rag-rulebook/query-local-context/smoke-test.sh
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-material-coverage/smoke-test.sh
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-projections/scoped-smoke-test.sh
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
+    result: failed
+    notes: 16 pre-existing unrelated source hashes; source and rule bytes match HEAD. See session evidence/source-projection-baseline.json.
+  - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+    result: failed
+    notes: Same 16 pre-existing hashes outside selected source; complete selected source/index/chunk proof
+      passes.
+  checks_pending: []
+review:
+  required: true
+  decision: approved
+  reviewer: /root/local_retrieval; source approval by architect, agentic-engineer, secops-engineer, senior-sre
+  reviewed_at_utc: '2026-10-25T20:44:56Z'
+  notes:
+  - Accepted bounded operational clarification and provenance refresh; generic provider rule semantics
+    unchanged.
+  - Scoped checks retain canonical inventory/structural validation and complete selected projection/source
+    proof. Their global defaults remain unchanged and baseline failures are recorded, not repaired or
+    hidden.
+  - Source review scores are 9.8, 9.7, 9.8 and 9.7. The historical July derivation remains unchanged.

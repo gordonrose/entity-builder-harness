@@ -1,0 +1,13 @@
+{
+  "appliedAt": "2026-10-25T21:15:48.841506+00:00",
+  "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+  "approvedBy": "explicit user reply approving narrow qualification-guard correction",
+  "ownerDigestsVerified": {
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh": "5443e3c13b8122b49e82e16ea8f2a814be9c4036feefcd210d452f781d6e7832",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": "edf6f303c61b7d196f86147800eb8f461c94929b3f7eb55e83099e5b851e299b",
+    "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile": "de93ae7595b398a68cc3a12c6b3fbe93a365029d6ac9dc9d0f9984869afed090",
+    "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003"
+  },
+  "changedValues": 3,
+  "databaseOrRuntimeMutation": false
+}

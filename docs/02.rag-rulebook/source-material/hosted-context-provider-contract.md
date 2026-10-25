@@ -4,7 +4,7 @@ id: rag-rulebook.source-material.hosted-context-provider-contract
 version: 1
 status: active
 created_on: "2026-07-07"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: runtime
 disciplines:
@@ -31,8 +31,9 @@ used_by:
 
 The RAG rulebook layer owns context-provider selection. A caller should ask the
 RAG rulebook layer for a validated context packet; it should not know whether
-the packet came from a hosted service, a local runtime cache, an AWS secret, or
-a development fallback.
+the packet came from a local runtime cache or a separately governed hosted
+service. Authentication lookup and optional development fallback are provider
+implementation details; neither is the source of a context packet.
 
 This keeps chat/workbench lifecycle code focused on session ownership and user
 workflow, while `02.rag-rulebook` owns retrieval configuration, hosted auth,
@@ -76,13 +77,30 @@ The local default config path is:
 ~/.config/rag-rulebook/rag.env
 ```
 
-This file is machine-local and must not be committed. It may contain:
+This file is machine-local and must not be committed. This repository now
+selects local retrieval explicitly because the `rag.kanbien.com` deployment is
+retired:
+
+```text
+RAG_RULEBOOK_PROVIDER=local
+```
+
+When switching an existing config, change only the provider assignment and
+preserve authentication values and private file permissions. Explicit local
+mode uses the local corpus/runtime and does not resolve hosted credentials or
+call the retired endpoint. Do not use `auto` for this deployment: retained
+hosted auth could select hosted mode. Keep local code, corpora, and retrieval
+machinery. The current setup is documented in
+`scripts/02.rag-rulebook/query-context/README.md`.
+
+The following is an illustrative config for a separately authorised hosted
+provider, not the current repository configuration or a redeployment request:
 
 ```text
 RAG_RULEBOOK_PROVIDER=hosted
-RAG_RULEBOOK_BASE_URL=https://rag.kanbien.com
+RAG_RULEBOOK_BASE_URL=https://rag.example.invalid
 RAG_RULEBOOK_AUTH_MODE=bearer
-RAG_RULEBOOK_AWS_PROFILE=gordon-kanbien
+RAG_RULEBOOK_AWS_PROFILE=example-profile
 RAG_RULEBOOK_AWS_REGION=eu-west-1
 RAG_RULEBOOK_TOKEN_SECRET_ARN=arn:aws:secretsmanager:...
 RAG_RULEBOOK_TOKEN=...

@@ -1,0 +1,7 @@
+[
+  {
+    "taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-staging/43828394bc744ca69fd695efe4f5b54d",
+    "taskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell:24",
+    "lastStatus": "RUNNING"
+  }
+]

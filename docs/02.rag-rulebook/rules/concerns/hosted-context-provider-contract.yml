@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-07-07"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -36,12 +36,12 @@ source_derivation:
   mode: generated-projection
   generator: agent-assisted-source-to-rule
   generator_version: v1
-  generated_at_utc: "2026-07-07T00:00:00Z"
+  generated_at_utc: "2026-10-25T20:38:13Z"
   derivation_workflow: .agentic/02.rag-rulebook/workflows/derive-rules-from-source.md
-  derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+  derivation_report: .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
   source_material:
     - path: docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
-      sha256: ddfb7ecf0da0570c6c70392a10b661354c9471d3601b94595607e2de80f5ad79
+      sha256: e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019
 
 description: >
   Rules for keeping hosted/local RAG context-provider selection, local auth

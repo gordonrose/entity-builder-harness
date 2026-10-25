@@ -4,7 +4,7 @@ id: docs.02-rag-rulebook.postman.readme
 version: 1
 status: active
 created_on: "2026-07-01"
-updated_on: "2026-10-20"
+updated_on: "2026-10-25"
 layer: 02.rag-rulebook
 domain: service-api
 disciplines:
@@ -12,7 +12,7 @@ disciplines:
 - architecture
 - sre
 kind: guide
-purpose: Explain how to import and use the hosted RAG/rulebook service Postman collection without committing secrets.
+purpose: Explain how to use the local RAG/rulebook service Postman collection without committing secrets.
 portability:
   class: reusable
   targets:
@@ -26,41 +26,24 @@ used_by:
 # RAG Rulebook Postman Collection
 
 Import `rag-rulebook-service.postman_collection.json` into Postman to test the
-hosted RAG/rulebook service.
+local RAG/rulebook HTTP service. The former `rag.kanbien.com` deployment is
+retired. Normal harness retrieval uses the local provider directly and does
+not need an HTTP server.
 
-## Variables
+## Local Setup and Variables
 
-Set these collection variables after import:
+Build the local runtime and start the loopback service using
+`scripts/02.rag-rulebook/run-local-service/README.md`. For the collection's
+authenticated and unauthorized checks, provide a private local
+`RAG_SERVICE_TOKEN` to that process, then configure the matching `ragToken` in
+Postman. Do not retrieve the retired staging service token.
 
-- `baseUrl`: defaults to `https://rag.kanbien.com`
-- `ragToken`: staging bearer token from AWS Secrets Manager
+- `baseUrl`: defaults to `http://127.0.0.1:3000`
+- `ragToken`: your local service token, kept private in Postman
 - `requestText`: default prompt for context-query smoke tests
 - `maxChunks`: default selected chunk count
 
-Do not commit a real `ragToken`. Keep it in your local Postman environment or
-collection variable value only.
-
-## Token Lookup
-
-Use AWS CLI to fetch the staging token locally:
-
-```bash
-SECRET_ARN="$(
-  aws cloudformation describe-stacks \
-    --profile gordon-kanbien \
-    --region eu-west-1 \
-    --stack-name rag-rulebook-staging-foundation \
-    --query "Stacks[0].Outputs[?OutputKey=='ServiceTokenSecretArn'].OutputValue | [0]" \
-    --output text
-)"
-
-aws secretsmanager get-secret-value \
-  --profile gordon-kanbien \
-  --region eu-west-1 \
-  --secret-id "$SECRET_ARN" \
-  --query SecretString \
-  --output text
-```
+Do not commit a real `ragToken` or copy it into evidence.
 
 ## Requests
 

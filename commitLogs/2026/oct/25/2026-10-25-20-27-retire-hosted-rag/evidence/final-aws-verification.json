@@ -1,0 +1,805 @@
+{
+  "identity": {
+    "UserId": "AROAU5ACKF52KZALNZ6EZ:gordon-kanbien",
+    "Account": "337159794548",
+    "Arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien"
+  },
+  "logs": {
+    "logGroups": [
+      {
+        "logGroupName": "/aws/ecs/rag-rulebook-staging",
+        "creationTime": 1782907128544,
+        "retentionInDays": 14,
+        "metricFilterCount": 0,
+        "arn": "arn:aws:logs:eu-west-1:337159794548:log-group:/aws/ecs/rag-rulebook-staging:*",
+        "storedBytes": 14789033,
+        "logGroupClass": "STANDARD",
+        "logGroupArn": "arn:aws:logs:eu-west-1:337159794548:log-group:/aws/ecs/rag-rulebook-staging",
+        "deletionProtectionEnabled": false,
+        "bearerTokenAuthenticationEnabled": false
+      }
+    ]
+  },
+  "cluster": {
+    "clusters": [
+      {
+        "clusterArn": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
+        "clusterName": "kanbien-staging",
+        "status": "ACTIVE",
+        "registeredContainerInstancesCount": 0,
+        "runningTasksCount": 1,
+        "pendingTasksCount": 0,
+        "activeServicesCount": 3,
+        "statistics": [],
+        "tags": [],
+        "settings": [],
+        "capacityProviders": [],
+        "defaultCapacityProviderStrategy": []
+      }
+    ],
+    "failures": []
+  },
+  "repository": {
+    "expectedAbsence": true,
+    "errorCode": "RepositoryNotFoundException"
+  },
+  "services": {
+    "services": [
+      {
+        "name": "rag-rulebook-staging",
+        "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/rag-rulebook-staging",
+        "status": "INACTIVE",
+        "desired": 0,
+        "running": 0,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3",
+        "loadBalancers": [
+          {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/rag-rulebook-staging/57147fd3f8668b77",
+            "containerName": "rag-rulebook",
+            "containerPort": 3000
+          }
+        ],
+        "networkConfiguration": {
+          "awsvpcConfiguration": {
+            "subnets": [
+              "subnet-05d385e4d57b18032",
+              "subnet-0397df802e31ff6fe"
+            ],
+            "securityGroups": [
+              "sg-0d351e31000a1a0e4"
+            ],
+            "assignPublicIp": "ENABLED"
+          }
+        }
+      },
+      {
+        "name": "kanbien-staging-platform-shell",
+        "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/kanbien-staging-platform-shell",
+        "status": "ACTIVE",
+        "desired": 1,
+        "running": 1,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell:24",
+        "loadBalancers": [
+          {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+            "containerName": "platform-shell",
+            "containerPort": 3000
+          }
+        ],
+        "networkConfiguration": {
+          "awsvpcConfiguration": {
+            "subnets": [
+              "subnet-05d385e4d57b18032",
+              "subnet-0397df802e31ff6fe"
+            ],
+            "securityGroups": [
+              "sg-0e38bedffb1c3f67a"
+            ],
+            "assignPublicIp": "ENABLED"
+          }
+        }
+      },
+      {
+        "name": "kanbien-staging-platform-shell-worker",
+        "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/kanbien-staging-platform-shell-worker",
+        "status": "ACTIVE",
+        "desired": 0,
+        "running": 0,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell-worker:18",
+        "loadBalancers": [],
+        "networkConfiguration": {
+          "awsvpcConfiguration": {
+            "subnets": [
+              "subnet-05d385e4d57b18032",
+              "subnet-0397df802e31ff6fe"
+            ],
+            "securityGroups": [
+              "sg-0b8a76379b41f4f63"
+            ],
+            "assignPublicIp": "ENABLED"
+          }
+        }
+      },
+      {
+        "name": "service-platform",
+        "arn": "arn:aws:ecs:eu-west-1:337159794548:service/kanbien-staging/service-platform",
+        "status": "ACTIVE",
+        "desired": 1,
+        "running": 0,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+        "loadBalancers": [
+          {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+            "containerName": "service-platform",
+            "containerPort": 3000
+          }
+        ],
+        "networkConfiguration": {
+          "awsvpcConfiguration": {
+            "subnets": [
+              "subnet-05d385e4d57b18032",
+              "subnet-0397df802e31ff6fe"
+            ],
+            "securityGroups": [
+              "sg-0ef494aaaf57c4f37"
+            ],
+            "assignPublicIp": "ENABLED"
+          }
+        }
+      }
+    ],
+    "failures": []
+  },
+  "secret": {
+    "ARN": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rag-rulebook/staging/service-token-vpSnES",
+    "Name": "rag-rulebook/staging/service-token",
+    "DeletedDate": "2026-10-25T21:40:21.898000+01:00"
+  },
+  "targetGroup": {
+    "expectedAbsence": true,
+    "errorCode": "TargetGroupNotFound"
+  },
+  "securityGroup": {
+    "expectedAbsence": true,
+    "errorCode": "InvalidGroup.NotFound"
+  },
+  "taskEni": {
+    "expectedAbsence": true,
+    "errorCode": "InvalidNetworkInterfaceID.NotFound"
+  },
+  "deployRole": {
+    "expectedAbsence": true,
+    "errorCode": "NoSuchEntity"
+  },
+  "taskRole": {
+    "expectedAbsence": true,
+    "errorCode": "NoSuchEntity"
+  },
+  "executionRole": {
+    "expectedAbsence": true,
+    "errorCode": "NoSuchEntity"
+  },
+  "rules": {
+    "Rules": [
+      {
+        "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/c919a1528f7565d3",
+        "Priority": "10",
+        "Conditions": [
+          {
+            "Field": "host-header",
+            "Values": [
+              "kanbien.com"
+            ],
+            "HostHeaderConfig": {
+              "Values": [
+                "kanbien.com"
+              ]
+            }
+          }
+        ],
+        "Actions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "Port": "#{port}",
+              "Host": "www.kanbien.com",
+              "Path": "/#{path}",
+              "Query": "#{query}",
+              "StatusCode": "HTTP_301"
+            }
+          }
+        ],
+        "IsDefault": false,
+        "Transforms": []
+      },
+      {
+        "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/bdb7877508883aeb",
+        "Priority": "20",
+        "Conditions": [
+          {
+            "Field": "host-header",
+            "Values": [
+              "staging.platform.kanbien.com"
+            ],
+            "HostHeaderConfig": {
+              "Values": [
+                "staging.platform.kanbien.com"
+              ]
+            }
+          }
+        ],
+        "Actions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-stg-platform-shell/daca4c73c4d01be0",
+                  "Weight": 1
+                }
+              ],
+              "TargetGroupStickinessConfig": {
+                "Enabled": false
+              }
+            }
+          }
+        ],
+        "IsDefault": false,
+        "Transforms": []
+      },
+      {
+        "RuleArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener-rule/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750/2a19e2d4d6c8870c",
+        "Priority": "default",
+        "Conditions": [],
+        "Actions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+                  "Weight": 1
+                }
+              ],
+              "TargetGroupStickinessConfig": {
+                "Enabled": false
+              }
+            }
+          }
+        ],
+        "IsDefault": true,
+        "Transforms": []
+      }
+    ]
+  },
+  "listener": {
+    "Listeners": [
+      {
+        "ListenerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750",
+        "LoadBalancerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357",
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "Certificates": [
+          {
+            "CertificateArn": "arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631"
+          }
+        ],
+        "SslPolicy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:targetgroup/kanbien-staging-app-tg/889e44db1e0160fb",
+                  "Weight": 1
+                }
+              ],
+              "TargetGroupStickinessConfig": {
+                "Enabled": false
+              }
+            }
+          }
+        ],
+        "MutualAuthentication": {
+          "Mode": "off"
+        }
+      }
+    ]
+  },
+  "loadBalancer": {
+    "LoadBalancers": [
+      {
+        "LoadBalancerArn": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357",
+        "DNSName": "kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com",
+        "CanonicalHostedZoneId": "Z32O12XQLNTSW2",
+        "CreatedTime": "2026-05-22T11:56:36.246000+00:00",
+        "LoadBalancerName": "kanbien-staging-alb",
+        "Scheme": "internet-facing",
+        "VpcId": "vpc-0063b6c3d2d781f3c",
+        "State": {
+          "Code": "active"
+        },
+        "Type": "application",
+        "AvailabilityZones": [
+          {
+            "ZoneName": "eu-west-1b",
+            "SubnetId": "subnet-0397df802e31ff6fe",
+            "LoadBalancerAddresses": []
+          },
+          {
+            "ZoneName": "eu-west-1a",
+            "SubnetId": "subnet-05d385e4d57b18032",
+            "LoadBalancerAddresses": []
+          }
+        ],
+        "SecurityGroups": [
+          "sg-08d590b0aee6e2e60"
+        ],
+        "IpAddressType": "ipv4",
+        "EnablePrefixForIpv6SourceNat": "off"
+      }
+    ]
+  },
+  "certificate": {
+    "Arn": "arn:aws:acm:eu-west-1:337159794548:certificate/c1e57be6-9744-471c-a390-548a3252f631",
+    "DomainName": "kanbien.com",
+    "Status": "ISSUED",
+    "InUseBy": [
+      "arn:aws:elasticloadbalancing:eu-west-1:337159794548:loadbalancer/app/kanbien-staging-alb/29ac325385686357"
+    ]
+  },
+  "dns": [],
+  "hostedZone": {
+    "Id": "/hostedzone/Z0909415EFV969Z95D5F",
+    "Name": "kanbien.com.",
+    "CallerReference": "kanbien-com-20260522-1229",
+    "Config": {
+      "Comment": "Kanbien production DNS zone",
+      "PrivateZone": false
+    },
+    "ResourceRecordSetCount": 7
+  },
+  "vpc": {
+    "Vpcs": [
+      {
+        "OwnerId": "337159794548",
+        "InstanceTenancy": "default",
+        "CidrBlockAssociationSet": [
+          {
+            "AssociationId": "vpc-cidr-assoc-0cb020281c5090ed5",
+            "CidrBlock": "10.0.0.0/16",
+            "CidrBlockState": {
+              "State": "associated"
+            }
+          }
+        ],
+        "IsDefault": false,
+        "Tags": [
+          {
+            "Key": "project",
+            "Value": "kanbien"
+          },
+          {
+            "Key": "Name",
+            "Value": "project-vpc"
+          },
+          {
+            "Key": "domain",
+            "Value": "kanbien.com"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "manual-now"
+          },
+          {
+            "Key": "Owner",
+            "Value": "Gordon"
+          },
+          {
+            "Key": "Environment",
+            "Value": "Staging"
+          }
+        ],
+        "BlockPublicAccessStates": {
+          "InternetGatewayBlockMode": "off"
+        },
+        "VpcId": "vpc-0063b6c3d2d781f3c",
+        "State": "available",
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "dopt-0b8f3c03b4b7c6f28"
+      }
+    ]
+  },
+  "subnets": {
+    "Subnets": [
+      {
+        "AvailabilityZoneId": "euw1-az2",
+        "MapCustomerOwnedIpOnLaunch": false,
+        "OwnerId": "337159794548",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+          {
+            "Key": "Owner",
+            "Value": "Gordon"
+          },
+          {
+            "Key": "Name",
+            "Value": "project-subnet-public1-eu-west-1a"
+          },
+          {
+            "Key": "project",
+            "Value": "kanbien"
+          },
+          {
+            "Key": "Environment",
+            "Value": "Staging"
+          },
+          {
+            "Key": "domain",
+            "Value": "kanbien.com"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "manual-now"
+          }
+        ],
+        "SubnetArn": "arn:aws:ec2:eu-west-1:337159794548:subnet/subnet-05d385e4d57b18032",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+          "HostnameType": "ip-name",
+          "EnableResourceNameDnsARecord": false,
+          "EnableResourceNameDnsAAAARecord": false
+        },
+        "BlockPublicAccessStates": {
+          "InternetGatewayBlockMode": "off"
+        },
+        "SubnetId": "subnet-05d385e4d57b18032",
+        "State": "available",
+        "VpcId": "vpc-0063b6c3d2d781f3c",
+        "CidrBlock": "10.0.0.0/20",
+        "AvailableIpAddressCount": 4090,
+        "AvailabilityZone": "eu-west-1a",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+      },
+      {
+        "AvailabilityZoneId": "euw1-az3",
+        "MapCustomerOwnedIpOnLaunch": false,
+        "OwnerId": "337159794548",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+          {
+            "Key": "domain",
+            "Value": "kanbien.com"
+          },
+          {
+            "Key": "project",
+            "Value": "kanbien"
+          },
+          {
+            "Key": "ManagedBy",
+            "Value": "manual-now"
+          },
+          {
+            "Key": "Owner",
+            "Value": "Gordon"
+          },
+          {
+            "Key": "Name",
+            "Value": "project-subnet-public2-eu-west-1b"
+          },
+          {
+            "Key": "Environment",
+            "Value": "Staging"
+          }
+        ],
+        "SubnetArn": "arn:aws:ec2:eu-west-1:337159794548:subnet/subnet-0397df802e31ff6fe",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+          "HostnameType": "ip-name",
+          "EnableResourceNameDnsARecord": false,
+          "EnableResourceNameDnsAAAARecord": false
+        },
+        "BlockPublicAccessStates": {
+          "InternetGatewayBlockMode": "off"
+        },
+        "SubnetId": "subnet-0397df802e31ff6fe",
+        "State": "available",
+        "VpcId": "vpc-0063b6c3d2d781f3c",
+        "CidrBlock": "10.0.16.0/20",
+        "AvailableIpAddressCount": 4089,
+        "AvailabilityZone": "eu-west-1b",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+      }
+    ]
+  },
+  "scaling": {
+    "ScalableTargets": []
+  },
+  "eventBuses": [
+    "default"
+  ],
+  "schedules": {
+    "Schedules": []
+  },
+  "oidc": {
+    "Url": "token.actions.githubusercontent.com",
+    "ClientIDList": [
+      "sts.amazonaws.com"
+    ],
+    "ThumbprintList": [
+      "6938fd4d98bab03faadb97b34396831e3780aea1"
+    ],
+    "CreateDate": "2026-07-01T09:22:41.902000+00:00",
+    "Tags": []
+  },
+  "activeDefinitions": {
+    "taskDefinitionArns": []
+  },
+  "inactiveDefinitions": {
+    "taskDefinitionArns": []
+  },
+  "deletingDefinitions": {
+    "taskDefinitionArns": [
+      "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:1",
+      "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:2",
+      "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3"
+    ]
+  },
+  "eventRules": {
+    "default": []
+  },
+  "publicDns": {
+    "lookupError": "[Errno -2] Name or service not known",
+    "retired": true
+  },
+  "checkedAt": "2026-10-25T20:41:50.641923+00:00",
+  "protectedComparisons": "pass",
+  "result": "pass",
+  "postIntakeRecheck": {
+    "checkedAtUtc": "2026-10-25T21:21:29.492814+00:00",
+    "profile": "kanbien-dev",
+    "region": "eu-west-1",
+    "identity": {
+      "account": "337159794548",
+      "arn": "arn:aws:sts::337159794548:assumed-role/AWSReservedSSO_AdministratorAccess_21e62f09e2d6df3d/gordon-kanbien"
+    },
+    "checks": {
+      "ragStoppedOrAbsent": true,
+      "sharedServicesUnchanged": false,
+      "noRagRunningOrPending": true,
+      "noActiveOrInactiveDefinitions": true,
+      "logsRetained14Days": true,
+      "secretPendingDeletion": true,
+      "endpointNxDomain": true,
+      "sharedClusterActive": true,
+      "taskRevisionsDeletedOrPending": true
+    },
+    "result": "fail",
+    "observations": {
+      "services": [
+        {
+          "name": "rag-rulebook-staging",
+          "status": "INACTIVE",
+          "desired": 0,
+          "running": 0,
+          "pending": 0,
+          "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/rag-rulebook-staging:3"
+        },
+        {
+          "name": "kanbien-staging-platform-shell",
+          "status": "ACTIVE",
+          "desired": 1,
+          "running": 1,
+          "pending": 0,
+          "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell:24",
+          "unchangedFromBefore": true
+        },
+        {
+          "name": "kanbien-staging-platform-shell-worker",
+          "status": "ACTIVE",
+          "desired": 0,
+          "running": 0,
+          "pending": 0,
+          "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-platform-shell-worker:18",
+          "unchangedFromBefore": true
+        },
+        {
+          "name": "service-platform",
+          "status": "ACTIVE",
+          "desired": 1,
+          "running": 0,
+          "pending": 1,
+          "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+          "unchangedFromBefore": false
+        }
+      ],
+      "runningRagTasks": [],
+      "pendingRagTasks": [],
+      "logs": [
+        {
+          "name": "/aws/ecs/rag-rulebook-staging",
+          "retentionDays": 14,
+          "storedBytes": 14789033
+        }
+      ],
+      "secret": {
+        "arn": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rag-rulebook/staging/service-token-vpSnES",
+        "name": "rag-rulebook/staging/service-token",
+        "deletedDate": "2026-10-25T21:40:21.898000+01:00"
+      },
+      "activeDefinitions": [],
+      "inactiveDefinitions": [],
+      "deletingDefinitions": [],
+      "cluster": [
+        {
+          "arn": "arn:aws:ecs:eu-west-1:337159794548:cluster/kanbien-staging",
+          "status": "ACTIVE",
+          "running": 1,
+          "pending": 1,
+          "activeServices": 3
+        }
+      ]
+    },
+    "taskRevisions": {
+      "1": {
+        "error": "aws: [ERROR]: An error occurred (ClientException) when calling the DescribeTaskDefinition operation: Unable to describe task definition.",
+        "exitCode": 254
+      },
+      "2": {
+        "error": "aws: [ERROR]: An error occurred (ClientException) when calling the DescribeTaskDefinition operation: Unable to describe task definition.",
+        "exitCode": 254
+      },
+      "3": {
+        "error": "aws: [ERROR]: An error occurred (ClientException) when calling the DescribeTaskDefinition operation: Unable to describe task definition.",
+        "exitCode": 254
+      }
+    },
+    "secretScheduledDeletionDate": "2026-11-24T21:40:21.890000+01:00",
+    "dns": {
+      "hostname": "rag.kanbien.com",
+      "resolver": "10.255.255.254",
+      "rcode": 3,
+      "nxdomain": true,
+      "answerCount": 0
+    },
+    "servicePlatformFollowup": {
+      "checkedAtUtc": "2026-10-25T21:22:10.538042+00:00",
+      "service": {
+        "name": "service-platform",
+        "status": "ACTIVE",
+        "desired": 1,
+        "running": 0,
+        "pending": 1,
+        "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+        "createdAt": "2026-05-22T11:58:04.438000+00:00",
+        "deployments": [
+          {
+            "id": "ecs-svc/6928887450547902755",
+            "status": "PRIMARY",
+            "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+            "desired": 1,
+            "running": 0,
+            "pending": 1,
+            "failedTasks": 0,
+            "createdAt": "2026-05-29T14:23:54.409000+00:00",
+            "updatedAt": "2026-08-30T22:27:53.451000+00:00",
+            "rolloutState": "COMPLETED",
+            "rolloutStateReason": "ECS deployment ecs-svc/6928887450547902755 completed."
+          }
+        ],
+        "events": [
+          {
+            "createdAt": "2026-10-25T22:19:28.330000+01:00",
+            "message": "(service service-platform) has started 1 tasks: (task cec42877998e409aabc0f55390707470)."
+          },
+          {
+            "createdAt": "2026-10-25T22:05:31.461000+01:00",
+            "message": "(service service-platform) is unable to consistently start tasks successfully. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide."
+          },
+          {
+            "createdAt": "2026-10-25T22:05:31.460000+01:00",
+            "message": "(service service-platform) was unable to place a task. Reason: ResourceInitializationError: unable to pull secrets or registry auth: unable to retrieve secret from asm: There is a connection issue between the task and AWS Secrets Manager. Check your task network configuration. failed to fetch secret arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/postgres/admin-ssf1p7 from secrets manager: operation error Secrets Manager: GetSecretValue, https response error StatusCode: 0, RequestID: , canceled, context deadline exceeded."
+          },
+          {
+            "createdAt": "2026-10-25T21:52:08.524000+01:00",
+            "message": "(service service-platform) has started 1 tasks: (task 6a3d964a871f4eb5869fee81b69f240a)."
+          },
+          {
+            "createdAt": "2026-10-25T21:38:47.514000+01:00",
+            "message": "(service service-platform) is unable to consistently start tasks successfully. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide."
+          },
+          {
+            "createdAt": "2026-10-25T21:38:47.513000+01:00",
+            "message": "(service service-platform) was unable to place a task. Reason: ResourceInitializationError: unable to pull secrets or registry auth: unable to retrieve secret from asm: There is a connection issue between the task and AWS Secrets Manager. Check your task network configuration. failed to fetch secret arn:aws:secretsmanager:eu-west-1:337159794548:secret:kanbien/staging/postgres/admin-ssf1p7 from secrets manager: operation error Secrets Manager: GetSecretValue, https response error StatusCode: 0, RequestID: , canceled, context deadline exceeded."
+          },
+          {
+            "createdAt": "2026-10-25T21:25:43.168000+01:00",
+            "message": "(service service-platform) has started 1 tasks: (task c61b2eb68adb451a9e66a5002666f655)."
+          },
+          {
+            "createdAt": "2026-10-25T21:12:27.258000+01:00",
+            "message": "(service service-platform) is unable to consistently start tasks successfully. For more information, see the Troubleshooting section of the Amazon ECS Developer Guide."
+          }
+        ]
+      },
+      "activeOrPendingTasks": [
+        {
+          "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-staging/cec42877998e409aabc0f55390707470",
+          "group": "service:service-platform",
+          "startedBy": "ecs-svc/6928887450547902755",
+          "lastStatus": "PENDING",
+          "desiredStatus": "RUNNING",
+          "taskDefinition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-staging-service-platform:12",
+          "createdAt": "2026-10-25T22:19:28.275000+01:00",
+          "startedAt": null,
+          "stopCode": null,
+          "stoppedReason": null,
+          "containers": [
+            {
+              "name": "service-platform",
+              "lastStatus": "PENDING",
+              "reason": null
+            }
+          ]
+        }
+      ],
+      "interpretation": "Desired count and task definition remain unchanged. Pending count is a runtime observation, not evidence of an administrative configuration change. See original deployment timestamps and scheduler events."
+    },
+    "assessment": {
+      "retirementChecks": "pass",
+      "protectedServiceConfiguration": "Observed status, desired counts and task-definition ARNs match services-before.json exactly for all three protected services. Running counts also match.",
+      "protectedServiceComparisons": {
+        "kanbien-staging-platform-shell": {
+          "statusUnchanged": true,
+          "desiredCountUnchanged": true,
+          "taskDefinitionUnchanged": true,
+          "runningCountUnchanged": true,
+          "pendingBefore": 0,
+          "pendingAfter": 0
+        },
+        "kanbien-staging-platform-shell-worker": {
+          "statusUnchanged": true,
+          "desiredCountUnchanged": true,
+          "taskDefinitionUnchanged": true,
+          "runningCountUnchanged": true,
+          "pendingBefore": 0,
+          "pendingAfter": 0
+        },
+        "service-platform": {
+          "statusUnchanged": true,
+          "desiredCountUnchanged": true,
+          "taskDefinitionUnchanged": true,
+          "runningCountUnchanged": true,
+          "pendingBefore": 0,
+          "pendingAfter": 1
+        }
+      },
+      "strictCountEquality": "Original sharedServicesUnchanged=false and result=fail remain visible because service-platform pending count changed from 0 to 1.",
+      "pendingTransition": "The pending task was launched by the existing ECS service scheduler deployment; repeated startup failures and retries predate RAG teardown. No service configuration or new deployment change was observed.",
+      "deploymentLineage": {
+        "id": "ecs-svc/6928887450547902755",
+        "createdAt": "2026-05-29T14:23:54.409000+00:00",
+        "updatedAt": "2026-08-30T22:27:53.451000+00:00",
+        "assessment": "This deployment predates retirement and matches the pending task startedBy value.",
+        "comparisonLimit": "services-before.json did not record deployment IDs, so exact before/after ID equality is not independently asserted."
+      },
+      "taskDefinitions": "RAG revisions 1, 2 and 3 are now absent; active, inactive and deleting family lists are empty.",
+      "scope": "Read-only verification only; no protected service changes or secret-value reads."
+    }
+  }
+}

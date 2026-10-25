@@ -1,0 +1,16 @@
+{
+  "logGroups": [
+    {
+      "logGroupName": "/aws/ecs/rag-rulebook-staging",
+      "creationTime": 1782907128544,
+      "retentionInDays": 14,
+      "metricFilterCount": 0,
+      "arn": "arn:aws:logs:eu-west-1:337159794548:log-group:/aws/ecs/rag-rulebook-staging:*",
+      "storedBytes": 14789033,
+      "logGroupClass": "STANDARD",
+      "logGroupArn": "arn:aws:logs:eu-west-1:337159794548:log-group:/aws/ecs/rag-rulebook-staging",
+      "deletionProtectionEnabled": false,
+      "bearerTokenAuthenticationEnabled": false
+    }
+  ]
+}

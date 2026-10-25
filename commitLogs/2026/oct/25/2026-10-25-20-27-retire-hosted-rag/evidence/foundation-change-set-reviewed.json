@@ -1,0 +1,172 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "LogGroup",
+        "PhysicalResourceId": "/aws/ecs/rag-rulebook-staging",
+        "ResourceType": "AWS::Logs::LogGroup",
+        "Replacement": "False",
+        "Scope": [
+          "DeletionPolicy",
+          "UpdateReplacePolicy"
+        ],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "UpdateReplacePolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "DeletionPolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ]
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Repository",
+        "PhysicalResourceId": "rag-rulebook-service",
+        "ResourceType": "AWS::ECR::Repository",
+        "Replacement": "False",
+        "Scope": [
+          "Properties"
+        ],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "EmptyOnDelete",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ]
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "ServiceTokenSecret",
+        "PhysicalResourceId": "arn:aws:secretsmanager:eu-west-1:337159794548:secret:rag-rulebook/staging/service-token-vpSnES",
+        "ResourceType": "AWS::SecretsManager::Secret",
+        "Replacement": "False",
+        "Scope": [
+          "DeletionPolicy",
+          "UpdateReplacePolicy"
+        ],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "UpdateReplacePolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "DeletionPolicy",
+              "RequiresRecreation": "Never"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ]
+      }
+    }
+  ],
+  "ChangeSetName": "rag-retire-foundation-20261025-a1",
+  "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/rag-retire-foundation-20261025-a1/46f5287b-98f2-499a-8575-127283c32279",
+  "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-foundation/3281f680-7544-11f1-a539-06e31f750d97",
+  "StackName": "rag-rulebook-staging-foundation",
+  "Description": null,
+  "Parameters": [
+    {
+      "ParameterKey": "PublicSubnetIds",
+      "ParameterValue": "subnet-05d385e4d57b18032,subnet-0397df802e31ff6fe"
+    },
+    {
+      "ParameterKey": "ExistingAlbCanonicalHostedZoneId",
+      "ParameterValue": "Z32O12XQLNTSW2"
+    },
+    {
+      "ParameterKey": "EnvironmentName",
+      "ParameterValue": "staging"
+    },
+    {
+      "ParameterKey": "HostedZoneId",
+      "ParameterValue": "Z0909415EFV969Z95D5F"
+    },
+    {
+      "ParameterKey": "RepositoryName",
+      "ParameterValue": "rag-rulebook-service"
+    },
+    {
+      "ParameterKey": "ExistingHttpsListenerArn",
+      "ParameterValue": "arn:aws:elasticloadbalancing:eu-west-1:337159794548:listener/app/kanbien-staging-alb/29ac325385686357/4baac4abe7800750"
+    },
+    {
+      "ParameterKey": "ExistingAlbDnsName",
+      "ParameterValue": "kanbien-staging-alb-1575766066.eu-west-1.elb.amazonaws.com"
+    },
+    {
+      "ParameterKey": "ListenerRulePriority",
+      "ParameterValue": "40"
+    },
+    {
+      "ParameterKey": "VpcId",
+      "ParameterValue": "vpc-0063b6c3d2d781f3c"
+    },
+    {
+      "ParameterKey": "ServiceName",
+      "ParameterValue": "rag-rulebook-staging"
+    },
+    {
+      "ParameterKey": "ExistingAlbSecurityGroupId",
+      "ParameterValue": "sg-08d590b0aee6e2e60"
+    },
+    {
+      "ParameterKey": "LogRetentionDays",
+      "ParameterValue": "14"
+    },
+    {
+      "ParameterKey": "HostName",
+      "ParameterValue": "rag.kanbien.com"
+    }
+  ],
+  "CreationTime": "2026-10-25T20:34:54.044000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [
+    "CAPABILITY_NAMED_IAM"
+  ],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null,
+  "StackDriftStatus": null,
+  "DeploymentMode": null,
+  "DeploymentConfig": {
+    "Mode": "STANDARD",
+    "DisableRollback": false
+  }
+}

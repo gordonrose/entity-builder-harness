@@ -52,7 +52,7 @@ they are needed for repeatable operations.
 - `workflows/execute-approved-aws-change.md` - run an explicitly approved AWS
   change and record the result.
 - `workflows/deploy-rag-rulebook-service.md` - govern GitHub-to-AWS deployment
-  of the RAG/rulebook MCP service after readiness proof and explicit approval.
+  of the RAG/rulebook MCP service and its bounded hosted staging retirement.
 
 ## Implementation Plans
 

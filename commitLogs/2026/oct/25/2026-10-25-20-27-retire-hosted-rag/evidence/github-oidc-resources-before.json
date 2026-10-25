@@ -1,0 +1,24 @@
+{
+  "StackResourceSummaries": [
+    {
+      "LogicalResourceId": "DeployRole",
+      "PhysicalResourceId": "github-rag-rulebook-staging-deploy",
+      "ResourceType": "AWS::IAM::Role",
+      "LastUpdatedTimestamp": "2026-07-01T10:42:50.660000+00:00",
+      "ResourceStatus": "UPDATE_COMPLETE",
+      "DriftInformation": {
+        "StackResourceDriftStatus": "NOT_CHECKED"
+      }
+    },
+    {
+      "LogicalResourceId": "GitHubOidcProvider",
+      "PhysicalResourceId": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com",
+      "ResourceType": "AWS::IAM::OIDCProvider",
+      "LastUpdatedTimestamp": "2026-07-01T09:22:42.924000+00:00",
+      "ResourceStatus": "CREATE_COMPLETE",
+      "DriftInformation": {
+        "StackResourceDriftStatus": "NOT_CHECKED"
+      }
+    }
+  ]
+}

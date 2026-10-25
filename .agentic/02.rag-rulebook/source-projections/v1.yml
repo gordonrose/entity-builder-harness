@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-06-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 02.rag-rulebook
 #   domain: rulebook
 #   disciplines:
@@ -67,13 +67,14 @@ projection_sets:
       - docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml
     derivation_reports:
       - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml
+      - .agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml
     corpus_gap_paths:
       - .agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml
     expected_selector_evaluations:
       - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml
     required_checks:
-      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current
-      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current
+      - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set projection.02.rag-rulebook.hosted-context-provider-contract
+      - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md
       - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --current
       - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml --json
       - bash scripts/02.rag-rulebook/query-context/smoke-test.sh

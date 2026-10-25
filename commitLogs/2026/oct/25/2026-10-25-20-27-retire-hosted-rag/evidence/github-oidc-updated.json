@@ -1,0 +1,59 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-github-oidc/648c7cb0-752e-11f1-b548-0a0c777ce413",
+      "StackName": "rag-rulebook-staging-github-oidc",
+      "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/rag-retire-deploy-role-20261025-a1/8e8b5dc6-3495-48ca-9ae4-7fcd5350e148",
+      "Description": "Bootstrap GitHub Actions OIDC deployment role for the RAG rulebook staging service.",
+      "Parameters": [
+        {
+          "ParameterKey": "ExistingOidcProviderArn",
+          "ParameterValue": ""
+        },
+        {
+          "ParameterKey": "GitHubEnvironment",
+          "ParameterValue": "staging"
+        },
+        {
+          "ParameterKey": "DeployRoleName",
+          "ParameterValue": "github-rag-rulebook-staging-deploy"
+        },
+        {
+          "ParameterKey": "GitHubRepository",
+          "ParameterValue": "gordonrose/entity-builder-harness"
+        }
+      ],
+      "CreationTime": "2026-07-01T09:22:34.163000+00:00",
+      "LastUpdatedTime": "2026-10-25T20:40:23.932000+00:00",
+      "RollbackConfiguration": {},
+      "StackStatus": "UPDATE_COMPLETE",
+      "DisableRollback": false,
+      "DeploymentConfig": {
+        "Mode": "STANDARD",
+        "DisableRollback": false
+      },
+      "NotificationARNs": [],
+      "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "OidcProviderArn",
+          "OutputValue": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com",
+          "Description": "OIDC provider ARN used by the deployment role."
+        }
+      ],
+      "Tags": [],
+      "EnableTerminationProtection": false,
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      },
+      "LastOperations": [
+        {
+          "OperationType": "UPDATE_STACK",
+          "OperationId": "b8045541-5ba2-4362-ac9d-a8feeabc36a0"
+        }
+      ]
+    }
+  ]
+}

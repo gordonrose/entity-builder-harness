@@ -1,0 +1,14 @@
+{"verdict":"passed","evidence_class":"local-runtime","code":"persistence-payload-imports-resolved"}
+Persistence payload regression passed (6 broken-payload cases; no container or target access).
+Persistence package stage regression passed (declaration gap blocks before Docker).
+Persistence package stage regression passed (missing or unloadable acceptance helper returns structured gap).
+Persistence package stage regression passed (corrupt health blocks before composition/Docker; repaired declaration advances).
+Publication qualification passed: actual workflow/builder route runs eight commands once; all eight failures stop progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.
+Traceback (most recent call last):
+  File "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924/scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py", line 127, in <module>
+    run_case('default-local')
+    ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-20-27-retire-hosted-rag-deployment-and-preserve-local-retrieval-4278027924/scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py", line 110, in run_case
+    assert status==expected,(name,status,stdout,stderr)
+           ^^^^^^^^^^^^^^^^
+AssertionError: ('default-local', 1, '', '{"schema": "deploy/local-public-qualification-report/v1", "verdict": "blocked", "code": "local-public-recovery-owner-review-required", "exit_code": 1}\n')

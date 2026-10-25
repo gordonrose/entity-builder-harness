@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -201,5 +201,76 @@ assert "gap.deploy.readiness.mcp-spec-version" in gap_ids
 assert "gap.deploy.readiness.mcp-transport" in gap_ids
 assert "gap.deploy.readiness.mcp-exposed-capabilities" in gap_ids
 PY
+
+# A fully qualified manifest still cannot deploy after explicit retirement.
+python3 - "$VALID" "$TMP_DIR/retired.yml" <<'PY_RETIRED'
+import sys
+from pathlib import Path
+import yaml
+manifest = yaml.safe_load(Path(sys.argv[1]).read_text())
+manifest["deployment"]["status"] = "retired"
+Path(sys.argv[2]).write_text(yaml.safe_dump(manifest))
+PY_RETIRED
+if bash scripts/04.deploy/verify-rag-rulebook-deploy-readiness/script.sh \
+  --manifest "$TMP_DIR/retired.yml" --json > "$TMP_DIR/retired.json"; then
+  echo "ERROR: retired manifest unexpectedly passed." >&2
+  exit 1
+fi
+
+python3 - "$TMP_DIR/retired.json" <<'PY_RETIREMENT_CHECK'
+import json
+import sys
+from pathlib import Path
+import yaml
+
+class CloudFormationLoader(yaml.SafeLoader):
+    pass
+
+def cfn_tag(loader, tag, node):
+    if isinstance(node, yaml.ScalarNode):
+        value = loader.construct_scalar(node)
+    elif isinstance(node, yaml.SequenceNode):
+        value = loader.construct_sequence(node)
+    else:
+        value = loader.construct_mapping(node)
+    return {"!" + tag: value}
+
+CloudFormationLoader.add_multi_constructor("!", cfn_tag)
+def load(path):
+    return yaml.load(Path(path).read_text(), Loader=CloudFormationLoader)
+
+report = json.loads(Path(sys.argv[1]).read_text())
+assert report["status"] == "blocked"
+assert any(gap["id"] == "gap.deploy.readiness.deployment-status" for gap in report["blocking_gaps"])
+
+workflow = load(".github/workflows/deploy-rag-rulebook-staging.yml")
+assert workflow["permissions"] == {}
+assert set(workflow["jobs"]) == {"retired"}
+assert workflow["jobs"]["retired"]["if"] == "${{ false }}"
+assert workflow["jobs"]["retired"]["steps"] == [
+    {"run": 'echo "Hosted RAG is retired. Use RAG_RULEBOOK_PROVIDER=local."'}
+]
+assert "env" not in workflow
+assert "environment" not in workflow["jobs"]["retired"]
+
+base = "infra/04.deploy/02.rag-rulebook/ecs-fargate/cloudformation/"
+foundation = load(base + "foundation.yml")
+for name in ["LogGroup", "ServiceTokenSecret"]:
+    assert foundation["Resources"][name]["DeletionPolicy"] == "Retain"
+    assert foundation["Resources"][name]["UpdateReplacePolicy"] == "Retain"
+assert foundation["Parameters"]["LogRetentionDays"]["Default"] == 14
+assert foundation["Resources"]["Repository"]["Properties"]["EmptyOnDelete"] is True
+service = load(base + "service.yml")
+assert service["Parameters"]["DesiredCount"]["Default"] == 0
+assert service["Parameters"]["DesiredCount"]["AllowedValues"] == [0]
+bootstrap = load(base + "github-oidc-bootstrap.yml")
+assert set(bootstrap["Resources"]) == {"GitHubOidcProvider"}
+assert bootstrap["Resources"]["GitHubOidcProvider"]["DeletionPolicy"] == "Retain"
+assert "DeployRoleArn" not in bootstrap["Outputs"]
+manifest = load("infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml")
+assert manifest["deployment"]["status"] == "retired"
+assert manifest["github"]["oidc"]["workflow_has_id_token_permission"] is False
+print("Hosted RAG retirement controls passed.")
+PY_RETIREMENT_CHECK
 
 echo "RAG/rulebook deploy-readiness verification smoke test passed."

@@ -1,0 +1,129 @@
+{
+  "check": [
+    "bash",
+    "scripts/02.rag-rulebook/check-source-projections/script.sh",
+    "--current",
+    "--json"
+  ],
+  "result": "failed",
+  "exit_code": 1,
+  "baseline_commit": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+  "scope": "Pre-existing source-provenance defects outside retirement changes",
+  "failure_count": 16,
+  "provider_projection_errors": 0,
+  "baseline_failures": [
+    {
+      "rule": "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml",
+      "source": "docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md",
+      "recorded_hash": "9993d73be63b4f8cabe615d596c9279dec91e3d99ed82cd08d79cbaef250cb35",
+      "current_source_hash": "592218a4dafc500c1449385f803b8e06693f6851c31240838e1d08561cd90b08",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md",
+      "recorded_hash": "3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f",
+      "current_source_hash": "03d58f94286fe6b1d531142a67c012903f2c4ae6be2f18549a637bdad4ca1ce0",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md",
+      "recorded_hash": "3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f",
+      "current_source_hash": "03d58f94286fe6b1d531142a67c012903f2c4ae6be2f18549a637bdad4ca1ce0",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md",
+      "recorded_hash": "3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f",
+      "current_source_hash": "03d58f94286fe6b1d531142a67c012903f2c4ae6be2f18549a637bdad4ca1ce0",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md",
+      "recorded_hash": "3a157d90a185c1e1c92fee76ba507d0cd195f24b59ad2a8c532b0bf47b39de2f",
+      "current_source_hash": "03d58f94286fe6b1d531142a67c012903f2c4ae6be2f18549a637bdad4ca1ce0",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "recorded_hash": "d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0",
+      "current_source_hash": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "recorded_hash": "d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0",
+      "current_source_hash": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml",
+      "source": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "recorded_hash": "d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0",
+      "current_source_hash": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/shared/container-image-management.yml",
+      "source": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "recorded_hash": "f6f224ce56fb55b65fc575502454a68a81da368273d56fc1aa5eb78f2d80d221",
+      "current_source_hash": "3bb870408a1b859299e862b6828b1cedf56103b0877e138eca38f9bfdfea7ac0",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml",
+      "source": "docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md",
+      "recorded_hash": "de0cd444aeca106099a7fc317e2058732f18f0ba73e600e06a17d34c6202f551",
+      "current_source_hash": "92d7bd617fee34cc95da599e515d2b22b8f9191b0abf37a7dc7c79eb7cdc62f8",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml",
+      "source": "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md",
+      "recorded_hash": "f0b8de8d3e143c941b3a356143ec095c5e056491a57b8ac2334ae4cf8ec21e6a",
+      "current_source_hash": "826ec060288b126b9a13d5d97c46f3c08e539b80ab9305d19fdff14ac54f77cf",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/03.product/rules/core/layers/packages-core.yml",
+      "source": "docs/03.product/source-material/core/packages-core-contract-surface-v1.md",
+      "recorded_hash": "3dafd7114f1618b1ee869fa4193953017f7953aa5dc3a5e36bfc380f703af64d",
+      "current_source_hash": "517c1f5125ffa6c9f820dc323c53724ae9ba0b45a76fc964688a89a65a51326b",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/03.product/rules/platform/layers/platform.yml",
+      "source": "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md",
+      "recorded_hash": "b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4",
+      "current_source_hash": "26e195e94586c71a2168aec21ffbc1a9646a7f9b89a07af4cb916ded0620eed3",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml",
+      "source": "docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md",
+      "recorded_hash": "f5ba953cc7a93df32586e39df2c50e53dd18a1e37697be66e18bd9371f52b6c1",
+      "current_source_hash": "63b5bf357a9cf648269f3d5f92447dd1f6e9fb475e7d475d076ad29a04d1dd5d",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/03.product/rules/concerns/package-documentation.yml",
+      "source": "docs/03.product/source-material/guides/markdown/package-documentation-v1.md",
+      "recorded_hash": "099dc9bb1eb69a7977817ee4b8768d1b40898fef1402b7606335107686dd8979",
+      "current_source_hash": "56fa64149041b4fc99d645ec782add66011435b0289db09393abe60482199f64",
+      "source_and_rule_identical_to_HEAD": true
+    },
+    {
+      "rule": "docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml",
+      "source": "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md",
+      "recorded_hash": "6cb6af3535b44d5e9b002bfd62273f0eb654d8b5c33d713e905c97445aa77b18",
+      "current_source_hash": "380afd33e1addb6b1acca6d91de1df0cb2941d3938656e355a31177763416f5e",
+      "source_and_rule_identical_to_HEAD": true
+    }
+  ],
+  "protected_sources_modified": false
+}

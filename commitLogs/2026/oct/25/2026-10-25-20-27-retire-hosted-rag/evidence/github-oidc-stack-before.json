@@ -1,0 +1,64 @@
+{
+  "Stacks": [
+    {
+      "StackId": "arn:aws:cloudformation:eu-west-1:337159794548:stack/rag-rulebook-staging-github-oidc/648c7cb0-752e-11f1-b548-0a0c777ce413",
+      "StackName": "rag-rulebook-staging-github-oidc",
+      "ChangeSetId": "arn:aws:cloudformation:eu-west-1:337159794548:changeSet/awscli-cloudformation-package-deploy-1782902546/48e04ebe-852a-489a-9572-5123f0ddc35f",
+      "Description": "Bootstrap GitHub Actions OIDC deployment role for the RAG rulebook staging service.",
+      "Parameters": [
+        {
+          "ParameterKey": "ExistingOidcProviderArn",
+          "ParameterValue": ""
+        },
+        {
+          "ParameterKey": "GitHubEnvironment",
+          "ParameterValue": "staging"
+        },
+        {
+          "ParameterKey": "DeployRoleName",
+          "ParameterValue": "github-rag-rulebook-staging-deploy"
+        },
+        {
+          "ParameterKey": "GitHubRepository",
+          "ParameterValue": "gordonrose/entity-builder-harness"
+        }
+      ],
+      "CreationTime": "2026-07-01T09:22:34.163000+00:00",
+      "LastUpdatedTime": "2026-07-01T10:42:31.345000+00:00",
+      "RollbackConfiguration": {},
+      "StackStatus": "UPDATE_COMPLETE",
+      "DisableRollback": false,
+      "DeploymentConfig": {
+        "Mode": "STANDARD",
+        "DisableRollback": false
+      },
+      "NotificationARNs": [],
+      "Capabilities": [
+        "CAPABILITY_NAMED_IAM"
+      ],
+      "Outputs": [
+        {
+          "OutputKey": "DeployRoleArn",
+          "OutputValue": "arn:aws:iam::337159794548:role/github-rag-rulebook-staging-deploy",
+          "Description": "GitHub Actions OIDC role ARN for staging deploys."
+        },
+        {
+          "OutputKey": "OidcProviderArn",
+          "OutputValue": "arn:aws:iam::337159794548:oidc-provider/token.actions.githubusercontent.com",
+          "Description": "OIDC provider ARN used by the deployment role."
+        }
+      ],
+      "Tags": [],
+      "EnableTerminationProtection": false,
+      "DriftInformation": {
+        "StackDriftStatus": "NOT_CHECKED"
+      },
+      "LastOperations": [
+        {
+          "OperationType": "UPDATE_STACK",
+          "OperationId": "a4fc7fe4-c875-4cfc-8a23-d2089efdd0bd"
+        }
+      ]
+    }
+  ]
+}
