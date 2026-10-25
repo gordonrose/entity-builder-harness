@@ -11,6 +11,7 @@
     "src"
   ],
   "dependencies": {
+    "@aws-sdk/rds-signer": "^3.1156.0",
     "@kanbien/core": "0.0.0",
     "@kanbien/platform-persistence": "0.0.0",
     "pg": "^8.23.0"

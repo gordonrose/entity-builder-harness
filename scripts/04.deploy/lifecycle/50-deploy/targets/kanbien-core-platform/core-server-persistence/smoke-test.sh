@@ -114,6 +114,37 @@ prepare = Prepare()
 observed, code = module.wait_for_review(prepare, name, "UPDATE_COMPLETE", digest, revision)
 assert observed is None and code == "persistence-database-permission-surface-change-set-failed" and prepare.calls == 1
 PY
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py" <<'PY'
+import importlib.util, json, sys, tempfile
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location("change_set", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+name = "kanbien-core-platform-persistence-create-" + "a" * 12
+receipt = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
+with tempfile.TemporaryDirectory() as directory:
+    # The repository evidence directory is intentionally not writable by this
+    # sandbox identity. Keep production fail-closed, and exercise the same
+    # governed-location rule with a disposable writable evidence root.
+    module.DIAGNOSTIC_DIRECTORY = Path(directory) / "operation-diagnostics"
+    module.DIAGNOSTIC_DIRECTORY.mkdir()
+    assert module.diagnostic_path_is_governed(module.DIAGNOSTIC_DIRECTORY / (name + ".json"))
+    assert not module.diagnostic_path_is_governed(Path("/tmp/unsafe-diagnostic.json"))
+    assert module.diagnostics_ready(module.DIAGNOSTIC_DIRECTORY / (name + ".json"))
+    class Provider:
+        def aws(self, *parts):
+            if parts[1] == "describe-change-set":
+                return True, {"Status": "FAILED", "StatusReason": "Property validation error at Properties.ContainerDefinitions[0].Image password=synthetic-only"}, "ok"
+            if parts[1] == "describe-stack-events":
+                return True, {"StackEvents": [{"LogicalResourceId": "ServerTask", "ResourceType": "AWS::ECS::TaskDefinition", "ResourceStatus": "CREATE_FAILED", "ResourceStatusReason": "Property validation error at Properties.ContainerDefinitions[0].Image password=synthetic-only"}]}, "ok"
+            raise AssertionError(parts)
+    path = module.DIAGNOSTIC_DIRECTORY / "failure.json"
+    assert module.retain_diagnostic(Provider(), name=name, receipt=receipt, path=path, original_code="persistence-change-set-creation-failed", outcome="rejected", fallback_code="aws-command-failed") is None
+    value = json.loads(path.read_text())
+    assert value["classification"]["code"] == "provider-property-rejection"
+    assert value["facts"]["property_path"] == "Properties.ContainerDefinitions"
+    assert "synthetic-only" not in path.read_text()
+    assert value["next_action"]["decision"] == "inspect-retained-evidence"
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.py" <<'PY'
 import importlib.util, sys
 spec = importlib.util.spec_from_file_location("replacement", sys.argv[1]); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)

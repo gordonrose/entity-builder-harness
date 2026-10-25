@@ -5,7 +5,7 @@
 #   version: 5
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-25"
 #   layer: 04.deploy
 #   domain: deployment.secret-management
 #   disciplines: [agentic, security, sre]
@@ -174,6 +174,99 @@ def invalid_entry(entry: Any, workload_types: dict[str, str], declared_dependenc
     return None
 
 
+def invalid_identity_entry(entry: Any, workload_types: dict[str, str], declared_dependencies: set[str]) -> str | None:
+    """Validate a provider-workload identity without treating its token as a secret artifact.
+
+    The portable contract records only the target-neutral reference and the
+    lifecycle boundary. Provider bindings and effective permissions remain
+    target-alignment/live-proof concerns.
+    """
+    required = {
+        "id", "dependency", "purpose", "owner", "authorised_workloads", "access_class",
+        "authentication_reference_id", "delivery", "access_grant", "authentication_lifecycle", "revocation",
+        "retirement", "failure_behaviour", "safe_diagnostics",
+    }
+    if not isinstance(entry, dict) or set(entry) != required:
+        return "workload-identity-fields-invalid"
+    if not all(text(entry[key]) for key in ("id", "dependency", "purpose", "owner", "authentication_reference_id")):
+        return "workload-identity-fields-invalid"
+    if (
+        IDENTIFIER.fullmatch(entry["id"]) is None
+        or IDENTIFIER.fullmatch(entry["dependency"]) is None
+        or IDENTIFIER.fullmatch(entry["authentication_reference_id"]) is None
+        or entry["dependency"] not in declared_dependencies
+    ):
+        return "workload-identity-reference-invalid"
+    workloads = text_list(entry["authorised_workloads"])
+    if workloads is None or not workloads or len(workloads) != len(set(workloads)) or any(item not in workload_types for item in workloads):
+        return "workload-identity-workload-invalid"
+    access_class = entry["access_class"]
+    if not isinstance(access_class, str) or access_class not in ACCESS_TYPES:
+        return "workload-identity-access-class-invalid"
+    selected_types = {workload_types[item] for item in workloads}
+    if access_class in {"migration", "administrative"} and selected_types != {COMPLETION_TASK_TYPE}:
+        return "workload-identity-access-class-workload-mismatch"
+    if selected_types - SERVER_OR_WORKER_TYPES and selected_types != {COMPLETION_TASK_TYPE}:
+        return "workload-identity-workload-invalid"
+    delivery, access_grant, lifecycle, revocation, retirement, failure, diagnostics = (
+        entry["delivery"], entry["access_grant"], entry["authentication_lifecycle"], entry["revocation"],
+        entry["retirement"], entry["failure_behaviour"], entry["safe_diagnostics"],
+    )
+    if not isinstance(delivery, dict) or delivery != {"method": "workload-identity-token", "phase": "dependency-connection"}:
+        return "workload-identity-delivery-invalid"
+    if (
+        not isinstance(access_grant, dict)
+        or set(access_grant) != {"owner", "policy", "privilege_boundary", "proof_requirement"}
+        or not text(access_grant.get("owner"))
+        or not text(access_grant.get("policy"))
+        or access_grant.get("privilege_boundary") != "declared-access-class-boundary-not-effective-privilege-proof"
+        or access_grant.get("proof_requirement") != "provider-binding-and-effective-access-observation-required"
+    ):
+        return "workload-identity-access-grant-invalid"
+    if (
+        not isinstance(lifecycle, dict)
+        or set(lifecycle) != {"owner", "policy", "task_role_credential_renewal", "new_connection_token_generation", "existing_session_behavior", "replacement_policy", "completed_task_behavior"}
+        or not text(lifecycle.get("owner"))
+        or not text(lifecycle.get("policy"))
+        or lifecycle.get("task_role_credential_renewal") != "provider-managed-automatic"
+        or lifecycle.get("new_connection_token_generation") != "generate-for-each-new-database-connection"
+        or lifecycle.get("existing_session_behavior") != "remains-valid-until-closed-or-governed-revocation"
+        or lifecycle.get("replacement_policy") != "not-required-for-normal-token-expiry"
+        or lifecycle.get("completed_task_behavior") != "no-replay"
+    ):
+        return "workload-identity-lifecycle-invalid"
+    if (
+        not isinstance(revocation, dict)
+        or set(revocation) != {"owner", "policy", "condition", "workload_effect", "proof_requirement"}
+        or any(not text(revocation.get(key)) for key in ("owner", "policy", "condition"))
+        or revocation.get("workload_effect") != "block-new-start-and-stop-active-authorised-workloads"
+        or revocation.get("proof_requirement") != "delivery-and-dependency-access-denied-observation-required"
+    ):
+        return "workload-identity-revocation-invalid"
+    if not isinstance(retirement, dict) or set(retirement) != {"owner", "policy", "condition"} or any(not text(retirement.get(key)) for key in ("owner", "policy", "condition")):
+        return "workload-identity-retirement-invalid"
+    if not isinstance(diagnostics, dict) or set(diagnostics) != {"unavailable", "invalid_shape", "credential_rejected", "access_denied"} or any(not isinstance(value, str) or DIAGNOSTIC.fullmatch(value) is None for value in diagnostics.values()):
+        return "workload-identity-diagnostics-invalid"
+    if selected_types <= SERVER_OR_WORKER_TYPES:
+        expected = {
+            "startup": {"unavailable": "process-exits", "invalid_shape": "process-exits"},
+            "readiness": {"unavailable": "block-readiness", "invalid_shape": "block-readiness"},
+        }
+        if failure != expected:
+            return "workload-identity-failure-behaviour-invalid"
+    else:
+        if not isinstance(failure, dict) or set(failure) != {"completion"}:
+            return "workload-identity-failure-behaviour-invalid"
+        completion = failure["completion"]
+        if not isinstance(completion, dict) or set(completion) != {"unavailable", "invalid_shape"}:
+            return "workload-identity-failure-behaviour-invalid"
+        for concern in ("unavailable", "invalid_shape"):
+            result = completion[concern]
+            if not isinstance(result, dict) or result != {"outcome": "unsuccessful-completion", "diagnostic_code": diagnostics[concern]}:
+                return "workload-identity-failure-behaviour-invalid"
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--scope-contract", type=Path, required=True)
@@ -192,7 +285,7 @@ def main() -> int:
             codes.append("secret-dependency-unsafe-configuration-field")
         elif contains_unsafe_value(configuration):
             codes.append("secret-dependency-unsafe-value-or-reference")
-        elif "secret_dependencies" not in configuration or not isinstance(configuration.get("secret_dependencies"), list) or not isinstance(configuration.get("secret_names"), list):
+        elif "secret_dependencies" not in configuration or not isinstance(configuration.get("secret_dependencies"), list) or not isinstance(configuration.get("secret_names"), list) or ("workload_identity_dependencies" in configuration and not isinstance(configuration.get("workload_identity_dependencies"), list)):
             codes.append("secret-dependency-declaration-missing")
         elif not isinstance(health, dict) or not isinstance(health.get("workloads"), list):
             codes.append("secret-dependency-workloads-missing")
@@ -213,6 +306,17 @@ def main() -> int:
                 codes.append("secret-dependency-scope-dependencies-invalid")
                 required_dependencies, optional_dependencies = [], []
             declared_dependencies = set(required_dependencies) | set(optional_dependencies)
+            persistence_dependencies_value = dependencies.get("persistence") if isinstance(dependencies, dict) else []
+            if persistence_dependencies_value is None:
+                persistence_dependencies_value = []
+            if (
+                not isinstance(persistence_dependencies_value, list)
+                or len(persistence_dependencies_value) != len(set(persistence_dependencies_value))
+                or not all(text(item) and item in declared_dependencies for item in persistence_dependencies_value)
+            ):
+                codes.append("secret-dependency-persistence-classification-invalid")
+                persistence_dependencies_value = []
+            persistence_dependencies = set(persistence_dependencies_value)
             server_mediated_verifiers = {
                 item.get("id"): item["server_mediated_dependency_proof"].get("dependency")
                 for item in health["workloads"]
@@ -230,16 +334,31 @@ def main() -> int:
                 and text(item["migration_execution"].get("dependency"))
             }
             administrative_executors: dict[str, str] = {}
+            administrative_runtime_probes: dict[str, str] = {}
             for item in health["workloads"]:
                 if not isinstance(item, dict) or not text(item.get("id")) or "administrative_execution" not in item:
                     continue
                 execution = item.get("administrative_execution")
                 dependency = execution.get("dependency") if isinstance(execution, dict) else None
-                if not isinstance(execution, dict) or not text(dependency) or execution.get("credential_access_class") != "administrative":
+                probe = execution.get("runtime_identity_probe") if isinstance(execution, dict) else None
+                probe_dependency = probe.get("dependency") if isinstance(probe, dict) else None
+                if (
+                    not isinstance(execution, dict)
+                    or not text(dependency)
+                    or execution.get("credential_access_class") != "administrative"
+                    or not isinstance(probe, dict)
+                    or set(probe) != {"dependency", "credential_access_class", "purpose"}
+                    or not text(probe_dependency)
+                    or probe.get("credential_access_class") != "runtime"
+                    or not text(probe.get("purpose"))
+                    or probe_dependency != dependency
+                ):
                     codes.append("administrative-executor-declaration-invalid")
                     continue
                 administrative_executors[item["id"]] = dependency
+                administrative_runtime_probes[item["id"]] = probe_dependency
             entries = configuration["secret_dependencies"]
+            identity_entries = configuration.get("workload_identity_dependencies", [])
             names = text_list(configuration["secret_names"])
             if names is None or len(names) != len(set(names)) or any(CONFIG_NAME.fullmatch(name) is None for name in names):
                 codes.append("secret-dependency-names-invalid")
@@ -283,12 +402,33 @@ def main() -> int:
                     codes.append("secret-dependency-shared-reference-invalid")
             if names is None or set(names) != injection_names:
                 codes.append("secret-dependency-names-mismatch")
+            valid_identity_entries: list[dict[str, Any]] = []
+            identity_ids: set[str] = set()
+            for entry in identity_entries:
+                code = invalid_identity_entry(entry, workload_types, declared_dependencies)
+                if code:
+                    codes.append(code)
+                    continue
+                valid_identity_entries.append(entry)
+                identity_ids.add(entry["id"])
+                if any(
+                    verifier_dependency == entry["dependency"] and verifier_id in entry["authorised_workloads"]
+                    for verifier_id, verifier_dependency in server_mediated_verifiers.items()
+                ):
+                    codes.append("server-mediated-verifier-direct-workload-identity-prohibited")
+            if len(identity_ids) != len(identity_entries) or entry_ids.intersection(identity_ids):
+                codes.append("workload-identity-identity-duplicate")
             for workload_id, dependency in migration_executors.items():
                 if not any(
                     entry.get("access_class") == "migration"
                     and entry.get("dependency") == dependency
                     and workload_id in entry.get("authorised_workloads", [])
                     for entry in valid_entries
+                ) and not any(
+                    entry.get("access_class") == "migration"
+                    and entry.get("dependency") == dependency
+                    and workload_id in entry.get("authorised_workloads", [])
+                    for entry in valid_identity_entries
                 ):
                     codes.append("migration-executor-credential-missing")
             for workload_id, dependency in administrative_executors.items():
@@ -299,6 +439,49 @@ def main() -> int:
                     for entry in valid_entries
                 ):
                     codes.append("administrative-executor-credential-missing")
+            for workload_id, dependency in administrative_runtime_probes.items():
+                if not any(
+                    entry.get("access_class") == "runtime"
+                    and entry.get("dependency") == dependency
+                    and workload_id in entry.get("authorised_workloads", [])
+                    for entry in valid_identity_entries
+                ):
+                    codes.append("administrative-runtime-identity-probe-missing")
+            runtime_identity_workloads: dict[str, set[str]] = {}
+            for item in health["workloads"]:
+                if not isinstance(item, dict) or not text(item.get("id")):
+                    continue
+                workload_id = item["id"]
+                used_dependencies: set[str] = set()
+                if item.get("persistence_writes") is True:
+                    used_dependencies.update(persistence_dependencies)
+                failures = item.get("dependency_failures")
+                if isinstance(failures, list):
+                    used_dependencies.update(
+                        failure.get("dependency")
+                        for failure in failures
+                        if isinstance(failure, dict) and isinstance(failure.get("dependency"), str) and failure["dependency"] in persistence_dependencies
+                    )
+                restoration = item.get("restoration_verification")
+                if isinstance(restoration, dict) and restoration.get("credential_access_class") == "runtime":
+                    dependency = restoration.get("dependency")
+                    if isinstance(dependency, str) and dependency in persistence_dependencies:
+                        used_dependencies.add(dependency)
+                    elif len(persistence_dependencies) == 1:
+                        used_dependencies.update(persistence_dependencies)
+                    else:
+                        codes.append("restoration-runtime-dependency-unresolved")
+                runtime_identity_workloads[workload_id] = used_dependencies
+            for workload_id, dependencies_used in runtime_identity_workloads.items():
+                for dependency in dependencies_used:
+                    has_runtime_access = any(
+                        entry.get("access_class") == "runtime"
+                        and entry.get("dependency") == dependency
+                        and workload_id in entry.get("authorised_workloads", [])
+                        for entry in [*valid_entries, *valid_identity_entries]
+                    )
+                    if not has_runtime_access:
+                        codes.append("runtime-workload-credential-missing")
     report = {
         "schema": "deploy/secret-dependency-declaration-report/v1",
         "scope_contract": str(args.scope_contract),

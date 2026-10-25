@@ -513,6 +513,119 @@ def check_observability_mvp(root: Path) -> None:
         raise DeclarationFailure("observability-mvp-declaration-invalid")
 
 
+def provider_resource_block(template: str, resource: str) -> str | None:
+    """Return one top-level CloudFormation resource block without parsing tags.
+
+    The provider template deliberately uses CloudFormation intrinsic tags that
+    SafeLoader does not understand. This narrow static checker therefore
+    verifies the named, fixed resources and their literal least-privilege
+    boundaries rather than interpreting arbitrary CloudFormation.
+    """
+    match = re.search(
+        rf"^  {re.escape(resource)}:\n(?P<body>.*?)(?=^  [A-Za-z][A-Za-z0-9]+:\n    Type:|^Outputs:|\Z)",
+        template,
+        re.MULTILINE | re.DOTALL,
+    )
+    return match.group("body") if match else None
+
+
+def check_persistence_provider_identity_bindings(root: Path) -> None:
+    """Check target-specific IAM bindings against the declared workload scope.
+
+    The portable secret-dependency validator checks declared relationships. It
+    cannot prove an AWS role policy, which belongs in the target checker. This
+    is static provider realization evidence, not a claim that AWS has applied
+    the policy or that an IAM database login has completed.
+    """
+    scope_root = root / "20-scopes" / "core-server-persistence"
+    declaration = mapping(scope_root / "00-declaration" / "declaration-contract.yml", "persistence-scope-contract-unreadable")
+    binding = mapping(scope_root / "10-workload-binding" / "workload-binding.yml", "persistence-workload-binding-unreadable")
+    template_path = root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except OSError:
+        raise DeclarationFailure("persistence-provider-template-unreadable") from None
+
+    configuration = declaration.get("configuration")
+    dependencies = configuration.get("workload_identity_dependencies") if isinstance(configuration, dict) else None
+    identities = {
+        item.get("id"): item
+        for item in dependencies
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    } if isinstance(dependencies, list) else {}
+    expected_identities = {
+        "postgresql-runtime-iam-authentication": ("core-server", "runtime"),
+        "postgresql-migration-iam-authentication": ("persistence-migration", "migration"),
+        "postgresql-administration-runtime-iam-probe": ("persistence-administration", "runtime"),
+        "postgresql-restoration-runtime-iam-authentication": ("persistence-restoration-verifier", "runtime"),
+    }
+    if set(identities) != set(expected_identities):
+        raise DeclarationFailure("persistence-workload-identity-declaration-invalid")
+    for identity_id, (workload, access_class) in expected_identities.items():
+        identity = identities[identity_id]
+        delivery = identity.get("delivery")
+        if identity.get("authorised_workloads") != [workload] or identity.get("access_class") != access_class or not isinstance(delivery, dict) or delivery.get("method") != "workload-identity-token":
+            raise DeclarationFailure("persistence-workload-identity-declaration-invalid")
+
+    expected_workloads = {
+        "core-server-service": ("CoreServerPersistenceService", "AWS::ECS::Service"),
+        "private-release-verifier-task": ("CoreServerPersistenceVerifierTaskDefinition", "AWS::ECS::TaskDefinition"),
+        "persistence-migration-task": ("CoreServerPersistenceMigrationTaskDefinition", "AWS::ECS::TaskDefinition"),
+        "persistence-administration-task": ("CoreServerPersistenceAdministrationTaskDefinition", "AWS::ECS::TaskDefinition"),
+        "persistence-restoration-verifier-task": ("CoreServerPersistenceRestorationVerifierTaskDefinition", "AWS::ECS::TaskDefinition"),
+    }
+    resources = provider_resource_types(template_path)
+    workload_rows = binding.get("workloads")
+    actual_workloads = {
+        row.get("id"): (row.get("provider_reference"), resources.get(row.get("provider_reference")))
+        for row in workload_rows
+        if isinstance(row, dict) and isinstance(row.get("id"), str)
+    } if isinstance(workload_rows, list) else {}
+    if actual_workloads != expected_workloads:
+        raise DeclarationFailure("persistence-workload-provider-reference-invalid")
+    required_resources = {
+        "PersistenceDatabase": "AWS::RDS::DBInstance",
+        "ServerTaskRole": "AWS::IAM::Role",
+        "MigrationTaskRole": "AWS::IAM::Role",
+        "AdministrationTaskRole": "AWS::IAM::Role",
+        "RestorationVerifierTaskRole": "AWS::IAM::Role",
+        "CoreServerPersistenceTaskDefinition": "AWS::ECS::TaskDefinition",
+        "CoreServerPersistenceMigrationTaskDefinition": "AWS::ECS::TaskDefinition",
+        "CoreServerPersistenceAdministrationTaskDefinition": "AWS::ECS::TaskDefinition",
+        "CoreServerPersistenceVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
+        "CoreServerPersistenceRestorationVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
+    }
+    if {name: resources.get(name) for name in required_resources} != required_resources or "EnableIAMDatabaseAuthentication: true" not in template:
+        raise DeclarationFailure("persistence-provider-iam-authentication-invalid")
+
+    task_roles = {
+        "CoreServerPersistenceTaskDefinition": "ServerTaskRole",
+        "CoreServerPersistenceMigrationTaskDefinition": "MigrationTaskRole",
+        "CoreServerPersistenceAdministrationTaskDefinition": "AdministrationTaskRole",
+        "CoreServerPersistenceRestorationVerifierTaskDefinition": "RestorationVerifierTaskRole",
+    }
+    for definition, role in task_roles.items():
+        block = provider_resource_block(template, definition)
+        if block is None or f"TaskRoleArn: !GetAtt {role}.Arn" not in block:
+            raise DeclarationFailure("persistence-provider-task-role-binding-invalid")
+    verifier = provider_resource_block(template, "CoreServerPersistenceVerifierTaskDefinition")
+    if verifier is None or "TaskRoleArn:" in verifier or "PERSISTENCE_POSTGRES_" in verifier or "PERSISTENCE_ADMINISTRATOR" in verifier:
+        raise DeclarationFailure("persistence-verifier-direct-database-access-prohibited")
+
+    arn_prefix = "arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/"
+    for role, database_user in {"ServerTaskRole": "core_runtime", "MigrationTaskRole": "core_schema_migration", "AdministrationTaskRole": "core_runtime"}.items():
+        block = provider_resource_block(template, role)
+        if block is None or "Action: rds-db:connect" not in block or f"{arn_prefix}{database_user}" not in block:
+            raise DeclarationFailure("persistence-provider-task-role-permission-invalid")
+    restoration_role = provider_resource_block(template, "RestorationVerifierTaskRole")
+    restore_definition = provider_resource_block(template, "CoreServerPersistenceRestorationVerifierTaskDefinition")
+    if restoration_role is None or re.search(r"Action:\s*(?:\[[^\]]*rds-db:connect|rds-db:connect)", restoration_role) or restore_definition is None or "restoration-identity-supplied-at-governed-task-run" not in restore_definition or "{ Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub" in restore_definition:
+        raise DeclarationFailure("persistence-restoration-identity-binding-invalid")
+    administration = provider_resource_block(template, "CoreServerPersistenceAdministrationTaskDefinition")
+    if administration is None or f"{arn_prefix}core_runtime" not in administration or "PERSISTENCE_ADMINISTRATOR_CREDENTIALS" not in administration:
+        raise DeclarationFailure("persistence-administration-runtime-probe-binding-invalid")
+
+
 def report(verdict: str, codes: tuple[str, ...]) -> str:
     return json.dumps({"schema": "deploy/target-declaration-report/v1", "target": TARGET, "scope": "repository-declaration", "verdict": verdict, "findings": [{"code": code} for code in codes]}, sort_keys=True)
 
@@ -530,6 +643,7 @@ def main() -> int:
         check_scope(root, args.rehearsal_root)
         check_accepted_release(root, evidence_class="simulated" if args.rehearsal_root else "live")
         check_pipeline(root)
+        check_persistence_provider_identity_bindings(root)
         check_observability_mvp(root)
         print(report("repository-declaration-complete", ()))
         return 0

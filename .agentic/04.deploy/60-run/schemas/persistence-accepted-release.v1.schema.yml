@@ -49,7 +49,7 @@ required_proofs:
 - effective-privilege
 - server-replacement
 - server-replacement-read
-- credential-rotation
+- runtime-identity-initial-access
 - credential-revocation
 - credential-revocation-unready
 - credential-recovery

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T16:04:28Z
-latest_commit_sha: 324e0680
-chat_duration: 1753499s (20:07:04:59)
+latest_commit_at_utc: 2026-10-25T18:51:14Z
+latest_commit_sha: dadc6360
+chat_duration: 1763505s (20:09:51:45)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -212,6 +212,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Corrected collector qualification after public layer throttling
   Resolution: The protected collector custody job authenticated to AWS but its anonymous public registry layer pull returned Data limit exceeded before any mirror, scan, receipt, or workload action. Read-only OCI metadata established that public index sha256:7968... selects Linux/AMD64 manifest sha256:d0a..., which already exists identically in target-private ECR from the earlier protected mirror. The custody route now verifies the public index bytes, requires that identical private digest, qualifies and scans that payload, then issues custody only after the unprivileged scan.
+
+
+- Raised: Corrected IAM lifecycle semantics and package recovery boundary
+  Resolution: Runtime access now uses task-role renewal plus per-connection RDS IAM tokens; normal token expiry does not replace a healthy server. Recovery restores only bounded IAM login/membership after termination proof; local tests use disposable constrained PostgreSQL and do not claim RDS IAM proof.
 
 ## Decisions Made
 
@@ -697,6 +701,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Collector run 40202249108 failed at public layer download only. The exact Linux/AMD64 public manifest and retained private ECR image share sha256:d0a012252142c0999982fc34cddc88e2f9ce8c6b2bdf2c53e8e489a49dfbac31.
   Durable evidence: Durable target contract and workflow are in infra/04.deploy/03.product/image/core-server-persistence-observability-collector and .github/workflows/publish-kanbien-core-platform-observability-collector.yml; run logs remain GitHub Actions evidence.
+
+
+- Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
+  Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
 
 ## Activity Log
 
@@ -3282,6 +3290,31 @@ Summary: Validated explicit observability activation separately from the databas
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-25T18:48:32Z - Issue
+
+Raised: Corrected IAM lifecycle semantics and package recovery boundary
+
+Resolution: Runtime access now uses task-role renewal plus per-connection RDS IAM tokens; normal token expiry does not replace a healthy server. Recovery restores only bounded IAM login/membership after termination proof; local tests use disposable constrained PostgreSQL and do not claim RDS IAM proof.
+
+
+### 2026-10-25T18:48:33Z - Context hygiene
+
+Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
+
+Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
+
+
+### 2026-10-25T18:51:14Z - Commit recorded
+
+Commit: `dadc6360`
+
+Message: feat(deploy): harden persistence IAM lifecycle
+
+Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
+
+ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4160,6 +4193,13 @@ ADR impact: covered by session ADR disposition
   Summary: Validated explicit observability activation separately from the database-permission phase and repaired its regression fixture topology.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `dadc6360`
+  Time UTC: 2026-10-25T18:51:14Z
+  Message: feat(deploy): harden persistence IAM lifecycle
+  Summary: Implements provider-neutral workload-identity lifecycle contracts and validators, RDS IAM token-per-connection adapter path, bounded administrator/revocation/recovery operations, isolated restore IAM binding, restricted disposable package qualification, durable retained proof acceptance, and diagnostics integration. Local declaration, target, composition, controller, acceptance, diagnostics, observability, check-selection, metadata, and staged gates passed; AWS IAM and incident closure remain live-proof work.
+  ADR impact: No ADR: bounded implementation and corrective integration under the existing PostgreSQL persistence and observability decisions.
+
 ## Main Refresh Conflicts
 
 
@@ -4183,9 +4223,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T16:04:28Z
-Latest commit SHA: 324e0680
-Chat duration: 1753499s (20:07:04:59)
+Latest commit at UTC: 2026-10-25T18:51:14Z
+Latest commit SHA: dadc6360
+Chat duration: 1763505s (20:09:51:45)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

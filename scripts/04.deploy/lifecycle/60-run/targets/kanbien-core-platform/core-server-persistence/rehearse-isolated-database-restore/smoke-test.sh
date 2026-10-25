@@ -41,10 +41,14 @@ valid = {
     "name": "persistence-restoration-verifier",
     "command": ["artifacts/kanbien-core-server-persistence-restore-verifier.main.js"],
     "environment": [
+        {"name": "PERSISTENCE_POSTGRES_PORT", "value": "5432"},
         {"name": "PERSISTENCE_POSTGRES_DATABASE", "value": "kanbienpersistence"},
         {"name": "PERSISTENCE_POSTGRES_SCHEMA", "value": "platform"},
+        {"name": "PERSISTENCE_POSTGRES_IAM_REGION", "value": "eu-west-1"},
+        {"name": "PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE", "value": "restoration-identity-supplied-at-governed-task-run"},
+        {"name": "PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME", "value": "core_runtime"},
     ],
-    "secrets": [{"name": "PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS", "valueFrom": "synthetic"}],
+    "secrets": [],
 }
 assert module.task_def_valid(AwsFixture(valid), "synthetic:1")
 
@@ -55,6 +59,8 @@ assert not module.task_def_valid(AwsFixture(upper_case_only), "synthetic:1")
 # The guard remains fail-closed for a definition that could carry a static host.
 unsafe = {**valid, "environment": valid["environment"] + [{"name": "PERSISTENCE_POSTGRES_HOST", "value": "db.example.invalid"}]}
 assert not module.task_def_valid(AwsFixture(unsafe), "synthetic:1")
+assert module.restore_identity_resource({"DbiResourceId": "db-RESTORE-A"}).endswith("db-RESTORE-A/core_runtime")
+assert module.restore_identity_resource({}) is None
 
 class TaskListFixture:
     def __init__(self):

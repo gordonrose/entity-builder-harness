@@ -8,14 +8,18 @@ export type {
 
 export {
   createNodePostgreSqlConnectionPool,
+  createNodePostgreSqlTokenConnectionPool,
 } from "./connection";
 export type {
   PostgreSqlConnectionCredentials,
+  PostgreSqlTokenConnectionCredentials,
   PostgreSqlConnectionPool,
   PostgreSqlQueryClient,
   PostgreSqlStatement,
   PostgreSqlTransactionalClient,
 } from "./connection";
+export { rdsIamAuthenticationToken } from "./rds-iam-authentication";
+export type { RdsIamAuthenticationTokenOptions } from "./rds-iam-authentication";
 
 export {
   createPostgreSqlMigrationRunner,

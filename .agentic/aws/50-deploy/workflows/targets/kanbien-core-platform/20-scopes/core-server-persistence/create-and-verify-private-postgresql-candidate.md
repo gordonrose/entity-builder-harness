@@ -48,6 +48,14 @@ observe the fixed digest-derived name without submitting again:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh --receipt "$receipt" --reconcile --json
 ```
 
+If CloudFormation rejects creation, the controller retains a
+`deploy/deployment-operation-diagnostic/v1` report under the scope's governed
+release evidence before any failed review artifact is removed. It contains only
+the operation identity, safe classified provider finding, safe resource/property
+facts when available, outcome, evidence reference, and next governed action.
+It does not retain `StatusReason` or raw events. An unavailable diagnosis is
+recorded as unavailable; it is not a reason to infer a cause or retry CREATE.
+
 Review the fixed CREATE change set. It may create only the declared private
 RDS, Secrets Manager, ECS, IAM, Cloud Map, security-group and Secrets Manager
 endpoint resources. Verify its digest and source revision match the receipt,
@@ -65,7 +73,8 @@ are independently observed complete. Reconcile without executing again:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh --receipt "$receipt" --approved-change-set "$change_set" --reconcile --json
 ```
 
-Follow `.agentic/04.deploy/standards/provider-async-conditions.md` for outcome
+Follow `.agentic/04.deploy/standards/provider-async-conditions.md` and
+`.agentic/04.deploy/standards/safe-command-diagnostics.md` for outcome
 meaning. `failed` requires positively observed terminal failure; `uncertain`
 retains the operation identity when observation cannot prove the result. Both
 remain unaccepted. Do not delete, retry, or submit another change set merely
@@ -118,6 +127,7 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 
 # 2. Identities and structural schema, then the narrow runtime DML grant.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation bootstrap-identities --json > administration_bootstrap_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation confirm-runtime-iam-access --json > initial_identity_access_report.json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh --json > migration_report.json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation grant-runtime-application-access --json > administration_grant_report.json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation prove-effective-privilege --json > effective_privilege_report.json
@@ -127,8 +137,7 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$candidate_receipt" --json > replacement_report.json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > replacement_read_report.json
 
-# 4. Rotation, urgent revocation, replacement, and recovery.
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$candidate_receipt" --operation rotate --json > rotation_report.json
+# 4. IAM identity revocation, replacement, and recovery.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$candidate_receipt" --operation revoke-and-recover --json > revocation_recovery_report.json
 
 # 5. Isolated database restore proof. Image rollback is a separate compatibility
@@ -150,7 +159,7 @@ controllers, all under
 `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/`:
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt credential-rotation="$rotation_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt runtime-identity-initial-access="$initial_identity_access_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
 ```
 
 This command creates an immutable verified candidate record. It does not
@@ -207,8 +216,9 @@ this control existed and no equally complete provider observation was retained,
 repeat only that governed proof and let its controller capture the receipt.
 
 Run the bounded administrative bootstrap first. It is the only task permitted
-to create or alter login roles, set a password, transfer ownership, or
-grant/revoke runtime application access. The existing CloudFormation logical
+to create or alter bounded login roles, transfer ownership, or grant/revoke
+runtime application access. It never sets an application password or emits a
+credential verifier. The existing CloudFormation logical
 identifier `MigrationCredentialsSecret` is the retained RDS-master secret for
 backward-compatible stack updates; from this transition onward it is injected
 only into this administrator task, never into an ordinary migration or server.
@@ -359,71 +369,43 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > "$replacement_read_report"
 ```
 
-## Runtime Credential Rotation and Urgent Revocation
+## Runtime IAM Authentication and Urgent Revocation
 
-The administrator credential remains the recovery identity. The server
-receives only the runtime secret and never refreshes it in place: a successful
-runtime credential rotation writes a new secret version, uses the separately
-governed administrator task to apply the matching database role password,
-replaces the server task, then requires both ready health and a meaningful
-retained-record read. If the administrative outcome is uncertain after the
-secret advances, this route blocks; it never blindly restores a secret version
-or replays a completed task.
+The server receives no database password. Its ECS task role renews AWS
+credentials through the provider; the adapter generates a fresh short-lived
+RDS IAM token for each new database connection. Normal token expiry does not
+require replacing a healthy server, and an existing database session remains
+valid until it closes or an urgent revocation deliberately terminates it.
 
-Urgent revocation is a separate, bounded exercise. The administrator task first
-sets the runtime role to `NOLOGIN` and terminates sessions for that role. ECS
-then starts a replacement carrying the now-denied version; it must remain live
-but not ready.  Recovery writes a new runtime secret version, applies the
-matching role password through the administrator identity, replaces the server,
-and repeats ready/read proof.  No completed verifier or migration is replayed
-merely because a credential changed.
+Urgent revocation is a separate, bounded exercise. The administrator task
+first removes `rds_iam` membership, disables login, and confirms termination
+of every active runtime session. ECS then starts a replacement with the denied
+identity; it must remain live but not ready. Recovery verifies the role has
+not acquired structural privilege, restores only login plus IAM membership,
+replaces the server, and repeats ready/read proof. No verifier or migration is
+replayed merely because access changed.
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation rotate --json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation revoke-and-recover --json
 ```
 
 If the independently reconciled revocation task and its live-but-not-ready
-proof have already completed but the controller was interrupted before it could
-perform recovery, use the continuation below. It first re-proves denied
-readiness, then performs only fresh credential recovery; it never replays the
-revocation migration.
+proof have already completed but the controller was interrupted before recovery,
+use the continuation below. It first re-proves denied readiness, then restores
+only the governed IAM identity and a replacement task; it never replays the
+revocation or a completed migration.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-after-revocation --json
 ```
 
-A secret write uses a generated request token as its version identity and emits
-that non-secret token before submission. If its response was interrupted, use
-only metadata observation; this does not generate or write another secret and
-does not launch a verifier or migration:
-
-```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation reconcile-secret --secret-operation-id "$secret_operation_id" --json
-```
-
-`prepared` means that exact version is current and the matching migration is
-still required. An absent or superseded version is `uncertain`; never rotate
-again as a substitute for observing the first write.
-
-If the provider observer itself is interrupted after the denied-state proof,
-the following explicit boundary may advance exactly one secret version. Its
-`prepared` verdict requires the next action to be the matching administrator
-rotation reconciliation; never invoke it again as a retry.
-
-```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$receipt" --operation recover-secret --json
-```
-
-The outer credential-lifecycle report preserves the child controller's safe
+The outer identity-lifecycle report preserves the child controller's safe
 checkpoint and `pending`, `failed` or `uncertain` outcome, including a timeout
-while its response is captured. Reconcile that child's operation before moving
-to the next existing continuation; never restart the whole rotation or
-revocation merely because a child observation was interrupted.
-
-This command creates no new persistent AWS resource.  It never prints or
-records a credential value: only secret-version identifiers, task identities,
-and the bounded verifier/administrator verdicts may become evidence.
+while its response is captured. Reconcile that child's task before moving to
+the next existing continuation; never restart the whole revocation merely
+because a child observation was interrupted. This command creates no new
+persistent AWS resource and never prints or records a password, token, or
+verifier; only task identities and bounded safe result codes become evidence.
 
 ## Qualified Persistence Image Transition
 
@@ -519,7 +501,7 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `create-recovery-point` | Same snapshot with `--observe-only`; absence stays uncertain. |
 | `rehearse-isolated-database-restore` | Same operation/snapshot with `--observe-only`; no restore, launch or deletion. |
 | `rehearse-server-replacement` | `--reconcile-original-task`; no second stop, and no reuse across task definitions. |
-| `rehearse-runtime-credential-lifecycle` | Preserve child checkpoint; reconcile exact child task or secret version metadata, then follow the existing continuation boundary. |
+| `rehearse-runtime-credential-lifecycle` | Preserve the child checkpoint; reconcile the exact administration/replacement/verifier task, then follow the existing continuation boundary. |
 | `transition-qualified-release` | Same operation/receipt with `--reconcile`; no repeated UPDATE execution. |
 | `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
 | `apply-restoration-verifier-surface` | Same receipt with `--reconcile`; no repeated surface update. |

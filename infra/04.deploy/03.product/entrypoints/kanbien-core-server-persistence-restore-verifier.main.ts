@@ -15,9 +15,10 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { createNodePostgreSqlConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { createNodePostgreSqlTokenConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 
-import { persistenceConfiguration, persistenceCredentials, persistenceCertificateAuthority, environmentText as text } from "./kanbien-core-server-persistence-configuration";
+import { persistenceConfiguration, persistenceCertificateAuthority, environmentText as text } from "./kanbien-core-server-persistence-configuration";
+import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
 
 /**
  * This is intentionally a direct database client only for an isolated restore
@@ -26,11 +27,11 @@ import { persistenceConfiguration, persistenceCredentials, persistenceCertificat
  */
 export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = persistenceConfiguration(env, "restore");
-  const credentials = persistenceCredentials(env["PERSISTENCE_RESTORE_RUNTIME_CREDENTIALS"]);
+  const credentials = configuration === undefined ? undefined : persistenceIamAuthentication(env, configuration, "PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME");
   const expected = expectedRecord(env);
   const certificateAuthority = persistenceCertificateAuthority(env);
   if (configuration === undefined || credentials === undefined || expected === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID");
-  const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   try {
     const result = await pool.query<{ readonly record_id: string; readonly fact_digest: string }>({
       text: `SELECT record_id, fact_digest FROM ${acceptanceTable(configuration.schema)} WHERE record_id = $1`,

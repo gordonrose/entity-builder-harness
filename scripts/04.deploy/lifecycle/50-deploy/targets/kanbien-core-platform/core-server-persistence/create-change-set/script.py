@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -13,6 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[8]
 STACK = "kanbien-core-platform-core-server-persistence"
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
+DIAGNOSTICS = ROOT / "scripts/04.deploy/shared/deployment-operation-diagnostics.py"
+DIAGNOSTIC_DIRECTORY = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics"
 
 
 def controls():
@@ -24,12 +27,65 @@ def controls():
     return module
 
 
+def diagnostic_controls():
+    spec = importlib.util.spec_from_file_location("deployment_operation_diagnostics", DIAGNOSTICS)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
+
+
+def diagnostic_path_is_governed(path: Path) -> bool:
+    try:
+        path.resolve().relative_to(DIAGNOSTIC_DIRECTORY.resolve())
+    except ValueError:
+        return False
+    return path.suffix == ".json"
+
+
+def diagnostics_ready(path: Path) -> bool:
+    """Preflight local report tooling before a protected provider mutation."""
+    try:
+        diagnostic_controls()
+    except Exception:
+        return False
+    return path.resolve().parent == DIAGNOSTIC_DIRECTORY.resolve() and path.parent.is_dir() and os.access(path.parent, os.W_OK)
+
+
 def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> int:
     value = {"schema": "deploy/persistence-change-set-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "stack": STACK, "verdict": verdict, "findings": [{"code": code} for code in codes]}
     if facts:
         value["facts"] = facts
     print(json.dumps(value, sort_keys=True))
     return 0 if verdict == "created-awaiting-review" else 1
+
+
+def retain_diagnostic(module, *, name: str, receipt: dict, path: Path, original_code: str, outcome: str, fallback_code: str) -> str | None:
+    """Retain a safe result for this named operation without changing its result.
+
+    This calls only the existing controller's read-only adapter after a failure.
+    If that observation or the receipt write fails, the caller retains its
+    original verdict and adds a distinct collection failure finding.
+    """
+    try:
+        diagnostics = diagnostic_controls()
+        classification, facts, diagnosed_outcome, collection = diagnostics.collect_cloudformation_failure(
+            module.aws, stack_name=STACK, change_set_name=name,
+        )
+        facts = {**facts, "change_set_id": name, "artifact_identity": receipt["image_digest"]}
+        report_value = diagnostics.build_report(
+            target="kanbien-core-platform", scope="core-server-persistence", operation_id=name,
+            stage="deploy", original_code=original_code, exit_status=1,
+            outcome=outcome if outcome in {"rejected", "failed", "pending", "unknown"} else diagnosed_outcome,
+            classification=classification if collection != "failed" else diagnostics.classify_aws_error(fallback_code),
+            evidence_reference=f"receipt-path:operation-diagnostics/{name}.json",
+            next_decision="observe-current-operation" if outcome == "unknown" else "inspect-retained-evidence",
+            collection_status=collection, facts=facts,
+        )
+        diagnostics.write_report(path, report_value)
+    except Exception:
+        return "persistence-change-set-diagnostic-collection-failed"
+    return None
 
 
 def package_gates(receipt: Path, *, coverage_checked: bool = False) -> bool:
@@ -48,6 +104,7 @@ def package_gates(receipt: Path, *, coverage_checked: bool = False) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--diagnostic-report", type=Path)
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--reconcile", action="store_true")
     args, unknown = parser.parse_known_args()
@@ -58,10 +115,16 @@ def main() -> int:
     if receipt is None:
         return report("blocked", "package-custody-receipt-invalid")
     name = f"kanbien-core-platform-persistence-create-{receipt['image_digest'][7:19]}"
-    if args.reconcile:
-        return reconcile(module, name, receipt)
+    diagnostic_path = args.diagnostic_report or DIAGNOSTIC_DIRECTORY / f"{name}.json"
     if not module.declaration_covered():
         return report("blocked", "persistence-declaration-coverage-gap")
+    # A declaration gap is a local, pre-provider rejection. Require retained
+    # diagnostics before reconciliation or a provider mutation, not before the
+    # existing structural guard can state its precise failure.
+    if not diagnostic_path_is_governed(diagnostic_path) or not diagnostics_ready(diagnostic_path):
+        return report("blocked", "persistence-change-set-diagnostic-route-unavailable")
+    if args.reconcile:
+        return reconcile(module, name, receipt, diagnostic_path)
     if not package_gates(args.receipt, coverage_checked=True):
         return report("blocked", "persistence-declaration-or-package-gate-not-proven")
     outputs, code = module.foundation_outputs()
@@ -93,21 +156,31 @@ def main() -> int:
             "--tags", "Key=Target,Value=kanbien-core-platform",
         )
     if not ok:
-        return report("uncertain", code, facts={"change_set": name})
-    return reconcile(module, name, receipt)
+        finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
+                                    original_code="persistence-change-set-submission-uncertain",
+                                    outcome="unknown", fallback_code=code)
+        return report("uncertain", code, *(finding,) if finding else (), facts={"change_set": name})
+    return reconcile(module, name, receipt, diagnostic_path)
 
 
-def reconcile(module, name: str, receipt: dict) -> int:
+def reconcile(module, name: str, receipt: dict, diagnostic_path: Path | None = None) -> int:
     facts = {"change_set": name, "candidate_image_digest": receipt["image_digest"], "candidate_source_revision": receipt["source_revision"]}
     ok, change, code = module.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    diagnostic_path = diagnostic_path or DIAGNOSTIC_DIRECTORY / f"{name}.json"
     if not ok or not isinstance(change, dict):
-        return report("uncertain", "persistence-change-set-observation-uncertain", facts=facts)
+        finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
+                                    original_code="persistence-change-set-observation-uncertain",
+                                    outcome="unknown", fallback_code=code)
+        return report("uncertain", "persistence-change-set-observation-uncertain", *(finding,) if finding else (), facts=facts)
     if not module.change_name_matches(change.get("ChangeSetName"), name):
         return report("blocked", "persistence-change-set-identity-invalid", facts=facts)
     if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
         return report("pending", "persistence-change-set-creation-pending", facts=facts)
     if change.get("Status") in {"FAILED", "DELETE_FAILED", "DELETE_COMPLETE"}:
-        return report("failed", "persistence-change-set-creation-failed", facts=facts)
+        finding = retain_diagnostic(module, name=name, receipt=receipt, path=diagnostic_path,
+                                    original_code="persistence-change-set-creation-failed",
+                                    outcome="rejected", fallback_code="aws-command-failed")
+        return report("failed", "persistence-change-set-creation-failed", *(finding,) if finding else (), facts=facts)
     parameters = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
     expected = {"ImageDigest": receipt["image_digest"], "RestoreVerifierImageDigest": receipt["image_digest"], "SourceRevision": receipt["source_revision"]}
     if change.get("Status") != "CREATE_COMPLETE" or change.get("ExecutionStatus") != "AVAILABLE" or any(parameters.get(key) != value for key, value in expected.items()):

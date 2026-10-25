@@ -21,10 +21,29 @@ ACCOUNT, REGION = "337159794548", "eu-west-1"
 SUCCESS = {
     "bootstrap-identities": "PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED",
     "grant-runtime-application-access": "PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED",
-    "rotate-runtime": "PERSISTENCE_RUNTIME_CREDENTIAL_ROTATED",
-    "revoke-runtime": "PERSISTENCE_RUNTIME_CREDENTIAL_REVOKED",
+    "confirm-runtime-iam-access": "PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED",
+    "revoke-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED",
+    "restore-runtime": "PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED",
     "prove-effective-privilege": "PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN",
 }
+PROOF_CONTRACT = {
+    operation: {
+        "proof_type": "administration",
+        "operation": operation,
+        "result_code": result,
+        "family": "kanbien-core-platform-persistence-administration",
+        "deadline_workload": "persistence-administration",
+    }
+    for operation, result in SUCCESS.items()
+}
+OPERATIONS = (
+    "bootstrap-identities",
+    "grant-runtime-application-access",
+    "confirm-runtime-iam-access",
+    "revoke-runtime",
+    "restore-runtime",
+    "prove-effective-privilege",
+)
 
 
 def module(path: Path, name: str):
@@ -104,12 +123,19 @@ def accept(task: dict[str, object], seconds: int, operation: str) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--operation", choices=sorted(SUCCESS))
+    # Keep this literal tuple beside the controller contract.  The declaration
+    # coverage gate intentionally reads the controller's permitted operations
+    # without executing it, so a computed dictionary view is insufficient.
+    parser.add_argument("--operation", choices=OPERATIONS)
     parser.add_argument("--reconcile-task")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.operation is None or (args.reconcile_task is not None and not isinstance(args.reconcile_task, str)):
         return report("blocked", "persistence-administration-arguments-invalid")
+    if args.validate_arguments:
+        print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": [], "proof_contract": PROOF_CONTRACT[args.operation]}, sort_keys=True))
+        return 0
     seconds = deadline()
     if seconds is None:
         return report("blocked", "persistence-administration-deadline-invalid")

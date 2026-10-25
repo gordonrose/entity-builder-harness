@@ -22,9 +22,10 @@
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
 import {
-  createNodePostgreSqlConnectionPool,
+  createNodePostgreSqlTokenConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { persistenceConfiguration, persistenceCredentials, persistenceCertificateAuthority } from "./kanbien-core-server-persistence-configuration";
+import { persistenceConfiguration, persistenceCertificateAuthority } from "./kanbien-core-server-persistence-configuration";
+import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
 import { resolvePlatformReleaseIdentity } from "@kanbien/platform-server";
 import { startPlatformServerProcess } from "@kanbien/platform-server/main";
 import { createKanbienCoreServerPersistenceApp } from "./kanbien-core-server-persistence.app";
@@ -33,12 +34,12 @@ import { createKanbienCoreServerPostgreSqlPersistenceRuntime } from "./kanbien-c
 export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = persistenceConfiguration(env, "server");
   if (configuration === undefined) return startupFailed("configuration-invalid");
-  const credentials = persistenceCredentials(env["PERSISTENCE_RUNTIME_CREDENTIALS"]);
-  if (credentials === undefined) return startupFailed("runtime-credentials-invalid");
+  const credentials = persistenceIamAuthentication(env, configuration, "PERSISTENCE_RUNTIME_DATABASE_USERNAME");
+  if (credentials === undefined) return startupFailed("runtime-iam-authentication-invalid");
   const certificateAuthority = persistenceCertificateAuthority(env);
   if (certificateAuthority === undefined) return startupFailed("tls-authority-unavailable");
 
-  const pool = createNodePostgreSqlConnectionPool(configuration, { ...credentials, certificateAuthority });
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   const persistence = createKanbienCoreServerPostgreSqlPersistenceRuntime({ pool, schema: configuration.schema });
   const started = await startPlatformServerProcess({
     apps: [createKanbienCoreServerPersistenceApp(resolvePlatformReleaseIdentity(env["PLATFORM_SOURCE_COMMIT_SHA"]), persistence)],
