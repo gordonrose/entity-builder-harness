@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -73,6 +73,38 @@ try:
     with patch.object(collector, "aws", side_effect=AssertionError("historical ECS lookup")):
         observed = collector.parse_proof_receipts(arguments,required,deadlines,directory)
     assert set(observed) == set(required)
+    # A qualified applicability record may carry only the named predecessor
+    # proofs across the exact restore-verifier-only image change.  Without it,
+    # a historical digest cannot be silently accepted.
+    predecessor = "sha256:" + "c" * 64
+    migration_path = directory / "migration-applied-state.json"
+    original_migration = json.loads(migration_path.read_text())
+    historical_migration = copy.deepcopy(original_migration)
+    historical_migration["task"]["image_digest"] = predecessor
+    historical_migration["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in historical_migration.items() if key != "integrity"})
+    migration_path.write_text(json.dumps(historical_migration), encoding="utf-8")
+    try:
+        collector.parse_proof_receipts(arguments, required, deadlines, directory)
+    except collector.EvidenceFailure as error:
+        assert str(error) == "acceptance-evidence-proof-receipt-mismatch"
+    else:
+        raise AssertionError("historical proof passed without applicability")
+    applicability = {"predecessor": {"image_digest": predecessor}, "reused_proofs": ["migration-applied-state"]}
+    assert set(collector.parse_proof_receipts(arguments, required, deadlines, directory, applicability=applicability)) == set(required)
+    migration_path.write_text(json.dumps(original_migration), encoding="utf-8")
+    restore_path = directory / "isolated-restore.json"
+    original_restore = json.loads(restore_path.read_text())
+    historical_restore = copy.deepcopy(original_restore)
+    historical_restore["task"]["image_digest"] = predecessor
+    historical_restore["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in historical_restore.items() if key != "integrity"})
+    restore_path.write_text(json.dumps(historical_restore), encoding="utf-8")
+    try:
+        collector.parse_proof_receipts(arguments, required, deadlines, directory, applicability=applicability)
+    except collector.EvidenceFailure as error:
+        assert str(error) == "acceptance-evidence-proof-receipt-mismatch"
+    else:
+        raise AssertionError("historical restore proof passed")
+    restore_path.write_text(json.dumps(original_restore), encoding="utf-8")
     retained = collector.EVIDENCE_ROOT / "proof-receipts/migration-apply-6ac40437365f4a72b1d86cc42a664a83.json"
     candidate_path, successor = collector.candidate_record(
         {"source_revision": "f" * 40, "image_digest": candidate, "receipt_reference": "test-receipt"},

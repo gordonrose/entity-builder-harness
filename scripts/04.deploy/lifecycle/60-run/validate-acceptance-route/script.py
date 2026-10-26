@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [architecture, security, sre]
@@ -94,9 +94,11 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
         value = values[key]
         if not isinstance(spec, dict): raise ValueError('acceptance-input-contract-invalid')
         kind = spec.get('kind')
-        if kind in {'path', 'identifier'}:
+        if kind in {'path', 'identifier', 'optional-path'}:
+            if kind == 'optional-path' and value is None:
+                continue
             if not isinstance(value, str) or not value or any(char in value for char in '\n\r\0'): raise ValueError('acceptance-input-value-invalid')
-            if kind == 'path':
+            if kind in {'path', 'optional-path'}:
                 selected = Path(value) if Path(value).is_absolute() else root / value
                 if not selected.is_file() or selected.is_symlink(): raise ValueError('acceptance-input-path-missing')
                 values[key] = str(selected)
@@ -137,7 +139,7 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if not isinstance(inputs, dict): gap('acceptance-route-inputs-invalid'); inputs = {}
     values = {}
     for key, spec in inputs.items():
-        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'proof-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
+        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'optional-path', 'proof-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
             gap('acceptance-route-input-contract-invalid', key); continue
         if spec['kind'] != 'proof-map':
             if not isinstance(spec.get('example'), str) or not spec['example']: gap('acceptance-route-input-example-missing', key)

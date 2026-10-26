@@ -229,6 +229,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Package qualification exposed over-broad role convergence
   Resolution: Hosted package run 40225491937 failed before AWS credentials, ECR, scan, or publication because the first convergence implementation rewrote already-bounded fixture roles under a constrained administrator. Narrowed convergence to only the legacy INHERIT attribute; bootstrap now refuses to reactivate NOLOGIN, reserving activation for explicit restore-runtime. Local Docker remains unavailable due host credential-helper failure; hosted package qualification remains authoritative.
 
+
+- Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
+  Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -725,6 +729,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Safe restore verifier mapping, controller receipt handling, 24 validated live receipts, two validated operation diagnostics, and rollback compatibility record are the active carry-forward facts.
   Durable evidence: Commits 8ff26fd6, 1b3d81cd, ed781c64; retained artifacts under infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.
+
+
+- Summary: Retained-package receipts from GitHub runs 40243828846 and 40247863444 are now preserved under the persistence scope; their source delta is mechanically limited to the restore verifier and its direct harness support.
+  Durable evidence: The target-owned proof-applicability record is infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-3edd9ac3002f.json; fresh current state and isolated-restore proof still remain required.
 
 ## Activity Log
 
@@ -3556,6 +3564,20 @@ Message: fix(deploy): classify isolated restore boundaries
 Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T00:31:24Z - Context hygiene
+
+Summary: Retained-package receipts from GitHub runs 40243828846 and 40247863444 are now preserved under the persistence scope; their source delta is mechanically limited to the restore verifier and its direct harness support.
+
+Durable evidence: The target-owned proof-applicability record is infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-3edd9ac3002f.json; fresh current state and isolated-restore proof still remain required.
+
+
+### 2026-10-26T00:31:24Z - Issue
+
+Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
+
+Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
 
 ## Sub-Agent Activity
 

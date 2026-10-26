@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 version: 4
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -229,6 +229,17 @@ unknown field, conflicting task context, wrong target/image, missing terminal
 fact, or invalid sequence blocks acceptance.  If a proof completed before
 this control existed and no equally complete provider observation was retained,
 repeat only that governed proof and let its controller capture the receipt.
+
+An image change normally requires new receipts for every proof that executes
+that image. The only narrow exception is a record created by
+`qualify-proof-applicability`: it binds two qualified package receipts, retains
+them under the target evidence root, recomputes the exact Git source delta, and
+allows reuse only when that delta is confined to the isolated restore-verifier
+entrypoint and its controller/tests/evidence. It never permits reuse of the
+isolated-restore proof itself, current health, or a proof after a dependency,
+template, permission, configuration, Dockerfile, or shared runtime change.
+The acceptance input records the explicit path; a null value means ordinary
+same-image receipt matching remains mandatory.
 
 Run the bounded administrative bootstrap first. It is the only task permitted
 to create or alter bounded login roles, transfer ownership, or grant/revoke
@@ -556,7 +567,13 @@ receipts, the fifteen-name `proof_receipts` mapping, original/successor task
 identities, exact recovery snapshot, successful retained source-record proof,
 and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
 Use paths to existing controller receipts. Missing ECS history is not permission
-to synthesize a receipt or replay a completed mutation.
+to synthesize a receipt or replay a completed mutation. The normal value of
+`proof_applicability` is `null`: every required proof must bind directly to the
+candidate's immutable image. It may name a target-owned applicability record
+only when the `qualify-proof-applicability` command has preserved both package
+receipts and proven the exact source delta is restore-verifier-only. That record
+can reuse only its closed allowlist of unaffected predecessor receipts; it
+cannot carry an isolated restore proof or replace any fresh provider observation.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --inputs "$acceptance_inputs" --json
