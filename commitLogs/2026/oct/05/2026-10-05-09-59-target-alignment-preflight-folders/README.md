@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T02:41:35Z
-latest_commit_sha: 1ab65b6c
-chat_duration: 1791726s (20:17:42:06)
+latest_commit_at_utc: 2026-10-26T02:45:13Z
+latest_commit_sha: HEAD
+chat_duration: 1791944s (20:17:45:44)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3730,6 +3730,17 @@ Summary: Retained the qualified package receipt, image-input applicability recor
 
 ADR impact: No ADR: factual live evidence under the existing durable proof model.
 
+
+### 2026-10-26T02:45:13Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): require restore PostgreSQL log export
+
+Summary: Requires each isolated restore to enable and prove the existing PostgreSQL CloudWatch log export before a verifier can run.
+
+ADR impact: No ADR: bounded recovery diagnostic source correction.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4769,6 +4780,13 @@ ADR impact: No ADR: factual live evidence under the existing durable proof model
   Summary: Retained the qualified package receipt, image-input applicability record, and closed isolated restore rejection after source-safe cleanup; recovery acceptance remains unproven.
   ADR impact: No ADR: factual live evidence under the existing durable proof model.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T02:45:13Z
+  Message: fix(deploy): require restore PostgreSQL log export
+  Summary: Requires each isolated restore to enable and prove the existing PostgreSQL CloudWatch log export before a verifier can run.
+  ADR impact: No ADR: bounded recovery diagnostic source correction.
+
 ## Main Refresh Conflicts
 
 
@@ -4792,9 +4810,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T02:41:35Z
-Latest commit SHA: 1ab65b6c
-Chat duration: 1791726s (20:17:42:06)
+Latest commit at UTC: 2026-10-26T02:45:13Z
+Latest commit SHA: HEAD
+Chat duration: 1791944s (20:17:45:44)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
