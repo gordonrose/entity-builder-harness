@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:50:58Z
-latest_commit_sha: 306e5eef
-chat_duration: 1831889s (21:04:51:29)
+latest_commit_at_utc: 2026-10-26T13:53:11Z
+latest_commit_sha: ebc54f65
+chat_duration: 1832022s (21:04:53:42)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3928,6 +3928,17 @@ Summary: Made rejected change-set cleanup depend only on receipt, stack identity
 
 ADR impact: No ADR change; narrows a recovery control.
 
+
+### 2026-10-26T13:53:11Z - Commit recorded
+
+Commit: `ebc54f65`
+
+Message: fix(deploy): reconcile retired image review
+
+Summary: Treat an already-absent rejected change set as a reconciled terminal state, without issuing another deletion or claiming a fresh mutation.
+
+ADR impact: No ADR change; completes bounded recovery idempotency.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5058,6 +5069,13 @@ ADR impact: No ADR change; narrows a recovery control.
   Summary: Made rejected change-set cleanup depend only on receipt, stack identity, and the named unexecuted review rather than unrelated live prerequisites.
   ADR impact: No ADR change; narrows a recovery control.
 
+
+- Commit: `ebc54f65`
+  Time UTC: 2026-10-26T13:53:11Z
+  Message: fix(deploy): reconcile retired image review
+  Summary: Treat an already-absent rejected change set as a reconciled terminal state, without issuing another deletion or claiming a fresh mutation.
+  ADR impact: No ADR change; completes bounded recovery idempotency.
+
 ## Main Refresh Conflicts
 
 
@@ -5081,9 +5099,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:50:58Z
-Latest commit SHA: 306e5eef
-Chat duration: 1831889s (21:04:51:29)
+Latest commit at UTC: 2026-10-26T13:53:11Z
+Latest commit SHA: ebc54f65
+Chat duration: 1832022s (21:04:53:42)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
