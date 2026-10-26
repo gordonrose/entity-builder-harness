@@ -170,6 +170,10 @@ can you walk me through which part of my repo work on the following stages
   Resolution: Each completed persistence proof now writes an allowlisted, integrity-checked durable receipt before reporting success. Acceptance consumes those retained receipts for historical proof while independently observing current service, database, recovery-point, cleanup, and budget state. One narrowly necessary replacement was repeated only after the old provider record had already expired; no migration, credential lifecycle, image update, or restore was repeated.
 
 
+- Raised: The isolated restore verifier reached the post-TLS database handshake boundary but returned no allowlisted PostgreSQL machine code.
+  Resolution: Preserved the closed rejected result as a governed operation diagnostic, cleaned up the isolated restore and its temporary instance-specific IAM policy, and added bounded causal/aggregate machine-code classification plus automatic safe rejection-record retention. The source database and revision-32 service remain healthy; no recovery proof was accepted or replayed.
+
+
 - Raised: Corrected current release-reference hash mismatch before package qualification
   Resolution: The immutable historical record had two trailing newlines while current-accepted-release.yml named the canonical one-newline rendering. The release-succession gate blocked safely before AWS/ECR actions. Preserved the history; updated only the current pointer to its actual retained SHA-256; validate-current and target smoke pass.
 

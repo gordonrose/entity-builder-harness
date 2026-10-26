@@ -10,6 +10,7 @@ DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; S
 EVIDENCE_CLASS="live"  # Only isolated imported test harnesses may change this; no CLI bypass.
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
 RESTORE_ACCEPTED_RESULT="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"
+OPERATION_DIAGNOSTICS=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics"
 # IAM policy observation confirms the target binding, but RDS IAM database
 # authentication is separately eventually consistent.  This is a bounded
 # *pre-launch stabilization wait*, not an automatic retry of a verifier that
@@ -47,6 +48,18 @@ def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up"} else 1
+def retain_verifier_rejection(operation, result):
+ """Retain only the closed task result; raw task and database errors stay out."""
+ if not isinstance(operation,str) or not isinstance(result,str): return
+ try:
+  diagnostics=importlib.util.spec_from_file_location("deployment_operation_diagnostics",ROOT/"scripts/04.deploy/shared/deployment-operation-diagnostics.py")
+  module=importlib.util.module_from_spec(diagnostics); assert diagnostics and diagnostics.loader; diagnostics.loader.exec_module(module)
+  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-restoration-verifier-rejected",exit_status=1,outcome="failed",classification="persistence-restore-verifier-rejected",evidence_reference=f"provider-operation:{operation}",next_decision="correct-and-create-new-operation")
+  module.write_report(OPERATION_DIAGNOSTICS/f"{operation}-rejected.json",report)
+ except Exception:
+  # The failure verdict remains authoritative. Never replace it with a report
+  # collection failure or emit the underlying provider detail.
+  return
 def outputs(m,name):
  ok,d,c=m.aws("cloudformation","describe-stacks","--stack-name",name); xs=d.get("Stacks") if ok and isinstance(d,dict) else None
  return ({x.get("OutputKey"):x.get("OutputValue") for x in xs[0].get("Outputs",[]) if isinstance(x,dict) and isinstance(x.get("OutputKey"),str) and isinstance(x.get("OutputValue"),str)},"ok") if isinstance(xs,list) and len(xs)==1 and isinstance(xs[0],dict) else (None,c if not ok else "persistence-restore-stack-outputs-unavailable")
@@ -266,6 +279,7 @@ def verify(m,sid,rid,observe_only=False):
   if duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
   evidence,result=terminal_result(m,arn)
   if exit_code!=0:
+   if evidence=="rejected" and result is not None: retain_verifier_rejection(started,result)
    return emit("failed","persistence-restoration-verifier-rejected" if evidence=="rejected" else "persistence-restoration-verifier-completion-invalid",facts={**facts,**({"safe_result_code":result} if evidence=="rejected" and result is not None else {})})
   # CloudWatch delivery can lag a stopped task.  A clean exit without the
   # closed acceptance envelope is therefore pending evidence, not proof; the

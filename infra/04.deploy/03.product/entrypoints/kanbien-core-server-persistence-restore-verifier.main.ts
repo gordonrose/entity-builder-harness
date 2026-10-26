@@ -86,15 +86,15 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
  */
 export function restoreVerificationFailureCode(error: unknown): string {
   // `pg`, Node TLS, and a small number of AWS client wrappers can retain the
-  // useful machine code on a causal error.  Read only that closed field: never
-  // turn a provider message, endpoint, query, or credential-bearing value into
-  // a result code.
-  const code = errorCode(error) ?? errorCode(errorCause(error));
-  if (code === "28P01" || code === "28000") return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
-  if (code === "42501") return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
-  if (code === "3D000" || code === "42P01") return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
-  if (code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENETUNREACH" || code === "EAI_AGAIN" || code === "ENOTFOUND") return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
-  if (code === "CERT_HAS_EXPIRED" || code === "ERR_TLS_CERT_ALTNAME_INVALID" || code === "SELF_SIGNED_CERT_IN_CHAIN" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE") return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
+  // useful machine code on a causal or aggregate error. Read only those
+  // closed fields: never turn a provider message, endpoint, query, or
+  // credential-bearing value into a result code.
+  const codes = errorCodes(error);
+  if (codes.some((code) => code === "28P01" || code === "28000")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
+  if (codes.includes("42501")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
+  if (codes.some((code) => code === "3D000" || code === "42P01")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
+  if (codes.some((code) => code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENETUNREACH" || code === "EAI_AGAIN" || code === "ENOTFOUND")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
+  if (codes.some((code) => code === "CERT_HAS_EXPIRED" || code === "ERR_TLS_CERT_ALTNAME_INVALID" || code === "SELF_SIGNED_CERT_IN_CHAIN" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
   return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
 }
 
@@ -211,14 +211,16 @@ export function restoreQueryFailureCode(error: unknown): string {
     : classified;
 }
 
-function errorCode(error: unknown): string | undefined {
-  return typeof error === "object" && error !== null && "code" in error && typeof (error as { readonly code?: unknown }).code === "string"
-    ? (error as { readonly code: string }).code
-    : undefined;
-}
-
-function errorCause(error: unknown): unknown {
-  return typeof error === "object" && error !== null && "cause" in error ? (error as { readonly cause?: unknown }).cause : undefined;
+function errorCodes(error: unknown, depth = 0, seen = new Set<object>()): readonly string[] {
+  if (depth > 3 || typeof error !== "object" || error === null || seen.has(error)) return [];
+  seen.add(error);
+  const value = error as { readonly code?: unknown; readonly cause?: unknown; readonly errors?: unknown };
+  const direct = typeof value.code === "string" ? [value.code] : [];
+  const causal = errorCodes(value.cause, depth + 1, seen);
+  const aggregate = Array.isArray(value.errors)
+    ? value.errors.flatMap((nested) => errorCodes(nested, depth + 1, seen))
+    : [];
+  return [...direct, ...causal, ...aggregate];
 }
 
 function expectedRecord(env: NodeJS.ProcessEnv): { readonly recordId: string; readonly factDigest: string } | undefined {
