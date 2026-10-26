@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T07:41:28Z
-latest_commit_sha: 3bcfe650
-chat_duration: 1809719s (20:22:41:59)
+latest_commit_at_utc: 2026-10-26T08:57:51Z
+latest_commit_sha: 749e869827d7a7e3affbf93899f60f43b5c0b6d7
+chat_duration: 1814302s (20:23:58:22)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3796,6 +3796,17 @@ Raised: Promoted isolated restore controller hardening
 
 Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
 
+
+### 2026-10-26T08:57:51Z - Commit recorded
+
+Commit: `749e869827d7a7e3affbf93899f60f43b5c0b6d7`
+
+Message: feat(deploy): compose private observability collector
+
+Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
+
+ADR impact: No new ADR: this implements the established separate-identity collector decision.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4870,6 +4881,13 @@ Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392b
   Summary: Added malformed, stale, and mismatched CloudTrail observation regressions; retained the closed historical restore rejection diagnostic after source-health and cleanup reconciliation.
   ADR impact: No ADR impact; this is a target-specific recovery-controller safety correction.
 
+
+- Commit: `749e869827d7a7e3affbf93899f60f43b5c0b6d7`
+  Time UTC: 2026-10-26T08:57:51Z
+  Message: feat(deploy): compose private observability collector
+  Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
+  ADR impact: No new ADR: this implements the established separate-identity collector decision.
+
 ## Main Refresh Conflicts
 
 
@@ -4893,9 +4911,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T07:41:28Z
-Latest commit SHA: 3bcfe650
-Chat duration: 1809719s (20:22:41:59)
+Latest commit at UTC: 2026-10-26T08:57:51Z
+Latest commit SHA: 749e869827d7a7e3affbf93899f60f43b5c0b6d7
+Chat duration: 1814302s (20:23:58:22)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
