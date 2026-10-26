@@ -651,11 +651,16 @@ For an existing candidate missing the isolated restoration surface, the fixed
 `apply-restoration-verifier-surface` control may add only its enumerated restore
 security groups, network rules, execution role and task definition. For an
 already-created restoration surface, its explicit `--mode egress` correction
-may add only `RestorationVerifierRestoredDatabaseEgress`; it rejects every
-other logical resource, action, type, parameter, source-database or credential
-change. Both modes preserve all other current stack parameters and supply one
-qualified restore image digest. This is a separate approved provider correction,
-not permission to change the source database or credentials.
+may add only `RestorationVerifierRestoredDatabaseEgress`; `--mode image` may
+modify only `CoreServerPersistenceRestorationVerifierTaskDefinition` to use a
+new qualified image. It rejects every other logical resource, action, type,
+parameter, source-database or credential change. The image mode preserves the
+current service image, source revision, support image, observability settings,
+database, and all other stack parameters; it is a verifier-support correction,
+not an application release transition. All modes preserve every other current
+stack parameter and require one qualified restore image digest. This is a
+separate approved provider correction, not permission to change the source
+database or credentials.
 Use the same receipt plus `--reconcile` after interruption; observation contains
 no mutation. The normal CREATE includes this surface already.
 

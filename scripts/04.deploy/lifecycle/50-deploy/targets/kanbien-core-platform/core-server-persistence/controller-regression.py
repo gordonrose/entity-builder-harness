@@ -127,6 +127,30 @@ class ControllerRegression(unittest.TestCase):
             self.assertEqual(len([parts for parts in provider.calls if parts[1]=='create-change-set']),1)
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
 
+    def test_restoration_verifier_image_mode_is_exact_and_preserves_parameters(self):
+        module=load(DEPLOY/'apply-restoration-verifier-surface/script.py')
+        predecessor='sha256:'+'a'*64; digest='sha256:'+'b'*64
+        state={'Parameters':[
+            {'ParameterKey':'ImageDigest','ParameterValue':predecessor},
+            {'ParameterKey':'SupportImageDigest','ParameterValue':predecessor},
+            {'ParameterKey':'RestoreVerifierImageDigest','ParameterValue':predecessor},
+            {'ParameterKey':'SourceRevision','ParameterValue':'a'*40},
+            {'ParameterKey':'EnableObservability','ParameterValue':'true'},
+        ]}
+        expected=module.expected_parameters(state,digest)
+        name=module.change_name(digest,'image')
+        good={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()],'Changes':[{'ResourceChange':{'LogicalResourceId':'CoreServerPersistenceRestorationVerifierTaskDefinition','Action':'Modify','ResourceType':'AWS::ECS::TaskDefinition'}}]}
+        self.assertTrue(module.review(good,name,digest,'image',expected))
+        self.assertEqual(name,'kanbien-core-platform-persistence-restore-image-'+digest[7:19])
+        for mutation in ('add','extra','wrong-parameter','missing-parameter','duplicate-parameter'):
+            candidate=copy.deepcopy(good)
+            if mutation=='add': candidate['Changes'][0]['ResourceChange']['Action']='Add'
+            if mutation=='extra': candidate['Changes'].append({'ResourceChange':{'LogicalResourceId':'CoreServerPersistenceTaskDefinition','Action':'Modify','ResourceType':'AWS::ECS::TaskDefinition'}})
+            if mutation=='wrong-parameter': next(item for item in candidate['Parameters'] if item['ParameterKey']=='EnableObservability')['ParameterValue']='false'
+            if mutation=='missing-parameter': candidate['Parameters']=candidate['Parameters'][:-1]
+            if mutation=='duplicate-parameter': candidate['Parameters'].append(copy.deepcopy(candidate['Parameters'][0]))
+            self.assertFalse(module.review(candidate,name,digest,'image',expected),mutation)
+
     def test_image_transition_retains_unowned_stack_parameters_and_discards_only_rejected_review(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
         digest, revision = 'sha256:' + 'a' * 64, 'a' * 40
@@ -442,14 +466,14 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual(parameters['SupportImageDigest'],digest)
         self.assertEqual(parameters['RestoreVerifierImageDigest'],digest)
         surface=load(DEPLOY/'apply-restoration-verifier-surface/script.py')
-        values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest'},{'ParameterKey':'RestoreVerifierImageDigest'}]},digest)
+        values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest','ParameterValue':'sha256:'+'c'*64},{'ParameterKey':'RestoreVerifierImageDigest','ParameterValue':'sha256:'+'c'*64}]},digest)
         self.assertEqual(len([item for item in values if item['ParameterKey']=='RestoreVerifierImageDigest']),1)
         self.assertEqual(values[-1]['ParameterValue'],digest)
-        egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':item['ParameterKey'],'ParameterValue':item.get('ParameterValue')} for item in values], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
-        self.assertTrue(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':'ImageDigest','ParameterValue':'sha256:'+'c'*64},{'ParameterKey':'RestoreVerifierImageDigest','ParameterValue':digest}], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
+        self.assertTrue(surface.review(egress_change,'restore-egress',digest,'egress'))
         self.assertEqual(surface.change_name(digest,'egress'),'kanbien-core-platform-persistence-restore-egress-'+'a'*12)
         egress_change['Changes'].append({'ResourceChange':{'LogicalResourceId':'RestoredDatabaseIngressFromRestorationVerifier','ResourceType':'AWS::EC2::SecurityGroupIngress','Action':'Add'}})
-        self.assertFalse(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        self.assertFalse(surface.review(egress_change,'restore-egress',digest,'egress'))
         route=load(DEPLOY/'apply-private-verifier-route-update/script.py')
         report=result(lambda:route.report('updated','persistence-private-verifier-route-updated',facts={'change_set':'synthetic'}))[1]
         self.assertEqual(report['facts']['change_set'],'synthetic')
