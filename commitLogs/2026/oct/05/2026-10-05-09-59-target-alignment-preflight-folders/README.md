@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T14:28:45Z
-latest_commit_sha: e3b1b26e6afe8a0dca0f9f8c75f9e0eaa446276f
-chat_duration: 1834156s (21:05:29:16)
+latest_commit_at_utc: 2026-10-26T15:08:52Z
+latest_commit_sha: a209473122a673754c983db133e5bf2559c47a27
+chat_duration: 1836563s (21:06:09:23)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3961,6 +3961,17 @@ Summary: Retained the failed isolated-restore evidence safely and required futur
 
 ADR impact: None.
 
+
+### 2026-10-26T15:08:52Z - Commit recorded
+
+Commit: `a209473122a673754c983db133e5bf2559c47a27`
+
+Message: Retained both PostgreSQL and IAM authentication restore diagnostics, including honest pending and partial collection states.
+
+Summary: Second restore rejection was reconciled and cleanup confirmed; isolated restoration acceptance remains unproved.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5112,6 +5123,13 @@ ADR impact: None.
   Summary: Retained the failed isolated-restore evidence safely and required future isolated restores to export and classify RDS IAM-auth errors without emitting raw provider details.
   ADR impact: None.
 
+
+- Commit: `a209473122a673754c983db133e5bf2559c47a27`
+  Time UTC: 2026-10-26T15:08:52Z
+  Message: Retained both PostgreSQL and IAM authentication restore diagnostics, including honest pending and partial collection states.
+  Summary: Second restore rejection was reconciled and cleanup confirmed; isolated restoration acceptance remains unproved.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -5135,9 +5153,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T14:28:45Z
-Latest commit SHA: e3b1b26e6afe8a0dca0f9f8c75f9e0eaa446276f
-Chat duration: 1834156s (21:05:29:16)
+Latest commit at UTC: 2026-10-26T15:08:52Z
+Latest commit SHA: a209473122a673754c983db133e5bf2559c47a27
+Chat duration: 1836563s (21:06:09:23)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
