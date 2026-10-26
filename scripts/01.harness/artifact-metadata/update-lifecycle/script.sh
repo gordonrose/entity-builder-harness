@@ -67,6 +67,24 @@ TODAY = dt.datetime.now(dt.timezone.utc).date().isoformat()
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$")
 DATE_KEYS = ("created_on", "updated_on", "deprecated_on", "superseded_on")
 
+# Repository preparation receipts are optional in portable installations. Use
+# the existing cache owner when present, never an arbitrary report argument.
+CACHE_OWNER = Path(sys.argv[1]).resolve().parents[4] / "scripts/repo/check-selection"
+LocalCache = None
+if (CACHE_OWNER / "local_cache.py").is_file():
+    sys.path.insert(0, str(CACHE_OWNER))
+    from local_cache import LocalCache
+
+
+def already_prepared(path, raw):
+    if LocalCache is None:
+        return False
+    try:
+        return LocalCache(ROOT, create=False).prepared_artifact(
+            path.relative_to(ROOT).as_posix(), raw, path.stat().st_mode & 0o777)
+    except (OSError, ValueError):
+        return False
+
 
 def iso_date(value, key):
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
@@ -500,7 +518,7 @@ def prepare(path, args):
     content_changed = (
         baseline is not None and strip_updated(raw) != strip_updated(baseline)
     ) or (baseline is None and history["basis"] == "new-artifact")
-    if header.render() != raw or content_changed or "updated_on" not in header.data:
+    if header.render() != raw or "updated_on" not in header.data or (content_changed and not already_prepared(path, raw)):
         header.set_field("updated_on", TODAY)
     validate_dates(header.data)
     rendered = header.render()
@@ -593,6 +611,13 @@ def main():
             for path, plan in plans.items():
                 if plan["rendered"] != plan["original"]:
                     path.write_bytes(plan["rendered"])
+            if LocalCache is not None:
+                LocalCache(ROOT).record_artifacts({
+                    path.relative_to(ROOT).as_posix(): {
+                        "sha256": hashlib.sha256(plan["rendered"]).hexdigest(),
+                        "mode": path.stat().st_mode & 0o777,
+                    } for path, plan in plans.items()
+                })
             report["applied"] = True
     print(json.dumps(report, indent=2))
     return 1 if report["errors"] else 0

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -111,6 +111,19 @@ def repo_root() -> Path:
 
 
 ROOT = repo_root()
+
+
+def lifecycle_prepared(path: str, text: str) -> bool:
+    owner = Path(sys.argv[1]).resolve().parents[4] / "scripts/repo/check-selection"
+    if not (owner / "local_cache.py").is_file():
+        return False
+    sys.path.insert(0, str(owner))
+    from local_cache import LocalCache
+    try:
+        mode = int(INDEX_ENTRIES[path][0], 8) & 0o777 if STAGED else (ROOT / path).stat().st_mode & 0o777
+        return LocalCache(ROOT, create=False).prepared_artifact(path, text.encode("utf-8"), mode)
+    except (OSError, ValueError, KeyError):
+        return False
 
 
 def load_taxonomy() -> dict[str, Any]:
@@ -671,13 +684,14 @@ def validate_staged_maintenance(path: str, change: tuple[str, str], parsed: dict
                 if field in old and field in current and old[field] != current[field]:
                     raise CheckError(f"{field} is immutable while retained: {path}")
         text = read_text(path)
+        prepared = lifecycle_prepared(path, text)
         if repairing_legacy or previous_text is None or without_lifecycle_dates(path, text) != without_lifecycle_dates(path, previous_text):
-            if current.get("updated_on") != TODAY.isoformat():
+            if current.get("updated_on") != TODAY.isoformat() and not prepared:
                 raise CheckError(f"updated_on must be today's UTC date for changed content: {path}")
         for field, event_status in (("deprecated_on", "deprecated"), ("superseded_on", "superseded")):
             new_transition = current.get("status") == event_status and old.get("status") != event_status
             new_retained_event = current.get("status") == "retired" and field in current and field not in old and old_v3
-            if (new_transition or new_retained_event) and current.get(field) != TODAY.isoformat():
+            if (new_transition or new_retained_event) and current.get(field) != TODAY.isoformat() and not prepared:
                 raise CheckError(f"{field} must be today's UTC date for a new lifecycle transition: {path}")
     return True
 

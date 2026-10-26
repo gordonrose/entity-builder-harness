@@ -4,7 +4,7 @@ id: shared.standard.require-change-completion
 version: 1
 status: active
 created_on: "2026-10-24"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 06.shared
 domain: process.change-completion
 disciplines: [agentic, architecture, sre]
@@ -40,6 +40,13 @@ artifact bindings and freshness still match; a prior static pass cannot
 satisfy package, target or live behavior proof. Preserve mandatory checks,
 stage ordering and each command's permissions. A selector may identify a
 provider or publication check without being allowed to execute it.
+
+Commit and integration scheduling are separate from execution effects and
+package, deployment and acceptance boundaries. Expensive local behavioral
+checks may be deferred from commits only when CI and direct local-main
+promotion enforce them against the combined result. The existing trusted local
+cache may transfer matching receipts between registered worktrees of the same
+repository; final input and runtime identities must still match.
 
 Missing implementation blocks the stage that consumes it. Missing proof blocks
 the stage that requires that proof. Distinguish static validation, local

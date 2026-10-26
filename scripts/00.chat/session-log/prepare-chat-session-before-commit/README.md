@@ -89,12 +89,16 @@ Then it validates the current chat session:
 
    It updates required lifecycle metadata for the named task paths, validates
    structure, refreshes the affected metadata index, and emits the focused
-   selector plan and records its exact input identities when this repository
+   selector plan and records its exact preparation identities when this repository
    supplies a selector. Run the selected final verification only after this command.
    It is idempotent and does not stage files or rebuild images. Owner-generated
    material selected by that plan must be refreshed by its owner before final
    verification; the quarantined RAG source-review records remain explicit
    maintenance work and are not rewritten by ordinary task preparation.
+   Process drift and governed-command prerequisites are validated before the
+   plan is recorded. Integration-only checks do not probe installed runtimes at
+   this preparation boundary. Unchanged prepared content retains its date on a
+   later UTC day through the same private preparation record.
 2. Stage only approved task paths in the committing worktree.
 3. Run the default readiness check. It validates the staged prepared state and
    reuses only evidence whose selected input identity still matches.

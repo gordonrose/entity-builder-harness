@@ -1,0 +1,63 @@
+{
+  "candidate": {
+    "image_digest": "sha256:8be8cb92e2f1b30fea24418474833428bf0a16241874551dc0a5dafed496ee6f",
+    "receipt_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40403072977.json",
+    "receipt_reference": "github-actions-run:40403072977",
+    "receipt_sha256": "sha256:6d6040c5979a6bac1fe8e85813b7d97cff2a520d85896acdca210d528fba7fe0",
+    "source_revision": "1f3d492718039ef3ed13e14281b523de5366bbae"
+  },
+  "change_class": "restore-verifier-only",
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:43f7ba6e02a4eff4541d4c6ba5744cb1d5615fc3bee01a8afeae942e5b21bc9e"
+  },
+  "predecessor": {
+    "image_digest": "sha256:d6142d71a4da25f03e55603a78187d6f4e1d5b7d6dee54b496253db20efe61d9",
+    "receipt_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40384658776.json",
+    "receipt_reference": "github-actions-run:40384658776",
+    "receipt_sha256": "sha256:852c3a82867a8270dd4764bf7f7289d5bbe290040f83c73062812ea999a5c780",
+    "source_revision": "c6350305d2a7259749afc5e084df39b437c96757"
+  },
+  "reused_proofs": [
+    "credential-recovery",
+    "credential-recovery-health",
+    "credential-recovery-read",
+    "credential-revocation",
+    "credential-revocation-unready",
+    "effective-privilege",
+    "migration-applied-state",
+    "rollback-final-health",
+    "rollback-final-read",
+    "runtime-identity-initial-access",
+    "server-replacement",
+    "server-replacement-read"
+  ],
+  "schema": "deploy/persistence-proof-applicability/v1",
+  "scope": "core-server-persistence",
+  "source_delta": {
+    "paths": [
+      ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+      "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts",
+      "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-connect-a7fcdc77e010702e-c74053fe67c772979f96ff45.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-connect-a7fcdc77e010702e-launch.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-restore-0c337daa4b5a52be-8c3614e1def554d86c843e6e.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-restore-0c337daa4b5a52be-9d8672461657187113c51763.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-restore-a7fcdc77e010702e-2bfec88d638397fd519513bc.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-restore-a7fcdc77e010702e-e6e2f4dfd1babd083e928887.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40384658776.json",
+      "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+      "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.py",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.py",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.sh",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+      "scripts/repo/check-selection/smoke-test.py"
+    ],
+    "sha256": "sha256:0ec07a75561342187dd18897aede1b16c33e46d95cfd4071517bd8d3bbebf319"
+  },
+  "target": "kanbien-core-platform"
+}

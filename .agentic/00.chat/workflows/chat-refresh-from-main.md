@@ -4,7 +4,7 @@
   version: 2
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-25"
+  updated_on: "2026-10-26"
   layer: 00.chat
   domain: main-refresh
   disciplines:
@@ -206,8 +206,11 @@ refresh should be rehearsed before mutating the active chat worktree.
    preflight branches with unique commits or dirty worktrees must be reported
    and skipped, not deleted. Do not force-remove the preflight worktree, delete
    the preflight branch, or apply the refresh while stopped.
-7. After applying the refresh, run the relevant layer checks before any task commit or
-   promotion to `main`.
+7. The apply owner revalidates required local checks in the promoted tree before
+   preflight cleanup. It can reuse exact receipts from the registered preflight
+   worktree through the existing private cache; changed inputs or runtimes rerun
+   affected checks. Complete any remaining owning-layer obligations before a
+   task commit or promotion to `main`.
 
 ## Preserved Replay Before The First Task Commit
 

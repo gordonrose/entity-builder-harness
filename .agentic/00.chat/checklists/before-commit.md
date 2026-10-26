@@ -73,8 +73,8 @@ bash scripts/01.harness/run-governed-script.sh --approved-action \
 This is the one task-preparation sequence: it applies necessary lifecycle
 metadata updates, refreshes the affected metadata index, runs inexpensive
 structural and prerequisite checks, and prints the focused verification plan.
-Repeat it until it reports no further lifecycle change, then run final
-verification. Do not report ready to merge while this preparation or the staged
+A successful run establishes the prepared inputs for final verification;
+repeating unchanged preparation does not rewrite them. Do not report ready to merge while this preparation or the staged
 commit-boundary gate remains outstanding. The dormant RAG source-review system
 remains explicit maintenance, not an ordinary preparation side effect.
 
@@ -90,8 +90,10 @@ references. Existing v1/v2 artifacts remain valid during focused migration;
 ordinary modifications to legacy files without headers remain grandfathered.
 Prepare lifecycle dates and replacement references before final verification
 and staging. For v3
-artifacts, preserve `created_on` and set `updated_on` to today's UTC date when
-content changes. The gate itself does not write or stage files.
+artifacts, preserve `created_on` and set `updated_on` to the UTC date when the
+changed content is prepared. An exact private preparation receipt preserves
+that date across a later commit day; changed bytes or permissions require
+preparation again. The gate itself does not write or stage files.
 
 ## Repository Extensions
 

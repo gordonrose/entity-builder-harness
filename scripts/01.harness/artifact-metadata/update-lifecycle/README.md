@@ -95,3 +95,10 @@ Commit gates use `check-headers/script.sh --staged` to validate staged lifecycle
 changes. Run the helper after content changes and before staging; checks remain
 read-only. Temporary-repository smoke tests cover history, transitions,
 all-or-nothing planning and repeated-run stability.
+
+When the repository verification cache is present, successful apply records
+exact artifact bytes and modes in its existing private preparation receipt.
+Unchanged preparation and staged validation can retain that edit's date across
+UTC rollover. A later content or permission change requires preparation again;
+the helper preserves `created_on`. Portable exports without this repository
+extension retain current-day validation.
