@@ -708,7 +708,7 @@ Resources:
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
           PortMappings: [{ ContainerPort: 4318, Protocol: tcp }]
           Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }]
-          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }]
+          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }]
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } }
 
   ObservabilityCollectorService:

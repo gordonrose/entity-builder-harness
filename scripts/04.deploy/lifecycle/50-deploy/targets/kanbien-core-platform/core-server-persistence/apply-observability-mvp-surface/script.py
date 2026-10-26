@@ -25,6 +25,7 @@ declared dedicated collector.  It never retries an ambiguous provider mutation:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
@@ -39,10 +40,14 @@ SERVER_SERVICE = "kanbien-core-platform-core-server-persistence"
 COLLECTOR_SERVICE = "kanbien-core-platform-observability-collector"
 TEMPLATE = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 COLLECTOR_GATE = ROOT / "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/script.sh"
+CLOUDFORMATION_INLINE_TEMPLATE_LIMIT_BYTES = 51_200
 
-# The server and collector are intentionally separate task identities.  This
-# list is both an allowlist for the change-set and a review aid: an activation
-# cannot smuggle in database, secret, broad-IAM, or unrelated topology changes.
+# The server and collector are intentionally separate task identities. These
+# lists are both an allowlist for the change-set and a review aid: enabling the
+# collector deliberately replaces every task definition that packages the new
+# qualified program image, and grants the server only its collector-delivery
+# configuration. It cannot smuggle in database, secret, broad-IAM, or unrelated
+# topology changes.
 ADDED = {
     "ObservabilityCollectorSecurityGroup": "AWS::EC2::SecurityGroup",
     "ServerObservabilityCollectorEgress": "AWS::EC2::SecurityGroupEgress",
@@ -64,8 +69,14 @@ ADDED = {
     "ObservabilityCollectorService": "AWS::ECS::Service",
 }
 MODIFIED = {
+    "CoreServerPersistenceAdministrationTaskDefinition": "AWS::ECS::TaskDefinition",
+    "CoreServerPersistenceMigrationTaskDefinition": "AWS::ECS::TaskDefinition",
+    "CoreServerPersistenceRestorationVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceTaskDefinition": "AWS::ECS::TaskDefinition",
+    "CoreServerPersistenceVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceService": "AWS::ECS::Service",
+    "ServerExecutionRole": "AWS::IAM::Role",
+    "ServerTaskRole": "AWS::IAM::Role",
 }
 
 
@@ -168,8 +179,28 @@ def review(change: object, name: str, server: dict, collector: dict, alert_email
     return added == set(ADDED) and modified == set(MODIFIED)
 
 
+def template_fingerprint() -> str:
+    """Bind a reviewed operation identity to its exact provider realization.
+
+    A rejected change set is durable diagnostic evidence, not a reusable
+    deployment object. Including the template fingerprint means a corrected
+    realization for the same qualified images receives a separate review while
+    preserving the rejected operation for investigation.
+    """
+    return hashlib.sha256(TEMPLATE.read_bytes()).hexdigest()[:12]
+
+
+def inline_template_body_is_supported(path: Path = TEMPLATE) -> bool:
+    """Fail before AWS rejects an oversized ``--template-body`` payload."""
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return False
+    return 0 < size <= CLOUDFORMATION_INLINE_TEMPLATE_LIMIT_BYTES
+
+
 def change_name(server: dict, collector: dict) -> str:
-    return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}"
+    return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}-{template_fingerprint()}"
 
 
 def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str) -> int:
@@ -207,6 +238,8 @@ def main() -> int:
     collector = receipt(args.collector_receipt, candidate="observability-collector", contract="core-server-persistence-observability-collector-image", program="kanbien-observability-collector")
     if server is None or collector is None or server.get("source_revision") != collector.get("source_revision"):
         return report("blocked", "persistence-observability-mvp-package-receipts-invalid")
+    if not inline_template_body_is_supported():
+        return report("blocked", "persistence-observability-mvp-template-body-too-large")
     name = change_name(server, collector)
     import subprocess
     collector_gate = subprocess.run(["bash", str(COLLECTOR_GATE), "--json"], capture_output=True, text=True)

@@ -42,7 +42,8 @@ expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
 expect_failure persistence-observability-mvp-arguments-invalid bash "$OBSERVABILITY" --json
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py" <<'PY'
-import importlib.util, sys
+import importlib.util, sys, tempfile
+from pathlib import Path
 spec = importlib.util.spec_from_file_location("observability_surface", sys.argv[1])
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 server = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
@@ -82,6 +83,11 @@ class MissingCollector:
     def candidate_runnable_manifest(self, receipt):
         return (None, "persistence-candidate-image-index-unavailable")
 assert not module.collector_image_available(MissingCollector(), collector)
+assert module.inline_template_body_is_supported()
+with tempfile.TemporaryDirectory() as directory:
+    oversized = Path(directory) / "oversized.yml"
+    oversized.write_bytes(b"x" * (module.CLOUDFORMATION_INLINE_TEMPLATE_LIMIT_BYTES + 1))
+    assert not module.inline_template_body_is_supported(oversized)
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, subprocess, sys
@@ -268,6 +274,9 @@ assert "DeletionProtection: true" in template
 assert "BackupRetentionPeriod: 7" in template
 assert "PERSISTENCE_POSTGRES_CA_PATH=/app/assets/rds-eu-west-1-bundle.crt" not in template
 assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-secret runtime default"
+collector = template[template.index("ObservabilityCollectorTaskDefinition:"):template.index("ObservabilityCollectorService:")]
+assert "ValueFrom: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config'" in collector
+assert "ValueFrom: !Ref ObservabilityCollectorConfiguration" not in collector
 verifier = template[template.index("VerifierExecutionRole:"):template.index("RestorationVerifierExecutionRole:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template
