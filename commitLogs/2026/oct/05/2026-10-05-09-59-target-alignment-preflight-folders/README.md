@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T23:56:16Z
-latest_commit_sha: b154eea4
-chat_duration: 1781807s (20:14:56:47)
+latest_commit_at_utc: 2026-10-26T00:05:21Z
+latest_commit_sha: aee7340b
+chat_duration: 1782352s (20:15:05:52)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3546,6 +3546,17 @@ Summary: Added a bounded, policy-stability recheck before the isolated restore v
 
 ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
 
+
+### 2026-10-26T00:05:21Z - Commit recorded
+
+Commit: `aee7340b`
+
+Message: fix(deploy): classify isolated restore boundaries
+
+Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4543,6 +4554,13 @@ ADR impact: No ADR: bounded recovery-controller correction under the existing pe
   Summary: Added a bounded, policy-stability recheck before the isolated restore verifier launches and retained five current-image live proof receipts for migration state, effective privilege, runtime IAM access, health, and read.
   ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
 
+
+- Commit: `aee7340b`
+  Time UTC: 2026-10-26T00:05:21Z
+  Message: fix(deploy): classify isolated restore boundaries
+  Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -4566,9 +4584,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T23:56:16Z
-Latest commit SHA: b154eea4
-Chat duration: 1781807s (20:14:56:47)
+Latest commit at UTC: 2026-10-26T00:05:21Z
+Latest commit SHA: aee7340b
+Chat duration: 1782352s (20:15:05:52)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
