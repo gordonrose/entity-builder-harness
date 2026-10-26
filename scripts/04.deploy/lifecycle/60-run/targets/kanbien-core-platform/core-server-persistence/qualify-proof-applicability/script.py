@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
 #   updated_on: "2026-10-26"
@@ -11,7 +11,7 @@
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Retain and validate a narrowly bounded predecessor-proof applicability record for a restore-verifier-only image change.
+#   purpose: Retain and validate a narrowly bounded predecessor-proof applicability record for a restore-verifier image change, including one exact test-only IAM qualification helper.
 #   portability: { class: internal, targets: [] }
 #   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
@@ -44,6 +44,7 @@ REUSABLE = {
     "rollback-final-health", "rollback-final-read",
 }
 RESTORE_VERIFIER_INPUT = "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"
+IAM_AUTHENTICATION_INPUT = "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts"
 # These paths are copied or compiled into the qualified image. A change to any
 # of them can alter the executable candidate and therefore cannot inherit an
 # earlier proof. Deployment controllers, receipt collectors, test fixtures and
@@ -102,12 +103,64 @@ def source_paths(predecessor: str, candidate: str) -> list[str]:
 def image_input_paths(paths: list[str]) -> list[str]:
     return sorted(path for path in paths if path in IMAGE_INPUT_FILES or path.startswith(IMAGE_INPUT_PREFIXES))
 
-def restore_only_delta(paths: list[str]) -> bool:
+def test_only_iam_qualification_delta(predecessor: str, candidate: str) -> bool:
+    """Accept one reviewed test-only helper change, never a general IAM change.
+
+    The candidate image contains a local-qualification delay hook solely so the
+    packaged restore verifier can prove that token acquisition is outside the
+    PostgreSQL connection deadline.  It is guarded by ``NODE_ENV == test`` and
+    target configuration rejects both local-token variables.  Match the exact
+    reviewed diff rather than treating arbitrary changes to IAM authentication
+    as harmless.
+    """
+    completed = subprocess.run(
+        ["git", "diff", "--unified=0", predecessor, candidate, "--", IAM_AUTHENTICATION_INPUT],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode:
+        return False
+    changed = [
+        line
+        for line in completed.stdout.splitlines()
+        if line.startswith(("+", "-")) and not line.startswith(("+++", "---"))
+    ]
+    return changed == [
+        "-//   version: 1",
+        "+//   version: 2",
+        '-//   updated_on: "2026-10-25"',
+        '+//   updated_on: "2026-10-26"',
+        '-  if (env["NODE_ENV"] === "test" && localToken !== undefined) return { username, authenticationToken: async () => localToken };',
+        '+  const localDelayText = text(env["PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN_DELAY_MS"]);',
+        "+  const localDelay = localDelayText === undefined ? 0 : Number(localDelayText);",
+        '+  if (env["NODE_ENV"] === "test" && localToken !== undefined && Number.isInteger(localDelay) && localDelay >= 0 && localDelay <= 10_000) {',
+        "+    return {",
+        "+      username,",
+        "+      authenticationToken: async () => {",
+        "+        if (localDelay > 0) await new Promise<void>((resolve) => setTimeout(resolve, localDelay));",
+        "+        return localToken;",
+        "+      },",
+        "+    };",
+        "+  }",
+    ]
+
+
+def restore_only_delta(paths: list[str], predecessor: str | None = None, candidate: str | None = None) -> bool:
     # Keep the complete revision delta in the record for review, but establish
     # historical runtime-proof applicability from the actual package input
     # closure. A source revision can legitimately add receipt retention or a
     # controller regression without changing the immutable executable image.
-    return image_input_paths(paths) == [RESTORE_VERIFIER_INPUT]
+    inputs = image_input_paths(paths)
+    if inputs == [RESTORE_VERIFIER_INPUT]:
+        return True
+    return (
+        inputs == [IAM_AUTHENTICATION_INPUT, RESTORE_VERIFIER_INPUT]
+        and isinstance(predecessor, str)
+        and isinstance(candidate, str)
+        and test_only_iam_qualification_delta(predecessor, candidate)
+    )
 
 def receipt_destination(identity: dict[str, str]) -> Path: return PACKAGE_RECEIPTS / f"package-custody-{identity['receipt_reference'].removeprefix('github-actions-run:')}.json"
 
@@ -127,7 +180,7 @@ def make(predecessor: tuple[dict[str, str], dict[str, Any]], candidate: tuple[di
     old, old_raw = predecessor; new, new_raw = candidate
     if old["source_revision"] == new["source_revision"] or old["image_digest"] == new["image_digest"]: raise ApplicabilityError("persistence-proof-applicability-identity-not-changed")
     paths = source_paths(old["source_revision"], new["source_revision"])
-    if not restore_only_delta(paths): raise ApplicabilityError("persistence-proof-applicability-change-not-restore-only")
+    if not restore_only_delta(paths, old["source_revision"], new["source_revision"]): raise ApplicabilityError("persistence-proof-applicability-change-not-restore-only")
     old_path, old_sha = persist_receipt(old, old_raw); new_path, new_sha = persist_receipt(new, new_raw)
     body: dict[str, Any] = {"schema": SCHEMA, "target": TARGET, "scope": SCOPE, "change_class": "restore-verifier-only", "predecessor": {**old, "receipt_path": old_path, "receipt_sha256": old_sha}, "candidate": {**new, "receipt_path": new_path, "receipt_sha256": new_sha}, "source_delta": {"paths": paths, "sha256": sha(paths)}, "reused_proofs": sorted(REUSABLE)}
     body["integrity"] = {"algorithm": "sha256", "payload_sha256": sha(body)}
@@ -154,7 +207,7 @@ def validate(value: object, expected_candidate: dict[str, str] | None = None) ->
     delta = value.get("source_delta")
     if not isinstance(delta, dict) or set(delta) != {"paths", "sha256"} or not isinstance(delta.get("paths"), list) or not all(isinstance(path, str) for path in delta["paths"]): raise ApplicabilityError("persistence-proof-applicability-source-diff-invalid")
     paths = source_paths(old["source_revision"], new["source_revision"])
-    if paths != delta["paths"] or delta.get("sha256") != sha(paths) or not restore_only_delta(paths): raise ApplicabilityError("persistence-proof-applicability-change-not-restore-only")
+    if paths != delta["paths"] or delta.get("sha256") != sha(paths) or not restore_only_delta(paths, old["source_revision"], new["source_revision"]): raise ApplicabilityError("persistence-proof-applicability-change-not-restore-only")
     reused = value.get("reused_proofs")
     if not isinstance(reused, list) or set(reused) != REUSABLE or len(reused) != len(REUSABLE) or reused != sorted(reused): raise ApplicabilityError("persistence-proof-applicability-reused-proof-set-invalid")
     return value

@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-proof-applicability
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-26"
 #   updated_on: "2026-10-26"
@@ -11,7 +11,7 @@ set -euo pipefail
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Prove restore-only retained-proof applicability fails closed outside its exact package and source boundaries.
+#   purpose: Prove retained-proof applicability permits only the restore verifier and its exact test-only IAM qualification helper while failing closed outside those boundaries.
 #   portability: { class: internal, targets: [] }
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
@@ -33,6 +33,11 @@ try:
     old_identity={key:old[key] for key in module.PACKAGE_FIELDS}
     new_identity={key:new[key] for key in module.PACKAGE_FIELDS}
     assert module.restore_only_delta(["scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"])
+    paired=["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"]
+    with patch.object(module,"test_only_iam_qualification_delta",return_value=True):
+        assert module.restore_only_delta(paired,"a"*40,"b"*40)
+    with patch.object(module,"test_only_iam_qualification_delta",return_value=False):
+        assert not module.restore_only_delta(paired,"a"*40,"b"*40)
     assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts", "platform/adapters/aws/persistence/postgresql/src/connection.ts"])
     assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts"])
     with patch.object(module,"source_paths",return_value=["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"]), patch.object(module,"validate_package_receipt"):
