@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T10:49:35Z
-latest_commit_sha: 962cddd1
-chat_duration: 1821006s (21:01:50:06)
+latest_commit_at_utc: 2026-10-26T13:28:56Z
+latest_commit_sha: 8bc53dd8
+chat_duration: 1830567s (21:04:29:27)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3873,6 +3873,17 @@ Decision: Promoted verified observability evidence controls to origin/main
 
 Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
 
+
+### 2026-10-26T13:28:56Z - Commit recorded
+
+Commit: `8bc53dd8`
+
+Message: fix(deploy): retain persistence acceptance evidence
+
+Summary: Added durable retained proof receipts and candidate acceptance evidence, corrected isolated-restore observation handling, and preserved the rejected restore result without repeating it.
+
+ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4968,6 +4979,13 @@ Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated
   Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
   ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
 
+
+- Commit: `8bc53dd8`
+  Time UTC: 2026-10-26T13:28:56Z
+  Message: fix(deploy): retain persistence acceptance evidence
+  Summary: Added durable retained proof receipts and candidate acceptance evidence, corrected isolated-restore observation handling, and preserved the rejected restore result without repeating it.
+  ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
+
 ## Main Refresh Conflicts
 
 
@@ -4991,9 +5009,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T10:49:35Z
-Latest commit SHA: 962cddd1
-Chat duration: 1821006s (21:01:50:06)
+Latest commit at UTC: 2026-10-26T13:28:56Z
+Latest commit SHA: 8bc53dd8
+Chat duration: 1830567s (21:04:29:27)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
