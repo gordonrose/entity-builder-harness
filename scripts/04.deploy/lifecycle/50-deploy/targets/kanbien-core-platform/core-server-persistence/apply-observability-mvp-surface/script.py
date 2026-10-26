@@ -57,7 +57,6 @@ ADDED = {
     "ObservabilityCollectorArtifactObjectStoreEgress": "AWS::EC2::SecurityGroupEgress",
     "ObservabilityCollectorIngressFromServer": "AWS::EC2::SecurityGroupIngress",
     "EndpointIngressFromObservabilityCollector": "AWS::EC2::SecurityGroupIngress",
-    "ObservabilityCollectorConfiguration": "AWS::SSM::Parameter",
     "ObservabilityCollectorServiceDiscovery": "AWS::ServiceDiscovery::Service",
     "ObservabilityCollectorExecutionRole": "AWS::IAM::Role",
     "ObservabilityCollectorTaskRole": "AWS::IAM::Role",

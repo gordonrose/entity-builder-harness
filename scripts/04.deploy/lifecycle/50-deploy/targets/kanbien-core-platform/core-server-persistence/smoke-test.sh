@@ -275,8 +275,10 @@ assert "BackupRetentionPeriod: 7" in template
 assert "PERSISTENCE_POSTGRES_CA_PATH=/app/assets/rds-eu-west-1-bundle.crt" not in template
 assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-secret runtime default"
 collector = template[template.index("ObservabilityCollectorTaskDefinition:"):template.index("ObservabilityCollectorService:")]
-assert "ValueFrom: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config'" in collector
-assert "ValueFrom: !Ref ObservabilityCollectorConfiguration" not in collector
+assert "Name: AOT_CONFIG_CONTENT" in collector
+assert "ValueFrom:" not in collector
+assert "ssm:GetParameter" not in collector
+assert "ObservabilityCollectorConfiguration:" not in template
 verifier = template[template.index("VerifierExecutionRole:"):template.index("RestorationVerifierExecutionRole:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template

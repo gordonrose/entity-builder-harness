@@ -286,60 +286,6 @@ Resources:
             Resource: [!Ref MigrationCredentialsSecret]
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
-  ObservabilityCollectorConfiguration:
-    Condition: ObservabilityEnabled
-    Type: AWS::SSM::Parameter
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      Name: /kanbien/core-platform/core-server-persistence/observability/collector-config
-      Type: String
-      Tier: Standard
-      DataType: text
-      Description: Non-secret target-owned ADOT EMF metrics collector configuration for the core-server persistence readiness path.
-      Value: !Sub |
-        extensions:
-          health_check:
-            endpoint: 127.0.0.1:13133
-        receivers:
-          otlp:
-            protocols:
-              http:
-                # The collector is a separate private ECS task. Its security
-                # group admits this listener only from ServerSecurityGroup.
-                endpoint: 0.0.0.0:4318
-        processors:
-          memory_limiter:
-            check_interval: 1s
-            limit_mib: 96
-            spike_limit_mib: 32
-          batch:
-            send_batch_size: 100
-            timeout: 10s
-        exporters:
-          # ADOT's AWS EMF exporter sends metrics through the existing private
-          # CloudWatch Logs endpoint.  It is not an OTLP HTTP CloudWatch API.
-          awsemf:
-            region: ${AWS::Region}
-            namespace: Kanbien/CorePlatform
-            log_group_name: ${LogGroupName}
-            log_stream_name: core-server-persistence-readiness-metrics
-            dimension_rollup_option: NoDimensionRollup
-            metric_declarations:
-              - dimensions: [[target, scope, workload, dependency, readiness]]
-                metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']
-        service:
-          extensions: [health_check]
-          telemetry:
-            logs:
-              level: info
-          pipelines:
-            metrics:
-              receivers: [otlp]
-              processors: [memory_limiter, batch]
-              exporters: [awsemf]
-      Tags: [{ Key: Target, Value: kanbien-core-platform }]
-
   PersistenceDatabase:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Snapshot
@@ -396,10 +342,6 @@ Resources:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - !If
-                - ObservabilityEnabled
-                - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
-                - !Ref AWS::NoValue
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
   ServerTaskRole:
     Type: AWS::IAM::Role
@@ -421,14 +363,13 @@ Resources:
       RoleName: kanbien-core-platform-observability-collector-execution
       AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
       Policies:
-        - PolicyName: pull-log-and-read-collector-configuration
+        - PolicyName: pull-and-log-collector-image
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
               - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
-              - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   ObservabilityCollectorTaskRole:
@@ -707,8 +648,49 @@ Resources:
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
           PortMappings: [{ ContainerPort: 4318, Protocol: tcp }]
-          Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }]
-          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }]
+          Environment:
+            - { Name: AWS_REGION, Value: !Ref 'AWS::Region' }
+            # This is target-owned, allowlisted and explicitly non-secret.
+            # It is a normal environment value, not a Secrets Manager or SSM
+            # injection. The collector identity cannot retrieve credentials.
+            - Name: AOT_CONFIG_CONTENT
+              Value: !Sub |
+                extensions:
+                  health_check:
+                    endpoint: 127.0.0.1:13133
+                receivers:
+                  otlp:
+                    protocols:
+                      http:
+                        endpoint: 0.0.0.0:4318
+                processors:
+                  memory_limiter:
+                    check_interval: 1s
+                    limit_mib: 96
+                    spike_limit_mib: 32
+                  batch:
+                    send_batch_size: 100
+                    timeout: 10s
+                exporters:
+                  awsemf:
+                    region: ${AWS::Region}
+                    namespace: Kanbien/CorePlatform
+                    log_group_name: ${LogGroupName}
+                    log_stream_name: core-server-persistence-readiness-metrics
+                    dimension_rollup_option: NoDimensionRollup
+                    metric_declarations:
+                      - dimensions: [[target, scope, workload, dependency, readiness]]
+                        metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']
+                service:
+                  extensions: [health_check]
+                  telemetry:
+                    logs:
+                      level: info
+                  pipelines:
+                    metrics:
+                      receivers: [otlp]
+                      processors: [memory_limiter, batch]
+                      exporters: [awsemf]
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } }
 
   ObservabilityCollectorService:
@@ -871,6 +853,5 @@ Outputs:
   ObservabilityCollectorTaskDefinitionArn: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorTaskDefinition }
   ObservabilityCollectorServiceDiscoveryArn: { Condition: ObservabilityEnabled, Value: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }
   ObservabilityCollectorSecurityGroupId: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorSecurityGroup }
-  ObservabilityCollectorConfigurationParameter: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorConfiguration }
   CoreServerPostgreSqlReadinessAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }
   PersistenceDatabaseFreeStorageAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt PersistenceDatabaseFreeStorageAlarm.Arn }

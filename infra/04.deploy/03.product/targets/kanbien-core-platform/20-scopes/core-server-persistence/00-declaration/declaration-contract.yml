@@ -196,7 +196,7 @@ observability_mvp:
     runtime_dependency: dedicated-private-otel-collector-service
     adapter: '@kanbien/platform-adapter-aws-observability-cloudwatch'
     endpoint: http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics
-    configuration_delivery: target-owned-ssm-parameter-non-secret
+    configuration_delivery: target-owned-allowlisted-non-secret-container-environment
     activation_control: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
     package_proof: immutable-collector-image-and-runtime-payload-required-before-live-deployment
     failure_behaviour: bounded-best-effort-application-work-continues-stale-signal-alarm-detects-missing-delivery
