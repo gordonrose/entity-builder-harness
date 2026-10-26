@@ -16,7 +16,8 @@
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
 import { createNodePostgreSqlTokenConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
-import { connect } from "node:net";
+import { connect as connectTcp } from "node:net";
+import { connect as connectTls } from "node:tls";
 
 import { persistenceConfiguration, persistenceCertificateAuthority, environmentText as text } from "./kanbien-core-server-persistence-configuration";
 import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
@@ -32,23 +33,23 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
   const expected = expectedRecord(env);
   const certificateAuthority = persistenceCertificateAuthority(env);
   if (configuration === undefined || credentials === undefined || expected === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID");
-  // Materialise the opaque token before opening the PostgreSQL connection.
-  // This creates a safe, actionable boundary between task-identity/token
-  // acquisition and an actual restored-database connection; neither the token
-  // nor a provider error message is emitted.
+  // Establish the private route and PostgreSQL TLS trust before materialising
+  // an IAM token. Neither preflight sends a credential or query.
+  try {
+    await probePostgreSqlTransport(configuration.host, configuration.port);
+  } catch (error) {
+    return rejected(restoreTransportFailureCode(error));
+  }
+  try {
+    await probePostgreSqlTls(configuration.host, configuration.port, certificateAuthority);
+  } catch (error) {
+    return rejected(restoreTlsPreflightFailureCode(error));
+  }
   let token: string;
   try {
     token = await credentials.authenticationToken();
   } catch {
     return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE");
-  }
-  // Establish only the private TCP path before giving PostgreSQL a credential.
-  // That makes a failed restore proof actionable without ever emitting a host,
-  // token, query, provider message, or certificate detail.
-  try {
-    await probePostgreSqlTransport(configuration.host, configuration.port);
-  } catch (error) {
-    return rejected(restoreTransportFailureCode(error));
   }
   const pool = createNodePostgreSqlTokenConnectionPool(configuration, { username: credentials.username, authenticationToken: async () => token, certificateAuthority });
   let client: Awaited<ReturnType<typeof pool.connect>> | undefined;
@@ -118,6 +119,13 @@ export function restoreTransportFailureCode(error: unknown): string {
     : classified;
 }
 
+export function restoreTlsPreflightFailureCode(error: unknown): string {
+  const classified = restoreVerificationFailureCode(error);
+  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
+    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE"
+    : classified;
+}
+
 /**
  * A completed TCP preflight proves that an opaque subsequent pool failure is
  * not simply an absent route to the database port.  Keep the unknown result
@@ -139,7 +147,7 @@ export function restorePostTransportConnectionFailureCode(error: unknown): strin
  */
 export function probePostgreSqlTransport(host: string, port: number, timeoutMs = 5_000): Promise<void> {
   return new Promise((resolve, reject) => {
-    const socket = connect({ host, port });
+    const socket = connectTcp({ host, port });
     let completed = false;
     const finish = (callback: () => void) => {
       if (completed) return;
@@ -155,6 +163,37 @@ export function probePostgreSqlTransport(host: string, port: number, timeoutMs =
     socket.once("connect", () => {
       finish(resolve);
       socket.destroy();
+    });
+    socket.once("error", (error) => finish(() => reject(error)));
+  });
+}
+
+/**
+ * PostgreSQL requires an SSLRequest before TLS. This probe performs only that
+ * negotiation and certificate validation; it never sends a role, token,
+ * password, database name, or SQL statement.
+ */
+export function probePostgreSqlTls(host: string, port: number, certificateAuthority: string, timeoutMs = 5_000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const socket = connectTcp({ host, port });
+    let completed = false;
+    const finish = (callback: () => void) => { if (completed) return; completed = true; clearTimeout(timeout); callback(); };
+    const timeout = setTimeout(() => {
+      const error = new Error("tls negotiation timeout") as Error & { code: string };
+      error.code = "ETIMEDOUT";
+      socket.destroy(error);
+    }, timeoutMs);
+    socket.once("connect", () => socket.write(Buffer.from([0, 0, 0, 8, 4, 210, 22, 47])));
+    socket.once("data", (response: Buffer) => {
+      if (response.length !== 1 || response[0] !== 83) {
+        const error = new Error("postgresql tls unavailable") as Error & { code: string };
+        error.code = "POSTGRES_TLS_UNAVAILABLE";
+        socket.destroy(error);
+        return;
+      }
+      const tlsSocket = connectTls({ socket, servername: host, ca: certificateAuthority, rejectUnauthorized: true });
+      tlsSocket.once("secureConnect", () => { finish(resolve); tlsSocket.destroy(); });
+      tlsSocket.once("error", (error) => finish(() => reject(error)));
     });
     socket.once("error", (error) => finish(() => reject(error)));
   });

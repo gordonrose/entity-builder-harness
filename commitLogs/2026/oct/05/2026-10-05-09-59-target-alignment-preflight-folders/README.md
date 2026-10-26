@@ -241,6 +241,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Restore verifier connection result was too coarse
   Resolution: A rejected isolated-restore verifier emitted only CONNECTION_UNAVAILABLE even after provider facts disproved the suspected missing egress rule. Added a bounded TCP preflight before PostgreSQL credential use so the next governed proof distinguishes a closed transport path from a post-transport database handshake failure without exposing provider text, endpoints, SQL, or credentials.
 
+
+- Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
+  Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -3688,6 +3692,13 @@ Message: fix(deploy): bind proof reuse to image inputs
 Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
 
 ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
+
+
+### 2026-10-26T01:41:45Z - Issue
+
+Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
+
+Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
 
 ## Sub-Agent Activity
 
