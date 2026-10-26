@@ -657,10 +657,16 @@ new qualified image. It rejects every other logical resource, action, type,
 parameter, source-database or credential change. The image mode preserves the
 current service image, source revision, support image, observability settings,
 database, and all other stack parameters; it is a verifier-support correction,
-not an application release transition. All modes preserve every other current
-stack parameter and require one qualified restore image digest. This is a
-separate approved provider correction, not permission to change the source
-database or credentials.
+not an application release transition. It deliberately uses the stack's
+deployed provider template rather than the current repository template: later
+scope work must not be smuggled into this repair. If a prior image review from
+the current template was rejected by this guard while still unexecuted, the
+same command's explicit `--discard-rejected-image-review` mode may remove only
+that named, unexecuted review after re-observing its complete parameter identity
+and rejecting its resource shape. All modes preserve every other current stack
+parameter and require one qualified restore image digest. This is a separate
+approved provider correction, not permission to change the source database or
+credentials.
 Use the same receipt plus `--reconcile` after interruption; observation contains
 no mutation. The normal CREATE includes this surface already.
 

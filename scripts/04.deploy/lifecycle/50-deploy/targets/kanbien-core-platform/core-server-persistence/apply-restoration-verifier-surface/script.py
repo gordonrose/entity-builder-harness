@@ -12,7 +12,7 @@ def load():
 def emit(v,*codes,facts=None):
  r={"schema":"deploy/persistence-restoration-surface-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":v,"findings":[{"code":c} for c in codes]};
  if facts:r["facts"]=facts
- print(json.dumps(r,sort_keys=True));return 0 if v=="applied" else 1
+ print(json.dumps(r,sort_keys=True));return 0 if v in {"applied","discarded"} else 1
 def parameter_values(value):
  if not isinstance(value,dict):return None
  items=value.get("Parameters")
@@ -51,9 +51,23 @@ def reconcile(m,name,digest,mode="surface",expected=None):
  observed_identity=expected or {"RestoreVerifierImageDigest":digest}
  verdict,code=m.observe_update(name,observed_identity,lambda change:review(change,name,digest,mode,expected))
  return emit("applied" if verdict=="complete" else verdict,code,facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":mode})
+def discard_rejected_image_review(m,name,digest,expected):
+ """Remove only an exact, unexecuted image review our guard has rejected."""
+ ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
+ if not ok and code=="aws-resource-missing":return emit("discarded","persistence-restoration-image-review-already-absent",facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":"image"})
+ if not ok or not isinstance(change,dict):return emit("blocked",code if not ok else "persistence-restoration-image-review-observation-invalid")
+ if change.get("Status")!="CREATE_COMPLETE" or change.get("ExecutionStatus")!="AVAILABLE":return emit("blocked","persistence-restoration-image-review-not-unexecuted")
+ if parameter_values(change)!=expected or review(change,name,digest,"image",expected):return emit("blocked","persistence-restoration-image-review-not-guard-rejected")
+ ok,_,code=m.aws("cloudformation","delete-change-set","--stack-name",STACK,"--change-set-name",name)
+ if not ok:return emit("blocked",code)
+ for attempt in range(6):
+  exists,_,observed=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
+  if not exists and observed=="aws-resource-missing":return emit("discarded","persistence-restoration-image-review-discarded",facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":"image"})
+  if attempt<5:time.sleep(2)
+ return emit("blocked","persistence-restoration-image-review-discard-not-confirmed")
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--mode",choices=("surface","egress","image"),default="surface");p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");a,u=p.parse_known_args()
- if u or a.receipt is None:return emit("blocked","persistence-restoration-surface-arguments-invalid")
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--mode",choices=("surface","egress","image"),default="surface");p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");p.add_argument("--discard-rejected-image-review",action="store_true");a,u=p.parse_known_args()
+ if u or a.receipt is None or (a.reconcile and a.discard_rejected_image_review) or (a.discard_rejected_image_review and a.mode!="image"):return emit("blocked","persistence-restoration-surface-arguments-invalid")
  m=load();receipt=m.validate_receipt(a.receipt)
  if receipt is None:return emit("blocked","package-custody-receipt-invalid")
  digest=receipt["image_digest"];name=change_name(digest,a.mode)
@@ -61,6 +75,7 @@ def main():
  if not isinstance(state,dict) or state.get("StackStatus") not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}:return emit("blocked",code if not ok else "persistence-restoration-surface-stack-not-healthy")
  expected=expected_parameters(state,digest)
  if expected is None:return emit("blocked","persistence-restoration-surface-parameters-invalid")
+ if a.discard_rejected_image_review:return discard_rejected_image_review(m,name,digest,expected)
  if a.reconcile:return reconcile(m,name,digest,a.mode,expected)
  if not m.declaration_covered() or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
  ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
@@ -68,7 +83,9 @@ def main():
   if code!="aws-resource-missing":return emit("blocked",code)
   params=surface_parameters(state,digest)
   with tempfile.NamedTemporaryFile(mode="w",suffix=".json") as f:
-   json.dump(params,f);f.flush();ok,_,code=m.aws("cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE","--template-body",f"file://{TEMPLATE}","--parameters",f"file://{f.name}","--capabilities","CAPABILITY_NAMED_IAM")
+   json.dump(params,f);f.flush();command=["cloudformation","create-change-set","--stack-name",STACK,"--change-set-name",name,"--change-set-type","UPDATE"]
+   command += ["--use-previous-template"] if a.mode=="image" else ["--template-body",f"file://{TEMPLATE}"]
+   ok,_,code=m.aws(*command,"--parameters",f"file://{f.name}","--capabilities","CAPABILITY_NAMED_IAM")
   if not ok:return emit("uncertain",code,facts={"change_set":name})
   for _ in range(6):
    time.sleep(2);ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)

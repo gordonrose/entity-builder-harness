@@ -151,6 +151,39 @@ class ControllerRegression(unittest.TestCase):
             if mutation=='duplicate-parameter': candidate['Parameters'].append(copy.deepcopy(candidate['Parameters'][0]))
             self.assertFalse(module.review(candidate,name,digest,'image',expected),mutation)
 
+    def test_restoration_verifier_image_uses_deployed_template_and_discards_only_rejected_review(self):
+        module=load(DEPLOY/'apply-restoration-verifier-surface/script.py')
+        previous='sha256:'+'a'*64; digest='sha256:'+'b'*64
+        state={'StackStatus':'UPDATE_COMPLETE','Parameters':[
+            {'ParameterKey':'ImageDigest','ParameterValue':previous},
+            {'ParameterKey':'RestoreVerifierImageDigest','ParameterValue':previous},
+            {'ParameterKey':'SourceRevision','ParameterValue':'a'*40},
+        ]}
+        expected=module.expected_parameters(state,digest); name=module.change_name(digest,'image')
+        rejected={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()],'Changes':[{'ResourceChange':{'LogicalResourceId':'PersistenceDatabase','Action':'Modify','ResourceType':'AWS::RDS::DBInstance'}}]}
+        calls={'describes':0}
+        def response(parts):
+            if parts[1]=='describe-change-set':
+                calls['describes']+=1
+                return (True,rejected,'ok') if calls['describes']==1 else (False,None,'aws-resource-missing')
+            if parts[1]=='delete-change-set': return True,{},'ok'
+            raise AssertionError(parts)
+        provider=Provider(response)
+        report=result(lambda:module.discard_rejected_image_review(provider,name,digest,expected))[1]
+        self.assertEqual(report['verdict'],'discarded')
+        self.assertEqual([parts[1] for parts in provider.calls],['describe-change-set','delete-change-set','describe-change-set'])
+
+        provider=Provider(lambda parts:(True,{**rejected,'Changes':[{'ResourceChange':{'LogicalResourceId':'CoreServerPersistenceRestorationVerifierTaskDefinition','Action':'Modify','ResourceType':'AWS::ECS::TaskDefinition'}}]},'ok') if parts[1]=='describe-change-set' else (_ for _ in ()).throw(AssertionError('must not delete review accepted by the guard')))
+        self.assertEqual(result(lambda:module.discard_rejected_image_review(provider,name,digest,expected))[1]['verdict'],'blocked')
+
+        provider=Provider(lambda parts:(True,{'Stacks':[state]},'ok') if parts[1]=='describe-stacks' else (False,None,'aws-resource-missing') if parts[1]=='describe-change-set' else (False,None,'aws-command-timeout') if parts[1]=='create-change-set' else (_ for _ in ()).throw(AssertionError(parts)))
+        provider.validate_receipt=lambda path:{'image_digest':digest,'source_revision':'b'*40};provider.declaration_covered=lambda:True;provider.candidate_image=lambda receipt:(True,'ok')
+        with patch.object(module,'load',return_value=provider),patch.object(sys,'argv',['test','--receipt','synthetic','--mode','image']):
+            self.assertEqual(result(module.main)[1]['verdict'],'uncertain')
+        submitted=next(parts for parts in provider.calls if parts[1]=='create-change-set')
+        self.assertIn('--use-previous-template',submitted)
+        self.assertNotIn('--template-body',submitted)
+
     def test_image_transition_retains_unowned_stack_parameters_and_discards_only_rejected_review(self):
         module = load(DEPLOY/'transition-qualified-release/script.py')
         digest, revision = 'sha256:' + 'a' * 64, 'a' * 40

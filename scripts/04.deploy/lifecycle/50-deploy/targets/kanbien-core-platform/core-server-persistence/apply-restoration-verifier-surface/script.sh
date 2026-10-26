@@ -3,7 +3,7 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.apply-restoration-verifier-surface
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-23"
 #   updated_on: "2026-10-26"
