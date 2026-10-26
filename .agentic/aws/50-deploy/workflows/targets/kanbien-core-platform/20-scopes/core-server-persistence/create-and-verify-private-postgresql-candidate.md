@@ -531,6 +531,32 @@ This update only composes the delivery path. It is not observability
 acceptance: the retained readiness-failure, alarm-notification, and recovery
 receipts plus fresh service/database/cleanup observations remain required.
 
+### Readiness Failure, Notification and Recovery Rehearsal
+
+Run the one bounded controlled-failure sequence only after the target-owned
+email subscription is confirmed. The controller first retains the completed
+private verifier proof and matching metric/alarm observation; an interruption
+therefore resumes from that receipt instead of revoking access again. The
+operator records confirmation timestamps but never email content, recipient,
+or notification payload. A confirmed subscription alone is not proof that the
+failure notification was received.
+
+```bash
+# 1. revoke only the runtime IAM identity; retain the unready verifier,
+#    readiness metric 0, and ALARM observation before returning.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation prepare-failure --json
+
+# 2. after the same ALARM notification has actually arrived, record only the
+#    two factual confirmation timestamps and the retained failure receipt.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation record-notification --failure-receipt "$failure_receipt" --subscription-confirmed-at "$subscription_confirmed_at" --operator-delivery-confirmed-at "$delivery_confirmed_at" --json
+
+# 3. restore the limited IAM identity, replace the server, prove ready/read,
+#    then retain readiness metric 1 and the recovered OK alarm observation.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation recover --failure-receipt "$failure_receipt" --notification-receipt "$notification_receipt" --json
+```
+
+The three receipts live under the target's `30-release-evidence/observability-receipts/` directory. The existing accepted record and historic proof receipts stay immutable. A future acceptance collection consumes the receipt map alongside its fresh current-state observations; elapsed ECS stopped-task retention never justifies another failure exercise.
+
 ### Readiness Metric Delivery Repair
 
 If the collector is already live and a reviewed declaration correction changes
@@ -626,7 +652,9 @@ the acceptance stage.
 After every run proof completes, retain a `deploy/acceptance-inputs/v1` manifest
 with `target: kanbien-core-platform`, `scope: core-server-persistence`, and
 `values` matching the route's typed inputs: the qualified candidate and rollback
-receipts, the fifteen-name `proof_receipts` mapping, original/successor task
+receipts, the fifteen-name `proof_receipts` mapping, the three-name
+`observability_receipts` mapping (`readiness-failure-observed`,
+`readiness-alarm-notified`, `readiness-recovery-observed`), original/successor task
 identities, exact recovery snapshot, successful retained source-record proof,
 and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
 Use paths to existing controller receipts. Missing ECS history is not permission

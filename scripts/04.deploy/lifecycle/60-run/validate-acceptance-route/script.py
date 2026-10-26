@@ -102,8 +102,14 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
                 selected = Path(value) if Path(value).is_absolute() else root / value
                 if not selected.is_file() or selected.is_symlink(): raise ValueError('acceptance-input-path-missing')
                 values[key] = str(selected)
-        elif kind == 'proof-map':
-            if not isinstance(value, dict) or set(value) != set(route.get('proofs', {})) or not all(isinstance(name, str) and isinstance(item, str) and item for name, item in value.items()): raise ValueError('acceptance-input-proof-map-invalid')
+        elif kind in {'proof-map', 'receipt-map'}:
+            expected = route.get('proofs', {}) if kind == 'proof-map' else spec.get('receipts')
+            if not isinstance(expected, (dict, list)):
+                raise ValueError('acceptance-input-receipt-map-invalid')
+            expected_names = set(expected)
+            if not expected_names or any(not isinstance(name, str) or not name for name in expected_names):
+                raise ValueError('acceptance-input-receipt-map-invalid')
+            if not isinstance(value, dict) or set(value) != expected_names or not all(isinstance(name, str) and isinstance(item, str) and item for name, item in value.items()): raise ValueError('acceptance-input-proof-map-invalid')
             for name, item in value.items():
                 selected = Path(item) if Path(item).is_absolute() else root / item
                 if not selected.is_file() or selected.is_symlink(): raise ValueError('acceptance-input-proof-path-missing')
@@ -139,9 +145,13 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if not isinstance(inputs, dict): gap('acceptance-route-inputs-invalid'); inputs = {}
     values = {}
     for key, spec in inputs.items():
-        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'optional-path', 'proof-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
+        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'optional-path', 'proof-map', 'receipt-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
             gap('acceptance-route-input-contract-invalid', key); continue
-        if spec['kind'] != 'proof-map':
+        if spec['kind'] == 'receipt-map':
+            receipt_names = spec.get('receipts')
+            if not isinstance(receipt_names, list) or not receipt_names or any(not isinstance(name, str) or not name for name in receipt_names) or len(set(receipt_names)) != len(receipt_names):
+                gap('acceptance-route-input-contract-invalid', key)
+        elif spec['kind'] != 'proof-map':
             if not isinstance(spec.get('example'), str) or not spec['example']: gap('acceptance-route-input-example-missing', key)
             else: values[key] = spec['example']
     inputs_schema = required_path(route.get('inputs_schema'), 'acceptance-route-input-schema-missing')

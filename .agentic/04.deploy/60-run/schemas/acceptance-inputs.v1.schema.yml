@@ -30,4 +30,6 @@ required_fields:
 values: exact keys and types from the owning acceptance route inputs; references only,
   never secret values. An optional-path is explicitly null when the route is
   using only same-image receipts; it must be a checked file reference when a
-  route declares a bounded cross-image proof-applicability record.
+  route declares a bounded cross-image proof-applicability record. A receipt-map
+  has only the declared receipt names and checked file references; the owning
+  collector validates each receipt's content and provenance.

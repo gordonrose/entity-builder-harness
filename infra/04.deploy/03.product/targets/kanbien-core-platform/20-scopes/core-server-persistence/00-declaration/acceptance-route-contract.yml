@@ -62,6 +62,13 @@ inputs:
     kind: optional-path
     owner: qualify-persistence-proof-applicability
     example: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-aaaaaaaaaaaa.json
+  observability_receipts:
+    kind: receipt-map
+    owner: rehearse-observability-readiness
+    receipts:
+    - readiness-failure-observed
+    - readiness-alarm-notified
+    - readiness-recovery-observed
 commands:
   qualify-proof-applicability:
     argv:
@@ -282,6 +289,19 @@ commands:
     owner: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
     effects:
     - aws-mutation
+  observability-readiness:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+    - --receipt
+    - '{candidate_receipt}'
+    - --operation
+    - prepare-failure
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+    effects:
+    - network
+    - writes-files
   rollback-update:
     argv:
     - bash

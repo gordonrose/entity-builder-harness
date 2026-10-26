@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T08:57:51Z
-latest_commit_sha: 749e869827d7a7e3affbf93899f60f43b5c0b6d7
-chat_duration: 1814302s (20:23:58:22)
+latest_commit_at_utc: 2026-10-26T09:59:19Z
+latest_commit_sha: e5bbda7c
+chat_duration: 1817990s (21:00:59:50)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -781,6 +781,14 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba. Its custody receipt and a restore-verifier-only applicability record are target evidence. The failed temporary restored database and its temporary policy are absent; do not retry that incarnation.
   Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
+
+
+- Summary: The live observability activation completed with both ECS services healthy, but CloudWatch could not find the readiness metric because the collector selector was over-escaped and the alarm dimensions omitted readiness. The corrected declaration/template is commit 6accf269; this commit adds a change-set-reviewed collector-only repair controller and regression coverage.
+  Durable evidence: Provider facts are in the kanbien-core-platform stack/ECS services; the governed repair controller, declaration validator, target smoke test, and AWS workflow are the durable repository evidence.
+
+
+- Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
+  Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
 
 ## Activity Log
 
@@ -3818,6 +3826,31 @@ Decision: Promoted private observability collector implementation
 
 Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
 
+
+### 2026-10-26T09:58:26Z - Context hygiene
+
+Summary: The live observability activation completed with both ECS services healthy, but CloudWatch could not find the readiness metric because the collector selector was over-escaped and the alarm dimensions omitted readiness. The corrected declaration/template is commit 6accf269; this commit adds a change-set-reviewed collector-only repair controller and regression coverage.
+
+Durable evidence: Provider facts are in the kanbien-core-platform stack/ECS services; the governed repair controller, declaration validator, target smoke test, and AWS workflow are the durable repository evidence.
+
+
+### 2026-10-26T09:59:19Z - Commit recorded
+
+Commit: `e5bbda7c`
+
+Message: fix(deploy): govern collector metric delivery repair
+
+Summary: Adds a healthy-baseline, exact-change-set controller mode for the corrected readiness metric configuration. It permits only collector task-definition and service modification, with regression tests and workflow guidance.
+
+ADR impact: No ADR: this is an implementation correction within the accepted observability deployment boundary.
+
+
+### 2026-10-26T10:44:12Z - Context hygiene
+
+Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
+
+Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4899,6 +4932,13 @@ Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clea
   Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
   ADR impact: No new ADR: this implements the established separate-identity collector decision.
 
+
+- Commit: `e5bbda7c`
+  Time UTC: 2026-10-26T09:59:19Z
+  Message: fix(deploy): govern collector metric delivery repair
+  Summary: Adds a healthy-baseline, exact-change-set controller mode for the corrected readiness metric configuration. It permits only collector task-definition and service modification, with regression tests and workflow guidance.
+  ADR impact: No ADR: this is an implementation correction within the accepted observability deployment boundary.
+
 ## Main Refresh Conflicts
 
 
@@ -4922,9 +4962,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T08:57:51Z
-Latest commit SHA: 749e869827d7a7e3affbf93899f60f43b5c0b6d7
-Chat duration: 1814302s (20:23:58:22)
+Latest commit at UTC: 2026-10-26T09:59:19Z
+Latest commit SHA: e5bbda7c
+Chat duration: 1817990s (21:00:59:50)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

@@ -58,7 +58,7 @@ class EvidenceFailure(Exception):
 
 def succession_module():
     """Load the one generic release-succession authority; do not fork it."""
-    path = ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+    path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
     spec = importlib.util.spec_from_file_location("release_succession", path)
     value = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -368,6 +368,15 @@ def receipt_module():
     return module
 
 
+def observability_receipt_module():
+    path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py"
+    specification = importlib.util.spec_from_file_location("persistence_observability_receipts", path)
+    module = importlib.util.module_from_spec(specification)
+    assert specification and specification.loader
+    specification.loader.exec_module(module)
+    return module
+
+
 def proof_applicability_module():
     path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py"
     specification = importlib.util.spec_from_file_location("persistence_proof_applicability", path)
@@ -463,6 +472,74 @@ def parse_proof_receipts(values: list[str], required: dict[str, tuple[str, str, 
             receipt_path = str(receipt_paths[name])
         observed[name] = {"name": name, "task_arn": task["arn"], "task_definition": task["definition"], "image_digest": task["image_digest"], "started_at": task["started_at"], "stopped_at": task["stopped_at"], "duration_seconds": duration, "result_code": task["result_code"], "receipt": receipt_path}
     return observed
+
+
+def parse_observability_receipts(values: list[str], expected_digest: str, receipt_root: Path | None = None) -> dict[str, dict[str, Any]]:
+    """Bind the alert-path receipts to genuine retained verifier proof.
+
+    Historical task lookup is intentionally unnecessary here: the referenced
+    verifier receipt captured task identity, immutable image and terminal
+    result when it completed.  Current service/database observations remain a
+    separate acceptance requirement below.
+    """
+    module = observability_receipt_module()
+    evidence_root = ROOT / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
+    root = receipt_root.resolve() if receipt_root is not None else evidence_root / "observability-receipts"
+    proof_root = evidence_root / "proof-receipts"
+    required = {"readiness-failure-observed", "readiness-alarm-notified", "readiness-recovery-observed"}
+    entries: dict[str, dict[str, Any]] = {}
+    locations: dict[str, Path] = {}
+    for value in values:
+        if value.count("=") != 1:
+            raise EvidenceFailure("acceptance-evidence-observability-receipt-argument-invalid")
+        name, raw_path = value.split("=", 1)
+        path = Path(raw_path).resolve()
+        if not name or name in entries or root not in path.parents:
+            raise EvidenceFailure("acceptance-evidence-observability-receipt-argument-invalid")
+        try:
+            item = module.validate(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+            raise EvidenceFailure("acceptance-evidence-observability-receipt-invalid") from error
+        if item["receipt_type"] != name or item["provenance"]["evidence_class"] != EVIDENCE_CLASS:
+            raise EvidenceFailure("acceptance-evidence-observability-receipt-mismatch")
+        entries[name], locations[name] = item, path
+    if set(entries) != required:
+        raise EvidenceFailure("acceptance-evidence-observability-receipt-set-invalid")
+
+    source_receipts: dict[str, dict[str, Any]] = {}
+    for name, item in entries.items():
+        source = item["source_proof"]
+        source_path = (ROOT / source["path"]).resolve()
+        if proof_root.resolve() not in source_path.parents:
+            raise EvidenceFailure("acceptance-evidence-observability-source-invalid")
+        try:
+            raw = source_path.read_bytes()
+            proof = receipt_module().validate(json.loads(raw.decode("utf-8")))
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+            raise EvidenceFailure("acceptance-evidence-observability-source-invalid") from error
+        if succession_module().sha256_bytes(raw) != source["sha256"] or proof["provenance"].get("evidence_class", "live") != EVIDENCE_CLASS or proof["proof_type"] != "verifier" or proof["task"]["arn"] != source["task_arn"] or proof["task"]["definition"] != source["task_definition"] or proof["task"]["image_digest"] != source["image_digest"] or proof["task"]["result_code"] != source["result_code"] or source["image_digest"] != expected_digest:
+            raise EvidenceFailure("acceptance-evidence-observability-source-invalid")
+        source_receipts[name] = proof
+
+    failure, notification, recovery = entries["readiness-failure-observed"], entries["readiness-alarm-notified"], entries["readiness-recovery-observed"]
+    if failure["source_proof"]["result_code"] != "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY" or notification["source_proof"] != failure["source_proof"] or recovery["source_proof"]["result_code"] != "KANBIEN_CORE_PERSISTENCE_HEALTHY":
+        raise EvidenceFailure("acceptance-evidence-observability-sequence-invalid")
+    if parsed_time(failure["observation"]["metric_observed_at"]) > parsed_time(failure["observation"]["alarm_state_updated_at"]) or parsed_time(notification["observation"]["operator_delivery_confirmed_at"]) < parsed_time(notification["observation"]["alarm_state_updated_at"]) or parsed_time(recovery["observation"]["metric_observed_at"]) < parsed_time(notification["observation"]["operator_delivery_confirmed_at"]) or parsed_time(recovery["observation"]["metric_observed_at"]) > parsed_time(recovery["observation"]["alarm_state_updated_at"]):
+        raise EvidenceFailure("acceptance-evidence-observability-sequence-invalid")
+    result: dict[str, dict[str, Any]] = {}
+    for name, item in entries.items():
+        try:
+            relative = str(locations[name].relative_to(ROOT))
+        except ValueError:
+            relative = str(locations[name])
+        result[name] = {
+            "receipt": relative,
+            "sha256": item["integrity"]["payload_sha256"],
+            "source_task": item["source_proof"]["task_arn"],
+            "source_image_digest": item["source_proof"]["image_digest"],
+            "alarm_state": item["observation"]["alarm_state"],
+        }
+    return result
 
 
 def stack_outputs() -> dict[str, str]:
@@ -703,7 +780,8 @@ def validate_record(record: object, *, evidence_class: str = "live") -> None:
             raise EvidenceFailure("accepted-release-rollback-compatibility-mismatch")
     proofs, database, replacement = provider.get("proofs"), provider.get("database"), provider.get("server_replacement")
     current = provider.get("current_service")
-    if not all(isinstance(value, dict) for value in (proofs, database, replacement, current)): raise EvidenceFailure("accepted-release-observation-invalid")
+    observability = provider.get("observability")
+    if not all(isinstance(value, dict) for value in (proofs, database, replacement, current, observability)): raise EvidenceFailure("accepted-release-observation-invalid")
     if database.get("database") != DATABASE or database.get("restore_cleanup") != "confirmed-absent" or SNAPSHOT.fullmatch(str(database.get("snapshot"))) is None: raise EvidenceFailure("accepted-release-recovery-observation-invalid")
     if current.get("service") != SERVICE or current.get("task_definition") != release.get("runtime_task_definition") or TASK_ARN.fullmatch(str(current.get("running_task"))) is None: raise EvidenceFailure("accepted-release-runtime-identity-invalid")
     arguments = []
@@ -712,6 +790,12 @@ def validate_record(record: object, *, evidence_class: str = "live") -> None:
         path = ROOT / item["receipt"]
         arguments.append(name + "=" + str(path))
     observed = parse_proof_receipts(arguments, required_proofs(release, rollback), contract_deadlines(), applicability=applicability)
+    try:
+        observability_arguments = [name + "=" + str(ROOT / item["receipt"]) for name, item in observability.items()]
+    except (TypeError, KeyError):
+        raise EvidenceFailure("accepted-release-observability-receipts-invalid") from None
+    if parse_observability_receipts(observability_arguments, release["image_digest"]) != observability:
+        raise EvidenceFailure("accepted-release-observability-receipts-invalid")
     original, successor = replacement.get("original_task"), replacement.get("replacement_task")
     if not isinstance(original, dict) or not isinstance(successor, dict): raise EvidenceFailure("accepted-release-replacement-invalid")
     values = retained_context(arguments, database["snapshot"], original.get("task_arn"), successor.get("task_arn"))
@@ -739,13 +823,13 @@ def parse_arguments(argv=None):
     parser.add_argument("--receipt", type=Path); parser.add_argument("--rollback-receipt", type=Path)
     parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[])
     parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot")
-    parser.add_argument("--record-proof-receipt", type=Path); parser.add_argument("--current-health-task"); parser.add_argument("--proof-applicability", type=Path)
+    parser.add_argument("--record-proof-receipt", type=Path); parser.add_argument("--current-health-task"); parser.add_argument("--proof-applicability", type=Path); parser.add_argument("--observability-receipt", action="append", default=[])
     parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true"); parser.add_argument("--validate-arguments", action="store_true")
     try: args, unknown = parser.parse_known_args(argv)
     except argparse.ArgumentError as error: raise EvidenceFailure("acceptance-evidence-arguments-invalid") from error
     if unknown: raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.inputs is not None:
-        if args.receipt or args.rollback_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.proof_applicability: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
+        if args.receipt or args.rollback_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.proof_applicability or args.observability_receipt: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
         if args.validate_arguments: return args
         try: values = route_module().input_values(args.inputs, route_contract(), root=ROOT)
         except ValueError as error: raise EvidenceFailure(str(error)) from error
@@ -754,10 +838,12 @@ def parse_arguments(argv=None):
         for name in ("server_replacement_original", "server_replacement_successor", "recovery_snapshot", "current_health_task"): setattr(args, name, values[name])
         args.record_proof_receipt = Path(values["record_proof_receipt"])
         if values.get("proof_applicability") is not None: args.proof_applicability = Path(values["proof_applicability"])
+        args.observability_receipt = [name + "=" + path for name, path in values["observability_receipts"].items()]
     if args.receipt is None or args.rollback_receipt is None or not all(isinstance(value, str) for value in (args.server_replacement_original, args.server_replacement_successor, args.recovery_snapshot, args.current_health_task)) or SNAPSHOT.fullmatch(args.recovery_snapshot) is None or args.record_proof_receipt is None:
         raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.proof: raise EvidenceFailure("acceptance-evidence-retained-proof-receipts-required")
     if not args.proof_receipt: raise EvidenceFailure("acceptance-evidence-proof-receipt-set-invalid")
+    if not args.observability_receipt: raise EvidenceFailure("acceptance-evidence-observability-receipt-set-invalid")
     return args
 
 
@@ -774,6 +860,7 @@ def main() -> int:
         required = required_proofs(candidate, rollback)
         applicability = proof_applicability(args.proof_applicability, candidate)
         observed = parse_proof_receipts(args.proof_receipt, required, contract_deadlines(), applicability=applicability)
+        observability = parse_observability_receipts(args.observability_receipt, candidate["image_digest"])
         values = retained_context(args.proof_receipt, args.recovery_snapshot, args.server_replacement_original, args.server_replacement_successor)
         sequence_valid(observed, values)
         # The retained source-record proof is checked before any current provider observation.
@@ -798,7 +885,7 @@ def main() -> int:
             try: relative = args.proof_applicability.resolve().relative_to(ROOT.resolve()).as_posix()
             except ValueError: raise EvidenceFailure("acceptance-evidence-proof-applicability-path-invalid") from None
             acceptance["proof_applicability"] = {"path": relative, "sha256": succession_module().sha256_bytes(args.proof_applicability.read_bytes())}
-        record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":acceptance,"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"server_replacement":{"original_task":original,"replacement_task":successor}}}
+        record = {"schema":"deploy/persistence-accepted-release/v1","target":TARGET,"scope":SCOPE,"status":"accepted" if EVIDENCE_CLASS == "live" else "rehearsed","evidence_class":EVIDENCE_CLASS,"release":{"source_revision":candidate["source_revision"],"image_digest":candidate["image_digest"],"image_repository":f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kanbien-core-platform/core-server","package_custody_reference":candidate["receipt_reference"],"runtime_stack":STACK,"service":SERVICE,"runtime_task_definition":outputs["CoreServerPersistenceTaskDefinitionArn"],"verifier_task_definition":outputs["CoreServerPersistenceVerifierTaskDefinitionArn"],"migration_task_definition":outputs["CoreServerPersistenceMigrationTaskDefinitionArn"],"restoration_verifier_task_definition":outputs["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]},"acceptance":acceptance,"provider_observation":{"current_service":current,"current_health":health,"database":database,"proofs":observed,"observability":observability,"server_replacement":{"original_task":original,"replacement_task":successor}}}
         validate_record(record, evidence_class=EVIDENCE_CLASS)
         if args.write:
             if RECORD.exists(): raise EvidenceFailure("acceptance-evidence-record-already-exists")
