@@ -2,7 +2,7 @@
 """Govern one fixed isolated native PostgreSQL restore proof."""
 from __future__ import annotations
 import argparse, hashlib, importlib.util, json, re, time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[8]
@@ -16,6 +16,13 @@ OPERATION_DIAGNOSTICS=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-plat
 # *pre-launch stabilization wait*, not an automatic retry of a verifier that
 # has already started or completed.
 RESTORATION_IDENTITY_STABILIZATION_SECONDS=60
+# RDS exports server logs asynchronously.  The controller makes one bounded
+# *read-only* observation for a completed verifier task and never retains the
+# raw events, log-stream names, endpoint, or any provider text.  A later
+# reconciliation may make the same read-only observation if delivery lagged.
+RESTORE_SERVER_LOG_LOOKBACK_SECONDS=30
+RESTORE_SERVER_LOG_TAIL_SECONDS=300
+RESTORE_SERVER_LOG_EVENT_LIMIT=100
 RESTORE_REJECTED_RESULTS={
  "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
@@ -48,13 +55,56 @@ def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up"} else 1
-def retain_verifier_rejection(operation, result):
- """Retain only the closed task result; raw task and database errors stay out."""
+def restored_postgresql_log_group(restored_database):
+ """Return the only RDS log group a restore diagnostic may observe."""
+ return f"/aws/rds/instance/{restored_database}/postgresql" if restored_database==restore_id_from_database(restored_database) else None
+
+def restore_id_from_database(restored_database):
+ """Validate the deterministic restored identifier without accepting free text."""
+ prefix="kanbien-core-platform-persistence-restore-"
+ if not isinstance(restored_database,str) or not restored_database.startswith(prefix): return None
+ suffix=restored_database[len(prefix):]
+ return restored_database if re.fullmatch(r"[0-9]{8}(?:-[a-z0-9]{1,8})?",suffix) else None
+
+def classify_restored_postgresql_log_events(events):
+ """Classify a bounded, in-memory RDS event list without exposing its text."""
+ if not isinstance(events,list): return "persistence-restore-server-log-observation-invalid"
+ for event in events[:RESTORE_SERVER_LOG_EVENT_LIMIT]:
+  message=event.get("message") if isinstance(event,dict) else None
+  if not isinstance(message,str): continue
+  text=message.lower()
+  if "password authentication failed" in text or "pam authentication failed" in text:
+   return "persistence-restore-server-log-authentication-rejected"
+  if "no pg_hba.conf entry" in text:
+   return "persistence-restore-server-log-client-authentication-policy-rejected"
+  if "role " in text and " does not exist" in text:
+   return "persistence-restore-server-log-role-state-invalid"
+ return "persistence-restore-server-log-no-classified-event"
+
+def collect_restored_postgresql_log_classification(m, restored_database, task):
+ """Read a target-owned RDS export only long enough to produce a closed code."""
+ group=restored_postgresql_log_group(restored_database)
+ started=parsed_time(task.get("startedAt")) if isinstance(task,dict) else None
+ stopped=parsed_time(task.get("stoppedAt")) if isinstance(task,dict) else None
+ if group is None or started is None or stopped is None or stopped<started:
+  return "persistence-restore-server-log-time-invalid","failed"
+ start=int((started-timedelta(seconds=RESTORE_SERVER_LOG_LOOKBACK_SECONDS)).timestamp()*1000)
+ end=int((stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)).timestamp()*1000)
+ ok,value,code=m.aws("logs","filter-log-events","--log-group-name",group,"--start-time",str(start),"--end-time",str(end),"--limit",str(RESTORE_SERVER_LOG_EVENT_LIMIT))
+ if not ok:
+  return ("persistence-restore-server-log-export-unavailable","unavailable") if code=="aws-resource-missing" else ("persistence-restore-server-log-observation-unavailable","failed")
+ events=value.get("events") if isinstance(value,dict) else None
+ return classify_restored_postgresql_log_events(events),"collected"
+
+def retain_verifier_rejection(m, operation, result, restored_database, task):
+ """Retain a closed task and optional server-log category; raw details stay out."""
  if not isinstance(operation,str) or not isinstance(result,str): return
  try:
   diagnostics=importlib.util.spec_from_file_location("deployment_operation_diagnostics",ROOT/"scripts/04.deploy/shared/deployment-operation-diagnostics.py")
   module=importlib.util.module_from_spec(diagnostics); assert diagnostics and diagnostics.loader; diagnostics.loader.exec_module(module)
-  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-restoration-verifier-rejected",exit_status=1,outcome="failed",classification="persistence-restore-verifier-rejected",evidence_reference=f"provider-operation:{operation}",next_decision="correct-and-create-new-operation")
+  classification,collection=collect_restored_postgresql_log_classification(m,restored_database,task)
+  actionable=collection=="collected" and classification not in {"persistence-restore-server-log-no-classified-event","persistence-restore-server-log-observation-invalid"}
+  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-restoration-verifier-rejected",exit_status=1,outcome="failed",classification=classification,evidence_reference=f"provider-operation:{operation}",next_decision="correct-and-create-new-operation" if actionable else "inspect-retained-evidence",collection_status=collection)
   module.write_report(OPERATION_DIAGNOSTICS/f"{operation}-rejected.json",report)
  except Exception:
   # The failure verdict remains authoritative. Never replace it with a report
@@ -280,7 +330,7 @@ def verify(m,sid,rid,observe_only=False):
   if duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
   evidence,result=terminal_result(m,arn)
   if exit_code!=0:
-   if evidence=="rejected" and result is not None: retain_verifier_rejection(started,result)
+   if evidence=="rejected" and result is not None: retain_verifier_rejection(m,started,result,rid,t)
    return emit("failed","persistence-restoration-verifier-rejected" if evidence=="rejected" else "persistence-restoration-verifier-completion-invalid",facts={**facts,**({"safe_result_code":result} if evidence=="rejected" and result is not None else {})})
   # CloudWatch delivery can lag a stopped task.  A clean exit without the
   # closed acceptance envelope is therefore pending evidence, not proof; the

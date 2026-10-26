@@ -27,6 +27,8 @@ import importlib.util
 import io
 import json
 import sys
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 spec = importlib.util.spec_from_file_location("isolated_restore", sys.argv[1])
 module = importlib.util.module_from_spec(spec)
@@ -85,6 +87,47 @@ second_restore = {"DbiResourceId": "db-RESTORE-B"}
 assert module.restore_run_identity(first_restore) != module.restore_run_identity(second_restore)
 assert module.restore_run_identity(first_restore).startswith("kanbien-restore-")
 assert module.restore_run_identity({}) is None
+
+# The restored copy must expose PostgreSQL logs, but the controller only ever
+# returns a closed category.  Raw provider/server messages (including a
+# synthetic credential canary) cannot enter its report or stdout.
+assert module.restored_postgresql_log_group("kanbien-core-platform-persistence-restore-20261025-r2") == "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/postgresql"
+assert module.restored_postgresql_log_group("unrelated-instance") is None
+canary = "password=synthetic-not-for-output"
+assert module.classify_restored_postgresql_log_events([{"message": f'FATAL: password authentication failed for user "runtime" {canary}'}]) == "persistence-restore-server-log-authentication-rejected"
+assert module.classify_restored_postgresql_log_events([{"message": "FATAL: no pg_hba.conf entry"}]) == "persistence-restore-server-log-client-authentication-policy-rejected"
+assert module.classify_restored_postgresql_log_events([{"message": 'FATAL: role "runtime" does not exist'}]) == "persistence-restore-server-log-role-state-invalid"
+assert module.classify_restored_postgresql_log_events([{"message": "unexpected provider detail " + canary}]) == "persistence-restore-server-log-no-classified-event"
+assert module.classify_restored_postgresql_log_events({}) == "persistence-restore-server-log-observation-invalid"
+
+class RdsLogFixture:
+    def __init__(self, response): self.response = response; self.calls = []
+    def aws(self, *args):
+        self.calls.append(args)
+        return self.response
+
+window_task = {"startedAt": "2026-10-26T02:00:00Z", "stoppedAt": "2026-10-26T02:00:11Z"}
+fixture = RdsLogFixture((True, {"events": [{"message": "PAM authentication failed " + canary}]}, "ok"))
+classification, collection = module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+assert (classification, collection) == ("persistence-restore-server-log-authentication-rejected", "collected")
+assert fixture.calls[0][:2] == ("logs", "filter-log-events") and canary not in json.dumps({"classification": classification, "collection": collection})
+missing_export = RdsLogFixture((False, None, "aws-resource-missing"))
+assert module.collect_restored_postgresql_log_classification(missing_export, "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-export-unavailable", "unavailable")
+assert module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", {"startedAt": "not-a-time", "stoppedAt": "2026-10-26T02:00:11Z"}) == ("persistence-restore-server-log-time-invalid", "failed")
+original_diagnostics = module.OPERATION_DIAGNOSTICS
+with TemporaryDirectory() as temporary:
+    module.OPERATION_DIAGNOSTICS = Path(temporary)
+    module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    retained = json.loads((Path(temporary) / "kanbien-restore-diagnostic-test-rejected.json").read_text())
+    assert retained["classification"] == {"code": "persistence-restore-server-log-authentication-rejected"}
+    assert retained["collection"] == {"status": "collected"}
+    assert retained["next_action"] == {"decision": "correct-and-create-new-operation"}
+    assert canary not in json.dumps(retained)
+    module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    unavailable = json.loads((Path(temporary) / "kanbien-restore-diagnostic-missing-export-rejected.json").read_text())
+    assert unavailable["collection"] == {"status": "unavailable"}
+    assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
+module.OPERATION_DIAGNOSTICS = original_diagnostics
 
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
 # restored instance.  A first verifier launch therefore waits once, rechecks
