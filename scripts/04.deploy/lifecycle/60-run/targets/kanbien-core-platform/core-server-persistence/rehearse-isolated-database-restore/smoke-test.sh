@@ -92,6 +92,10 @@ assert module.restore_run_identity({}) is None
 # returns a closed category.  Raw provider/server messages (including a
 # synthetic credential canary) cannot enter its report or stdout.
 assert module.restored_postgresql_log_group("kanbien-core-platform-persistence-restore-20261025-r2") == "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/postgresql"
+assert module.restored_database_log_groups("kanbien-core-platform-persistence-restore-20261025-r2") == (
+    "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/postgresql",
+    "/aws/rds/instance/kanbien-core-platform-persistence-restore-20261025-r2/iam-db-auth-error",
+)
 assert module.restored_postgresql_log_group("unrelated-instance") is None
 canary = "password=synthetic-not-for-output"
 assert module.classify_restored_postgresql_log_events([{"message": f'FATAL: password authentication failed for user "runtime" {canary}'}]) == "persistence-restore-server-log-authentication-rejected"
@@ -113,8 +117,26 @@ fixture = RdsLogFixture((True, {"events": [{"message": "PAM authentication faile
 classification, collection = module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
 assert (classification, collection) == ("persistence-restore-server-log-authentication-rejected", "collected")
 assert fixture.calls[0][:2] == ("logs", "filter-log-events") and canary not in json.dumps({"classification": classification, "collection": collection})
+class IamRdsLogFixture:
+    def aws(self, *args):
+        group = args[args.index("--log-group-name") + 1]
+        message = "ordinary PostgreSQL event" if group.endswith("/postgresql") else "Failed to authorize the connection request because the caller is not authorized to perform `rds-db:connect` " + canary
+        return True, {"events": [{"message": message}]}, "ok"
+
+assert module.collect_restored_postgresql_log_classification(IamRdsLogFixture(), "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-iam-authorization-rejected", "collected")
 missing_export = RdsLogFixture((False, None, "aws-resource-missing"))
 assert module.collect_restored_postgresql_log_classification(missing_export, "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-export-unavailable", "unavailable")
+class PartialRdsLogFixture:
+    def aws(self, *args):
+        group = args[args.index("--log-group-name") + 1]
+        return (True, {"events": []}, "ok") if group.endswith("/postgresql") else (False, None, "aws-resource-missing")
+
+assert module.collect_restored_postgresql_log_classification(PartialRdsLogFixture(), "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ("persistence-restore-server-log-collection-incomplete", "partial")
+recent = module.datetime.now(module.timezone.utc)
+recent_task = {"startedAt": (recent - module.timedelta(seconds=5)).isoformat().replace("+00:00", "Z"), "stoppedAt": recent.isoformat().replace("+00:00", "Z")}
+pending_delivery = RdsLogFixture((True, {"events": []}, "ok"))
+assert module.collect_restored_postgresql_log_classification(pending_delivery, "kanbien-core-platform-persistence-restore-20261025-r2", recent_task) == ("persistence-restore-server-log-delivery-pending", "pending")
+assert pending_delivery.calls == []
 assert module.collect_restored_postgresql_log_classification(fixture, "kanbien-core-platform-persistence-restore-20261025-r2", {"startedAt": "not-a-time", "stoppedAt": "2026-10-26T02:00:11Z"}) == ("persistence-restore-server-log-time-invalid", "failed")
 original_diagnostics = module.OPERATION_DIAGNOSTICS
 with TemporaryDirectory() as temporary:
@@ -129,6 +151,12 @@ with TemporaryDirectory() as temporary:
     unavailable = json.loads((Path(temporary) / "kanbien-restore-diagnostic-missing-export-rejected.json").read_text())
     assert unavailable["collection"] == {"status": "unavailable"}
     assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
+    assert unavailable["original_failure"] == {"code": "persistence-restoration-verifier-rejected", "exit_status": 1}
+    assert module.retain_verifier_rejection(PartialRdsLogFixture(), "kanbien-restore-diagnostic-partial-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
+    partial = json.loads((Path(temporary) / "kanbien-restore-diagnostic-partial-export-rejected.json").read_text())
+    assert partial["collection"] == {"status": "partial"}
+    assert partial["next_action"] == {"decision": "inspect-retained-evidence"}
+    assert partial["original_failure"] == {"code": "persistence-restoration-verifier-rejected", "exit_status": 1}
     assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-follow-up", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task, "rejected-reobservation") == (True, "ok")
     assert (Path(temporary) / "kanbien-restore-diagnostic-follow-up-rejected-reobservation.json").is_file()
 module.OPERATION_DIAGNOSTICS = original_diagnostics

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -44,7 +44,11 @@ DECISIONS = {
     "stop-and-escalate",
     "retry-read-only-observation",
 }
-COLLECTION = {"collected", "unavailable", "failed"}
+# Collection state describes the diagnostic observation, never the original
+# operation outcome. `pending` means a provider's declared delivery window has
+# not elapsed; `partial` means some required bounded sources were observed but
+# at least one was unavailable. Both preserve the original failure.
+COLLECTION = {"collected", "unavailable", "failed", "pending", "partial"}
 FACT_KEYS = {
     "artifact_identity", "change_set_id", "provider_status", "property_path",
     "resource_logical_id", "resource_type",

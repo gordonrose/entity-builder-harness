@@ -60,9 +60,15 @@ def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up","diagnosed"} else 1
+def restored_database_log_groups(restored_database):
+ """Return the fixed, target-owned RDS exports a restore diagnosis may read."""
+ if restored_database!=restore_id_from_database(restored_database): return ()
+ return tuple(f"/aws/rds/instance/{restored_database}/{export}" for export in RESTORE_SERVER_LOG_EXPORTS)
+
 def restored_postgresql_log_group(restored_database):
- """Return the only RDS log group a restore diagnostic may observe."""
- return f"/aws/rds/instance/{restored_database}/postgresql" if restored_database==restore_id_from_database(restored_database) else None
+ """Compatibility helper for the ordinary PostgreSQL export's fixed path."""
+ groups=restored_database_log_groups(restored_database)
+ return groups[0] if groups else None
 
 def restore_id_from_database(restored_database):
  """Validate the deterministic restored identifier without accepting free text."""
@@ -95,19 +101,36 @@ def classify_restored_postgresql_log_events(events):
  return "persistence-restore-server-log-no-classified-event"
 
 def collect_restored_postgresql_log_classification(m, restored_database, task):
- """Read a target-owned RDS export only long enough to produce a closed code."""
- group=restored_postgresql_log_group(restored_database)
+ """Read fixed RDS exports only long enough to produce a closed safe code."""
+ groups=restored_database_log_groups(restored_database)
  started=parsed_time(task.get("startedAt")) if isinstance(task,dict) else None
  stopped=parsed_time(task.get("stoppedAt")) if isinstance(task,dict) else None
- if group is None or started is None or stopped is None or stopped<started:
+ if not groups or started is None or stopped is None or stopped<started:
   return "persistence-restore-server-log-time-invalid","failed"
+ # The RDS exports are asynchronous.  A query window extending into the
+ # future is not evidence that no event exists, so retain an explicit pending
+ # collection state until the declared delivery tail has elapsed.
+ if datetime.now(timezone.utc)<stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS):
+  return "persistence-restore-server-log-delivery-pending","pending"
  start=int((started-timedelta(seconds=RESTORE_SERVER_LOG_LOOKBACK_SECONDS)).timestamp()*1000)
  end=int((stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)).timestamp()*1000)
- ok,value,code=m.aws("logs","filter-log-events","--log-group-name",group,"--start-time",str(start),"--end-time",str(end),"--limit",str(RESTORE_SERVER_LOG_EVENT_LIMIT))
- if not ok:
-  return ("persistence-restore-server-log-export-unavailable","unavailable") if code=="aws-resource-missing" else ("persistence-restore-server-log-observation-unavailable","failed")
- events=value.get("events") if isinstance(value,dict) else None
- return classify_restored_postgresql_log_events(events),"collected"
+ collected=False
+ missing=0
+ for group in groups:
+  ok,value,code=m.aws("logs","filter-log-events","--log-group-name",group,"--start-time",str(start),"--end-time",str(end),"--limit",str(RESTORE_SERVER_LOG_EVENT_LIMIT))
+  if not ok:
+   if code=="aws-resource-missing":
+    missing+=1
+    continue
+   return "persistence-restore-server-log-observation-unavailable","failed"
+  events=value.get("events") if isinstance(value,dict) else None
+  classification=classify_restored_postgresql_log_events(events)
+  if classification!="persistence-restore-server-log-no-classified-event": return classification,"collected"
+  collected=True
+ if collected and missing:return "persistence-restore-server-log-collection-incomplete","partial"
+ if collected:return "persistence-restore-server-log-no-classified-event","collected"
+ if missing==len(groups): return "persistence-restore-server-log-export-unavailable","unavailable"
+ return "persistence-restore-server-log-observation-unavailable","failed"
 
 def retain_verifier_rejection(m, operation, result, restored_database, task, artifact="rejected"):
  """Retain a closed task and optional server-log category; raw details stay out."""

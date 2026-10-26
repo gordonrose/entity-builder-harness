@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -52,6 +52,8 @@ allowed_collection_statuses:
   - collected
   - unavailable
   - failed
+  - pending
+  - partial
 allowed_fact_fields:
   - artifact_identity
   - change_set_id

@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -56,6 +56,8 @@ def fails(report):
 
 
 diagnostics.validate(valid())
+diagnostics.validate(valid(collection={"status": "pending"}))
+diagnostics.validate(valid(collection={"status": "partial"}))
 bad = valid(); bad["facts"]["provider_message"] = "synthetic provider response"; fails(bad)
 bad = valid(); bad["facts"]["resource_logical_id"] = "password=synthetic-only"; fails(bad)
 bad = valid(); bad["operation_outcome"] = "unknown"; bad["next_action"] = {"decision": "correct-and-create-new-operation"}; fails(bad)

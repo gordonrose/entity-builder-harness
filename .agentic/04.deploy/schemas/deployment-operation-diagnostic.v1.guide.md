@@ -4,7 +4,7 @@ id: deploy.schema.deployment-operation-diagnostic.v1.guide
 version: 1
 status: draft
 created_on: "2026-10-25"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.diagnostics
 disciplines: [security, sre, agentic]
@@ -33,8 +33,11 @@ only `observe-current-operation` or `inspect-retained-evidence`.
 receipt. It is opaque: it may identify a CI artifact, a receipt path, or a
 provider operation identity, but must not be a URL, endpoint, account number,
 or copied provider response. `collection` says whether bounded diagnosis was
-available. A failure collecting diagnostics never changes the original failure
-or exit status.
+available. `pending` means the source's declared delivery window has not
+elapsed; `partial` means some required bounded sources were observed but at
+least one was unavailable. They are not clean observations and require the
+declared follow-up decision. A failure or delay collecting diagnostics never
+changes the original failure or exit status.
 
 `facts` is optional and intentionally small. Only the exact fields listed in
 the schema may be supplied. Resource logical identifiers, resource types,
