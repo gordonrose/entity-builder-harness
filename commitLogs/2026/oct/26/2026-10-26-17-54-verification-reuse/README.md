@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T21:25:36Z
-latest_commit_sha: 839f1cfe
-chat_duration: 12671s (00:03:31:11)
+latest_commit_at_utc: 2026-10-26T21:28:46Z
+latest_commit_sha: 51066af1
+chat_duration: 12861s (00:03:34:21)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -314,6 +314,17 @@ Summary: Root preservation complete under explicit user direction: c5320a73 cont
 
 Durable evidence: Reports: /tmp/root-preservation-commit-gates.log (baseline hook failure retained), /tmp/root-hook-correction-test.log, /tmp/verification-root-preserved-combined.json, /tmp/verification-root-fixture-combined.json, /tmp/verification-root-final-apply.log. Private matching receipts transferred before temporary preflight cleanup; no push or cloud operations.
 
+
+### 2026-10-26T21:28:46Z - Commit recorded
+
+Commit: `51066af1`
+
+Message: fix(deploy): bind retained proof to exact qualification helper delta
+
+Summary: User-directed root preservation of four additional concurrently authored files. Reviewed exact test-only IAM delta matcher, retained package/proof records, focused applicability regressions and staged metadata checks passed. Root clean; incoming source changes require affected integration refresh.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 
@@ -411,6 +422,13 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Summary: Conflict audited; root staged preparation/comments/version and all stronger rejection assertions retained. Focused hook passed. Final combined integration passed:68 selected,2 executed,49 reused,17 external-stage deferred,352.919s. Apply transfers matching receipts before temporary cleanup.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `51066af1`
+  Time UTC: 2026-10-26T21:28:46Z
+  Message: fix(deploy): bind retained proof to exact qualification helper delta
+  Summary: User-directed root preservation of four additional concurrently authored files. Reviewed exact test-only IAM delta matcher, retained package/proof records, focused applicability regressions and staged metadata checks passed. Root clean; incoming source changes require affected integration refresh.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -445,9 +463,9 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC: 2026-10-26T21:25:36Z
-Latest commit SHA: 839f1cfe
-Chat duration: 12671s (00:03:31:11)
+Latest commit at UTC: 2026-10-26T21:28:46Z
+Latest commit SHA: 51066af1
+Chat duration: 12861s (00:03:34:21)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
