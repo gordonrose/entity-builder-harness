@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-10-26T17:54:25Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 3521025
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-26T19:11:44Z
+latest_commit_sha: HEAD
+chat_duration: 4639s (00:01:17:19)
+estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -116,6 +116,17 @@ Raised: Restored catalogue coverage and resolved independent-review findings
 
 Resolution: Latest main omitted 49 previously accepted check definitions. Restored them without altering provider permissions; audited consumed source/runtime inputs, removed fixture runtime alias leakage, and bound nested configuration validation helpers. Final prepared-input verification follows.
 
+
+### 2026-10-26T19:11:44Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: refactor(verification): separate preparation and integration proof
+
+Summary: Implemented prepared-input receipts, explicit consumed-input contracts, commit/integration scheduling and trusted refresh reuse. Independent review resolved material findings. Checkpoint gate passed: selected57, executed31, deferred26, 360.571s; broader final verification remains pending on the combined latest-main tree.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 
@@ -135,7 +146,13 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T19:11:44Z
+  Message: refactor(verification): separate preparation and integration proof
+  Summary: Implemented prepared-input receipts, explicit consumed-input contracts, commit/integration scheduling and trusted refresh reuse. Independent review resolved material findings. Checkpoint gate passed: selected57, executed31, deferred26, 360.571s; broader final verification remains pending on the combined latest-main tree.
+  ADR impact: covered by session ADR disposition
 
 ## Main Refresh Conflicts
 
@@ -150,12 +167,12 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-26T19:11:44Z
+Latest commit SHA: HEAD
+Chat duration: 4639s (00:01:17:19)
+Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
