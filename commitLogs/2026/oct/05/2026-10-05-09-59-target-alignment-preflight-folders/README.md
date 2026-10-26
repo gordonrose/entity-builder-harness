@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:47:00Z
-latest_commit_sha: HEAD
-chat_duration: 1831651s (21:04:47:31)
+latest_commit_at_utc: 2026-10-26T13:47:28Z
+latest_commit_sha: e865479d
+chat_duration: 1831679s (21:04:47:59)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3906,6 +3906,17 @@ Summary: Retained the qualified package receipt and made image-only transitions 
 
 ADR impact: No ADR change; strengthens existing governed deployment recovery.
 
+
+### 2026-10-26T13:47:28Z - Commit recorded
+
+Commit: `e865479d`
+
+Message: fix(deploy): preserve target controls on image update
+
+Summary: Corrects the prior symbolic commit reference: retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+
+ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5022,6 +5033,13 @@ ADR impact: No ADR change; strengthens existing governed deployment recovery.
   Summary: Retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
   ADR impact: No ADR change; strengthens existing governed deployment recovery.
 
+
+- Commit: `e865479d`
+  Time UTC: 2026-10-26T13:47:28Z
+  Message: fix(deploy): preserve target controls on image update
+  Summary: Corrects the prior symbolic commit reference: retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+  ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
 ## Main Refresh Conflicts
 
 
@@ -5045,9 +5063,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:47:00Z
-Latest commit SHA: HEAD
-Chat duration: 1831651s (21:04:47:31)
+Latest commit at UTC: 2026-10-26T13:47:28Z
+Latest commit SHA: e865479d
+Chat duration: 1831679s (21:04:47:59)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
