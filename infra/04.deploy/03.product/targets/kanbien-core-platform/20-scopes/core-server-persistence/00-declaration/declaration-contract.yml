@@ -186,6 +186,7 @@ observability_mvp:
         kind: gauge
         unit: count
         dimensions: [target, scope, workload, dependency, readiness]
+        published_dimensions: [target, scope, workload, dependency]
         cardinality_limit: 16
         meaning: 1-when-periodic-server-postgresql-readiness-observation-is-ready-0-otherwise
     rds_native:

@@ -679,8 +679,8 @@ Resources:
                     log_stream_name: core-server-persistence-readiness-metrics
                     dimension_rollup_option: NoDimensionRollup
                     metric_declarations:
-                      - dimensions: [[target, scope, workload, dependency, readiness]]
-                        metric_name_selectors: ['^kanbien\\.core_server\\.postgresql_readiness$']
+                      - dimensions: [[target, scope, workload, dependency]]
+                        metric_name_selectors: ['^kanbien\.core_server\.postgresql_readiness$']
                 service:
                   extensions: [health_check]
                   telemetry:
