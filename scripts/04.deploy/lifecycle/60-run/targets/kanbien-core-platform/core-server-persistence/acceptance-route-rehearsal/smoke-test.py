@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -113,11 +113,14 @@ def full_route():
         shutil.copytree(ROOT/'.agentic/04.deploy/60-run/schemas',root/'.agentic/04.deploy/60-run/schemas')
         shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
         image_contract=Path(yaml.safe_load((root/CONTRACT).read_text())['program']['image_contract']);(root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
-        shutil.rmtree(root/SCOPE/'30-release-evidence/proof-receipts');(root/RECORD).unlink()
+        evidence_root=root/SCOPE/'30-release-evidence'
+        historical_record=(root/RECORD).read_bytes()
+        initial_candidates={path:path.read_bytes() for path in (evidence_root/'release-candidates').glob('*.yml')}
+        shutil.rmtree(evidence_root/'proof-receipts')
         facts=fixtures.capture_proofs(root)
         assert len(facts['proof_receipts'])==15
         passed('actual controller observations retain all 15 simulated proof receipts')
-        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_CLASS='simulated'
+        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_ROOT=evidence_root;collector.EVIDENCE_CLASS='simulated'
         now=datetime.now(timezone.utc);stamp=lambda value:value.isoformat().replace('+00:00','Z')
         runnable='sha256:'+'c'*64;image='337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+facts['candidate_digest']
         current=ARN+'f'*32;health=ARN+'e'*32
@@ -136,7 +139,10 @@ def full_route():
         notified=observability_module.persist(observability_module.make(receipt_type='readiness-alarm-notified',source_proof=failure_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'ALARM','alarm_state_updated_at':failure_alarm,'subscription_confirmed_at':stamp(now-timedelta(minutes=6)),'operator_delivery_confirmed_at':delivery},collected_at=delivery,evidence_class='simulated'))
         recovered=observability_module.persist(observability_module.make(receipt_type='readiness-recovery-observed',source_proof=recovery_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'OK','alarm_state_updated_at':recovery_alarm,'metric_name':observability_module.METRIC,'dimensions':observability_module.DIMENSIONS,'metric_value':1,'metric_observed_at':recovery_metric},collected_at=recovery_alarm,evidence_class='simulated'))
         observability_receipts={'readiness-failure-observed':str(failure),'readiness-alarm-notified':str(notified),'readiness-recovery-observed':str(recovered)}
-        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
+        # Package custody is acceptance evidence too.  Keep the simulated
+        # files in the same durable evidence root as production receipts so
+        # the generic successor validator exercises its allowlisted-root rule.
+        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
         manifest=root/'inputs.yml';manifest.write_text(yaml.safe_dump({'schema':'deploy/acceptance-inputs/v1','target':'kanbien-core-platform','scope':'core-server-persistence','values':values}))
         health_task={'taskArn':health,'taskDefinitionArn':definitions['CoreServerPersistenceVerifierTaskDefinitionArn'],'lastStatus':'STOPPED','startedAt':stamp(now-timedelta(seconds=60)),'stoppedAt':stamp(now-timedelta(seconds=40)),'containers':[{'name':'private-persistence-verifier','exitCode':0,'image':image,'imageDigest':runnable}],'overrides':{'containerOverrides':[{'name':'private-persistence-verifier','environment':[{'name':'PERSISTENCE_VERIFIER_MODE','value':'health-ready'},{'name':'PERSISTENCE_ACCEPTANCE_RECORD_ID','value':'core-persistence-acceptance-v1'},{'name':'PERSISTENCE_ACCEPTANCE_FACT','value':'kanbien-core-persistence-acceptance-v1'}]}]}}
         observations=[];state={'healthy':True,'cleanup':True}
@@ -166,74 +172,40 @@ def full_route():
         with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
             parsed_observability = collector.parse_observability_receipts([name+'='+path for name,path in observability_receipts.items()], facts['candidate_digest'])
             assert set(parsed_observability) == set(observability_receipts)
-            state['healthy']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-service-task-invalid'}] and not collector.RECORD.exists(),report
-            state['healthy']=True;state['cleanup']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-restored-database-not-cleaned-up'}] and not collector.RECORD.exists(),report
-            state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and not collector.RECORD.exists(),report;health_task['startedAt'],health_task['stoppedAt']=original
-            passed('fresh unhealthy, stale readiness and remaining restore block writes')
-            code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code==0 and report['verdict']=='recorded',report
-        record=yaml.safe_load(collector.RECORD.read_text());assert record['status']=='rehearsed' and record['evidence_class']=='simulated'
+            unchanged=lambda:{path:path.read_bytes() for path in (evidence_root/'release-candidates').glob('*.yml')}==initial_candidates
+            state['healthy']=False;code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-service-task-invalid'}] and unchanged(),report
+            state['healthy']=True;state['cleanup']=False;code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-restored-database-not-cleaned-up'}] and unchanged(),report
+            state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and unchanged(),report;health_task['startedAt'],health_task['stoppedAt']=original
+            passed('fresh unhealthy, stale readiness and remaining restore block candidate publication')
+            code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code==0 and report['verdict']=='recorded' and report['facts']['candidate_record'],report
+            candidate_path=root/report['facts']['candidate_record'];candidate_bytes=candidate_path.read_bytes()
+            candidate_value=yaml.safe_load(candidate_bytes)
+            assert {'candidate-package','rollback-package','record-source','observability-readiness-failure-observed','observability-readiness-alarm-notified','observability-readiness-recovery-observed'} <= set(candidate_value['proof_set'])
+            succession=load(Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.py'),'retained_evidence_succession')
+            protected=evidence_root/candidate_value['proof_set']['observability-readiness-recovery-observed']['path'];original_protected=protected.read_bytes()
+            protected.write_bytes(b'{"fabricated":true}')
+            try:
+                succession.candidate_identity(candidate_value,evidence_root)
+            except succession.SuccessionFailure: pass
+            else: raise AssertionError('modified retained observability receipt accepted')
+            protected.write_bytes(original_protected)
+            code,resumed=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code==0 and resumed['facts']==report['facts'] and candidate_path.read_bytes()==candidate_bytes,resumed
+        assert (root/RECORD).read_bytes()==historical_record
         assert {parts[-1] for parts in observations if parts[:2]==('ecs','describe-tasks')}=={health,current}
-        passed('complete collector writes temporary rehearsal using zero historical task queries')
-        validator=RUN/'validate-accepted-release/script.sh'
-        cli(validator,'--record',collector.RECORD,'--root',root,'--json',ok=False)
-        cli(validator,'--record',collector.RECORD,'--rehearsal-root',root,'--json')
-        passed('production rejects simulation; explicit temporary rehearsal validates retained chain')
-        with patch.object(collector,'RECORD',ROOT/RECORD):
-            try:collector.write_record(record)
-            except collector.EvidenceFailure as error:assert str(error)=='acceptance-evidence-simulation-production-write-forbidden'
-            else:raise AssertionError('simulation written to canonical evidence')
+        passed('complete collector publishes an idempotent successor candidate using zero historical task queries and preserves history')
+        succession=load(Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.py'),'rehearsal_succession')
+        candidate,raw=succession.document(candidate_path);target,scope,_,identity=succession.candidate_identity(candidate,evidence_root)
+        current_reference=succession.current(evidence_root);assert current_reference is not None
+        verdict,release_id=succession.promote(evidence_root,target=target,scope=scope,identity=identity,source_path=candidate_path,source_digest=succession.sha256_bytes(raw),expected_predecessor=current_reference['release_id'],legacy=False)
+        assert verdict=='promoted' and release_id==report['facts']['release_id'] and succession.current(evidence_root)['release_id']==release_id
+        passed('generic succession validates and atomically promotes the collector candidate after preserving the predecessor')
         receipts=collector.receipt_module();receipt=json.loads(Path(facts['record_proof_receipt']).read_text())
         for field,value in [('proof_type',[]),('operation',[]),('operation','../escape')]:
             malformed=copy.deepcopy(receipt);malformed[field]=value
             try:receipts.validate(malformed)
             except receipts.ReceiptError:pass
             else:raise AssertionError('malformed imported receipt accepted')
-        passed('simulation cannot write canonical evidence and malformed receipts fail safely')
-        corrupted=copy.deepcopy(record);corrupted['provider_observation']['database']['snapshot']=facts['recovery_snapshot']+'x'
-        try:collector.validate_record(corrupted,evidence_class='simulated')
-        except collector.EvidenceFailure:pass
-        else:raise AssertionError('mismatched recovery context accepted')
-        passed('record validation rejects cross-proof snapshot mismatch')
-        # Exercise actual promotion and downstream validators in the temporary target.
-        index=root/TARGET/'20-scopes/scope-index.yml';value=yaml.safe_load(index.read_text())
-        for entry in value['scopes']:
-            if entry['id']=='core-server-persistence':entry['lifecycle']='candidate'
-            else:entry['lifecycle']='active';entry.pop('successor',None)
-        index.write_text(yaml.safe_dump(value,sort_keys=False))
-        bootstrap=root/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml';record_b=yaml.safe_load(bootstrap.read_text());record_b.update(status='rehearsed',evidence_class='simulated');bootstrap.write_text(yaml.safe_dump(record_b))
-        for field in ('last_rehearsal','last_restoration_rehearsal'):
-            retained=bootstrap.parent/record_b['acceptance'][field];item=yaml.safe_load(retained.read_text());item['evidence_class']='simulated';retained.write_text(yaml.safe_dump(item))
-        promotion=load(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.py'),'promotion_test');route_api=promotion.route_module();route,path=route_api.load_route(root/CONTRACT,root);route['commands'][route['accepted_record']['validator']]['effects']=['aws-mutation']
-        with patch.object(route_api,'load_route',return_value=(route,path)),patch.object(promotion,'route_module',return_value=route_api),patch('subprocess.run',side_effect=AssertionError('untrusted validator executed')):
-            try:promotion.promote(root/CONTRACT,root,True,True)
-            except ValueError as error:assert str(error)=='scope-promotion-validator-owner-or-effects-invalid'
-            else:raise AssertionError('promotion accepted mutating validator')
-        passed('direct promotion rejects a mutating record validator before invocation')
-        original_record=collector.RECORD.read_text();foreign=copy.deepcopy(record);foreign['scope']='bootstrap-runtime';collector.RECORD.write_text(yaml.safe_dump(foreign))
-        with patch('subprocess.run',side_effect=AssertionError('foreign record invoked validator')):
-            try:promotion.promote(root/CONTRACT,root,True,True)
-            except ValueError as error:assert str(error)=='scope-promotion-record-subject-invalid'
-            else:raise AssertionError('foreign record promoted scope')
-            lifecycle=load(Path('scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.py'),'lifecycle_identity_test')
-            assert lifecycle.acceptance_codes(yaml.safe_load((root/CONTRACT).read_text()),root/CONTRACT,root)==['scope-lifecycle-accepted-release-identity-invalid']
-        collector.RECORD.write_text(original_record)
-        with tempfile.TemporaryDirectory(prefix='acceptance-outside-root-') as sibling:
-            with patch('subprocess.run',side_effect=AssertionError('outside root invoked validator')):
-                try:promotion.promote(root/CONTRACT,Path(sibling),True,True)
-                except ValueError as error:assert str(error)=='scope-promotion-path-outside-root'
-                else:raise AssertionError('outside-root index promoted')
-        index_before=index.read_text();invalid=copy.deepcopy(value);invalid['scopes'].append(copy.deepcopy(invalid['scopes'][1]));index.write_text(yaml.safe_dump(invalid));invalid_bytes=index.read_bytes()
-        try:promotion.promote(root/CONTRACT,root,True,True)
-        except ValueError as error:assert str(error)=='scope-promotion-inventory-invalid',error
-        else:raise AssertionError('duplicate scope promoted')
-        assert index.read_bytes()==invalid_bytes
-        index.write_text(index_before)
-        passed('promotion and downstream reject foreign evidence, outside roots and invalid current ownership before writes')
-        cli(Path('scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh'),'--scope-contract',root/CONTRACT,'--rehearsal-root',root,'--write','--json')
-        promoted=yaml.safe_load(index.read_text());assert [item['lifecycle'] for item in promoted['scopes']]==['accepted-historical','active']
-        cli(Path('scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh'),'--target-root',root/TARGET/'20-scopes','--rehearsal-root',root,'--json')
-        cli(Path('scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh'),'--target-root',root/TARGET,'--rehearsal-root',root,'--json')
-        passed('actual promotion and lifecycle/target downstream gates accept complete temporary route')
+        passed('malformed retained receipts fail safely before any release-candidate promotion')
         # Incomplete inputs and old raw task forms fail safely without provider access.
         with patch.object(collector,'aws',side_effect=AssertionError('malformed input queried provider')):
             code,report=capture(collector,['--receipt']);assert code and report['findings'],report

@@ -117,16 +117,18 @@ assert module.collect_restored_postgresql_log_classification(fixture, "kanbien-c
 original_diagnostics = module.OPERATION_DIAGNOSTICS
 with TemporaryDirectory() as temporary:
     module.OPERATION_DIAGNOSTICS = Path(temporary)
-    module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
     retained = json.loads((Path(temporary) / "kanbien-restore-diagnostic-test-rejected.json").read_text())
     assert retained["classification"] == {"code": "persistence-restore-server-log-authentication-rejected"}
     assert retained["collection"] == {"status": "collected"}
     assert retained["next_action"] == {"decision": "correct-and-create-new-operation"}
     assert canary not in json.dumps(retained)
-    module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
+    assert module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == (True, "ok")
     unavailable = json.loads((Path(temporary) / "kanbien-restore-diagnostic-missing-export-rejected.json").read_text())
     assert unavailable["collection"] == {"status": "unavailable"}
     assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
+    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-follow-up", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task, "rejected-reobservation") == (True, "ok")
+    assert (Path(temporary) / "kanbien-restore-diagnostic-follow-up-rejected-reobservation.json").is_file()
 module.OPERATION_DIAGNOSTICS = original_diagnostics
 
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
@@ -166,7 +168,8 @@ assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-resto
 policy_event = json.dumps({"requestParameters": {"roleName": "restore-role", "policyName": "kanbien-core-platform-restoration-verifier-current-instance"}})
 class CloudTrailFixture:
     def __init__(self, events): self.events = events
-    def aws(self, *args):
+    def aws_in_region(self, region, *args):
+        assert region == "us-east-1"
         assert args[:2] == ("cloudtrail", "lookup-events")
         return True, {"Events": self.events}, "ok"
 

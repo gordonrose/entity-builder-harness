@@ -1,7 +1,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: infra.04-deploy.03-product.targets.kanbien-core-platform.scope.core-server-persistence.acceptance-route
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: '2026-10-25'
 #   updated_on: '2026-10-26'
@@ -69,6 +69,15 @@ inputs:
     - readiness-failure-observed
     - readiness-alarm-notified
     - readiness-recovery-observed
+outputs:
+  candidate_record:
+    command: collect
+    fact: candidate_record
+    kind: target-evidence-path
+  current_release_id:
+    command: current-release
+    fact: release_id
+    kind: release-id
 commands:
   qualify-proof-applicability:
     argv:
@@ -370,7 +379,7 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
     - --inputs
     - '{acceptance_inputs}'
-    - --write
+    - --write-candidate
     - --json
     owner: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance.wrapper
     effects:
@@ -386,16 +395,47 @@ commands:
     owner: deploy.command.persistence-accepted-release.validate
     effects:
     - read-only
+  validate-candidate:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - validate-candidate
+    - --evidence-root
+    - '{evidence_root}'
+    - --candidate-record
+    - '{candidate_record}'
+    - --json
+    owner: deploy.command.release-succession
+    effects:
+    - writes-files
+  current-release:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - validate-current
+    - --evidence-root
+    - '{evidence_root}'
+    - --json
+    owner: deploy.command.release-succession
+    effects:
+    - writes-files
   promote:
     argv:
     - bash
-    - scripts/04.deploy/lifecycle/60-run/promote-accepted-scope/script.sh
-    - --scope-contract
-    - '{scope_contract}'
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - promote
+    - --evidence-root
+    - '{evidence_root}'
+    - --candidate-record
+    - '{candidate_record}'
+    - --expected-predecessor
+    - '{current_release_id}'
     - --json
-    owner: deploy.command.promote-accepted-scope
+    owner: deploy.command.release-succession
     effects:
-    - read-only
     - writes-files
   scope-inventory:
     argv:
@@ -554,6 +594,7 @@ sequence:
 - - rollback-final-health
   - rollback-final-read
 collector: collect
+candidate_validator: validate-candidate
 accepted_record:
   schema: deploy/persistence-accepted-release/v1
   schema_path: .agentic/04.deploy/60-run/schemas/persistence-accepted-release.v1.schema.yml

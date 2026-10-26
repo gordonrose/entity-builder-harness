@@ -95,6 +95,11 @@ export function restoreVerificationFailureCode(error: unknown): string {
   if (codes.some((code) => code === "3D000" || code === "42P01")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
   if (codes.some((code) => code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENETUNREACH" || code === "EAI_AGAIN" || code === "ENOTFOUND")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
   if (codes.some((code) => code === "CERT_HAS_EXPIRED" || code === "ERR_TLS_CERT_ALTNAME_INVALID" || code === "SELF_SIGNED_CERT_IN_CHAIN" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
+  // node-postgres emits this fixed SCRAM client-side validation text when the
+  // configured token material is not a string.  Match the exact library
+  // invariant in memory so operators receive a remediation category without
+  // ever receiving a provider message or an authentication token.
+  if (errorMessages(error).some((message) => message === "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID";
   return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
 }
 
@@ -219,6 +224,18 @@ function errorCodes(error: unknown, depth = 0, seen = new Set<object>()): readon
   const causal = errorCodes(value.cause, depth + 1, seen);
   const aggregate = Array.isArray(value.errors)
     ? value.errors.flatMap((nested) => errorCodes(nested, depth + 1, seen))
+    : [];
+  return [...direct, ...causal, ...aggregate];
+}
+
+function errorMessages(error: unknown, depth = 0, seen = new Set<object>()): readonly string[] {
+  if (depth > 3 || typeof error !== "object" || error === null || seen.has(error)) return [];
+  seen.add(error);
+  const value = error as { readonly message?: unknown; readonly cause?: unknown; readonly errors?: unknown };
+  const direct = typeof value.message === "string" ? [value.message] : [];
+  const causal = errorMessages(value.cause, depth + 1, seen);
+  const aggregate = Array.isArray(value.errors)
+    ? value.errors.flatMap((nested) => errorMessages(nested, depth + 1, seen))
     : [];
   return [...direct, ...causal, ...aggregate];
 }

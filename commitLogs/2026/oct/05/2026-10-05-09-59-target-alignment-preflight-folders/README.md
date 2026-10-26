@@ -5000,6 +5000,37 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
+- 2026-10-26: The target alert subscription was confirmed and a delivery was
+  confirmed by the user.  The persistence candidate remains unaccepted while
+  the final isolated native-restore proof is in progress.  A fresh encrypted
+  recovery snapshot, `kanbien-core-platform-persistence-recovery-20261026-r1`,
+  was created after the retained accepted record proof and its isolated,
+  private restore was submitted.  It has no connection to the source service.
+  The verifier and cleanup will be reconciled from the exact provider state;
+  they must not be duplicated if a controller call is interrupted.
+- 2026-10-26: Acceptance succession was corrected before final collection.
+  Each candidate now integrity-binds the package custody, source-record,
+  observability, compatibility/applicability where present, and terminal proof
+  receipts below allowlisted durable evidence folders.  The generic successor
+  controller rejects mismatched receipt counts and altered retained evidence;
+  historical accepted-release records remain immutable.
+- 2026-10-26: The isolated restore against recovery snapshot
+  `kanbien-core-platform-persistence-recovery-20261026-r1` reached a verified
+  private, encrypted, IAM-authenticated restored instance.  Its one permitted
+  restoration verifier rejected with the closed code
+  `KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE`.  The
+  target-owned RDS export yielded only the safe
+  `persistence-restore-server-log-no-classified-event` classification.  The
+  rejected operation diagnostic is retained; no restore proof was accepted or
+  replayed.  The temporary instance-specific IAM policy was removed and the
+  restored instance was confirmed absent.  The source database and candidate
+  ECS service remain healthy.
+- 2026-10-26: The restore controller initially checked CloudTrail in
+  `eu-west-1` for a global IAM `PutRolePolicy` event.  Event History holds the
+  exact event in `us-east-1`; the controller now uses an explicit regional
+  adapter for that global-event observation, with a regression fixture.  This
+  allowed reconciliation of the already-submitted policy without recreating
+  it.
 - 2026-10-26: Promoted the verified isolated-restore TLS-boundary correction
   to `origin/main` by normal fast-forward. The source and promoted commit is
   `5c00b8f211c0bef7519cae05a08c0134eeda0030`; the clean promotion worktree

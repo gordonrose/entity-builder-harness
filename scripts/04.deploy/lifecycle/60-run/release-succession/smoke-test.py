@@ -3,10 +3,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.regression
-#   version: 1
+#   version: 2
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines: [security, sre]
@@ -70,7 +70,7 @@ def candidate(root: Path, *, source: str, image: str, configuration: str, permis
         "scope": identity["scope"],
         "status": "verified",
         "release": {"id": module.release_id(identity), **{key: identity[key] for key in ("source_revision", "image_digest", "configuration_contract", "permission_contract", "proof_set_sha256")}},
-        "proof": {"accepted_at": accepted, "receipt_count": 2},
+        "proof": {"accepted_at": accepted, "receipt_count": len(proof_set)},
         "proof_set": proof_set,
     }
     path = root / module.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml"
@@ -212,6 +212,19 @@ with tempfile.TemporaryDirectory() as temporary:
     failure("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "bad-qualified.yml"))
 
     first_candidate = candidate(root, source="b" * 40, image="sha256:" + "b" * 64, configuration="sha256:" + "c" * 64, permissions="sha256:" + "d" * 64, proof="sha256:" + "e" * 64)
+    # Candidate validation is independently available to the acceptance route;
+    # it cannot advance the current reference or accept a malformed candidate.
+    current_before_validation = (root / module.CURRENT).read_bytes()
+    assert run("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(first_candidate)) == 0
+    assert (root / module.CURRENT).read_bytes() == current_before_validation
+    invalid_candidate = yaml.safe_load(first_candidate.read_text(encoding="utf-8"))
+    invalid_candidate["proof_set"]["complete-proof"]["sha256"] = "sha256:" + "0" * 64
+    write(root / module.CANDIDATE_DIRECTORY / "invalid-candidate.yml", invalid_candidate)
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "invalid-candidate.yml"))
+    wrong_count = yaml.safe_load(first_candidate.read_text(encoding="utf-8"))
+    wrong_count["proof"]["receipt_count"] = 2
+    write(root / module.CANDIDATE_DIRECTORY / "wrong-proof-count.yml", wrong_count)
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "wrong-proof-count.yml"))
     assert run("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", first_id) == 0
     second = module.current(root)
     assert second and second["predecessor"] == first_id

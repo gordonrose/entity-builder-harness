@@ -133,6 +133,8 @@ function restoreDiagnosticRegression() {
     ["ENETUNREACH", "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"],
     ["ERR_TLS_CERT_ALTNAME_INVALID", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"],
   ]) assert.equal(restore.restoreVerificationFailureCode({ code: providerCode }), diagnostic);
+  assert.equal(restore.restoreVerificationFailureCode(new Error("SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string")), "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID", "the one fixed node-postgres token-material invariant has its own closed remediation code");
+  assert.equal(restore.restoreVerificationFailureCode(new Error("SASL: unexpected password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "nearby provider detail must not become an allowlisted diagnostic");
   assert.equal(restore.restoreVerificationFailureCode({ cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" }, message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "only an allowlisted causal machine code may cross the diagnostic boundary");
   assert.equal(restore.restoreVerificationFailureCode({ errors: [{ code: "28P01", message: "password=synthetic-canary" }] }), "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", "an allowlisted nested PostgreSQL code may cross the boundary without its message");
   assert.equal(restore.restoreVerificationFailureCode({ errors: [{ errors: [{ code: "42501", message: "password=synthetic-canary" }] }] }), "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "bounded aggregate traversal retains only allowlisted machine codes");

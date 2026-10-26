@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -340,8 +340,8 @@ class ControllerRegression(unittest.TestCase):
         for obsolete in ('advance_secret','current_secret_version','RUNTIME_SECRET_OUTPUT','SECRET_CHECKPOINT'):
             self.assertFalse(hasattr(module,obsolete))
         receipt=Path('synthetic-receipt.json')
-        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy:
-            self.assertEqual(module.recover(receipt),'ok')
+        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy,patch.object(module,'verifier_receipt',return_value='retained-receipt.json'):
+            self.assertEqual(module.recover(receipt)[0],'ok')
         administer.assert_called_once_with('restore-runtime')
         replace.assert_called_once_with(receipt)
         self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])
@@ -376,6 +376,23 @@ class ControllerRegression(unittest.TestCase):
         provider=Provider(lambda parts:(True,{'events':[{'message':rejected}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
             self.assertEqual(module.accepted_log(task,'observe-migration-state'),(None,'persistence-administration-not-confirmed'))
+
+    def test_administration_observation_retry_reuses_exact_retained_receipt(self):
+        """An interrupted observation retry must not start a second task."""
+        module=load(RUN/'run-administration/script.py')
+        digest='sha256:'+'d'*64;definition='definition-safe'
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'d'*32,'taskDefinitionArn':definition,'lastStatus':'STOPPED','startedAt':'2026-10-26T12:00:00Z','stoppedAt':'2026-10-26T12:00:08Z','stoppedReason':'Essential container in task exited','containers':[{'exitCode':0}]}
+        receipt=module.RECEIPTS.make(proof_type='administration',operation='prove-effective-privilege',task=task,image_digest=digest,result_code='PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN',context={'completion_deadline_seconds':300,'completion_duration_seconds':8},controller='run-administration',collected_at='2026-10-26T12:00:09Z')
+        with tempfile.TemporaryDirectory(prefix='administration-retained-receipt-') as directory:
+            destination=Path(directory)/'proof-receipts'
+            with patch.object(module,'ROOT',Path(directory)),patch.object(module,'deadline',return_value=300),patch.object(module.RECEIPTS,'RECEIPTS',destination),patch.object(module.MIGRATION,'outputs',side_effect=[({'CoreServerPersistenceAdministrationTaskDefinitionArn':definition,'PersistenceAdministrationSecurityGroupId':'sg-safe'},'ok'),({'PrivateSubnetIds':'subnet-safe'},'ok')]),patch.object(module.MIGRATION,'image_digest',return_value=digest),patch.object(module.MIGRATION,'aws',side_effect=AssertionError('retained observation retry must not submit or query a task')):
+                path=module.RECEIPTS.persist(receipt)
+                with patch.object(sys,'argv',['test','--operation','prove-effective-privilege']):
+                    code,report,_=result(module.main)
+            self.assertEqual(code,0,report)
+            self.assertEqual(report['findings'],[{'code':'persistence-administration-reconciled-retained-receipt'}])
+            self.assertTrue(report['facts']['proof_receipt'].endswith(path.name))
+            self.assertEqual(module.retained_observation('restore-runtime',definition),(None,None))
         unsafe=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','password':'synthetic-canary'})
         provider=Provider(lambda parts:(True,{'events':[{'message':unsafe}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
@@ -731,6 +748,36 @@ class ControllerRegression(unittest.TestCase):
             self.assertEqual(captured['task']['arn'],original['taskArn'])
             self.assertEqual(captured['context']['successor_task_arn'],successor['taskArn'])
             self.assertEqual(captured['context']['runtime_task_definition'],old_definition)
+
+    def test_replacement_reconciliation_reuses_exact_retained_receipt(self):
+        """A host interruption after receipt persistence must not repeat a stop."""
+        module=load(RUN/'rehearse-server-replacement/script.py'); digest='sha256:'+'c'*64
+        prefix='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'
+        definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:34'
+        original={'taskArn':prefix+'a'*32,'taskDefinitionArn':definition,'group':'service:'+module.SERVICE,'lastStatus':'STOPPED','startedAt':'2026-10-26T12:08:37Z','stoppedAt':'2026-10-26T12:08:40Z','containers':[{'exitCode':137}],'stoppedReason':'governed core-server-persistence replacement rehearsal'}
+        image=f'337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@{digest}'
+        successor={'taskArn':prefix+'b'*32,'taskDefinitionArn':definition,'group':'service:'+module.SERVICE,'lastStatus':'RUNNING','startedAt':'2026-10-26T12:08:41Z','containers':[{'name':'core-server-persistence','image':image,'imageDigest':digest}]}
+        def response(parts):
+            if parts[1]=='describe-tasks': return True,{'tasks':[original if parts[-1]==original['taskArn'] else successor]},'ok'
+            if parts[1]=='describe-task-definition': return True,{'taskDefinition':{'taskDefinitionArn':definition,'containerDefinitions':[{'name':'core-server-persistence','image':image,'environment':[{'name':'PLATFORM_SOURCE_COMMIT_SHA','value':'a'*40}]}]}},'ok'
+            raise AssertionError(f'unexpected provider action: {parts}')
+        prepare=Provider(response); prepare.REGION='eu-west-1'; prepare.ACCOUNT='337159794548'; prepare.REPOSITORY='kanbien-core-platform/core-server'
+        prepare.validate_receipt=lambda _: {'image_digest':digest,'source_revision':'a'*40}; prepare.candidate_runnable_manifest=lambda _: (digest,'ok')
+        create=SimpleNamespace(package_gates=lambda _:True)
+        with temporary_receipts(module) as receipts:
+            first=receipts.make(proof_type='server-replacement',operation='controlled-replacement',task=original,image_digest=digest,result_code='PERSISTENCE_SERVER_REPLACED',context={'original_stopped_reason':'governed core-server-persistence replacement rehearsal','successor_task_arn':successor['taskArn'],'successor_started_at':successor['startedAt'],'runtime_task_definition':definition,'recovery_boundary':'2026-10-26T12:08:38Z'},controller='rehearse-server-replacement',collected_at='2026-10-26T12:08:42Z')
+            path=receipts.persist(first); original_bytes=path.read_bytes()
+            current=(successor,'ok',definition)
+            argv=['test','--receipt','synthetic','--reconcile-original-task',original['taskArn'],'--reconcile-successor-task',successor['taskArn']]
+            with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'current_task',return_value=current),patch.object(sys,'argv',argv):
+                report=result(module.main)[1]
+            self.assertEqual(report['verdict'],'replaced')
+            self.assertEqual(report['facts']['recovery_boundary'],'2026-10-26T12:08:38Z')
+            self.assertEqual(path.read_bytes(),original_bytes)
+            self.assertFalse(any(parts[1]=='stop-task' for parts in prepare.calls))
+            altered=json.loads(path.read_text()); altered['context']['successor_task_arn']=prefix+'d'*32; altered['integrity']['payload_sha256']=receipts.digest({key:value for key,value in altered.items() if key!='integrity'}); path.write_text(json.dumps(altered),encoding='utf-8')
+            with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'current_task',return_value=current),patch.object(sys,'argv',argv):
+                self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-replacement-reconciliation-receipt-mismatch'}])
 
     def test_main_snapshot_suffix_support_is_preserved(self):
         snapshot=load(RUN/'create-recovery-point/script.py');restore=load(RUN/'rehearse-isolated-database-restore/script.py')
