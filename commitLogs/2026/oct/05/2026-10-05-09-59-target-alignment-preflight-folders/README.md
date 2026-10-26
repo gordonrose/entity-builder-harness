@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T07:19:16Z
-latest_commit_sha: b3c8e547
-chat_duration: 1808387s (20:22:19:47)
+latest_commit_at_utc: 2026-10-26T07:40:59Z
+latest_commit_sha: ed63c025
+chat_duration: 1809690s (20:22:41:30)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3763,6 +3763,17 @@ Summary: Treat RDS configuring-log-exports as an ordinary in-flight restore stat
 
 ADR impact: No ADR impact; provider lifecycle-state correction.
 
+
+### 2026-10-26T07:40:59Z - Commit recorded
+
+Commit: `ed63c025`
+
+Message: fix(deploy): resume restore identity stabilization
+
+Summary: Replaced the controller's blocking identity-propagation delay with a bounded exact CloudTrail observation before the one allowed restore verifier launch.
+
+ADR impact: No ADR impact; governed isolated-restore reconciliation remains target-specific.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4823,6 +4834,13 @@ ADR impact: No ADR impact; provider lifecycle-state correction.
   Summary: Treat RDS configuring-log-exports as an ordinary in-flight restore state and prove it in restore-controller regression.
   ADR impact: No ADR impact; provider lifecycle-state correction.
 
+
+- Commit: `ed63c025`
+  Time UTC: 2026-10-26T07:40:59Z
+  Message: fix(deploy): resume restore identity stabilization
+  Summary: Replaced the controller's blocking identity-propagation delay with a bounded exact CloudTrail observation before the one allowed restore verifier launch.
+  ADR impact: No ADR impact; governed isolated-restore reconciliation remains target-specific.
+
 ## Main Refresh Conflicts
 
 
@@ -4846,9 +4864,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T07:19:16Z
-Latest commit SHA: b3c8e547
-Chat duration: 1808387s (20:22:19:47)
+Latest commit at UTC: 2026-10-26T07:40:59Z
+Latest commit SHA: ed63c025
+Chat duration: 1809690s (20:22:41:30)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

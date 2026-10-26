@@ -258,8 +258,10 @@ def temporary_restore_identity_policy_stable(m, controls):
  cutoff=datetime.now(timezone.utc)-timedelta(seconds=RESTORATION_IDENTITY_STABILIZATION_SECONDS)
  for event in events:
   raw=event.get("CloudTrailEvent") if isinstance(event,dict) else None; observed=parsed_time(event.get("EventTime")) if isinstance(event,dict) else None
-  try: request=json.loads(raw).get("requestParameters") if isinstance(raw,str) else None
-  except json.JSONDecodeError: request=None
+  try:
+   decoded=json.loads(raw) if isinstance(raw,str) else None
+   request=decoded.get("requestParameters") if isinstance(decoded,dict) else None
+  except (json.JSONDecodeError,TypeError):request=None
   if isinstance(request,dict) and request.get("roleName")==role and request.get("policyName")==name and observed is not None and observed<=cutoff:return True
  return False
 def task_image_digest(m,arn):

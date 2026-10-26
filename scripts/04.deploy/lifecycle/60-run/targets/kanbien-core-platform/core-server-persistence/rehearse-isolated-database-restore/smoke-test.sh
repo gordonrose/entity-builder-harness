@@ -159,6 +159,26 @@ module.source, module.controls, module.db, module.correct, module.task_def_valid
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
 
+# The non-blocking stabilization check has to identify the exact temporary
+# policy mutation, and must fail closed for fresh, unrelated, or malformed
+# CloudTrail observations. The raw event is parsed only in memory and never
+# becomes controller output or retained evidence.
+policy_event = json.dumps({"requestParameters": {"roleName": "restore-role", "policyName": "kanbien-core-platform-restoration-verifier-current-instance"}})
+class CloudTrailFixture:
+    def __init__(self, events): self.events = events
+    def aws(self, *args):
+        assert args[:2] == ("cloudtrail", "lookup-events")
+        return True, {"Events": self.events}, "ok"
+
+old_event = {"EventTime": "2020-01-01T00:00:00Z", "CloudTrailEvent": policy_event}
+assert module.temporary_restore_identity_policy_stable(CloudTrailFixture([old_event]), controls)
+fresh_event = {"EventTime": module.datetime.now(module.timezone.utc).isoformat(), "CloudTrailEvent": policy_event}
+assert not module.temporary_restore_identity_policy_stable(CloudTrailFixture([fresh_event]), controls)
+wrong_target = {"EventTime": "2020-01-01T00:00:00Z", "CloudTrailEvent": json.dumps({"requestParameters": {"roleName": "other-role", "policyName": "kanbien-core-platform-restoration-verifier-current-instance"}})}
+assert not module.temporary_restore_identity_policy_stable(CloudTrailFixture([wrong_target]), controls)
+assert not module.temporary_restore_identity_policy_stable(CloudTrailFixture([{"EventTime": "2020-01-01T00:00:00Z", "CloudTrailEvent": "[]"}]), controls)
+assert not module.temporary_restore_identity_policy_stable(CloudTrailFixture([{"EventTime": "not-a-time", "CloudTrailEvent": policy_event}]), controls)
+
 # A failed verifier may contribute only an explicit allowlisted result code.
 # Raw provider output and lookalike payloads are not diagnostic evidence.
 class LogFixture:
