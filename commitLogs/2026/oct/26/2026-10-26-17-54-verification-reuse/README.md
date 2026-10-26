@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T20:32:26Z
-latest_commit_sha: 7ecae22e21e787e65c1fdb2040aa37d714739fd7
-chat_duration: 9481s (00:02:38:01)
+latest_commit_at_utc: 2026-10-26T21:03:30Z
+latest_commit_sha: c5320a73
+chat_duration: 11345s (00:03:09:05)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -55,6 +55,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 
 - Raised: Local-main promotion blocked by parallel root evidence
   Resolution: Final source is committed, verified and includes main85747a3d. Apply reused all51 local proofs with0 executions in66.233s. Root readiness correctly stopped before any merge because two untracked kanbien-restore-0c337daa4b5a52be diagnostic files belong to parallel deployment work. Files left untouched; owner clarification requested. Continue with clean-root check, refresh only if main advances, readiness census+integration reuse, then authorized local no-ff merge. No task source work remains.
+
+
+- Raised: Root preservation explicitly authorized by user
+  Resolution: User explicitly instructed committing root to unblock local integration. Preserved exactly four runtime/test files and two failed-operation diagnostic JSON records. Direct composition suite and 13 affected local checks passed. Old selector regression hook fixture fails verification-preparation-missing, independently reproduced; its correction already exists on this verified branch. Root preservation commit c5320a73; corrected combined-tree integration remains mandatory. Evidence: /tmp/root-preservation-commit-gates.log and /tmp/root-baseline-hook-failure.log.
 
 ## Decisions Made
 
@@ -237,6 +241,24 @@ Raised: Local-main promotion blocked by parallel root evidence
 
 Resolution: Final source is committed, verified and includes main85747a3d. Apply reused all51 local proofs with0 executions in66.233s. Root readiness correctly stopped before any merge because two untracked kanbien-restore-0c337daa4b5a52be diagnostic files belong to parallel deployment work. Files left untouched; owner clarification requested. Continue with clean-root check, refresh only if main advances, readiness census+integration reuse, then authorized local no-ff merge. No task source work remains.
 
+
+### 2026-10-26T21:03:30Z - Issue
+
+Raised: Root preservation explicitly authorized by user
+
+Resolution: User explicitly instructed committing root to unblock local integration. Preserved exactly four runtime/test files and two failed-operation diagnostic JSON records. Direct composition suite and 13 affected local checks passed. Old selector regression hook fixture fails verification-preparation-missing, independently reproduced; its correction already exists on this verified branch. Root preservation commit c5320a73; corrected combined-tree integration remains mandatory. Evidence: /tmp/root-preservation-commit-gates.log and /tmp/root-baseline-hook-failure.log.
+
+
+### 2026-10-26T21:03:30Z - Commit recorded
+
+Commit: `c5320a73`
+
+Message: fix(persistence): obtain restore IAM token before connection timeout
+
+Summary: Explicit user-directed root preservation checkpoint; six reviewed files preserved, root clean; baseline fixture failure transparently retained pending corrected combined integration.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 
@@ -306,6 +328,13 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Summary: Non-rewriting rehearsed main/session refresh; preserve accepted work and combined source ancestry. Final source checks and receipt transfer passed.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `c5320a73`
+  Time UTC: 2026-10-26T21:03:30Z
+  Message: fix(persistence): obtain restore IAM token before connection timeout
+  Summary: Explicit user-directed root preservation checkpoint; six reviewed files preserved, root clean; baseline fixture failure transparently retained pending corrected combined integration.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -329,9 +358,9 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC: 2026-10-26T20:32:26Z
-Latest commit SHA: 7ecae22e21e787e65c1fdb2040aa37d714739fd7
-Chat duration: 9481s (00:02:38:01)
+Latest commit at UTC: 2026-10-26T21:03:30Z
+Latest commit SHA: c5320a73
+Chat duration: 11345s (00:03:09:05)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
