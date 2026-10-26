@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T16:38:33Z
-latest_commit_sha: 50fbc00e
-chat_duration: 1841944s (21:07:39:04)
+latest_commit_at_utc: 2026-10-26T18:03:35Z
+latest_commit_sha: 3a90ae88
+chat_duration: 1847046s (21:09:04:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -4045,6 +4045,17 @@ ADR needed: no
 
 Reason: This is an implementation correction within existing restore, IAM, and diagnostics decisions; it creates no new durable architecture decision.
 
+
+### 2026-10-26T18:03:35Z - Commit recorded
+
+Commit: `3a90ae88`
+
+Message: Merge origin/main diagnostics and harness improvements
+
+Summary: Integrated origin/main, retained exact IAM simulation, added dual PostgreSQL/IAM restore-log diagnosis, and passed focused restore, diagnostics, controller, target, observability, and staged commit-readiness gates.
+
+ADR impact: not-needed: existing restore and diagnostics architecture governs this correction
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5224,6 +5235,13 @@ Reason: This is an implementation correction within existing restore, IAM, and d
   Summary: The restore verifier failure remains unclassified after private route, TLS, restored posture, and exact IAM simulation; no governed safe observer presently resolves the post-TLS client handshake boundary.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `3a90ae88`
+  Time UTC: 2026-10-26T18:03:35Z
+  Message: Merge origin/main diagnostics and harness improvements
+  Summary: Integrated origin/main, retained exact IAM simulation, added dual PostgreSQL/IAM restore-log diagnosis, and passed focused restore, diagnostics, controller, target, observability, and staged commit-readiness gates.
+  ADR impact: not-needed: existing restore and diagnostics architecture governs this correction
+
 ## Main Refresh Conflicts
 
 
@@ -5247,9 +5265,9 @@ Reason: This is an implementation correction within existing restore, IAM, and d
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T16:38:33Z
-Latest commit SHA: 50fbc00e
-Chat duration: 1841944s (21:07:39:04)
+Latest commit at UTC: 2026-10-26T18:03:35Z
+Latest commit SHA: 3a90ae88
+Chat duration: 1847046s (21:09:04:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
