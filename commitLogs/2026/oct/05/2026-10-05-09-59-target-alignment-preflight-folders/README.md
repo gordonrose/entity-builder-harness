@@ -253,6 +253,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
   Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
 
+
+- Raised: Promoted isolated restore controller hardening
+  Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -3784,6 +3788,13 @@ Message: test(deploy): harden restore identity observation
 Summary: Added malformed, stale, and mismatched CloudTrail observation regressions; retained the closed historical restore rejection diagnostic after source-health and cleanup reconciliation.
 
 ADR impact: No ADR impact; this is a target-specific recovery-controller safety correction.
+
+
+### 2026-10-26T07:44:45Z - Issue
+
+Raised: Promoted isolated restore controller hardening
+
+Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
 
 ## Sub-Agent Activity
 
