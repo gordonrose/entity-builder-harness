@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T09:59:19Z
-latest_commit_sha: e5bbda7c
-chat_duration: 1817990s (21:00:59:50)
+latest_commit_at_utc: 2026-10-26T10:49:35Z
+latest_commit_sha: 962cddd1
+chat_duration: 1821006s (21:01:50:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3851,6 +3851,17 @@ Summary: Observability activation is healthy after a collector-only metric repai
 
 Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
 
+
+### 2026-10-26T10:49:35Z - Commit recorded
+
+Commit: `962cddd1`
+
+Message: feat(deploy): retain observability readiness proof
+
+Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
+
+ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4939,6 +4950,13 @@ Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien
   Summary: Adds a healthy-baseline, exact-change-set controller mode for the corrected readiness metric configuration. It permits only collector task-definition and service modification, with regression tests and workflow guidance.
   ADR impact: No ADR: this is an implementation correction within the accepted observability deployment boundary.
 
+
+- Commit: `962cddd1`
+  Time UTC: 2026-10-26T10:49:35Z
+  Message: feat(deploy): retain observability readiness proof
+  Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
+  ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
+
 ## Main Refresh Conflicts
 
 
@@ -4962,9 +4980,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T09:59:19Z
-Latest commit SHA: e5bbda7c
-Chat duration: 1817990s (21:00:59:50)
+Latest commit at UTC: 2026-10-26T10:49:35Z
+Latest commit SHA: 962cddd1
+Chat duration: 1821006s (21:01:50:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
