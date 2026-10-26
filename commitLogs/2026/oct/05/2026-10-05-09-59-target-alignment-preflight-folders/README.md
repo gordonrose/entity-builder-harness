@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:28:56Z
-latest_commit_sha: 8bc53dd8
-chat_duration: 1830567s (21:04:29:27)
+latest_commit_at_utc: 2026-10-26T13:35:33Z
+latest_commit_sha: d716bb88
+chat_duration: 1830964s (21:04:36:04)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3884,6 +3884,17 @@ Summary: Added durable retained proof receipts and candidate acceptance evidence
 
 ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
 
+
+### 2026-10-26T13:35:33Z - Commit recorded
+
+Commit: `d716bb88`
+
+Message: fix(deploy): align persistence acceptance route
+
+Summary: Corrected the check-selection acceptance collector argument so package qualification uses the declared candidate-writing route.
+
+ADR impact: No ADR change; restores agreement between the release contract and required package check.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4986,6 +4997,13 @@ ADR impact: Covered by existing deployment evidence and recovery governance; no 
   Summary: Added durable retained proof receipts and candidate acceptance evidence, corrected isolated-restore observation handling, and preserved the rejected restore result without repeating it.
   ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
 
+
+- Commit: `d716bb88`
+  Time UTC: 2026-10-26T13:35:33Z
+  Message: fix(deploy): align persistence acceptance route
+  Summary: Corrected the check-selection acceptance collector argument so package qualification uses the declared candidate-writing route.
+  ADR impact: No ADR change; restores agreement between the release contract and required package check.
+
 ## Main Refresh Conflicts
 
 
@@ -5009,9 +5027,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:28:56Z
-Latest commit SHA: 8bc53dd8
-Chat duration: 1830567s (21:04:29:27)
+Latest commit at UTC: 2026-10-26T13:35:33Z
+Latest commit SHA: d716bb88
+Chat duration: 1830964s (21:04:36:04)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
