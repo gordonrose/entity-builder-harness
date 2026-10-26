@@ -53,6 +53,16 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(report['routes'][0]['target'], 'synthetic')
         self.assertTrue(report['inputs']); self.assertTrue(report['routes'][0]['chain'])
 
+    def test_catalogued_dormant_root_does_not_block_active_delivery_inventory(self):
+        dormant = self.root / 'dormant-rag'
+        dormant.mkdir()
+        (dormant / 'unregistered-deploy.sh').write_text('#!/bin/bash\naws cloudformation deploy --stack-name dormant\n')
+        self.fixture.catalog['dormant_impact_roots'] = ['dormant-rag']
+        self.fixture.save()
+        code, report = self.invoke()
+        self.assertEqual(code, 0, report['findings'])
+        self.assertNotIn('dormant-rag/unregistered-deploy.sh', {item['path'] for item in report['inputs']})
+
     def test_effective_image_context_inputs_are_bound_without_becoming_images(self):
         ignore = self.root / 'Dockerfile.dockerignore'
         ignore.write_text('**\n!src/**\n')

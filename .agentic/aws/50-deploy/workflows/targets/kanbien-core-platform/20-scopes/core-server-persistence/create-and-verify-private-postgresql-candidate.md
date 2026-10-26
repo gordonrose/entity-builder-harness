@@ -184,8 +184,9 @@ controllers, all under
 The derived restore must export its PostgreSQL and `iam-db-auth-error` logs.
 If its verifier rejects, the controller makes one bounded, read-only
 observation of both target-owned exports over the verifier's execution window.
-It retains one closed classification, or an honest `pending`, `partial`, or
-`unavailable` collection state, in the governed operation diagnostic; it never
+It retains one closed classification with an honest `complete`, `empty`,
+`unrecognized`, `malformed`, or `incomplete` observation, or an `unavailable`
+or `failed` collection state, in the governed operation diagnostic; it never
 prints, commits, or stores a raw server event, log stream, endpoint,
 credential, or provider error. A missing or delayed export does not make the
 verifier successful and does not authorize a new task: reconcile the same

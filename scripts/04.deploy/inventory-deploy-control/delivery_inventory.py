@@ -52,7 +52,36 @@ def module(root, name, path):
     spec.loader.exec_module(result)
     return result
 
-def files(root):
+def under(path, prefix):
+    prefix = prefix.rstrip('/')
+    return path == prefix or path.startswith(prefix + '/')
+
+
+def dormant_roots(root, catalog):
+    """Return the catalogue-owned roots excluded from ordinary delivery work.
+
+    Dormancy is an explicit repository decision, not a filename heuristic.  The
+    delivery census must use the same source as check selection; otherwise a
+    dormant capability can make an unrelated active deployment impossible to
+    verify.
+    """
+    values = catalog.get('dormant_impact_roots', []) if isinstance(catalog, dict) else []
+    if not isinstance(values, list):
+        raise ValueError('dormant-impact-roots-invalid')
+    roots = []
+    for value in values:
+        if not isinstance(value, str) or not value or value.startswith('/') or '..' in Path(value).parts:
+            raise ValueError('dormant-impact-roots-invalid')
+        candidate = (root / value).resolve()
+        if not candidate.is_dir() or not candidate.is_relative_to(root):
+            raise ValueError('dormant-impact-roots-invalid')
+        roots.append(value.rstrip('/'))
+    if len(set(roots)) != len(roots):
+        raise ValueError('dormant-impact-roots-invalid')
+    return tuple(roots)
+
+
+def files(root, dormant=()):
     # Scan physical source locations, including root/new package entrypoints.
     # Build outputs, private configuration and evidence history are not sources.
     result = []
@@ -62,6 +91,8 @@ def files(root):
         for name in filenames:
             path = Path(directory) / name
             relative = path.relative_to(root).as_posix()
+            if any(under(relative, prefix) for prefix in dormant):
+                continue
             image = name in {'Dockerfile', 'Containerfile'} or name.startswith(('Dockerfile.', 'Containerfile.')) and not name.endswith('dockerignore')
             if path.is_symlink() or image or name == '.dockerignore' or name.endswith('.dockerignore') or path.suffix in {'.py', '.sh', '.mjs', '.cjs', '.js', '.jsx', '.ts', '.tsx', '.json', '.yml', '.yaml'} or path.suffix == '.md' and relative.startswith(('.agentic/', 'scripts/', 'infra/')):
                 result.append(path)
@@ -190,9 +221,14 @@ def package_execution(root, package_path, command, packages, bodies, seen=()):
     return refs, sorted(set(unknown)), external
 
 
-def report(root, source_revision=None):
+def report(root, source_revision=None, *, routes_only=False):
     root = root.resolve()
-    paths = files(root)
+    catalog_path = root / 'scripts/repo/check-selection/checks.yml'
+    try:
+        catalog = document(catalog_path.read_text())
+    except OSError as error:
+        raise ValueError('check-catalog-unavailable') from error
+    paths = files(root, dormant_roots(root, catalog))
     bodies, modes, source_errors = {}, {}, []
     for path in paths:
         ref = path.relative_to(root).as_posix()
@@ -275,6 +311,20 @@ def report(root, source_revision=None):
         for ref in route_refs:
             requirements.setdefault(ref, []).append(rid)
             if ref in bodies: declared.add(ref)
+    if routes_only:
+        # Check selection needs declared scope routes so it can route a changed
+        # input to its proofs.  Full entrypoint census/command tracing is the
+        # independent delivery-inventory gate's responsibility; performing it
+        # for every focused local plan makes unrelated source trees a latency
+        # and availability dependency of ordinary change verification.
+        route_inputs = {'scripts/repo/check-selection/checks.yml'}
+        for route in routes:
+            route_inputs.update({route['declaration'], route['binding']})
+            route_inputs.update(ref for ref in route['references'] if ref in bodies)
+        inputs = [{'path': path, 'sha256': hashlib.sha256(bodies[path].encode()).hexdigest(), 'mode': modes[path]}
+                  for path in sorted(route_inputs) if path in bodies]
+        revision = source_revision or subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+        return {'schema': 'deploy/delivery-coverage-report/v1', 'source_revision': revision, 'source_state': 'working-tree', 'input_digest': hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest(), 'inputs': inputs, 'verdict': 'gap' if findings else 'covered', 'summary': {'entrypoints': 0, 'routes': len(routes), 'kinds': {}, 'classifications': {}, 'gaps': len(findings)}, 'entrypoints': [], 'routes': routes, 'findings': findings, 'limitations': ['Route-only inventory is for local check selection. Full entrypoint and command coverage remains owned by the independent delivery-inventory gate.', 'Source coverage is distinct from local, finished-image, CI and live evidence; this command neither executes proof commands nor grants provider authority.']}
     # Trace each owner route through existing references and selected proof commands.
     # Directory input declarations describe affected consumers, not registration.
     packages = {path: json.loads(body) for path, body in bodies.items() if Path(path).name == 'package.json'}
@@ -359,6 +409,20 @@ def report(root, source_revision=None):
         p = Path(path)
         value = documents.get(path, {})
         kind = None
+        candidate = (
+            path.startswith('.github/workflows/')
+            or p.name in {'Dockerfile', 'Containerfile'}
+            or p.name.startswith(('Dockerfile.', 'Containerfile.'))
+            or path.startswith('scripts/04.deploy/')
+            or path in operational
+            or path in launched_sources
+            or p.name.endswith(('.main.ts', '.main.js'))
+            or p.name in {'main.ts', '__main__.py', 'target-profile.yml', 'workload-binding.yml'}
+            or value.get('schema') in {'deploy/target-scope-contract/v1', 'deploy/declaration-contract/v1'}
+            or isinstance(value.get('Resources'), dict)
+        )
+        if not candidate:
+            continue
         semantic = '\n'.join(line for line in body.splitlines() if not line.lstrip().startswith(('#', '//')))
         has_external_command = external_command(semantic)
         script_effects = effects(body)

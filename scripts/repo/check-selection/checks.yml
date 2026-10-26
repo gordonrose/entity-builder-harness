@@ -21,6 +21,34 @@ dormant_impact_roots:
 - docs/02.rag-rulebook
 - infra/04.deploy/02.rag-rulebook
 checks:
+  delivery-inventory-regression:
+    argv:
+    - bash
+    - scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.script.inventory-deploy-control.smoke-test
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/inventory-deploy-control
+    - .github/workflows/delivery-coverage.yml
   # Disposable engine/driver CI proof only; persistence-container owns shipped-image qualification.
   postgresql-disposable-diagnostics:
     argv:
@@ -97,6 +125,9 @@ checks:
     - read-only
     - writes-files
     owner: deploy.test.kanbien-core-platform.isolated-persistence-restore
+    applicability:
+      kind: bound
+      program_id: kanbien-core-server-persistence
     runtime:
       tools:
       - bash

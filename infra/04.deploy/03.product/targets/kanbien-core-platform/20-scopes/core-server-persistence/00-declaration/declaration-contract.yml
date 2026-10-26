@@ -369,6 +369,7 @@ change_impact:
     - runnable-program
     - persistence-composition
     - persistence-provider-regression
+    - restore-connection-diagnostics
     - persistence-payload-regression
     - acceptance-route
     - acceptance-route-regression
