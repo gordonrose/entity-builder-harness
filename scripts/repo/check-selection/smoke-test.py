@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -149,6 +149,32 @@ class SelectionTests(unittest.TestCase):
         report = selection.coverage.inspect(ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml', ROOT, catalog)
         self.assertEqual(report['verdict'], 'covered', report)
         self.assertIn('persistence-composition', report['required_checks'])
+
+    def test_actual_diagnostic_paths_select_focused_checks(self):
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        for paths, expected in [
+            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
+            (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
+        ]:
+            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+            report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            selected = {check['check_id'] for check in report['checks']}
+            self.assertTrue(expected <= selected, (paths, selected))
+            if 'postgresql-disposable-diagnostics' in expected:
+                engine = next(check for check in report['checks'] if check['check_id'] == 'postgresql-disposable-diagnostics')
+                self.assertEqual(engine['stage'], 'package'); self.assertEqual(engine['evidence_class'], 'ci')
+                image = next(check for check in report['checks'] if check['check_id'] == 'persistence-container')
+                self.assertEqual(image['evidence_class'], 'container-qualification')
+                self.assertNotEqual(engine['argv'], image['argv'])
+            if paths[0].startswith('scripts/04.deploy'):
+                self.assertNotIn('postgresql-connection-diagnostics', selected, 'report-only changes reuse unaffected adapter evidence')
+
+    def test_openssl_runtime_identity_is_bounded_and_versioned(self):
+        identity = local_cache.runtime_identity(self.root, {'tools': ['openssl'], 'environment': [], 'node_packages': []})
+        self.assertIn('openssl', identity['tools'])
+        self.assertTrue(identity['tools']['openssl']['version'])
+        self.assertEqual(len(identity['tools']['openssl']['digest']), 64)
 
     def test_duplicate_commands_run_once(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])

@@ -1,4 +1,4 @@
-import { equal } from "node:assert/strict";
+import { equal, ok as assertOk } from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Pool } from "pg";
 import {
@@ -33,6 +33,7 @@ import {
   createPostgreSqlPlatformOutboxStore,
   createPostgreSqlPlatformProcessingStore,
   postgreSqlPersistenceConfiguration,
+  postgreSqlFailureDiagnostic,
   postgreSqlPersistenceFoundationMigration,
   stagePostgreSqlTransactionStatement,
 } from "../src/index";
@@ -43,6 +44,7 @@ const fixtureStart = new Date("2026-09-26T12:00:00.000Z");
 
 async function main(): Promise<void> {
   const environment = localFixtureEnvironment();
+  await diagnosticEngineFailures(environment);
   const rawPool = new Pool({
     host: environment.host,
     port: environment.port,
@@ -395,3 +397,31 @@ main().catch(() => {
   console.error("PostgreSQL disposable integration proof failed.");
   process.exitCode = 1;
 });
+
+async function diagnosticEngineFailures(environment: { host: string; port: number; database: string; password: string }): Promise<void> {
+  const options = { host: environment.host, port: environment.port, database: environment.database, user: "postgres", password: environment.password, ssl: false as const, connectionTimeoutMillis: 1_000 };
+  for (const [override, classification] of [[{ password: "synthetic-wrong-password" }, "authentication_rejected"], [{ database: "synthetic_absent_database" }, "content_unavailable"]] as const) {
+    const pool = nodePoolAdapter(new Pool({ ...options, ...override }));
+    try {
+      let failure: unknown;
+      try { const client = await pool.connect(); client.release(); } catch (error) { failure = error; }
+      const diagnostic = postgreSqlFailureDiagnostic(failure);
+      equal(diagnostic.facts.classification, classification);
+      equal(diagnostic.facts.phase, "pool_connect"); equal(diagnostic.facts.code_status, "recognized");
+      assertOk(diagnostic.facts.elapsed_ms !== null && diagnostic.facts.elapsed_ms >= 0);
+      equal(JSON.stringify(diagnostic).includes(environment.password), false);
+    } finally { await pool.end(); }
+  }
+  const pool = nodePoolAdapter(new Pool({ ...options, options: "-c statement_timeout=50" }));
+  try {
+    const client = await pool.connect();
+    try {
+      let failure: unknown;
+      try { await client.query({ text: "SELECT pg_sleep(0.2)" }); } catch (error) { failure = error; }
+      const diagnostic = postgreSqlFailureDiagnostic(failure);
+      equal(diagnostic.facts.classification, "query_canceled"); equal(diagnostic.facts.phase, "query");
+      assertOk(diagnostic.facts.elapsed_ms !== null && diagnostic.facts.elapsed_ms >= 20);
+    } finally { client.release(); }
+  } finally { await pool.end(); }
+  console.log("PostgreSQL disposable authentication, missing-database and query-timeout diagnostics passed.");
+}

@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path, { join } from "node:path";
 
 const runtimeRoot = ".cache/platform-adapter-aws-persistence-postgresql-integration";
-const coreModules = ["diagnostics", "monitoring", "persistence", "queues", "shared", "tenancy"];
+const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events", "i18n", "logging", "monitoring", "persistence", "queues", "shared", "tenancy", "validation"];
 
 writePackageShim("@kanbien/core", {
   ".": join(runtimeRoot, "packages/core/src/index.js"),
@@ -15,6 +15,9 @@ writePackageShim("@kanbien/platform-persistence", {
 writePackageShim("@kanbien/platform-adapter-aws-persistence-postgresql", {
   ".": join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/src/index.js"),
 });
+
+writePackageShim("@kanbien/platform-contracts", { ".": join(runtimeRoot, "platform/contracts/src/index.js") });
+writePackageShim("@kanbien/platform-observability", { ".": join(runtimeRoot, "platform/observability/src/index.js") });
 
 const result = spawnSync(
   process.execPath,

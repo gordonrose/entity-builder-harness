@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -48,7 +48,7 @@ def public_owners(root):
     # This optional recovery is qualified only for these reviewed owner bytes.
     # Fail closed on owner changes instead of interpreting arbitrary shell or
     # Dockerfile forms; normal package qualification remains independent.
-    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': '5443e3c13b8122b49e82e16ea8f2a814be9c4036feefcd210d452f781d6e7832', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': 'edf6f303c61b7d196f86147800eb8f461c94929b3f7eb55e83099e5b851e299b', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'de93ae7595b398a68cc3a12c6b3fbe93a365029d6ac9dc9d0f9984869afed090', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003'}
+    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': 'd09be8dacc031c095b0645c42103d0698572cb933abb0c8fe7ff079bc0394b77', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': '0c760adedbb10b58649ab59eb0b6ff91cc2b65ab23a52673b348acd7abdbf09d', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'eb950c9d634078451a66a2fee6d08f59eda0e4228c45fa2e8235b567dd1f5855', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh': '0a56d1d262ef1da4f768e0ad6d498dbd72775fe9bba1d2725942f0758aee1afe', 'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs': 'ed21b67f82426de9f6bf258f5ff2bad8ac1ee0a113999c252aa14171cddb5c27', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh': '386b30f8fd36a6a97dc5fbb23acaba5811f3e9a06a8d3bdd692e433d292da54c'}
     for path, digest in reviewed.items():
         if hashlib.sha256((root/path).read_bytes()).hexdigest()!=digest:
             fail('local-public-recovery-owner-review-required')
@@ -63,6 +63,9 @@ def public_owners(root):
     if len(runtime)!=1 or re.fullmatch(r'gcr\.io/distroless/nodejs[0-9]+-debian[0-9]+@sha256:[0-9a-f]{64}',runtime[0]) is None or not isinstance(base,dict) or runtime[0]!=base.get('reference'): fail('local-public-recovery-runtime-image-not-public')
     postgres=re.findall(r' (postgres:[0-9]+-bookworm) (?:bash -ec|postgres -c) ',(root/SMOKE).read_text())
     if len(postgres)!=2 or len(set(postgres))!=1: fail('local-public-recovery-test-image-not-public')
+    nested=(root/'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs').read_text()
+    nested_images=re.findall(r'["\'](postgres:[^"\']+)["\']',nested)
+    if nested_images!=['postgres:17.11-bookworm']: fail('local-public-recovery-test-image-not-public')
 
 def endpoint():
     # Docker documents DOCKER_CONTEXT precedence over DOCKER_HOST. Inspect that

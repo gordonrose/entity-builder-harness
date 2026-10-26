@@ -16,6 +16,102 @@
 #     path: scripts/repo/check-selection/script.sh
 schema: repo/check-catalog/v1
 checks:
+  # Disposable engine/driver CI proof only; persistence-container owns shipped-image qualification.
+  postgresql-disposable-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+    stage: package
+    evidence_class: ci
+    effects:
+    - network
+    - writes-files
+    owner: deploy.test.postgresql-disposable-connection-diagnostics
+    inputs:
+    - platform/adapters/aws/persistence/postgresql
+    - platform/persistence
+    - packages/core
+    - package.json
+    - package-lock.json
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  postgresql-connection-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - writes-files
+    owner: deploy.test.postgresql-connection-diagnostics
+    runtime:
+      tools:
+      - bash
+      - python3
+      - node
+      - npm
+      - typescript
+      - openssl
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      - NODE_OPTIONS
+      - NODE_PATH
+      - TS_NODE_PROJECT
+      - TS_NODE_COMPILER_OPTIONS
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+      - .npmrc
+      - .node-version
+      - .nvmrc
+      node_packages:
+      - pg
+      - '@types/node'
+      - typescript
+      - '@aws-sdk/rds-signer'
+      - '@types/pg'
+    inputs:
+    - platform/adapters/aws/persistence/postgresql
+    - platform/persistence
+    - packages/core
+    - package.json
+    - package-lock.json
+    - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  restore-connection-diagnostics:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
+    stage: local
+    evidence_class: local-runtime
+    effects:
+    - read-only
+    - writes-files
+    owner: deploy.test.kanbien-core-platform.isolated-persistence-restore
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
+    - scripts/04.deploy/shared/deployment-operation-diagnostics.py
   rag-retirement-regression:
     argv:
     - bash
@@ -384,6 +480,7 @@ checks:
       - node
       - npm
       - typescript
+      - openssl
       environment:
       - PATH
       - LANG
@@ -404,6 +501,7 @@ checks:
       - .nvmrc
       node_packages:
       - pg
+      - '@aws-sdk/rds-signer'
       - '@types/node'
       - typescript
     inputs:
@@ -954,3 +1052,23 @@ repository_inputs:
   checks:
   - collector-package-custody-regression
   - deployment-operation-diagnostics-regression
+
+- inputs:
+  - platform/adapters/aws/persistence/postgresql
+  - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  checks:
+  - postgresql-connection-diagnostics
+  - postgresql-disposable-diagnostics
+- inputs:
+  - infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+  - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore
+  - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  - .agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml
+  checks:
+  - restore-connection-diagnostics
+  - deployment-operation-diagnostics-regression
+
+- inputs:
+  - scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  checks:
+  - postgresql-disposable-diagnostics

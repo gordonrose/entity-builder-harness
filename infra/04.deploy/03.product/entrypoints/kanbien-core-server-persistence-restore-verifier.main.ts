@@ -15,7 +15,7 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
-import { createNodePostgreSqlTokenConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { createNodePostgreSqlTokenConnectionPool, observePostgreSqlOperation, postgreSqlFailureDiagnostic, type PostgreSqlFailureDiagnostic } from "@kanbien/platform-adapter-aws-persistence-postgresql";
 import { connect as connectTcp } from "node:net";
 import { connect as connectTls } from "node:tls";
 
@@ -30,35 +30,37 @@ import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-
 export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const configuration = persistenceConfiguration(env, "restore");
   const credentials = configuration === undefined ? undefined : persistenceIamAuthentication(env, configuration, "PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME");
+  const diagnosticMode = text(env, "PERSISTENCE_RESTORE_DIAGNOSTIC_MODE");
+  const diagnostic = diagnosticMode === "connection";
   const expected = expectedRecord(env);
   const certificateAuthority = persistenceCertificateAuthority(env);
-  if (configuration === undefined || credentials === undefined || expected === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID");
+  if (configuration === undefined || credentials === undefined || (!diagnostic && expected === undefined) || certificateAuthority === undefined || (diagnosticMode !== undefined && !diagnostic)) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID", undefined, diagnostic);
   // Establish the private route and PostgreSQL TLS trust before materialising
   // an IAM token. Neither preflight sends a credential or query.
   try {
-    await probePostgreSqlTransport(configuration.host, configuration.port);
+    await observePostgreSqlOperation("tcp_probe", () => probePostgreSqlTransport(configuration.host, configuration.port));
   } catch (error) {
-    return rejected(restoreTransportFailureCode(error));
+    return rejected(restoreTransportFailureCode(error), postgreSqlFailureDiagnostic(error), diagnostic);
   }
   try {
-    await probePostgreSqlTls(configuration.host, configuration.port, certificateAuthority);
+    await observePostgreSqlOperation("tls_probe", () => probePostgreSqlTls(configuration.host, configuration.port, certificateAuthority));
   } catch (error) {
-    return rejected(restoreTlsPreflightFailureCode(error));
+    return rejected(restoreTlsPreflightFailureCode(error), postgreSqlFailureDiagnostic(error), diagnostic);
   }
-  let token: string;
-  try {
-    token = await credentials.authenticationToken();
-  } catch {
-    return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE");
-  }
-  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { username: credentials.username, authenticationToken: async () => token, certificateAuthority });
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   let client: Awaited<ReturnType<typeof pool.connect>> | undefined;
   try {
     try {
       client = await pool.connect();
     } catch (error) {
-      return rejected(restorePostTransportConnectionFailureCode(error));
+      return rejected(postgreSqlFailureDiagnostic(error).facts.phase === "authentication_value" ? "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE" : restoreConnectionFailureCode(error), postgreSqlFailureDiagnostic(error), diagnostic);
     }
+    if (diagnostic) {
+      await client.query({ text: "SELECT 1" });
+      return diagnosed("KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED");
+    }
+    // Configuration validation above requires this only for recovery proof.
+    if (expected === undefined) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID");
     const result = await client.query<{ readonly record_id: string; readonly fact_digest: string }>({
       text: `SELECT record_id, fact_digest FROM ${acceptanceTable(configuration.schema)} WHERE record_id = $1`,
       values: [expected.recordId],
@@ -67,7 +69,7 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
     if (row?.record_id === expected.recordId && row.fact_digest === expected.factDigest) return accepted("KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED");
     return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH");
   } catch (error) {
-    return rejected(restoreQueryFailureCode(error));
+    return rejected(restoreQueryFailureCode(error), postgreSqlFailureDiagnostic(error), diagnostic);
   } finally {
     client?.release();
     // A failed connection can leave no reusable client. Closing that pool is
@@ -85,17 +87,15 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
  * from a configuration/identity or restore-content correction.
  */
 export function restoreVerificationFailureCode(error: unknown): string {
-  // `pg`, Node TLS, and a small number of AWS client wrappers can retain the
-  // useful machine code on a causal or aggregate error. Read only those
-  // closed fields: never turn a provider message, endpoint, query, or
-  // credential-bearing value into a result code.
-  const codes = errorCodes(error);
-  if (codes.some((code) => code === "28P01" || code === "28000")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
-  if (codes.includes("42501")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
-  if (codes.some((code) => code === "3D000" || code === "42P01")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
-  if (codes.some((code) => code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENETUNREACH" || code === "EAI_AGAIN" || code === "ENOTFOUND")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
-  if (codes.some((code) => code === "CERT_HAS_EXPIRED" || code === "ERR_TLS_CERT_ALTNAME_INVALID" || code === "SELF_SIGNED_CERT_IN_CHAIN" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE")) return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
-  return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
+  switch (postgreSqlFailureDiagnostic(error).facts.classification) {
+    case "authentication_rejected": return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
+    case "permission_denied": return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
+    case "content_unavailable": return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";
+    case "transport_unavailable":
+    case "timeout": return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
+    case "tls_trust_invalid": return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
+    default: return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
+  }
 }
 
 /**
@@ -126,17 +126,9 @@ export function restoreTlsPreflightFailureCode(error: unknown): string {
     : classified;
 }
 
-/**
- * A completed TCP preflight proves that an opaque subsequent pool failure is
- * not simply an absent route to the database port.  Keep the unknown result
- * closed: the controller can request a bounded PostgreSQL/TLS correction
- * without receiving raw driver detail.
- */
+/** A separate probe establishes no internal stage of this connection. */
 export function restorePostTransportConnectionFailureCode(error: unknown): string {
-  const classified = restoreVerificationFailureCode(error);
-  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
-    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"
-    : classified;
+  return restoreConnectionFailureCode(error);
 }
 
 /**
@@ -211,23 +203,16 @@ export function restoreQueryFailureCode(error: unknown): string {
     : classified;
 }
 
-function errorCodes(error: unknown, depth = 0, seen = new Set<object>()): readonly string[] {
-  if (depth > 3 || typeof error !== "object" || error === null || seen.has(error)) return [];
-  seen.add(error);
-  const value = error as { readonly code?: unknown; readonly cause?: unknown; readonly errors?: unknown };
-  const direct = typeof value.code === "string" ? [value.code] : [];
-  const causal = errorCodes(value.cause, depth + 1, seen);
-  const aggregate = Array.isArray(value.errors)
-    ? value.errors.flatMap((nested) => errorCodes(nested, depth + 1, seen))
-    : [];
-  return [...direct, ...causal, ...aggregate];
-}
-
 function expectedRecord(env: NodeJS.ProcessEnv): { readonly recordId: string; readonly factDigest: string } | undefined {
   const recordId = text(env, "PERSISTENCE_ACCEPTANCE_RECORD_ID"), factDigest = text(env, "PERSISTENCE_ACCEPTANCE_FACT_DIGEST");
   return recordId !== undefined && /^core-persistence-[a-z0-9-]{8,80}$/.test(recordId) && factDigest !== undefined && /^[a-f0-9]{64}$/.test(factDigest) ? { recordId, factDigest } : undefined;
 }
 function acceptanceTable(schema: string): string { if (!/^[a-z][a-z0-9_]{0,62}$/.test(schema)) throw new TypeError("CORE_SERVER_PERSISTENCE_SCHEMA_INVALID"); return `"${schema}"."core_server_persistence_acceptance"`; }
-function accepted(code: string): void { console.log(JSON.stringify({ verdict: "accepted", code })); }
-function rejected(code: string): void { console.error(JSON.stringify({ verdict: "rejected", code })); process.exitCode = 1; }
+const resultSchema = "deploy/persistence-restore-verifier-result/v2";
+function accepted(code: string): void { console.log(JSON.stringify({ schema: resultSchema, verdict: "accepted", code })); }
+function diagnosed(code: string): void { console.log(JSON.stringify({ schema: resultSchema, verdict: "diagnosed", code })); }
+function rejected(code: string, diagnostic?: PostgreSqlFailureDiagnostic, connectionDiagnostic = false): void {
+  console.error(JSON.stringify({ schema: resultSchema, verdict: connectionDiagnostic ? "diagnostic-failed" : "rejected", code, ...(diagnostic === undefined ? {} : { execution: diagnostic.facts }) }));
+  process.exitCode = 1;
+}
 if (typeof require !== "undefined" && require.main === module) void runKanbienCoreServerPersistenceRestoreVerifier();

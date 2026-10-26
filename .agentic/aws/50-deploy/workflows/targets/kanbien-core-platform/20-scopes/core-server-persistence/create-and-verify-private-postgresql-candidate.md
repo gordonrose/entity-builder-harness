@@ -183,6 +183,38 @@ export does not make the verifier successful and does not authorize a new
 task: reconcile the same operation first. This diagnosis supports correction;
 only an accepted verifier receipt can prove recovery.
 
+For a failed connection, the deployment chat may use the separate bounded mode
+below after explicit task-launch and temporary-access authority. It targets the
+positively tagged restored incarnation derived from this snapshot and retained
+record proof. It launches at most one diagnostic task for that incarnation,
+grants only its restored-instance runtime identity, runs separate TCP/TLS probes
+and a driver connection plus `SELECT 1`, and removes temporary access after all
+related tasks stop. A running diagnostic beyond 120 seconds can be stopped only
+by this controller for its exact owned task. Existing `cleanup` observes both
+recovery and diagnostic tasks before deleting the disposable database.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation diagnose-connection --snapshot-id "$snapshot" --record-proof-receipt "$record_proof_receipt" --json
+```
+
+The same command with `--observe-only` performs bounded reads without launching,
+granting, stopping or revoking access. Each invocation reads at most three log
+pages/observations per stream; each provider call retains its existing 30-second
+process timeout. Delayed logs are reconciled against the same task, without
+replaying it. A durable launch reservation survives interruptions and ECS task
+retention expiry; absence of a discoverable task after reservation blocks
+relaunch, IAM revocation and disposable-database deletion until the launch
+outcome is resolved through governed observation or owner escalation. A local
+exclusive controller lock serializes launch/access/cleanup decisions in this
+checkout; it is not a distributed lock across operator checkouts. The deployment
+chat remains the sole live execution owner. Policy removal requires the exact
+restored-incarnation policy; a later foreign policy is left untouched. Collection/write failures preserve the
+original safe verifier code and child status. Historical two-field results and
+new typed v2 results remain readable. No diagnostic result is recovery evidence,
+a release promotion, or proof that the underlying connection fault is repaired.
+This chat implements/tests the route locally; live RDS execution stays with the
+deployment chat using the merged revision and newly qualified verifier image.
+
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt runtime-identity-initial-access="$initial_identity_access_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
 ```

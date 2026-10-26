@@ -16,7 +16,7 @@ set -euo pipefail
 #   used_by:
 #   - id: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
 RESTORE_SCRIPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
@@ -118,14 +118,15 @@ original_diagnostics = module.OPERATION_DIAGNOSTICS
 with TemporaryDirectory() as temporary:
     module.OPERATION_DIAGNOSTICS = Path(temporary)
     module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-test", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
-    retained = json.loads((Path(temporary) / "kanbien-restore-diagnostic-test-rejected.json").read_text())
+    retained = json.loads((next(Path(temporary).glob("kanbien-restore-diagnostic-test-*.json"))).read_text())
     assert retained["classification"] == {"code": "persistence-restore-server-log-authentication-rejected"}
-    assert retained["collection"] == {"status": "collected"}
-    assert retained["next_action"] == {"decision": "correct-and-create-new-operation"}
+    assert retained["collection"]["status"] == "collected"
+    assert retained["original_failure"]["code"] == "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"
+    assert retained["next_action"] == {"decision": "inspect-retained-evidence"}
     assert canary not in json.dumps(retained)
     module.retain_verifier_rejection(missing_export, "kanbien-restore-diagnostic-missing-export", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task)
-    unavailable = json.loads((Path(temporary) / "kanbien-restore-diagnostic-missing-export-rejected.json").read_text())
-    assert unavailable["collection"] == {"status": "unavailable"}
+    unavailable = json.loads((next(Path(temporary).glob("kanbien-restore-diagnostic-missing-export-*.json"))).read_text())
+    assert unavailable["collection"]["status"] == "unavailable"
     assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
 module.OPERATION_DIAGNOSTICS = original_diagnostics
 
@@ -193,8 +194,8 @@ assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "co
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE"})]), "task-transport-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE"})]), "task-tls-negotiation-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"})]), "task-handshake-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE")
-assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("unavailable", None)
-assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("unavailable", None)
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("malformed", None)
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("malformed", None)
 
 # A normal RDS restore reports ``creating`` before it has an endpoint.  The
 # controller must preserve that as an in-flight operation instead of claiming
@@ -215,3 +216,5 @@ assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-resto
 assert json.loads(log_export_output.getvalue())["findings"] == [{"code": "persistence-restore-still-provisioning"}]
 print("isolated persistence restore verifier task-definition checks passed")
 PY
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py"

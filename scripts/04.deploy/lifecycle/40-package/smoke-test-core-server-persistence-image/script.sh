@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -109,6 +109,17 @@ const read = await fetch(`${base}/internal/persistence-acceptance?record_id=${id
 NODE
 restore_digest="$(node -e 'process.stdout.write("f".repeat(64))')"
 expect_code KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED docker run --rm "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ACCEPTANCE_RECORD_ID=core-persistence-package-smoke-0001 -e "PERSISTENCE_ACCEPTANCE_FACT_DIGEST=$restore_digest" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js
+# Connection investigation never emits the recovery success verdict/code.
+diagnostic_output="$(docker run --rm "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_RESTORE_DIAGNOSTIC_MODE=connection "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js 2>&1)" || fail 'connection-diagnostic-package-failed'
+assert_safe_output "$diagnostic_output"
+printf '%s' "$diagnostic_output" | node -e 'let s="";process.stdin.on("data",x=>s+=x);process.stdin.on("end",()=>{try{const v=JSON.parse(s);if(v.schema!=="deploy/persistence-restore-verifier-result/v2"||v.verdict!=="diagnosed"||v.code!=="KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED")process.exitCode=1}catch{process.exitCode=1}})' || fail 'connection-diagnostic-package-result-invalid'
+set +e
+diagnostic_output="$(docker run --rm "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_RESTORE_DIAGNOSTIC_MODE=connection -e "PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN=$REJECTED_PASSWORD" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js 2>&1)"
+diagnostic_status=$?
+set -e
+[[ "$diagnostic_status" == 1 ]] || fail 'connection-diagnostic-rejection-status-invalid'
+assert_safe_output "$diagnostic_output"
+printf '%s' "$diagnostic_output" | node -e 'let s="";process.stdin.on("data",x=>s+=x);process.stdin.on("end",()=>{try{const v=JSON.parse(s);if(v.verdict!=="diagnostic-failed"||v.code!=="KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED"||v.execution?.phase!=="pool_connect"||v.execution?.classification!=="authentication_rejected")process.exitCode=1}catch{process.exitCode=1}})' || fail 'connection-diagnostic-rejection-result-invalid'
 # A synthetic legacy password is rejected on a new connection. It is only a
 # local canary; the governed live proof checks the already-exposed target
 # credential without putting its value in a report or shell output.

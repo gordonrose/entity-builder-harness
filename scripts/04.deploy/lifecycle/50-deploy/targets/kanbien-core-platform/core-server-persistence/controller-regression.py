@@ -55,7 +55,7 @@ def temporary_receipts(controller):
         root = Path(directory)
         receipts.RECEIPTS = root / 'proof-receipts'
         receipts.EVIDENCE_CLASS = 'simulated'
-        with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root):
+        with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root), (patch.object(controller, 'OPERATION_DIAGNOSTICS', root / 'operation-diagnostics') if hasattr(controller, 'OPERATION_DIAGNOSTICS') else contextlib.nullcontext()):
             yield receipts
 
 class Provider:
@@ -340,8 +340,8 @@ class ControllerRegression(unittest.TestCase):
         for obsolete in ('advance_secret','current_secret_version','RUNTIME_SECRET_OUTPUT','SECRET_CHECKPOINT'):
             self.assertFalse(hasattr(module,obsolete))
         receipt=Path('synthetic-receipt.json')
-        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy:
-            self.assertEqual(module.recover(receipt),'ok')
+        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy,patch.object(module,'verifier_receipt',return_value='fixture-readiness-receipt'):
+            self.assertEqual(module.recover(receipt),('ok','fixture-readiness-receipt'))
         administer.assert_called_once_with('restore-runtime')
         replace.assert_called_once_with(receipt)
         self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])

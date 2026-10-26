@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -37,5 +37,6 @@ NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/40-package/build
 # load time.  Resolve its real external packages here just as the image payload
 # does, while the individual runtime fixtures still select provider `none`.
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$TEMPORARY_DIRECTORY"
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs "$TEMPORARY_DIRECTORY"

@@ -312,9 +312,10 @@ def log_has_code(kind: str, arn: str, code: str) -> None:
 
 def safe_result(event: object, code: str) -> bool:
     if not isinstance(event, dict) or not isinstance(event.get("message"), str): return False
-    try: value = json.loads(event["message"])
-    except json.JSONDecodeError: return False
-    return isinstance(value, dict) and value.get("verdict") == "accepted" and value.get("code") == code
+    try:
+        value = controller("scripts/04.deploy/shared/deployment-operation-diagnostics.py").validate_verifier_result(json.loads(event["message"]))
+    except Exception: return False
+    return value["verdict"] == "accepted" and value["code"] == code
 
 
 def task_fact(name: str, arn: str, kind: str, family: str, digest: str, code: str, deadline: int) -> dict[str, Any]:

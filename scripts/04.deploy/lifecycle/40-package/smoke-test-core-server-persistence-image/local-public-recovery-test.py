@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -35,6 +35,9 @@ BUILD=Path('scripts/04.deploy/lifecycle/40-package/build-core-server-persistence
 SMOKE=DIRECTORY/'script.sh'
 DOCKERFILE=Path('infra/04.deploy/03.product/image/core-server-persistence/Dockerfile')
 CONTRACT=DOCKERFILE.with_name('image-contract.yml')
+DIAGNOSTIC_CHECK=Path('scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh')
+INTEGRATION_CHECK=Path('scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh')
+INTEGRATION_RUNNER=Path('platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs')
 COUNT=0
 FAKE_DOCKER='''import json,os,sys
 from pathlib import Path
@@ -80,7 +83,7 @@ def run_case(name,*,environment=None,arguments=None,mutate=None,expected=0,code=
  global COUNT
  with tempfile.TemporaryDirectory(prefix='public-recovery-test-') as directory:
   fixture=Path(directory);binaries=fixture/'bin';binaries.mkdir();events=fixture/'events';events.touch()
-  for relative in (BUILD,SMOKE,DOCKERFILE,CONTRACT):
+  for relative in (BUILD,SMOKE,DOCKERFILE,CONTRACT,DIAGNOSTIC_CHECK,INTEGRATION_CHECK,INTEGRATION_RUNNER):
    path=fixture/relative;path.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/relative,path)
   original=fixture/'original-docker';original.mkdir(mode=0o700);(original/'config.json').write_text('{"credsStore":"untouched-fixture-helper","auths":{"fixture.invalid":{"auth":"fixture-only"}}}\n');(original/'context').write_text('unchanged-context\n');original_files={p.name:(p.read_bytes(),stat.S_IMODE(p.stat().st_mode)) for p in original.iterdir()}
   for binary,text in [('git',"import os\nprint(os.environ['RECOVERY_ROOT'])\n"),('docker',FAKE_DOCKER),('bash',FAKE_BASH)]:
@@ -139,6 +142,9 @@ run_case('signal-cleanup',environment={'RECOVERY_SLEEP':'build'},expected=143,co
 for arguments in (['--tag'],['--build-arg','anything'],['--tag','private.invalid/image:test','--port','39456'],['--tag','kanbien-core-server-persistence:test','--port','0'],['--tag','kanbien-core-server-persistence:test','--port','bad']):
  run_case('invalid-argument',arguments=arguments,expected=1,code='local-public-recovery-arguments-invalid')
 for name,mutate in (
+ ('private-nested-postgres',replace(INTEGRATION_RUNNER,'postgres:17.11-bookworm','private.invalid/postgres:17.11-bookworm')),
+ ('changed-nested-integration-check',lambda root:(root/INTEGRATION_CHECK).write_text((root/INTEGRATION_CHECK).read_text()+'\n# unreviewed owner edit\n')),
+ ('changed-nested-diagnostic-check',lambda root:(root/DIAGNOSTIC_CHECK).write_text((root/DIAGNOSTIC_CHECK).read_text()+'\n# unreviewed owner edit\n')),
  ('private-node',replace(DOCKERFILE,'node:22-bookworm-slim','private.invalid/node:22')),
  ('private-frontend',replace(DOCKERFILE,'docker/dockerfile:1.7','private.invalid/frontend:1.7')),
  ('private-postgres',replace(SMOKE,'postgres:16-bookworm','private.invalid/postgres:16-bookworm')),

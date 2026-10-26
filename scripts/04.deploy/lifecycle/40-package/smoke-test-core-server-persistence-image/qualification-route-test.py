@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -76,6 +76,7 @@ printf '%s\\n' "$command_path" >> "$QUAL_CALLS"
 if [[ "$command_path" == "$QUAL_FAIL" ]]; then exit 23; fi
 if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path" "$@"; fi
 ''')
+    (binaries / 'npm').write_text('#!/bin/bash\nprintf "npm:%s\\n" "$*" >> "$QUAL_CALLS"\nif [[ "npm:$*" == "$QUAL_FAIL" ]]; then exit 23; fi\n')
     (binaries / 'docker').write_text('#!/bin/bash\nprintf "docker:%s\\n" "$1" >> "$QUAL_CALLS"\n')
     for binary in binaries.iterdir():
         binary.chmod(0o755)
@@ -87,6 +88,8 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
         'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh',
         'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
         'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh',
+        'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh',
+        'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh',
     ]
     for rejected in ('', *required):
         calls.write_text('')
@@ -120,4 +123,4 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
             builder.write_text(altered)
             assert not module.qualification_route_valid(text), change
         builder.write_text(original)
-print('Publication qualification passed: actual workflow/builder route runs eight commands once; all eight failures stop progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.')
+print('Publication qualification passed: actual workflow/builder route runs all focused qualification commands once; all required failures stop progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.')

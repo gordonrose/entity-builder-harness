@@ -19,13 +19,10 @@ writePackageShim("@kanbien/platform-observability", {
   ".": join(runtimeRoot, "platform/observability/src/index.js"),
 });
 
-const result = spawnSync(
-  process.execPath,
-  [join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.js")],
-  { stdio: "inherit" },
-);
-
-process.exitCode = result.status ?? 1;
+for (const test of ["postgresql-persistence-adapter-runtime.test.js", "postgresql-diagnostics.test.js"]) {
+  const result = spawnSync(process.execPath, [join(runtimeRoot, "platform/adapters/aws/persistence/postgresql/tests", test)], { stdio: "inherit", timeout: 20_000 });
+  if (result.status !== 0) { process.exitCode = 1; break; }
+}
 
 function writePackageShim(packageName, exportsMap) {
   const packageRoot = join(runtimeRoot, "node_modules", ...packageName.split("/"));

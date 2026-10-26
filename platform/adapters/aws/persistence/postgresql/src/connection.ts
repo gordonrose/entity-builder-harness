@@ -1,5 +1,6 @@
 import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 import type { PostgreSqlPersistenceConfiguration } from "./config";
+import { observePostgreSqlOperation } from "./errors";
 
 export interface PostgreSqlConnectionCredentials {
   readonly username: string;
@@ -64,7 +65,7 @@ export function createNodePostgreSqlTokenConnectionPool(
     port: configuration.port,
     database: configuration.database,
     user: credentials.username,
-    password: credentials.authenticationToken,
+    password: () => observePostgreSqlOperation("authentication_value", credentials.authenticationToken),
     max: configuration.maximumPoolSize,
     connectionTimeoutMillis: configuration.connectionTimeoutMs,
     idleTimeoutMillis: configuration.idleTimeoutMs,
@@ -89,15 +90,15 @@ export function nodePoolAdapter(pool: Pool): PostgreSqlConnectionPool {
   // runtime through its safe diagnostic policy.
   pool.on("error", () => undefined);
   return {
-    query: async (statement) => nodeQuery(pool, statement),
-    connect: async () => nodeClientAdapter(await pool.connect()),
+    query: async (statement) => observePostgreSqlOperation("pool_query", () => nodeQuery(pool, statement)),
+    connect: async () => nodeClientAdapter(await observePostgreSqlOperation("pool_connect", () => pool.connect())),
     end: async () => pool.end(),
   };
 }
 
 export function nodeClientAdapter(client: PoolClient): PostgreSqlTransactionalClient {
   return {
-    query: async (statement) => nodeQuery(client, statement),
+    query: async (statement) => observePostgreSqlOperation("query", () => nodeQuery(client, statement)),
     release: () => client.release(),
   };
 }

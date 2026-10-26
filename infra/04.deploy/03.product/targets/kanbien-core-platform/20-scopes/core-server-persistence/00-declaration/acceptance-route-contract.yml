@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: '2026-10-25'
-#   updated_on: '2026-10-26'
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.release-lifecycle
 #   disciplines:
@@ -70,6 +70,21 @@ inputs:
     - readiness-alarm-notified
     - readiness-recovery-observed
 commands:
+  # Explicitly non-accepting: this command has no proof contract and cannot
+  # replace isolated-restore or any other recovery acceptance obligation.
+  connection-diagnostic:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - --operation
+    - diagnose-connection
+    - --snapshot-id
+    - '{recovery_snapshot}'
+    - --record-proof-receipt
+    - '{record_proof_receipt}'
+    - --json
+    owner: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
+    effects: [aws-mutation, writes-files]
   qualify-proof-applicability:
     argv:
     - bash
