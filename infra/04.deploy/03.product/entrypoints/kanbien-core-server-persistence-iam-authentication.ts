@@ -1,10 +1,10 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-iam-authentication
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-25"
-//   updated_on: "2026-10-25"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -31,7 +31,17 @@ export function persistenceIamAuthentication(
   // token is allowed only with the explicit test runtime marker; target
   // declarations reject both variables for any deployed workload.
   const localToken = text(env["PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN"]);
-  if (env["NODE_ENV"] === "test" && localToken !== undefined) return { username, authenticationToken: async () => localToken };
+  const localDelayText = text(env["PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN_DELAY_MS"]);
+  const localDelay = localDelayText === undefined ? 0 : Number(localDelayText);
+  if (env["NODE_ENV"] === "test" && localToken !== undefined && Number.isInteger(localDelay) && localDelay >= 0 && localDelay <= 10_000) {
+    return {
+      username,
+      authenticationToken: async () => {
+        if (localDelay > 0) await new Promise<void>((resolve) => setTimeout(resolve, localDelay));
+        return localToken;
+      },
+    };
+  }
   return { username, authenticationToken: rdsIamAuthenticationToken({ region, hostname: configuration.host, port: configuration.port, username }) };
 }
 

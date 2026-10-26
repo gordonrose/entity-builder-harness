@@ -20,6 +20,11 @@ dormant_impact_roots:
 - scripts/02.rag-rulebook
 - docs/02.rag-rulebook
 - infra/04.deploy/02.rag-rulebook
+dormant_package_commands:
+- package.json#scripts.rag:service
+- package.json#scripts.rag:service:smoke
+- package.json#scripts.rag:image:build
+- package.json#scripts.rag:image:smoke
 checks:
   delivery-inventory-regression:
     argv:
@@ -49,6 +54,290 @@ checks:
     inputs:
     - scripts/04.deploy/inventory-deploy-control
     - .github/workflows/delivery-coverage.yml
+  # The retained kanbien/staging reference target remains an active delivery
+  # route. These bindings name its existing proof owners rather than allowing
+  # a newer target's catalogue to hide incomplete legacy routes.
+  shell-package-source: &staging_local
+    argv: [bash, scripts/04.deploy/build-platform-shell-image/check-source.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only]
+    owner: deploy.check.platform-shell-package-source
+    applicability: {kind: profile, target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml}
+    inputs: [scripts/04.deploy/build-platform-shell-image/check-source.sh, infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml]
+  shell-image-smoke: &staging_package
+    argv: [bash, scripts/04.deploy/smoke-test-platform-shell-image/script.sh]
+    stage: package
+    evidence_class: container-qualification
+    effects: [network, writes-files]
+    owner: deploy.command.smoke-test-platform-shell-image
+    applicability: {kind: profile, target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml}
+    inputs: [scripts/04.deploy/smoke-test-platform-shell-image, infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml]
+  shell-runtime-alignment: &staging_target
+    argv: [bash, scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh]
+    stage: deploy
+    evidence_class: live
+    effects: [network]
+    owner: deploy.script.verify-platform-shell-deploy-readiness
+    applicability: {kind: profile, target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml}
+    inputs: [scripts/04.deploy/verify-platform-shell-deploy-readiness, infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml]
+  shell-publication:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh]
+    owner: deploy.script.verify-platform-shell-deployment-workflow
+    inputs: [scripts/04.deploy/verify-platform-shell-deployment-workflow, .github/workflows/deploy-platform-shell-staging.yml]
+  shell-ingress-smoke: &staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-ingress-smoke/script.sh]
+    stage: acceptance
+    evidence_class: live
+    effects: [network]
+    owner: deploy.script.run-platform-shell-ingress-smoke
+    applicability: {kind: profile, target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml}
+    inputs: [scripts/04.deploy/run-platform-shell-ingress-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-infrastructure:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-infrastructure/script.sh]
+    owner: deploy.script.verify-platform-shell-infrastructure
+    inputs: [scripts/04.deploy/verify-platform-shell-infrastructure, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-release-evidence-regression:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-deploy-readiness
+    inputs: [scripts/04.deploy/verify-platform-shell-deploy-readiness, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-negative-authz-client-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.provision-platform-shell-negative-authz-client
+    inputs: [scripts/04.deploy/provision-platform-shell-negative-authz-client, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-write-client-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/provision-platform-shell-persistence-write-client/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.provision-platform-shell-persistence-write-client
+    inputs: [scripts/04.deploy/provision-platform-shell-persistence-write-client, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-controlled-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-controlled-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-controlled-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-controlled-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-negative-authz-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-negative-authz-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-negative-authz-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-negative-authz-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-persistence-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-persistence-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-negative-authz-smoke:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-negative-authz-smoke/script.sh]
+    owner: deploy.script.run-platform-shell-negative-authz-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-negative-authz-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-smoke:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh]
+    owner: deploy.script.run-platform-shell-persistence-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-persistence-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-worker-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-worker-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-worker-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-delivery-proof-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-persistence-delivery-proof
+    inputs: [scripts/04.deploy/run-platform-shell-persistence-delivery-proof, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-worker-smoke:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-worker-smoke/script.sh]
+    owner: deploy.script.run-platform-shell-worker-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-worker-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-delivery-proof:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh]
+    owner: deploy.script.run-platform-shell-persistence-delivery-proof
+    inputs: [scripts/04.deploy/run-platform-shell-persistence-delivery-proof, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-metric-coverage-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-metric-coverage/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-metric-coverage
+    inputs: [scripts/04.deploy/run-platform-shell-metric-coverage, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-metric-coverage-policy-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh]
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-metric-coverage
+    inputs: [scripts/04.deploy/verify-platform-shell-metric-coverage, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-synthetic-scheduler-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh]
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-synthetic-scheduler
+    inputs: [scripts/04.deploy/verify-platform-shell-synthetic-scheduler, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-rate-limit-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-rate-limit-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-rate-limit-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-rate-limit-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-ingress-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-ingress-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-ingress-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-ingress-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-metric-coverage:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-metric-coverage/script.sh]
+    owner: deploy.script.run-platform-shell-metric-coverage
+    inputs: [scripts/04.deploy/run-platform-shell-metric-coverage, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-rate-limit-smoke:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-rate-limit-smoke/script.sh]
+    owner: deploy.script.run-platform-shell-rate-limit-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-rate-limit-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-deployment-reconciliation-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.reconcile-platform-shell-staging
+    inputs: [scripts/04.deploy/reconcile-platform-shell-staging, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-candidate-preflight-regression:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-candidate-execution-preflight
+    inputs: [scripts/04.deploy/run-platform-shell-candidate-execution-preflight, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-deployment-reconciliation-policy-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh]
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-deployment-reconciliation
+    inputs: [scripts/04.deploy/verify-platform-shell-deployment-reconciliation, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-artifact-active-drift-assessment-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/assess-platform-shell-artifact-drift/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.assess-platform-shell-artifact-drift
+    inputs: [scripts/04.deploy/assess-platform-shell-artifact-drift, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-foundation-active-drift-assessment-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/assess-platform-shell-foundation-drift/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.assess-platform-shell-foundation-drift
+    inputs: [scripts/04.deploy/assess-platform-shell-foundation-drift, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-service-active-drift-assessment-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/assess-platform-shell-service-drift/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.assess-platform-shell-service-drift
+    inputs: [scripts/04.deploy/assess-platform-shell-service-drift, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-drift-detection-boundary-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-drift-detection-boundary/smoke-test.sh]
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-drift-detection-boundary
+    inputs: [scripts/04.deploy/verify-platform-shell-drift-detection-boundary, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-deployment-reconciliation:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/reconcile-platform-shell-staging/script.sh]
+    owner: deploy.script.reconcile-platform-shell-staging
+    inputs: [scripts/04.deploy/reconcile-platform-shell-staging, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-postgresql-live-boundary-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/smoke-test.sh]
+    effects: [read-only, writes-files]
+    owner: deploy.test.verify-platform-shell-postgresql-live-boundary
+    inputs: [scripts/04.deploy/verify-platform-shell-postgresql-live-boundary, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-postgresql-relational-smoke-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-postgresql-relational-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-postgresql-relational-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-persistence-admission-probe-check:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh]
+    evidence_class: local-runtime
+    effects: [read-only, writes-files]
+    owner: deploy.test.run-platform-shell-persistence-admission-probe
+    inputs: [scripts/04.deploy/run-platform-shell-persistence-admission-probe, infra/04.deploy/03.product/targets/kanbien/staging]
+  shell-postgresql-relational-smoke:
+    <<: *staging_run
+    argv: [bash, scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh]
+    owner: deploy.script.run-platform-shell-postgresql-relational-smoke
+    inputs: [scripts/04.deploy/run-platform-shell-postgresql-relational-smoke, infra/04.deploy/03.product/targets/kanbien/staging]
+  observability-mvp-declaration-regression: &declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/smoke-test.sh]
+    stage: local
+    evidence_class: static
+    effects: [read-only, writes-files]
+    owner: deploy.test.validate-observability-mvp-declaration
+    inputs: [scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration]
+  secret-dependency-declaration-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.sh]
+    owner: deploy.test.validate-secret-dependency-declaration
+    inputs: [scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration]
+  target-alignment-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment/smoke-test.sh]
+    owner: deploy.test.validate-target-alignment
+    inputs: [scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment]
+  runtime-credential-lifecycle-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/smoke-test.sh]
+    evidence_class: local-runtime
+    owner: deploy.test.kanbien-core-platform.runtime-credential-lifecycle
+    inputs: [scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle]
+  active-workload-health-recovery-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/smoke-test.sh]
+    owner: deploy.test.validate-active-workload-health-recovery
+    inputs: [scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery]
+  health-failure-recovery-declaration-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.sh]
+    owner: deploy.test.validate-health-failure-and-recovery-declaration
+    inputs: [scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration]
+  persistence-diagnostic-mapping-regression:
+    <<: *declaration_regression
+    argv: [bash, scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping/smoke-test.sh]
+    owner: deploy.test.validate-persistence-diagnostic-mapping
+    inputs: [scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping]
+  shell-postgresql-reference-regression:
+    <<: *staging_local
+    argv: [bash, scripts/04.deploy/verify-platform-shell-postgresql-reference/smoke-test.sh]
+    owner: deploy.test.verify-platform-shell-postgresql-reference
+    inputs: [scripts/04.deploy/verify-platform-shell-postgresql-reference, infra/04.deploy/03.product/targets/kanbien/staging]
   # Disposable engine/driver CI proof only; persistence-container owns shipped-image qualification.
   postgresql-disposable-diagnostics:
     argv:

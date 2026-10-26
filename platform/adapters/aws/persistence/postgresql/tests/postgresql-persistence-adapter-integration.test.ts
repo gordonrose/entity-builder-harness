@@ -41,9 +41,16 @@ import { nodePoolAdapter } from "../src/connection";
 
 const schema = "platform_smoke";
 const fixtureStart = new Date("2026-09-26T12:00:00.000Z");
+// Only fixed, local labels may reach the disposable-test output.  A failed
+// assertion still fails closed, while CI can identify the exercised boundary
+// without serialising a PostgreSQL error (which can contain connection detail).
+let integrationPhase = "initialization";
 
 async function main(): Promise<void> {
   const environment = localFixtureEnvironment();
+  integrationPhase = "fixture-authentication-ready";
+  await waitForFixtureAuthentication(environment);
+  integrationPhase = "diagnostic-engine-failures";
   await diagnosticEngineFailures(environment);
   const rawPool = new Pool({
     host: environment.host,
@@ -57,6 +64,7 @@ async function main(): Promise<void> {
   });
 
   try {
+    integrationPhase = "bootstrap-ownership-repeat";
     console.log("PostgreSQL disposable assertion phase: bootstrap ownership repeat.");
     await bootstrapOwnershipRepeat(environment, rawPool);
     const pool = nodePoolAdapter(rawPool);
@@ -77,6 +85,7 @@ async function main(): Promise<void> {
     const smokeMigration = kanbienPlatformSmokePostgreSqlMigration(schema);
     const migrations = [foundationMigration, smokeMigration];
     const migrationRunner = createPostgreSqlMigrationRunner(configuration, { pool }, "stage3-local");
+    integrationPhase = "immutable-migrations";
     console.log("PostgreSQL disposable assertion phase: immutable migrations.");
     const applied = await migrationRunner.apply({ schema, migrations });
     equal(applied.ok, true, "The immutable migration manifest must apply to the disposable engine.");
@@ -91,6 +100,7 @@ async function main(): Promise<void> {
     }
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_migration_history"`), 2);
 
+    integrationPhase = "least-privilege-roles";
     console.log("PostgreSQL disposable assertion phase: least-privilege migration and runtime roles.");
     await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokemigrate LOGIN PASSWORD 'fixture-migration-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
     await rawPool.query({ text: "DO $$ BEGIN CREATE ROLE psmokeruntime LOGIN PASSWORD 'fixture-runtime-password'; EXCEPTION WHEN duplicate_object THEN NULL; END $$" });
@@ -121,6 +131,7 @@ async function main(): Promise<void> {
       await runtimePool.end();
     }
 
+    integrationPhase = "bootstrap-effects-reconciliation";
     console.log("PostgreSQL disposable assertion phase: bootstrap-effect read-only reconciliation.");
     await bootstrapEffectsReadOnlyReconciliation(environment, rawPool);
 
@@ -130,6 +141,7 @@ async function main(): Promise<void> {
       telemetry: (observation) => telemetry.push(observation),
     });
     const atomicWorkItemId = required(platformSmokeWorkItemId("synthetic-work-item-atomic"));
+    integrationPhase = "atomic-state-lineage-outbox";
     console.log("PostgreSQL disposable assertion phase: atomic state, lineage, and outbox.");
     const accepted = await acceptPlatformSmokeWorkItem({
       id: atomicWorkItemId,
@@ -142,6 +154,7 @@ async function main(): Promise<void> {
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_outbox"`), 1);
 
     const rollbackId = "synthetic-work-item-rollback";
+    integrationPhase = "atomic-rollback";
     console.log("PostgreSQL disposable assertion phase: atomic rollback.");
     const rollback = await smokePersistence.atomicWriter.run(async (scope) => {
       const participant = stagePostgreSqlTransactionStatement(scope.transaction, {
@@ -162,6 +175,7 @@ async function main(): Promise<void> {
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_record_change" WHERE record_id = $1`, [rollbackId]), 0);
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."platform_outbox" WHERE subject_id = $1`, [rollbackId]), 0);
 
+    integrationPhase = "optimistic-concurrency";
     console.log("PostgreSQL disposable assertion phase: optimistic concurrency.");
     const updated = await rawPool.query({
       text: `UPDATE "${schema}"."platform_smoke_work_item" SET revision = $1 WHERE id = $2 AND revision = $3 RETURNING revision`,
@@ -174,6 +188,7 @@ async function main(): Promise<void> {
     });
     equal(stale.rowCount, 0, "A stale optimistic-concurrency revision must update no record.");
 
+    integrationPhase = "tenant-predicate-isolation";
     console.log("PostgreSQL disposable assertion phase: tenant predicate isolation.");
     await rawPool.query({
       text: `CREATE TABLE "${schema}"."synthetic_tenant_item" (tenant_id text NOT NULL, id text NOT NULL, state text NOT NULL, PRIMARY KEY (tenant_id, id))`,
@@ -193,6 +208,7 @@ async function main(): Promise<void> {
     })).rowCount, 0);
     equal(await count(rawPool, `SELECT COUNT(*)::integer AS count FROM "${schema}"."synthetic_tenant_item" WHERE tenant_id = $1 AND id = $2`, ["synthetic-tenant-a", "synthetic-tenant-record"]), 1);
 
+    integrationPhase = "outbox-lease-fencing";
     console.log("PostgreSQL disposable assertion phase: outbox lease fencing.");
     const outbox = createPostgreSqlPlatformOutboxStore({ configuration, pool });
     const fencedEntry = testMutation("synthetic-fenced-record", at(4), "synthetic-tenant-a").outboxEntry;
@@ -211,6 +227,7 @@ async function main(): Promise<void> {
     if (!staleCompletion.ok) equal(staleCompletion.error.code, "PLATFORM_PERSISTENCE_STALE_FENCE");
     equal((await outbox.markPublished({ id: fencedEntry.id, fence: secondFence, publishedAt: at(6.5) })).ok, true);
 
+    integrationPhase = "relay-ordering";
     console.log("PostgreSQL disposable assertion phase: relay ordering.");
     const relayEntry = testMutation("synthetic-relay-record", at(-1), "synthetic-tenant-a").outboxEntry;
     equal((await outbox.create(relayEntry)).ok, true);
@@ -228,6 +245,7 @@ async function main(): Promise<void> {
     equal(queue.messages.length, 1, "The relay must emit only one minimal queue envelope.");
     equal((await outbox.get(relayEntry.id))?.state, "published");
 
+    integrationPhase = "worker-processing-fence";
     console.log("PostgreSQL disposable assertion phase: worker processing fence.");
     const processing = createPostgreSqlPlatformProcessingStore({ configuration, pool });
     const processingFirstClaim = await processing.claim({ outboxEntryId: relayEntry.id, owner: ownerOne, acquiredAt: at(10), leaseDurationMs: 1_000 });
@@ -241,6 +259,7 @@ async function main(): Promise<void> {
     if (!staleWorker.ok) equal(staleWorker.error.code, "PLATFORM_PERSISTENCE_STALE_FENCE");
     equal((await processing.complete({ outboxEntryId: relayEntry.id, fence: processingSecondFence, outcome: "succeeded", completedAt: at(12.5) })).ok, true);
 
+    integrationPhase = "telemetry-safety";
     console.log("PostgreSQL disposable assertion phase: telemetry safety.");
     const telemetryText = JSON.stringify(telemetry);
     equal(telemetryText.includes(environment.password), false, "Normal telemetry must not contain the fixture password.");
@@ -249,6 +268,38 @@ async function main(): Promise<void> {
   } finally {
     await rawPool.end();
   }
+}
+
+async function waitForFixtureAuthentication(environment: ReturnType<typeof localFixtureEnvironment>): Promise<void> {
+  // `pg_isready` establishes that the postmaster accepts probes, not that a
+  // freshly created container has reached a stable password-authentication
+  // boundary. Establish that boundary with the real driver before testing a
+  // deliberately rejected password. Bounded retries only cover fixture start;
+  // they never turn an expected diagnostic assertion into a pass.
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const pool = new Pool({
+      host: environment.host,
+      port: environment.port,
+      database: environment.database,
+      user: "postgres",
+      password: environment.password,
+      max: 1,
+      connectionTimeoutMillis: 1_000,
+      ssl: false,
+    });
+    try {
+      const client = await pool.connect();
+      client.release();
+      return;
+    } catch {
+      // The fixture is still starting. Provider detail is deliberately not
+      // emitted because it can contain connection material.
+    } finally {
+      await pool.end();
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error("The disposable PostgreSQL fixture did not reach authenticated readiness.");
 }
 
 async function bootstrapOwnershipRepeat(environment: ReturnType<typeof localFixtureEnvironment>, rawPool: Pool): Promise<void> {
@@ -394,18 +445,28 @@ function required<TValue>(result: { readonly ok: true; readonly value: TValue } 
 }
 
 main().catch(() => {
-  console.error("PostgreSQL disposable integration proof failed.");
+  console.error(`PostgreSQL disposable integration proof failed safely during ${integrationPhase}.`);
   process.exitCode = 1;
 });
 
 async function diagnosticEngineFailures(environment: { host: string; port: number; database: string; password: string }): Promise<void> {
   const options = { host: environment.host, port: environment.port, database: environment.database, user: "postgres", password: environment.password, ssl: false as const, connectionTimeoutMillis: 1_000 };
   for (const [override, classification, codeStatus] of [[{ password: "synthetic-wrong-password" }, "authentication_rejected", "recognized"], [{ database: "synthetic_absent_database" }, "content_unavailable", "recognized"], [{ password: async () => undefined as unknown as string }, "authentication_material_invalid", "absent"]] as const) {
+    integrationPhase = `diagnostic-${classification}`;
     const pool = nodePoolAdapter(new Pool({ ...options, ...override }));
     try {
       let failure: unknown;
       try { const client = await pool.connect(); client.release(); } catch (error) { failure = error; }
       const diagnostic = postgreSqlFailureDiagnostic(failure);
+      // Emit the already allowlisted diagnostic descriptor, not the provider
+      // error. This makes a hosted-fixture disagreement actionable without
+      // leaking a password, host, SQLSTATE message, or connection string.
+      console.log(JSON.stringify({
+        event: "postgresql-disposable-diagnostic-observed",
+        scenario: classification,
+        facts: diagnostic.facts,
+        connection_rejected: failure !== undefined,
+      }));
       equal(diagnostic.facts.classification, classification);
       equal(diagnostic.facts.phase, "pool_connect"); equal(diagnostic.facts.code_status, codeStatus);
       assertOk(diagnostic.facts.elapsed_ms !== null && diagnostic.facts.elapsed_ms >= 0);
@@ -414,6 +475,7 @@ async function diagnosticEngineFailures(environment: { host: string; port: numbe
       if (classification === "authentication_material_invalid") equal(diagnostic.failureKind, "configuration");
     } finally { await pool.end(); }
   }
+  integrationPhase = "diagnostic-query-timeout";
   const pool = nodePoolAdapter(new Pool({ ...options, options: "-c statement_timeout=50" }));
   try {
     const client = await pool.connect();

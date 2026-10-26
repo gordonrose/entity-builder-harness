@@ -81,6 +81,36 @@ def dormant_roots(root, catalog):
     return tuple(roots)
 
 
+def dormant_package_commands(catalog):
+    """Return explicit package-command identities for dormant capabilities.
+
+    A package command remains executable source even when its implementation is
+    dormant.  It may be excluded only by an exact catalogue identity and only
+    after the caller proves its governed action lies wholly under a declared
+    dormant root.
+    """
+    values = catalog.get('dormant_package_commands', []) if isinstance(catalog, dict) else []
+    if not isinstance(values, list) or len(values) != len(set(values)):
+        raise ValueError('dormant-package-commands-invalid')
+    for value in values:
+        if not isinstance(value, str) or not re.fullmatch(r'[^#]+#scripts\.[A-Za-z0-9:_-]+', value):
+            raise ValueError('dormant-package-commands-invalid')
+    return frozenset(values)
+
+
+def dormant_governed_action(command, dormant):
+    """Recognise the one safe dormant command form without evaluating shell."""
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return False
+    if tokens[:1] == ['bash']:
+        tokens = tokens[1:]
+    if len(tokens) != 3 or tokens[0] != 'scripts/01.harness/run-governed-script.sh' or tokens[1] != '--approved-action':
+        return False
+    return any(under(tokens[2], root) for root in dormant)
+
+
 def files(root, dormant=()):
     # Scan physical source locations, including root/new package entrypoints.
     # Build outputs, private configuration and evidence history are not sources.
@@ -241,6 +271,8 @@ def report(root, source_revision=None, *, routes_only=False):
             source_errors.append({'code': 'delivery-source-encoding-invalid', 'path': ref})
     documents = {path: document(body) for path, body in bodies.items() if path.endswith(('.yml', '.yaml')) and (path.startswith(('infra/', '.github/')) or path == 'scripts/repo/check-selection/checks.yml')}
     catalog = documents.get('scripts/repo/check-selection/checks.yml', {})
+    dormant = dormant_roots(root, catalog)
+    dormant_commands = dormant_package_commands(catalog)
     checks = catalog.get('checks', {})
     if not isinstance(checks, dict): checks = {}
     requirements = {}
@@ -461,7 +493,12 @@ def report(root, source_revision=None, *, routes_only=False):
         if classification == 'unsupported': gap('delivery-entrypoint-unregistered', path, kind=kind)
         if not script_effects and p.name in {'script.py', 'script.mjs'}:
             script_effects = effects(bodies.get(wrapper, ''))
-        needs_route = kind in {'image-definition', 'provider-template', 'runnable-program'} or kind in {'command', 'ci-workflow'} and (has_external_command or bool({'network', 'aws-mutation'} & set(script_effects))) or kind == 'regression-command' and path in operational
+        # The delivery-coverage workflow is the repository-wide enforcement
+        # control which verifies every routed delivery chain; it is not a
+        # delivery implementation belonging to one arbitrary target.  Its own
+        # structure is checked above by repository_ci_findings().
+        global_control = path == '.github/workflows/delivery-coverage.yml'
+        needs_route = not global_control and (kind in {'image-definition', 'provider-template', 'runnable-program'} or kind in {'command', 'ci-workflow'} and (has_external_command or bool({'network', 'aws-mutation'} & set(script_effects))) or kind == 'regression-command' and path in operational)
         if classification == 'supported' and needs_route and not requirements.get(path):
             gap('delivery-consumer-unbound', path, kind=kind)
 
@@ -469,6 +506,13 @@ def report(root, source_revision=None, *, routes_only=False):
     for package_path, package in packages.items():
         for name, command in package.get('scripts', {}).items():
             if not isinstance(command, str): continue
+            identity = package_path + '#scripts.' + name
+            if identity in dormant_commands:
+                if not dormant_governed_action(command, dormant):
+                    gap('delivery-dormant-package-command-invalid', identity)
+                else:
+                    discovered.append({'path': identity, 'kind': 'package-command', 'classification': 'dormant', 'command': command, 'registered_by': [package_path], 'routes': [], 'implementation': [], 'requires_delivery_chain': False})
+                continue
             refs, unknown, direct_external = package_executions[(package_path, name)]
             consequential = refs & operational
             named = bool(re.search(r'(?:build|publish|deploy|image|release|rollback|cleanup|accept|recovery|(?:^|:)(?:start|serve|service)(?:$|:))', name))
@@ -481,7 +525,6 @@ def report(root, source_revision=None, *, routes_only=False):
             # declared command owners rather than invent a package mapping registry.
             if direct_external: unknown = [*unknown, 'inline-provider-command-requires-owned-script']
             unsupported = bool(unknown or missing or requires_chain and not linked)
-            identity = package_path + '#scripts.' + name
             if unknown: gap('delivery-command-relationship-unsupported', identity, reasons=unknown)
             if missing or requires_chain and not linked: gap('delivery-command-unbound', identity, implementations=missing)
             discovered.append({'path': identity, 'kind': 'package-command', 'classification': 'unsupported' if unsupported else 'supported', 'command': command, 'registered_by': [package_path], 'routes': linked, 'implementation': sorted(refs), 'requires_delivery_chain': requires_chain})

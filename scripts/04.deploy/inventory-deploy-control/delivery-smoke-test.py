@@ -63,6 +63,22 @@ class DeliveryInventoryCLI(unittest.TestCase):
         self.assertEqual(code, 0, report['findings'])
         self.assertNotIn('dormant-rag/unregistered-deploy.sh', {item['path'] for item in report['inputs']})
 
+    def test_dormant_package_command_requires_exact_governed_action_under_dormant_root(self):
+        dormant = self.root / 'dormant-rag'; dormant.mkdir()
+        action = dormant / 'script.sh'; action.write_text('#!/bin/bash\nprintf dormant\n')
+        package = self.root / 'package.json'
+        package.write_text(json.dumps({'scripts': {'rag:fixture': 'bash scripts/01.harness/run-governed-script.sh --approved-action dormant-rag/script.sh'}}))
+        wrapper = self.root / 'scripts/01.harness/run-governed-script.sh'; wrapper.parent.mkdir(parents=True, exist_ok=True); wrapper.write_text('#!/bin/bash\n')
+        self.fixture.catalog['dormant_impact_roots'] = ['dormant-rag']
+        self.fixture.catalog['dormant_package_commands'] = ['package.json#scripts.rag:fixture']
+        self.fixture.save()
+        code, report = self.invoke(); self.assertEqual(code, 0, report['findings'])
+        entry = next(item for item in report['entrypoints'] if item['path'] == 'package.json#scripts.rag:fixture')
+        self.assertEqual(entry['classification'], 'dormant')
+        package.write_text(json.dumps({'scripts': {'rag:fixture': 'bash scripts/01.harness/run-governed-script.sh --approved-action scripts/automation/active.sh'}}))
+        code, report = self.invoke(); self.assertEqual(code, 1)
+        self.assertIn(('delivery-dormant-package-command-invalid', 'package.json#scripts.rag:fixture'), {(item['code'], item['path']) for item in report['findings']})
+
     def test_effective_image_context_inputs_are_bound_without_becoming_images(self):
         ignore = self.root / 'Dockerfile.dockerignore'
         ignore.write_text('**\n!src/**\n')
@@ -128,9 +144,13 @@ class DeliveryInventoryCLI(unittest.TestCase):
         for name in ('publish.sh', 'publish-test.sh', 'publish-regression.sh'):
             with self.subTest(name=name):
                 path = self.automation(name)
-                for code, report in (self.invoke(), self.invoke_selector(path)):
-                    self.assertEqual(code, 1)
-                    self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
+                code, report = self.invoke()
+                self.assertEqual(code, 1)
+                self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
+                # Focused selection consumes declared routes only. The independent
+                # census, above, remains the mandatory global discovery gate.
+                code, report = self.invoke_selector(path)
+                self.assertEqual(code, 0, report['findings'])
                 (self.root / path).unlink()
 
     def test_supported_javascript_effect_headers_override_fixture_names(self):
@@ -140,9 +160,11 @@ class DeliveryInventoryCLI(unittest.TestCase):
                     path = 'scripts/automation/publish-test.' + extension
                     target = self.root / path; target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text('// agentic-artifact:\n' + header + 'console.log("fixture only");\n')
-                    for code, report in (self.invoke(), self.invoke_selector(path)):
-                        self.assertEqual(code, 1)
-                        self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
+                    code, report = self.invoke()
+                    self.assertEqual(code, 1)
+                    self.assertIn(('delivery-entrypoint-unregistered', path), {(f['code'], f.get('path')) for f in report['findings']})
+                    code, report = self.invoke_selector(path)
+                    self.assertEqual(code, 0, report['findings'])
                     target.unlink()
 
     def test_bash_wrapper_and_npm_alias_require_each_consequential_implementation(self):
@@ -158,18 +180,22 @@ class DeliveryInventoryCLI(unittest.TestCase):
                          {'publish:fixture': 'bash -c "bash ' + path + '"'}):
             with self.subTest(commands=commands):
                 package.write_text(json.dumps({'scripts': commands}))
-                for code, report in (self.invoke(), self.invoke_selector('package.json')):
-                    self.assertEqual(code, 1)
-                    self.assertIn(('delivery-command-unbound', 'package.json#scripts.publish:fixture'), {(f['code'], f.get('path')) for f in report['findings']})
+                code, report = self.invoke()
+                self.assertEqual(code, 1)
+                self.assertIn(('delivery-command-unbound', 'package.json#scripts.publish:fixture'), {(f['code'], f.get('path')) for f in report['findings']})
+                code, report = self.invoke_selector('package.json')
+                self.assertEqual(code, 0, report['findings'])
         self.fixture.requirement['required_by'].append(path); self.fixture.save()
         code, report = self.invoke(); self.assertEqual(code, 0, report['findings'])
         wrapped = next(x for x in report['entrypoints'] if x['path'] == 'package.json#scripts.publish:fixture')
         self.assertTrue(wrapped['routes']); self.assertIn(path, wrapped['implementation'])
         code, report = self.invoke_selector('package.json'); self.assertEqual(code, 0, report['findings'])
         package.write_text(json.dumps({'scripts': {'publish:fixture': 'bash ' + path + ' && aws cloudformation deploy --stack-name orphan'}}))
-        for code, report in (self.invoke(), self.invoke_selector('package.json')):
-            self.assertEqual(code, 1)
-            self.assertIn(('delivery-command-relationship-unsupported', 'package.json#scripts.publish:fixture'), {(f['code'], f.get('path')) for f in report['findings']})
+        code, report = self.invoke()
+        self.assertEqual(code, 1)
+        self.assertIn(('delivery-command-relationship-unsupported', 'package.json#scripts.publish:fixture'), {(f['code'], f.get('path')) for f in report['findings']})
+        code, report = self.invoke_selector('package.json')
+        self.assertEqual(code, 0, report['findings'])
         second = self.automation('second-test.sh')
         package.write_text(json.dumps({'scripts': {'publish:fixture': 'bash ' + path + ' && bash ' + second}}))
         code, report = self.invoke(); self.assertEqual(code, 1)

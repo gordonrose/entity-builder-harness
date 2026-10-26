@@ -353,6 +353,7 @@ change_impact:
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.sh
     - scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh
     - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
     - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
