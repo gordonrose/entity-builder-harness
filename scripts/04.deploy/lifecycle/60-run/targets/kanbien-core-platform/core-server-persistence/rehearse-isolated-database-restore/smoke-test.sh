@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -130,6 +130,8 @@ assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "co
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"})]), "task-tls-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE"})]), "task-token-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE"})]), "task-query-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE"})]), "task-transport-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"})]), "task-handshake-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("unavailable", None)
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("unavailable", None)
 

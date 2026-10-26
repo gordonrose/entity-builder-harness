@@ -4,7 +4,7 @@
 //   version: 3
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-25"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [security, sre]
@@ -16,6 +16,7 @@
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
 import { createNodePostgreSqlTokenConnectionPool } from "@kanbien/platform-adapter-aws-persistence-postgresql";
+import { connect } from "node:net";
 
 import { persistenceConfiguration, persistenceCertificateAuthority, environmentText as text } from "./kanbien-core-server-persistence-configuration";
 import { persistenceIamAuthentication } from "./kanbien-core-server-persistence-iam-authentication";
@@ -41,13 +42,21 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
   } catch {
     return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE");
   }
+  // Establish only the private TCP path before giving PostgreSQL a credential.
+  // That makes a failed restore proof actionable without ever emitting a host,
+  // token, query, provider message, or certificate detail.
+  try {
+    await probePostgreSqlTransport(configuration.host, configuration.port);
+  } catch (error) {
+    return rejected(restoreTransportFailureCode(error));
+  }
   const pool = createNodePostgreSqlTokenConnectionPool(configuration, { username: credentials.username, authenticationToken: async () => token, certificateAuthority });
   let client: Awaited<ReturnType<typeof pool.connect>> | undefined;
   try {
     try {
       client = await pool.connect();
     } catch (error) {
-      return rejected(restoreConnectionFailureCode(error));
+      return rejected(restorePostTransportConnectionFailureCode(error));
     }
     const result = await client.query<{ readonly record_id: string; readonly fact_digest: string }>({
       text: `SELECT record_id, fact_digest FROM ${acceptanceTable(configuration.schema)} WHERE record_id = $1`,
@@ -98,6 +107,57 @@ export function restoreConnectionFailureCode(error: unknown): string {
   return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
     ? "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"
     : classified;
+}
+
+/** The preflight has no PostgreSQL credential or query, so it reports only a
+ * closed transport boundary when no allowlisted machine code is available. */
+export function restoreTransportFailureCode(error: unknown): string {
+  const classified = restoreVerificationFailureCode(error);
+  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
+    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE"
+    : classified;
+}
+
+/**
+ * A completed TCP preflight proves that an opaque subsequent pool failure is
+ * not simply an absent route to the database port.  Keep the unknown result
+ * closed: the controller can request a bounded PostgreSQL/TLS correction
+ * without receiving raw driver detail.
+ */
+export function restorePostTransportConnectionFailureCode(error: unknown): string {
+  const classified = restoreVerificationFailureCode(error);
+  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
+    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE"
+    : classified;
+}
+
+/**
+ * Probe only DNS and TCP reachability. PostgreSQL TLS negotiation deliberately
+ * remains in the authenticated driver path, where its closed allowlisted
+ * machine codes are classified separately. The socket is never sent a
+ * credential or a PostgreSQL query.
+ */
+export function probePostgreSqlTransport(host: string, port: number, timeoutMs = 5_000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const socket = connect({ host, port });
+    let completed = false;
+    const finish = (callback: () => void) => {
+      if (completed) return;
+      completed = true;
+      clearTimeout(timeout);
+      callback();
+    };
+    const timeout = setTimeout(() => {
+      const error = new Error("transport timeout") as Error & { code: string };
+      error.code = "ETIMEDOUT";
+      socket.destroy(error);
+    }, timeoutMs);
+    socket.once("connect", () => {
+      finish(resolve);
+      socket.destroy();
+    });
+    socket.once("error", (error) => finish(() => reject(error)));
+  });
 }
 
 /**

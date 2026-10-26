@@ -237,6 +237,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Restore verifier could not reach the isolated restored database.
   Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
 
+
+- Raised: Restore verifier connection result was too coarse
+  Resolution: A rejected isolated-restore verifier emitted only CONNECTION_UNAVAILABLE even after provider facts disproved the suspected missing egress rule. Added a bounded TCP preflight before PostgreSQL credential use so the next governed proof distinguishes a closed transport path from a post-transport database handshake failure without exposing provider text, endpoints, SQL, or credentials.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -503,6 +507,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Promoted durable evidence controls to remote main.
   Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
 
+
+- Decision: Use safe transport preflight before restore verifier authentication
+  Rationale: The preflight opens and immediately closes only a TCP socket to the declared private database address. PostgreSQL TLS, IAM authentication, and query proof remain in the existing driver path. Unknown post-preflight driver failures map to a new closed handshake result; raw provider detail remains excluded.
+
 ## Context Hygiene
 
 
@@ -741,6 +749,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Retained-package receipts from GitHub runs 40243828846 and 40247863444 are now preserved under the persistence scope; their source delta is mechanically limited to the restore verifier and its direct harness support.
   Durable evidence: The target-owned proof-applicability record is infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-3edd9ac3002f.json; fresh current state and isolated-restore proof still remain required.
+
+
+- Summary: The failed restored copy has been deleted and its temporary inline IAM policy is absent. The deployed service remains healthy. The next necessary live operation is a new qualified verifier image plus one fresh isolated restore proof; do not retry the expired DB incarnation.
+  Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
 
 ## Activity Log
 
@@ -3611,6 +3623,27 @@ Rationale: After focused checks in a clean integration worktree, main advanced f
 Raised: Restore verifier could not reach the isolated restored database.
 
 Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
+
+
+### 2026-10-26T01:03:24Z - Issue
+
+Raised: Restore verifier connection result was too coarse
+
+Resolution: A rejected isolated-restore verifier emitted only CONNECTION_UNAVAILABLE even after provider facts disproved the suspected missing egress rule. Added a bounded TCP preflight before PostgreSQL credential use so the next governed proof distinguishes a closed transport path from a post-transport database handshake failure without exposing provider text, endpoints, SQL, or credentials.
+
+
+### 2026-10-26T01:03:24Z - Decision
+
+Decision: Use safe transport preflight before restore verifier authentication
+
+Rationale: The preflight opens and immediately closes only a TCP socket to the declared private database address. PostgreSQL TLS, IAM authentication, and query proof remain in the existing driver path. Unknown post-preflight driver failures map to a new closed handshake result; raw provider detail remains excluded.
+
+
+### 2026-10-26T01:03:24Z - Context hygiene
+
+Summary: The failed restored copy has been deleted and its temporary inline IAM policy is absent. The deployed service remains healthy. The next necessary live operation is a new qualified verifier image plus one fresh isolated restore proof; do not retry the expired DB incarnation.
+
+Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
 
 ## Sub-Agent Activity
 
