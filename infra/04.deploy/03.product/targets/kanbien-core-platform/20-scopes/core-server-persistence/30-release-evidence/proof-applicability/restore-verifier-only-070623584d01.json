@@ -1,0 +1,50 @@
+{
+  "candidate": {
+    "image_digest": "sha256:070623584d01662092fd0324488c0b9743d78bea30c8c98275e72430e43f3657",
+    "receipt_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40258429302.json",
+    "receipt_reference": "github-actions-run:40258429302",
+    "receipt_sha256": "sha256:4ea0c38a6bf9029e7caf358db6287886dcd1514aae88fe153907af884a3a403c",
+    "source_revision": "122454fc18ffc822660ccb2ef2b9c6b6779bf0e1"
+  },
+  "change_class": "restore-verifier-only",
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:4d075f28fd97d49efb02725493a69d5ae67f0dd0e5b88db49f9818ad98d97af8"
+  },
+  "predecessor": {
+    "image_digest": "sha256:0ddc3ecac808bec82df971baec8a28f11213442f6f4692cf851e00f8c6051ad5",
+    "receipt_path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40255958912.json",
+    "receipt_reference": "github-actions-run:40255958912",
+    "receipt_sha256": "sha256:8f9d7a1767d5d2d106511bc665353bc5d1dce93f5b0aac1ca88a77b62e3832c6",
+    "source_revision": "5c00b8f211c0bef7519cae05a08c0134eeda0030"
+  },
+  "reused_proofs": [
+    "credential-recovery",
+    "credential-recovery-health",
+    "credential-recovery-read",
+    "credential-revocation",
+    "credential-revocation-unready",
+    "effective-privilege",
+    "migration-applied-state",
+    "rollback-final-health",
+    "rollback-final-read",
+    "runtime-identity-initial-access",
+    "server-replacement",
+    "server-replacement-read"
+  ],
+  "schema": "deploy/persistence-proof-applicability/v1",
+  "scope": "core-server-persistence",
+  "source_delta": {
+    "paths": [
+      "commitLogs/2026/oct/05/2026-10-05-09-59-target-alignment-preflight-folders/README.md",
+      "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics/kanbien-restore-ce285bd43f5220c3-rejected.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/package-receipts/package-custody-40255958912.json",
+      "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-0ddc3ecac808.json",
+      "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+      "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
+    ],
+    "sha256": "sha256:aff6737c2d6d97b399885169fac1991a68f9b37fe2ddddf8f9717faa09218724"
+  },
+  "target": "kanbien-core-platform"
+}
