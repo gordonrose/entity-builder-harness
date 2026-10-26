@@ -129,6 +129,17 @@ def main():
     if receipt is None:return emit("blocked","package-custody-receipt-invalid")
     digest,revision=receipt["image_digest"],receipt["source_revision"]
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
+    if args.operation == "discard-rejected-review":
+        if args.reconcile:return emit("blocked", "persistence-release-transition-discard-reconcile-unsupported")
+        # A rejected review has not touched the target.  Its bounded cleanup
+        # needs only the receipt, current stack identity, and the exact named
+        # change set; it must not wait on unrelated service, budget, endpoint,
+        # or candidate-image observations.
+        ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
+        if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
+        current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
+        name=f"kanbien-core-platform-persistence-update-{digest[7:19]}"
+        return discard_rejected_review(prepare, name, current_parameters, digest, revision)
     if args.reconcile:return reconcile(prepare,name,digest,revision)
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return emit("blocked","persistence-release-transition-preconditions-not-proven")
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
@@ -140,9 +151,6 @@ def main():
     if infra is None or not prepare.candidate_image(receipt)[0]: return emit("blocked","persistence-release-transition-alignment-not-proven")
     digest,revision=receipt["image_digest"],receipt["source_revision"]
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
-    if args.operation == "discard-rejected-review":
-        name=f"kanbien-core-platform-persistence-update-{digest[7:19]}"
-        return discard_rejected_review(prepare, name, current_parameters, digest, revision)
     expected=prepare.candidate_parameters(outputs,infra,receipt)
     parameters=update_parameter_inputs(current_parameters, expected)
     if parameters is None: return emit("blocked", "persistence-release-transition-update-parameter-inputs-invalid")
