@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T21:03:30Z
-latest_commit_sha: c5320a73
-chat_duration: 11345s (00:03:09:05)
+latest_commit_at_utc: 2026-10-26T21:25:36Z
+latest_commit_sha: 839f1cfe
+chat_duration: 12671s (00:03:31:11)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -77,6 +77,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 
 - Summary: Final verification complete: 80 selector regressions pass; all 91 registered check contracts valid; independent delivery census covered with zero gaps. All 14 approved costly checks remain mandatory at integration and external stages retain their owners. Independent review resolved consumed-input, runtime, catalogue-only selection and census findings. Unchanged refresh transferred all 51 local receipts with zero executions and zero images.
   Durable evidence: Full qualified run: selected 68, executed 51, reused 0, deferred 17, 1248.056s. Combined incoming-main revalidation: selected 68, executed 9, reused 42, deferred 17, 581.683s. Provider mock JSON publication race caused one failed attempt; unchanged retry passed: selected 68, executed 1, reused 50, deferred 17, 115.628s. Bounded resolution commit gate: selected47/executed0/reused23/deferred24 in21.751s. Unchanged apply: selected 68, executed 0, reused 51, deferred 17, 66.233s. Before/after unrelated-scope fixture: 3 executions/1.766s versus1 execution+2 reuses/0.814s. Stable repeat:0 executions. UTC-rollover fixture preserved bytes, artifact and preparation-receipt mtime, and immutable created_on; changed content requires preparation. Main refresh used fetched/local accepted refs, no stash. Source/contract/runtime/dependency/environment/mode changes and unsafe/missing receipts remain legitimate rerun reasons. No push, image publication, deployment, cloud or credential changes by this chat. Durable authority: this chat worktree's private agentic-local-checks receipts/latest-report.json; development reports /tmp/verification-final2.json, verification-combined.json, verification-latest-retry.json, verification-apply.log. Final local-main readiness will reconcile current census and the same affected proofs.
+
+
+- Summary: Root preservation complete under explicit user direction: c5320a73 contains six runtime/test/diagnostic files; 1f3d4927 contains the additionally authored hook fixture correction. Both are incorporated with all verification controls. Final combined run passed with68 selected,2 executed,49 reused,17 deferred in352.919s; prior changed persistence inputs required10 executions with41 reused in725.258s. Unchanged apply passed; final promotion census/integration gate and authorized local-main merge follow.
+  Durable evidence: Reports: /tmp/root-preservation-commit-gates.log (baseline hook failure retained), /tmp/root-hook-correction-test.log, /tmp/verification-root-preserved-combined.json, /tmp/verification-root-fixture-combined.json, /tmp/verification-root-final-apply.log. Private matching receipts transferred before temporary preflight cleanup; no push or cloud operations.
 
 ## Activity Log
 
@@ -270,6 +274,46 @@ Mode: manual
 
 Action: Preserve incoming staged preparation helper, comments and metadata version; retain all new selector regressions and additional changed-preparation rejection assertions from the verification branch.
 
+
+### 2026-10-26T21:25:35Z - Commit recorded
+
+Commit: `1f3d4927`
+
+Message: test(verification): prepare the real commit-hook fixture
+
+Summary: Preserved the additional root fixture correction with its focused test passing; merged equivalent staged preparation with the verification branch rejection assertions.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T21:25:36Z - Commit recorded
+
+Commit: `e28569b8`
+
+Message: Merge main into verification preflight
+
+Summary: Preserved root persistence checkpoint c5320a73; combined integration passed with 10 executions, 41 reused proofs, 17 external-stage deferrals in725.258s.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T21:25:36Z - Commit recorded
+
+Commit: `839f1cfe`
+
+Message: Merge root fixture correction into verification preflight
+
+Summary: Conflict audited; root staged preparation/comments/version and all stronger rejection assertions retained. Focused hook passed. Final combined integration passed:68 selected,2 executed,49 reused,17 external-stage deferred,352.919s. Apply transfers matching receipts before temporary cleanup.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T21:25:36Z - Context hygiene
+
+Summary: Root preservation complete under explicit user direction: c5320a73 contains six runtime/test/diagnostic files; 1f3d4927 contains the additionally authored hook fixture correction. Both are incorporated with all verification controls. Final combined run passed with68 selected,2 executed,49 reused,17 deferred in352.919s; prior changed persistence inputs required10 executions with41 reused in725.258s. Unchanged apply passed; final promotion census/integration gate and authorized local-main merge follow.
+
+Durable evidence: Reports: /tmp/root-preservation-commit-gates.log (baseline hook failure retained), /tmp/root-hook-correction-test.log, /tmp/verification-root-preserved-combined.json, /tmp/verification-root-fixture-combined.json, /tmp/verification-root-final-apply.log. Private matching receipts transferred before temporary preflight cleanup; no push or cloud operations.
+
 ## Sub-Agent Activity
 
 
@@ -346,6 +390,27 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Summary: Explicit user-directed root preservation checkpoint; six reviewed files preserved, root clean; baseline fixture failure transparently retained pending corrected combined integration.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `1f3d4927`
+  Time UTC: 2026-10-26T21:25:35Z
+  Message: test(verification): prepare the real commit-hook fixture
+  Summary: Preserved the additional root fixture correction with its focused test passing; merged equivalent staged preparation with the verification branch rejection assertions.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `e28569b8`
+  Time UTC: 2026-10-26T21:25:36Z
+  Message: Merge main into verification preflight
+  Summary: Preserved root persistence checkpoint c5320a73; combined integration passed with 10 executions, 41 reused proofs, 17 external-stage deferrals in725.258s.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `839f1cfe`
+  Time UTC: 2026-10-26T21:25:36Z
+  Message: Merge root fixture correction into verification preflight
+  Summary: Conflict audited; root staged preparation/comments/version and all stronger rejection assertions retained. Focused hook passed. Final combined integration passed:68 selected,2 executed,49 reused,17 external-stage deferred,352.919s. Apply transfers matching receipts before temporary cleanup.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -380,9 +445,9 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC: 2026-10-26T21:03:30Z
-Latest commit SHA: c5320a73
-Chat duration: 11345s (00:03:09:05)
+Latest commit at UTC: 2026-10-26T21:25:36Z
+Latest commit SHA: 839f1cfe
+Chat duration: 12671s (00:03:31:11)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
