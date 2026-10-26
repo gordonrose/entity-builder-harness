@@ -99,7 +99,7 @@ class ControllerRegression(unittest.TestCase):
         for name in ('transition-qualified-release','apply-private-verifier-route-update','apply-restoration-verifier-surface'):
             module=load(DEPLOY/name/'script.py')
             def response(parts):
-                if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':'CREATE_COMPLETE','Parameters':[]}]},'ok'
+                if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':'CREATE_COMPLETE','Parameters':[{'ParameterKey': key, 'ParameterValue': value} for key, value in {'ImageDigest': receipt['image_digest'], 'SupportImageDigest': receipt['image_digest'], 'RestoreVerifierImageDigest': receipt['image_digest'], 'SourceRevision': receipt['source_revision']}.items()]}]},'ok'
                 if parts[1]=='describe-services':return True,{'services':[{'desiredCount':1,'runningCount':1}]},'ok'
                 if parts[1]=='describe-change-set':return False,None,'aws-resource-missing'
                 if parts[1]=='create-change-set':return False,None,'aws-command-timeout'
@@ -122,6 +122,34 @@ class ControllerRegression(unittest.TestCase):
             self.assertTrue(report['facts']['change_set'].endswith('a'*12))
             self.assertEqual(len([parts for parts in provider.calls if parts[1]=='create-change-set']),1)
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
+
+    def test_image_transition_retains_unowned_stack_parameters_and_discards_only_rejected_review(self):
+        module = load(DEPLOY/'transition-qualified-release/script.py')
+        digest, revision = 'sha256:' + 'a' * 64, 'a' * 40
+        desired = {'ImageDigest': digest, 'SupportImageDigest': digest, 'RestoreVerifierImageDigest': digest, 'SourceRevision': revision}
+        current = {**desired, 'ImageDigest': 'sha256:' + 'c' * 64, 'SupportImageDigest': 'sha256:' + 'c' * 64, 'RestoreVerifierImageDigest': 'sha256:' + 'c' * 64, 'SourceRevision': 'c' * 40, 'EnableObservability': 'true', 'ObservabilityCollectorImage': 'synthetic@sha256:' + 'b' * 64, 'ObservabilityAlertEmail': '****'}
+        inputs = module.update_parameter_inputs(current, desired)
+        self.assertEqual({item['ParameterKey'] for item in inputs if item.get('UsePreviousValue')}, {'EnableObservability', 'ObservabilityCollectorImage', 'ObservabilityAlertEmail'})
+        self.assertTrue(all(item.get('UsePreviousValue') is True for item in inputs if item['ParameterKey'] not in desired))
+        self.assertIsNone(module.update_parameter_inputs({'ImageDigest': digest}, desired))
+
+        name = 'kanbien-core-platform-persistence-update-' + digest[7:19]
+        rejected = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': [{'ParameterKey': key, 'ParameterValue': value} for key, value in {**desired, 'EnableObservability': 'false'}.items()], 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::CloudWatch::Alarm'}}]}
+        calls = {'describes': 0}
+        def response(parts):
+            if parts[1] == 'describe-change-set':
+                calls['describes'] += 1
+                return ((True, rejected, 'ok') if calls['describes'] == 1 else (False, None, 'aws-resource-missing'))
+            if parts[1] == 'delete-change-set': return True, {}, 'ok'
+            raise AssertionError(parts)
+        provider = Provider(response)
+        report = result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]
+        self.assertEqual(report['verdict'], 'discarded')
+        self.assertEqual(len([parts for parts in provider.calls if parts[1] == 'delete-change-set']), 1)
+
+        executable = {**rejected, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::Service'}}]}
+        provider = Provider(lambda parts: (True, executable, 'ok') if parts[1] == 'describe-change-set' else (_ for _ in ()).throw(AssertionError('must not delete executable review')))
+        self.assertEqual(result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]['verdict'], 'blocked')
 
     def test_original_create_command_does_not_execute_known_operation_twice(self):
         module=load(DEPLOY/'deploy-candidate/script.py')
