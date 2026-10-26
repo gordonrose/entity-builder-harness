@@ -495,6 +495,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Closed isolated restore cleanup before correcting failure classification; retained proof is accepted only from a closed, allowlisted result envelope and all synthetic regression diagnostics stay outside durable evidence.
   Rationale: Existing PostgreSQL persistence/recovery design; no new ADR required.
 
+
+- Decision: Promoted durable evidence controls to remote main.
+  Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
+
 ## Context Hygiene
 
 
@@ -3589,6 +3593,13 @@ Message: feat(deploy): retain persistence proof evidence
 Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
 
 ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
+
+
+### 2026-10-26T00:34:49Z - Decision
+
+Decision: Promoted durable evidence controls to remote main.
+
+Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
 
 ## Sub-Agent Activity
 
