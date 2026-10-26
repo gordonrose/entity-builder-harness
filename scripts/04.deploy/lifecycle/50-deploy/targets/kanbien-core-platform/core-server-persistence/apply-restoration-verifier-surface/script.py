@@ -23,6 +23,8 @@ def review(change,name,digest,allowed=ADDED):
  return seen==allowed
 def surface_parameters(state,digest):
  return [{"ParameterKey":x["ParameterKey"],"UsePreviousValue":True} for x in state.get("Parameters",[]) if isinstance(x,dict) and isinstance(x.get("ParameterKey"),str) and x["ParameterKey"]!="RestoreVerifierImageDigest"] + [{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":digest}]
+def change_name(digest,mode):
+ return f"kanbien-core-platform-persistence-restore-{'egress' if mode=='egress' else 'surface'}-{digest[7:19]}"
 def reconcile(m,name,digest,allowed=ADDED,mode="surface"):
  verdict,code=m.observe_update(name,{"RestoreVerifierImageDigest":digest},lambda change:review(change,name,digest,allowed))
  return emit("applied" if verdict=="complete" else verdict,code,facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":mode})
@@ -31,12 +33,11 @@ def main():
  if u or a.receipt is None:return emit("blocked","persistence-restoration-surface-arguments-invalid")
  m=load();receipt=m.validate_receipt(a.receipt)
  if receipt is None:return emit("blocked","package-custody-receipt-invalid")
- digest=receipt["image_digest"];allowed=EGRESS_ONLY if a.mode=="egress" else ADDED;name=f"kanbien-core-platform-persistence-restore-{'egress' if a.mode=='egress' else 'surface'}-{digest[7:19]}"
+ digest=receipt["image_digest"];allowed=EGRESS_ONLY if a.mode=="egress" else ADDED;name=change_name(digest,a.mode)
  if a.reconcile:return reconcile(m,name,digest,allowed,a.mode)
  if not m.declaration_covered() or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
  ok,stack,code=m.aws("cloudformation","describe-stacks","--stack-name",STACK);items=stack.get("Stacks") if ok and isinstance(stack,dict) else None; state=items[0] if isinstance(items,list) and len(items)==1 and isinstance(items[0],dict) else None
  if not isinstance(state,dict) or state.get("StackStatus") not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}:return emit("blocked",code if not ok else "persistence-restoration-surface-stack-not-healthy")
- digest=receipt["image_digest"];name=f"kanbien-core-platform-persistence-restore-surface-{digest[7:19]}"
  ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
  if not ok:
   if code!="aws-resource-missing":return emit("blocked",code)

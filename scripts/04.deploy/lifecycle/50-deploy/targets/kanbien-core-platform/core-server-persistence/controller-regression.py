@@ -394,6 +394,7 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual(values[-1]['ParameterValue'],digest)
         egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':item['ParameterKey'],'ParameterValue':item.get('ParameterValue')} for item in values], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
         self.assertTrue(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        self.assertEqual(surface.change_name(digest,'egress'),'kanbien-core-platform-persistence-restore-egress-'+'a'*12)
         egress_change['Changes'].append({'ResourceChange':{'LogicalResourceId':'RestoredDatabaseIngressFromRestorationVerifier','ResourceType':'AWS::EC2::SecurityGroupIngress','Action':'Add'}})
         self.assertFalse(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
         route=load(DEPLOY/'apply-private-verifier-route-update/script.py')
