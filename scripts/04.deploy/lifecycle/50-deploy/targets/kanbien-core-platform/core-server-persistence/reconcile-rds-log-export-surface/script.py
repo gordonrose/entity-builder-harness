@@ -110,10 +110,12 @@ def main(argv: list[str] | None = None) -> int:
     status = state["status"]
     exports = frozenset(state["exports"])
     facts = {"database": DATABASE, "status": status, "enabled_exports": sorted(exports)}
-    if REQUIRED_EXPORTS.issubset(exports):
-        return report("reconciled", "persistence-rds-log-exports-observed", facts=facts)
+    # RDS can report the eventual export list while it remains in a transient
+    # configuration state.  The values alone are not completion evidence.
     if status in TRANSITIONAL_STATUSES:
         return report("pending", "persistence-rds-log-export-update-still-provisioning", facts=facts)
+    if REQUIRED_EXPORTS.issubset(exports):
+        return report("reconciled", "persistence-rds-log-exports-observed", facts=facts)
     if status != "available":
         return report("blocked", "persistence-rds-log-export-database-not-available", facts=facts)
     # This route repairs exactly the observed drift. Missing PostgreSQL logging

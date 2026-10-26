@@ -90,7 +90,7 @@ assert all(parts[1] != "modify-db-instance" for parts in calls)
 calls = []
 def transitional(*parts):
     calls.append(parts)
-    return True, instance(status="configuring-log-exports", exports=("postgresql", "upgrade")), "ok"
+    return True, instance(status="configuring-log-exports"), "ok"
 with patch.object(module, "aws", side_effect=transitional):
     assert module.main([]) == 1
 assert len(calls) == 1 and calls[0][1] == "describe-db-instances"
