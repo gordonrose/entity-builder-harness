@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -24,15 +24,18 @@ set -euo pipefail
 #   - id: harness.architecture.adr.0011-use-chat-owned-worktrees-for-local-convergence
 #   effects:
 #   - read-only
+#   - writes-files
 
 usage() {
   cat <<'EOF'
 Usage:
   script.sh [--base <branch>] [--remote-main <remote>] <chat-branch>
 
-Read-only gate for merging a completed chat branch into local main.
+Local gate for merging a completed chat branch into local main.
 Classifies deterministic blocked states and exits non-zero unless the branch is
 eligible for explicit, user-approved local merge.
+When present, the repository selector verifies affected local integration
+checks in the chat worktree and may write check outputs and private receipts.
 
 With --remote-main, verifies the same recorded source evidence against a
 freshly fetched <remote>/<base> reference. This mode is for a clean,
@@ -374,6 +377,36 @@ if ! git -C "$REPO_ROOT" merge-base --is-ancestor "$metadata_latest_sha" "$TARGE
   block "blocked-log-head-mismatch" \
     "recorded latest_commit_sha is not contained in the chat branch" \
     "Record a commit that is present on the target chat branch before convergence."
+fi
+
+if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTREE_PATH/scripts/repo/check-selection/script.sh" ]; then
+  if [ ! -f "$WORKTREE_PATH/scripts/repo/check-selection/script.sh" ]; then
+    block "blocked-missing-integration-gate" "repository selector is missing from the target branch" "Restore the repository integration gate."
+  fi
+  base_head="$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
+  target_head="$(git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")"
+  # Source registration is independent of reusable behavioural receipts, as
+  # it is in CI. Reconcile the current physical census before accepting reuse.
+  delivery_gate="scripts/04.deploy/inventory-deploy-control/script.py"
+  if [ -f "$CALLER_ROOT/$delivery_gate" ] || [ -f "$WORKTREE_PATH/$delivery_gate" ]; then
+    if [ ! -f "$WORKTREE_PATH/$delivery_gate" ]; then
+      block "blocked-missing-integration-gate" "delivery census is missing from the target branch" "Restore the repository delivery gate."
+    fi
+    if ! (cd "$WORKTREE_PATH" && python3 "$delivery_gate" --delivery --check); then
+      block "blocked-delivery-coverage" "current delivery entrypoints are not fully registered" "Repair the delivery census in the chat worktree, then rerun promotion verification."
+    fi
+  fi
+  # The chat already contains main. Its tree is the exact code that a local
+  # merge will promote, and its private receipts can be revalidated in place.
+  if ! (cd "$WORKTREE_PATH" && BASE_SHA="$base_head" HEAD_SHA="$target_head" \
+    bash scripts/repo/check-selection/script.sh --ci --boundary integration --execute-local --json); then
+    block "blocked-integration-proof" "required affected integration checks failed or are missing" "Repair the reported checks in the chat worktree, then rerun promotion verification."
+  fi
+  if [ "$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")" != "$base_head" ] \
+    || [ "$(git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")" != "$target_head" ] \
+    || [ -n "$(git -C "$WORKTREE_PATH" status --porcelain)" ]; then
+    block "blocked-integration-input-drift" "branch or worktree changed during integration verification" "Stabilize the inputs and rerun promotion verification."
+  fi
 fi
 
 if [ -n "$REMOTE_NAME" ]; then

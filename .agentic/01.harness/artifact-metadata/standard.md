@@ -143,6 +143,13 @@ inputs. Creation dates remain fixed. No-op runs must not rewrite files or
 advance dates. The helper's status-transition convenience path does not replace
 historical lifecycle review.
 
+In this repository, the existing private verification-preparation receipt also
+binds prepared artifact bytes and permissions. Repeating preparation on the
+same content across a UTC date boundary preserves its truthful preparation
+date. A changed body, consequential metadata or file mode requires preparation
+again. Portable installations without that repository cache retain current-day
+validation; no imported report can waive lifecycle validation.
+
 ## Discovery And Required Headers
 
 A file that declares a leading `agentic-artifact` or legacy `agentic-script`
@@ -201,7 +208,9 @@ It checks added/copied/renamed and modified artifact files; missing legacy heade
 remain grandfathered. Existing v3 artifacts cannot downgrade to bypass lifecycle
 checks. For v3 changes, compare against HEAD (including rename sources), preserve
 creation dates and require today's update date for body or non-date metadata
-changes. New deprecation/supersession transitions require today's event date.
+changes, or an exact match to the private preparation receipt from that edit.
+New deprecation/supersession transitions use the date they are prepared; a later
+commit can retain it only with the same exact-content receipt.
 Retained transition dates are immutable; reactivation removes obsolete event
 fields rather than rewriting history. The check reports errors without editing
 or staging files. The helper uses the checker's read-only `--proposed` JSON

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-17"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: main-refresh
 #   disciplines:
@@ -27,6 +27,7 @@ set -euo pipefail
 #   - branches
 #   - destructive
 #   - worktrees
+#   - writes-files
 
 usage() {
   cat <<'EOF'
@@ -186,6 +187,14 @@ PROMOTED_COMMIT="$(git rev-parse HEAD)"
 if [ "$PROMOTED_COMMIT" != "$PREFLIGHT_HEAD" ]; then
   echo "ERROR: apply ended at ${PROMOTED_COMMIT}, expected ${PREFLIGHT_HEAD}." >&2
   exit 1
+fi
+
+if [ -f scripts/repo/check-selection/script.sh ]; then
+  # Revalidate matching preflight receipts in the promoted tree before their
+  # worktree is removed. Changed inputs rerun only their affected local checks.
+  BASE_SHA="$(git rev-parse main)" HEAD_SHA="$PROMOTED_COMMIT" \
+    bash scripts/repo/check-selection/script.sh --ci --boundary integration \
+    --execute-local --reuse-from-worktree "$PREFLIGHT_WORKTREE" --json
 fi
 
 git worktree remove "$PREFLIGHT_WORKTREE"

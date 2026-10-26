@@ -28,7 +28,7 @@ repo-specific, harness-specific, deployment, or product checks.
 
 The portable chat hook already validates staged lifecycle edits, deterministic
 process drift and governed command drift. This extension does not repeat those
-checks. It runs `check-selection --staged --execute-local --require-preparation` for affected scope
+checks. It runs `check-selection --staged --boundary commit --execute-local --require-preparation` for affected scope
 consumers. The complete artifact inventory audit is intentionally separate:
 
 ```bash
@@ -42,6 +42,9 @@ missing. The hook does not edit headers or stage files.
 Required commands fail closed if missing. Unknown implementation impact remains
 an explicit gap. Package/live proof obligations remain deferred to their owning
 stages and cannot be satisfied by local check success.
+Deferred integration checks remain mandatory in CI and direct local-main
+promotion. Their installed runtimes are qualified at integration, keeping commit
+preparation bounded to structural prerequisites and relevant fast checks.
 
 The ordinary selector invocation automatically retains and reuses successful local
 runner evidence in private per-worktree Git metadata. Its JSON output includes

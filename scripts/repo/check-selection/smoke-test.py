@@ -133,6 +133,8 @@ class SelectionTests(unittest.TestCase):
             else:
                 check['applicability'] = {'kind': 'bound', 'program_id': 'generic-server', 'image_id': 'generic-server-image', 'target': 'synthetic', 'scope': 'synthetic-worker'}
             if check['stage'] == 'local': check['runtime'] = {'tools': ['bash', 'python3'], 'environment': ['LANG', 'PYTHONPATH']}
+        self.catalog['checks']['local'].update(scope_inputs=False, inputs=['src', 'program.yml', 'image.yml'])
+        self.catalog['checks']['runnable-program'].update(scope_inputs=False, inputs=['program.yml'])
         self.catalog_path = self.root / 'scripts/repo/check-selection/checks.yml'
         self.save()
 
@@ -144,8 +146,10 @@ class SelectionTests(unittest.TestCase):
     def save(self) -> None:
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
-    def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False):
+    def run_plan(self, *, paths=None, stage='local', boundary='integration', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False, reuse_from_worktree=None):
         args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=record_preparation, require_preparation=require_preparation, evidence=evidence, json=True)
+        args.boundary = boundary
+        args.reuse_from_worktree = reuse_from_worktree
         files = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file() and '.git' not in path.relative_to(self.root).parts]
         def git(_root, *arguments):
             if arguments[0] == 'diff': return 'src/old.ts\0src/main.ts\0' if '--cached' in arguments else ''
@@ -177,6 +181,98 @@ class SelectionTests(unittest.TestCase):
 
     def local_command_result(self, report):
         return next(item for item in report['checks'] if item['argv'][1] == 'scripts/local.sh')
+
+    def test_every_registered_check_has_a_valid_execution_contract(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        errors = [error for key, check in catalog['checks'].items()
+                  for error in selection.validate_check(ROOT, key, check)]
+        self.assertEqual(errors, [])
+
+    def test_protected_ci_invocation_defaults_to_required_integration(self):
+        self.catalog['checks']['local']['boundary'] = 'integration'
+        self.save()
+        self.prepare_selector_cli()
+        result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json'], cwd=self.root, env={**self.cli_environment, 'BASE_SHA': '', 'HEAD_SHA': ''}, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report['boundary'], 'integration')
+        self.assertIn('local', report['execution_summary']['executed_check_ids'])
+        self.assertFalse((self.root / 'operations').exists())
+
+    def test_ci_catalog_only_change_selects_consumers_against_pr_base(self):
+        self.prepare_selector_cli()
+        def git(*argv):
+            result = subprocess.run(['git', *argv], cwd=self.root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Baseline')
+        base = git('rev-parse', 'HEAD')
+        self.catalog['checks']['local']['boundary'] = 'integration'
+        self.save()
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Catalog contract only')
+        head = git('rev-parse', 'HEAD')
+        result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json'],
+            cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': head}, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual([item['path'] for item in report['changed_inputs']], ['scripts/repo/check-selection/checks.yml'])
+        self.assertIn('local', report['execution_summary']['executed_check_ids'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertFalse((self.root / 'operations').exists())
+
+    def test_ci_repository_only_contract_change_selects_only_changed_identity(self):
+        # No scope can accidentally select the mapped command through a broad
+        # fixture command directory; this is the independent repository route.
+        shutil.rmtree(self.target.parent)
+        (self.root / 'trigger.md').write_text('Unchanged selection input.\n')
+        for name in ('mapped', 'sibling', 'catalog-check'):
+            self.check_script(name, ['read-only', 'writes-files'], 'echo ' + name + ' >> ' + name + '-counts\n')
+            self.catalog['checks'][name] = copy.deepcopy(self.catalog['checks']['local'])
+            self.catalog['checks'][name]['argv'] = ['bash', 'scripts/' + name + '.sh']
+            self.catalog['checks'][name]['inputs'] = ['trigger.md']
+        self.catalog['repository_inputs'] = [
+            {'inputs': ['trigger.md'], 'checks': ['mapped', 'sibling']},
+            {'inputs': ['scripts/repo/check-selection/checks.yml'], 'checks': ['catalog-check']},
+        ]
+        write(self.catalog_path, self.catalog)
+        self.prepare_selector_cli()
+        def git(*argv):
+            result = subprocess.run(['git', *argv], cwd=self.root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Mapped baseline')
+        base = git('rev-parse', 'HEAD')
+        self.catalog['checks']['mapped']['boundary'] = 'integration'
+        write(self.catalog_path, self.catalog)
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Mapped contract only')
+        head = git('rev-parse', 'HEAD')
+        def run(boundary):
+            result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--boundary', boundary, '--execute-local', '--json'],
+                cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': head}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            return json.loads(result.stdout)
+        commit = run('commit')
+        self.assertIn('mapped', commit['execution_summary']['deferred_check_ids'])
+        self.assertNotIn('sibling', commit['execution_summary']['selected_check_ids'])
+        self.assertFalse((self.root / 'mapped-counts').exists())
+        integrated = run('integration')
+        self.assertIn('mapped', integrated['execution_summary']['executed_check_ids'])
+        self.assertNotIn('sibling', integrated['execution_summary']['selected_check_ids'])
+        self.assertEqual((self.root / 'mapped-counts').read_text(), 'mapped\n')
+        self.assertEqual(run('integration')['execution_summary']['executed_check_ids'], [])
+        del self.catalog['checks']['mapped']
+        write(self.catalog_path, self.catalog)
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Invalid removed obligation')
+        rejected = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json'],
+            cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': git('rev-parse', 'HEAD')}, capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('required-check-missing', self.codes(json.loads(rejected.stdout)))
+        self.assertEqual((self.root / 'mapped-counts').read_text(), 'mapped\n')
 
     def test_cli_unrelated_catalog_changes_reuse_full_selected_alias_definitions(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
@@ -597,7 +693,7 @@ used_by:
         self.assertIn('requirement-proof-list-invalid', self.codes(self.run_plan()))
         self.requirement['local_proofs'] = ['local', 'scope-inventory', 'runnable-program']
         self.catalog['checks']['local']['inputs'] = 7; self.save()
-        self.assertIn('check-input-missing', self.codes(self.run_plan()))
+        self.assertIn('check-input-contract-missing', self.codes(self.run_plan()))
 
     def test_malformed_program_shapes_return_structured_gaps(self):
         for malformed in (None, [], 'unsupported-program', {'contract': []}):
@@ -644,6 +740,8 @@ used_by:
         schema.write_text('# agentic-artifact:\n#   id: fixture.schema\n#   used_by: [{path: scripts/bridge.py}]\nschema: fixture/v1\n')
         bridge = self.root / 'scripts/bridge.py'
         bridge.write_text('# agentic-artifact:\n#   id: fixture.bridge\n#   used_by: [{path: scripts/local.sh}]\n')
+        self.catalog['checks']['local']['inputs'].append('.agentic/schemas/fixture.yml')
+        self.check_script('local', ['read-only', 'writes-files'], 'cat .agentic/schemas/fixture.yml >/dev/null\necho local >> counts\n')
         self.catalog['repository_inputs'] = [{'inputs': ['scripts/local.sh'], 'checks': ['local']}]; self.save()
         first = self.run_plan(paths=['.agentic/schemas/fixture.yml'], execute=True)
         self.assertEqual(first['verdict'], 'passed', first)
@@ -686,6 +784,180 @@ used_by:
         (self.root / 'src/main.ts').write_text('changed implementation\n')
         stale = self.run_plan(execute=True, staged=True, require_preparation=True)
         self.assertIn('verification-preparation-inputs-changed', self.codes(stale))
+
+    def test_scope_explanation_preserves_unconsumed_runtime_and_contract_proof(self):
+        self.run_plan(execute=True)
+        self.requirement['purpose'] = 'An unrelated scope explanation changed.'
+        self.save()
+        report = self.run_plan(execute=True)
+        self.assertEqual(report['verdict'], 'passed', report['findings'])
+        self.assertEqual(report['execution_summary']['executed_check_ids'], ['scope-inventory'])
+        self.assertEqual(report['execution_summary']['reused_check_ids'], ['local', 'runnable-program'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_mapping_triggers_do_not_enter_explicit_proof_inputs(self):
+        (self.root / 'trigger.md').write_text('Selection only.\n')
+        self.catalog['repository_inputs'] = [{'inputs': ['trigger.md'], 'checks': ['local']}]
+        self.save()
+        first = self.run_plan(paths=['trigger.md'], execute=True)
+        self.assertEqual(first['verdict'], 'passed', first['findings'])
+        (self.root / 'trigger.md').write_text('Another selection explanation.\n')
+        second = self.run_plan(paths=['trigger.md'], execute=True)
+        self.assertEqual(second['execution_summary']['executed_check_ids'], [])
+        self.assertEqual(second['execution_summary']['reused_check_ids'], ['local'])
+        (self.root / 'src/main.ts').write_text('A consumed source changed.\n')
+        changed = self.run_plan(paths=['trigger.md'], execute=True)
+        self.assertEqual(changed['execution_summary']['executed_check_ids'], ['local'])
+
+    def test_commit_is_bounded_and_integration_reuses_final_proof_without_images(self):
+        self.catalog['checks']['local']['boundary'] = 'integration'
+        self.save()
+        self.run_plan(record_preparation=True)
+        commit = self.run_plan(execute=True, boundary='commit', staged=True, require_preparation=True)
+        self.assertEqual(commit['verdict'], 'passed', commit['findings'])
+        self.assertNotIn('local', commit['execution_summary']['executed_check_ids'])
+        self.assertFalse((self.root / 'counts').exists())
+        verified = self.run_plan(execute=True)
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local'])
+        commit = self.run_plan(execute=True, boundary='commit', staged=True, require_preparation=True)
+        integrated = self.run_plan(execute=True)
+        for report in (commit, integrated):
+            self.assertEqual(report['verdict'], 'passed', report['findings'])
+            self.assertEqual(report['execution_summary']['executed_check_ids'], [])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertFalse((self.root / 'operations').exists(), 'No image or provider operation may run locally.')
+
+    def test_missing_explicit_inputs_and_invalid_scheduling_fail_closed(self):
+        self.catalog['checks']['local'].pop('inputs')
+        self.save()
+        self.assertIn('check-input-contract-missing', self.codes(self.run_plan(execute=True)))
+        self.assertFalse((self.root / 'counts').exists())
+        self.catalog['checks']['local']['inputs'] = ['src']
+        self.catalog['checks']['local']['boundary'] = 'anything'
+        self.save()
+        self.assertIn('check-boundary-invalid', self.codes(self.run_plan(execute=True)))
+
+    def test_deferred_integration_runtime_is_not_qualified_at_commit(self):
+        self.catalog['checks']['local']['boundary'] = 'integration'
+        self.catalog['checks']['local']['runtime']['environment'].append('EXPENSIVE_FIXTURE')
+        self.save()
+        actual = selection.runtime_identity
+        def bounded(root, declaration):
+            if 'EXPENSIVE_FIXTURE' in declaration.get('environment', []):
+                raise ValueError('fixture integration runtime unavailable')
+            return actual(root, declaration)
+        with patch.object(selection, 'runtime_identity', side_effect=bounded):
+            self.assertEqual(self.run_plan(boundary='commit', record_preparation=True)['verdict'], 'planned')
+            commit = self.run_plan(boundary='commit', staged=True, execute=True, require_preparation=True)
+            self.assertEqual(commit['verdict'], 'passed', commit['findings'])
+            self.assertIn('check-runtime-identity-unavailable', self.codes(self.run_plan(execute=True)))
+
+    def test_later_command_cannot_revoke_an_earlier_pass_unnoticed(self):
+        self.check_script('other', ['read-only', 'writes-files'], 'echo changed >> src/main.ts\n')
+        self.catalog['checks']['z-mutator'] = {**copy.deepcopy(self.catalog['checks']['local']), 'argv': ['bash', 'scripts/other.sh'], 'inputs': ['consumer.ts']}
+        self.requirement['local_proofs'].append('z-mutator')
+        self.save()
+        report = self.run_plan(execute=True)
+        self.assertIn('check-input-changed-before-completion', self.codes(report))
+        self.assertEqual(next(item for item in report['checks'] if item['check_id'] == 'local')['status'], 'uncertain')
+
+    def test_registered_worktree_transfer_revalidates_inputs_and_rejects_other_repos(self):
+        source_root, source_catalog = self.root, self.catalog_path
+        subprocess.run(['git', '-C', str(source_root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(source_root), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Fixture source'], check=True)
+        self.assertEqual(self.run_plan(execute=True)['verdict'], 'passed')
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / 'integration'
+            subprocess.run(['git', '-C', str(source_root), 'worktree', 'add', '--detach', '--quiet', str(destination)], check=True)
+            try:
+                self.root, self.catalog_path = destination, destination / source_catalog.relative_to(source_root)
+                reused = self.run_plan(execute=True, reuse_from_worktree=source_root)
+                self.assertEqual(reused['verdict'], 'passed', reused['findings'])
+                self.assertEqual(reused['execution_summary']['executed_check_ids'], [])
+                self.assertEqual(reused['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+                self.assertFalse((destination / 'counts').exists())
+                (destination / 'src/main.ts').write_text('Resolved incoming changes.\n')
+                changed = self.run_plan(execute=True, reuse_from_worktree=source_root)
+                self.assertIn('local', changed['execution_summary']['executed_check_ids'])
+                with patch.dict(os.environ, {'LANG': 'C.transfer-fixture'}):
+                    runtime_changed = self.run_plan(execute=True, reuse_from_worktree=source_root)
+                self.assertIn('local', runtime_changed['execution_summary']['executed_check_ids'])
+                unregistered = source_root / 'not-a-worktree'
+                unregistered.mkdir()
+                rejected = self.run_plan(execute=True, reuse_from_worktree=unregistered)
+                self.assertIn('reuse-worktree-unavailable', self.codes(rejected))
+                foreign = Path(directory) / 'foreign'
+                subprocess.run(['git', 'init', '--quiet', str(foreign)], check=True)
+                rejected = self.run_plan(execute=True, reuse_from_worktree=foreign)
+                self.assertIn('reuse-worktree-unavailable', self.codes(rejected))
+                self.assertEqual(rejected['execution_summary']['executed_check_ids'], [])
+            finally:
+                self.root, self.catalog_path = source_root, source_catalog
+
+    def test_receipt_with_changed_identity_fields_is_not_authority(self):
+        report = self.run_plan(execute=True)
+        item = next(item for item in report['checks'] if item['check_id'] == 'local')
+        path = self.root / '.git/agentic-local-checks' / (item['evidence_key'] + '.json')
+        value = json.loads(path.read_text())
+        value['input_digest'] = 'forged-digest'
+        path.write_text(json.dumps(value))
+        rerun = self.run_plan(execute=True)
+        self.assertIn('local', rerun['execution_summary']['executed_check_ids'])
+
+    def test_repository_metadata_and_promotion_owner_regressions(self):
+        for owner in (
+            'scripts/01.harness/artifact-metadata/update-lifecycle/smoke-test.sh',
+            'scripts/01.harness/artifact-metadata/check-headers/smoke-test.sh',
+            'scripts/00.chat/session-log/prepare-chat-session-before-commit/smoke-test.sh',
+            'scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/smoke-test.sh',
+            'scripts/00.chat/main-refresh/rehearse-refresh-from-main/smoke-test.sh',
+        ):
+            with self.subTest(owner=owner):
+                result = subprocess.run(['bash', owner], cwd=ROOT, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout[-3000:] + result.stderr[-3000:])
+
+    def test_actual_refresh_retains_verified_preflight_receipts(self):
+        for relative in (
+            'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py',
+            'scripts/repo/check-selection/local_cache.py',
+            'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py',
+            'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py',
+            'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py',
+            'scripts/01.harness/artifact-metadata/header_discovery.py',
+            'scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh',
+        ):
+            target = self.root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, target)
+        (self.root / '.gitignore').write_text('counts\n')
+        (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
+        def command(directory, *argv):
+            result = subprocess.run(argv, cwd=directory, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout[-4000:] + result.stderr[-4000:])
+            return result.stdout
+        command(self.root, 'git', 'add', '.')
+        command(self.root, 'git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Fixture baseline')
+        if command(self.root, 'git', 'branch', '--show-current').strip() != 'main':
+            command(self.root, 'git', 'branch', 'main')
+        command(self.root, 'git', 'checkout', '-qb', 'chat/fixture')
+        branch = 'agentic/preflight/chat-fixture/20261026000000'
+        with tempfile.TemporaryDirectory() as temporary:
+            preflight = Path(temporary) / 'preflight'
+            command(self.root, 'git', 'worktree', 'add', '--quiet', '-b', branch, str(preflight))
+            (preflight / 'src/main.ts').write_text('Resolved combined code.\n')
+            command(preflight, 'git', 'add', 'src/main.ts')
+            command(preflight, 'git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Fixture refresh')
+            verified = json.loads(command(preflight, 'bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--execute-local', '--json'))
+            self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+            output = command(self.root, 'bash', 'scripts/00.chat/main-refresh/apply-rehearsed-refresh/script.sh', branch)
+            applied = json.loads(next(line for line in output.splitlines() if line.startswith('{')))
+            self.assertEqual(applied['execution_summary']['executed_check_ids'], [])
+            self.assertEqual(applied['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+            self.assertFalse(preflight.exists())
+            self.assertFalse((self.root / 'counts').exists(), 'Refresh must not repeat the behavioral command.')
+            self.assertFalse((self.root / 'operations').exists(), 'Refresh must not build images or invoke providers.')
+            retained = json.loads(command(self.root, 'bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--execute-local', '--json'))
+            self.assertEqual(retained['execution_summary']['executed_check_ids'], [])
 
     def test_imported_report_cannot_qualify_local_check(self):
         planned = self.run_plan()
@@ -804,6 +1076,9 @@ used_by:
         self.assertIn('selected-input-not-staged', blocked.stdout)
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         subprocess.run(['git', '-C', str(self.root), 'add', 'src/main.ts'], check=True)
+        unfinished = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
+        self.assertNotEqual(unfinished.returncode, 0)
+        self.assertIn('verification-preparation-inputs-changed', unfinished.stdout)
         prepare()
         invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')

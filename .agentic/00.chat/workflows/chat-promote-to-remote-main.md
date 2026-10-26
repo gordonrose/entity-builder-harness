@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-26"
   layer: 00.chat
   domain: remote-promotion
   disciplines:
@@ -51,7 +51,7 @@ work.
 
    ```bash
    git fetch --prune origin
-   bash scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh \
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh \
      --remote-main origin <chat-branch>
    ```
 

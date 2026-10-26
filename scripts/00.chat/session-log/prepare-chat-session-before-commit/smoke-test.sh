@@ -189,7 +189,7 @@ bash -c 'cd "$1" && shift && "$@"' sh "$REPO" \
 
 grep -q 'Verification preparation passed.' "$TMP_ROOT/before-verification.out" \
   || fail "before-verification mode did not pass"
-expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --stage local --record-preparation --json'
+expected_order=$'lifecycle --paths .agentic/task.md src/feature.ts --skip-non-artifacts --apply\nindex --paths .agentic/task.md --strict\nheaders --paths .agentic/task.md src/feature.ts\nselector --paths .agentic/task.md src/feature.ts --stage local --boundary commit --record-preparation --json'
 if [[ "$(cat "$REPO/preparation-order")" != "$expected_order" ]]; then
   fail "before-verification did not complete lifecycle, structural, then selector preparation in order"
 fi

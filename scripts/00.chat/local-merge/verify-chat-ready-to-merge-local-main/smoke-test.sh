@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -243,5 +243,40 @@ session="2026-06-16-22-38-log-mismatch"
 branch="chat/$session"
 create_chat_branch_with_log "$repo" "$session" "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 run_expect_state "$repo" "$branch" "blocked-log-head-mismatch" "no"
+
+repo="$(init_repo integration-proof)"
+session="2026-06-16-22-39-integration-proof"
+branch="chat/$session"
+create_chat_branch_with_log "$repo" "$session"
+worktree="$(canonical_worktree_path "$repo" "$branch")"
+mkdir -p "$worktree/scripts/repo/check-selection"
+mkdir -p "$worktree/scripts/04.deploy/inventory-deploy-control"
+cat > "$worktree/scripts/04.deploy/inventory-deploy-control/script.py" <<'PYTHON'
+import os
+from pathlib import Path
+import subprocess
+Path(subprocess.check_output(['git', 'rev-parse', '--git-path', 'delivery-invoked'], text=True).strip()).write_text('invoked')
+raise SystemExit(int(os.environ.get('FIXTURE_DELIVERY_EXIT', '0')))
+PYTHON
+cat > "$worktree/scripts/repo/check-selection/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$*" == '--ci --boundary integration --execute-local --json' ]]
+test -f "$(git rev-parse --git-path delivery-invoked)"
+[[ "$(git rev-parse HEAD)" == "$HEAD_SHA" ]]
+git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"
+printf '%s\n' invoked > "$(git rev-parse --git-path integration-invoked)"
+if [ "${FIXTURE_INTEGRATION_DRIFT:-0}" = 1 ]; then touch unqualified-drift; fi
+exit "${FIXTURE_INTEGRATION_EXIT:-0}"
+EOF
+git -C "$worktree" add scripts/repo/check-selection scripts/04.deploy/inventory-deploy-control
+git -C "$worktree" commit -qm "Add fixture integration proof"
+run_expect_state "$repo" "$branch" "eligible" "yes"
+test -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)" || fail "integration proof was skipped"
+rm -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)"
+FIXTURE_DELIVERY_EXIT=1 run_expect_state "$repo" "$branch" "blocked-delivery-coverage" "no"
+test ! -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)" || fail "proof ran despite failed delivery census"
+FIXTURE_INTEGRATION_EXIT=1 run_expect_state "$repo" "$branch" "blocked-integration-proof" "no"
+FIXTURE_INTEGRATION_DRIFT=1 run_expect_state "$repo" "$branch" "blocked-integration-input-drift" "no"
 
 echo "local merge readiness verifier smoke test passed."

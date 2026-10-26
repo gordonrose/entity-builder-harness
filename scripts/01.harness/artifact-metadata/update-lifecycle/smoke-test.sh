@@ -453,5 +453,41 @@ with tempfile.TemporaryDirectory(prefix="artifact-legacy-repair-") as temporary:
         update(repo, [str(path.relative_to(repo))], "--apply", succeeds=False)
         assert path.read_bytes() == current, "ambiguous or malformed v3 history must fail closed"
 
-print("Lifecycle updater smoke tests passed.")
+with tempfile.TemporaryDirectory(prefix="lifecycle-rollover-") as temporary:
+    repo = Path(temporary)
+    git(repo, "init", "-q")
+    git(repo, "config", "user.name", "Lifecycle rollover fixture")
+    git(repo, "config", "user.email", "rollover@example.invalid")
+    source = artifact(repo)
+    commit(repo, "Original artifact")
+    source.write_bytes(source.read_bytes() + b"Prepared content.\n")
+    # Exercise yesterday's preparation with the same source implementation;
+    # there is no production clock override or provider operation.
+    yesterday = (dt.date.fromisoformat(TODAY) - dt.timedelta(days=1)).isoformat()
+    code = UPDATER.read_text().split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+    code = code.replace('TODAY = dt.datetime.now(dt.timezone.utc).date().isoformat()', 'TODAY = ' + repr(yesterday))
+    result = run([sys.executable, "-c", code, str(UPDATER), "--paths", ".agentic/original.md", "--apply"], repo)
+    assert result.returncode == 0, result.stdout.decode() + result.stderr.decode()
+    prepared, mtime = source.read_bytes(), source.stat().st_mtime_ns
+    private = Path(git(repo, "rev-parse", "--absolute-git-dir").decode().strip()) / "agentic-local-checks/preparation-report.json"
+    receipt_mtime = private.stat().st_mtime_ns
+    assert ('updated_on: "' + yesterday + '"').encode() in prepared
+    for _ in range(2):
+        report = update(repo, [".agentic/original.md"], "--apply")
+        assert not report["plans"][0]["changed"], report
+        assert source.read_bytes() == prepared and source.stat().st_mtime_ns == mtime
+        assert private.stat().st_mtime_ns == receipt_mtime, "unchanged preparation must not rewrite its private receipt"
+    git(repo, "add", ".agentic/original.md")
+    checker = UPDATER.parents[1] / "check-headers/script.sh"
+    validation = run(["bash", str(checker), "--staged"], repo)
+    assert validation.returncode == 0, validation.stdout.decode() + validation.stderr.decode()
+    source.write_bytes(prepared + b"Unprepared later content.\n")
+    git(repo, "add", ".agentic/original.md")
+    validation = run(["bash", str(checker), "--staged"], repo)
+    assert validation.returncode != 0, "a date receipt cannot authorize changed staged bytes"
+    update(repo, [".agentic/original.md"], "--apply")
+    assert ('updated_on: "' + TODAY + '"').encode() in source.read_bytes()
+    assert b'created_on: "2025-01-03"' in source.read_bytes()
+
+print("Lifecycle updater smoke tests passed (including unchanged preparation across UTC rollover).")
 PY
