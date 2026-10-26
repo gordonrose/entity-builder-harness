@@ -213,7 +213,7 @@ class LocalCache:
         except (OSError, ValueError): return {}
 
     def write(self, name: str, value: dict) -> Path:
-        if name != 'latest-report.json' and not re.fullmatch(r'[0-9a-f]{64}\.json', name):
+        if name not in {'latest-report.json', 'preparation-report.json'} and not re.fullmatch(r'[0-9a-f]{64}\.json', name):
             raise ValueError('local-cache-name-invalid')
         path = self.directory / name
         if path.is_symlink(): raise ValueError('local-cache-symlink-forbidden')
@@ -232,5 +232,54 @@ class LocalCache:
         if item.get('stage') != 'local' or item.get('status') != 'passed' or item.get('exit_code') != 0: return
         self.write(item['evidence_key'] + '.json', {**item, 'schema': 'repo/local-check-cache/v1', 'worktree': self.worktree})
 
+    def invalidation_reasons(self, item: dict) -> list[str]:
+        """Explain a cache miss without treating a stale receipt as proof."""
+        candidates: list[tuple[int, dict]] = []
+        for path in self.directory.iterdir():
+            if not re.fullmatch(r'[0-9a-f]{64}\.json', path.name):
+                continue
+            value = self.read(path.stem)
+            if value and value.get('check_key') == item.get('check_key'):
+                try:
+                    candidates.append((path.stat().st_mtime_ns, value))
+                except OSError:
+                    continue
+        if not candidates:
+            return ['no-prior-successful-local-evidence']
+        previous = max(candidates, key=lambda candidate: candidate[0])[1]
+        reasons = []
+        if previous.get('input_digest') != item.get('input_digest'):
+            reasons.append('verified-inputs-changed')
+        if previous.get('runtime_identity') != item.get('runtime_identity'):
+            reasons.append('runtime-identity-changed')
+        if any(previous.get(field) != item.get(field) for field in ('argv', 'effects', 'stage', 'evidence_class', 'runtime', 'parameters', 'applicability')):
+            reasons.append('verification-contract-changed')
+        return reasons or ['evidence-key-changed']
+
     def save_report(self, report: dict) -> str:
         return str(self.write('latest-report.json', report))
+
+    def save_preparation(self, value: dict) -> str:
+        return str(self.write('preparation-report.json', {
+            **value,
+            'schema': 'repo/verification-preparation/v1',
+            'worktree': self.worktree,
+        }))
+
+    def read_preparation(self) -> dict:
+        path = self.directory / 'preparation-report.json'
+        try:
+            descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+            with os.fdopen(descriptor, 'r') as stream:
+                info = os.fstat(stream.fileno())
+                if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077 or info.st_nlink != 1 or info.st_size > 1048576:
+                    return {}
+                value = json.load(stream)
+            if not isinstance(value, dict) or value.get('schema') != 'repo/verification-preparation/v1' or value.get('worktree') != self.worktree:
+                return {}
+            checks = value.get('checks')
+            if not isinstance(checks, list) or any(not isinstance(item, dict) or not isinstance(item.get('check_id'), str) or not isinstance(item.get('evidence_key'), str) for item in checks):
+                return {}
+            return value
+        except (OSError, ValueError):
+            return {}

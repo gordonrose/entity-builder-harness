@@ -144,8 +144,8 @@ class SelectionTests(unittest.TestCase):
     def save(self) -> None:
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
-    def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False):
-        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, evidence=evidence, json=True)
+    def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False):
+        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=record_preparation, require_preparation=require_preparation, evidence=evidence, json=True)
         files = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file() and '.git' not in path.relative_to(self.root).parts]
         def git(_root, *arguments):
             if arguments[0] == 'diff': return 'src/old.ts\0src/main.ts\0' if '--cached' in arguments else ''
@@ -362,6 +362,23 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(report['verdict'], 'passed', report)
         self.assertEqual(len(report['checks']), 6)
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_dormant_impact_roots_do_not_expand_normal_dependency_proofs(self):
+        dormant = self.root / 'dormant'; dormant.mkdir()
+        (dormant / 'source.md').write_text('''<!-- agentic-artifact:
+schema: agentic-artifact/v3
+id: fixture.dormant-source
+used_by:
+- id: fixture.main
+  path: src/main.ts
+-->\n''')
+        paths = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file()]
+        active = selection.consumer_graph(self.root, paths)
+        isolated = selection.consumer_graph(self.root, paths, ['dormant'])
+        self.assertIn('src/main.ts', active.get('dormant/source.md', set()))
+        self.assertNotIn('dormant/source.md', isolated)
+        self.catalog['dormant_impact_roots'] = ['dormant']; self.save()
+        self.assertEqual(self.run_plan()['verdict'], 'planned')
 
     def test_duplicate_command_cannot_claim_conflicting_evidence_classes(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
@@ -635,8 +652,22 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(local['evidence_source'], 'trusted-worktree-cache')
         self.assertEqual(local['executed_revision'], 'a' * 40)
         self.assertEqual(local['source_revision'], 'b' * 40)
+        self.assertEqual(result['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
         with patch.dict(os.environ, {'LANG': 'C.fixture'}): self.run_plan(execute=True)
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
+
+    def test_preparation_reuses_unchanged_proof_and_rejects_changed_inputs(self):
+        prepared = self.run_plan(record_preparation=True)
+        self.assertEqual(prepared['preparation_status'], 'recorded')
+        verified = self.run_plan(execute=True)
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        commit = self.run_plan(execute=True, staged=True, require_preparation=True)
+        self.assertEqual(commit['preparation_status'], 'matched')
+        self.assertEqual(commit['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        (self.root / 'src/main.ts').write_text('changed implementation\n')
+        stale = self.run_plan(execute=True, staged=True, require_preparation=True)
+        self.assertIn('verification-preparation-inputs-changed', self.codes(stale))
 
     def test_imported_report_cannot_qualify_local_check(self):
         planned = self.run_plan()

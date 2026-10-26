@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: harness.script.artifact-metadata.update-lifecycle-smoke-test
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -86,6 +86,12 @@ def update(repo, paths, *flags, succeeds=True):
     return json.loads(result.stdout)
 
 
+def update_changed(repo, *flags, succeeds=True):
+    result = run(["bash", str(UPDATER), "--changed", *flags], repo)
+    assert result.returncode == (0 if succeeds else 1), result.stderr.decode() + result.stdout.decode()
+    return json.loads(result.stdout)
+
+
 def artifact(repo, name=".agentic/original.md", identity="test.artifact.original", status="active", crlf=False):
     path = repo / name
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -127,6 +133,24 @@ with tempfile.TemporaryDirectory(prefix="artifact-lifecycle-test-") as temporary
     mtime = source.stat().st_mtime_ns
     assert not update(repo, [".agentic/original.md"], "--apply")["plans"][0]["changed"]
     assert source.stat().st_mtime_ns == mtime, "repeat apply must not rewrite unchanged files"
+
+    # Task preparation discovers changed lifecycle artifacts without touching
+    # ordinary source, and a second unchanged preparation is a true no-op.
+    source.write_bytes(source.read_bytes() + b"Prepared task body change.\r\n")
+    ordinary = repo / "src/ordinary.ts"; ordinary.parent.mkdir()
+    ordinary.write_text("export const ordinary = true;\n")
+    prepared = update_changed(repo, "--apply")
+    assert prepared["selection"] == "changed-artifacts"
+    assert [item["path"] for item in prepared["plans"]] == [".agentic/original.md"], prepared
+    # The header was already refreshed today; discovering a further same-day
+    # body edit must not rewrite it simply to manufacture another update.
+    assert not prepared["plans"][0]["changed"]
+    assert prepared["skipped"] == [{"path": "src/ordinary.ts", "reason": "not-a-v2-or-v3-artifact"}]
+    prepared_bytes = source.read_bytes(); prepared_mtime = source.stat().st_mtime_ns
+    repeated = update_changed(repo, "--apply")
+    assert not repeated["plans"][0]["changed"]
+    assert source.read_bytes() == prepared_bytes and source.stat().st_mtime_ns == prepared_mtime
+    assert ordinary.read_text() == "export const ordinary = true;\n"
 
     commit(repo, "Migrate lifecycle", TODAY + "T00:00:00+00:00")
     git(repo, "mv", ".agentic/original.md", ".agentic/renamed.md")

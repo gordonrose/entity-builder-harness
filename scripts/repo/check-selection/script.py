@@ -63,7 +63,16 @@ def metadata(path: Path) -> dict[str, Any]:
         return {}
 
 
-def consumer_graph(root: Path, paths: list[str]) -> dict[str, set[str]]:
+def dormant_roots(root: Path, catalog: dict[str, Any]) -> tuple[list[str], list[dict[str, str]]]:
+    roots = catalog.get('dormant_impact_roots', [])
+    if not isinstance(roots, list) or not all(isinstance(item, str) and item and coverage.safe_path(item) and (root / item).is_dir() for item in roots):
+        return [], [{'code': 'dormant-impact-roots-invalid'}]
+    if len(set(roots)) != len(roots):
+        return [], [{'code': 'dormant-impact-roots-duplicate'}]
+    return roots, []
+
+
+def consumer_graph(root: Path, paths: list[str], dormant: list[str] | tuple[str, ...] = ()) -> dict[str, set[str]]:
     graph: dict[str, set[str]] = {}
     headers = {path: metadata(root / path) for path in paths if coverage.within(root, path) is not None and path.endswith(('.md', '.yml', '.yaml', '.py', '.sh', '.ts', '.mjs'))}
     identities = {meta.get('id'): path for path, meta in headers.items() if isinstance(meta.get('id'), str)}
@@ -71,7 +80,7 @@ def consumer_graph(root: Path, paths: list[str]) -> dict[str, set[str]]:
         for consumer in meta.get('used_by', []) if isinstance(meta.get('used_by'), list) else []:
             if isinstance(consumer, dict):
                 target = consumer.get('path') or identities.get(consumer.get('id'))
-                if isinstance(target, str) and coverage.safe_path(target): graph.setdefault(path, set()).add(target)
+                if isinstance(target, str) and coverage.safe_path(target) and not any(below(path, dormant_root) or below(target, dormant_root) for dormant_root in dormant): graph.setdefault(path, set()).add(target)
     # Workspace packages expose real dependency edges even when ordinary source
     # files have no artifact header. Explicit scope inputs cover entrypoints and
     # tsconfig path aliases; unmatched imports remain reported impact gaps.
@@ -188,6 +197,8 @@ def fingerprint(root: Path, refs: set[str], *, exclude: set[str] | frozenset[str
 
 def plan(args: argparse.Namespace) -> dict[str, Any]:
     root = args.root.resolve()
+    record_preparation = getattr(args, 'record_preparation', False)
+    require_preparation = getattr(args, 'require_preparation', False)
     catalog_path = args.catalog or root / 'scripts/repo/check-selection/checks.yml'
     catalog_ref = catalog_path.relative_to(root).as_posix()
     # Catalog authority is checked fresh for each invocation. Its raw bytes
@@ -207,7 +218,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     if args.staged: changed = sorted(set(git(root, 'diff', '--cached', '--name-only', '--no-renames', '-z').split('\0')) - {''})
     if any(not coverage.safe_path(path) for path in changed): findings.append({'code': 'changed-path-invalid'})
     paths = repository_paths(root)
-    graph = consumer_graph(root, paths)
+    dormant, dormant_findings = dormant_roots(root, catalog)
+    findings += dormant_findings
+    graph = consumer_graph(root, paths, dormant)
     # This graph is immutable for one plan. Cache traversals only within that
     # invocation; later plans must observe new metadata and dependency edges.
     downstream_cache: dict[frozenset[str], frozenset[str]] = {}
@@ -342,7 +355,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             bind_catalog_entry(item, identity, check, argv)
             item['references'].update(upstream(set(rule['inputs']) | set(check.get('inputs', [])) | {str(Path(argv[1]).parent)}))
     cache = None
-    if args.execute_local:
+    if args.execute_local or record_preparation or require_preparation:
         try: cache = LocalCache(root)
         except (ValueError, OSError) as error: findings.append({'code': 'local-cache-unavailable', 'detail': str(error)})
     results = sorted(selected.values(), key=lambda item: (STAGES[item['stage']], item['check_key']))
@@ -379,6 +392,22 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             if any(below(path, ref) or below(ref, path) for ref in selected_inputs):
                 findings.append({'code': 'selected-input-not-staged', 'path': path})
     if not catalog_unchanged(): findings.append({'code': 'check-catalog-changed-during-planning'})
+    preparation_status = 'not-requested'
+    if record_preparation:
+        preparation_status = 'recorded-pending-validation'
+    if require_preparation and results:
+        preparation = cache.read_preparation() if cache else {}
+        if not preparation:
+            findings.append({'code': 'verification-preparation-missing'})
+            preparation_status = 'missing'
+        else:
+            prepared = {(item['check_id'], item['evidence_key']) for item in preparation['checks']}
+            mismatched = [item['check_id'] for item in results if (item['check_id'], item.get('evidence_key')) not in prepared]
+            if mismatched:
+                findings.append({'code': 'verification-preparation-inputs-changed', 'check_ids': sorted(mismatched)})
+                preparation_status = 'inputs-changed'
+            else:
+                preparation_status = 'matched'
     execution_preflight_passed = not findings
     for item in results:
         item['source_revision'] = revision
@@ -403,6 +432,8 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
             item.update(status='passed', exit_code=0, evidence_source='trusted-worktree-cache', executed_revision=proof.get('executed_revision', proof.get('source_revision')))
         elif not required_now: item['status'] = 'deferred'; item['reason'] = 'required-before-' + item['stage']
         elif args.execute_local and item['stage'] == 'local' and execution_preflight_passed:
+            if cache:
+                item['cache_invalidation_reasons'] = cache.invalidation_reasons(item)
             completed = subprocess.run(item['argv'], cwd=root, capture_output=True, text=True, check=False)
             item.update(status='passed' if completed.returncode == 0 else 'failed', exit_code=completed.returncode, evidence_source='local-runner', executed_revision=revision)
             # A check cannot qualify bytes that changed while it was executing.
@@ -424,7 +455,23 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
         item['references'] = sorted(item['references'])
     if not catalog_unchanged() and not any(item['code'].startswith('check-catalog-changed-') for item in findings):
         findings.append({'code': 'check-catalog-changed-during-invocation'})
-    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'delivery_inventory': {'source_revision': delivery['source_revision'], 'input_digest': delivery['input_digest'], 'summary': delivery['summary']}, 'scopes': impacted, 'checks': results, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
+    execution_summary = {
+        'reused_check_ids': sorted(item['check_id'] for item in results if item.get('evidence_source') == 'trusted-worktree-cache'),
+        'executed_check_ids': sorted(item['check_id'] for item in results if item.get('evidence_source') == 'local-runner'),
+        'deferred_check_ids': sorted(item['check_id'] for item in results if item.get('status') == 'deferred'),
+        'invalidated_checks': [
+            {'check_id': item['check_id'], 'reasons': item['cache_invalidation_reasons']}
+            for item in results if item.get('cache_invalidation_reasons') and item.get('cache_invalidation_reasons') != ['no-prior-successful-local-evidence']
+        ],
+    }
+    report = {'schema': 'repo/check-selection-report/v1', 'stage': args.stage, 'verdict': 'gap' if findings else ('passed' if args.execute_local or args.stage != 'local' else 'planned'), 'source_revision': revision, 'changed_inputs': [{'path': path, 'state': 'present' if (root / path).exists() else 'deleted'} for path in changed], 'affected_consumers': sorted(consumers - set(changed) | {path for report in impacted for path in report['consumers']}), 'delivery_inventory': {'source_revision': delivery['source_revision'], 'input_digest': delivery['input_digest'], 'summary': delivery['summary']}, 'scopes': impacted, 'checks': results, 'execution_summary': execution_summary, 'non_applicable': non_applicable, 'findings': findings, 'limitations': ['Declared inputs, metadata consumers and workspace dependencies define supported impact; unmapped authoritative definitions remain gaps.', 'Local cache trusts same-user private worktree Git metadata and declared runtime/config/environment inputs; it is not portable or live acceptance evidence.', 'Imported reports cannot qualify checks. Only unchanged successful local runner results are reused; all external proof remains with its owning stage controller.']}
+    if record_preparation and cache and not findings:
+        report['preparation_report_path'] = cache.save_preparation({
+            'changed_inputs': report['changed_inputs'],
+            'checks': [{'check_id': item['check_id'], 'evidence_key': item.get('evidence_key'), 'stage': item['stage']} for item in results],
+        })
+        preparation_status = 'recorded'
+    report['preparation_status'] = preparation_status
     if args.evidence: report['evidence_import_status'] = 'rejected-untrusted-report'
     if cache:
         report['local_report_path'] = str(cache.directory / 'latest-report.json')
@@ -444,9 +491,15 @@ def main() -> int:
     parser.add_argument('--catalog', type=Path)
     parser.add_argument('--stage', choices=STAGES, default='local')
     parser.add_argument('--execute-local', action='store_true')
+    parser.add_argument('--record-preparation', action='store_true')
+    parser.add_argument('--require-preparation', action='store_true')
     parser.add_argument('--evidence', type=Path)
     parser.add_argument('--json', action='store_true')
     args = parser.parse_args()
+    if args.record_preparation and args.require_preparation:
+        parser.error('--record-preparation and --require-preparation are mutually exclusive')
+    if args.require_preparation and not args.staged:
+        parser.error('--require-preparation requires --staged')
     try:
         if args.ci:
             base, head = os.environ.get('BASE_SHA', ''), os.environ.get('HEAD_SHA', '')

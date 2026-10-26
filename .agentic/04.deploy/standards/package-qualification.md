@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.standards.package-qualification
-version: 1
+version: 2
 status: draft
 created_on: "2026-10-20"
-updated_on: "2026-10-21"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -41,6 +41,14 @@ policy before a workload may select the resulting digest.
 A target foundation may be prepared only to the minimum extent needed to host
 the approved package destination. A workload foundation or workload deployment
 must not proceed until package qualification has an accepted receipt.
+
+Chat commit or merge preparation does not build, requalify, or itself validate
+a package receipt. It preserves an accepted receipt for its owner-bound package
+or target workflow to validate against the immutable digest, source binding,
+and package contract. A source change included in the image still requires
+qualification of the changed image; the optimization is completing metadata
+preparation before qualification so a later commit-boundary check does not
+create a needless new image identity.
 
 ## Failure rule
 

@@ -41,7 +41,7 @@ explicitly grants write permission for task files.
 
 * `00.chat` (`.agentic/00.chat/`) governs chat lifecycle, including sessions, worktrees, session logs, chat refresh, closeout, cleanup, shortcuts, and reporting.
 * `01.harness` (`.agentic/01.harness/`) governs the agentic harness itself, including routing, workflows, standards, gates, agents, and artifact metadata.
-* `02.rag-rulebook` (`.agentic/02.rag-rulebook/`) governs reusable RAG and rulebook machinery, including corpora, indexing, retrieval, intent, and context packets.
+* `02.rag-rulebook` (`.agentic/02.rag-rulebook/`) is dormant RAG/rulebook machinery retained for explicit maintenance and future rebuilding; it must not add automatic work to platform, harness, or ordinary commit flows.
 * `03.product` (`.agentic/03.product/`) governs product and runtime contract work, including current `packages/core/` and `platform/contracts/` surfaces.
 * `04.deploy` (`.agentic/04.deploy/`, `.agentic/aws/`, `infra/04.deploy/`, `docs/04.deploy/`, and `scripts/04.deploy/`) governs deployment, infrastructure, runtime operations, and CI/CD surfaces. `.agentic/04.deploy/` is the provider-neutral layer; `.agentic/aws/` remains the active AWS-specific governance surface during its planned transition.
 * `05.education` (`.agentic/education/`) governs educational resources derived from repo work.

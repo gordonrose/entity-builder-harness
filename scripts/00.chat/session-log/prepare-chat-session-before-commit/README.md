@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.script.session-log.prepare-chat-session-before-commit.readme
-  version: 2
+  version: 3
   status: active
   created_on: "2026-06-19"
-  updated_on: "2026-10-25"
+  updated_on: "2026-10-26"
   layer: 00.chat
   domain: session-log
   disciplines:
@@ -37,13 +37,15 @@ Before a task commit, the harness needs two kinds of confidence:
 - the Git state is appropriate for committing from this chat worktree
 - the session log has enough context to explain the work after the commit lands
 
-This helper coordinates those checks. It is deliberately read-only. If anything
-is missing, it stops before the commit boundary so the human and agent can fix
-the session state rather than writing an incomplete audit trail.
+The default mode coordinates those checks without changing task files. Its
+`--before-verification` mode performs the bounded lifecycle preparation needed
+before final verification. If anything is missing, either mode stops before the
+commit boundary so the human and agent can fix the state rather than writing an
+incomplete audit trail.
 
 ## Checks
 
-The script runs shared gates first:
+In its default commit-boundary mode, the script runs shared gates first:
 
 - write-location check
 - commit prerequisite check
@@ -78,12 +80,28 @@ Then it validates the current chat session:
 
 ## Typical Sequence
 
-1. Stage only approved task paths in the committing worktree.
-2. Run this readiness check.
-3. Commit the task changes only if this check passes.
-4. Run `record-chat-commit` with the task commit SHA and summary.
-5. If only the session log is dirty, run `checkpoint-chat-session-log`.
-6. If continuing the same chat into a new phase, run `/compact` so Codex keeps
+1. Before final verification or any image qualification, run:
+
+   ```bash
+   bash scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+     --before-verification --paths <task-path> [<task-path>...]
+   ```
+
+   It updates required lifecycle metadata for the named task paths, validates
+   structure, refreshes the affected metadata index, and emits the focused
+   selector plan and records its exact input identities when this repository
+   supplies a selector. Run the selected final verification only after this command.
+   It is idempotent and does not stage files or rebuild images. Owner-generated
+   material selected by that plan must be refreshed by its owner before final
+   verification; the quarantined RAG source-review records remain explicit
+   maintenance work and are not rewritten by ordinary task preparation.
+2. Stage only approved task paths in the committing worktree.
+3. Run the default readiness check. It validates the staged prepared state and
+   reuses only evidence whose selected input identity still matches.
+4. Commit the task changes only if this check passes.
+5. Run `record-chat-commit` with the task commit SHA and summary.
+6. If only the session log is dirty, run `checkpoint-chat-session-log`.
+7. If continuing the same chat into a new phase, run `/compact` so Codex keeps
    the commit summary, decisions, unresolved issues, and context hygiene instead
    of raw intermediate output.
 
@@ -111,3 +129,6 @@ run authorized local tests that create temporary outputs. Invoke preparation
 through the governed runner only with the current task’s applicable local-test
 authorization (`--approved-action`); it is not an always-approved read-only gate.
 This metadata does not authorize committing, provider access or publication.
+Package qualification remains owned by its package workflow. Commit readiness
+does not rebuild an image; it defers package-stage proof and preserves its
+immutable receipt requirements.
