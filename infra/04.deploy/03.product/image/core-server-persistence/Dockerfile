@@ -29,6 +29,7 @@ COPY platform/persistence/ ./platform/persistence/
 COPY platform/runtime/ ./platform/runtime/
 COPY platform/security/ ./platform/security/
 COPY platform/server/ ./platform/server/
+COPY platform/adapters/aws/observability/cloudwatch/ ./platform/adapters/aws/observability/cloudwatch/
 COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts
@@ -41,6 +42,7 @@ COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-runt
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-role-credential.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-iam-authentication.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+COPY infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts ./infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs
 COPY scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs ./scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs
@@ -51,6 +53,7 @@ RUN npm ci --ignore-scripts \
  && mkdir -p /payload/node_modules \
  && cp -a node_modules/pg node_modules/pg-connection-string node_modules/pg-pool node_modules/pg-protocol node_modules/pg-types node_modules/pg-int8 node_modules/pgpass node_modules/postgres-array node_modules/postgres-bytea node_modules/postgres-date node_modules/postgres-interval node_modules/split2 node_modules/xtend /payload/node_modules/ \
  && cp -a node_modules/@aws-sdk node_modules/@smithy node_modules/@aws node_modules/tslib /payload/node_modules/ \
+ && cp -a node_modules/@opentelemetry /payload/node_modules/ \
  && NODE_PATH=/payload/node_modules node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root /payload/artifacts
 FROM ${RUNTIME_NODE_IMAGE}
 ARG SOURCE_COMMIT_SHA=unknown

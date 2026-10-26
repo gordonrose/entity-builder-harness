@@ -1,0 +1,25 @@
+{
+  "candidate_id": "observability-collector",
+  "checked_at": "2026-10-26T08:00:09Z",
+  "checks": {
+    "delivery_access_live": "passed",
+    "delivery_access_static": "passed",
+    "dependency_boundary": "passed",
+    "local_image_smoke": "passed",
+    "provenance_attestation": "passed",
+    "runnable_program_contract": "passed",
+    "sbom": "passed",
+    "vulnerability_scan": "passed"
+  },
+  "environment_class": "private-persistence-candidate",
+  "image_digest": "sha256:d36660f3bf504d04512e891226ac7274b2d58db998d90f9801dc7b5bd91355c9",
+  "package_contract_id": "core-server-persistence-observability-collector-image",
+  "program_id": "kanbien-observability-collector",
+  "provider_region_alias": "aws-eu-west-1",
+  "receipt_reference": "github-actions-run:40288696596",
+  "release_identity": "source-92adeab0dab6567c0f3784437c7392d4eaa3f94d",
+  "schema": "deploy/package-custody-receipt/v1",
+  "source_revision": "92adeab0dab6567c0f3784437c7392d4eaa3f94d",
+  "target": "kanbien-core-platform",
+  "verdict": "qualified"
+}

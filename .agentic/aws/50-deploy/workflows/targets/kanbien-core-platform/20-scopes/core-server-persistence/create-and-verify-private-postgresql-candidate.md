@@ -501,6 +501,36 @@ If the control cannot prove the failed state, exact target tag, quiesced
 service, protected database, post-unlock observation, or stack deletion, it
 blocks without substituting a manual cleanup procedure.
 
+## Dedicated Observability MVP Activation
+
+The first observability proof uses a separate private collector service, not a
+sidecar sharing the server's RDS-capable task role. After both the server and
+collector are qualified from the same source revision, the only activation
+route is the controller below. It accepts a target-only notification address
+at execution time; that address is never stored in the repository.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --json
+```
+
+Before creating a named UPDATE change set, the controller requires the
+declaration and package gates, healthy server, target budget, aligned
+foundation, clean immutable server and collector images, and matching source
+revisions. Its review permits only the enumerated collector identity, private
+OTLP route, non-secret configuration, alarms, notification topic and
+subscription, collector task/service, and server task/service update. Any
+database, secret, broad permission, public route, or unrelated resource
+change blocks the operation. A lost response is reconciled through the same
+digest-derived change-set name:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --reconcile --json
+```
+
+This update only composes the delivery path. It is not observability
+acceptance: the retained readiness-failure, alarm-notification, and recovery
+receipts plus fresh service/database/cleanup observations remain required.
+
 ## Bounded Private Verifier Route Correction
 
 When a completed migration and healthy server prove that only the private
@@ -552,6 +582,7 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `transition-qualified-release` | Same operation/receipt with `--reconcile`; no repeated UPDATE execution. |
 | `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
 | `apply-restoration-verifier-surface` | Same receipt with `--reconcile`; no repeated surface update. |
+| `apply-observability-mvp-surface` | Same server/collector receipts with `--reconcile`; no repeated observability update. |
 | `retire-failed-candidate` | Retained exact stack ARN with `--reconcile-stack-id`; explicit `--continue-stack-id` advances only the incomplete deletion stage after safety checks. |
 
 The regression suite at

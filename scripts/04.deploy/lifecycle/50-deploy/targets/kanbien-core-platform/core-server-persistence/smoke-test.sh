@@ -27,6 +27,7 @@ VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/c
 REPLACE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh"
 ROUTE_UPDATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh"
 TRANSITION="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh"
+OBSERVABILITY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
 expect_failure package-custody-receipt-invalid "$CREATE" --receipt /tmp/missing-persistence-receipt.json --json
@@ -39,6 +40,39 @@ expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mo
 expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
+expect_failure persistence-observability-mvp-arguments-invalid bash "$OBSERVABILITY" --json
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("observability_surface", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+server = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
+collector = {"image_digest": "sha256:" + "b" * 64, "source_revision": "a" * 40}
+name = module.change_name(server, collector)
+email = "operator@example.invalid"
+parameters = [
+    {"ParameterKey": "ImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "SupportImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "RestoreVerifierImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "SourceRevision", "ParameterValue": server["source_revision"]},
+    {"ParameterKey": "EnableObservability", "ParameterValue": "true"},
+    {"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector["image_digest"]},
+    {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": email},
+]
+changes = [
+    {"ResourceChange": {"Action": "Add", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.ADDED.items()
+] + [
+    {"ResourceChange": {"Action": "Modify", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.MODIFIED.items()
+]
+valid = {"ChangeSetName": name, "Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE", "Parameters": parameters, "Changes": changes}
+assert module.review(valid, name, server, collector, email)
+assert not module.review({**valid, "Changes": changes[:-1]}, name, server, collector, email)
+assert not module.review({**valid, "Changes": changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "PersistenceDatabase", "ResourceType": "AWS::RDS::DBInstance"}}]}, name, server, collector, email)
+assert not module.review({**valid, "Parameters": parameters[:-1]}, name, server, collector, email)
+assert module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 1})
+assert not module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 0})
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, subprocess, sys
 from unittest.mock import patch

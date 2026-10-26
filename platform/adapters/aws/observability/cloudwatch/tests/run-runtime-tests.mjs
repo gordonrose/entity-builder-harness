@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process"; // Run the compiled CommonJS run
 import { mkdirSync, writeFileSync } from "node:fs"; // Create a local compiled-package shim without modifying the repository source tree.
 import path, { join } from "node:path"; // Build portable runtime and shim paths.
 
-const runtimeRoot = ".cache/platform-adapter-aws-observability-cloudwatch-runtime"; // Name the TypeScript runtime-test output directory.
+const runtimeRoot = process.env["KANBIEN_CLOUDWATCH_OTEL_RUNTIME_ROOT"] ?? ".cache/platform-adapter-aws-observability-cloudwatch-runtime"; // Permit a disposable output root when a governed worktree cache is intentionally read-only.
 writePackageShim("@kanbien/core", { // Point the Core workspace package at compiled JavaScript rather than its TypeScript source.
   ".": join(runtimeRoot, "packages/core/src/index.js"), // Map the Core public barrel to emitted JavaScript.
   "./monitoring": join(runtimeRoot, "packages/core/src/monitoring/index.js"), // Map the monitoring subpath imported by the adapter.

@@ -73,7 +73,7 @@ def contains_recipient(value: object) -> bool:
 def check(root: Path) -> None:
     declaration = document(root / "20-scopes" / SCOPE / "00-declaration" / "declaration-contract.yml", "observability-scope-contract-unreadable")
     observability = mapping(declaration.get("observability_mvp"), "observability-declaration-missing")
-    if observability.get("declaration_schema") != "deploy/readiness-observability-mvp/v1" or observability.get("status") != "local-contract-validated-deployment-disabled-pending-dedicated-collector-boundary" or observability.get("owner") != "observability-owner":
+    if observability.get("declaration_schema") != "deploy/readiness-observability-mvp/v1" or observability.get("status") != "dedicated-collector-composed-live-proof-pending" or observability.get("owner") != "observability-owner":
         raise Failure("observability-declaration-invalid")
     envelope = mapping(observability.get("event_envelope"), "observability-event-envelope-invalid")
     if envelope.get("owner") != "platform-contracts" or envelope.get("type") != "dependency.readiness-observed" or envelope.get("code_owner") != "platform-observability" or envelope.get("raw_error_fields") != "prohibited" or envelope.get("closed_fields") != ["event_type", "target", "scope", "workload", "dependency", "readiness", "observed_at", "diagnostic_code"]:
@@ -82,7 +82,7 @@ def check(root: Path) -> None:
     if observation.get("workload") != "core-server" or observation.get("dependency") != "postgresql" or observation.get("producer") != "core-server-process-independent-of-request-traffic" or observation.get("cadence_seconds") != 30 or observation.get("timeout_seconds") != 5 or observation.get("stale_after_seconds") != 180:
         raise Failure("observability-readiness-observation-invalid")
     codes = observation.get("not_ready_codes")
-    if not isinstance(codes, list) or set(codes) != {"persistence.transport-unavailable", "persistence.credential-rejected", "persistence.trust-validation-failed", "persistence.schema-incompatible"}:
+    if not isinstance(codes, list) or set(codes) != {"persistence.transport-unavailable", "persistence.credential-rejected", "persistence.trust-validation-failed", "persistence.schema-incompatible", "persistence.unclassified-failure"}:
         raise Failure("observability-readiness-code-policy-invalid")
     catalogue = mapping(observability.get("metric_catalogue"), "observability-metric-catalogue-invalid")
     application = named(catalogue.get("application"), "observability-metric-catalogue-invalid")
@@ -94,8 +94,10 @@ def check(root: Path) -> None:
     if set(native) != set(expected_rds) or any(item.get("source") != "rds-native" or item.get("namespace") != "AWS/RDS" or item.get("metric") != expected_rds[item_id] for item_id, item in native.items()):
         raise Failure("observability-rds-metric-catalogue-invalid")
     collector = mapping(observability.get("collector"), "observability-collector-invalid")
-    if collector.get("runtime_dependency") != "task-local-otel-collector" or collector.get("adapter") != "@kanbien/platform-adapter-aws-observability-cloudwatch" or collector.get("endpoint") != "http://127.0.0.1:4318/v1/metrics" or collector.get("configuration_delivery") != "target-owned-ssm-parameter-non-secret" or collector.get("deployment_status") != "disabled-pending-dedicated-task-role-and-private-route" or collector.get("prohibited_topology") != "task-local-sidecar-sharing-server-task-role":
+    if collector.get("runtime_dependency") != "dedicated-private-otel-collector-service" or collector.get("adapter") != "@kanbien/platform-adapter-aws-observability-cloudwatch" or collector.get("endpoint") != "http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics" or collector.get("configuration_delivery") != "target-owned-ssm-parameter-non-secret" or collector.get("activation_control") != "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh" or collector.get("deployment_status") != "governed-private-service-update-pending-live-proof" or collector.get("prohibited_topology") != "task-local-sidecar-sharing-server-task-role" or collector.get("identity_boundary") != "separate-collector-task-role-no-rds-connect" or collector.get("network_boundary") != "server-to-collector-otlp-4318-only-collector-to-private-aws-endpoints-443-only":
         raise Failure("observability-collector-invalid")
+    if not (ROOT / collector["activation_control"]).is_file():
+        raise Failure("observability-collector-activation-control-unavailable")
     alarms = mapping(observability.get("alarms"), "observability-alarm-policy-invalid")
     if contains_recipient(alarms):
         raise Failure("observability-notification-recipient-prohibited")
@@ -119,7 +121,7 @@ def check(root: Path) -> None:
     collector_builder = mapping(collector_source.get("builder_image"), "observability-collector-package-contract-invalid")
     collector_files = mapping(collector_source.get("source_files"), "observability-collector-package-contract-invalid")
     if (
-        collector_contract.get("schema") != "deploy/sidecar-image-contract/v1"
+        collector_contract.get("schema") != "deploy/collector-image-contract/v1"
         or collector_contract.get("target") != TARGET
         or collector_contract.get("scope") != SCOPE
         or collector_contract.get("candidate_id") != "observability-collector"
@@ -134,6 +136,7 @@ def check(root: Path) -> None:
         or mapping(collector_contract.get("destination"), "observability-collector-package-contract-invalid").get("selection") != "private-ecr-immutable-digest"
         or mapping(collector_contract.get("destination"), "observability-collector-package-contract-invalid").get("precondition") != "exact-qualified-archive-must-pass-unprivileged-scan-before-private-publication"
         or mapping(collector_contract.get("runtime"), "observability-collector-package-contract-invalid").get("exporter") != "aws-emf-cloudwatch-logs"
+        or mapping(collector_contract.get("runtime"), "observability-collector-package-contract-invalid").get("receiver") != "otlp-http-private-service-4318"
     ):
         raise Failure("observability-collector-package-contract-invalid")
     template = (root / "30-provider-realization/aws/cloudformation/core-server-persistence.yml").read_text(encoding="utf-8")
@@ -142,10 +145,12 @@ def check(root: Path) -> None:
     # database-permission transition must not claim notification delivery or
     # couple its recovery to collector activation.
     required_template_text = [
-        "EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false'] }", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
-        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "Condition: ObservabilityEnabled", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ServerTaskRole:", "TaskRoleArn: !GetAtt ServerTaskRole.Arn", "Name: observability-collector", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
+        "EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }", "ObservabilityEnabled: !Equals [!Ref EnableObservability, 'true']",
+        "ObservabilityCollectorImage:", "ObservabilityAlertEmail:", "ObservabilityCollectorConfiguration:", "Condition: ObservabilityEnabled", "awsemf:", "dimension_rollup_option: NoDimensionRollup", "ObservabilityAlarmTopic:", "ObservabilityAlertSubscription:", "ObservabilityCollectorSecurityGroup:", "ObservabilityCollectorIngressFromServer:", "ServerObservabilityCollectorEgress:", "ObservabilityCollectorExecutionRole:", "ObservabilityCollectorTaskRole:", "ObservabilityCollectorTaskDefinition:", "ObservabilityCollectorService:", "TaskRoleArn: !GetAtt ObservabilityCollectorTaskRole.Arn", "ServiceRegistries: [{ RegistryArn: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }]", "http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics", "PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY, Value: private-collector-service", "PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS", "Value: '30000'", "PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS", "Value: '5000'", "PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS", "Value: '180000'", "CoreServerPostgreSqlReadinessAlarm:", "TreatMissingData: breaching", "PersistenceDatabaseFreeStorageAlarm:", "TreatMissingData: notBreaching",
     ]
-    if any(item not in template for item in required_template_text):
+    server_role = template.split("ServerTaskRole:", 1)[1].split("ObservabilityCollectorExecutionRole:", 1)[0] if "ServerTaskRole:" in template and "ObservabilityCollectorExecutionRole:" in template else ""
+    collector_role = template.split("ObservabilityCollectorTaskRole:", 1)[1].split("MigrationExecutionRole:", 1)[0] if "ObservabilityCollectorTaskRole:" in template and "MigrationExecutionRole:" in template else ""
+    if not collector_role or any(item not in template for item in required_template_text) or "rds-db:connect" in collector_role or "deliver-reviewed-readiness-metrics" in server_role or "DependsOn: !If [ObservabilityEnabled" in template:
         raise Failure("observability-provider-realization-invalid")
 
 

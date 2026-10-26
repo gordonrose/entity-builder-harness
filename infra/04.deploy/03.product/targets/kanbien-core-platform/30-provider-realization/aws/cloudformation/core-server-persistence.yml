@@ -32,11 +32,10 @@ Parameters:
   ImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   SupportImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
   RestoreVerifierImageDigest: { Type: String, AllowedPattern: '^sha256:[a-f0-9]{64}$' }
-  # A collector sidecar would share this task definition's ServerTaskRole,
-  # which has RDS IAM access for core_runtime.  Keep the historical scaffold
-  # inert until the observability slice supplies a separately isolated
-  # collector workload, task role, security group, and private route.
-  EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false'] }
+  # A dedicated collector service keeps CloudWatch delivery authority separate
+  # from the server's RDS IAM database identity. It is enabled only by the
+  # observability-specific reviewed update controller.
+  EnableObservability: { Type: String, Default: 'false', AllowedValues: ['false', 'true'] }
   ObservabilityCollectorImage: { Type: String, Default: '', AllowedPattern: '^$|^.+@sha256:[a-f0-9]{64}$' }
   # Supplied only to the governed target-update route.  It is never retained
   # in the repository or in accepted evidence; CloudFormation creates the
@@ -66,6 +65,14 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Private persistence-capable core server.
+      VpcId: !Ref VpcId
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityCollectorSecurityGroup:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Private OTLP collector reachable only by the core persistence server.
       VpcId: !Ref VpcId
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
@@ -112,6 +119,26 @@ Resources:
   ServerDatabaseEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 5432, ToPort: 5432, DestinationSecurityGroupId: !Ref DatabaseSecurityGroup }
+  ServerObservabilityCollectorEgress:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 4318, ToPort: 4318, DestinationSecurityGroupId: !Ref ObservabilityCollectorSecurityGroup }
+  ObservabilityCollectorDnsUdpEgress:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ObservabilityCollectorSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  ObservabilityCollectorDnsTcpEgress:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ObservabilityCollectorSecurityGroup, IpProtocol: tcp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
+  ObservabilityCollectorEndpointEgress:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ObservabilityCollectorSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationSecurityGroupId: !Ref EndpointSecurityGroupId }
+  ObservabilityCollectorArtifactObjectStoreEgress:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties: { GroupId: !Ref ObservabilityCollectorSecurityGroup, IpProtocol: tcp, FromPort: 443, ToPort: 443, DestinationPrefixListId: !Ref S3ArtifactPrefixListId }
   MigrationDnsUdpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref MigrationSecurityGroup, IpProtocol: udp, FromPort: 53, ToPort: 53, CidrIp: !Ref VpcCidr }
@@ -172,12 +199,20 @@ Resources:
   ServerIngressFromVerifier:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref ServerSecurityGroup, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, SourceSecurityGroupId: !Ref VerifierSecurityGroupId }
+  ObservabilityCollectorIngressFromServer:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref ObservabilityCollectorSecurityGroup, IpProtocol: tcp, FromPort: 4318, ToPort: 4318, SourceSecurityGroupId: !Ref ServerSecurityGroup }
   VerifierEgressToServer:
     Type: AWS::EC2::SecurityGroupEgress
     Properties: { GroupId: !Ref VerifierSecurityGroupId, IpProtocol: tcp, FromPort: 3000, ToPort: 3000, DestinationSecurityGroupId: !Ref ServerSecurityGroup }
   EndpointIngressFromServer:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ServerSecurityGroup }
+  EndpointIngressFromObservabilityCollector:
+    Condition: ObservabilityEnabled
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref ObservabilityCollectorSecurityGroup }
   EndpointIngressFromMigration:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: { GroupId: !Ref EndpointSecurityGroupId, IpProtocol: tcp, FromPort: 443, ToPort: 443, SourceSecurityGroupId: !Ref MigrationSecurityGroup }
@@ -270,7 +305,9 @@ Resources:
           otlp:
             protocols:
               http:
-                endpoint: 127.0.0.1:4318
+                # The collector is a separate private ECS task. Its security
+                # group admits this listener only from ServerSecurityGroup.
+                endpoint: 0.0.0.0:4318
         processors:
           memory_limiter:
             check_interval: 1s
@@ -337,6 +374,15 @@ Resources:
       HealthCheckCustomConfig: { FailureThreshold: 1 }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
+  ObservabilityCollectorServiceDiscovery:
+    Condition: ObservabilityEnabled
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: observability-collector
+      DnsConfig: { NamespaceId: !Ref NamespaceId, DnsRecords: [{ Type: A, TTL: 10 }] }
+      HealthCheckCustomConfig: { FailureThreshold: 1 }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
   ServerExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -366,13 +412,36 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - { Effect: Allow, Action: rds-db:connect, Resource: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityCollectorExecutionRole:
+    Condition: ObservabilityEnabled
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-observability-collector-execution
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
+        - PolicyName: pull-log-and-read-collector-configuration
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - { Effect: Allow, Action: ecr:GetAuthorizationToken, Resource: '*' }
+              - { Effect: Allow, Action: [ecr:BatchCheckLayerAvailability, ecr:GetDownloadUrlForLayer, ecr:BatchGetImage], Resource: !Ref ImageRepositoryArn }
+              - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:*' }
+              - { Effect: Allow, Action: [ssm:GetParameter, ssm:GetParameters], Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/kanbien/core-platform/core-server-persistence/observability/collector-config' }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityCollectorTaskRole:
+    Condition: ObservabilityEnabled
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: kanbien-core-platform-observability-collector-task
+      AssumeRolePolicyDocument: { Version: '2012-10-17', Statement: [{ Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole' }] }
+      Policies:
         - PolicyName: deliver-reviewed-readiness-metrics
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              # The collector emits allowlisted EMF metric records into one
-              # fixed stream under the existing target log group.  It does not
-              # receive generic CloudWatch or Secrets Manager authority.
               - { Effect: Allow, Action: [logs:CreateLogStream, logs:PutLogEvents], Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:log-stream:core-server-persistence-readiness-metrics*' }
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
@@ -503,7 +572,6 @@ Resources:
           Essential: true
           Cpu: 128
           MemoryReservation: 256
-          DependsOn: !If [ObservabilityEnabled, [{ ContainerName: observability-collector, Condition: START }], !Ref AWS::NoValue]
           ReadonlyRootFilesystem: true
           LinuxParameters: { Capabilities: { Drop: [ALL] } }
           PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
@@ -522,7 +590,8 @@ Resources:
               - { Name: PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE, Value: !Sub 'arn:${AWS::Partition}:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${PersistenceDatabase.DbiResourceId}/core_runtime' }
               - { Name: PERSISTENCE_RUNTIME_DATABASE_USERNAME, Value: core_runtime }
               - { Name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER, Value: cloudwatch-otel }
-              - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://127.0.0.1:4318/v1/metrics }
+              - { Name: PLATFORM_OBSERVABILITY_METRICS_ENDPOINT, Value: http://observability-collector.kanbien-core-platform.internal:4318/v1/metrics }
+              - { Name: PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY, Value: private-collector-service }
               - { Name: PLATFORM_OBSERVABILITY_METRICS_REGION, Value: !Ref 'AWS::Region' }
               - { Name: PLATFORM_OBSERVABILITY_SERVICE_NAME, Value: kanbien-core-server-persistence }
               - { Name: PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT, Value: kanbien-core-platform }
@@ -555,10 +624,6 @@ Resources:
             Retries: 3
             StartPeriod: 30
           LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence } }
-        - !If
-          - ObservabilityEnabled
-          - { Name: observability-collector, Image: !Ref ObservabilityCollectorImage, Essential: false, Cpu: 64, MemoryReservation: 128, ReadonlyRootFilesystem: true, LinuxParameters: { Capabilities: { Drop: [ALL] } }, Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }], Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }], LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } } }
-          - !Ref AWS::NoValue
 
   CoreServerPostgreSqlReadinessAlarm:
     Condition: ObservabilityEnabled
@@ -618,6 +683,50 @@ Resources:
       NetworkConfiguration: { AwsvpcConfiguration: { AssignPublicIp: DISABLED, SecurityGroups: [!Ref ServerSecurityGroup], Subnets: !Ref PrivateSubnetIds } }
       ServiceRegistries: [{ RegistryArn: !GetAtt PersistenceServiceDiscovery.Arn }]
       TaskDefinition: !Ref CoreServerPersistenceTaskDefinition
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+
+  ObservabilityCollectorTaskDefinition:
+    Condition: ObservabilityEnabled
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: kanbien-core-platform-observability-collector
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt ObservabilityCollectorExecutionRole.Arn
+      TaskRoleArn: !GetAtt ObservabilityCollectorTaskRole.Arn
+      RuntimePlatform: { CpuArchitecture: X86_64, OperatingSystemFamily: LINUX }
+      Tags: [{ Key: Target, Value: kanbien-core-platform }]
+      ContainerDefinitions:
+        - Name: observability-collector
+          Image: !Ref ObservabilityCollectorImage
+          Essential: true
+          Cpu: 128
+          MemoryReservation: 256
+          ReadonlyRootFilesystem: true
+          LinuxParameters: { Capabilities: { Drop: [ALL] } }
+          PortMappings: [{ ContainerPort: 4318, Protocol: tcp }]
+          Environment: [{ Name: AWS_REGION, Value: !Ref 'AWS::Region' }]
+          Secrets: [{ Name: AOT_CONFIG_CONTENT, ValueFrom: !Ref ObservabilityCollectorConfiguration }]
+          LogConfiguration: { LogDriver: awslogs, Options: { awslogs-group: !Ref LogGroupName, awslogs-region: !Ref 'AWS::Region', awslogs-stream-prefix: core-server-persistence-observability-collector } }
+
+  ObservabilityCollectorService:
+    Condition: ObservabilityEnabled
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: kanbien-core-platform-observability-collector
+      Cluster: !Ref ClusterArn
+      DesiredCount: 1
+      LaunchType: FARGATE
+      PlatformVersion: '1.4.0'
+      EnableExecuteCommand: false
+      EnableECSManagedTags: true
+      PropagateTags: TASK_DEFINITION
+      DeploymentConfiguration: { MinimumHealthyPercent: 100, MaximumPercent: 200, DeploymentCircuitBreaker: { Enable: true, Rollback: true } }
+      NetworkConfiguration: { AwsvpcConfiguration: { AssignPublicIp: DISABLED, SecurityGroups: [!Ref ObservabilityCollectorSecurityGroup], Subnets: !Ref PrivateSubnetIds } }
+      ServiceRegistries: [{ RegistryArn: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }]
+      TaskDefinition: !Ref ObservabilityCollectorTaskDefinition
       Tags: [{ Key: Target, Value: kanbien-core-platform }]
 
   CoreServerPersistenceMigrationTaskDefinition:
@@ -758,6 +867,10 @@ Outputs:
   PersistenceRestorationVerifierSecurityGroupId: { Value: !Ref RestorationVerifierSecurityGroup }
   PersistenceRestorationVerifierTaskRoleName: { Value: !Ref RestorationVerifierTaskRole }
   PersistenceRestoredDatabaseSecurityGroupId: { Value: !Ref RestoredDatabaseSecurityGroup }
+  ObservabilityCollectorServiceArn: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorService }
+  ObservabilityCollectorTaskDefinitionArn: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorTaskDefinition }
+  ObservabilityCollectorServiceDiscoveryArn: { Condition: ObservabilityEnabled, Value: !GetAtt ObservabilityCollectorServiceDiscovery.Arn }
+  ObservabilityCollectorSecurityGroupId: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorSecurityGroup }
   ObservabilityCollectorConfigurationParameter: { Condition: ObservabilityEnabled, Value: !Ref ObservabilityCollectorConfiguration }
   CoreServerPostgreSqlReadinessAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt CoreServerPostgreSqlReadinessAlarm.Arn }
   PersistenceDatabaseFreeStorageAlarmArn: { Condition: ObservabilityEnabled, Value: !GetAtt PersistenceDatabaseFreeStorageAlarm.Arn }
