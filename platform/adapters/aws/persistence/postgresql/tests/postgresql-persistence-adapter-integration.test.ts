@@ -424,6 +424,15 @@ async function diagnosticEngineFailures(environment: { host: string; port: numbe
       let failure: unknown;
       try { const client = await pool.connect(); client.release(); } catch (error) { failure = error; }
       const diagnostic = postgreSqlFailureDiagnostic(failure);
+      // Emit the already allowlisted diagnostic descriptor, not the provider
+      // error. This makes a hosted-fixture disagreement actionable without
+      // leaking a password, host, SQLSTATE message, or connection string.
+      console.log(JSON.stringify({
+        event: "postgresql-disposable-diagnostic-observed",
+        scenario: classification,
+        facts: diagnostic.facts,
+        connection_rejected: failure !== undefined,
+      }));
       equal(diagnostic.facts.classification, classification);
       equal(diagnostic.facts.phase, "pool_connect"); equal(diagnostic.facts.code_status, codeStatus);
       assertOk(diagnostic.facts.elapsed_ms !== null && diagnostic.facts.elapsed_ms >= 0);
