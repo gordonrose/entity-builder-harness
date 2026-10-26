@@ -55,7 +55,7 @@ export function createCloudWatchOtelMetricsRuntime( // Construct the production 
   options: CloudWatchOtelMetricsOptions, // Receive reviewed target configuration rather than reading an app-owned configuration directly.
 ): CloudWatchOtelMetricsRuntime { // Return the Core port plus lifecycle operations needed by the target process.
   validateCloudWatchOtelMetricsOptions(options); // Fail before traffic when the target configuration is malformed or unsafe.
-  const exporter = new OTLPMetricExporter({ url: options.endpoint }); // Configure one metric-only exporter to the task-local collector endpoint.
+  const exporter = new OTLPMetricExporter({ url: options.endpoint }); // Configure one metric-only exporter to the reviewed private collector endpoint.
   const reader = new PeriodicExportingMetricReader({ // Construct bounded periodic export outside request and worker execution paths.
     exporter, // Give the reader the OTLP exporter selected above.
     exportIntervalMillis: options.exportIntervalMs, // Use the reviewed target batching interval.
@@ -174,9 +174,11 @@ function assertPointMatchesSeries( // Validate that a Core point exactly fits th
 function validateCloudWatchOtelMetricsOptions( // Validate runtime configuration before the process accepts traffic.
   options: CloudWatchOtelMetricsOptions, // Receive the target-owned exporter configuration.
 ): void { // Throw safe configuration errors with no secret or endpoint payload values.
-  const endpoint = new URL(options.endpoint); // Parse the configured endpoint once before enforcing the task-local boundary.
-  if (endpoint.protocol !== "http:" || endpoint.hostname !== "127.0.0.1" || endpoint.port !== "4318" || endpoint.pathname !== "/v1/metrics") { // Permit only the local collector's reviewed HTTP/protobuf endpoint.
-    throw new RangeError("CloudWatch OTel metrics require the task-local http://127.0.0.1:4318/v1/metrics endpoint."); // Prevent this metrics path from becoming arbitrary outbound data delivery.
+  const endpoint = new URL(options.endpoint); // Parse the configured endpoint once before enforcing the private OTLP boundary.
+  const localCollector = endpoint.hostname === "127.0.0.1"; // Preserve task-local delivery for existing targets.
+  const privateCollectorService = /^[a-z][a-z0-9-]{1,63}(?:\.[a-z][a-z0-9-]{1,63})+\.internal$/.test(endpoint.hostname); // Permit only bounded private-service discovery names for a target that declares a separate collector task.
+  if (endpoint.protocol !== "http:" || endpoint.port !== "4318" || endpoint.pathname !== "/v1/metrics" || endpoint.username !== "" || endpoint.password !== "" || endpoint.search !== "" || endpoint.hash !== "" || (!localCollector && !privateCollectorService)) { // Reject external, credential-bearing, query-bearing, or unbounded delivery routes.
+    throw new RangeError("CloudWatch OTel metrics require a reviewed private collector endpoint on http port 4318 at /v1/metrics."); // Keep target composition responsible for selecting the exact private route.
   }
   assertNonEmpty("serviceName", options.serviceName); // Require a stable service resource identity.
   assertAwsRegion("region", options.region); // Require an AWS-region-shaped target configuration value.

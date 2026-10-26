@@ -1,14 +1,43 @@
 #!/usr/bin/env python3
 """Govern one fixed isolated native PostgreSQL restore proof."""
 from __future__ import annotations
-import argparse, hashlib, importlib.util, json, re
-from datetime import datetime, timezone
+import argparse, hashlib, importlib.util, json, re, time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[8]
 DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"; STACK="kanbien-core-platform-core-server-persistence"; FOUNDATION="kanbien-core-platform-foundation"; LOG_GROUP="/aws/ecs/kanbien-core-platform"
 EVIDENCE_CLASS="live"  # Only isolated imported test harnesses may change this; no CLI bypass.
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
+RESTORE_ACCEPTED_RESULT="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"
+OPERATION_DIAGNOSTICS=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/operation-diagnostics"
+# IAM policy observation confirms the target binding, but RDS IAM database
+# authentication is separately eventually consistent.  This is a bounded
+# *pre-launch stabilization wait*, not an automatic retry of a verifier that
+# has already started or completed.
+RESTORATION_IDENTITY_STABILIZATION_SECONDS=60
+# RDS exports server logs asynchronously.  The controller makes one bounded
+# *read-only* observation for a completed verifier task and never retains the
+# raw events, log-stream names, endpoint, or any provider text.  A later
+# reconciliation may make the same read-only observation if delivery lagged.
+RESTORE_SERVER_LOG_LOOKBACK_SECONDS=30
+RESTORE_SERVER_LOG_TAIL_SECONDS=300
+RESTORE_SERVER_LOG_EVENT_LIMIT=100
+RESTORE_REJECTED_RESULTS={
+ "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_TRANSPORT_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_NEGOTIATION_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE",
+}
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py"; s=importlib.util.spec_from_file_location("prepare",p); m=importlib.util.module_from_spec(s); assert s and s.loader; s.loader.exec_module(m); return m
 def proof_receipts():
@@ -26,6 +55,61 @@ def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
  print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up"} else 1
+def restored_postgresql_log_group(restored_database):
+ """Return the only RDS log group a restore diagnostic may observe."""
+ return f"/aws/rds/instance/{restored_database}/postgresql" if restored_database==restore_id_from_database(restored_database) else None
+
+def restore_id_from_database(restored_database):
+ """Validate the deterministic restored identifier without accepting free text."""
+ prefix="kanbien-core-platform-persistence-restore-"
+ if not isinstance(restored_database,str) or not restored_database.startswith(prefix): return None
+ suffix=restored_database[len(prefix):]
+ return restored_database if re.fullmatch(r"[0-9]{8}(?:-[a-z0-9]{1,8})?",suffix) else None
+
+def classify_restored_postgresql_log_events(events):
+ """Classify a bounded, in-memory RDS event list without exposing its text."""
+ if not isinstance(events,list): return "persistence-restore-server-log-observation-invalid"
+ for event in events[:RESTORE_SERVER_LOG_EVENT_LIMIT]:
+  message=event.get("message") if isinstance(event,dict) else None
+  if not isinstance(message,str): continue
+  text=message.lower()
+  if "password authentication failed" in text or "pam authentication failed" in text:
+   return "persistence-restore-server-log-authentication-rejected"
+  if "no pg_hba.conf entry" in text:
+   return "persistence-restore-server-log-client-authentication-policy-rejected"
+  if "role " in text and " does not exist" in text:
+   return "persistence-restore-server-log-role-state-invalid"
+ return "persistence-restore-server-log-no-classified-event"
+
+def collect_restored_postgresql_log_classification(m, restored_database, task):
+ """Read a target-owned RDS export only long enough to produce a closed code."""
+ group=restored_postgresql_log_group(restored_database)
+ started=parsed_time(task.get("startedAt")) if isinstance(task,dict) else None
+ stopped=parsed_time(task.get("stoppedAt")) if isinstance(task,dict) else None
+ if group is None or started is None or stopped is None or stopped<started:
+  return "persistence-restore-server-log-time-invalid","failed"
+ start=int((started-timedelta(seconds=RESTORE_SERVER_LOG_LOOKBACK_SECONDS)).timestamp()*1000)
+ end=int((stopped+timedelta(seconds=RESTORE_SERVER_LOG_TAIL_SECONDS)).timestamp()*1000)
+ ok,value,code=m.aws("logs","filter-log-events","--log-group-name",group,"--start-time",str(start),"--end-time",str(end),"--limit",str(RESTORE_SERVER_LOG_EVENT_LIMIT))
+ if not ok:
+  return ("persistence-restore-server-log-export-unavailable","unavailable") if code=="aws-resource-missing" else ("persistence-restore-server-log-observation-unavailable","failed")
+ events=value.get("events") if isinstance(value,dict) else None
+ return classify_restored_postgresql_log_events(events),"collected"
+
+def retain_verifier_rejection(m, operation, result, restored_database, task):
+ """Retain a closed task and optional server-log category; raw details stay out."""
+ if not isinstance(operation,str) or not isinstance(result,str): return
+ try:
+  diagnostics=importlib.util.spec_from_file_location("deployment_operation_diagnostics",ROOT/"scripts/04.deploy/shared/deployment-operation-diagnostics.py")
+  module=importlib.util.module_from_spec(diagnostics); assert diagnostics and diagnostics.loader; diagnostics.loader.exec_module(module)
+  classification,collection=collect_restored_postgresql_log_classification(m,restored_database,task)
+  actionable=collection=="collected" and classification not in {"persistence-restore-server-log-no-classified-event","persistence-restore-server-log-observation-invalid"}
+  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-restoration-verifier-rejected",exit_status=1,outcome="failed",classification=classification,evidence_reference=f"provider-operation:{operation}",next_decision="correct-and-create-new-operation" if actionable else "inspect-retained-evidence",collection_status=collection)
+  module.write_report(OPERATION_DIAGNOSTICS/f"{operation}-rejected.json",report)
+ except Exception:
+  # The failure verdict remains authoritative. Never replace it with a report
+  # collection failure or emit the underlying provider detail.
+  return
 def outputs(m,name):
  ok,d,c=m.aws("cloudformation","describe-stacks","--stack-name",name); xs=d.get("Stacks") if ok and isinstance(d,dict) else None
  return ({x.get("OutputKey"):x.get("OutputValue") for x in xs[0].get("Outputs",[]) if isinstance(x,dict) and isinstance(x.get("OutputKey"),str) and isinstance(x.get("OutputValue"),str)},"ok") if isinstance(xs,list) and len(xs)==1 and isinstance(xs[0],dict) else (None,c if not ok else "persistence-restore-stack-outputs-unavailable")
@@ -51,7 +135,8 @@ def controls(m):
  s["PrivateSubnetIds"]=f["PrivateSubnetIds"];return s,"ok"
 def correct(restored,src,group):
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]; a=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; b=restored.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(restored.get("DBSubnetGroup"),dict) else None
- return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b
+ exports=restored.get("EnabledCloudwatchLogsExports")
+ return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b and isinstance(exports,list) and exports==["postgresql"]
 def parsed_time(value):
  if not isinstance(value,str):return None
  try:
@@ -115,11 +200,11 @@ def restore(m,sid,rid,observe_only=False,record_proof_path=None):
   if observe_only:return emit("uncertain","persistence-restore-operation-not-observed",facts=facts)
   subnet=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; cls=src.get("DBInstanceClass")
   if not isinstance(subnet,str) or not isinstance(cls,str):return emit("blocked","persistence-restore-source-shape-invalid")
-  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
+  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-cloudwatch-logs-exports","postgresql","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
   return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts=facts)
  bound=existing_restore_binding(value,rid,tags)
  if bound!="ok":return emit("uncertain" if bound.endswith("unproven") else "blocked",bound,facts=facts)
- if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring"}:return emit("pending","persistence-restore-still-provisioning",facts=facts)
+ if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring","configuring-log-exports"}:return emit("pending","persistence-restore-still-provisioning",facts=facts)
  if value.get("DBInstanceStatus") in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts=facts)
  if value.get("DBInstanceStatus")!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts=facts)
  return emit("restored","persistence-restored-database-ready",facts=facts) if correct(value,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]) else emit("blocked","persistence-restored-database-posture-invalid")
@@ -162,6 +247,23 @@ def remove_temporary_restore_identity_policy(m, controls, observe_only=False):
  if observe_only:return "persistence-restoration-temporary-identity-policy-removal-not-observed"
  ok,_,code=m.aws("iam","delete-role-policy","--role-name",role,"--policy-name",name)
  return "persistence-restoration-temporary-identity-policy-removal-submitted" if ok else code
+def temporary_restore_identity_policy_stable(m, controls):
+ """Require the exact policy mutation to age before the one verifier launch."""
+ role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ name="kanbien-core-platform-restoration-verifier-current-instance"
+ if not isinstance(role,str) or not role:return False
+ ok,value,_=m.aws("cloudtrail","lookup-events","--lookup-attributes","AttributeKey=EventName,AttributeValue=PutRolePolicy","--max-results","50")
+ events=value.get("Events") if ok and isinstance(value,dict) else None
+ if not isinstance(events,list):return False
+ cutoff=datetime.now(timezone.utc)-timedelta(seconds=RESTORATION_IDENTITY_STABILIZATION_SECONDS)
+ for event in events:
+  raw=event.get("CloudTrailEvent") if isinstance(event,dict) else None; observed=parsed_time(event.get("EventTime")) if isinstance(event,dict) else None
+  try:
+   decoded=json.loads(raw) if isinstance(raw,str) else None
+   request=decoded.get("requestParameters") if isinstance(decoded,dict) else None
+  except (json.JSONDecodeError,TypeError):request=None
+  if isinstance(request,dict) and request.get("roleName")==role and request.get("policyName")==name and observed is not None and observed<=cutoff:return True
+ return False
 def task_image_digest(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
  return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
@@ -169,14 +271,20 @@ def task_duration(task):
  try:
   a=datetime.fromisoformat(task["startedAt"].replace("Z","+00:00")); b=datetime.fromisoformat(task["stoppedAt"].replace("Z","+00:00")); return int((b-a).total_seconds()) if b>=a else None
  except (KeyError,ValueError,TypeError,OverflowError):return None
-def accepted_log(m,arn):
+def terminal_result(m,arn):
+ """Read only the verifier's closed result envelope, never raw provider output."""
  tid=arn.rsplit("/",1)[-1]; ok,d,c=m.aws("logs","get-log-events","--log-group-name",LOG_GROUP,"--log-stream-name",f"persistence-restoration-verifier/persistence-restoration-verifier/{tid}","--start-from-head"); xs=d.get("events") if ok and isinstance(d,dict) else None
- if not isinstance(xs,list):return "uncertain"
+ if not isinstance(xs,list):return "unavailable",None
+ results=[]
  for event in xs:
   try:value=json.loads(event.get("message", "")) if isinstance(event,dict) else None
   except (json.JSONDecodeError,TypeError):continue
-  if isinstance(value,dict) and value.get("verdict")=="accepted" and value.get("code")=="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED":return "accepted"
- return "pending"
+  if not isinstance(value,dict) or set(value)!={"verdict","code"}:continue
+  verdict,code=value.get("verdict"),value.get("code")
+  if verdict=="accepted" and code==RESTORE_ACCEPTED_RESULT:results.append(("accepted",code))
+  elif verdict=="rejected" and code in RESTORE_REJECTED_RESULTS:results.append(("rejected",code))
+ if len(results)!=1:return "unavailable",None
+ return results[0]
 def verifier_tasks(m,operation,definition):
  arns = []
  family = definition.rsplit("/", 1)[-1].split(":", 1)[0]
@@ -207,7 +315,15 @@ def verify(m,sid,rid,observe_only=False):
  src,c=source(m); ctl,cc=controls(m); restored,rc=db(m,rid)
  if src is None:return emit("blocked",c)
  if ctl is None:return emit("blocked",cc)
- if restored is None or not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked",rc if restored is None else "persistence-restored-database-posture-invalid")
+ if restored is None:return emit("blocked",rc)
+ # A restore normally appears as ``creating`` before it has an endpoint. That
+ # is an in-flight governed operation, not a malformed restored target. Do
+ # not turn a normal provider lifecycle state into a false hard failure.
+ status=restored.get("DBInstanceStatus")
+ if status in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring","configuring-log-exports"}:return emit("pending","persistence-restore-still-provisioning",facts={"snapshot":sid,"restored_database":rid})
+ if status in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts={"snapshot":sid,"restored_database":rid})
+ if status!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts={"snapshot":sid,"restored_database":rid})
+ if not correct(restored,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]):return emit("blocked","persistence-restored-database-posture-invalid")
  endpoint=restored.get("Endpoint",{}).get("Address") if isinstance(restored.get("Endpoint"),dict) else None; td=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
  if not isinstance(endpoint,str) or not task_def_valid(m,td):return emit("blocked","persistence-restoration-verifier-definition-invalid")
  identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,observe_only)
@@ -228,9 +344,15 @@ def verify(m,sid,rid,observe_only=False):
   if t.get("lastStatus")!="STOPPED":return emit("uncertain","persistence-restoration-verifier-status-unknown",facts=facts)
   containers=t.get("containers"); exit_code=containers[0].get("exitCode") if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None; duration=task_duration(t); arn=t.get("taskArn")
   if type(exit_code) is not int or duration is None or not isinstance(arn,str):return emit("uncertain","persistence-restoration-verifier-completion-evidence-unavailable",facts=facts)
-  if exit_code!=0 or duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
-  evidence=accepted_log(m,arn)
-  if evidence!="accepted":return emit(evidence,"persistence-restoration-verifier-log-evidence-unavailable",facts=facts)
+  if duration>DEADLINE:return emit("failed","persistence-restoration-verifier-completion-invalid",facts=facts)
+  evidence,result=terminal_result(m,arn)
+  if exit_code!=0:
+   if evidence=="rejected" and result is not None: retain_verifier_rejection(m,started,result,rid,t)
+   return emit("failed","persistence-restoration-verifier-rejected" if evidence=="rejected" else "persistence-restoration-verifier-completion-invalid",facts={**facts,**({"safe_result_code":result} if evidence=="rejected" and result is not None else {})})
+  # CloudWatch delivery can lag a stopped task.  A clean exit without the
+  # closed acceptance envelope is therefore pending evidence, not proof; the
+  # reconciler will never manufacture a receipt from it.
+  if evidence!="accepted":return emit("pending","persistence-restoration-verifier-log-evidence-unavailable",facts=facts)
   digest=task_image_digest(m,td)
   if digest is None:return emit("blocked","persistence-restoration-verifier-receipt-identity-unavailable")
   try:
@@ -238,6 +360,14 @@ def verify(m,sid,rid,observe_only=False):
   except Exception:return emit("blocked","persistence-restoration-verifier-receipt-persistence-failed")
   return emit("accepted","persistence-isolated-restoration-record-retrieved",facts={**facts,"verifier_task":arn.rsplit("/",1)[-1],"completion_duration_seconds":duration,"proof_receipt":str(path.relative_to(ROOT))})
  if observe_only:return emit("uncertain","persistence-restoration-verifier-operation-not-observed",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+ # A policy can be visible to IAM before it is usable by RDS IAM database
+ # authentication.  Do not turn the resulting first connection into a
+ # misleading retryable verifier failure.  Re-observe the exact policy after
+ # one bounded stabilization interval, then launch at most one task for this
+ # restored database incarnation.
+ if not temporary_restore_identity_policy_stable(m,ctl):return emit("pending","persistence-restoration-temporary-identity-policy-stabilizing",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
+ identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,True)
+ if identity_status!="ok" or identity_reference!=restore_identity_resource(restored):return emit("uncertain","persistence-restoration-temporary-identity-policy-not-stable",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
  ok,_,c=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",td,"--launch-type","FARGATE","--count","1","--started-by",started,"--client-token",started,"--network-configuration",net,"--overrides",overrides)
  return emit("pending" if ok else "uncertain","persistence-restoration-verifier-submitted-awaiting-provider-observation" if ok else c,facts={"snapshot":sid,"restored_database":rid,"operation_id":started})

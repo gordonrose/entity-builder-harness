@@ -2,7 +2,7 @@
 
 `@kanbien/platform-adapter-aws-observability-cloudwatch` adapts the
 provider-neutral Core `Metrics` port to an OpenTelemetry metric provider which
-exports to a task-local OTLP collector. The collector, not this package,
+exports to a target-reviewed private OTLP collector. The collector, not this package,
 delivers the resulting metrics to AWS CloudWatch.
 
 It is deliberately an adapter package. Routes, jobs, apps, Core contracts, and
@@ -30,7 +30,7 @@ Platform `Metrics` port
        ↓ emits a Core counter or timer point
 This adapter
        ↓ validates the target catalogue and creates an OTel instrument
-Task-local OTLP collector
+Target-reviewed private OTLP collector
        ↓ exports to the AWS CloudWatch OTel backend
 CloudWatch dashboard / SLO calculation / alert
 ```
@@ -49,9 +49,12 @@ thresholds truthfully.
 - The OpenTelemetry SDK applies the same label allowlist and a per-series
   cardinality cap as defence in depth.
 - Timer and histogram series require strictly increasing explicit buckets.
-- The exporter accepts only `http://127.0.0.1:4318/v1/metrics`. An application
-  cannot turn the metrics adapter into an arbitrary external data-delivery
-  channel through an environment value.
+- The exporter accepts only a task-local loopback endpoint or a bounded
+  private-service-discovery hostname, on `http` port `4318` at `/v1/metrics`.
+  It rejects credentials, queries, fragments, external hosts, and arbitrary
+  protocols. Target composition selects the exact route and its network policy;
+  an application cannot turn the adapter into an arbitrary external delivery
+  channel through request or application configuration.
 - The OTel reader batches export off the request and worker paths. `shutdown()`
   gives target composition a bounded final flush hook.
 

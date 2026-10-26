@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -69,7 +69,8 @@ def custody(path,digest):
     path.write_text(json.dumps(value));return str(path)
 
 def hashes():
-    files=[ROOT/RECORD,ROOT/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml',ROOT/TARGET/'20-scopes/scope-index.yml',*(ROOT/SCOPE/'30-release-evidence/proof-receipts').glob('*.json')]
+    evidence = ROOT / SCOPE / '30-release-evidence'
+    files=[ROOT/RECORD,ROOT/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml',ROOT/TARGET/'20-scopes/scope-index.yml',*(evidence/'proof-receipts').glob('*.json'),*(evidence/'observability-receipts').glob('*.json')]
     # Durable live receipts accumulate as governed proofs complete. The
     # rehearsal protects byte-for-byte preservation of the current set below;
     # it must not assume a fixed historical receipt count.
@@ -121,7 +122,21 @@ def full_route():
         runnable='sha256:'+'c'*64;image='337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+facts['candidate_digest']
         current=ARN+'f'*32;health=ARN+'e'*32
         definitions={'CoreServerPersistenceTaskDefinitionArn':DEFINITION+'kanbien-core-platform-core-server-persistence:1','CoreServerPersistenceVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-verifier:1','CoreServerPersistenceMigrationTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-migration:1','CoreServerPersistenceRestorationVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-restoration-verifier:1'}
-        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health}
+        observability_module=load(RUN/'observability-receipts.py','rehearsal_observability_receipts')
+        observability_module.RECEIPTS=root/SCOPE/'30-release-evidence/observability-receipts'
+        proof_module=load(RUN/'proof-receipts.py','rehearsal_task_receipts')
+        def observability_source(path):
+            raw=Path(path).read_bytes();proof=proof_module.validate(json.loads(raw))
+            task=proof['task']
+            return {'path':str(Path(path).relative_to(root)),'sha256':'sha256:'+hashlib.sha256(raw).hexdigest(),'task_arn':task['arn'],'task_definition':task['definition'],'image_digest':task['image_digest'],'result_code':task['result_code']}
+        failure_source=observability_source(facts['proof_receipts']['credential-revocation-unready'])
+        recovery_source=observability_source(facts['proof_receipts']['credential-recovery-health'])
+        failure_alarm=stamp(now-timedelta(minutes=4));failure_metric=stamp(now-timedelta(minutes=5));delivery=stamp(now-timedelta(minutes=3));recovery_metric=stamp(now-timedelta(minutes=2));recovery_alarm=stamp(now-timedelta(minutes=1))
+        failure=observability_module.persist(observability_module.make(receipt_type='readiness-failure-observed',source_proof=failure_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'ALARM','alarm_state_updated_at':failure_alarm,'metric_name':observability_module.METRIC,'dimensions':observability_module.DIMENSIONS,'metric_value':0,'metric_observed_at':failure_metric},collected_at=failure_alarm,evidence_class='simulated'))
+        notified=observability_module.persist(observability_module.make(receipt_type='readiness-alarm-notified',source_proof=failure_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'ALARM','alarm_state_updated_at':failure_alarm,'subscription_confirmed_at':stamp(now-timedelta(minutes=6)),'operator_delivery_confirmed_at':delivery},collected_at=delivery,evidence_class='simulated'))
+        recovered=observability_module.persist(observability_module.make(receipt_type='readiness-recovery-observed',source_proof=recovery_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'OK','alarm_state_updated_at':recovery_alarm,'metric_name':observability_module.METRIC,'dimensions':observability_module.DIMENSIONS,'metric_value':1,'metric_observed_at':recovery_metric},collected_at=recovery_alarm,evidence_class='simulated'))
+        observability_receipts={'readiness-failure-observed':str(failure),'readiness-alarm-notified':str(notified),'readiness-recovery-observed':str(recovered)}
+        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
         manifest=root/'inputs.yml';manifest.write_text(yaml.safe_dump({'schema':'deploy/acceptance-inputs/v1','target':'kanbien-core-platform','scope':'core-server-persistence','values':values}))
         health_task={'taskArn':health,'taskDefinitionArn':definitions['CoreServerPersistenceVerifierTaskDefinitionArn'],'lastStatus':'STOPPED','startedAt':stamp(now-timedelta(seconds=60)),'stoppedAt':stamp(now-timedelta(seconds=40)),'containers':[{'name':'private-persistence-verifier','exitCode':0,'image':image,'imageDigest':runnable}],'overrides':{'containerOverrides':[{'name':'private-persistence-verifier','environment':[{'name':'PERSISTENCE_VERIFIER_MODE','value':'health-ready'},{'name':'PERSISTENCE_ACCEPTANCE_RECORD_ID','value':'core-persistence-acceptance-v1'},{'name':'PERSISTENCE_ACCEPTANCE_FACT','value':'kanbien-core-persistence-acceptance-v1'}]}]}}
         observations=[];state={'healthy':True,'cleanup':True}
@@ -149,6 +164,8 @@ def full_route():
                 return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','DBInstanceNotFound' if state['cleanup'] else '')
             return real_run(argv,*args,**kwargs)
         with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
+            parsed_observability = collector.parse_observability_receipts([name+'='+path for name,path in observability_receipts.items()], facts['candidate_digest'])
+            assert set(parsed_observability) == set(observability_receipts)
             state['healthy']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-service-task-invalid'}] and not collector.RECORD.exists(),report
             state['healthy']=True;state['cleanup']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-restored-database-not-cleaned-up'}] and not collector.RECORD.exists(),report
             state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and not collector.RECORD.exists(),report;health_task['startedAt'],health_task['stoppedAt']=original

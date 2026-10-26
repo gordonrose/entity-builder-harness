@@ -6,7 +6,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -19,6 +19,8 @@
 #   effects: [read-only, writes-files]
 from __future__ import annotations
 import copy
+from datetime import datetime, timedelta, timezone
+import hashlib
 import importlib.util
 import json
 import shutil
@@ -73,6 +75,38 @@ try:
     with patch.object(collector, "aws", side_effect=AssertionError("historical ECS lookup")):
         observed = collector.parse_proof_receipts(arguments,required,deadlines,directory)
     assert set(observed) == set(required)
+    # A qualified applicability record may carry only the named predecessor
+    # proofs across the exact restore-verifier-only image change.  Without it,
+    # a historical digest cannot be silently accepted.
+    predecessor = "sha256:" + "c" * 64
+    migration_path = directory / "migration-applied-state.json"
+    original_migration = json.loads(migration_path.read_text())
+    historical_migration = copy.deepcopy(original_migration)
+    historical_migration["task"]["image_digest"] = predecessor
+    historical_migration["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in historical_migration.items() if key != "integrity"})
+    migration_path.write_text(json.dumps(historical_migration), encoding="utf-8")
+    try:
+        collector.parse_proof_receipts(arguments, required, deadlines, directory)
+    except collector.EvidenceFailure as error:
+        assert str(error) == "acceptance-evidence-proof-receipt-mismatch"
+    else:
+        raise AssertionError("historical proof passed without applicability")
+    applicability = {"predecessor": {"image_digest": predecessor}, "reused_proofs": ["migration-applied-state"]}
+    assert set(collector.parse_proof_receipts(arguments, required, deadlines, directory, applicability=applicability)) == set(required)
+    migration_path.write_text(json.dumps(original_migration), encoding="utf-8")
+    restore_path = directory / "isolated-restore.json"
+    original_restore = json.loads(restore_path.read_text())
+    historical_restore = copy.deepcopy(original_restore)
+    historical_restore["task"]["image_digest"] = predecessor
+    historical_restore["integrity"]["payload_sha256"] = receipts.digest({key: value for key, value in historical_restore.items() if key != "integrity"})
+    restore_path.write_text(json.dumps(historical_restore), encoding="utf-8")
+    try:
+        collector.parse_proof_receipts(arguments, required, deadlines, directory, applicability=applicability)
+    except collector.EvidenceFailure as error:
+        assert str(error) == "acceptance-evidence-proof-receipt-mismatch"
+    else:
+        raise AssertionError("historical restore proof passed")
+    restore_path.write_text(json.dumps(original_restore), encoding="utf-8")
     retained = collector.EVIDENCE_ROOT / "proof-receipts/migration-apply-6ac40437365f4a72b1d86cc42a664a83.json"
     candidate_path, successor = collector.candidate_record(
         {"source_revision": "f" * 40, "image_digest": candidate, "receipt_reference": "test-receipt"},
@@ -105,6 +139,53 @@ try:
 finally:
     shutil.rmtree(directory)
 print("retained persistence acceptance receipt checks passed")
+
+# The bounded observability receipts remain sufficient after ECS has forgotten
+# their stopped tasks. Their source proof, image and ordered alarm facts are
+# all checked locally; a changed receipt cannot quietly become current state.
+with tempfile.TemporaryDirectory(prefix="observability-acceptance-receipt-") as temporary:
+    root = Path(temporary)
+    evidence = root / "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence"
+    proof_root, observation_root = evidence / "proof-receipts", evidence / "observability-receipts"
+    proof_root.mkdir(parents=True); observation_root.mkdir()
+    proof_module = load("observation_task_proofs", BASE / "proof-receipts.py")
+    proof_module.EVIDENCE_CLASS = "simulated"
+    observation_module = load("observation_receipts", BASE / "observability-receipts.py")
+    digest = "sha256:" + "d" * 64
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    def write_proof(name, task_id, code, stopped):
+        task = {"taskArn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/" + task_id * 32, "taskDefinitionArn": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:1", "lastStatus": "STOPPED", "startedAt": (stopped - timedelta(seconds=20)).isoformat().replace("+00:00", "Z"), "stoppedAt": stopped.isoformat().replace("+00:00", "Z"), "containers": [{"exitCode": 0}]}
+        value = proof_module.make(proof_type="verifier", operation="health-unready" if code.endswith("NOT_READY") else "health-ready", task=task, image_digest=digest, result_code=code, context={"record_id": "observability-receipt-smoke", "completion_deadline_seconds": 120, "completion_duration_seconds": 20}, controller="verify-candidate", collected_at=(stopped + timedelta(seconds=1)).isoformat().replace("+00:00", "Z"))
+        path = proof_root / name; path.write_text(json.dumps(value)); return path, value
+    failure_path, failure_proof = write_proof("failure.json", "a", "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY", now - timedelta(minutes=5))
+    recovery_path, recovery_proof = write_proof("recovery.json", "b", "KANBIEN_CORE_PERSISTENCE_HEALTHY", now - timedelta(minutes=1))
+    def source(path, proof):
+        raw = path.read_bytes(); task = proof["task"]
+        return {"path": path.relative_to(root).as_posix(), "sha256": "sha256:" + hashlib.sha256(raw).hexdigest(), "task_arn": task["arn"], "task_definition": task["definition"], "image_digest": task["image_digest"], "result_code": task["result_code"]}
+    failure_source, recovery_source = source(failure_path, failure_proof), source(recovery_path, recovery_proof)
+    def stamp(value): return value.isoformat().replace("+00:00", "Z")
+    failure = observation_module.make(receipt_type="readiness-failure-observed", source_proof=failure_source, observation_value={"alarm_name": observation_module.ALARM, "alarm_state": "ALARM", "alarm_state_updated_at": stamp(now - timedelta(minutes=4)), "metric_name": observation_module.METRIC, "dimensions": observation_module.DIMENSIONS, "metric_value": 0, "metric_observed_at": stamp(now - timedelta(minutes=5))}, collected_at=stamp(now - timedelta(minutes=4)), evidence_class="simulated")
+    notified = observation_module.make(receipt_type="readiness-alarm-notified", source_proof=failure_source, observation_value={"alarm_name": observation_module.ALARM, "alarm_state": "ALARM", "alarm_state_updated_at": stamp(now - timedelta(minutes=4)), "subscription_confirmed_at": stamp(now - timedelta(minutes=6)), "operator_delivery_confirmed_at": stamp(now - timedelta(minutes=3))}, collected_at=stamp(now - timedelta(minutes=3)), evidence_class="simulated")
+    recovery = observation_module.make(receipt_type="readiness-recovery-observed", source_proof=recovery_source, observation_value={"alarm_name": observation_module.ALARM, "alarm_state": "OK", "alarm_state_updated_at": stamp(now), "metric_name": observation_module.METRIC, "dimensions": observation_module.DIMENSIONS, "metric_value": 1, "metric_observed_at": stamp(now - timedelta(minutes=1))}, collected_at=stamp(now), evidence_class="simulated")
+    paths = {}
+    for name, value in (("readiness-failure-observed", failure), ("readiness-alarm-notified", notified), ("readiness-recovery-observed", recovery)):
+        path = observation_root / (name + ".json"); path.write_text(json.dumps(value)); paths[name] = path
+    old_root, old_class = collector.ROOT, collector.EVIDENCE_CLASS
+    collector.ROOT, collector.EVIDENCE_CLASS = root, "simulated"
+    try:
+        arguments = [name + "=" + str(path) for name, path in paths.items()]
+        observed = collector.parse_observability_receipts(arguments, digest)
+        assert set(observed) == set(paths)
+        try: collector.parse_observability_receipts(arguments, "sha256:" + "e" * 64)
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-source-invalid"
+        else: raise AssertionError("wrong observability image passed")
+        tampered = json.loads(paths["readiness-recovery-observed"].read_text()); tampered["observation"]["metric_value"] = 0; paths["readiness-recovery-observed"].write_text(json.dumps(tampered))
+        try: collector.parse_observability_receipts(arguments, digest)
+        except collector.EvidenceFailure as error: assert str(error) == "acceptance-evidence-observability-receipt-invalid"
+        else: raise AssertionError("modified observability receipt passed")
+    finally:
+        collector.ROOT, collector.EVIDENCE_CLASS = old_root, old_class
+print("retained observability acceptance receipt checks passed")
 
 # Current-state proof remains fresh even when historical task receipts are reused.
 import subprocess, sys

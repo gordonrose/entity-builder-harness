@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T19:03:10Z
-latest_commit_sha: be024ef9
-chat_duration: 1764221s (20:10:03:41)
+latest_commit_at_utc: 2026-10-26T10:49:35Z
+latest_commit_sha: 962cddd1
+chat_duration: 1821006s (21:01:50:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -170,6 +170,14 @@ can you walk me through which part of my repo work on the following stages
   Resolution: Each completed persistence proof now writes an allowlisted, integrity-checked durable receipt before reporting success. Acceptance consumes those retained receipts for historical proof while independently observing current service, database, recovery-point, cleanup, and budget state. One narrowly necessary replacement was repeated only after the old provider record had already expired; no migration, credential lifecycle, image update, or restore was repeated.
 
 
+- Raised: The isolated restore verifier reached the post-TLS database handshake boundary but returned no allowlisted PostgreSQL machine code.
+  Resolution: Preserved the closed rejected result as a governed operation diagnostic, cleaned up the isolated restore and its temporary instance-specific IAM policy, and added bounded causal/aggregate machine-code classification plus automatic safe rejection-record retention. The source database and revision-32 service remain healthy; no recovery proof was accepted or replayed.
+
+
+- Raised: The upgraded restore verifier again reached a post-TLS database handshake failure without an allowlisted PostgreSQL machine code.
+  Resolution: Qualified and deployed the closed-classification image, retained its rejected verifier operation diagnostic, and removed the isolated copy and temporary IAM policy. The result confirms that a target-governed, safe server-side diagnostic route is required before another recovery rehearsal; raw RDS log download is not an authorised or safe substitute.
+
+
 - Raised: Corrected current release-reference hash mismatch before package qualification
   Resolution: The immutable historical record had two trailing newlines while current-accepted-release.yml named the canonical one-newline rendering. The release-succession gate blocked safely before AWS/ECR actions. Preserved the history; updated only the current pointer to its actual retained SHA-256; validate-current and target smoke pass.
 
@@ -220,6 +228,34 @@ can you walk me through which part of my repo work on the following stages
 
 - Raised: Corrected permission-surface change-set allowlist against the active stack baseline
   Resolution: CloudFormation correctly exposed an existing-stack UPDATE delta that differed from the controller's stale CREATE-era allowlist. The controller now admits only the reviewed four task-role additions and exact IAM/RDS/secret/task/service modifications; it continues to reject network expansion and unrelated resources. No change set was executed while the guard was invalid.
+
+
+- Raised: IAM bootstrap rejected legacy non-elevated role
+  Resolution: The first governed bootstrap task stopped with the safe PERSISTENCE_ADMINISTRATION_BOOTSTRAP_IDENTITY_BOUNDARY_NOT_CONFIRMED result because the pre-existing runtime role retained PostgreSQL INHERIT. Corrected the role helper to reject elevated legacy roles but safely converge a non-elevated legacy identity to NOINHERIT without any credential SQL; local composition and target declaration checks pass.
+
+
+- Raised: Package qualification exposed over-broad role convergence
+  Resolution: Hosted package run 40225491937 failed before AWS credentials, ECR, scan, or publication because the first convergence implementation rewrote already-bounded fixture roles under a constrained administrator. Narrowed convergence to only the legacy INHERIT attribute; bootstrap now refuses to reactivate NOLOGIN, reserving activation for explicit restore-runtime. Local Docker remains unavailable due host credential-helper failure; hosted package qualification remains authoritative.
+
+
+- Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
+  Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
+
+
+- Raised: Restore verifier could not reach the isolated restored database.
+  Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
+
+
+- Raised: Restore verifier connection result was too coarse
+  Resolution: A rejected isolated-restore verifier emitted only CONNECTION_UNAVAILABLE even after provider facts disproved the suspected missing egress rule. Added a bounded TCP preflight before PostgreSQL credential use so the next governed proof distinguishes a closed transport path from a post-transport database handshake failure without exposing provider text, endpoints, SQL, or credentials.
+
+
+- Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
+  Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
+
+
+- Raised: Promoted isolated restore controller hardening
+  Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
 
 ## Decisions Made
 
@@ -479,6 +515,30 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Use manifest-identity requalification for the retained collector mirror
   Rationale: No delivery-role permission expansion or public image-layer retry is required. The collector workflow proves the immutable public OCI index and selected platform manifest, requires the same content-addressed digest in private ECR, and qualifies/scans only that private payload. This is a bounded custody correction; no ADR is required because it changes an in-flight target package route rather than the architecture.
 
+
+- Decision: Closed isolated restore cleanup before correcting failure classification; retained proof is accepted only from a closed, allowlisted result envelope and all synthetic regression diagnostics stay outside durable evidence.
+  Rationale: Existing PostgreSQL persistence/recovery design; no new ADR required.
+
+
+- Decision: Promoted durable evidence controls to remote main.
+  Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
+
+
+- Decision: Use safe transport preflight before restore verifier authentication
+  Rationale: The preflight opens and immediately closes only a TCP socket to the declared private database address. PostgreSQL TLS, IAM authentication, and query proof remain in the existing driver path. Unknown post-preflight driver failures map to a new closed handshake result; raw provider detail remains excluded.
+
+
+- Decision: Bind proof reuse to the immutable image input closure
+  Rationale: The new diagnostic image differs from the previously qualified image only in the restoration verifier among package inputs. Target controllers, durable-evidence artifacts and acceptance checks remain in the full audited source delta but do not change the executable image. The applicability control now rejects every changed package input except that verifier and records the full delta for review.
+
+
+- Decision: Promoted private observability collector implementation
+  Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
+
+
+- Decision: Promoted verified observability evidence controls to origin/main
+  Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
+
 ## Context Hygiene
 
 
@@ -709,6 +769,30 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: Retained current implementation evidence: identity lifecycle, role-boundary recovery, restricted admin package smoke, restore/rollback qualifier, durable acceptance receipts, target and generic identity validators. Diagnostics commit a4eb4337 is already integrated at HEAD.
   Durable evidence: Authoritative current contracts: core-server-persistence declaration and acceptance route; current executable evidence: composition/package smoke, controller regressions, acceptance rehearsal; historic accepted-release remains immutable legacy evidence.
+
+
+- Summary: Safe restore verifier mapping, controller receipt handling, 24 validated live receipts, two validated operation diagnostics, and rollback compatibility record are the active carry-forward facts.
+  Durable evidence: Commits 8ff26fd6, 1b3d81cd, ed781c64; retained artifacts under infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.
+
+
+- Summary: Retained-package receipts from GitHub runs 40243828846 and 40247863444 are now preserved under the persistence scope; their source delta is mechanically limited to the restore verifier and its direct harness support.
+  Durable evidence: The target-owned proof-applicability record is infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-3edd9ac3002f.json; fresh current state and isolated-restore proof still remain required.
+
+
+- Summary: The failed restored copy has been deleted and its temporary inline IAM policy is absent. The deployed service remains healthy. The next necessary live operation is a new qualified verifier image plus one fresh isolated restore proof; do not retry the expired DB incarnation.
+  Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
+
+
+- Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba. Its custody receipt and a restore-verifier-only applicability record are target evidence. The failed temporary restored database and its temporary policy are absent; do not retry that incarnation.
+  Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
+
+
+- Summary: The live observability activation completed with both ECS services healthy, but CloudWatch could not find the readiness metric because the collector selector was over-escaped and the alarm dimensions omitted readiness. The corrected declaration/template is commit 6accf269; this commit adds a change-set-reviewed collector-only repair controller and regression coverage.
+  Durable evidence: Provider facts are in the kanbien-core-platform stack/ECS services; the governed repair controller, declaration validator, target smoke test, and AWS workflow are the durable repository evidence.
+
+
+- Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
+  Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
 
 ## Activity Log
 
@@ -3337,6 +3421,458 @@ Summary: Replaces the stale CREATE-era permission-surface allowlist with the exa
 
 ADR impact: No ADR: narrow safety correction to an existing governed controller.
 
+
+### 2026-10-25T19:17:42Z - Issue
+
+Raised: IAM bootstrap rejected legacy non-elevated role
+
+Resolution: The first governed bootstrap task stopped with the safe PERSISTENCE_ADMINISTRATION_BOOTSTRAP_IDENTITY_BOUNDARY_NOT_CONFIRMED result because the pre-existing runtime role retained PostgreSQL INHERIT. Corrected the role helper to reject elevated legacy roles but safely converge a non-elevated legacy identity to NOINHERIT without any credential SQL; local composition and target declaration checks pass.
+
+
+### 2026-10-25T19:18:27Z - Commit recorded
+
+Commit: `6c33ab8f`
+
+Message: fix(deploy): converge legacy IAM runtime role
+
+Summary: Normalizes only a non-elevated inherited password-era runtime role to the bounded no-inherit IAM login profile; retains rejection of elevated roles and proves no password or verifier SQL is emitted.
+
+ADR impact: No ADR: bounded implementation correction under the existing IAM lifecycle decision.
+
+
+### 2026-10-25T19:25:39Z - Issue
+
+Raised: Package qualification exposed over-broad role convergence
+
+Resolution: Hosted package run 40225491937 failed before AWS credentials, ECR, scan, or publication because the first convergence implementation rewrote already-bounded fixture roles under a constrained administrator. Narrowed convergence to only the legacy INHERIT attribute; bootstrap now refuses to reactivate NOLOGIN, reserving activation for explicit restore-runtime. Local Docker remains unavailable due host credential-helper failure; hosted package qualification remains authoritative.
+
+
+### 2026-10-25T19:26:24Z - Commit recorded
+
+Commit: `cfa2bd60`
+
+Message: fix(deploy): preserve IAM revocation boundary
+
+Summary: Narrows legacy role convergence to INHERIT only, retains fail-closed elevated-role checks, and prevents bootstrap from undoing NOLOGIN revocation; adds regression coverage.
+
+ADR impact: No ADR: a focused correction within the existing IAM lifecycle model.
+
+
+### 2026-10-25T19:34:55Z - Commit recorded
+
+Commit: `52b0a15c`
+
+Message: fix(deploy): bind persistence support image
+
+Summary: Binds the persistence server, support program, and restoration verifier to one qualified immutable digest for create and update paths; change-set review and reconciliation now reject a support-image mismatch.
+
+ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+### 2026-10-25T19:40:11Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): preserve update parameter state
+
+Summary: Makes qualified persistence update review verify all controller-owned parameters and preserve every unowned CloudFormation parameter from the healthy stack, including template defaults.
+
+ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+### 2026-10-25T19:43:31Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): reconcile executed update change sets
+
+Summary: Recognizes CloudFormation's removed executed change set only when the current stack proves the exact candidate parameter identity; retains no-retry and mismatch uncertainty.
+
+ADR impact: No ADR: bounded reconciliation correction for an existing provider lifecycle.
+
+
+### 2026-10-25T19:51:46Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): classify migration task failures
+
+Summary: Parses only closed migration rejection codes and failure classes from terminal task logs; raw task output and sensitive fields remain excluded from controller reports.
+
+ADR impact: No ADR: bounded safe-diagnostics correction under existing deployment standards.
+
+
+### 2026-10-25T20:06:29Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: Require a read-only, receipt-backed migration-history observation before a failed persistence migration can be replayed.
+
+Summary: Adds the state observer across the runnable administration program, reusable health contract, exact AWS workflow, package proof, and controller regression coverage.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:24:33Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): observe migration state as owner
+
+Summary: Repaired the migration-state observer so the constrained administrator assumes the migration owner only within a read-only transaction. Local composition, lifecycle controller, health/recovery, secret and diagnostic validations passed; Docker Desktop credential-helper failure prevents local package build before Docker starts.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:45:16Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): retain applied migration state evidence
+
+Summary: Accepted migration-state observation distinguishes replay permission from already-applied evidence and routes the durable receipt into acceptance.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T20:58:11Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): classify persistence privilege probe outcomes
+
+Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppress provider detail.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T22:32:56Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: --summary
+
+Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-25T23:11:55Z - Decision
+
+Decision: Closed isolated restore cleanup before correcting failure classification; retained proof is accepted only from a closed, allowlisted result envelope and all synthetic regression diagnostics stay outside durable evidence.
+
+Rationale: Existing PostgreSQL persistence/recovery design; no new ADR required.
+
+
+### 2026-10-25T23:11:55Z - Context hygiene
+
+Summary: Safe restore verifier mapping, controller receipt handling, 24 validated live receipts, two validated operation diagnostics, and rollback compatibility record are the active carry-forward facts.
+
+Durable evidence: Commits 8ff26fd6, 1b3d81cd, ed781c64; retained artifacts under infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `8ff26fd6`
+
+Message: fix: classify isolated restore verifier failures safely
+
+Summary: Added closed allowlisted restore failure mapping, causal machine-code handling, controller rejection receipts, and focused regression coverage.
+
+ADR impact: No ADR: bounded safe-diagnostic correction under the current persistence recovery decision.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `1b3d81cd`
+
+Message: test: isolate synthetic deployment diagnostics
+
+Summary: Kept controller-regression diagnostics in a temporary directory so synthetic tests cannot contaminate retained live-evidence storage.
+
+ADR impact: No ADR: test isolation correction.
+
+
+### 2026-10-25T23:11:55Z - Commit recorded
+
+Commit: `ed781c64`
+
+Message: evidence: retain persistence proof receipts
+
+Summary: Committed 24 integrity-validated live proof receipts, two safe operation diagnostics, and immutable qualified rollback-compatibility records.
+
+ADR impact: No ADR: durable evidence under the existing acceptance model.
+
+
+### 2026-10-25T23:56:16Z - Commit recorded
+
+Commit: `b154eea4`
+
+Message: fix(deploy): stabilize isolated restore identity
+
+Summary: Added a bounded, policy-stability recheck before the isolated restore verifier launches and retained five current-image live proof receipts for migration state, effective privilege, runtime IAM access, health, and read.
+
+ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
+
+
+### 2026-10-26T00:05:21Z - Commit recorded
+
+Commit: `aee7340b`
+
+Message: fix(deploy): classify isolated restore boundaries
+
+Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T00:31:24Z - Context hygiene
+
+Summary: Retained-package receipts from GitHub runs 40243828846 and 40247863444 are now preserved under the persistence scope; their source delta is mechanically limited to the restore verifier and its direct harness support.
+
+Durable evidence: The target-owned proof-applicability record is infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-applicability/restore-verifier-only-3edd9ac3002f.json; fresh current state and isolated-restore proof still remain required.
+
+
+### 2026-10-26T00:31:24Z - Issue
+
+Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
+
+Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
+
+
+### 2026-10-26T00:33:06Z - Commit recorded
+
+Commit: `5a962e64858476e87fb793f7c2b55233c584d0ca`
+
+Message: feat(deploy): retain persistence proof evidence
+
+Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
+
+ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
+
+
+### 2026-10-26T00:34:49Z - Decision
+
+Decision: Promoted durable evidence controls to remote main.
+
+Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
+
+
+### 2026-10-26T00:50:50Z - Issue
+
+Raised: Restore verifier could not reach the isolated restored database.
+
+Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
+
+
+### 2026-10-26T01:03:24Z - Issue
+
+Raised: Restore verifier connection result was too coarse
+
+Resolution: A rejected isolated-restore verifier emitted only CONNECTION_UNAVAILABLE even after provider facts disproved the suspected missing egress rule. Added a bounded TCP preflight before PostgreSQL credential use so the next governed proof distinguishes a closed transport path from a post-transport database handshake failure without exposing provider text, endpoints, SQL, or credentials.
+
+
+### 2026-10-26T01:03:24Z - Decision
+
+Decision: Use safe transport preflight before restore verifier authentication
+
+Rationale: The preflight opens and immediately closes only a TCP socket to the declared private database address. PostgreSQL TLS, IAM authentication, and query proof remain in the existing driver path. Unknown post-preflight driver failures map to a new closed handshake result; raw provider detail remains excluded.
+
+
+### 2026-10-26T01:03:24Z - Context hygiene
+
+Summary: The failed restored copy has been deleted and its temporary inline IAM policy is absent. The deployed service remains healthy. The next necessary live operation is a new qualified verifier image plus one fresh isolated restore proof; do not retry the expired DB incarnation.
+
+Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
+
+
+### 2026-10-26T01:05:07Z - Commit recorded
+
+Commit: `408d7734`
+
+Message: fix(deploy): classify isolated restore transport boundary
+
+Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
+
+ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
+
+
+### 2026-10-26T01:15:37Z - Decision
+
+Decision: Bind proof reuse to the immutable image input closure
+
+Rationale: The new diagnostic image differs from the previously qualified image only in the restoration verifier among package inputs. Target controllers, durable-evidence artifacts and acceptance checks remain in the full audited source delta but do not change the executable image. The applicability control now rejects every changed package input except that verifier and records the full delta for review.
+
+
+### 2026-10-26T01:15:37Z - Context hygiene
+
+Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba. Its custody receipt and a restore-verifier-only applicability record are target evidence. The failed temporary restored database and its temporary policy are absent; do not retry that incarnation.
+
+Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
+
+
+### 2026-10-26T01:16:35Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): bind proof reuse to image inputs
+
+Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
+
+ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
+
+
+### 2026-10-26T01:41:45Z - Issue
+
+Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
+
+Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
+
+
+### 2026-10-26T01:42:24Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): probe restore verifier TLS boundary
+
+Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated restore verifier. It retains closed transport, TLS negotiation, TLS trust and post-TLS handshake outcomes, with composition and restore-controller checks passing.
+
+ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
+
+
+### 2026-10-26T02:41:35Z - Commit recorded
+
+Commit: `1ab65b6c`
+
+Message: evidence(deploy): retain restore handshake rejection
+
+Summary: Retained the qualified package receipt, image-input applicability record, and closed isolated restore rejection after source-safe cleanup; recovery acceptance remains unproven.
+
+ADR impact: No ADR: factual live evidence under the existing durable proof model.
+
+
+### 2026-10-26T02:45:13Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): require restore PostgreSQL log export
+
+Summary: Requires each isolated restore to enable and prove the existing PostgreSQL CloudWatch log export before a verifier can run.
+
+ADR impact: No ADR: bounded recovery diagnostic source correction.
+
+
+### 2026-10-26T02:56:39Z - Commit recorded
+
+Commit: `ca0d679f`
+
+Message: fix(deploy): classify isolated restore server logs safely
+
+Summary: Require PostgreSQL export on derived restores and retain only a bounded server-log classification for a rejected verifier.
+
+ADR impact: No ADR impact; target-scoped recovery diagnostic hardening.
+
+
+### 2026-10-26T07:19:16Z - Commit recorded
+
+Commit: `b3c8e547`
+
+Message: fix(deploy): recognize RDS log export configuration
+
+Summary: Treat RDS configuring-log-exports as an ordinary in-flight restore state and prove it in restore-controller regression.
+
+ADR impact: No ADR impact; provider lifecycle-state correction.
+
+
+### 2026-10-26T07:40:59Z - Commit recorded
+
+Commit: `ed63c025`
+
+Message: fix(deploy): resume restore identity stabilization
+
+Summary: Replaced the controller's blocking identity-propagation delay with a bounded exact CloudTrail observation before the one allowed restore verifier launch.
+
+ADR impact: No ADR impact; governed isolated-restore reconciliation remains target-specific.
+
+
+### 2026-10-26T07:41:28Z - Commit recorded
+
+Commit: `3bcfe650`
+
+Message: test(deploy): harden restore identity observation
+
+Summary: Added malformed, stale, and mismatched CloudTrail observation regressions; retained the closed historical restore rejection diagnostic after source-health and cleanup reconciliation.
+
+ADR impact: No ADR impact; this is a target-specific recovery-controller safety correction.
+
+
+### 2026-10-26T07:44:45Z - Issue
+
+Raised: Promoted isolated restore controller hardening
+
+Resolution: Verified normal fast-forward promotion of 820185f1e5dd207e38fe8b392bf11c6c53bdfe96 to origin/main after clean-worktree restore, composition, and deployment-diagnostic regressions; source and target state were rechecked.
+
+
+### 2026-10-26T08:57:51Z - Commit recorded
+
+Commit: `749e869827d7a7e3affbf93899f60f43b5c0b6d7`
+
+Message: feat(deploy): compose private observability collector
+
+Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
+
+ADR impact: No new ADR: this implements the established separate-identity collector decision.
+
+
+### 2026-10-26T08:59:13Z - Decision
+
+Decision: Promoted private observability collector implementation
+
+Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
+
+
+### 2026-10-26T09:58:26Z - Context hygiene
+
+Summary: The live observability activation completed with both ECS services healthy, but CloudWatch could not find the readiness metric because the collector selector was over-escaped and the alarm dimensions omitted readiness. The corrected declaration/template is commit 6accf269; this commit adds a change-set-reviewed collector-only repair controller and regression coverage.
+
+Durable evidence: Provider facts are in the kanbien-core-platform stack/ECS services; the governed repair controller, declaration validator, target smoke test, and AWS workflow are the durable repository evidence.
+
+
+### 2026-10-26T09:59:19Z - Commit recorded
+
+Commit: `e5bbda7c`
+
+Message: fix(deploy): govern collector metric delivery repair
+
+Summary: Adds a healthy-baseline, exact-change-set controller mode for the corrected readiness metric configuration. It permits only collector task-definition and service modification, with regression tests and workflow guidance.
+
+ADR impact: No ADR: this is an implementation correction within the accepted observability deployment boundary.
+
+
+### 2026-10-26T10:44:12Z - Context hygiene
+
+Summary: Observability activation is healthy after a collector-only metric repair. The target still lacks confirmed SNS email delivery, so no revocation/recovery is repeated until the receipt controller can retain failure, notification, and recovery evidence.
+
+Durable evidence: Controller: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/. Receipt validator: .../observability-receipts.py. Acceptance collector/route now consume the three receipt references; AWS SNS read-only observation remains PendingConfirmation.
+
+
+### 2026-10-26T10:49:35Z - Commit recorded
+
+Commit: `962cddd1`
+
+Message: feat(deploy): retain observability readiness proof
+
+Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
+
+ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
+
+
+### 2026-10-26T11:47:27Z - Decision
+
+Decision: Promoted verified observability evidence controls to origin/main
+
+Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4229,6 +4765,209 @@ ADR impact: No ADR: narrow safety correction to an existing governed controller.
   Summary: Replaces the stale CREATE-era permission-surface allowlist with the exact reviewed UPDATE delta for the active stack: four task-role additions plus explicit RDS/IAM/secret/task/service modifications. Fixed-control and controller regressions pass; the previously created change set remains unexecuted.
   ADR impact: No ADR: narrow safety correction to an existing governed controller.
 
+
+- Commit: `6c33ab8f`
+  Time UTC: 2026-10-25T19:18:27Z
+  Message: fix(deploy): converge legacy IAM runtime role
+  Summary: Normalizes only a non-elevated inherited password-era runtime role to the bounded no-inherit IAM login profile; retains rejection of elevated roles and proves no password or verifier SQL is emitted.
+  ADR impact: No ADR: bounded implementation correction under the existing IAM lifecycle decision.
+
+
+- Commit: `cfa2bd60`
+  Time UTC: 2026-10-25T19:26:24Z
+  Message: fix(deploy): preserve IAM revocation boundary
+  Summary: Narrows legacy role convergence to INHERIT only, retains fail-closed elevated-role checks, and prevents bootstrap from undoing NOLOGIN revocation; adds regression coverage.
+  ADR impact: No ADR: a focused correction within the existing IAM lifecycle model.
+
+
+- Commit: `52b0a15c`
+  Time UTC: 2026-10-25T19:34:55Z
+  Message: fix(deploy): bind persistence support image
+  Summary: Binds the persistence server, support program, and restoration verifier to one qualified immutable digest for create and update paths; change-set review and reconciliation now reject a support-image mismatch.
+  ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:40:11Z
+  Message: fix(deploy): preserve update parameter state
+  Summary: Makes qualified persistence update review verify all controller-owned parameters and preserve every unowned CloudFormation parameter from the healthy stack, including template defaults.
+  ADR impact: No ADR: bounded correction to the existing qualified-release controller.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:43:31Z
+  Message: fix(deploy): reconcile executed update change sets
+  Summary: Recognizes CloudFormation's removed executed change set only when the current stack proves the exact candidate parameter identity; retains no-retry and mismatch uncertainty.
+  ADR impact: No ADR: bounded reconciliation correction for an existing provider lifecycle.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T19:51:46Z
+  Message: fix(deploy): classify migration task failures
+  Summary: Parses only closed migration rejection codes and failure classes from terminal task logs; raw task output and sensitive fields remain excluded from controller reports.
+  ADR impact: No ADR: bounded safe-diagnostics correction under existing deployment standards.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:06:29Z
+  Message: Require a read-only, receipt-backed migration-history observation before a failed persistence migration can be replayed.
+  Summary: Adds the state observer across the runnable administration program, reusable health contract, exact AWS workflow, package proof, and controller regression coverage.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:24:33Z
+  Message: fix(deploy): observe migration state as owner
+  Summary: Repaired the migration-state observer so the constrained administrator assumes the migration owner only within a read-only transaction. Local composition, lifecycle controller, health/recovery, secret and diagnostic validations passed; Docker Desktop credential-helper failure prevents local package build before Docker starts.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:45:16Z
+  Message: fix(deploy): retain applied migration state evidence
+  Summary: Accepted migration-state observation distinguishes replay permission from already-applied evidence and routes the durable receipt into acceptance.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T20:58:11Z
+  Message: fix(deploy): classify persistence privilege probe outcomes
+  Summary: Preserve allowlisted privilege-probe outcomes while continuing to suppress provider detail.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-25T22:32:56Z
+  Message: --summary
+  Summary: Retained governed persistence proof receipts, added qualified rollback-predecessor compatibility records, and made isolated restore verification safe and lifecycle-aware.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `8ff26fd6`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: fix: classify isolated restore verifier failures safely
+  Summary: Added closed allowlisted restore failure mapping, causal machine-code handling, controller rejection receipts, and focused regression coverage.
+  ADR impact: No ADR: bounded safe-diagnostic correction under the current persistence recovery decision.
+
+
+- Commit: `1b3d81cd`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: test: isolate synthetic deployment diagnostics
+  Summary: Kept controller-regression diagnostics in a temporary directory so synthetic tests cannot contaminate retained live-evidence storage.
+  ADR impact: No ADR: test isolation correction.
+
+
+- Commit: `ed781c64`
+  Time UTC: 2026-10-25T23:11:55Z
+  Message: evidence: retain persistence proof receipts
+  Summary: Committed 24 integrity-validated live proof receipts, two safe operation diagnostics, and immutable qualified rollback-compatibility records.
+  ADR impact: No ADR: durable evidence under the existing acceptance model.
+
+
+- Commit: `b154eea4`
+  Time UTC: 2026-10-25T23:56:16Z
+  Message: fix(deploy): stabilize isolated restore identity
+  Summary: Added a bounded, policy-stability recheck before the isolated restore verifier launches and retained five current-image live proof receipts for migration state, effective privilege, runtime IAM access, health, and read.
+  ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
+
+
+- Commit: `aee7340b`
+  Time UTC: 2026-10-26T00:05:21Z
+  Message: fix(deploy): classify isolated restore boundaries
+  Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
+  ADR impact: covered by session ADR disposition
+
+
+- Commit: `5a962e64858476e87fb793f7c2b55233c584d0ca`
+  Time UTC: 2026-10-26T00:33:06Z
+  Message: feat(deploy): retain persistence proof evidence
+  Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
+  ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
+
+
+- Commit: `408d7734`
+  Time UTC: 2026-10-26T01:05:07Z
+  Message: fix(deploy): classify isolated restore transport boundary
+  Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
+  ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T01:16:35Z
+  Message: fix(deploy): bind proof reuse to image inputs
+  Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
+  ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T01:42:24Z
+  Message: fix(deploy): probe restore verifier TLS boundary
+  Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated restore verifier. It retains closed transport, TLS negotiation, TLS trust and post-TLS handshake outcomes, with composition and restore-controller checks passing.
+  ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
+
+
+- Commit: `1ab65b6c`
+  Time UTC: 2026-10-26T02:41:35Z
+  Message: evidence(deploy): retain restore handshake rejection
+  Summary: Retained the qualified package receipt, image-input applicability record, and closed isolated restore rejection after source-safe cleanup; recovery acceptance remains unproven.
+  ADR impact: No ADR: factual live evidence under the existing durable proof model.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T02:45:13Z
+  Message: fix(deploy): require restore PostgreSQL log export
+  Summary: Requires each isolated restore to enable and prove the existing PostgreSQL CloudWatch log export before a verifier can run.
+  ADR impact: No ADR: bounded recovery diagnostic source correction.
+
+
+- Commit: `ca0d679f`
+  Time UTC: 2026-10-26T02:56:39Z
+  Message: fix(deploy): classify isolated restore server logs safely
+  Summary: Require PostgreSQL export on derived restores and retain only a bounded server-log classification for a rejected verifier.
+  ADR impact: No ADR impact; target-scoped recovery diagnostic hardening.
+
+
+- Commit: `b3c8e547`
+  Time UTC: 2026-10-26T07:19:16Z
+  Message: fix(deploy): recognize RDS log export configuration
+  Summary: Treat RDS configuring-log-exports as an ordinary in-flight restore state and prove it in restore-controller regression.
+  ADR impact: No ADR impact; provider lifecycle-state correction.
+
+
+- Commit: `ed63c025`
+  Time UTC: 2026-10-26T07:40:59Z
+  Message: fix(deploy): resume restore identity stabilization
+  Summary: Replaced the controller's blocking identity-propagation delay with a bounded exact CloudTrail observation before the one allowed restore verifier launch.
+  ADR impact: No ADR impact; governed isolated-restore reconciliation remains target-specific.
+
+
+- Commit: `3bcfe650`
+  Time UTC: 2026-10-26T07:41:28Z
+  Message: test(deploy): harden restore identity observation
+  Summary: Added malformed, stale, and mismatched CloudTrail observation regressions; retained the closed historical restore rejection diagnostic after source-health and cleanup reconciliation.
+  ADR impact: No ADR impact; this is a target-specific recovery-controller safety correction.
+
+
+- Commit: `749e869827d7a7e3affbf93899f60f43b5c0b6d7`
+  Time UTC: 2026-10-26T08:57:51Z
+  Message: feat(deploy): compose private observability collector
+  Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
+  ADR impact: No new ADR: this implements the established separate-identity collector decision.
+
+
+- Commit: `e5bbda7c`
+  Time UTC: 2026-10-26T09:59:19Z
+  Message: fix(deploy): govern collector metric delivery repair
+  Summary: Adds a healthy-baseline, exact-change-set controller mode for the corrected readiness metric configuration. It permits only collector task-definition and service modification, with regression tests and workflow guidance.
+  ADR impact: No ADR: this is an implementation correction within the accepted observability deployment boundary.
+
+
+- Commit: `962cddd1`
+  Time UTC: 2026-10-26T10:49:35Z
+  Message: feat(deploy): retain observability readiness proof
+  Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
+  ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
+
 ## Main Refresh Conflicts
 
 
@@ -4252,15 +4991,20 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T19:03:10Z
-Latest commit SHA: be024ef9
-Chat duration: 1764221s (20:10:03:41)
+Latest commit at UTC: 2026-10-26T10:49:35Z
+Latest commit SHA: 962cddd1
+Chat duration: 1821006s (21:01:50:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
+- 2026-10-26: Promoted the verified isolated-restore TLS-boundary correction
+  to `origin/main` by normal fast-forward. The source and promoted commit is
+  `5c00b8f211c0bef7519cae05a08c0134eeda0030`; the clean promotion worktree
+  ran the restore-controller, proof-applicability, and persistence-composition
+  regression suites before the final fetch, eligibility check, and push.
 - 2026-10-21: Refreshed this clean chat branch by rebasing it onto local `main`
   (`c1ad31a0`) after fetching remote references. The branch moved from
   `3bfce6a8` to `c1ad31a0`; Git reported no conflicts, no stash was used, and

@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -27,6 +27,7 @@ VERIFY="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/c
 REPLACE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh"
 ROUTE_UPDATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh"
 TRANSITION="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh"
+OBSERVABILITY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
 expect_failure package-custody-receipt-invalid "$CREATE" --receipt /tmp/missing-persistence-receipt.json --json
@@ -39,6 +40,64 @@ expect_failure private-persistence-verification-arguments-invalid "$VERIFY" --mo
 expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
+expect_failure persistence-observability-mvp-arguments-invalid bash "$OBSERVABILITY" --json
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py" <<'PY'
+import importlib.util, sys, tempfile
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("observability_surface", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+server = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
+collector = {"image_digest": "sha256:" + "b" * 64, "source_revision": "a" * 40}
+email = "operator@example.invalid"
+name = module.change_name(server, collector, email)
+collector_image = "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@" + collector["image_digest"]
+parameters = [
+    {"ParameterKey": "ImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "SupportImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "RestoreVerifierImageDigest", "ParameterValue": server["image_digest"]},
+    {"ParameterKey": "SourceRevision", "ParameterValue": server["source_revision"]},
+    {"ParameterKey": "EnableObservability", "ParameterValue": "true"},
+    {"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector_image},
+    {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"},
+]
+changes = [
+    {"ResourceChange": {"Action": "Add", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.ADDED.items()
+] + [
+    {"ResourceChange": {"Action": "Modify", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.MODIFIED.items()
+]
+valid = {"ChangeSetName": name, "Status": "CREATE_COMPLETE", "ChangeSetType": "UPDATE", "Parameters": parameters, "Changes": changes}
+assert module.review(valid, name, server, collector, email, collector_image)
+assert not module.review({**valid, "Changes": changes[:-1]}, name, server, collector, email, collector_image)
+assert not module.review({**valid, "Changes": changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "PersistenceDatabase", "ResourceType": "AWS::RDS::DBInstance"}}]}, name, server, collector, email, collector_image)
+assert not module.review({**valid, "Parameters": parameters[:-1]}, name, server, collector, email, collector_image)
+assert not module.review({**valid, "Parameters": parameters[:-2] + [{"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector["image_digest"]}, {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"}]}, name, server, collector, email, collector_image)
+repair_changes = [
+    {"ResourceChange": {"Action": "Modify", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.REPAIR_MODIFIED.items()
+]
+repair = {**valid, "Changes": repair_changes}
+assert module.review(repair, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
+assert not module.review(valid, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
+assert not module.review({**repair, "Changes": repair_changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "CoreServerPersistenceService", "ResourceType": "AWS::ECS::Service"}}]}, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
+assert module.change_name(server, collector, "other@example.invalid") != name
+assert module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 1})
+assert not module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 0})
+class Prepare:
+    def candidate_runnable_manifest(self, receipt):
+        return ("sha256:" + "c" * 64, "ok")
+assert module.collector_image_available(Prepare(), collector)
+class MissingCollector:
+    def candidate_runnable_manifest(self, receipt):
+        return (None, "persistence-candidate-image-index-unavailable")
+assert not module.collector_image_available(MissingCollector(), collector)
+assert module.inline_template_body_is_supported()
+with tempfile.TemporaryDirectory() as directory:
+    oversized = Path(directory) / "oversized.yml"
+    oversized.write_bytes(b"x" * (module.CLOUDFORMATION_INLINE_TEMPLATE_LIMIT_BYTES + 1))
+    assert not module.inline_template_body_is_supported(oversized)
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, subprocess, sys
 from unittest.mock import patch
@@ -58,6 +117,12 @@ with patch.object(prepare.subprocess, "run", return_value=Result()):
     assert prepare.aws("cloudformation", "execute-change-set") == (True, {}, "ok")
 with patch.object(prepare.subprocess, "run", side_effect=subprocess.TimeoutExpired(["aws"], 30)):
     assert prepare.aws("cloudformation", "describe-stacks") == (False, None, "aws-command-timeout")
+class Missing:
+    returncode = 255
+    stdout = ""
+    stderr = "An error occurred (NoSuchEntity) when calling the GetRolePolicy operation: policy cannot be found"
+with patch.object(prepare.subprocess, "run", return_value=Missing()):
+    assert prepare.aws("iam", "get-role-policy") == (False, None, "aws-resource-missing")
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py" <<'PY'
 import importlib.util, sys
@@ -218,6 +283,11 @@ assert "DeletionProtection: true" in template
 assert "BackupRetentionPeriod: 7" in template
 assert "PERSISTENCE_POSTGRES_CA_PATH=/app/assets/rds-eu-west-1-bundle.crt" not in template
 assert "PERSISTENCE_POSTGRES_CA_PATH" not in template, "the image owns this non-secret runtime default"
+collector = template[template.index("ObservabilityCollectorTaskDefinition:"):template.index("ObservabilityCollectorService:")]
+assert "Name: AOT_CONFIG_CONTENT" in collector
+assert "ValueFrom:" not in collector
+assert "ssm:GetParameter" not in collector
+assert "ObservabilityCollectorConfiguration:" not in template
 verifier = template[template.index("VerifierExecutionRole:"):template.index("RestorationVerifierExecutionRole:")]
 assert "secretsmanager:GetSecretValue" not in verifier
 assert "DatabaseIngressFromVerifier" not in template

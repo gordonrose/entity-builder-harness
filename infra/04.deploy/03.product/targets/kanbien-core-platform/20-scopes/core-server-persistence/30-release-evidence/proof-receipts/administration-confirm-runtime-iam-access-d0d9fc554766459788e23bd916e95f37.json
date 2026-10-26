@@ -1,0 +1,32 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 23
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:8b52b240eb38469e87d3d0bc01905e7d6c42737895f79c4ac6027666b79fa567"
+  },
+  "operation": "confirm-runtime-iam-access",
+  "proof_type": "administration",
+  "provenance": {
+    "collected_at": "2026-10-25T23:41:49.801141Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-administration",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d0d9fc554766459788e23bd916e95f37",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:12",
+    "exit_code": 0,
+    "image_digest": "sha256:deace2180290d9fe5350faa117d0d3c42f7545727f7fe37c799a43179aad4cb7",
+    "result_code": "PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED",
+    "started_at": "2026-10-26T00:41:16.305000+01:00",
+    "stopped_at": "2026-10-26T00:41:40.012000+01:00",
+    "stopped_reason": "Essential container in task exited",
+    "terminal_status": "STOPPED"
+  }
+}

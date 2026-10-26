@@ -58,6 +58,8 @@ export function observabilityFromTargetEnvironment( // Construct optional target
 
   const endpoint = requiredString(env, "PLATFORM_OBSERVABILITY_METRICS_ENDPOINT"); // Require the adapter's reviewed task-local collector endpoint.
   if (!endpoint.ok) return endpoint; // Preserve the safe missing-value error.
+  const deliveryBoundary = observabilityDeliveryBoundary(env, endpoint.value); // Ensure this target has declared the route class used by the exporter.
+  if (!deliveryBoundary.ok) return deliveryBoundary; // Do not let a deployment switch from local to remote telemetry by changing only a URL.
   const region = requiredString(env, "PLATFORM_OBSERVABILITY_METRICS_REGION"); // Require the selected AWS region.
   if (!region.ok) return region; // Preserve the safe missing-value error.
   const serviceName = requiredString(env, "PLATFORM_OBSERVABILITY_SERVICE_NAME"); // Require a stable OTel resource service identity.
@@ -93,6 +95,23 @@ export function observabilityFromTargetEnvironment( // Construct optional target
       error instanceof Error ? error.message : "Metrics adapter configuration is invalid.", // Retain only the adapter's safe validation message.
     ); // Ensure the process remains fail-closed for a configured-but-invalid target metrics path.
   }
+}
+
+function observabilityDeliveryBoundary(
+  env: NodeJS.ProcessEnv,
+  endpoint: string,
+): { readonly ok: true } | { readonly ok: false; readonly error: TargetObservabilityConfigurationError } {
+  const boundary = env["PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY"] ?? "task-local";
+  if (boundary === "task-local" && endpoint === "http://127.0.0.1:4318/v1/metrics") return { ok: true };
+  if (boundary === "private-collector-service") {
+    try {
+      const route = new URL(endpoint);
+      if (route.protocol === "http:" && route.port === "4318" && route.pathname === "/v1/metrics" && route.username === "" && route.password === "" && route.search === "" && route.hash === "" && /^[a-z][a-z0-9-]{1,63}(?:\.[a-z][a-z0-9-]{1,63})+\.internal$/.test(route.hostname)) return { ok: true };
+    } catch {
+      // Return the same safe configuration result below.
+    }
+  }
+  return targetObservabilityConfigurationError("PLATFORM_OBSERVABILITY_DELIVERY_BOUNDARY", "A reviewed task-local or private collector delivery boundary is required.");
 }
 
 /**

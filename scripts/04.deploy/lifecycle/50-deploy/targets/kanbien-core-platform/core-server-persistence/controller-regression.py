@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 3
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -236,19 +236,56 @@ class ControllerRegression(unittest.TestCase):
             elif name=='apply-private-verifier-route-update':changes=[{'ResourceChange':{'LogicalResourceId':'VerifierEgressToServer','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]
             else:changes=[{'ResourceChange':{'LogicalResourceId':'Runtime','ResourceType':'AWS::ECS::TaskDefinition','Action':'Modify'}}]
             change={'ChangeSetName':change_name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in params.items()],'Changes':changes}
-            for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
-                def response(parts):
-                    if parts[1]=='describe-change-set':return True,change,'ok'
-                    if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
-                    raise AssertionError(f'mutation during reconciliation: {parts}')
-                provider=Provider(response)
-                with patch.object(prepare,'aws',provider.aws):
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                # A synthetic provider failure must never create a file in the
+                # canonical retained-evidence directory.  The production
+                # controller keeps that durable route; this fixture uses a
+                # temporary substitute while exercising the same write path.
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics:
+                    for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
+                        def response(parts):
+                            if parts[1]=='describe-change-set':return True,change,'ok'
+                            if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
+                            raise AssertionError(f'mutation during reconciliation: {parts}')
+                        provider=Provider(response)
+                        with patch.object(prepare,'aws',provider.aws):
+                            call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
+                            self.assertEqual(result(call)[1]['verdict'],verdict)
+                        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics, patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
                     call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                    self.assertEqual(result(call)[1]['verdict'],verdict)
-                self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
-            with patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
-                call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                self.assertEqual(result(call)[1]['verdict'],'uncertain')
+                    self.assertEqual(result(call)[1]['verdict'],'uncertain')
+
+    def test_transition_failure_retains_allowlisted_diagnostic(self):
+        """A circuit-breaker failure survives controller reconciliation safely."""
+        module=load(DEPLOY/'transition-qualified-release/script.py')
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        digest='sha256:'+'a'*64; revision='a'*40; name='kanbien-core-platform-persistence-rollback-'+'a'*12
+        parameters=[{'ParameterKey':key,'ParameterValue':value} for key,value in {
+            'ImageDigest':digest,'SupportImageDigest':digest,
+            'RestoreVerifierImageDigest':digest,'SourceRevision':revision,
+        }.items()]
+        change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':parameters,'Changes':[{'ResourceChange':{'ResourceType':'AWS::ECS::TaskDefinition'}}]}
+        self.assertTrue(module.reviewable(change,'UPDATE_ROLLBACK_COMPLETE',name,digest,revision))
+        def response(parts):
+            if parts[1]=='describe-change-set': return True,change,'ok'
+            if parts[1]=='describe-stacks': return True,{'Stacks':[{'StackStatus':'UPDATE_ROLLBACK_COMPLETE','Parameters':parameters}]},'ok'
+            if parts[1]=='describe-stack-events': return True,{'StackEvents':[{'LogicalResourceId':'CoreServerPersistenceService','ResourceType':'AWS::ECS::Service','ResourceStatus':'UPDATE_FAILED','ResourceStatusReason':'ECS deployment circuit breaker triggered'}]},'ok'
+            raise AssertionError(f'unexpected mutation or observation: {parts}')
+        provider=Provider(response)
+        with tempfile.TemporaryDirectory() as directory, patch.object(prepare,'aws',provider.aws), patch.object(module,'DIAGNOSTIC_DIRECTORY',Path(directory)):
+            report=result(lambda:module.reconcile(prepare,name,digest,revision))[1]
+            path=Path(directory)/(name+'.json')
+            self.assertEqual(report['verdict'],'failed')
+            self.assertTrue(path.is_file())
+            saved=json.loads(path.read_text(encoding='utf-8'))
+            self.assertEqual(saved['operation_outcome'],'failed')
+            self.assertEqual(saved['facts']['resource_logical_id'],'CoreServerPersistenceService')
+            self.assertNotIn('ECS deployment circuit breaker triggered',path.read_text(encoding='utf-8'))
+        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
 
     def test_missing_executed_change_set_reconciles_through_matching_stack_only(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
@@ -355,6 +392,11 @@ class ControllerRegression(unittest.TestCase):
         values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest'},{'ParameterKey':'RestoreVerifierImageDigest'}]},digest)
         self.assertEqual(len([item for item in values if item['ParameterKey']=='RestoreVerifierImageDigest']),1)
         self.assertEqual(values[-1]['ParameterValue'],digest)
+        egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':item['ParameterKey'],'ParameterValue':item.get('ParameterValue')} for item in values], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
+        self.assertTrue(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        self.assertEqual(surface.change_name(digest,'egress'),'kanbien-core-platform-persistence-restore-egress-'+'a'*12)
+        egress_change['Changes'].append({'ResourceChange':{'LogicalResourceId':'RestoredDatabaseIngressFromRestorationVerifier','ResourceType':'AWS::EC2::SecurityGroupIngress','Action':'Add'}})
+        self.assertFalse(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
         route=load(DEPLOY/'apply-private-verifier-route-update/script.py')
         report=result(lambda:route.report('updated','persistence-private-verifier-route-updated',facts={'change_set':'synthetic'}))[1]
         self.assertEqual(report['facts']['change_set'],'synthetic')
@@ -595,7 +637,7 @@ class ControllerRegression(unittest.TestCase):
                     mutations.append(parts)
                     tag_values=parts[parts.index('--tags')+1:]
                     tags=[{'Key':value.split(',Value=',1)[0][4:],'Value':value.split(',Value=',1)[1]} for value in tag_values]
-                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
+                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
                     return True,{},'ok'
                 raise AssertionError(f'unexpected provider action {parts}')
             provider=Provider(response)

@@ -28,6 +28,7 @@ for (const entrypoint of Object.keys(runtimeEntrypoints).map((entry) => `${entry
 const coreModules = ["audit", "authn", "authz", "config", "diagnostics", "events", "i18n", "logging", "monitoring", "persistence", "queues", "shared", "tenancy", "validation"];
 const packages = {
   "@kanbien/core": { ".": "packages/core/src/index.js", ...Object.fromEntries(coreModules.map((name) => [`./${name}`, `packages/core/src/${name}/index.js`])) },
+  "@kanbien/platform-adapter-aws-observability-cloudwatch": { ".": "platform/adapters/aws/observability/cloudwatch/src/index.js" },
   "@kanbien/platform-adapter-aws-persistence-postgresql": { ".": "platform/adapters/aws/persistence/postgresql/src/index.js" },
   "@kanbien/platform-config": { ".": "platform/config/src/index.js" },
   "@kanbien/platform-contracts": { ".": "platform/contracts/src/index.js" },

@@ -104,6 +104,35 @@ def rollback_compatibility(root: Path, retained: dict[str, str]) -> Path:
     return path
 
 
+def qualified_predecessor_compatibility(root: Path) -> Path:
+    """An earlier qualified release is selectable without becoming history."""
+    receipt = root / "proof-receipts" / "qualified-predecessor.json"
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text(json.dumps({"proof": "earlier image with corrected permissions"}), encoding="utf-8")
+    proof_set = {"rollback-b-health": {"path": str(receipt.relative_to(root)), "sha256": module.sha256_bytes(receipt.read_bytes())}}
+    contract_path = SCRIPT.relative_to(module.REPOSITORY_ROOT)
+    contract = {"path": str(contract_path), "sha256": module.sha256_bytes(SCRIPT.read_bytes())}
+    predecessor = {"source_revision": "2" * 40, "image_digest": "sha256:" + "2" * 64, "package_custody_reference": "github-actions-run:40232309637"}
+    identity = {
+        "target": "example-target", "scope": "example-scope",
+        "qualified_predecessor": predecessor,
+        "source_revision": predecessor["source_revision"], "image_digest": predecessor["image_digest"],
+        "configuration_contract": contract, "permission_contract": contract,
+        "workloads": ["core-server-service", "private-release-verifier-task"],
+        "proof_set_sha256": module.sha256_bytes(module.canonical(proof_set)),
+    }
+    identifier = "rollback-compatibility-" + __import__("hashlib").sha256(module.canonical(identity)).hexdigest()[:24]
+    value = {
+        "schema": module.COMPATIBILITY_SCHEMA, "target": identity["target"], "scope": identity["scope"], "status": "verified",
+        "qualified_predecessor": predecessor,
+        "rollback": {"id": identifier, **{key: identity[key] for key in ("configuration_contract", "permission_contract", "workloads", "proof_set_sha256")}},
+        "proof": {"qualified_at": "2026-10-25T12:00:00Z", "receipt_count": 1}, "proof_set": proof_set,
+    }
+    path = root / module.CANDIDATE_DIRECTORY / f"{identifier}.yml"
+    write(path, value)
+    return path
+
+
 def failure(*arguments: str) -> None:
     assert run(*arguments) == 1
 
@@ -168,6 +197,19 @@ with tempfile.TemporaryDirectory() as temporary:
     wrong_contract["rollback"]["id"] = "rollback-compatibility-" + __import__("hashlib").sha256(module.canonical(identity)).hexdigest()[:24]
     write(root / module.CANDIDATE_DIRECTORY / f"{wrong_contract['rollback']['id']}.yml", wrong_contract)
     failure("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / f"{wrong_contract['rollback']['id']}.yml"))
+
+    # An earlier qualified release can supply a rollback target after fresh
+    # contract-bound proof, without being retroactively written as accepted.
+    qualified = qualified_predecessor_compatibility(root)
+    assert run("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(qualified)) == 0
+    qualified_value = yaml.safe_load(qualified.read_text(encoding="utf-8"))
+    qualified_id = qualified_value["rollback"]["id"]
+    _, qualified_archive = module.compatibility_record(root, qualified_id)
+    assert qualified_archive["identity"]["qualified_predecessor"]["package_custody_reference"] == "github-actions-run:40232309637"
+    bad_qualified = yaml.safe_load(qualified.read_text(encoding="utf-8"))
+    bad_qualified["qualified_predecessor"]["package_custody_reference"] = "not-a-custody-reference"
+    write(root / module.CANDIDATE_DIRECTORY / "bad-qualified.yml", bad_qualified)
+    failure("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "bad-qualified.yml"))
 
     first_candidate = candidate(root, source="b" * 40, image="sha256:" + "b" * 64, configuration="sha256:" + "c" * 64, permissions="sha256:" + "d" * 64, proof="sha256:" + "e" * 64)
     assert run("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", first_id) == 0

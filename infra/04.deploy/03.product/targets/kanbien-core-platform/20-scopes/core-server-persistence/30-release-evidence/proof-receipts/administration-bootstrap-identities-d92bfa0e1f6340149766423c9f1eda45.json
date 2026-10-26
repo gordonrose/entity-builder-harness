@@ -1,0 +1,32 @@
+{
+  "context": {
+    "completion_deadline_seconds": 300,
+    "completion_duration_seconds": 23
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:769506b04b1338ac7f24e17fe862a9fb84e88a170c65a6923d96bc136dfe2ffa"
+  },
+  "operation": "bootstrap-identities",
+  "proof_type": "administration",
+  "provenance": {
+    "collected_at": "2026-10-25T19:45:56.438499Z",
+    "collection_method": "ecs-terminal-task+task-definition+safe-log",
+    "controller": "run-administration",
+    "evidence_class": "live"
+  },
+  "schema": "deploy/persistence-proof-receipt/v1",
+  "scope": "core-server-persistence",
+  "target": "kanbien-core-platform",
+  "task": {
+    "arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d92bfa0e1f6340149766423c9f1eda45",
+    "definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-administration:3",
+    "exit_code": 0,
+    "image_digest": "sha256:6fdd4a796989b6f4b1e8f114c056945c9ec8767c9d76fed65094d5a8bc02d19b",
+    "result_code": "PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED",
+    "started_at": "2026-10-25T20:45:24.297000+01:00",
+    "stopped_at": "2026-10-25T20:45:48.272000+01:00",
+    "stopped_reason": "Essential container in task exited",
+    "terminal_status": "STOPPED"
+  }
+}

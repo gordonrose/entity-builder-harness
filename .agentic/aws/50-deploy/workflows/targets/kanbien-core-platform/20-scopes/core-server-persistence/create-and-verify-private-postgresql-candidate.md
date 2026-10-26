@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
 version: 4
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -173,6 +173,16 @@ database. Then give the acceptance collector the exact paths reported by the
 controllers, all under
 `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/`:
 
+The derived restore must export only its PostgreSQL server log. If its verifier
+rejects, the controller makes a bounded, read-only observation of that
+derived instance's target-owned export over the verifier's execution window.
+It retains one closed classification (or `unavailable`) in the governed
+operation diagnostic; it never prints, commits, or stores a raw server event,
+log stream, endpoint, credential, or provider error. A missing or delayed
+export does not make the verifier successful and does not authorize a new
+task: reconcile the same operation first. This diagnosis supports correction;
+only an accepted verifier receipt can prove recovery.
+
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt runtime-identity-initial-access="$initial_identity_access_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
 ```
@@ -229,6 +239,17 @@ unknown field, conflicting task context, wrong target/image, missing terminal
 fact, or invalid sequence blocks acceptance.  If a proof completed before
 this control existed and no equally complete provider observation was retained,
 repeat only that governed proof and let its controller capture the receipt.
+
+An image change normally requires new receipts for every proof that executes
+that image. The only narrow exception is a record created by
+`qualify-proof-applicability`: it binds two qualified package receipts, retains
+them under the target evidence root, recomputes the exact Git source delta, and
+allows reuse only when that delta is confined to the isolated restore-verifier
+entrypoint and its controller/tests/evidence. It never permits reuse of the
+isolated-restore proof itself, current health, or a proof after a dependency,
+template, permission, configuration, Dockerfile, or shared runtime change.
+The acceptance input records the explicit path; a null value means ordinary
+same-image receipt matching remains mandatory.
 
 Run the bounded administrative bootstrap first. It is the only task permitted
 to create or alter bounded login roles, transfer ownership, or grant/revoke
@@ -339,6 +360,14 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 # Retire only that derived temporary database after the evidence is retained:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh --operation cleanup --snapshot-id "$snapshot" --json
 ```
+
+The first verifier launch waits for one bounded restoration-identity
+stabilization interval after the exact temporary `rds-db:connect` policy is
+observed, then re-observes that policy before submitting the task. This covers
+normal IAM/RDS propagation without retrying a verifier that has already run.
+An unsuccessful verifier remains a failed completion: collect its closed safe
+result, clean up the derived database, diagnose through governed controls, and
+start a fresh rehearsal only after the correction is reviewed.
 
 New restores retain source, snapshot, record and proof-digest tags. Continue
 with the same snapshot and record receipt; existing resources with absent or
@@ -472,6 +501,81 @@ If the control cannot prove the failed state, exact target tag, quiesced
 service, protected database, post-unlock observation, or stack deletion, it
 blocks without substituting a manual cleanup procedure.
 
+## Dedicated Observability MVP Activation
+
+The first observability proof uses a separate private collector service, not a
+sidecar sharing the server's RDS-capable task role. After both the server and
+collector are qualified from the same source revision, the only activation
+route is the controller below. It accepts a target-only notification address
+at execution time; that address is never stored in the repository.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --json
+```
+
+Before creating a named UPDATE change set, the controller requires the
+declaration and package gates, healthy server, target budget, aligned
+foundation, clean immutable server and collector images, and matching source
+revisions. Its review permits only the enumerated collector identity, private
+OTLP route, non-secret configuration, alarms, notification topic and
+subscription, collector task/service, and server task/service update. Any
+database, secret, broad permission, public route, or unrelated resource
+change blocks the operation. A lost response is reconciled through the same
+digest-derived change-set name:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --reconcile --json
+```
+
+This update only composes the delivery path. It is not observability
+acceptance: the retained readiness-failure, alarm-notification, and recovery
+receipts plus fresh service/database/cleanup observations remain required.
+
+### Readiness Failure, Notification and Recovery Rehearsal
+
+Run the one bounded controlled-failure sequence only after the target-owned
+email subscription is confirmed. The controller first retains the completed
+private verifier proof and matching metric/alarm observation; an interruption
+therefore resumes from that receipt instead of revoking access again. The
+operator records confirmation timestamps but never email content, recipient,
+or notification payload. A confirmed subscription alone is not proof that the
+failure notification was received.
+
+```bash
+# 1. revoke only the runtime IAM identity; retain the unready verifier,
+#    readiness metric 0, and ALARM observation before returning.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation prepare-failure --json
+
+# 2. after the same ALARM notification has actually arrived, record only the
+#    two factual confirmation timestamps and the retained failure receipt.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation record-notification --failure-receipt "$failure_receipt" --subscription-confirmed-at "$subscription_confirmed_at" --operator-delivery-confirmed-at "$delivery_confirmed_at" --json
+
+# 3. restore the limited IAM identity, replace the server, prove ready/read,
+#    then retain readiness metric 1 and the recovered OK alarm observation.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh --receipt "$receipt" --operation recover --failure-receipt "$failure_receipt" --notification-receipt "$notification_receipt" --json
+```
+
+The three receipts live under the target's `30-release-evidence/observability-receipts/` directory. The existing accepted record and historic proof receipts stay immutable. A future acceptance collection consumes the receipt map alongside its fresh current-state observations; elapsed ECS stopped-task retention never justifies another failure exercise.
+
+### Readiness Metric Delivery Repair
+
+If the collector is already live and a reviewed declaration correction changes
+only its allowlisted non-secret metric-export configuration, use the same
+controller with the explicit repair mode:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --repair-readiness-metric-delivery --json
+```
+
+The repair route requires the already-enabled target to retain the exact
+qualified server and collector identities, source revision, and all other
+current activation parameters; it also requires both services to be healthy
+before a change set is created. Review admits exactly two modifications:
+`ObservabilityCollectorTaskDefinition` and `ObservabilityCollectorService`.
+It cannot add resources or change the server, database, network, IAM,
+notification, alarms, image, or secret bindings. A lost response is observed
+through the same named change set with `--reconcile` and the same repair flag.
+
 ## Bounded Private Verifier Route Correction
 
 When a completed migration and healthy server prove that only the private
@@ -494,10 +598,13 @@ match before initial execution.
 
 For an existing candidate missing the isolated restoration surface, the fixed
 `apply-restoration-verifier-surface` control may add only its enumerated restore
-security groups, network rules, execution role and task definition. It preserves
-all other current stack parameters and supplies one qualified restore image
-digest. It must reject any additional change. This is a separate approved
-provider correction, not permission to change the source database or credentials.
+security groups, network rules, execution role and task definition. For an
+already-created restoration surface, its explicit `--mode egress` correction
+may add only `RestorationVerifierRestoredDatabaseEgress`; it rejects every
+other logical resource, action, type, parameter, source-database or credential
+change. Both modes preserve all other current stack parameters and supply one
+qualified restore image digest. This is a separate approved provider correction,
+not permission to change the source database or credentials.
 Use the same receipt plus `--reconcile` after interruption; observation contains
 no mutation. The normal CREATE includes this surface already.
 
@@ -520,6 +627,7 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `transition-qualified-release` | Same operation/receipt with `--reconcile`; no repeated UPDATE execution. |
 | `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
 | `apply-restoration-verifier-surface` | Same receipt with `--reconcile`; no repeated surface update. |
+| `apply-observability-mvp-surface` | Same server/collector receipts with `--reconcile`; no repeated observability update. |
 | `retire-failed-candidate` | Retained exact stack ARN with `--reconcile-stack-id`; explicit `--continue-stack-id` advances only the incomplete deletion stage after safety checks. |
 
 The regression suite at
@@ -544,11 +652,19 @@ the acceptance stage.
 After every run proof completes, retain a `deploy/acceptance-inputs/v1` manifest
 with `target: kanbien-core-platform`, `scope: core-server-persistence`, and
 `values` matching the route's typed inputs: the qualified candidate and rollback
-receipts, the fifteen-name `proof_receipts` mapping, original/successor task
+receipts, the fifteen-name `proof_receipts` mapping, the three-name
+`observability_receipts` mapping (`readiness-failure-observed`,
+`readiness-alarm-notified`, `readiness-recovery-observed`), original/successor task
 identities, exact recovery snapshot, successful retained source-record proof,
 and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
 Use paths to existing controller receipts. Missing ECS history is not permission
-to synthesize a receipt or replay a completed mutation.
+to synthesize a receipt or replay a completed mutation. The normal value of
+`proof_applicability` is `null`: every required proof must bind directly to the
+candidate's immutable image. It may name a target-owned applicability record
+only when the `qualify-proof-applicability` command has preserved both package
+receipts and proven the exact source delta is restore-verifier-only. That record
+can reuse only its closed allowlist of unaffected predecessor receipts; it
+cannot carry an isolated restore proof or replace any fresh provider observation.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --inputs "$acceptance_inputs" --json
