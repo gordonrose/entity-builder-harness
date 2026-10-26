@@ -76,6 +76,11 @@ MODIFIED = {
     "CoreServerPersistenceService": "AWS::ECS::Service",
     "ServerTaskRole": "AWS::IAM::Role",
 }
+REPAIR_ADDED: dict[str, str] = {}
+REPAIR_MODIFIED = {
+    "ObservabilityCollectorTaskDefinition": "AWS::ECS::TaskDefinition",
+    "ObservabilityCollectorService": "AWS::ECS::Service",
+}
 
 
 def load(path: Path, name: str):
@@ -153,7 +158,11 @@ def name_matches(value: object, name: str) -> bool:
     return value == name or (isinstance(value, str) and value.startswith("arn:aws:cloudformation:") and value.split(":changeSet/", 1)[-1].split("/", 1)[0] == name)
 
 
-def review(change: object, name: str, server: dict, collector: dict, alert_email: str, collector_image: str) -> bool:
+def review(
+    change: object, name: str, server: dict, collector: dict, alert_email: str,
+    collector_image: str, *, expected_added: dict[str, str] = ADDED,
+    expected_modified: dict[str, str] = MODIFIED,
+) -> bool:
     if not isinstance(change, dict) or change.get("Status") != "CREATE_COMPLETE" or change.get("ChangeSetType") not in {None, "UPDATE"} or not name_matches(change.get("ChangeSetName"), name):
         return False
     values = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
@@ -170,13 +179,13 @@ def review(change: object, name: str, server: dict, collector: dict, alert_email
         if not isinstance(value, dict):
             return False
         logical, kind, action = value.get("LogicalResourceId"), value.get("ResourceType"), value.get("Action")
-        if action == "Add" and ADDED.get(logical) == kind:
+        if action == "Add" and expected_added.get(logical) == kind:
             added.add(logical)
-        elif action == "Modify" and MODIFIED.get(logical) == kind:
+        elif action == "Modify" and expected_modified.get(logical) == kind:
             modified.add(logical)
         else:
             return False
-    return added == set(ADDED) and modified == set(MODIFIED)
+    return added == set(expected_added) and modified == set(expected_modified)
 
 
 def template_fingerprint() -> str:
@@ -204,19 +213,20 @@ def change_name(server: dict, collector: dict, alert_email: str) -> str:
     return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}-{template_fingerprint()}-{recipient}"
 
 
-def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str) -> int:
-    verdict, code = prepare.observe_update(name, expected, lambda value: review(value, name, server, collector, alert_email, expected["ObservabilityCollectorImage"]))
+def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str, *, expected_added: dict[str, str] = ADDED, expected_modified: dict[str, str] = MODIFIED) -> int:
+    observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
+    verdict, code = prepare.observe_update(name, observable_expected, lambda value: review(value, name, server, collector, alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified))
     return report("updated-awaiting-observability-proof" if verdict == "complete" else verdict, code, facts={"change_set": name, "server_image_digest": server["image_digest"], "collector_image_digest": collector["image_digest"]})
 
 
-def wait_for_review(prepare, name: str, server: dict, collector: dict, alert_email: str, collector_image: str) -> tuple[dict | None, str]:
+def wait_for_review(prepare, name: str, server: dict, collector: dict, alert_email: str, collector_image: str, *, expected_added: dict[str, str] = ADDED, expected_modified: dict[str, str] = MODIFIED) -> tuple[dict | None, str]:
     for attempt in range(6):
         ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
         if not ok:
             return None, code
         if isinstance(change, dict) and change.get("Status") == "FAILED":
             return None, "persistence-observability-mvp-change-set-failed"
-        if review(change, name, server, collector, alert_email, collector_image):
+        if review(change, name, server, collector, alert_email, collector_image, expected_added=expected_added, expected_modified=expected_modified):
             return change, "ok"
         if attempt < 5:
             time.sleep(2)
@@ -228,6 +238,7 @@ def main() -> int:
     parser.add_argument("--server-receipt", type=Path)
     parser.add_argument("--collector-receipt", type=Path)
     parser.add_argument("--alert-email")
+    parser.add_argument("--repair-readiness-metric-delivery", action="store_true")
     parser.add_argument("--reconcile", action="store_true")
     parser.add_argument("--json", action="store_true")
     args, unknown = parser.parse_known_args()
@@ -250,8 +261,6 @@ def main() -> int:
     if foundation is None:
         return report("blocked", code)
     expected = {"ImageDigest": server["image_digest"], "SupportImageDigest": server["image_digest"], "RestoreVerifierImageDigest": server["image_digest"], "SourceRevision": server["source_revision"], "EnableObservability": "true", "ObservabilityCollectorImage": f"{foundation['RepositoryUri']}@{collector['image_digest']}", "ObservabilityAlertEmail": args.alert_email}
-    if args.reconcile:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email)
     infrastructure, code = prepare.infrastructure_parameters(foundation)
     if infrastructure is None:
         return report("blocked", code)
@@ -259,12 +268,20 @@ def main() -> int:
     current = parameters(stack) if ok else None
     if current is None or stack.get("Stacks", [{}])[0].get("StackStatus") not in {"CREATE_COMPLETE", "UPDATE_COMPLETE"}:
         return report("blocked", code if not ok else "persistence-observability-mvp-stack-not-healthy")
-    if current.get("EnableObservability") != "false":
+    expected_added, expected_modified = (REPAIR_ADDED, REPAIR_MODIFIED) if args.repair_readiness_metric_delivery else (ADDED, MODIFIED)
+    if args.reconcile:
+        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
+    observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
+    if args.repair_readiness_metric_delivery:
+        if current.get("EnableObservability") != "true" or any(current.get(key) != value for key, value in observable_expected.items()):
+            return report("blocked", "persistence-observability-mvp-repair-baseline-mismatch")
+    elif current.get("EnableObservability") != "false":
         return report("blocked", "persistence-observability-mvp-not-at-unactivated-baseline")
-    ok, observed, code = prepare.aws("ecs", "describe-services", "--cluster", CLUSTER, "--services", SERVER_SERVICE)
+    service_names = [SERVER_SERVICE, COLLECTOR_SERVICE] if args.repair_readiness_metric_delivery else [SERVER_SERVICE]
+    ok, observed, code = prepare.aws("ecs", "describe-services", "--cluster", CLUSTER, "--services", *service_names)
     services = observed.get("services") if ok and isinstance(observed, dict) else None
-    if not isinstance(services, list) or len(services) != 1 or not healthy(services[0]):
-        return report("blocked", "persistence-observability-mvp-server-not-healthy")
+    if not isinstance(services, list) or len(services) != len(service_names) or not all(healthy(item) for item in services):
+        return report("blocked", "persistence-observability-mvp-services-not-healthy")
     values = {**infrastructure, "ImageRepositoryArn": f"arn:aws:ecr:{prepare.REGION}:{prepare.ACCOUNT}:repository/kanbien-core-platform/core-server", "ImageRepositoryUri": foundation["RepositoryUri"], **expected}
     ok, _, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok:
@@ -277,19 +294,18 @@ def main() -> int:
             ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
         if not ok:
             return report("uncertain", code, facts={"change_set": name})
-    change, code = wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"])
+    change, code = wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"], expected_added=expected_added, expected_modified=expected_modified)
     if change is None:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email)
+        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
     if change.get("ExecutionStatus") != "AVAILABLE":
-        return reconcile(prepare, name, expected, server, collector, args.alert_email)
+        return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
     actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
     if not prepare.update_parameters_match(actual, observable_expected, current):
         return report("blocked", "persistence-observability-mvp-parameters-mismatch")
     ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok:
         return report("uncertain", code, facts={"change_set": name})
-    return reconcile(prepare, name, expected, server, collector, args.alert_email)
+    return reconcile(prepare, name, expected, server, collector, args.alert_email, expected_added=expected_added, expected_modified=expected_modified)
 
 
 if __name__ == "__main__":

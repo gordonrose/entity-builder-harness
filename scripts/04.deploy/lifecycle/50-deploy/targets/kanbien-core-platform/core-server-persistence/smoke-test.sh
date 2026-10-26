@@ -73,6 +73,14 @@ assert not module.review({**valid, "Changes": changes[:-1]}, name, server, colle
 assert not module.review({**valid, "Changes": changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "PersistenceDatabase", "ResourceType": "AWS::RDS::DBInstance"}}]}, name, server, collector, email, collector_image)
 assert not module.review({**valid, "Parameters": parameters[:-1]}, name, server, collector, email, collector_image)
 assert not module.review({**valid, "Parameters": parameters[:-2] + [{"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector["image_digest"]}, {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"}]}, name, server, collector, email, collector_image)
+repair_changes = [
+    {"ResourceChange": {"Action": "Modify", "LogicalResourceId": logical, "ResourceType": resource_type}}
+    for logical, resource_type in module.REPAIR_MODIFIED.items()
+]
+repair = {**valid, "Changes": repair_changes}
+assert module.review(repair, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
+assert not module.review(valid, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
+assert not module.review({**repair, "Changes": repair_changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "CoreServerPersistenceService", "ResourceType": "AWS::ECS::Service"}}]}, name, server, collector, email, collector_image, expected_added=module.REPAIR_ADDED, expected_modified=module.REPAIR_MODIFIED)
 assert module.change_name(server, collector, "other@example.invalid") != name
 assert module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 1})
 assert not module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 0})

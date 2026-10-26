@@ -531,6 +531,25 @@ This update only composes the delivery path. It is not observability
 acceptance: the retained readiness-failure, alarm-notification, and recovery
 receipts plus fresh service/database/cleanup observations remain required.
 
+### Readiness Metric Delivery Repair
+
+If the collector is already live and a reviewed declaration correction changes
+only its allowlisted non-secret metric-export configuration, use the same
+controller with the explicit repair mode:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh --server-receipt "$server_receipt" --collector-receipt "$collector_receipt" --alert-email "$alert_email" --repair-readiness-metric-delivery --json
+```
+
+The repair route requires the already-enabled target to retain the exact
+qualified server and collector identities, source revision, and all other
+current activation parameters; it also requires both services to be healthy
+before a change set is created. Review admits exactly two modifications:
+`ObservabilityCollectorTaskDefinition` and `ObservabilityCollectorService`.
+It cannot add resources or change the server, database, network, IAM,
+notification, alarms, image, or secret bindings. A lost response is observed
+through the same named change set with `--reconcile` and the same repair flag.
+
 ## Bounded Private Verifier Route Correction
 
 When a completed migration and healthy server prove that only the private
