@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.persistence-acceptance-route.impl
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -69,7 +69,8 @@ def custody(path,digest):
     path.write_text(json.dumps(value));return str(path)
 
 def hashes():
-    files=[ROOT/RECORD,ROOT/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml',ROOT/TARGET/'20-scopes/scope-index.yml',*(ROOT/SCOPE/'30-release-evidence/proof-receipts').glob('*.json')]
+    evidence = ROOT / SCOPE / '30-release-evidence'
+    files=[ROOT/RECORD,ROOT/TARGET/'20-scopes/bootstrap-runtime/30-release-evidence/accepted-release.yml',ROOT/TARGET/'20-scopes/scope-index.yml',*(evidence/'proof-receipts').glob('*.json'),*(evidence/'observability-receipts').glob('*.json')]
     # Durable live receipts accumulate as governed proofs complete. The
     # rehearsal protects byte-for-byte preservation of the current set below;
     # it must not assume a fixed historical receipt count.
@@ -104,6 +105,9 @@ def route_tests():
     check_mutation(lambda v:v['accepted_record'].__setitem__('schema_path','missing/schema.yml'),'acceptance-route-record-schema-missing',True)
     check_mutation(lambda v:v.pop('release_succession'),'acceptance-route-release-succession-missing',True)
     check_mutation(lambda v:v['release_succession'].__setitem__('promotion','promote'),'acceptance-route-release-succession-command-invalid',True)
+    check_mutation(lambda v:v.pop('outputs'),'acceptance-route-outputs-invalid',True)
+    check_mutation(lambda v:v.pop('candidate_validator'),'acceptance-route-stage-missing',True)
+    check_mutation(lambda v:v.__setitem__('release_succession',{'not_applicable':'accepted-historical'}),'acceptance-route-succession-non-applicability-invalid',True)
     passed('malformed proof, missing succession, scope activation substitution, wrong owner/effects and missing schema never execute commands')
 
 
@@ -159,18 +163,46 @@ def full_route():
         shutil.copytree(ROOT/'.agentic/04.deploy/60-run/schemas',root/'.agentic/04.deploy/60-run/schemas')
         shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
         image_contract=Path(yaml.safe_load((root/CONTRACT).read_text())['program']['image_contract']);(root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
-        shutil.rmtree(root/SCOPE/'30-release-evidence/proof-receipts');(root/RECORD).unlink()
-        (root/SCOPE/'30-release-evidence/current-accepted-release.yml').unlink()
-        shutil.rmtree(root/SCOPE/'30-release-evidence/accepted-releases')
+        evidence_root=root/SCOPE/'30-release-evidence'
+        # Construct a simulated predecessor in this disposable tree. Copied
+        # live archives cannot be relabelled as simulated history.
+        for name in ['current-accepted-release.yml','accepted-releases']:
+            path=evidence_root/name
+            if path.is_dir():shutil.rmtree(path)
+            elif path.exists():path.unlink()
+        legacy=yaml.safe_load((root/RECORD).read_text());legacy.update(status='rehearsed',evidence_class='simulated')
+        (root/RECORD).write_text(yaml.safe_dump(legacy,sort_keys=False))
+        cli(Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.sh'),'--operation','initialize-legacy','--evidence-root',evidence_root,'--legacy-record',root/RECORD,'--expected-predecessor','none','--rehearsal-root',root,'--json')
+        historical_record=(root/RECORD).read_bytes()
+        initial_candidates={path:path.read_bytes() for path in (evidence_root/'release-candidates').glob('*.yml')}
+        shutil.rmtree(evidence_root/'proof-receipts')
         facts=fixtures.capture_proofs(root)
         assert len(facts['proof_receipts'])==15
         passed('actual controller observations retain all 15 simulated proof receipts')
-        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_ROOT=collector.RECORD.parent;collector.EVIDENCE_CLASS='simulated'
+        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_ROOT=evidence_root;collector.EVIDENCE_CLASS='simulated'
         now=datetime.now(timezone.utc);stamp=lambda value:value.isoformat().replace('+00:00','Z')
         runnable='sha256:'+'c'*64;image='337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+facts['candidate_digest']
         current=ARN+'f'*32;health=ARN+'e'*32
         definitions={'CoreServerPersistenceTaskDefinitionArn':DEFINITION+'kanbien-core-platform-core-server-persistence:1','CoreServerPersistenceVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-verifier:1','CoreServerPersistenceMigrationTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-migration:1','CoreServerPersistenceRestorationVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-restoration-verifier:1'}
-        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'rollback_compatibility_id':'rollback-compatibility-'+'a'*24}
+        observability_module=load(RUN/'observability-receipts.py','rehearsal_observability_receipts')
+        observability_module.RECEIPTS=root/SCOPE/'30-release-evidence/observability-receipts'
+        proof_module=load(RUN/'proof-receipts.py','rehearsal_task_receipts')
+        def observability_source(path):
+            raw=Path(path).read_bytes();proof=proof_module.validate(json.loads(raw))
+            task=proof['task']
+            return {'path':str(Path(path).relative_to(root)),'sha256':'sha256:'+hashlib.sha256(raw).hexdigest(),'task_arn':task['arn'],'task_definition':task['definition'],'image_digest':task['image_digest'],'result_code':task['result_code']}
+        failure_source=observability_source(facts['proof_receipts']['credential-revocation-unready'])
+        recovery_source=observability_source(facts['proof_receipts']['credential-recovery-health'])
+        failure_alarm=stamp(now-timedelta(minutes=4));failure_metric=stamp(now-timedelta(minutes=5));delivery=stamp(now-timedelta(minutes=3));recovery_metric=stamp(now-timedelta(minutes=2));recovery_alarm=stamp(now-timedelta(minutes=1))
+        failure=observability_module.persist(observability_module.make(receipt_type='readiness-failure-observed',source_proof=failure_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'ALARM','alarm_state_updated_at':failure_alarm,'metric_name':observability_module.METRIC,'dimensions':observability_module.DIMENSIONS,'metric_value':0,'metric_observed_at':failure_metric},collected_at=failure_alarm,evidence_class='simulated'))
+        notified=observability_module.persist(observability_module.make(receipt_type='readiness-alarm-notified',source_proof=failure_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'ALARM','alarm_state_updated_at':failure_alarm,'subscription_confirmed_at':stamp(now-timedelta(minutes=6)),'operator_delivery_confirmed_at':delivery},collected_at=delivery,evidence_class='simulated'))
+        recovered=observability_module.persist(observability_module.make(receipt_type='readiness-recovery-observed',source_proof=recovery_source,observation_value={'alarm_name':observability_module.ALARM,'alarm_state':'OK','alarm_state_updated_at':recovery_alarm,'metric_name':observability_module.METRIC,'dimensions':observability_module.DIMENSIONS,'metric_value':1,'metric_observed_at':recovery_metric},collected_at=recovery_alarm,evidence_class='simulated'))
+        observability_receipts={'readiness-failure-observed':str(failure),'readiness-alarm-notified':str(notified),'readiness-recovery-observed':str(recovered)}
+        # Package custody is acceptance evidence too.  Keep the simulated
+        # files in the same durable evidence root as production receipts so
+        # the generic successor validator exercises its allowlisted-root rule.
+        values={'candidate_receipt':custody(evidence_root/'package-receipts/candidate.json',facts['candidate_digest']),'rollback_receipt':custody(evidence_root/'package-receipts/rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'proof_applicability':None,'observability_receipts':observability_receipts}
+        values["rollback_compatibility_id"]="rollback-compatibility-"+"a"*24
         route_inputs=yaml.safe_load((ROOT/ROUTE).read_text())['inputs']
         values.update({key:spec['example'] for key,spec in route_inputs.items() if key.endswith('_predecessor')})
         manifest=root/'inputs.yml';manifest.write_text(yaml.safe_dump({'schema':'deploy/acceptance-inputs/v1','target':'kanbien-core-platform','scope':'core-server-persistence','values':values}))
@@ -200,23 +232,49 @@ def full_route():
                 return subprocess.CompletedProcess(argv,1 if state['cleanup'] else 0,'{}','DBInstanceNotFound' if state['cleanup'] else '')
             return real_run(argv,*args,**kwargs)
         with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
-            state['healthy']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-service-task-invalid'}] and not collector.RECORD.exists(),report
-            state['healthy']=True;state['cleanup']=False;code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-restored-database-not-cleaned-up'}] and not collector.RECORD.exists(),report
-            state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and not collector.RECORD.exists(),report;health_task['startedAt'],health_task['stoppedAt']=original
-            passed('fresh unhealthy, stale readiness and remaining restore block writes')
-            code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code==0 and report['verdict']=='recorded',report
-        candidate_path=Path(report['facts']['candidate_record'])
-        record=yaml.safe_load(collector.RECORD.read_text());assert record['status']=='rehearsed' and record['evidence_class']=='simulated'
+            parsed_observability = collector.parse_observability_receipts([name+'='+path for name,path in observability_receipts.items()], facts['candidate_digest'])
+            assert set(parsed_observability) == set(observability_receipts)
+            unchanged=lambda:{path:path.read_bytes() for path in (evidence_root/'release-candidates').glob('*.yml')}==initial_candidates
+            state['healthy']=False;code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-service-task-invalid'}] and unchanged(),report
+            state['healthy']=True;state['cleanup']=False;code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-restored-database-not-cleaned-up'}] and unchanged(),report
+            state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and unchanged(),report;health_task['startedAt'],health_task['stoppedAt']=original
+            passed('fresh unhealthy, stale readiness and remaining restore block candidate publication')
+            code,report=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code==0 and report['verdict']=='recorded' and report['facts']['candidate_record'],report
+            candidate_path=root/report['facts']['candidate_record'];candidate_bytes=candidate_path.read_bytes()
+            candidate_value=yaml.safe_load(candidate_bytes)
+            assert {'candidate-package','rollback-package','record-source','observability-readiness-failure-observed','observability-readiness-alarm-notified','observability-readiness-recovery-observed'} <= set(candidate_value['proof_set'])
+            succession=load(Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.py'),'retained_evidence_succession');succession.REPOSITORY_ROOT=root;succession.EVIDENCE_CLASS='simulated'
+            protected=evidence_root/candidate_value['proof_set']['observability-readiness-recovery-observed']['path'];original_protected=protected.read_bytes()
+            succession.candidate_identity(candidate_value,evidence_root)
+            protected.write_bytes(b'{"fabricated":true}')
+            try:
+                succession.candidate_identity(candidate_value,evidence_root)
+            except succession.SuccessionFailure: pass
+            else: raise AssertionError('modified retained observability receipt accepted')
+            protected.write_bytes(original_protected)
+            code,resumed=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code==0 and resumed['facts']==report['facts'] and candidate_path.read_bytes()==candidate_bytes,resumed
+        assert (root/RECORD).read_bytes()==historical_record
+        record=yaml.safe_load(collector.RECORD.read_text())
         assert {parts[-1] for parts in observations if parts[:2]==('ecs','describe-tasks')}=={health,current}
-        passed('complete collector writes temporary rehearsal using zero historical task queries')
-        validator=RUN/'validate-accepted-release/script.sh'
-        cli(validator,'--record',collector.RECORD,'--root',root,'--json',ok=False)
-        cli(validator,'--record',collector.RECORD,'--rehearsal-root',root,'--json')
-        passed('production rejects simulation; explicit temporary rehearsal validates retained chain')
-        with patch.object(collector,'RECORD',ROOT/RECORD):
-            try:collector.write_record(record)
-            except collector.EvidenceFailure as error:assert str(error)=='acceptance-evidence-simulation-production-write-forbidden'
-            else:raise AssertionError('simulation written to canonical evidence')
+        passed('complete collector publishes an idempotent successor candidate using zero historical task queries and preserves history')
+        succession=load(Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.py'),'rehearsal_succession');succession.REPOSITORY_ROOT=root;succession.EVIDENCE_CLASS='simulated'
+        candidate,raw=succession.document(candidate_path);target,scope,_,identity=succession.candidate_identity(candidate,evidence_root)
+        current_reference=succession.current(evidence_root);assert current_reference is not None
+        verdict,release_id=succession.promote(evidence_root,target=target,scope=scope,identity=identity,source_path=candidate_path,source_digest=succession.sha256_bytes(raw),expected_predecessor=current_reference['release_id'],legacy=False)
+        assert verdict=='promoted' and release_id==report['facts']['release_id'] and succession.current(evidence_root)['release_id']==release_id
+        passed('generic succession validates and atomically promotes the collector candidate after preserving the predecessor')
+        # Keep the complete historical-succession scenario, then exercise first
+        # scope activation with fresh observations in a separate evidence tree.
+        prior_scenario=root/'historical-succession-scenario'
+        evidence_root.rename(prior_scenario);evidence_root.mkdir()
+        for name in ['proof-receipts','observability-receipts','package-receipts']:
+            if (prior_scenario/name).exists():shutil.copytree(prior_scenario/name,evidence_root/name)
+        with patch.object(collector,'aws',aws),patch.object(collector,'live_budget',lambda:None),patch('subprocess.run',run):
+            code,fresh=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code==0 and fresh['verdict']=='recorded',fresh
+            code,fresh_candidate=capture(collector,['--inputs',str(manifest),'--write-candidate','--json']);assert code==0,fresh_candidate
+        candidate_path=root/fresh_candidate['facts']['candidate_record']
+        record=yaml.safe_load(collector.RECORD.read_text())
+
         receipts=collector.receipt_module();receipt=json.loads(Path(facts['record_proof_receipt']).read_text())
         for field,value in [('proof_type',[]),('operation',[]),('operation','../escape')]:
             malformed=copy.deepcopy(receipt);malformed[field]=value
@@ -278,7 +336,7 @@ def full_route():
         cli(succession,'--operation','validate-current','--evidence-root',evidence,'--rehearsal-root',root,'--json')
         cli(succession,'--operation','promote','--evidence-root',evidence,'--candidate-record',candidate_path,'--expected-predecessor',predecessor,'--rehearsal-root',root,'--json')
         cli(succession,'--operation','promote','--evidence-root',evidence,'--candidate-record',candidate_path,'--expected-predecessor','release-'+ '0'*24,'--rehearsal-root',root,'--json',ok=False)
-        cli(validator,'--record',collector.RECORD,'--rehearsal-root',root,'--json')
+        cli(RUN/'validate-accepted-release/script.sh','--record',collector.RECORD,'--rehearsal-root',root,'--json')
         passed('actual producer candidate uses evidence-relative paths and CLI succession preserves legacy, resumes idempotently and rejects stale predecessor')
         # Incomplete inputs and old raw task forms fail safely without provider access.
         with patch.object(collector,'aws',side_effect=AssertionError('malformed input queried provider')):

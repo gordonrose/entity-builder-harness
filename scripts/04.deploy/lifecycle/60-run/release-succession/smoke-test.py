@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.regression
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -39,7 +39,8 @@ def run(*arguments: str) -> int:
     result = subprocess.run(["bash", str(SCRIPT.with_name("script.sh")), *arguments, "--rehearsal-root", str(module.REPOSITORY_ROOT), "--json"], cwd=SCRIPT.parents[5], text=True, capture_output=True)
     try: value = json.loads(result.stdout)
     except ValueError: raise AssertionError((result.returncode, result.stdout, result.stderr)) from None
-    assert value.get("schema") == "deploy/release-succession-report/v1", value
+    expected_schema = "deploy/command-arguments-report/v1" if "--validate-arguments" in arguments and result.returncode == 0 else "deploy/release-succession-report/v1"
+    assert value.get("schema") == expected_schema, value
     print(json.dumps(value, sort_keys=True))
     return result.returncode
 
@@ -76,7 +77,7 @@ def candidate(root: Path, *, source: str, image: str, configuration: str, permis
         "scope": identity["scope"],
         "status": "verified",
         "release": {"id": module.release_id(identity), **{key: identity[key] for key in ("source_revision", "image_digest", "configuration_contract", "permission_contract", "proof_set_sha256")}},
-        "proof": {"accepted_at": accepted, "receipt_count": 1},
+        "proof": {"accepted_at": accepted, "receipt_count": len(proof_set)},
         "proof_set": proof_set,
     }
     path = root / module.CANDIDATE_DIRECTORY / f"{value['release']['id']}.yml"
@@ -102,6 +103,35 @@ def rollback_compatibility(root: Path, retained: dict[str, str]) -> Path:
     value = {
         "schema": module.COMPATIBILITY_SCHEMA, "evidence_class": "simulated", "target": identity["target"], "scope": identity["scope"], "status": "verified",
         "historical_release": {key: retained[key] for key in ("release_id", "source_revision", "image_digest")},
+        "rollback": {"id": identifier, **{key: identity[key] for key in ("configuration_contract", "permission_contract", "workloads", "proof_set_sha256")}},
+        "proof": {"qualified_at": "2026-10-25T12:00:00Z", "receipt_count": 1}, "proof_set": proof_set,
+    }
+    path = root / module.CANDIDATE_DIRECTORY / f"{identifier}.yml"
+    write(path, value)
+    return path
+
+
+def qualified_predecessor_compatibility(root: Path) -> Path:
+    """An earlier qualified release is selectable without becoming history."""
+    receipt = root / "proof-receipts" / "qualified-predecessor.json"
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text(json.dumps({"proof": "earlier image with corrected permissions"}), encoding="utf-8")
+    proof_set = {"rollback-b-health": {"path": str(receipt.relative_to(root)), "sha256": module.sha256_bytes(receipt.read_bytes())}}
+    contract_path = module.REPOSITORY_ROOT / "contracts/configuration.yml"
+    contract = {"path": "contracts/configuration.yml", "sha256": module.sha256_bytes(contract_path.read_bytes())}
+    predecessor = {"source_revision": "2" * 40, "image_digest": "sha256:" + "2" * 64, "package_custody_reference": "github-actions-run:40232309637"}
+    identity = {
+        "target": "example-target", "scope": "example-scope",
+        "qualified_predecessor": predecessor,
+        "source_revision": predecessor["source_revision"], "image_digest": predecessor["image_digest"],
+        "configuration_contract": contract, "permission_contract": contract,
+        "workloads": ["core-server-service", "private-release-verifier-task"],
+        "proof_set_sha256": module.sha256_bytes(module.canonical(proof_set)),
+    }
+    identifier = "rollback-compatibility-" + __import__("hashlib").sha256(module.canonical(identity)).hexdigest()[:24]
+    value = {
+        "schema": module.COMPATIBILITY_SCHEMA, "evidence_class": "simulated", "target": identity["target"], "scope": identity["scope"], "status": "verified",
+        "qualified_predecessor": predecessor,
         "rollback": {"id": identifier, **{key: identity[key] for key in ("configuration_contract", "permission_contract", "workloads", "proof_set_sha256")}},
         "proof": {"qualified_at": "2026-10-25T12:00:00Z", "receipt_count": 1}, "proof_set": proof_set,
     }
@@ -179,7 +209,37 @@ with tempfile.TemporaryDirectory() as temporary:
     write(root / module.CANDIDATE_DIRECTORY / f"{wrong_contract['rollback']['id']}.yml", wrong_contract)
     failure("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / f"{wrong_contract['rollback']['id']}.yml"))
 
+    # An earlier qualified release can supply a rollback target after fresh
+    # contract-bound proof, without being retroactively written as accepted.
+    qualified = qualified_predecessor_compatibility(root)
+    assert run("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(qualified)) == 0
+    qualified_value = yaml.safe_load(qualified.read_text(encoding="utf-8"))
+    qualified_id = qualified_value["rollback"]["id"]
+    _, qualified_archive = module.compatibility_record(root, qualified_id)
+    assert qualified_archive["identity"]["qualified_predecessor"]["package_custody_reference"] == "github-actions-run:40232309637"
+    bad_qualified = yaml.safe_load(qualified.read_text(encoding="utf-8"))
+    bad_qualified["qualified_predecessor"]["package_custody_reference"] = "not-a-custody-reference"
+    write(root / module.CANDIDATE_DIRECTORY / "bad-qualified.yml", bad_qualified)
+    failure("--operation", "record-compatibility", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "bad-qualified.yml"))
+
     first_candidate = candidate(root, source="b" * 40, image="sha256:" + "b" * 64, configuration="sha256:" + "c" * 64, permissions="sha256:" + "d" * 64, proof="sha256:" + "e" * 64)
+    # Candidate validation is independently available to the acceptance route;
+    # it cannot advance the current reference or accept a malformed candidate.
+    current_before_validation = (root / module.CURRENT).read_bytes()
+    assert run("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--validate-arguments") == 0
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--validate-arguments")
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--legacy-record", str(legacy), "--validate-arguments")
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", "none", "--validate-arguments")
+    assert run("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(first_candidate)) == 0
+    assert (root / module.CURRENT).read_bytes() == current_before_validation
+    invalid_candidate = yaml.safe_load(first_candidate.read_text(encoding="utf-8"))
+    invalid_candidate["proof_set"]["complete-proof"]["sha256"] = "sha256:" + "0" * 64
+    write(root / module.CANDIDATE_DIRECTORY / "invalid-candidate.yml", invalid_candidate)
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "invalid-candidate.yml"))
+    wrong_count = yaml.safe_load(first_candidate.read_text(encoding="utf-8"))
+    wrong_count["proof"]["receipt_count"] = 2
+    write(root / module.CANDIDATE_DIRECTORY / "wrong-proof-count.yml", wrong_count)
+    failure("--operation", "validate-candidate", "--evidence-root", str(root), "--candidate-record", str(root / module.CANDIDATE_DIRECTORY / "wrong-proof-count.yml"))
     assert run("--operation", "promote", "--evidence-root", str(root), "--candidate-record", str(first_candidate), "--expected-predecessor", first_id) == 0
     second = module.current(root)
     assert second and second["predecessor"] == first_id
@@ -234,6 +294,25 @@ with tempfile.TemporaryDirectory() as temporary:
     current["record"]["sha256"] = "sha256:" + "0" * 64
     write(root / module.CURRENT, current)
     failure("--operation", "validate-current", "--evidence-root", str(root))
+
+# Rehearsal trees must be disjoint from an implementation checkout even when
+# that checkout itself lives below the temporary directory.
+with tempfile.TemporaryDirectory(prefix="succession-implementation-") as directory:
+    ancestor = Path(directory)
+    implementation = ancestor / "repository"
+    copied = implementation / "scripts/04.deploy/lifecycle/60-run/release-succession/script.py"
+    copied.parent.mkdir(parents=True)
+    copied.write_bytes(SCRIPT.read_bytes())
+    evidence = implementation / "30-release-evidence"
+    legacy = evidence / "accepted-release.yml"
+    write(legacy, {"schema": module.LEGACY_SCHEMA, "target": "example-target", "scope": "example-scope", "status": "rehearsed", "evidence_class": "simulated", "release": {"source_revision": "a" * 40, "image_digest": "sha256:" + "a" * 64}, "acceptance": {"rollback_release": {"source_revision": "0" * 40, "image_digest": "sha256:" + "0" * 64}}})
+    original = legacy.read_bytes()
+    for rehearsal in [ancestor, implementation, evidence]:
+        result = subprocess.run([sys.executable, "-B", str(copied), "--operation", "initialize-legacy", "--evidence-root", str(evidence), "--legacy-record", str(legacy), "--expected-predecessor", "none", "--rehearsal-root", str(rehearsal), "--json"], capture_output=True, text=True, timeout=10)
+        report = json.loads(result.stdout)
+        assert result.returncode == 1 and report["findings"] == [{"code": "release-succession-rehearsal-root-invalid"}], report
+        assert legacy.read_bytes() == original
+        assert sorted(path.name for path in evidence.iterdir()) == ["accepted-release.yml"]
 
 print("Release succession regressions passed.")
 

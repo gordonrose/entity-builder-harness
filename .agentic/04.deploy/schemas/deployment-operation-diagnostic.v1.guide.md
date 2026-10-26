@@ -4,7 +4,7 @@ id: deploy.schema.deployment-operation-diagnostic.v1.guide
 version: 1
 status: draft
 created_on: "2026-10-25"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.diagnostics
 disciplines: [security, sre, agentic]
@@ -46,3 +46,32 @@ For CloudFormation, the AWS helper reads the named change set and bounded stack
 events after the operation. It classifies only known patterns and otherwise
 records `provider-details-unavailable`. It does not infer a root cause from a
 missing event, and it does not repeat a create or execute operation.
+
+Optional `execution` copies only the validated closed adapter observation:
+classification, code-presence status, actual call phase and elapsed milliseconds
+(or null). `pool_connect` does not identify an internal handshake stage;
+`pool_query` includes acquisition. TCP and TLS probes have their own phases and
+connections. `query_canceled` does not establish whether a deadline or explicit
+cancellation caused it. No observation grants retry authority.
+
+Optional collection `observation` distinguishes complete, empty, unrecognized,
+malformed, incomplete, unavailable and failed observations. `attempts` counts
+at most three bounded reads in this invocation. Successful log reads can still
+be incomplete because pagination or export delay prevents a complete window.
+Historical v1 records lacking these optional fields remain valid. The shared
+builder, validator and CLI own the reader; retained reports are never migrated
+in place. Reconciliation writes a new diagnostic observation, preserving prior
+records and the original safe verifier code/status.
+
+`collection.task_observation` and `task_attempts` describe the verifier-log
+stream independently from the server-log window. A unique validated rejection
+survives malformed, unrecognized, missing later pages or failed collection;
+acceptance still requires a complete, valid success observation. A saturated
+page is incomplete. The evidence reference can include the safe ECS task id;
+`facts.artifact_identity` retains the observed immutable image digest.
+
+`authentication_material_invalid` is a closed adapter classification for the
+exact installed pg SCRAM invariant. The message is inspected privately and never
+retained. Its machine-code status remains `absent` or `unrecognized`; a known
+library invariant does not invent a recognized provider code. Its observed phase
+is the actual failed driver operation, usually `pool_connect`.

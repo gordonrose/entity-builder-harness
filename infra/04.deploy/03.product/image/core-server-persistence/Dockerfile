@@ -29,8 +29,8 @@ COPY platform/persistence/ ./platform/persistence/
 COPY platform/runtime/ ./platform/runtime/
 COPY platform/security/ ./platform/security/
 COPY platform/server/ ./platform/server/
-COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
 COPY platform/adapters/aws/observability/cloudwatch/ ./platform/adapters/aws/observability/cloudwatch/
+COPY platform/adapters/aws/persistence/postgresql/ ./platform/adapters/aws/persistence/postgresql/
 COPY infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts ./infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
 COPY infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts ./infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-postgresql.ts

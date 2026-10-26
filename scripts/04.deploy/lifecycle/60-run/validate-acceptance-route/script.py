@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -27,7 +27,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[5]
-CONTEXT = {'scope_contract', 'accepted_record', 'target_root', 'target_directory'}
+CONTEXT = {'scope_contract', 'accepted_record', 'target_root', 'target_directory', 'evidence_root', 'candidate_record', 'current_release_id'}
 
 
 def document(path: Path) -> dict:
@@ -94,14 +94,22 @@ def input_values(path: Path, route: dict, *, root: Path = ROOT) -> dict:
         value = values[key]
         if not isinstance(spec, dict): raise ValueError('acceptance-input-contract-invalid')
         kind = spec.get('kind')
-        if kind in {'path', 'identifier'}:
+        if kind in {'path', 'identifier', 'optional-path'}:
+            if kind == 'optional-path' and value is None:
+                continue
             if not isinstance(value, str) or not value or any(char in value for char in '\n\r\0'): raise ValueError('acceptance-input-value-invalid')
-            if kind == 'path':
+            if kind in {'path', 'optional-path'}:
                 selected = Path(value) if Path(value).is_absolute() else root / value
                 if not selected.is_file() or selected.is_symlink(): raise ValueError('acceptance-input-path-missing')
                 values[key] = str(selected)
-        elif kind == 'proof-map':
-            if not isinstance(value, dict) or set(value) != set(route.get('proofs', {})) or not all(isinstance(name, str) and isinstance(item, str) and item for name, item in value.items()): raise ValueError('acceptance-input-proof-map-invalid')
+        elif kind in {'proof-map', 'receipt-map'}:
+            expected = route.get('proofs', {}) if kind == 'proof-map' else spec.get('receipts')
+            if not isinstance(expected, (dict, list)):
+                raise ValueError('acceptance-input-receipt-map-invalid')
+            expected_names = set(expected)
+            if not expected_names or any(not isinstance(name, str) or not name for name in expected_names):
+                raise ValueError('acceptance-input-receipt-map-invalid')
+            if not isinstance(value, dict) or set(value) != expected_names or not all(isinstance(name, str) and isinstance(item, str) and item for name, item in value.items()): raise ValueError('acceptance-input-proof-map-invalid')
             for name, item in value.items():
                 selected = Path(item) if Path(item).is_absolute() else root / item
                 if not selected.is_file() or selected.is_symlink(): raise ValueError('acceptance-input-proof-path-missing')
@@ -137,9 +145,13 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if not isinstance(inputs, dict): gap('acceptance-route-inputs-invalid'); inputs = {}
     values = {}
     for key, spec in inputs.items():
-        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'proof-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
+        if not isinstance(key, str) or not re.fullmatch(r'[a-z][a-z0-9_]*', key) or not isinstance(spec, dict) or spec.get('kind') not in {'path', 'identifier', 'optional-path', 'proof-map', 'receipt-map'} or not isinstance(spec.get('owner'), str) or not spec['owner']:
             gap('acceptance-route-input-contract-invalid', key); continue
-        if spec['kind'] != 'proof-map':
+        if spec['kind'] == 'receipt-map':
+            receipt_names = spec.get('receipts')
+            if not isinstance(receipt_names, list) or not receipt_names or any(not isinstance(name, str) or not name for name in receipt_names) or len(set(receipt_names)) != len(receipt_names):
+                gap('acceptance-route-input-contract-invalid', key)
+        elif spec['kind'] != 'proof-map':
             if not isinstance(spec.get('example'), str) or not spec['example']: gap('acceptance-route-input-example-missing', key)
             else: values[key] = spec['example']
     inputs_schema = required_path(route.get('inputs_schema'), 'acceptance-route-input-schema-missing')
@@ -150,7 +162,30 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if record_schema and document(record_schema).get('record_schema') != record.get('schema'): gap('acceptance-route-record-schema-invalid')
     record_path = reference(scope_contract.parent.parent, record.get('path'))
     if record_path is None: gap('acceptance-route-record-path-invalid')
-    values.update(scope_contract=str(scope_contract), accepted_record=str(record_path or ''), target_root=str(scope_contract.parents[2]), target_directory=str(scope_contract.parents[3]))
+    succession = route.get('release_succession')
+    lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')
+    entries = lifecycle.get('scopes', [])
+    states = [entry.get('lifecycle') for entry in entries if isinstance(entry, dict) and entry.get('id') == contract.get('scope')]
+    historical_succession = isinstance(succession, dict) and set(succession) == {'not_applicable'} and succession['not_applicable'] in {'accepted-historical', 'retired'} and states == [succession['not_applicable']]
+    if not historical_succession:
+        outputs = route.get('outputs')
+        if not isinstance(outputs, dict) or set(outputs) != {'candidate_record', 'current_release_id'}:
+            gap('acceptance-route-outputs-invalid')
+            outputs = {}
+        expected_outputs = {
+            'candidate_record': {'command': 'collect', 'fact': 'candidate_record', 'kind': 'target-evidence-path'},
+            'current_release_id': {'command': 'current-release', 'fact': 'release_id', 'kind': 'release-id'},
+        }
+        if outputs != expected_outputs:
+            gap('acceptance-route-outputs-invalid')
+    evidence_root = scope_contract.parent.parent / '30-release-evidence'
+    values.update(
+        scope_contract=str(scope_contract), accepted_record=str(record_path or ''),
+        target_root=str(scope_contract.parents[2]), target_directory=str(scope_contract.parents[3]),
+        evidence_root=str(evidence_root),
+        candidate_record=str(evidence_root / 'release-candidates/release-aaaaaaaaaaaaaaaaaaaaaaaa.yml'),
+        current_release_id='release-aaaaaaaaaaaaaaaaaaaaaaaa',
+    )
     # The collector takes one bounded manifest; the contents are checked only at
     # the acceptance stage. A package build must not require future live proof.
     values['acceptance_inputs'] = '/tmp/acceptance-route-inputs.json'
@@ -182,7 +217,9 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
         if not isinstance(proof, dict) or not isinstance(proof.get('command'), str) or proof.get('command') not in commands or not all(isinstance(proof.get(field), str) and proof[field] for field in ('proof_type', 'operation', 'result_code', 'image_role')): gap('acceptance-route-proof-binding-invalid', name)
     sequence = route.get('sequence')
     if not isinstance(sequence, list) or any(not isinstance(pair, list) or len(pair) != 2 or any(not isinstance(name, str) or name not in proofs for name in pair) for pair in sequence): gap('acceptance-route-sequence-invalid')
-    for field, value in [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]:
+    stages = [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]
+    if not historical_succession: stages.append(('candidate-validator', route.get('candidate_validator')))
+    for field, value in stages:
         if not isinstance(value, str) or value not in commands: gap('acceptance-route-stage-missing', field)
     succession = route.get('release_succession')
     lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')

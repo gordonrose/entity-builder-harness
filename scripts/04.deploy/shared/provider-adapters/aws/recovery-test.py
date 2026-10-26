@@ -71,6 +71,14 @@ def fixture_root(root):
  inventory=root/'scripts/04.deploy/inventory-deploy-control/script.py';inventory.parent.mkdir(parents=True);inventory.write_text('print("covered synthetic fixture")\n')
 
 class RecoveryCli(unittest.TestCase):
+ def test_log_absence_is_operation_specific(self):
+  response=load(ROOT/'scripts/04.deploy/shared/provider-adapters/aws/response.py')
+  missing='An error occurred (ResourceNotFoundException) when calling the Fixture operation: private-canary'
+  for operation in ['filter-log-events','get-log-events']:
+   self.assertEqual(response.classify_error('logs',operation,missing),'aws-resource-missing')
+   self.assertEqual(response.classify_error('logs',operation,'not found private-canary'),'aws-command-failed')
+  self.assertEqual(response.classify_error('logs','delete-log-group',missing),'aws-command-failed')
+  self.assertEqual(response.classify_error('ecs','describe-tasks',missing),'aws-command-failed')
  def test_cognito_partial_absent_unknown_and_present_never_mutate(self):
   with tempfile.TemporaryDirectory(prefix='cognito-recovery-') as directory:
    root=Path(directory);fixture_root(root)

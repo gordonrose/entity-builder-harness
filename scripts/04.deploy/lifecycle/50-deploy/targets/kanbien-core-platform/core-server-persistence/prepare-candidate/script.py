@@ -47,7 +47,7 @@ def aws_response():
     return _AWS_RESPONSE
 
 
-def aws(*parts: str) -> tuple[bool, Any, str]:
+def aws_in_region(region: str, *parts: str) -> tuple[bool, Any, str]:
     if not aws_response().inventory_covered(ROOT):return False,None,"delivery-inventory-not-covered"
     try:
         result = subprocess.run(
@@ -55,7 +55,7 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
                 "aws", *parts,
                 "--cli-connect-timeout", str(AWS_CONNECT_TIMEOUT_SECONDS),
                 "--cli-read-timeout", str(AWS_READ_TIMEOUT_SECONDS),
-                "--profile", PROFILE, "--region", REGION, "--output", "json",
+                "--profile", PROFILE, "--region", region, "--output", "json",
             ],
             capture_output=True, text=True, timeout=AWS_PROCESS_TIMEOUT_SECONDS, env={**os.environ, "AWS_PAGER": ""},
         )
@@ -72,6 +72,10 @@ def aws(*parts: str) -> tuple[bool, Any, str]:
         return True, {} if not result.stdout.strip() else json.loads(result.stdout), "ok"
     except json.JSONDecodeError:
         return False, None, "aws-response-invalid"
+
+
+def aws(*parts: str) -> tuple[bool, Any, str]:
+    return aws_in_region(REGION, *parts)
 
 
 def report(verdict: str, codes: list[str], facts: dict[str, Any] | None = None) -> int:

@@ -3,15 +3,15 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.run-core-server-persistence-administration
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Start one bounded administrative PostgreSQL task and retain its successful proof receipt; ordinary migrations cannot invoke this credential path.
+#   purpose: Start one bounded administrative PostgreSQL task, or reconcile the exact retained terminal observation after host interruption; ordinary migrations cannot invoke this credential path.
 #   portability: { class: internal, targets: [] }
 #   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:

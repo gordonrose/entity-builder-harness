@@ -1,0 +1,31 @@
+{
+  "integrity": {
+    "algorithm": "sha256",
+    "payload_sha256": "sha256:b149aac322d081291e11a9d34e8b616bb80582a2b0640fc35a66370505d7767c"
+  },
+  "observation": {
+    "alarm_name": "kanbien-core-platform-core-server-postgresql-readiness-not-ready-or-silent",
+    "alarm_state": "ALARM",
+    "alarm_state_updated_at": "2026-10-26T12:00:39.355000Z",
+    "operator_delivery_confirmed_at": "2026-10-26T12:03:45Z",
+    "subscription_confirmed_at": "2026-10-26T12:03:45Z"
+  },
+  "provenance": {
+    "collected_at": "2026-10-26T12:04:02.237304Z",
+    "collection_method": "cloudwatch-alarm+metric+confirmed-subscription",
+    "controller": "rehearse-observability-readiness",
+    "evidence_class": "live"
+  },
+  "receipt_type": "readiness-alarm-notified",
+  "schema": "deploy/persistence-observability-receipt/v1",
+  "scope": "core-server-persistence",
+  "source_proof": {
+    "image_digest": "sha256:bd8960e5de1b92f2cab721b64f77ec9c5e1b37411a15c67269b9351979028569",
+    "path": "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/verifier-health-unready-d8aeec6b2ad94005948a084d5a6e9199.json",
+    "result_code": "KANBIEN_CORE_PERSISTENCE_LIVE_NOT_READY",
+    "sha256": "sha256:ab97817c63c5e4201dc9011957a35b1146fc91d8f3c5be9cac7c7aaae4a51fb3",
+    "task_arn": "arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/d8aeec6b2ad94005948a084d5a6e9199",
+    "task_definition": "arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-persistence-verifier:34"
+  },
+  "target": "kanbien-core-platform"
+}

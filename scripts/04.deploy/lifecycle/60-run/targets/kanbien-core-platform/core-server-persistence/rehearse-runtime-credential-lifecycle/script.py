@@ -6,6 +6,26 @@ resolvable.  It no longer rotates, reads, writes, or transports a long-lived
 database credential.  Runtime access is restored by the RDS IAM role and a
 new task.
 """
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+#   version: 1
+#   status: active
+#   created_on: "2026-10-24"
+#   updated_on: "2026-10-26"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence
+#   disciplines: [security, sre]
+#   kind: script
+#   purpose: Govern a bounded runtime IAM denial/recovery lifecycle and expose retained verifier receipts to its owning rehearsal.
+#   portability: { class: internal, targets: [] }
+#   argument_validation:
+#     flag: --validate-arguments
+#     effects: [read-only]
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
+#     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh
+#   effects: [network, writes-files]
 from __future__ import annotations
 
 import argparse
@@ -17,6 +37,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[8]
 CHILD_CHECKPOINT: dict[str, Any] | None = None
+LAST_SUCCESS: dict[str, Any] | None = None
 VERIFIER_OPERATIONS: dict[str, dict[str, str]] = {}
 
 def module(path: Path, name: str):
@@ -44,8 +65,9 @@ def last_report(stdout: str) -> dict[str, Any] | None:
     return None
 
 def child(path: str, *args: str) -> dict[str, Any] | None:
-    global CHILD_CHECKPOINT
+    global CHILD_CHECKPOINT, LAST_SUCCESS
     CHILD_CHECKPOINT = None
+    LAST_SUCCESS = None
     try:
         completed = subprocess.run(["bash", str(ROOT / path), *args], cwd=ROOT, capture_output=True, text=True, timeout=180)
         body = last_report(completed.stdout)
@@ -62,7 +84,18 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
         raw = observed.get("facts") if isinstance(observed.get("facts"), dict) else {}
         safe = {key: value for key, value in raw.items() if key in {"operation", "operation_id", "evidence_reuse", "administration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
         CHILD_CHECKPOINT = {"command": path, "verdict": observed.get("verdict") if observed.get("verdict") in {"pending", "failed", "uncertain"} else "uncertain", "facts": safe}
-    return body if succeeded and isinstance(body, dict) else None
+    if succeeded and isinstance(body, dict):
+        # A parent rehearsal may retain only these controller-produced receipt
+        # references.  It must never infer a completed task from console text.
+        facts = body.get("facts")
+        LAST_SUCCESS = {
+            key: value
+            for key, value in facts.items()
+            if key in {"proof_receipt", "operation", "task_arn"}
+            and isinstance(value, str)
+        } if isinstance(facts, dict) else {}
+        return body
+    return None
 
 def healthy(verify: str) -> bool:
     command = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh"
@@ -82,6 +115,11 @@ def healthy(verify: str) -> bool:
         VERIFIER_OPERATIONS[verify] = {key: value for key, value in facts.items() if key in {"operation_id", "verifier_task", "proof_receipt", "evidence_reuse"} and isinstance(value, str)}
     return True
 
+
+def verifier_receipt() -> str | None:
+    value = LAST_SUCCESS.get("proof_receipt") if isinstance(LAST_SUCCESS, dict) else None
+    return value if isinstance(value, str) and value else None
+
 def administer(operation: str) -> bool:
     """Use the separately governed administrator task for credential state."""
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh", "--operation", operation, "--json") is not None
@@ -89,19 +127,22 @@ def administer(operation: str) -> bool:
 def replace(receipt: Path) -> bool:
     return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh", "--receipt", str(receipt), "--json") is not None
 
-def recover(receipt: Path) -> str:
+def recover(receipt: Path) -> tuple[str, str | None]:
     """Restore only the bounded IAM identity after proven denied readiness."""
     if not administer("restore-runtime"):
-        return "persistence-runtime-identity-recovery-not-confirmed"
+        return "persistence-runtime-identity-recovery-not-confirmed", None
     if not replace(receipt):
-        return "persistence-runtime-identity-recovery-replacement-not-confirmed"
-    if not healthy("health-ready") or not healthy("read"):
-        return "persistence-runtime-identity-recovery-meaningful-operation-not-confirmed"
-    return "ok"
+        return "persistence-runtime-identity-recovery-replacement-not-confirmed", None
+    if not healthy("health-ready"):
+        return "persistence-runtime-identity-recovery-meaningful-operation-not-confirmed", None
+    ready_receipt = verifier_receipt()
+    if ready_receipt is None or not healthy("read"):
+        return "persistence-runtime-identity-recovery-meaningful-operation-not-confirmed", None
+    return "ok", ready_receipt
 
 def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation", choices=("revoke-and-recover", "recover-after-revocation")); parser.add_argument("--json", action="store_true")
+    parser.add_argument("--receipt", type=Path); parser.add_argument("--operation", choices=("revoke-and-recover", "revoke-await-observability", "recover-after-revocation")); parser.add_argument("--json", action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown or args.receipt is None or args.operation is None: return report("blocked", "persistence-runtime-identity-lifecycle-arguments-invalid")
@@ -113,15 +154,24 @@ def main() -> int:
     if args.operation == "recover-after-revocation":
         if not healthy("health-unready"):
             return report("blocked", "persistence-runtime-identity-revocation-denial-not-proven")
-        code = recover(args.receipt)
-        return report("accepted", "persistence-runtime-identity-recovery-proved") if code == "ok" else report("blocked", code)
+        code, ready_receipt = recover(args.receipt)
+        return report("accepted", "persistence-runtime-identity-recovery-proved", facts={"ready_verifier_receipt": ready_receipt} if ready_receipt else None) if code == "ok" else report("blocked", code)
     if not healthy("health-ready"):
         return report("blocked", "persistence-runtime-identity-baseline-health-not-proven")
     if not administer("revoke-runtime"):
         return report("blocked", "persistence-runtime-identity-revocation-not-confirmed")
     if not replace(args.receipt) or not healthy("health-unready"):
         return report("blocked", "persistence-runtime-identity-revocation-denial-not-proven")
-    code = recover(args.receipt)
-    return report("accepted", "persistence-runtime-identity-revocation-and-recovery-proved") if code == "ok" else report("blocked", code)
+    if args.operation == "revoke-await-observability":
+        receipt_path = verifier_receipt()
+        if receipt_path is None:
+            return report("blocked", "persistence-runtime-identity-unready-receipt-missing")
+        return report(
+            "prepared",
+            "persistence-runtime-identity-revocation-awaiting-observability",
+            facts={"unready_verifier_receipt": receipt_path},
+        )
+    code, ready_receipt = recover(args.receipt)
+    return report("accepted", "persistence-runtime-identity-revocation-and-recovery-proved", facts={"ready_verifier_receipt": ready_receipt} if ready_receipt else None) if code == "ok" else report("blocked", code)
 
 if __name__ == "__main__": raise SystemExit(main())

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.persistence-controller-reconciliation
-#   version: 4
+#   version: 6
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -57,7 +57,7 @@ def temporary_receipts(controller):
         subprocess.run(["git", "init", "--quiet", str(root)], check=True)
         receipts.RECEIPTS = root / 'proof-receipts'
         receipts.EVIDENCE_CLASS = 'simulated'
-        with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root):
+        with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root), (patch.object(controller, 'OPERATION_DIAGNOSTICS', root / 'operation-diagnostics') if hasattr(controller, 'OPERATION_DIAGNOSTICS') else contextlib.nullcontext()):
             yield receipts
 
 class Provider:
@@ -103,7 +103,7 @@ class ControllerRegression(unittest.TestCase):
         for name in ('transition-qualified-release','apply-private-verifier-route-update','apply-restoration-verifier-surface'):
             module=load(DEPLOY/name/'script.py')
             def response(parts):
-                if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':'CREATE_COMPLETE','Parameters':[]}]},'ok'
+                if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':'CREATE_COMPLETE','Parameters':[{'ParameterKey': key, 'ParameterValue': value} for key, value in {'ImageDigest': receipt['image_digest'], 'SupportImageDigest': receipt['image_digest'], 'RestoreVerifierImageDigest': receipt['image_digest'], 'SourceRevision': receipt['source_revision']}.items()]}]},'ok'
                 if parts[1]=='describe-services':return True,{'services':[{'desiredCount':1,'runningCount':1}]},'ok'
                 if parts[1]=='describe-change-set':return False,None,'aws-resource-missing'
                 if parts[1]=='create-change-set':return False,None,'aws-command-timeout'
@@ -126,6 +126,38 @@ class ControllerRegression(unittest.TestCase):
             self.assertTrue(report['facts']['change_set'].endswith('a'*12))
             self.assertEqual(len([parts for parts in provider.calls if parts[1]=='create-change-set']),1)
             self.assertFalse(any(parts[1]=='execute-change-set' for parts in provider.calls))
+
+    def test_image_transition_retains_unowned_stack_parameters_and_discards_only_rejected_review(self):
+        module = load(DEPLOY/'transition-qualified-release/script.py')
+        digest, revision = 'sha256:' + 'a' * 64, 'a' * 40
+        desired = {'ImageDigest': digest, 'SupportImageDigest': digest, 'RestoreVerifierImageDigest': digest, 'SourceRevision': revision}
+        current = {**desired, 'ImageDigest': 'sha256:' + 'c' * 64, 'SupportImageDigest': 'sha256:' + 'c' * 64, 'RestoreVerifierImageDigest': 'sha256:' + 'c' * 64, 'SourceRevision': 'c' * 40, 'EnableObservability': 'true', 'ObservabilityCollectorImage': 'synthetic@sha256:' + 'b' * 64, 'ObservabilityAlertEmail': '****'}
+        inputs = module.update_parameter_inputs(current, desired)
+        self.assertEqual({item['ParameterKey'] for item in inputs if item.get('UsePreviousValue')}, {'EnableObservability', 'ObservabilityCollectorImage', 'ObservabilityAlertEmail'})
+        self.assertTrue(all(item.get('UsePreviousValue') is True for item in inputs if item['ParameterKey'] not in desired))
+        self.assertIsNone(module.update_parameter_inputs({'ImageDigest': digest}, desired))
+
+        name = 'kanbien-core-platform-persistence-update-' + digest[7:19]
+        rejected = {'ChangeSetName': name, 'Status': 'CREATE_COMPLETE', 'ExecutionStatus': 'AVAILABLE', 'ChangeSetType': 'UPDATE', 'Parameters': [{'ParameterKey': key, 'ParameterValue': value} for key, value in {**desired, 'EnableObservability': 'false'}.items()], 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::CloudWatch::Alarm'}}]}
+        calls = {'describes': 0}
+        def response(parts):
+            if parts[1] == 'describe-change-set':
+                calls['describes'] += 1
+                return ((True, rejected, 'ok') if calls['describes'] == 1 else (False, None, 'aws-resource-missing'))
+            if parts[1] == 'delete-change-set': return True, {}, 'ok'
+            raise AssertionError(parts)
+        provider = Provider(response)
+        report = result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]
+        self.assertEqual(report['verdict'], 'discarded')
+        self.assertEqual(len([parts for parts in provider.calls if parts[1] == 'delete-change-set']), 1)
+
+        provider = Provider(lambda parts: (False, None, 'aws-resource-missing'))
+        self.assertEqual(result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]['verdict'], 'reconciled')
+        self.assertFalse(any(parts[1] == 'delete-change-set' for parts in provider.calls))
+
+        executable = {**rejected, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::Service'}}]}
+        provider = Provider(lambda parts: (True, executable, 'ok') if parts[1] == 'describe-change-set' else (_ for _ in ()).throw(AssertionError('must not delete executable review')))
+        self.assertEqual(result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]['verdict'], 'blocked')
 
     def test_original_create_command_does_not_execute_known_operation_twice(self):
         module=load(DEPLOY/'deploy-candidate/script.py')
@@ -240,19 +272,56 @@ class ControllerRegression(unittest.TestCase):
             elif name=='apply-private-verifier-route-update':changes=[{'ResourceChange':{'LogicalResourceId':'VerifierEgressToServer','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]
             else:changes=[{'ResourceChange':{'LogicalResourceId':'Runtime','ResourceType':'AWS::ECS::TaskDefinition','Action':'Modify'}}]
             change={'ChangeSetName':change_name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':key,'ParameterValue':value} for key,value in params.items()],'Changes':changes}
-            for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
-                def response(parts):
-                    if parts[1]=='describe-change-set':return True,change,'ok'
-                    if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
-                    raise AssertionError(f'mutation during reconciliation: {parts}')
-                provider=Provider(response)
-                with patch.object(prepare,'aws',provider.aws):
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                # A synthetic provider failure must never create a file in the
+                # canonical retained-evidence directory.  The production
+                # controller keeps that durable route; this fixture uses a
+                # temporary substitute while exercising the same write path.
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics:
+                    for status,verdict in [('UPDATE_IN_PROGRESS','pending'),('UPDATE_ROLLBACK_FAILED','failed'),('UPDATE_COMPLETE',success)]:
+                        def response(parts):
+                            if parts[1]=='describe-change-set':return True,change,'ok'
+                            if parts[1]=='describe-stacks':return True,{'Stacks':[{'StackStatus':status,'Parameters':change['Parameters']}]},'ok'
+                            raise AssertionError(f'mutation during reconciliation: {parts}')
+                        provider=Provider(response)
+                        with patch.object(prepare,'aws',provider.aws):
+                            call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
+                            self.assertEqual(result(call)[1]['verdict'],verdict)
+                        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
+            with tempfile.TemporaryDirectory(prefix='persistence-controller-diagnostics-') as directory:
+                diagnostics = patch.object(module, 'DIAGNOSTIC_DIRECTORY', Path(directory)) if name=='transition-qualified-release' else contextlib.nullcontext()
+                with diagnostics, patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
                     call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                    self.assertEqual(result(call)[1]['verdict'],verdict)
-                self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
-            with patch.object(prepare,'aws',return_value=(False,None,'aws-command-timeout')):
-                call=(lambda:module.reconcile(prepare,change_name,digest)) if name=='apply-restoration-verifier-surface' else (lambda:module.reconcile(prepare,change_name,digest,revision))
-                self.assertEqual(result(call)[1]['verdict'],'uncertain')
+                    self.assertEqual(result(call)[1]['verdict'],'uncertain')
+
+    def test_transition_failure_retains_allowlisted_diagnostic(self):
+        """A circuit-breaker failure survives controller reconciliation safely."""
+        module=load(DEPLOY/'transition-qualified-release/script.py')
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        digest='sha256:'+'a'*64; revision='a'*40; name='kanbien-core-platform-persistence-rollback-'+'a'*12
+        parameters=[{'ParameterKey':key,'ParameterValue':value} for key,value in {
+            'ImageDigest':digest,'SupportImageDigest':digest,
+            'RestoreVerifierImageDigest':digest,'SourceRevision':revision,
+        }.items()]
+        change={'ChangeSetName':name,'Status':'CREATE_COMPLETE','ExecutionStatus':'EXECUTE_COMPLETE','ChangeSetType':'UPDATE','Parameters':parameters,'Changes':[{'ResourceChange':{'ResourceType':'AWS::ECS::TaskDefinition'}}]}
+        self.assertTrue(module.reviewable(change,'UPDATE_ROLLBACK_COMPLETE',name,digest,revision))
+        def response(parts):
+            if parts[1]=='describe-change-set': return True,change,'ok'
+            if parts[1]=='describe-stacks': return True,{'Stacks':[{'StackStatus':'UPDATE_ROLLBACK_COMPLETE','Parameters':parameters}]},'ok'
+            if parts[1]=='describe-stack-events': return True,{'StackEvents':[{'LogicalResourceId':'CoreServerPersistenceService','ResourceType':'AWS::ECS::Service','ResourceStatus':'UPDATE_FAILED','ResourceStatusReason':'ECS deployment circuit breaker triggered'}]},'ok'
+            raise AssertionError(f'unexpected mutation or observation: {parts}')
+        provider=Provider(response)
+        with tempfile.TemporaryDirectory() as directory, patch.object(prepare,'aws',provider.aws), patch.object(module,'DIAGNOSTIC_DIRECTORY',Path(directory)):
+            report=result(lambda:module.reconcile(prepare,name,digest,revision))[1]
+            path=Path(directory)/(name+'.json')
+            self.assertEqual(report['verdict'],'failed')
+            self.assertTrue(path.is_file())
+            saved=json.loads(path.read_text(encoding='utf-8'))
+            self.assertEqual(saved['operation_outcome'],'failed')
+            self.assertEqual(saved['facts']['resource_logical_id'],'CoreServerPersistenceService')
+            self.assertNotIn('ECS deployment circuit breaker triggered',path.read_text(encoding='utf-8'))
+        self.assertTrue(all(parts[1].startswith('describe-') for parts in provider.calls))
 
     def test_missing_executed_change_set_reconciles_through_matching_stack_only(self):
         prepare=load(DEPLOY/'prepare-candidate/script.py')
@@ -307,8 +376,8 @@ class ControllerRegression(unittest.TestCase):
         for obsolete in ('advance_secret','current_secret_version','RUNTIME_SECRET_OUTPUT','SECRET_CHECKPOINT'):
             self.assertFalse(hasattr(module,obsolete))
         receipt=Path('synthetic-receipt.json')
-        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy:
-            self.assertEqual(module.recover(receipt),'ok')
+        with patch.object(module,'administer',return_value=True) as administer,patch.object(module,'replace',return_value=True) as replace,patch.object(module,'healthy',return_value=True) as healthy,patch.object(module,'verifier_receipt',return_value='fixture-readiness-receipt'):
+            self.assertEqual(module.recover(receipt),('ok','fixture-readiness-receipt'))
         administer.assert_called_once_with('restore-runtime')
         replace.assert_called_once_with(receipt)
         self.assertEqual(healthy.call_args_list,[call('health-ready'),call('read')])
@@ -343,6 +412,23 @@ class ControllerRegression(unittest.TestCase):
         provider=Provider(lambda parts:(True,{'events':[{'message':rejected}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
             self.assertEqual(module.accepted_log(task,'observe-migration-state'),(None,'persistence-administration-not-confirmed'))
+
+    def test_administration_observation_retry_reuses_exact_retained_receipt(self):
+        """An interrupted observation retry must not start a second task."""
+        module=load(RUN/'run-administration/script.py')
+        digest='sha256:'+'d'*64;definition='definition-safe'
+        task={'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'d'*32,'taskDefinitionArn':definition,'lastStatus':'STOPPED','startedAt':'2026-10-26T12:00:00Z','stoppedAt':'2026-10-26T12:00:08Z','stoppedReason':'Essential container in task exited','containers':[{'exitCode':0}]}
+        receipt=module.RECEIPTS.make(proof_type='administration',operation='prove-effective-privilege',task=task,image_digest=digest,result_code='PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN',context={'completion_deadline_seconds':300,'completion_duration_seconds':8},controller='run-administration',collected_at='2026-10-26T12:00:09Z')
+        with tempfile.TemporaryDirectory(prefix='administration-retained-receipt-') as directory:
+            destination=Path(directory)/'proof-receipts'
+            with patch.object(module,'ROOT',Path(directory)),patch.object(module,'deadline',return_value=300),patch.object(module.RECEIPTS,'RECEIPTS',destination),patch.object(module.MIGRATION,'outputs',side_effect=[({'CoreServerPersistenceAdministrationTaskDefinitionArn':definition,'PersistenceAdministrationSecurityGroupId':'sg-safe'},'ok'),({'PrivateSubnetIds':'subnet-safe'},'ok')]),patch.object(module.MIGRATION,'image_digest',return_value=digest),patch.object(module.MIGRATION,'aws',side_effect=AssertionError('retained observation retry must not submit or query a task')):
+                path=module.RECEIPTS.persist(receipt)
+                with patch.object(sys,'argv',['test','--operation','prove-effective-privilege']):
+                    code,report,_=result(module.main)
+            self.assertEqual(code,0,report)
+            self.assertEqual(report['findings'],[{'code':'persistence-administration-reconciled-retained-receipt'}])
+            self.assertTrue(report['facts']['proof_receipt'].endswith(path.name))
+            self.assertEqual(module.retained_observation('restore-runtime',definition),(None,None))
         unsafe=json.dumps({'verdict':'accepted','code':'PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED','password':'synthetic-canary'})
         provider=Provider(lambda parts:(True,{'events':[{'message':unsafe}]},'ok'))
         with patch.object(module.MIGRATION,'aws',provider.aws):
@@ -359,6 +445,11 @@ class ControllerRegression(unittest.TestCase):
         values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest'},{'ParameterKey':'RestoreVerifierImageDigest'}]},digest)
         self.assertEqual(len([item for item in values if item['ParameterKey']=='RestoreVerifierImageDigest']),1)
         self.assertEqual(values[-1]['ParameterValue'],digest)
+        egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':item['ParameterKey'],'ParameterValue':item.get('ParameterValue')} for item in values], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
+        self.assertTrue(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        self.assertEqual(surface.change_name(digest,'egress'),'kanbien-core-platform-persistence-restore-egress-'+'a'*12)
+        egress_change['Changes'].append({'ResourceChange':{'LogicalResourceId':'RestoredDatabaseIngressFromRestorationVerifier','ResourceType':'AWS::EC2::SecurityGroupIngress','Action':'Add'}})
+        self.assertFalse(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
         route=load(DEPLOY/'apply-private-verifier-route-update/script.py')
         report=result(lambda:route.report('updated','persistence-private-verifier-route-updated',facts={'change_set':'synthetic'}))[1]
         self.assertEqual(report['facts']['change_set'],'synthetic')
@@ -546,6 +637,7 @@ class ControllerRegression(unittest.TestCase):
             module=load(RUN/name/'script.py')
             output={output_key:'definition-safe','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
             with contextlib.ExitStack() as stack:
+                stack.enter_context(temporary_receipts(module))
                 stack.enter_context(patch.object(module,'outputs',return_value=(output,'ok')))
                 stack.enter_context(patch.object(module,'deadline',return_value=120))
                 if name=='verify-candidate':stack.enter_context(patch.object(module,'no_direct_database_credential',return_value=True))
@@ -599,7 +691,7 @@ class ControllerRegression(unittest.TestCase):
                     mutations.append(parts)
                     tag_values=parts[parts.index('--tags')+1:]
                     tags=[{'Key':value.split(',Value=',1)[0][4:],'Value':value.split(',Value=',1)[1]} for value in tag_values]
-                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
+                    state['database']={'DBInstanceIdentifier':restored_id,'DBInstanceStatus':'creating','TagList':tags,'PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'EnabledCloudwatchLogsExports':['postgresql'],'Engine':'postgres','DBSubnetGroup':{'DBSubnetGroupName':'private-subnets'},'VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}]}
                     return True,{},'ok'
                 raise AssertionError(f'unexpected provider action {parts}')
             provider=Provider(response)
@@ -693,6 +785,36 @@ class ControllerRegression(unittest.TestCase):
             self.assertEqual(captured['task']['arn'],original['taskArn'])
             self.assertEqual(captured['context']['successor_task_arn'],successor['taskArn'])
             self.assertEqual(captured['context']['runtime_task_definition'],old_definition)
+
+    def test_replacement_reconciliation_reuses_exact_retained_receipt(self):
+        """A host interruption after receipt persistence must not repeat a stop."""
+        module=load(RUN/'rehearse-server-replacement/script.py'); digest='sha256:'+'c'*64
+        prefix='arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'
+        definition='arn:aws:ecs:eu-west-1:337159794548:task-definition/kanbien-core-platform-core-server-persistence:34'
+        original={'taskArn':prefix+'a'*32,'taskDefinitionArn':definition,'group':'service:'+module.SERVICE,'lastStatus':'STOPPED','startedAt':'2026-10-26T12:08:37Z','stoppedAt':'2026-10-26T12:08:40Z','containers':[{'exitCode':137}],'stoppedReason':'governed core-server-persistence replacement rehearsal'}
+        image=f'337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@{digest}'
+        successor={'taskArn':prefix+'b'*32,'taskDefinitionArn':definition,'group':'service:'+module.SERVICE,'lastStatus':'RUNNING','startedAt':'2026-10-26T12:08:41Z','containers':[{'name':'core-server-persistence','image':image,'imageDigest':digest}]}
+        def response(parts):
+            if parts[1]=='describe-tasks': return True,{'tasks':[original if parts[-1]==original['taskArn'] else successor]},'ok'
+            if parts[1]=='describe-task-definition': return True,{'taskDefinition':{'taskDefinitionArn':definition,'containerDefinitions':[{'name':'core-server-persistence','image':image,'environment':[{'name':'PLATFORM_SOURCE_COMMIT_SHA','value':'a'*40}]}]}},'ok'
+            raise AssertionError(f'unexpected provider action: {parts}')
+        prepare=Provider(response); prepare.REGION='eu-west-1'; prepare.ACCOUNT='337159794548'; prepare.REPOSITORY='kanbien-core-platform/core-server'
+        prepare.validate_receipt=lambda _: {'image_digest':digest,'source_revision':'a'*40}; prepare.candidate_runnable_manifest=lambda _: (digest,'ok')
+        create=SimpleNamespace(package_gates=lambda _:True)
+        with temporary_receipts(module) as receipts:
+            first=receipts.make(proof_type='server-replacement',operation='controlled-replacement',task=original,image_digest=digest,result_code='PERSISTENCE_SERVER_REPLACED',context={'original_stopped_reason':'governed core-server-persistence replacement rehearsal','successor_task_arn':successor['taskArn'],'successor_started_at':successor['startedAt'],'runtime_task_definition':definition,'recovery_boundary':'2026-10-26T12:08:38Z'},controller='rehearse-server-replacement',collected_at='2026-10-26T12:08:42Z')
+            path=receipts.persist(first); original_bytes=path.read_bytes()
+            current=(successor,'ok',definition)
+            argv=['test','--receipt','synthetic','--reconcile-original-task',original['taskArn'],'--reconcile-successor-task',successor['taskArn']]
+            with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'current_task',return_value=current),patch.object(sys,'argv',argv):
+                report=result(module.main)[1]
+            self.assertEqual(report['verdict'],'replaced')
+            self.assertEqual(report['facts']['recovery_boundary'],'2026-10-26T12:08:38Z')
+            self.assertEqual(path.read_bytes(),original_bytes)
+            self.assertFalse(any(parts[1]=='stop-task' for parts in prepare.calls))
+            altered=json.loads(path.read_text()); altered['context']['successor_task_arn']=prefix+'d'*32; altered['integrity']['payload_sha256']=receipts.digest({key:value for key,value in altered.items() if key!='integrity'}); path.write_text(json.dumps(altered),encoding='utf-8')
+            with patch.object(module,'module',side_effect=[prepare,create]),patch.object(module,'current_task',return_value=current),patch.object(sys,'argv',argv):
+                self.assertEqual(result(module.main)[1]['findings'],[{'code':'persistence-replacement-reconciliation-receipt-mismatch'}])
 
     def test_main_snapshot_suffix_support_is_preserved(self):
         snapshot=load(RUN/'create-recovery-point/script.py');restore=load(RUN/'rehearse-isolated-database-restore/script.py')

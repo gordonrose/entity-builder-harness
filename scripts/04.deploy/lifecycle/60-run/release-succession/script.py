@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -41,6 +41,7 @@ CURRENT = "current-accepted-release.yml"
 HISTORY_DIRECTORY = "accepted-releases"
 CANDIDATE_DIRECTORY = "release-candidates"
 COMPATIBILITY_DIRECTORY = "rollback-compatibility"
+EVIDENCE_DIRECTORIES = frozenset({"proof-receipts", "package-receipts", "observability-receipts", "rollback-compatibility", "proof-applicability"})
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 EVIDENCE_CLASS = "live"
 
@@ -112,6 +113,17 @@ def under(root: Path, path: Path, directory: str) -> Path:
     return result
 
 
+def retained_evidence_file(root: Path, path: Path) -> Path:
+    """Resolve only one allowlisted durable evidence artifact below its root."""
+    root = root.resolve()
+    result = path.resolve()
+    for directory in EVIDENCE_DIRECTORIES:
+        base = (root / directory).resolve()
+        if base in result.parents:
+            return result
+    raise SuccessionFailure("release-succession-candidate-proof-set-invalid")
+
+
 def repository_file(path: str) -> Path:
     relative = Path(path)
     if relative.is_absolute():
@@ -139,7 +151,7 @@ def proof_set(record: dict[str, Any], root: Path | None = None) -> dict[str, dic
             raise SuccessionFailure("release-succession-candidate-proof-set-invalid")
         result[name] = {"path": str(path), "sha256": sha(item.get("sha256"))}
         if root is not None:
-            receipt = under(root, root / path, "proof-receipts")
+            receipt = retained_evidence_file(root, root / path)
             try:
                 raw = receipt.read_bytes()
             except OSError as error:
@@ -234,11 +246,12 @@ def retained_rollback_identity(root: Path) -> dict[str, Any]:
 
 
 def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> tuple[str, str, str, dict[str, Any]]:
-    """Validate a fresh, additive compatibility proof for a legacy release.
+    """Validate a fresh, additive compatibility proof for a rollback release.
 
-    This record does not promote or amend legacy acceptance.  It names the
-    historical image that a controlled rollback may select only after the
-    corrected configuration and permission surfaces have been proved.
+    This record does not promote or amend any previous acceptance.  It names
+    either a historical accepted image or an earlier qualified image that a
+    controlled rollback may select only after the corrected configuration and
+    permission surfaces have been proved.
     """
     if record.get("evidence_class", "live") != EVIDENCE_CLASS:
         raise SuccessionFailure("release-succession-evidence-class-invalid")
@@ -246,10 +259,15 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
         raise SuccessionFailure("release-succession-compatibility-schema-invalid")
     target, scope = text(record.get("target")), text(record.get("scope"))
     historical = record.get("historical_release")
+    qualified = record.get("qualified_predecessor")
     rollback = record.get("rollback")
     proof = record.get("proof")
-    if not isinstance(historical, dict) or set(historical) != {"release_id", "source_revision", "image_digest"}:
+    if (historical is None) == (qualified is None):
+        raise SuccessionFailure("release-succession-compatibility-predecessor-invalid")
+    if historical is not None and (not isinstance(historical, dict) or set(historical) != {"release_id", "source_revision", "image_digest"}):
         raise SuccessionFailure("release-succession-compatibility-historical-release-invalid")
+    if qualified is not None and (not isinstance(qualified, dict) or set(qualified) != {"source_revision", "image_digest", "package_custody_reference"}):
+        raise SuccessionFailure("release-succession-compatibility-qualified-predecessor-invalid")
     if not isinstance(rollback, dict) or set(rollback) != {"id", "configuration_contract", "permission_contract", "workloads", "proof_set_sha256"}:
         raise SuccessionFailure("release-succession-compatibility-rollback-invalid")
     if not isinstance(proof, dict) or set(proof) != {"qualified_at", "receipt_count"} or type(proof.get("receipt_count")) is not int or proof["receipt_count"] < 1:
@@ -274,11 +292,30 @@ def compatibility_identity(record: dict[str, Any], root: Path | None = None) -> 
             except OSError as error: raise SuccessionFailure("release-succession-compatibility-contract-unreadable") from error
             if sha256_bytes(raw) != contract["sha256"]:
                 raise SuccessionFailure("release-succession-compatibility-contract-mismatch")
+    if historical is not None:
+        # Preserve the existing legacy compatibility identity exactly.  That
+        # keeps previously generated, immutable compatibility records valid.
+        identity_predecessor = {"historical_release_id": text(historical.get("release_id"))}
+        source_revision = text(historical.get("source_revision"))
+        image_digest = sha(historical.get("image_digest"))
+    else:
+        reference = text(qualified.get("package_custody_reference"))
+        if not reference.startswith("github-actions-run:") or not reference.removeprefix("github-actions-run:").isdigit():
+            raise SuccessionFailure("release-succession-compatibility-qualified-custody-invalid")
+        source_revision = text(qualified.get("source_revision"))
+        image_digest = sha(qualified.get("image_digest"))
+        identity_predecessor = {
+            "qualified_predecessor": {
+                "source_revision": source_revision,
+                "image_digest": image_digest,
+                "package_custody_reference": reference,
+            }
+        }
     identity = {
         "target": target, "scope": scope,
-        "historical_release_id": text(historical.get("release_id")),
-        "source_revision": text(historical.get("source_revision")),
-        "image_digest": sha(historical.get("image_digest")),
+        **identity_predecessor,
+        "source_revision": source_revision,
+        "image_digest": image_digest,
         "configuration_contract": contracts["configuration_contract"],
         "permission_contract": contracts["permission_contract"],
         "workloads": sorted(workloads),
@@ -306,14 +343,22 @@ def record_compatibility(root: Path, source: Path) -> tuple[str, str]:
     source = under(root, source, CANDIDATE_DIRECTORY)
     record, raw = document(source)
     target, scope, _, identity = compatibility_identity(record, root)
-    historical_id = identity["historical_release_id"]
-    try:
-        history, _ = history_record_for_id(root, historical_id)
-        release = history.get("release")
-        matches = isinstance(release, dict) and release.get("source_revision") == identity["source_revision"] and release.get("image_digest") == identity["image_digest"]
-    except SuccessionFailure:
-        retained = retained_rollback_identity(root)
-        matches = historical_id == retained["release_id"] and retained["source_revision"] == identity["source_revision"] and retained["image_digest"] == identity["image_digest"]
+    qualified = identity.get("qualified_predecessor")
+    if qualified is not None:
+        # Qualification is established by the target-owned proof set.  The
+        # generic controller verifies its immutable receipt hashes and the
+        # corrected contract hashes above, but deliberately does not invent a
+        # second acceptance history for this release.
+        matches = True
+    else:
+        historical_id = identity["historical_release_id"]
+        try:
+            history, _ = history_record_for_id(root, historical_id)
+            release = history.get("release")
+            matches = isinstance(release, dict) and release.get("source_revision") == identity["source_revision"] and release.get("image_digest") == identity["image_digest"]
+        except SuccessionFailure:
+            retained = retained_rollback_identity(root)
+            matches = historical_id == retained["release_id"] and retained["source_revision"] == identity["source_revision"] and retained["image_digest"] == identity["image_digest"]
     if not matches:
         raise SuccessionFailure("release-succession-compatibility-historical-release-mismatch")
     identifier = "rollback-compatibility-" + hashlib.sha256(canonical(identity)).hexdigest()[:24]
@@ -520,7 +565,7 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 def main() -> int:
     global REPOSITORY_ROOT, EVIDENCE_CLASS
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
-    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-current"))
+    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-candidate", "validate-current"))
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--legacy-record", type=Path)
     parser.add_argument("--candidate-record", type=Path)
@@ -534,7 +579,9 @@ def main() -> int:
         return report("blocked", "release-succession-arguments-invalid")
     if unknown or args.operation is None or args.evidence_root is None or (args.operation in {"initialize-legacy", "promote"} and not isinstance(args.expected_predecessor, str)):
         return report("blocked", "release-succession-arguments-invalid")
-    if args.operation == "initialize-legacy" and (args.legacy_record is None or args.candidate_record is not None) or args.operation in {"promote", "record-compatibility"} and (args.candidate_record is None or args.legacy_record is not None) or args.operation == "validate-current" and (args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None):
+    if args.operation == "initialize-legacy" and (args.legacy_record is None or args.candidate_record is not None) or args.operation in {"promote", "record-compatibility", "validate-candidate"} and (args.candidate_record is None or args.legacy_record is not None) or args.operation == "validate-current" and (args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None):
+        return report("blocked", "release-succession-arguments-invalid")
+    if args.operation in {"record-compatibility", "validate-candidate"} and args.expected_predecessor is not None:
         return report("blocked", "release-succession-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
@@ -542,7 +589,7 @@ def main() -> int:
     try:
         if args.rehearsal_root is not None:
             rehearsal = args.rehearsal_root.resolve()
-            if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()):
+            if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()) or REPOSITORY_ROOT.resolve().is_relative_to(rehearsal):
                 raise SuccessionFailure("release-succession-rehearsal-root-invalid")
             REPOSITORY_ROOT, EVIDENCE_CLASS = rehearsal, "simulated"
         if args.operation == "validate-current":
@@ -552,6 +599,13 @@ def main() -> int:
             if state is None:
                 raise SuccessionFailure("release-succession-current-missing")
             return report("valid", "release-succession-current-reference-valid", facts={"target": state["target"], "scope": state["scope"], "release_id": state["release_id"]})
+        if args.operation == "validate-candidate":
+            if args.candidate_record is None or args.legacy_record is not None or args.expected_predecessor is not None:
+                raise SuccessionFailure("release-succession-arguments-invalid")
+            source = under(root, args.candidate_record, CANDIDATE_DIRECTORY)
+            record, _ = document(source)
+            target, scope, _, identity = candidate_identity(record, root)
+            return report("valid", "release-succession-candidate-valid", facts={"target": target, "scope": scope, "release_id": release_id(identity)})
         root.mkdir(parents=True, exist_ok=True)
         lock = root / ".release-succession.lock"
         with lock.open("a+b") as handle:

@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -54,6 +54,8 @@ assert not any(call == ("administer", "revoke-runtime") for call in calls)
 # readiness: requiring the latter would prevent recovery from ever starting.
 source = open(sys.argv[1], encoding="utf-8").read()
 assert 'args.operation == "recover-after-revocation"' in source
+assert 'revoke-await-observability' in source
+assert 'unready_verifier_receipt' in source
 assert 'put-secret-value' not in source
 assert 'get-random-password' not in source
 assert 'rotate-runtime' not in source

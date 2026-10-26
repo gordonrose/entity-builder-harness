@@ -81,3 +81,6 @@ export const adapterMetadata = {
   implementation: "postgresql",
   packageName: "@kanbien/platform-adapter-aws-persistence-postgresql",
 } as const;
+
+export { observePostgreSqlOperation, postgreSqlFailureDiagnostic, postgreSqlFailureClassifications } from "./errors";
+export type { PostgreSqlFailureDiagnostic, PostgreSqlFailureFacts, PostgreSqlFailureClassification, PostgreSqlObservedPhase } from "./errors";

@@ -53,8 +53,8 @@ generation_command: scripts/02.rag-rulebook/generate-recognition-sources/script.
   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
 generation_summary:
   artifact_index_schema: agentic-artifact-index/v1
-  indexed_artifacts: 1405
-  term_count: 2840
+  indexed_artifacts: 1425
+  term_count: 2880
   excluded_prefixes:
   - .agentic/02.rag-rulebook/recognition-sources/
 terms:
@@ -8446,6 +8446,18 @@ terms:
   canonical_id: platform.adapters.readme
   evidence_path: platform/adapters/README.md
   confidence_weight: 1
+- term: product.test.postgresql-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: product.test.postgresql-diagnostics
+  evidence_path: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
+  confidence_weight: 1
+- term: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
+  category: file-path
+  match_type: exact
+  canonical_id: product.test.postgresql-diagnostics
+  evidence_path: platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts
+  confidence_weight: 1
 - term: deploy.schema.secret-dependency-contract.v1.guide
   category: artifact-id
   match_type: exact
@@ -12442,6 +12454,54 @@ terms:
   canonical_id: deploy.test.core-server-persistence-configuration
   evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs
   confidence_weight: 1
+- term: deploy.test.core-server-persistence-observability-runtime
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.core-server-persistence-observability-runtime
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.core-server-persistence-observability-runtime
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs
+  confidence_weight: 1
+- term: deploy.test.postgresql-connection-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.postgresql-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.postgresql-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh
+  confidence_weight: 1
+- term: deploy.test.postgresql-disposable-connection-diagnostics
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.postgresql-disposable-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.postgresql-disposable-connection-diagnostics
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh
+  confidence_weight: 1
+- term: deploy.test.packaged-persistence-connection-diagnostic
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.packaged-persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.packaged-persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs
+  confidence_weight: 1
 - term: deploy.test.core-server-persistence-composition-runtime
   category: artifact-id
   match_type: exact
@@ -13270,6 +13330,30 @@ terms:
   canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-database-permission-surface
   evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.apply-private-persistence-verifier-route-update
   category: artifact-id
   match_type: exact
@@ -13858,6 +13942,30 @@ terms:
   canonical_id: deploy.fixture.kanbien-core-platform.persistence-ecs-captured-responses
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/fixtures/ecs-captured-responses.yml
   confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.observability-receipts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts-smoke-test.py
+  confidence_weight: 1
+- term: deploy.library.kanbien-core-platform.observability-receipts
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.library.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.library.kanbien-core-platform.observability-receipts
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/observability-receipts.py
+  confidence_weight: 1
 - term: deploy.test.kanbien-core-platform.persistence-proof-receipts
   category: artifact-id
   match_type: exact
@@ -13882,6 +13990,78 @@ terms:
   canonical_id: deploy.library.kanbien-core-platform.persistence-proof-receipts
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py
   confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-proof-applicability.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.persistence-proof-applicability
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-proof-applicability/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.qualify-persistence-rollback-predecessor
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/qualify-rollback-predecessor/script.sh
+  confidence_weight: 1
+- term: deploy.test.persistence-connection-diagnostic
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.persistence-connection-diagnostic
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py
+  confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
   category: artifact-id
   match_type: exact
@@ -13905,6 +14085,66 @@ terms:
   match_type: exact
   canonical_id: deploy.test.kanbien-core-platform.isolated-persistence-restore
   evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.py
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-observability-readiness.wrapper
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/script.sh
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.py
+  confidence_weight: 1
+- term: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.test.kanbien-core-platform.rehearse-observability-readiness
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-observability-readiness/smoke-test.sh
+  confidence_weight: 1
+- term: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  category: artifact-id
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
+  confidence_weight: 1
+- term: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
+  category: file-path
+  match_type: exact
+  canonical_id: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle.impl
+  evidence_path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py
   confidence_weight: 1
 - term: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
   category: artifact-id

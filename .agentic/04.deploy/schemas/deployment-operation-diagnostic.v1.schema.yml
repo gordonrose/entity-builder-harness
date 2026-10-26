@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines: [security, sre, agentic]
@@ -69,3 +69,31 @@ prohibited_values:
   - account identifiers
   - raw provider response bodies
   - request or response headers
+
+optional_fields: [facts, execution]
+execution:
+  required_fields: [phase, elapsed_ms, code_status, classification]
+  additional_fields: false
+  allowed_phases: [pool_connect, pool_query, query, authentication_value, tcp_probe, tls_probe, unknown]
+  allowed_code_statuses: [recognized, unrecognized, absent]
+  allowed_classifications: [authentication_rejected, authentication_material_invalid, permission_denied, content_unavailable, tls_trust_invalid, transport_unavailable, timeout, conflict, constraint, transaction_rolled_back, validation, query_canceled, unknown]
+  elapsed_ms: {type: integer-or-null, minimum: 0, maximum: 3600000, unknown_phase_requires_null: true}
+collection:
+  required_fields: [status]
+  optional_fields: [observation, attempts, task_observation, task_attempts]
+  additional_fields: false
+  allowed_observations: [complete, empty, unrecognized, malformed, incomplete, unavailable, failed]
+  attempts: {type: integer, minimum: 1, maximum: 3}
+  task_observation: {same_vocabulary_as: allowed_observations}
+  task_attempts: {type: integer, minimum: 1, maximum: 3}
+compatibility: Historical v1 reports without optional execution or collection observations remain valid and are never rewritten.
+
+verifier_result_reader:
+  current_schema: deploy/persistence-restore-verifier-result/v2
+  required_fields: [schema, verdict, code]
+  optional_fields: [execution]
+  additional_fields: false
+  allowed_verdicts: [accepted, rejected, diagnosed, diagnostic-failed]
+  historical_fields: [verdict, code]
+  historical_verdicts: [accepted, rejected]
+  diagnostic_verdicts_are_acceptance_evidence: false

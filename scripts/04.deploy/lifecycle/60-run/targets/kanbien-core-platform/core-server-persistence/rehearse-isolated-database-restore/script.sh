@@ -6,12 +6,12 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Run the fixed target-scoped isolated persistence restore rehearsal.
+#   purpose: Run the fixed isolated restore rehearsal or a separately bounded non-accepting connection diagnosis.
 #   portability: { class: internal, targets: [] }
 #   argument_validation: {flag: --validate-arguments, effects: [read-only]}
 #   used_by:
