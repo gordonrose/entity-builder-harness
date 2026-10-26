@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:47:28Z
-latest_commit_sha: e865479d
-chat_duration: 1831679s (21:04:47:59)
+latest_commit_at_utc: 2026-10-26T13:50:58Z
+latest_commit_sha: 306e5eef
+chat_duration: 1831889s (21:04:51:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3917,6 +3917,17 @@ Summary: Corrects the prior symbolic commit reference: retained the qualified pa
 
 ADR impact: No ADR change; strengthens existing governed deployment recovery.
 
+
+### 2026-10-26T13:50:58Z - Commit recorded
+
+Commit: `306e5eef`
+
+Message: fix(deploy): bound rejected review cleanup
+
+Summary: Made rejected change-set cleanup depend only on receipt, stack identity, and the named unexecuted review rather than unrelated live prerequisites.
+
+ADR impact: No ADR change; narrows a recovery control.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5040,6 +5051,13 @@ ADR impact: No ADR change; strengthens existing governed deployment recovery.
   Summary: Corrects the prior symbolic commit reference: retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
   ADR impact: No ADR change; strengthens existing governed deployment recovery.
 
+
+- Commit: `306e5eef`
+  Time UTC: 2026-10-26T13:50:58Z
+  Message: fix(deploy): bound rejected review cleanup
+  Summary: Made rejected change-set cleanup depend only on receipt, stack identity, and the named unexecuted review rather than unrelated live prerequisites.
+  ADR impact: No ADR change; narrows a recovery control.
+
 ## Main Refresh Conflicts
 
 
@@ -5063,9 +5081,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:47:28Z
-Latest commit SHA: e865479d
-Chat duration: 1831679s (21:04:47:59)
+Latest commit at UTC: 2026-10-26T13:50:58Z
+Latest commit SHA: 306e5eef
+Chat duration: 1831889s (21:04:51:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
