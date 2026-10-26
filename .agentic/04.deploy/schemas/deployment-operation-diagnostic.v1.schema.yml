@@ -76,7 +76,7 @@ execution:
   additional_fields: false
   allowed_phases: [pool_connect, pool_query, query, authentication_value, tcp_probe, tls_probe, unknown]
   allowed_code_statuses: [recognized, unrecognized, absent]
-  allowed_classifications: [authentication_rejected, permission_denied, content_unavailable, tls_trust_invalid, transport_unavailable, timeout, conflict, constraint, transaction_rolled_back, validation, query_canceled, unknown]
+  allowed_classifications: [authentication_rejected, authentication_material_invalid, permission_denied, content_unavailable, tls_trust_invalid, transport_unavailable, timeout, conflict, constraint, transaction_rolled_back, validation, query_canceled, unknown]
   elapsed_ms: {type: integer-or-null, minimum: 0, maximum: 3600000, unknown_phase_requires_null: true}
 collection:
   required_fields: [status]

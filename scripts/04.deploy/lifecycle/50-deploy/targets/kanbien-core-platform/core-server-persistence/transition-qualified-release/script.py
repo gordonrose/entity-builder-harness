@@ -55,7 +55,7 @@ def retain_failure_diagnostic(prepare,name,digest,code,outcome):
 def emit(verdict,*codes,facts=None):
     value={"schema":"deploy/persistence-release-transition-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":code} for code in codes]}
     if facts: value["facts"]=facts
-    print(json.dumps(value,sort_keys=True)); return 0 if verdict=="transitioned" else 1
+    print(json.dumps(value,sort_keys=True)); return 0 if verdict in {"transitioned", "discarded", "reconciled"} else 1
 def reviewable(change, status, name, digest, revision, support_digest=None):
     if not isinstance(change,dict) or status not in STABLE_STACK_STATES: return False
     if not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"}: return False
@@ -63,6 +63,54 @@ def reviewable(change, status, name, digest, revision, support_digest=None):
     if params.get("ImageDigest")!=digest or params.get("SupportImageDigest")!=(support_digest or digest) or params.get("RestoreVerifierImageDigest")!=digest or params.get("SourceRevision")!=revision: return False
     changes=[x.get("ResourceChange",{}) for x in change.get("Changes",[]) if isinstance(x,dict)]
     return bool(changes) and {x.get("ResourceType") for x in changes} <= ALLOWED
+
+
+def update_parameter_inputs(current, desired):
+    """Retain every non-image stack parameter through a narrow image update.
+
+    CloudFormation applies a template default when an UPDATE omits a parameter;
+    omission is therefore not equivalent to preserving the deployed value.
+    In particular, an image-only release must not disable an independently
+    governed observability surface.  ``UsePreviousValue`` preserves opaque
+    values (including NoEcho parameters) without reading or re-emitting them.
+    """
+    if not isinstance(current, dict) or not isinstance(desired, dict): return None
+    if not all(isinstance(key, str) and key and isinstance(value, str) for mapping in (current, desired) for key, value in mapping.items()): return None
+    if not set(desired) <= set(current): return None
+    return ([{"ParameterKey": key, "UsePreviousValue": True} for key in sorted(set(current) - set(desired))] +
+            [{"ParameterKey": key, "ParameterValue": desired[key]} for key in sorted(desired)])
+
+
+def discard_rejected_review(prepare, name, current, digest, revision):
+    """Retire only a known unexecuted review that this controller rejects.
+
+    This exists for an interrupted/corrected review path.  It cannot delete an
+    executable or executed change set, and it requires the live stack still to
+    be on the predecessor image.
+    """
+    if current.get("ImageDigest") == digest: return emit("blocked", "persistence-release-transition-discard-current-image-matches-candidate")
+    ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok and code == "aws-resource-missing":
+        # A prior controller invocation may have completed deletion just before
+        # its response was interrupted.  Absence is the desired, non-mutating
+        # terminal state; record it as reconciliation, not a fresh discard.
+        return emit("reconciled", "persistence-release-transition-rejected-review-already-absent", facts={"change_set": name, "image_digest": digest, "source_revision": revision})
+    if not ok or not isinstance(change, dict): return emit("blocked", code if not ok else "persistence-release-transition-discard-observation-invalid")
+    if not (change.get("Status") == "CREATE_COMPLETE" and change.get("ExecutionStatus") == "AVAILABLE"):
+        return emit("blocked", "persistence-release-transition-discard-state-invalid")
+    if reviewable(change, "UPDATE_COMPLETE", name, digest, revision):
+        return emit("blocked", "persistence-release-transition-discard-review-is-executable")
+    changes = [item.get("ResourceChange", {}) for item in change.get("Changes", []) if isinstance(item, dict)]
+    if not changes or not any(item.get("ResourceType") not in ALLOWED for item in changes):
+        return emit("blocked", "persistence-release-transition-discard-not-controller-rejected")
+    ok, _, code = prepare.aws("cloudformation", "delete-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok: return emit("blocked", code)
+    for attempt in range(6):
+        exists, _, observed = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+        if not exists and observed == "aws-resource-missing":
+            return emit("discarded", "persistence-release-transition-rejected-review-discarded", facts={"change_set": name, "image_digest": digest, "source_revision": revision})
+        if attempt < 5: time.sleep(2)
+    return emit("blocked", "persistence-release-transition-discard-not-confirmed")
 def wait_reviewable(prepare,name,status,digest,revision,support_digest=None):
     for attempt in range(6):
         ok,change,code=prepare.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
@@ -75,7 +123,7 @@ def reconcile(prepare,name,digest,revision,support_digest=None):
     finding=retain_failure_diagnostic(prepare,name,digest,code,verdict) if verdict in {"failed","uncertain"} else None
     return emit("transitioned" if verdict=="complete" else verdict,code,*((finding,) if finding else ()),facts={"change_set":name,"image_digest":digest,"source_revision":revision})
 def main():
-    parser=argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt",type=Path); parser.add_argument("--operation",choices=("update","rollback")); parser.add_argument("--json",action="store_true"); parser.add_argument("--reconcile",action="store_true")
+    parser=argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt",type=Path); parser.add_argument("--operation",choices=("update","rollback","discard-rejected-review")); parser.add_argument("--json",action="store_true"); parser.add_argument("--reconcile",action="store_true")
     parser.add_argument("--validate-arguments", action="store_true")
     parser.add_argument("--rollback-compatibility-id")
     parser.add_argument("--support-receipt",type=Path)
@@ -97,11 +145,22 @@ def main():
         support_digest=support["image_digest"]
     digest,revision=receipt["image_digest"],receipt["source_revision"]
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
+    if args.operation == "discard-rejected-review":
+        if args.reconcile:return emit("blocked", "persistence-release-transition-discard-reconcile-unsupported")
+        # A rejected review has not touched the target.  Its bounded cleanup
+        # needs only the receipt, current stack identity, and the exact named
+        # change set; it must not wait on unrelated service, budget, endpoint,
+        # or candidate-image observations.
+        ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
+        if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
+        current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
+        name=f"kanbien-core-platform-persistence-update-{digest[7:19]}"
+        return discard_rejected_review(prepare, name, current_parameters, digest, revision)
     if args.reconcile:return reconcile(prepare,name,digest,revision,support_digest)
     if not create.package_gates(args.receipt) or not prepare.live_budget()[0]: return emit("blocked","persistence-release-transition-preconditions-not-proven")
     ok,stack,code=prepare.aws("cloudformation","describe-stacks","--stack-name",STACK); status=stack.get("Stacks",[{}])[0].get("StackStatus") if ok and isinstance(stack,dict) else None
     if not ok or status not in STABLE_STACK_STATES: return emit("blocked",code if not ok else "persistence-release-transition-stack-not-healthy")
-    current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict)}
+    current_parameters={item.get("ParameterKey"):item.get("ParameterValue") for item in stack.get("Stacks",[{}])[0].get("Parameters",[]) if isinstance(item,dict) and isinstance(item.get("ParameterKey"),str) and isinstance(item.get("ParameterValue"),str)}
     if args.operation=="rollback" and current_parameters.get("SupportImageDigest")!=support_digest:return emit("blocked","persistence-rollback-support-image-mismatch")
     ok,service,code=prepare.aws("ecs","describe-services","--cluster",CLUSTER,"--services",SERVICE); services=service.get("services",[]) if ok and isinstance(service,dict) else []
     if len(services)!=1 or not isinstance(services[0],dict) or services[0].get("desiredCount")!=1 or services[0].get("runningCount")!=1: return emit("blocked","persistence-release-transition-service-not-healthy")
@@ -111,7 +170,8 @@ def main():
     name=f"kanbien-core-platform-persistence-{args.operation}-{digest[7:19]}"
     expected=prepare.candidate_parameters(outputs,infra,receipt)
     if args.operation=="rollback":expected["SupportImageDigest"]=support_digest
-    parameters=[{"ParameterKey":k,"ParameterValue":v} for k,v in expected.items()]
+    parameters=update_parameter_inputs(current_parameters, expected)
+    if parameters is None: return emit("blocked", "persistence-release-transition-update-parameter-inputs-invalid")
     ok,_,code=prepare.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
     if not ok:
         if code!="aws-resource-missing": return emit("blocked",code)

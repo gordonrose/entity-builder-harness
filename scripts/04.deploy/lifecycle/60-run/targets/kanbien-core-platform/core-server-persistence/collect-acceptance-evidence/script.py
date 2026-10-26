@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.kanbien-core-platform.collect-core-server-persistence-acceptance
-#   version: 2
+#   version: 3
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -68,7 +68,7 @@ def succession_module():
     return value
 
 
-def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]], accepted_at: str) -> tuple[Path, dict[str, Any]]:
+def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]], accepted_at: str, retained: dict[str, Path] | None = None) -> tuple[Path, dict[str, Any]]:
     """Build, but do not publish, a succession-compatible candidate record.
 
     Publishing remains the generic succession controller's responsibility.  A
@@ -88,11 +88,28 @@ def candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]],
             raise EvidenceFailure("acceptance-evidence-proof-reference-invalid")
         path = (ROOT / relative).resolve()
         try:
+            evidence_relative = path.relative_to(EVIDENCE_ROOT.resolve())
             path.relative_to(EVIDENCE_ROOT.resolve() / "proof-receipts")
             raw = path.read_bytes()
         except (OSError, ValueError):
             raise EvidenceFailure("acceptance-evidence-proof-reference-invalid") from None
-        receipt_set[name] = {"path": path.relative_to(EVIDENCE_ROOT.resolve()).as_posix(), "sha256": succession.sha256_bytes(raw)}
+        # Generic release succession owns an evidence-root-relative proof set;
+        # the target collector's observed record may use repository-relative
+        # paths, but those are not meaningful to the generic controller.
+        receipt_set[name] = {"path": evidence_relative.as_posix(), "sha256": succession.sha256_bytes(raw)}
+    for name, source in (retained or {}).items():
+        if not isinstance(name, str) or not name or not isinstance(source, Path):
+            raise EvidenceFailure("acceptance-evidence-retained-reference-invalid")
+        try:
+            path = source.resolve()
+            relative = path.relative_to(EVIDENCE_ROOT.resolve())
+            succession.retained_evidence_file(EVIDENCE_ROOT, path)
+            raw = path.read_bytes()
+        except (OSError, ValueError, succession.SuccessionFailure):
+            raise EvidenceFailure("acceptance-evidence-retained-reference-invalid") from None
+        if name in receipt_set:
+            raise EvidenceFailure("acceptance-evidence-retained-reference-invalid")
+        receipt_set[name] = {"path": relative.as_posix(), "sha256": succession.sha256_bytes(raw)}
     if not receipt_set:
         raise EvidenceFailure("acceptance-evidence-proof-reference-invalid")
     contract_paths = {
@@ -173,8 +190,11 @@ def qualified_rollback_compatibility(rollback: dict[str, str]) -> dict[str, str]
     return {"id": path.stem, "path": relative, "sha256": observed["sha256"]}
 
 
-def report(verdict: str, *codes: str, facts: dict | None = None) -> int:
-    print(json.dumps({"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)], **({"facts": facts} if facts else {})}, sort_keys=True))
+def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> int:
+    value: dict[str, Any] = {"schema": "deploy/persistence-acceptance-collection-report/v1", "target": TARGET, "scope": SCOPE, "verdict": verdict, "findings": [{"code": code} for code in dict.fromkeys(codes)]}
+    if facts:
+        value["facts"] = facts
+    print(json.dumps(value, sort_keys=True))
     return 0 if verdict in {"ready", "recorded"} else 1
 
 
@@ -703,6 +723,39 @@ def write_successor(record: dict[str, Any]) -> dict[str, str]:
     return {"candidate_record": str(path), "release_id": value["release"]["id"]}
 
 
+def publish_candidate_record(package: dict[str, str], proofs: dict[str, dict[str, str]], accepted_at: str, retained: dict[str, Path]) -> tuple[Path, dict[str, Any]]:
+    """Publish one immutable successor candidate without changing legacy history.
+
+    The historical ``accepted-release.yml`` remains the accepted observation it
+    was when first recorded.  A later release is represented by the generic
+    succession candidate and can therefore be resumed after an interrupted
+    controller without rewriting either history or proof timestamps.
+    """
+    if EVIDENCE_CLASS == "simulated" and (not EVIDENCE_ROOT.resolve().is_relative_to(Path(tempfile.gettempdir()).resolve()) or EVIDENCE_ROOT.resolve().is_relative_to(IMPLEMENTATION_ROOT.resolve()) or IMPLEMENTATION_ROOT.resolve().is_relative_to(EVIDENCE_ROOT.resolve())):
+        raise EvidenceFailure("acceptance-evidence-simulation-production-write-forbidden")
+    succession = succession_module()
+    path, candidate = candidate_record(package, proofs, accepted_at, retained)
+    try:
+        relative = path.resolve().relative_to(EVIDENCE_ROOT.resolve())
+    except ValueError as error:
+        raise EvidenceFailure("acceptance-evidence-candidate-path-invalid") from error
+    if path.exists():
+        try:
+            existing, _ = succession.document(path)
+            existing_target, existing_scope, _, existing_identity = succession.candidate_identity(existing, EVIDENCE_ROOT)
+            _, _, _, proposed_identity = succession.candidate_identity(candidate, EVIDENCE_ROOT)
+        except (OSError, succession.SuccessionFailure) as error:
+            raise EvidenceFailure("acceptance-evidence-candidate-record-invalid") from error
+        if (existing_target, existing_scope, existing_identity) != (TARGET, SCOPE, proposed_identity):
+            raise EvidenceFailure("acceptance-evidence-candidate-record-conflict")
+        return path, existing
+    try:
+        succession.immutable_write(path, succession.rendered(candidate))
+    except (OSError, succession.SuccessionFailure) as error:
+        raise EvidenceFailure("acceptance-evidence-candidate-record-unwritable") from error
+    return path, candidate
+
+
 def route_module():
     path = IMPLEMENTATION_ROOT / "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
     spec = importlib.util.spec_from_file_location("acceptance_route", path)
@@ -844,10 +897,10 @@ def parse_arguments(argv=None):
     parser.add_argument("--proof", action="append", default=[]); parser.add_argument("--proof-receipt", action="append", default=[])
     parser.add_argument("--server-replacement-original"); parser.add_argument("--server-replacement-successor"); parser.add_argument("--recovery-snapshot")
     parser.add_argument("--record-proof-receipt", type=Path); parser.add_argument("--current-health-task"); parser.add_argument("--proof-applicability", type=Path); parser.add_argument("--observability-receipt", action="append", default=[])
-    parser.add_argument("--write", action="store_true"); parser.add_argument("--json", action="store_true"); parser.add_argument("--validate-arguments", action="store_true")
+    parser.add_argument("--write", action="store_true"); parser.add_argument("--write-candidate", action="store_true"); parser.add_argument("--json", action="store_true"); parser.add_argument("--validate-arguments", action="store_true")
     try: args, unknown = parser.parse_known_args(argv)
     except argparse.ArgumentError as error: raise EvidenceFailure("acceptance-evidence-arguments-invalid") from error
-    if unknown: raise EvidenceFailure("acceptance-evidence-arguments-invalid")
+    if unknown or (args.write and args.write_candidate): raise EvidenceFailure("acceptance-evidence-arguments-invalid")
     if args.inputs is not None:
         if args.receipt or args.rollback_receipt or args.proof or args.proof_receipt or args.server_replacement_original or args.server_replacement_successor or args.recovery_snapshot or args.record_proof_receipt or args.current_health_task or args.proof_applicability or args.observability_receipt: raise EvidenceFailure("acceptance-evidence-input-source-ambiguous")
         if args.validate_arguments: return args
@@ -909,11 +962,26 @@ def main() -> int:
         validate_record(record, evidence_class=EVIDENCE_CLASS)
         facts = None
         if args.write:
-            # Never overwrite accepted history; always produce the successor
-            # artifact consumed by the declared release-succession command.
-            facts = write_successor(record)
-            if not RECORD.exists(): write_record(record)
-        return report("recorded" if args.write else "ready", facts=facts)
+            if RECORD.exists(): raise EvidenceFailure("acceptance-evidence-record-already-exists")
+            write_record(record)
+        if args.write_candidate:
+            retained = {
+                "candidate-package": args.receipt,
+                "rollback-package": args.rollback_receipt,
+                "record-source": args.record_proof_receipt,
+                **{f"observability-{name}": ROOT / value["receipt"] for name, value in observability.items()},
+            }
+            if compatibility is not None:
+                retained["rollback-compatibility"] = ROOT / compatibility["path"]
+            if args.proof_applicability is not None:
+                retained["proof-applicability"] = args.proof_applicability
+            candidate_path, candidate = publish_candidate_record(candidate, observed, stamp, retained)
+            try:
+                relative = candidate_path.resolve().relative_to(ROOT.resolve()).as_posix()
+            except ValueError:
+                raise EvidenceFailure("acceptance-evidence-candidate-path-invalid") from None
+            return report("recorded", facts={"candidate_record": relative, "release_id": candidate["release"]["id"]})
+        return report("recorded" if args.write else "ready")
     except (EvidenceFailure, KeyError, TypeError, ValueError, OSError, subprocess.SubprocessError) as error:
         return report("blocked", str(error) if isinstance(error, EvidenceFailure) else "acceptance-evidence-malformed-input")
 

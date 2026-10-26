@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.compiler.acceptance-route
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -27,7 +27,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[5]
-CONTEXT = {'scope_contract', 'accepted_record', 'target_root', 'target_directory'}
+CONTEXT = {'scope_contract', 'accepted_record', 'target_root', 'target_directory', 'evidence_root', 'candidate_record', 'current_release_id'}
 
 
 def document(path: Path) -> dict:
@@ -162,7 +162,30 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
     if record_schema and document(record_schema).get('record_schema') != record.get('schema'): gap('acceptance-route-record-schema-invalid')
     record_path = reference(scope_contract.parent.parent, record.get('path'))
     if record_path is None: gap('acceptance-route-record-path-invalid')
-    values.update(scope_contract=str(scope_contract), accepted_record=str(record_path or ''), target_root=str(scope_contract.parents[2]), target_directory=str(scope_contract.parents[3]))
+    succession = route.get('release_succession')
+    lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')
+    entries = lifecycle.get('scopes', [])
+    states = [entry.get('lifecycle') for entry in entries if isinstance(entry, dict) and entry.get('id') == contract.get('scope')]
+    historical_succession = isinstance(succession, dict) and set(succession) == {'not_applicable'} and succession['not_applicable'] in {'accepted-historical', 'retired'} and states == [succession['not_applicable']]
+    if not historical_succession:
+        outputs = route.get('outputs')
+        if not isinstance(outputs, dict) or set(outputs) != {'candidate_record', 'current_release_id'}:
+            gap('acceptance-route-outputs-invalid')
+            outputs = {}
+        expected_outputs = {
+            'candidate_record': {'command': 'collect', 'fact': 'candidate_record', 'kind': 'target-evidence-path'},
+            'current_release_id': {'command': 'current-release', 'fact': 'release_id', 'kind': 'release-id'},
+        }
+        if outputs != expected_outputs:
+            gap('acceptance-route-outputs-invalid')
+    evidence_root = scope_contract.parent.parent / '30-release-evidence'
+    values.update(
+        scope_contract=str(scope_contract), accepted_record=str(record_path or ''),
+        target_root=str(scope_contract.parents[2]), target_directory=str(scope_contract.parents[3]),
+        evidence_root=str(evidence_root),
+        candidate_record=str(evidence_root / 'release-candidates/release-aaaaaaaaaaaaaaaaaaaaaaaa.yml'),
+        current_release_id='release-aaaaaaaaaaaaaaaaaaaaaaaa',
+    )
     # The collector takes one bounded manifest; the contents are checked only at
     # the acceptance stage. A package build must not require future live proof.
     values['acceptance_inputs'] = '/tmp/acceptance-route-inputs.json'
@@ -194,7 +217,9 @@ def _inspect(scope_contract: Path, root: Path = ROOT, command_root: Path | None 
         if not isinstance(proof, dict) or not isinstance(proof.get('command'), str) or proof.get('command') not in commands or not all(isinstance(proof.get(field), str) and proof[field] for field in ('proof_type', 'operation', 'result_code', 'image_role')): gap('acceptance-route-proof-binding-invalid', name)
     sequence = route.get('sequence')
     if not isinstance(sequence, list) or any(not isinstance(pair, list) or len(pair) != 2 or any(not isinstance(name, str) or name not in proofs for name in pair) for pair in sequence): gap('acceptance-route-sequence-invalid')
-    for field, value in [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]:
+    stages = [('collector', route.get('collector')), ('record-validator', record.get('validator')), ('promotion', route.get('promotion'))]
+    if not historical_succession: stages.append(('candidate-validator', route.get('candidate_validator')))
+    for field, value in stages:
         if not isinstance(value, str) or value not in commands: gap('acceptance-route-stage-missing', field)
     succession = route.get('release_succession')
     lifecycle = document(scope_contract.parent.parent.parent / 'scope-index.yml')

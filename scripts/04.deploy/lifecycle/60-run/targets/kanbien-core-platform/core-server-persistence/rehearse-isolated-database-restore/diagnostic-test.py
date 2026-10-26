@@ -52,6 +52,9 @@ def event(value):return {'message':json.dumps(value)}
 class Provider:
  def __init__(self,module):
   self.module=module;self.calls=[];self.tasks=[];self.policy=True;self.foreign_policy=False;self.lost_response=False;self.result={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'diagnosed','code':module.DIAGNOSTIC_RESULT}
+ def aws_in_region(self,region,*args):
+  assert region=="us-east-1"
+  return self.aws(*args)
  def live_budget(self):return True,"ok"
  def aws(self,*args):
   self.calls.append(args);service,operation=args[:2]
@@ -255,6 +258,52 @@ class DiagnosticTests(unittest.TestCase):
    self.m.OPERATION_DIAGNOSTICS=Path(self.directory.name)/'restored-directory'
    self.run_diagnostic(provider);provider.tasks[0]['createdAt']='2020-01-01T00:00:00Z'
    self.run_diagnostic(provider);self.assertEqual(sum(call[1]=='stop-task' for call in provider.calls),1);self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
+ def rejected_task(self,provider):
+  self.run_diagnostic(provider)
+  operation=self.m.restore_run_identity(provider.restored)
+  provider.tasks[0].update(startedBy=operation,lastStatus='STOPPED')
+  provider.tasks[0]['containers'][0]['exitCode']=7
+  provider.result={'schema':'deploy/persistence-restore-verifier-result/v2','verdict':'rejected','code':'KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID','execution':{'phase':'pool_connect','elapsed_ms':5,'code_status':'absent','classification':'authentication_material_invalid'}}
+  provider.calls=[]
+  return operation
+ def test_reobserve_rejected_cli_collects_delayed_logs_without_replaying(self):
+  provider,stack=self.target()
+  with stack:
+   operation=self.rejected_task(provider)
+   original=provider.aws;reads=0
+   def delayed(*args):
+    nonlocal reads
+    if args[1]=='get-log-events':
+     reads+=1
+     if reads==1:return logs([])
+    return original(*args)
+   with patch.object(self.m,'load',return_value=provider),patch.object(provider,'aws',side_effect=delayed):
+    status,report=self.capture(self.m.main,['--operation','diagnose-rejected','--snapshot-id',SID,'--operation-id',operation,'--json'])
+   self.assertEqual((status,report['verdict']),(0,'diagnosed'),report)
+   self.assertEqual(report['facts']['safe_result_code'],provider.result['code'])
+   retained={p:p.read_bytes() for p in self.m.OPERATION_DIAGNOSTICS.glob('*.json')}
+   self.m.diagnose_rejected(provider,SID,RID,operation)
+   self.assertTrue(all(path.read_bytes()==raw for path,raw in retained.items()))
+   self.assertFalse(any(call[1] in {'run-task','put-role-policy','delete-role-policy','restore-db-instance-from-db-snapshot','delete-db-instance'} for call in provider.calls))
+   observations=[json.loads(p.read_text()) for p in retained if p.name.startswith(operation)]
+   self.assertEqual(observations[0]['original_failure'],{'code':provider.result['code'],'exit_status':7})
+   self.assertEqual(observations[0]['execution']['phase'],'pool_connect')
+ def test_reobserve_write_failure_keeps_specific_original_result(self):
+  provider,stack=self.target()
+  with stack:
+   operation=self.rejected_task(provider)
+   self.m.OPERATION_DIAGNOSTICS=Path(self.directory.name)/'not-directory';self.m.OPERATION_DIAGNOSTICS.write_text('fixture')
+   _,report=self.capture(self.m.diagnose_rejected,provider,SID,RID,operation)
+   self.assertEqual(report['facts']['safe_result_code'],provider.result['code'])
+   self.assertEqual(report['findings'],[{'code':provider.result['code']},{'code':'persistence-diagnostic-report-write-failed'}])
+ def test_reobserve_cli_is_proofless_and_requires_exact_operation_identity(self):
+  args=['--operation','diagnose-rejected','--snapshot-id',SID,'--operation-id','kanbien-restore-'+'a'*16,'--validate-arguments']
+  status,report=self.capture(self.m.main,args)
+  self.assertEqual(status,0);self.assertIsNone(report['proof_contract']);self.assertIsNone(report['runtime_input_contract'])
+  status,report=self.capture(self.m.main,[*args,'--record-proof-receipt','/tmp/unexpected.json'])
+  self.assertEqual(report['verdict'],'blocked')
+  status,report=self.capture(self.m.main,[*args[:-2],'unknown','--validate-arguments'])
+  self.assertEqual(report['verdict'],'blocked')
  def test_real_cli_argument_contract(self):
   command=['bash',str(HERE/'script.sh'),'--operation','diagnose-connection','--snapshot-id',SID,'--record-proof-receipt','/tmp/fixture-proof.json','--json','--validate-arguments']
   result=subprocess.run(command,cwd=ROOT,capture_output=True,text=True,timeout=10)

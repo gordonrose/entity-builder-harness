@@ -567,6 +567,138 @@ Mode: manual
 
 Action: Unioned diagnostic checks and all incoming inventory/shell/package/source-review selector mappings.
 
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts`
+
+Type: `unsupported-conflict`
+
+Mode: manual
+
+Action: Retained shared adapter classification and typed phase/timing envelope; preserved incoming exact SCRAM material-invalid result through bounded private shared adapter interpretation.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml`
+
+Type: `unsupported-conflict`
+
+Mode: manual
+
+Action: Unioned fresh verifier predecessor inputs with incoming declared candidate/current outputs and explicit immutable candidate writer route.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Kept full exact tuple/receipt recovery assertion and retained fixture metadata isolation.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Combined region-specific AWS adapter with canonical operation-specific error classification and mandatory inventory guard.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Combined support_digest rollback checks, stable stack/failure diagnostics, opaque previous-parameter retention and bounded controller-rejected review discard.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/release-succession/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Combined explicit validate-candidate with controlled simulated roots, parser failures and immutable compatibility/evidence-class validation; fixed rehearsal roots to be disjoint from implementation checkout.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/release-succession/script.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained active wrapper status with incoming additive version and validation support.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved both qualified predecessor and simulated compatibility cases; used actual proof count and temporary-root contracts; added ancestor-root isolation regression.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Combined immutable write-candidate custody/tamper checks with fresh predecessor argv and temporary promotion/downstream regressions.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained strict safe verifier parser and rollback compatibility; combined explicit immutable candidate publication and retained evidence-root-relative package/observability references.
+
+
+### 2026-10-26T16:11:15Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved bounded diagnostic launch/reservation/cleanup, added read-only exact rejected-operation re-observation with specific original failure and append-only typed retention, kept global IAM CloudTrail region.
+
+
+### 2026-10-26T16:11:16Z - Main refresh conflict recorded
+
+Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Retained append-only original-failure assertions and adapted incoming re-observation fixture to strict typed helper; retained regional CloudTrail proof.
+
 ## Sub-Agent Activity
 
 
@@ -960,6 +1092,138 @@ Summary: Reviewed baseline and adapter diff. Fixed invocation-scoping stale obse
   Files changed by resolution: scripts/repo/check-selection/checks.yml
   Checks: Conflict markers removed; Python/shell/YAML syntax passed. Combined focused and qualification checks plus independent resolved-byte review pending.
 
+
+- Path: `infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts`
+  Type: `unsupported-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Retained shared adapter classification and typed phase/timing envelope; preserved incoming exact SCRAM material-invalid result through bounded private shared adapter interpretation.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml`
+  Type: `unsupported-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Unioned fresh verifier predecessor inputs with incoming declared candidate/current outputs and explicit immutable candidate writer route.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Kept full exact tuple/receipt recovery assertion and retained fixture metadata isolation.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Combined region-specific AWS adapter with canonical operation-specific error classification and mandatory inventory guard.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Combined support_digest rollback checks, stable stack/failure diagnostics, opaque previous-parameter retention and bounded controller-rejected review discard.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/release-succession/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Combined explicit validate-candidate with controlled simulated roots, parser failures and immutable compatibility/evidence-class validation; fixed rehearsal roots to be disjoint from implementation checkout.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/release-succession/script.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/release-succession/script.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Retained active wrapper status with incoming additive version and validation support.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Preserved both qualified predecessor and simulated compatibility cases; used actual proof count and temporary-root contracts; added ancestor-root isolation regression.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Combined immutable write-candidate custody/tamper checks with fresh predecessor argv and temporary promotion/downstream regressions.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Retained strict safe verifier parser and rollback compatibility; combined explicit immutable candidate publication and retained evidence-root-relative package/observability references.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Preserved bounded diagnostic launch/reservation/cleanup, added read-only exact rejected-operation re-observation with specific original failure and append-only typed retention, kept global IAM CloudTrail region.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
+
+- Path: `scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Canonical ownership and both accepted histories are known. User authorized current-main integration and overlapping-source reconciliation; this is the manually reviewed resolution of that authorized intake, with no history rewrite or evidence replacement. Infrastructure classifier does not infer its ownership.
+  Action: Retained append-only original-failure assertions and adapted incoming re-observation fixture to strict typed helper; retained regional CloudTrail proof.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d/20261026160403`
+  Preflight worktree: `/home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/agentic-main-refresh-preflight/chat-2026-10-26-11-53-bounded-postgresql-restore-fd547c20389d-20261026160403`
+  Files changed by resolution: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh
+  Checks: Python/shell/YAML syntax and affected adapter/composition/provider/restore/shared/disposable-engine checks; independent reconciliation review; final acceptance and commit gates pending.
+
 ## ADR Disposition
 
 ADR needed: no
@@ -984,3 +1248,10 @@ Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICI
 
 
 - Reconciliation follow-up: acceptance rehearsal passed 19 checks; incoming provider fixture now uses disposable operation metadata, and absent-database remaining-policy cases require blocked/no deletion. Staged metadata and governed-command drift checks passed.
+
+- Remote intake pinned to origin/main 494693efab6c55709b8941a29b5d8ff0253d3ec8. The execution environment removed the original /tmp preflight and running test handles before continuation. fd547c20 and all prior task checkpoints remained safe. Remaining old administrative metadata was copied to /home/owner/projects/.chat-preservation/bounded-diagnostic-preflight/lost-preflight-metadata-20261026T1531. The existing rehearsal helper recreated the same fd547c20/494693ef merge with supported durable TMPDIR, and exact prior resolution scripts recovered from this session transcript were replayed; no prior branch or evidence was overwritten.
+- Origin compatibility retained: private bounded exact pg SCRAM invariant now lives only in the shared adapter as authentication_material_invalid, with independent absent/unrecognized machine-code status, configuration failure kind, and observed pool_connect phase. Actual disposable PostgreSQL proves this case along with rejected authentication, missing database and canceled query; complete process exit and engine/directory cleanup passed. The fixture server authentication timeout bounds pg's otherwise lingering failed SCRAM transport; no live setting changed.
+- Preserved read-only diagnose-rejected/operation-id route, global IAM CloudTrail region and immutable candidate/rollback support controls. Twenty diagnostic/controller tests, shared historical/v2 report tests, adapter runtime/TLS/boundary, combined composition/configuration/observability, provider regression and 43 public-image recovery controlled cases passed. Original failures remain separate from collection/storage failure and read-only reconciliation never launches/replays the verifier.
+- Independent review identified simulated evidence containment gaps in the combined generic succession CLI and candidate collector writer. Both now require temporary evidence roots disjoint from implementation roots, with imported and real CLI regression coverage proving failure before writes. Offline validate-candidate arguments now enforce required candidate and conflicting-argument rejection. Historical-scope omission of active candidate outputs is allowed only for exact declared non-applicability matching actual lifecycle; active-route negative tests and actual parser probes preserve fail-closed coverage. Full acceptance reconciliation final rerun and final active-branch gates remain pending.
+
+- Final remote-intake rehearsal passed all 19 acceptance checks, generic succession regressions, inventory zero findings, metadata and governed-command drift. Reviewer reported no remaining material findings across diagnostics and both main reconciliations. These establish local behavior only; actual image qualification and final active-worktree gates remain pending.

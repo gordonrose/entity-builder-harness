@@ -128,6 +128,8 @@ with TemporaryDirectory() as temporary:
     unavailable = json.loads((next(Path(temporary).glob("kanbien-restore-diagnostic-missing-export-*.json"))).read_text())
     assert unavailable["collection"]["status"] == "unavailable"
     assert unavailable["next_action"] == {"decision": "inspect-retained-evidence"}
+    assert module.retain_verifier_rejection(fixture, "kanbien-restore-diagnostic-follow-up", "KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE", "kanbien-core-platform-persistence-restore-20261025-r2", window_task) == ()
+    assert len(list(Path(temporary).glob("kanbien-restore-diagnostic-follow-up-*.json"))) == 1
 module.OPERATION_DIAGNOSTICS = original_diagnostics
 
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
@@ -167,7 +169,8 @@ assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-resto
 policy_event = json.dumps({"requestParameters": {"roleName": "restore-role", "policyName": "kanbien-core-platform-restoration-verifier-current-instance"}})
 class CloudTrailFixture:
     def __init__(self, events): self.events = events
-    def aws(self, *args):
+    def aws_in_region(self, region, *args):
+        assert region == "us-east-1"
         assert args[:2] == ("cloudtrail", "lookup-events")
         return True, {"Events": self.events}, "ok"
 

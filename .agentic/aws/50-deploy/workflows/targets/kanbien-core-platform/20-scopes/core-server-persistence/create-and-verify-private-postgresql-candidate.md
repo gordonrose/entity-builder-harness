@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 4
+version: 5
 status: active
 created_on: "2026-10-23"
 updated_on: "2026-10-26"
@@ -224,7 +224,7 @@ This chat implements/tests the route locally; live RDS execution stays with the
 deployment chat using the merged revision and newly qualified verifier image.
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --server-replacement-original "$original_task_arn" --server-replacement-successor "$successor_task_arn" --recovery-snapshot "$snapshot" --proof-receipt migration-apply="$migration_receipt" --proof-receipt effective-privilege="$effective_privilege_receipt" --proof-receipt server-replacement="$replacement_receipt" --proof-receipt server-replacement-read="$replacement_read_receipt" --proof-receipt runtime-identity-initial-access="$initial_identity_access_receipt" --proof-receipt credential-revocation="$revocation_receipt" --proof-receipt credential-revocation-unready="$revocation_unready_receipt" --proof-receipt credential-recovery="$recovery_receipt" --proof-receipt credential-recovery-health="$recovery_health_receipt" --proof-receipt credential-recovery-read="$recovery_read_receipt" --proof-receipt rollback-b-health="$rollback_health_receipt" --proof-receipt rollback-b-read="$rollback_read_receipt" --proof-receipt rollback-final-health="$return_health_receipt" --proof-receipt rollback-final-read="$return_read_receipt" --proof-receipt isolated-restore="$restore_receipt" --write-candidate --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh --inputs "$acceptance_inputs" --write-candidate --json
 ```
 
 This command creates an immutable verified candidate record. It does not
@@ -232,6 +232,7 @@ overwrite the current accepted release. Validate the existing current reference,
 then promote the candidate with its exact predecessor id:
 
 ```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/release-succession/script.sh --operation validate-candidate --evidence-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence --candidate-record "$candidate_record" --json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/release-succession/script.sh --operation validate-current --evidence-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence --json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/release-succession/script.sh --operation promote --evidence-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence --candidate-record "$candidate_record" --expected-predecessor "$current_release_id" --json
 ```
@@ -250,9 +251,11 @@ otherwise ready, but promotion is intentionally blocked at this decision rather
 than restoring the old broad credential/privilege model.
 
 Any controller interruption is a stop-and-reconcile boundary. Reconcile the
-exact task/change-set identifier reported by that controller; do not submit a
-second update, rerun an uncertain migration, rotate another secret version, or
-delete the candidate. If the provider update itself fails or cannot be
+exact task/change-set identifier reported by that controller; the read-only
+administration observations also reuse an exact retained receipt for the
+current task definition and image. Do not submit a second update, rerun an
+uncertain migration, rotate another secret version, or delete the candidate.
+If the provider update itself fails or cannot be
 observed as stable, preserve the database and stack for diagnosis. If a later
 image rollback is needed, use the qualified-release rollback only after
 checking schema and permission-contract compatibility; it restores an image,

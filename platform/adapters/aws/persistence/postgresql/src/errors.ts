@@ -50,6 +50,7 @@ export function postgreSqlPersistenceOperationError(
 export function postgreSqlPersistenceProviderFailureClass(cause: unknown): PostgreSqlPersistenceProviderFailureClass {
   const classification = postgreSqlFailureDiagnostic(cause).facts.classification;
   if (classification === "authentication_rejected" || classification === "permission_denied") return "access_denied";
+  if (classification === "authentication_material_invalid") return "validation";
   if (classification === "content_unavailable") return "resource_not_found";
   if (classification === "transport_unavailable" || classification === "tls_trust_invalid") return "transport";
   // Retain the legacy broad timeout bucket; the diagnostic itself only
@@ -59,7 +60,7 @@ export function postgreSqlPersistenceProviderFailureClass(cause: unknown): Postg
 }
 
 export const postgreSqlFailureClassifications = [
-  "authentication_rejected", "permission_denied", "content_unavailable",
+  "authentication_rejected", "authentication_material_invalid", "permission_denied", "content_unavailable",
   "tls_trust_invalid", "transport_unavailable", "timeout", "conflict",
   "constraint", "transaction_rolled_back", "validation", "query_canceled", "unknown",
 ] as const;
@@ -104,15 +105,18 @@ export async function observePostgreSqlOperation<T>(phase: Exclude<PostgreSqlObs
 /** Only this closed descriptor may cross the diagnostic/log boundary. */
 export function postgreSqlFailureDiagnostic(cause: unknown): PostgreSqlFailureDiagnostic {
   const codes = errorCodes(cause);
-  const classified = codes.map(classifyCode).find((value) => value !== "unknown") ?? "unknown";
+  const codeClassification = codes.map(classifyCode).find((value) => value !== "unknown") ?? "unknown";
+  const classified = codeClassification !== "unknown" ? codeClassification
+    : hasInvalidAuthenticationMaterial(cause) ? "authentication_material_invalid" : "unknown";
   const observation = typeof cause === "object" && cause !== null ? observations.get(cause) : undefined;
   const facts: PostgreSqlFailureDiagnostic["facts"] = {
     classification: classified,
-    code_status: codes.length === 0 ? "absent" : classified === "unknown" ? "unrecognized" : "recognized",
+    code_status: codes.length === 0 ? "absent" : codeClassification === "unknown" ? "unrecognized" : "recognized",
     phase: observation?.phase ?? "unknown",
     elapsed_ms: observation?.elapsed_ms ?? null,
   };
-  const failureKind = classified === "authentication_rejected" ? "authentication"
+  const failureKind = classified === "authentication_material_invalid" ? "configuration"
+    : classified === "authentication_rejected" ? "authentication"
     : classified === "permission_denied" ? "authorization"
     : classified === "timeout" ? "timeout"
     : classified === "conflict" || classified === "transaction_rolled_back" ? "conflict"
@@ -140,6 +144,24 @@ function classifyCode(code: unknown): PostgreSqlFailureClassification {
   if (code.startsWith("08")) return "transport_unavailable";
   if (code.startsWith("22") || code.startsWith("42")) return "validation";
   return "unknown";
+}
+
+// pg emits this exact fixed invariant only after its password callback has
+// returned invalid material. Match privately; never retain the message itself.
+function hasInvalidAuthenticationMaterial(cause: unknown): boolean {
+  const seen = new Set<object>();
+  function visit(value: unknown, depth: number): boolean {
+    if (depth > 3 || typeof value !== "object" || value === null || seen.has(value) || seen.size >= 32) return false;
+    seen.add(value);
+    try {
+      const error = value as { message?: unknown; cause?: unknown; errors?: unknown };
+      if (error.message === "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string") return true;
+      if (visit(error.cause, depth + 1)) return true;
+      if (Array.isArray(error.errors)) for (const nested of error.errors.slice(0, 32)) if (visit(nested, depth + 1)) return true;
+    } catch { /* unreadable provider fields remain unknown */ }
+    return false;
+  }
+  return visit(cause, 0);
 }
 
 function errorCodes(cause: unknown): readonly unknown[] {

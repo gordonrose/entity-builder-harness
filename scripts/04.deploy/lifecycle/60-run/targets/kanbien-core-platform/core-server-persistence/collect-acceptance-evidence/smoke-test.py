@@ -190,3 +190,16 @@ print("retained observability acceptance receipt checks passed")
 # Current-state proof remains fresh even when historical task receipts are reused.
 import subprocess, sys
 subprocess.run([sys.executable, "-B", str(Path(__file__).with_name("current-observations-test.py"))], check=True)
+
+# Imported simulated collectors cannot bypass root isolation through the newer
+# candidate writer. Fail before invoking candidate construction or storage.
+with tempfile.TemporaryDirectory(prefix="collector-implementation-") as directory:
+    implementation = Path(directory) / "repository"
+    implementation.mkdir()
+    with patch.object(collector,"IMPLEMENTATION_ROOT",implementation), patch.object(collector,"EVIDENCE_CLASS","simulated"), patch.object(collector,"candidate_record",side_effect=AssertionError("unsafe candidate builder invoked")):
+        for destination in [implementation/"evidence", implementation, Path(directory)]:
+            with patch.object(collector,"EVIDENCE_ROOT",destination):
+                try: collector.publish_candidate_record({}, {}, "2026-10-26T00:00:00Z", {})
+                except collector.EvidenceFailure as error: assert str(error)=="acceptance-evidence-simulation-production-write-forbidden"
+                else: raise AssertionError("simulated candidate wrote into implementation")
+        assert list(implementation.iterdir())==[]

@@ -119,6 +119,8 @@ assert set(schema['collection']['allowed_observations'])==diagnostics.COLLECTION
 adapter=(ROOT/'platform/adapters/aws/persistence/postgresql/src/errors.ts').read_text()
 assert set(re.findall(r'"([a-z_]+)"',re.search(r'postgreSqlFailureClassifications = \[(.*?)\] as const',adapter,re.S).group(1)))==diagnostics.FAILURE_CLASSIFICATIONS
 assert set(re.findall(r'"([a-z_]+)"',re.search(r'PostgreSqlObservedPhase = ([^;]+)',adapter).group(1)))==diagnostics.EXECUTION_PHASES
+for status in ["absent", "unrecognized"]:
+ diagnostics.validate_execution({**execution,"classification":"authentication_material_invalid","code_status":status})
 for value in [{"verdict":"rejected","code":"SAFE_REJECTED"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"rejected","code":"SAFE_REJECTED","execution":execution}]:diagnostics.validate_verifier_result(value)
 for value in [{"verdict":"accepted","code":"SAFE_RESULT","provider_message":"synthetic-canary"},{"schema":"deploy/persistence-restore-verifier-result/v2","verdict":"accepted","code":"SAFE_RESULT","execution":execution}]:
  try:diagnostics.validate_verifier_result(value)

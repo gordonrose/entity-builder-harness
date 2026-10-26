@@ -69,3 +69,9 @@ survives malformed, unrecognized, missing later pages or failed collection;
 acceptance still requires a complete, valid success observation. A saturated
 page is incomplete. The evidence reference can include the safe ECS task id;
 `facts.artifact_identity` retains the observed immutable image digest.
+
+`authentication_material_invalid` is a closed adapter classification for the
+exact installed pg SCRAM invariant. The message is inspected privately and never
+retained. Its machine-code status remains `absent` or `unrecognized`; a known
+library invariant does not invent a recognized provider code. Its observed phase
+is the actual failed driver operation, usually `pool_connect`.

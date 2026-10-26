@@ -88,6 +88,7 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
  */
 export function restoreVerificationFailureCode(error: unknown): string {
   switch (postgreSqlFailureDiagnostic(error).facts.classification) {
+    case "authentication_material_invalid": return "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID";
     case "authentication_rejected": return "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED";
     case "permission_denied": return "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED";
     case "content_unavailable": return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE";

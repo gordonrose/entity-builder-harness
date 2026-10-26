@@ -605,7 +605,7 @@ checks:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.sh
     - --inputs
     - '{acceptance_inputs}'
-    - --write
+    - --write-candidate
     - --json
     stage: acceptance
     evidence_class: live

@@ -64,6 +64,19 @@ async function main(): Promise<void> {
   deepEqual(postgreSqlFailureDiagnostic(new Error(canary)).facts, { classification: "unknown", code_status: "absent", phase: "unknown", elapsed_ms: null });
   equal(postgreSqlFailureDiagnostic({ code: canary }).facts.code_status, "unrecognized");
   equal(postgreSqlFailureDiagnostic({ cause: { code: "28P01" } }).facts.classification, "authentication_rejected");
+  const materialMessage = "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string";
+  for (const code of [undefined, canary]) {
+    const diagnostic = postgreSqlFailureDiagnostic({ cause: { message: materialMessage, code } });
+    equal(diagnostic.facts.classification, "authentication_material_invalid");
+    equal(diagnostic.facts.code_status, code === undefined ? "absent" : "unrecognized");
+    equal(diagnostic.failureKind, "configuration");
+    equal(JSON.stringify(diagnostic).includes(materialMessage), false);
+  }
+  equal(postgreSqlFailureDiagnostic(new Error(materialMessage + canary)).facts.classification, "unknown");
+  equal(postgreSqlFailureDiagnostic({ message: materialMessage, code: "28P01" }).facts.classification, "authentication_rejected");
+  equal(postgreSqlFailureDiagnostic({ errors: [...Array.from({ length: 32 }, () => ({})), { message: materialMessage }] }).facts.classification, "unknown");
+  const messageAccessor = Object.defineProperty({}, "message", { get() { throw new Error(canary); } });
+  equal(postgreSqlFailureDiagnostic(messageAccessor).facts.classification, "unknown");
   const cyclic: { cause?: unknown } = {}; cyclic.cause = cyclic;
   equal(postgreSqlFailureDiagnostic(cyclic).facts.code_status, "absent");
   const accessor = Object.defineProperty({}, "code", { get() { throw new Error(canary); } });

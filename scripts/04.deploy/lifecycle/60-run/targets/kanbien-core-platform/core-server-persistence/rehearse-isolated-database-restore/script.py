@@ -18,6 +18,9 @@ OPERATION_DIAGNOSTICS=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-plat
 # *pre-launch stabilization wait*, not an automatic retry of a verifier that
 # has already started or completed.
 RESTORATION_IDENTITY_STABILIZATION_SECONDS=60
+# IAM is global.  CloudTrail Event History records its management events in
+# the global-event region rather than this target's regional RDS control plane.
+IAM_CLOUDTRAIL_REGION="us-east-1"
 # RDS exports server logs asynchronously.  The controller makes one bounded
 # *read-only* observation for a completed verifier task and never retains the
 # raw events, log-stream names, endpoint, or any provider text.  A later
@@ -32,6 +35,7 @@ RESTORE_REJECTED_RESULTS={
  "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE",
+ "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_MATERIAL_INVALID",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE",
@@ -58,7 +62,7 @@ def task_evidence():
 def emit(verdict,*codes,facts=None):
  v={"schema":"deploy/isolated-persistence-restore-rehearsal-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":c} for c in codes]};
  if facts:v["facts"]=facts
- print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up"} else 1
+ print(json.dumps(v,sort_keys=True)); return 0 if verdict in {"restored","accepted","cleaned-up","diagnosed"} else 1
 def restored_postgresql_log_group(restored_database):
  """Return the only RDS log group a restore diagnostic may observe."""
  return f"/aws/rds/instance/{restored_database}/postgresql" if restored_database==restore_id_from_database(restored_database) else None
@@ -294,7 +298,7 @@ def temporary_restore_identity_policy_stable(m, controls):
  role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
  name="kanbien-core-platform-restoration-verifier-current-instance"
  if not isinstance(role,str) or not role:return False
- ok,value,_=m.aws("cloudtrail","lookup-events","--lookup-attributes","AttributeKey=EventName,AttributeValue=PutRolePolicy","--max-results","50")
+ ok,value,_=m.aws_in_region(IAM_CLOUDTRAIL_REGION,"cloudtrail","lookup-events","--lookup-attributes","AttributeKey=EventName,AttributeValue=PutRolePolicy","--max-results","50")
  events=value.get("Events") if ok and isinstance(value,dict) else None
  if not isinstance(events,list):return False
  cutoff=datetime.now(timezone.utc)-timedelta(seconds=RESTORATION_IDENTITY_STABILIZATION_SECONDS)
@@ -635,10 +639,30 @@ def run_locked(action):
  finally:
   fcntl.flock(handle,fcntl.LOCK_UN);handle.close()
 
+def diagnose_rejected(m,sid,rid,operation):
+ """Re-observe one closed rejected verifier without restoring or rerunning it."""
+ if not isinstance(operation,str) or re.fullmatch(r"kanbien-restore-[a-f0-9]{16}",operation) is None:return emit("blocked","persistence-restore-diagnostic-operation-invalid")
+ ctl,cc=controls(m)
+ if ctl is None:return emit("blocked",cc)
+ arns,code=verifier_tasks(m,operation,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
+ if arns is None:return emit("uncertain",code)
+ if len(arns)!=1:return emit("uncertain","persistence-restoration-verifier-task-identity-ambiguous",facts={"snapshot":sid,"restored_database":rid,"operation_id":operation})
+ ok,value,code=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",arns[0]);tasks=value.get("tasks") if ok and isinstance(value,dict) else None
+ task=tasks[0] if isinstance(tasks,list) and len(tasks)==1 and isinstance(tasks[0],dict) else None
+ if task is None or value.get("failures") or task.get("taskArn")!=arns[0] or task.get("taskDefinitionArn")!=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"] or task.get("startedBy")!=operation:return emit("uncertain","persistence-restoration-verifier-task-binding-unavailable",facts={"snapshot":sid,"restored_database":rid,"operation_id":operation})
+ if task.get("lastStatus")!="STOPPED":return emit("pending","persistence-restoration-verifier-still-running",facts={"snapshot":sid,"restored_database":rid,"operation_id":operation})
+ containers=task.get("containers");exit_code=containers[0].get("exitCode") if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None
+ observation=observe_terminal_result(m,arns[0]);result=observation["result"]
+ if type(exit_code) is not int or exit_code==0 or result not in RESTORE_REJECTED_RESULTS:return emit("blocked","persistence-restoration-verifier-rejection-evidence-invalid",facts={"snapshot":sid,"restored_database":rid,"operation_id":operation})
+ findings=retain_verifier_rejection(m,operation,result,rid,task,execution=observation["execution"],task_observation=observation)
+ facts={"snapshot":sid,"restored_database":rid,"operation_id":operation,"safe_result_code":result}
+ if findings:return emit("blocked",result,*findings,facts=facts)
+ return emit("diagnosed","persistence-restoration-verifier-rejection-reobserved",facts=facts)
+
 def main(argv=None):
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--operation");p.add_argument("--snapshot-id");p.add_argument("--record-proof-receipt",type=Path);p.add_argument("--json",action="store_true");p.add_argument("--observe-only",action="store_true");p.add_argument("--validate-arguments",action="store_true");a,u=p.parse_known_args(argv);rid=restore_id(a.snapshot_id) if isinstance(a.snapshot_id,str) else None
- if u or a.operation not in {"restore","verify","cleanup","diagnose-connection"} or rid is None or (a.operation in {"restore","diagnose-connection"})!=(a.record_proof_receipt is not None):return emit("blocked","persistence-isolated-restore-arguments-invalid")
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--operation");p.add_argument("--operation-id");p.add_argument("--snapshot-id");p.add_argument("--record-proof-receipt",type=Path);p.add_argument("--json",action="store_true");p.add_argument("--observe-only",action="store_true");p.add_argument("--validate-arguments",action="store_true");a,u=p.parse_known_args(argv);rid=restore_id(a.snapshot_id) if isinstance(a.snapshot_id,str) else None
+ if u or a.operation not in {"restore","verify","cleanup","diagnose-connection","diagnose-rejected"} or rid is None or (a.operation in {"restore","diagnose-connection"})!=(a.record_proof_receipt is not None) or (a.operation=="diagnose-rejected")!=(a.operation_id is not None) or (a.operation_id is not None and re.fullmatch(r"kanbien-restore-[a-f0-9]{16}",a.operation_id) is None):return emit("blocked","persistence-isolated-restore-arguments-invalid")
  if a.validate_arguments:
   print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[],"runtime_input_contract":{"workload":"persistence-restoration-verifier-task","names":["PERSISTENCE_POSTGRES_HOST"],"observation_required":True} if a.operation in {"verify","diagnose-connection"} else None,"proof_contract": {"proof_type":"restore","operation":"isolated-restore","result_code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED","family":"kanbien-core-platform-persistence-restoration-verifier","deadline_workload":"persistence-restoration-verifier"} if a.operation=="verify" else None}));return 0
- m=load();return run_locked(lambda: restore(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="restore" else verify(m,a.snapshot_id,rid,a.observe_only) if a.operation=="verify" else diagnose_connection(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="diagnose-connection" else cleanup(m,a.snapshot_id,rid,a.observe_only))
+ m=load();return run_locked(lambda: restore(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="restore" else verify(m,a.snapshot_id,rid,a.observe_only) if a.operation=="verify" else diagnose_connection(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="diagnose-connection" else diagnose_rejected(m,a.snapshot_id,rid,a.operation_id) if a.operation=="diagnose-rejected" else cleanup(m,a.snapshot_id,rid,a.observe_only))
 if __name__=="__main__":raise SystemExit(main())

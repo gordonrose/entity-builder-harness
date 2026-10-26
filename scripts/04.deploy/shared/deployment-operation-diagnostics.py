@@ -49,7 +49,7 @@ COLLECTION_OBSERVATIONS = {"complete", "empty", "unrecognized", "malformed", "in
 EXECUTION_PHASES = {"pool_connect", "pool_query", "query", "authentication_value", "tcp_probe", "tls_probe", "unknown"}
 CODE_STATUSES = {"recognized", "unrecognized", "absent"}
 FAILURE_CLASSIFICATIONS = {
-    "authentication_rejected", "permission_denied", "content_unavailable", "tls_trust_invalid",
+    "authentication_rejected", "authentication_material_invalid", "permission_denied", "content_unavailable", "tls_trust_invalid",
     "transport_unavailable", "timeout", "conflict", "constraint", "transaction_rolled_back",
     "validation", "query_canceled", "unknown",
 }
@@ -128,7 +128,9 @@ def validate_execution(value: object) -> dict[str, Any]:
         raise DiagnosticFailure("execution-timing-invalid")
     if value["phase"] == "unknown" and elapsed is not None:
         raise DiagnosticFailure("execution-unknown-timing-invalid")
-    if (value["code_status"] == "recognized") == (value["classification"] == "unknown"):
+    if value["code_status"] == "recognized" and value["classification"] in {"unknown", "authentication_material_invalid"}:
+        raise DiagnosticFailure("execution-code-classification-invalid")
+    if value["code_status"] != "recognized" and value["classification"] not in {"unknown", "authentication_material_invalid"}:
         raise DiagnosticFailure("execution-code-classification-invalid")
     return value
 

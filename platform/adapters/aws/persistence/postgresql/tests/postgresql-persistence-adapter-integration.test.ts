@@ -400,16 +400,18 @@ main().catch(() => {
 
 async function diagnosticEngineFailures(environment: { host: string; port: number; database: string; password: string }): Promise<void> {
   const options = { host: environment.host, port: environment.port, database: environment.database, user: "postgres", password: environment.password, ssl: false as const, connectionTimeoutMillis: 1_000 };
-  for (const [override, classification] of [[{ password: "synthetic-wrong-password" }, "authentication_rejected"], [{ database: "synthetic_absent_database" }, "content_unavailable"]] as const) {
+  for (const [override, classification, codeStatus] of [[{ password: "synthetic-wrong-password" }, "authentication_rejected", "recognized"], [{ database: "synthetic_absent_database" }, "content_unavailable", "recognized"], [{ password: async () => undefined as unknown as string }, "authentication_material_invalid", "absent"]] as const) {
     const pool = nodePoolAdapter(new Pool({ ...options, ...override }));
     try {
       let failure: unknown;
       try { const client = await pool.connect(); client.release(); } catch (error) { failure = error; }
       const diagnostic = postgreSqlFailureDiagnostic(failure);
       equal(diagnostic.facts.classification, classification);
-      equal(diagnostic.facts.phase, "pool_connect"); equal(diagnostic.facts.code_status, "recognized");
+      equal(diagnostic.facts.phase, "pool_connect"); equal(diagnostic.facts.code_status, codeStatus);
       assertOk(diagnostic.facts.elapsed_ms !== null && diagnostic.facts.elapsed_ms >= 0);
       equal(JSON.stringify(diagnostic).includes(environment.password), false);
+      equal(JSON.stringify(diagnostic).includes("SASL:"), false);
+      if (classification === "authentication_material_invalid") equal(diagnostic.failureKind, "configuration");
     } finally { await pool.end(); }
   }
   const pool = nodePoolAdapter(new Pool({ ...options, options: "-c statement_timeout=50" }));

@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T10:49:35Z
-latest_commit_sha: 962cddd1
-chat_duration: 1821006s (21:01:50:06)
+latest_commit_at_utc: 2026-10-26T14:07:58Z
+latest_commit_sha: 43509078
+chat_duration: 1832909s (21:05:08:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3873,6 +3873,83 @@ Decision: Promoted verified observability evidence controls to origin/main
 
 Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
 
+
+### 2026-10-26T13:28:56Z - Commit recorded
+
+Commit: `8bc53dd8`
+
+Message: fix(deploy): retain persistence acceptance evidence
+
+Summary: Added durable retained proof receipts and candidate acceptance evidence, corrected isolated-restore observation handling, and preserved the rejected restore result without repeating it.
+
+ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
+
+
+### 2026-10-26T13:35:33Z - Commit recorded
+
+Commit: `d716bb88`
+
+Message: fix(deploy): align persistence acceptance route
+
+Summary: Corrected the check-selection acceptance collector argument so package qualification uses the declared candidate-writing route.
+
+ADR impact: No ADR change; restores agreement between the release contract and required package check.
+
+
+### 2026-10-26T13:47:00Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): preserve target controls on image update
+
+Summary: Retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+
+ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
+
+### 2026-10-26T13:47:28Z - Commit recorded
+
+Commit: `e865479d`
+
+Message: fix(deploy): preserve target controls on image update
+
+Summary: Corrects the prior symbolic commit reference: retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+
+ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
+
+### 2026-10-26T13:50:58Z - Commit recorded
+
+Commit: `306e5eef`
+
+Message: fix(deploy): bound rejected review cleanup
+
+Summary: Made rejected change-set cleanup depend only on receipt, stack identity, and the named unexecuted review rather than unrelated live prerequisites.
+
+ADR impact: No ADR change; narrows a recovery control.
+
+
+### 2026-10-26T13:53:11Z - Commit recorded
+
+Commit: `ebc54f65`
+
+Message: fix(deploy): reconcile retired image review
+
+Summary: Treat an already-absent rejected change set as a reconciled terminal state, without issuing another deletion or claiming a fresh mutation.
+
+ADR impact: No ADR change; completes bounded recovery idempotency.
+
+
+### 2026-10-26T14:07:58Z - Commit recorded
+
+Commit: `43509078`
+
+Message: evidence(deploy): retain qualified image transition proof
+
+Summary: Retained the safe provisional update diagnostic and fresh server-mediated read proof from the newly qualified image before recovery rehearsal.
+
+ADR impact: No ADR change; durable evidence only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4968,6 +5045,55 @@ Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated
   Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
   ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
 
+
+- Commit: `8bc53dd8`
+  Time UTC: 2026-10-26T13:28:56Z
+  Message: fix(deploy): retain persistence acceptance evidence
+  Summary: Added durable retained proof receipts and candidate acceptance evidence, corrected isolated-restore observation handling, and preserved the rejected restore result without repeating it.
+  ADR impact: Covered by existing deployment evidence and recovery governance; no ADR change.
+
+
+- Commit: `d716bb88`
+  Time UTC: 2026-10-26T13:35:33Z
+  Message: fix(deploy): align persistence acceptance route
+  Summary: Corrected the check-selection acceptance collector argument so package qualification uses the declared candidate-writing route.
+  ADR impact: No ADR change; restores agreement between the release contract and required package check.
+
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T13:47:00Z
+  Message: fix(deploy): preserve target controls on image update
+  Summary: Retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+  ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
+
+- Commit: `e865479d`
+  Time UTC: 2026-10-26T13:47:28Z
+  Message: fix(deploy): preserve target controls on image update
+  Summary: Corrects the prior symbolic commit reference: retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+  ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
+
+- Commit: `306e5eef`
+  Time UTC: 2026-10-26T13:50:58Z
+  Message: fix(deploy): bound rejected review cleanup
+  Summary: Made rejected change-set cleanup depend only on receipt, stack identity, and the named unexecuted review rather than unrelated live prerequisites.
+  ADR impact: No ADR change; narrows a recovery control.
+
+
+- Commit: `ebc54f65`
+  Time UTC: 2026-10-26T13:53:11Z
+  Message: fix(deploy): reconcile retired image review
+  Summary: Treat an already-absent rejected change set as a reconciled terminal state, without issuing another deletion or claiming a fresh mutation.
+  ADR impact: No ADR change; completes bounded recovery idempotency.
+
+
+- Commit: `43509078`
+  Time UTC: 2026-10-26T14:07:58Z
+  Message: evidence(deploy): retain qualified image transition proof
+  Summary: Retained the safe provisional update diagnostic and fresh server-mediated read proof from the newly qualified image before recovery rehearsal.
+  ADR impact: No ADR change; durable evidence only.
+
 ## Main Refresh Conflicts
 
 
@@ -4991,15 +5117,46 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T10:49:35Z
-Latest commit SHA: 962cddd1
-Chat duration: 1821006s (21:01:50:06)
+Latest commit at UTC: 2026-10-26T14:07:58Z
+Latest commit SHA: 43509078
+Chat duration: 1832909s (21:05:08:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
+- 2026-10-26: The target alert subscription was confirmed and a delivery was
+  confirmed by the user.  The persistence candidate remains unaccepted while
+  the final isolated native-restore proof is in progress.  A fresh encrypted
+  recovery snapshot, `kanbien-core-platform-persistence-recovery-20261026-r1`,
+  was created after the retained accepted record proof and its isolated,
+  private restore was submitted.  It has no connection to the source service.
+  The verifier and cleanup will be reconciled from the exact provider state;
+  they must not be duplicated if a controller call is interrupted.
+- 2026-10-26: Acceptance succession was corrected before final collection.
+  Each candidate now integrity-binds the package custody, source-record,
+  observability, compatibility/applicability where present, and terminal proof
+  receipts below allowlisted durable evidence folders.  The generic successor
+  controller rejects mismatched receipt counts and altered retained evidence;
+  historical accepted-release records remain immutable.
+- 2026-10-26: The isolated restore against recovery snapshot
+  `kanbien-core-platform-persistence-recovery-20261026-r1` reached a verified
+  private, encrypted, IAM-authenticated restored instance.  Its one permitted
+  restoration verifier rejected with the closed code
+  `KANBIEN_CORE_PERSISTENCE_RESTORE_DATABASE_HANDSHAKE_UNAVAILABLE`.  The
+  target-owned RDS export yielded only the safe
+  `persistence-restore-server-log-no-classified-event` classification.  The
+  rejected operation diagnostic is retained; no restore proof was accepted or
+  replayed.  The temporary instance-specific IAM policy was removed and the
+  restored instance was confirmed absent.  The source database and candidate
+  ECS service remain healthy.
+- 2026-10-26: The restore controller initially checked CloudTrail in
+  `eu-west-1` for a global IAM `PutRolePolicy` event.  Event History holds the
+  exact event in `us-east-1`; the controller now uses an explicit regional
+  adapter for that global-event observation, with a regression fixture.  This
+  allowed reconciliation of the already-submitted policy without recreating
+  it.
 - 2026-10-26: Promoted the verified isolated-restore TLS-boundary correction
   to `origin/main` by normal fast-forward. The source and promoted commit is
   `5c00b8f211c0bef7519cae05a08c0134eeda0030`; the clean promotion worktree

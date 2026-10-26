@@ -3,7 +3,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.release-succession.implementation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -41,6 +41,7 @@ CURRENT = "current-accepted-release.yml"
 HISTORY_DIRECTORY = "accepted-releases"
 CANDIDATE_DIRECTORY = "release-candidates"
 COMPATIBILITY_DIRECTORY = "rollback-compatibility"
+EVIDENCE_DIRECTORIES = frozenset({"proof-receipts", "package-receipts", "observability-receipts", "rollback-compatibility", "proof-applicability"})
 REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 EVIDENCE_CLASS = "live"
 
@@ -112,6 +113,17 @@ def under(root: Path, path: Path, directory: str) -> Path:
     return result
 
 
+def retained_evidence_file(root: Path, path: Path) -> Path:
+    """Resolve only one allowlisted durable evidence artifact below its root."""
+    root = root.resolve()
+    result = path.resolve()
+    for directory in EVIDENCE_DIRECTORIES:
+        base = (root / directory).resolve()
+        if base in result.parents:
+            return result
+    raise SuccessionFailure("release-succession-candidate-proof-set-invalid")
+
+
 def repository_file(path: str) -> Path:
     relative = Path(path)
     if relative.is_absolute():
@@ -139,7 +151,7 @@ def proof_set(record: dict[str, Any], root: Path | None = None) -> dict[str, dic
             raise SuccessionFailure("release-succession-candidate-proof-set-invalid")
         result[name] = {"path": str(path), "sha256": sha(item.get("sha256"))}
         if root is not None:
-            receipt = under(root, root / path, "proof-receipts")
+            receipt = retained_evidence_file(root, root / path)
             try:
                 raw = receipt.read_bytes()
             except OSError as error:
@@ -553,7 +565,7 @@ def report(verdict: str, *codes: str, facts: dict[str, str] | None = None) -> in
 def main() -> int:
     global REPOSITORY_ROOT, EVIDENCE_CLASS
     parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
-    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-current"))
+    parser.add_argument("--operation", choices=("initialize-legacy", "promote", "record-compatibility", "validate-candidate", "validate-current"))
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--legacy-record", type=Path)
     parser.add_argument("--candidate-record", type=Path)
@@ -567,7 +579,9 @@ def main() -> int:
         return report("blocked", "release-succession-arguments-invalid")
     if unknown or args.operation is None or args.evidence_root is None or (args.operation in {"initialize-legacy", "promote"} and not isinstance(args.expected_predecessor, str)):
         return report("blocked", "release-succession-arguments-invalid")
-    if args.operation == "initialize-legacy" and (args.legacy_record is None or args.candidate_record is not None) or args.operation in {"promote", "record-compatibility"} and (args.candidate_record is None or args.legacy_record is not None) or args.operation == "validate-current" and (args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None):
+    if args.operation == "initialize-legacy" and (args.legacy_record is None or args.candidate_record is not None) or args.operation in {"promote", "record-compatibility", "validate-candidate"} and (args.candidate_record is None or args.legacy_record is not None) or args.operation == "validate-current" and (args.legacy_record is not None or args.candidate_record is not None or args.expected_predecessor is not None):
+        return report("blocked", "release-succession-arguments-invalid")
+    if args.operation in {"record-compatibility", "validate-candidate"} and args.expected_predecessor is not None:
         return report("blocked", "release-succession-arguments-invalid")
     if args.validate_arguments:
         print(json.dumps({"schema": "deploy/command-arguments-report/v1", "verdict": "valid", "findings": []})); return 0
@@ -575,7 +589,7 @@ def main() -> int:
     try:
         if args.rehearsal_root is not None:
             rehearsal = args.rehearsal_root.resolve()
-            if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()):
+            if not rehearsal.is_relative_to(Path(tempfile.gettempdir()).resolve()) or not root.is_relative_to(rehearsal) or rehearsal.is_relative_to(REPOSITORY_ROOT.resolve()) or REPOSITORY_ROOT.resolve().is_relative_to(rehearsal):
                 raise SuccessionFailure("release-succession-rehearsal-root-invalid")
             REPOSITORY_ROOT, EVIDENCE_CLASS = rehearsal, "simulated"
         if args.operation == "validate-current":
@@ -585,6 +599,13 @@ def main() -> int:
             if state is None:
                 raise SuccessionFailure("release-succession-current-missing")
             return report("valid", "release-succession-current-reference-valid", facts={"target": state["target"], "scope": state["scope"], "release_id": state["release_id"]})
+        if args.operation == "validate-candidate":
+            if args.candidate_record is None or args.legacy_record is not None or args.expected_predecessor is not None:
+                raise SuccessionFailure("release-succession-arguments-invalid")
+            source = under(root, args.candidate_record, CANDIDATE_DIRECTORY)
+            record, _ = document(source)
+            target, scope, _, identity = candidate_identity(record, root)
+            return report("valid", "release-succession-candidate-valid", facts={"target": target, "scope": scope, "release_id": release_id(identity)})
         root.mkdir(parents=True, exist_ok=True)
         lock = root / ".release-succession.lock"
         with lock.open("a+b") as handle:
