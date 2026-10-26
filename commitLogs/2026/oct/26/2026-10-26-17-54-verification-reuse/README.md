@@ -259,6 +259,17 @@ Summary: Explicit user-directed root preservation checkpoint; six reviewed files
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-26T21:17:44Z - Main refresh conflict recorded
+
+Path: `scripts/repo/check-selection/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserve incoming staged preparation helper, comments and metadata version; retain all new selector regressions and additional changed-preparation rejection assertions from the verification branch.
+
 ## Sub-Agent Activity
 
 
@@ -348,6 +359,17 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268-20261026191146`
   Files changed by resolution: script.py; checks.yml auto-merge duplicate consolidation preserves audited definitions, all eight incoming new checks, dormant package exclusions and restore applicability
   Checks: Syntax and diff checks passed; final integration selector and regression suites pending on prepared combined inputs.
+
+
+- Path: `scripts/repo/check-selection/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: User-authorized verification implementation and local-main integration; both branches independently fix the same missing preparation in the real-hook fixture.
+  Action: Preserve incoming staged preparation helper, comments and metadata version; retain all new selector regressions and additional changed-preparation rejection assertions from the verification branch.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-8095c171069b/20261026210333`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-17-54-simplify-repository-verifi-8095c171069b-20261026210333`
+  Files changed by resolution: scripts/repo/check-selection/smoke-test.py; current session audit
+  Checks: Focused real-hook regression passed; full affected integration verification follows.
 
 ## ADR Disposition
 

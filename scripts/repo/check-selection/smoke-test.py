@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection
-#   version: 4
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -1048,12 +1048,22 @@ used_by:
         (shim / 'git').chmod(0o755)
         environment = {**os.environ, 'PATH': str(shim) + ':' + os.environ['PATH']}
         def prepare():
-            result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--paths', 'src/main.ts', '--record-preparation', '--json'], cwd=self.root, env=environment, capture_output=True, text=True)
+            result = subprocess.run(
+                ['bash', 'scripts/repo/check-selection/script.sh', '--staged', '--record-preparation', '--json'],
+                cwd=self.root,
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
         def invoke():
             result = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             return json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
+        # Commit gates require a recorded pre-verification selection. The
+        # source revision is deliberately not part of the reusable local-proof
+        # identity, so an unrelated revision change may still reuse it.
         prepare()
         first = invoke(); revision.write_text('b' * 40); second = invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
