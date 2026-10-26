@@ -1,7 +1,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: infra.04-deploy.03-product.entrypoint.kanbien-core-server-persistence-restore-verifier
-//   version: 3
+//   version: 4
 //   status: draft
 //   created_on: "2026-10-23"
 //   updated_on: "2026-10-26"
@@ -47,7 +47,22 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
   } catch (error) {
     return rejected(restoreTlsPreflightFailureCode(error), postgreSqlFailureDiagnostic(error), diagnostic);
   }
-  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
+  // Materialise the short-lived IAM token before constructing the PostgreSQL
+  // pool.  Obtaining task-role credentials can legitimately take longer than
+  // the database connection deadline on a newly started Fargate task.  The
+  // deadline must measure the database connection, not credential-provider
+  // startup.  The token remains opaque and is never emitted.
+  let authenticationToken: string;
+  try {
+    authenticationToken = await observePostgreSqlOperation("authentication_value", credentials.authenticationToken);
+  } catch (error) {
+    return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE", postgreSqlFailureDiagnostic(error), diagnostic);
+  }
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, {
+    username: credentials.username,
+    authenticationToken: async () => authenticationToken,
+    certificateAuthority,
+  });
   let client: Awaited<ReturnType<typeof pool.connect>> | undefined;
   try {
     try {

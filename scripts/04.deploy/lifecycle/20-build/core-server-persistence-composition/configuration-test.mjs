@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.core-server-persistence-configuration
-//   version: 1
+//   version: 2
 //   status: draft
 //   created_on: "2026-10-24"
 //   updated_on: "2026-10-26"
@@ -227,6 +227,7 @@ async function iamAuthenticationRegression() {
 function targetTemplateRegression() {
   const template = originalRead("infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml", "utf8");
   assert.equal(template.includes("PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN"), false, "The target realization must reject the local-token test escape by never declaring it.");
+  assert.equal(template.includes("PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN_DELAY_MS"), false, "The target realization must reject the test-only IAM-token delay escape by never declaring it.");
   assert.equal(/Name:\s*NODE_ENV,\s*Value:\s*test/.test(template), false, "The target realization must never deploy a test runtime marker.");
   assert.equal(template.includes("PERSISTENCE_RUNTIME_CREDENTIALS"), false, "The deployed server must not receive the retired runtime password secret.");
   assert.equal(template.includes("PERSISTENCE_MIGRATION_CREDENTIALS"), false, "The deployed migration task must not receive the retired migration password secret.");
