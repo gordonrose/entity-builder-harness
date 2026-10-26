@@ -4775,6 +4775,11 @@ Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
+- 2026-10-26: Promoted the verified isolated-restore TLS-boundary correction
+  to `origin/main` by normal fast-forward. The source and promoted commit is
+  `5c00b8f211c0bef7519cae05a08c0134eeda0030`; the clean promotion worktree
+  ran the restore-controller, proof-applicability, and persistence-composition
+  regression suites before the final fetch, eligibility check, and push.
 - 2026-10-21: Refreshed this clean chat branch by rebasing it onto local `main`
   (`c1ad31a0`) after fetching remote references. The branch moved from
   `3bfce6a8` to `c1ad31a0`; Git reported no conflicts, no stash was used, and
