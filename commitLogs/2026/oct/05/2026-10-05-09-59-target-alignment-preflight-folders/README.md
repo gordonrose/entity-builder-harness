@@ -511,6 +511,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Use safe transport preflight before restore verifier authentication
   Rationale: The preflight opens and immediately closes only a TCP socket to the declared private database address. PostgreSQL TLS, IAM authentication, and query proof remain in the existing driver path. Unknown post-preflight driver failures map to a new closed handshake result; raw provider detail remains excluded.
 
+
+- Decision: Bind proof reuse to the immutable image input closure
+  Rationale: The new diagnostic image differs from the previously qualified image only in the restoration verifier among package inputs. Target controllers, durable-evidence artifacts and acceptance checks remain in the full audited source delta but do not change the executable image. The applicability control now rejects every changed package input except that verifier and records the full delta for review.
+
 ## Context Hygiene
 
 
@@ -753,6 +757,10 @@ can you walk me through which part of my repo work on the following stages
 
 - Summary: The failed restored copy has been deleted and its temporary inline IAM policy is absent. The deployed service remains healthy. The next necessary live operation is a new qualified verifier image plus one fresh isolated restore proof; do not retry the expired DB incarnation.
   Durable evidence: Current task evidence is in AWS ECS/RDS and durable accepted proof receipts remain under the core-server-persistence target release-evidence directory.
+
+
+- Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba. Its custody receipt and a restore-verifier-only applicability record are target evidence. The failed temporary restored database and its temporary policy are absent; do not retry that incarnation.
+  Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
 
 ## Activity Log
 
@@ -3655,6 +3663,20 @@ Message: fix(deploy): classify isolated restore transport boundary
 Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
 
 ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
+
+
+### 2026-10-26T01:15:37Z - Decision
+
+Decision: Bind proof reuse to the immutable image input closure
+
+Rationale: The new diagnostic image differs from the previously qualified image only in the restoration verifier among package inputs. Target controllers, durable-evidence artifacts and acceptance checks remain in the full audited source delta but do not change the executable image. The applicability control now rejects every changed package input except that verifier and records the full delta for review.
+
+
+### 2026-10-26T01:15:37Z - Context hygiene
+
+Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba. Its custody receipt and a restore-verifier-only applicability record are target evidence. The failed temporary restored database and its temporary policy are absent; do not retry that incarnation.
+
+Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
 
 ## Sub-Agent Activity
 

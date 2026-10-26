@@ -1,0 +1,25 @@
+{
+  "candidate_id": "kanbien-core-server-persistence-candidate",
+  "checked_at": "2026-10-26T01:10:41Z",
+  "checks": {
+    "delivery_access_live": "passed",
+    "delivery_access_static": "passed",
+    "dependency_boundary": "passed",
+    "ecr_scan": "passed",
+    "local_image_smoke": "passed",
+    "provenance_attestation": "passed",
+    "runnable_program_contract": "passed",
+    "sbom": "passed"
+  },
+  "environment_class": "private-persistence-candidate",
+  "image_digest": "sha256:5a7be9c80dea97a46d319058218ddc32788c8d1fcee617a4bedadf083376e3ba",
+  "package_contract_id": "kanbien-core-server-persistence-image",
+  "program_id": "kanbien-core-server-persistence",
+  "provider_region_alias": "aws-eu-west-1",
+  "receipt_reference": "github-actions-run:40252659734",
+  "release_identity": "source-2a7a3d11e0693ea5e6001aaf7e3df40f6fa67e3a",
+  "schema": "deploy/package-custody-receipt/v1",
+  "source_revision": "2a7a3d11e0693ea5e6001aaf7e3df40f6fa67e3a",
+  "target": "kanbien-core-platform",
+  "verdict": "qualified"
+}

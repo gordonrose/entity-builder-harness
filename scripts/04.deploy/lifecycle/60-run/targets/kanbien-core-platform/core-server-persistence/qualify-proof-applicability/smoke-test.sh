@@ -32,6 +32,9 @@ try:
     new={**old,"source_revision":"b"*40,"image_digest":"sha256:"+"b"*64,"receipt_reference":"github-actions-run:2"}
     old_identity={key:old[key] for key in module.PACKAGE_FIELDS}
     new_identity={key:new[key] for key in module.PACKAGE_FIELDS}
+    assert module.restore_only_delta(["scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py", "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"])
+    assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts", "platform/adapters/aws/persistence/postgresql/src/connection.ts"])
+    assert not module.restore_only_delta(["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts"])
     with patch.object(module,"source_paths",return_value=["infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"]), patch.object(module,"validate_package_receipt"):
         record=module.make((old_identity,old),(new_identity,new))
         assert module.validate(record,new_identity)==record

@@ -43,13 +43,19 @@ REUSABLE = {
     "credential-recovery", "credential-recovery-health", "credential-recovery-read",
     "rollback-final-health", "rollback-final-read",
 }
-RESTORE_ONLY_PATHS = {
-    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
-    "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
-    "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
-    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
-    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh",
-}
+RESTORE_VERIFIER_INPUT = "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts"
+# These paths are copied or compiled into the qualified image. A change to any
+# of them can alter the executable candidate and therefore cannot inherit an
+# earlier proof. Deployment controllers, receipt collectors, test fixtures and
+# target declarations remain in the recorded repository delta, but are not
+# image input simply because they are in the same source revision.
+IMAGE_INPUT_PREFIXES = (
+    "packages/",
+    "platform/",
+    "infra/04.deploy/03.product/entrypoints/",
+    "infra/04.deploy/03.product/image/core-server-persistence/",
+)
+IMAGE_INPUT_FILES = {"package.json", "package-lock.json"}
 PACKAGE_FIELDS = {"source_revision", "image_digest", "receipt_reference"}
 
 
@@ -93,9 +99,15 @@ def source_paths(predecessor: str, candidate: str) -> list[str]:
     if not paths or len(paths) != len(set(paths)): raise ApplicabilityError("persistence-proof-applicability-source-diff-invalid")
     return sorted(paths)
 
+def image_input_paths(paths: list[str]) -> list[str]:
+    return sorted(path for path in paths if path in IMAGE_INPUT_FILES or path.startswith(IMAGE_INPUT_PREFIXES))
+
 def restore_only_delta(paths: list[str]) -> bool:
-    if "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts" not in paths: return False
-    return all(path in RESTORE_ONLY_PATHS or path.startswith("commitLogs/") or path.startswith("infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/proof-receipts/") for path in paths)
+    # Keep the complete revision delta in the record for review, but establish
+    # historical runtime-proof applicability from the actual package input
+    # closure. A source revision can legitimately add receipt retention or a
+    # controller regression without changing the immutable executable image.
+    return image_input_paths(paths) == [RESTORE_VERIFIER_INPUT]
 
 def receipt_destination(identity: dict[str, str]) -> Path: return PACKAGE_RECEIPTS / f"package-custody-{identity['receipt_reference'].removeprefix('github-actions-run:')}.json"
 
