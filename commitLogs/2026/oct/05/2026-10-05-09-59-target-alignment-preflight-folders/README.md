@@ -233,6 +233,10 @@ can you walk me through which part of my repo work on the following stages
 - Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
   Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
 
+
+- Raised: Restore verifier could not reach the isolated restored database.
+  Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
+
 ## Decisions Made
 
 - Established `.agentic/04.deploy/` as the provider-neutral deployment
@@ -3600,6 +3604,13 @@ ADR impact: No ADR required: this is a bounded correction to the existing releas
 Decision: Promoted durable evidence controls to remote main.
 
 Rationale: After focused checks in a clean integration worktree, main advanced fast-forward from c60e55d4 to f0e0d23a; remote main was read back at that exact commit. The remaining live restore proof will use this governed version.
+
+
+### 2026-10-26T00:50:50Z - Issue
+
+Raised: Restore verifier could not reach the isolated restored database.
+
+Resolution: Read-only provider facts showed the deployed stack lacks the declared RestorationVerifierRestoredDatabaseEgress resource. Added a governed egress-only correction mode that accepts exactly that one CloudFormation addition and no broader surface change.
 
 ## Sub-Agent Activity
 

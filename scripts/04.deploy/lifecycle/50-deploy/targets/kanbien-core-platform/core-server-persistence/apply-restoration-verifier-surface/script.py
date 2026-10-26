@@ -1,37 +1,38 @@
 #!/usr/bin/env python3
-"""Add only the isolated restore-verifier CloudFormation resources."""
+"""Apply only an enumerated isolated restoration-verifier provider correction."""
 from __future__ import annotations
 import argparse, importlib.util, json, subprocess, tempfile, time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[8]; STACK="kanbien-core-platform-core-server-persistence"; TEMPLATE=ROOT/"infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml"
 ADDED={"RestorationVerifierSecurityGroup","RestoredDatabaseSecurityGroup","RestorationVerifierDnsUdpEgress","RestorationVerifierDnsTcpEgress","RestorationVerifierEndpointEgress","RestorationVerifierArtifactObjectStoreEgress","RestorationVerifierRestoredDatabaseEgress","RestoredDatabaseIngressFromRestorationVerifier","EndpointIngressFromRestorationVerifier","RestorationVerifierExecutionRole","CoreServerPersistenceRestorationVerifierTaskDefinition"}
+EGRESS_ONLY={"RestorationVerifierRestoredDatabaseEgress"}
 def load():
  p=ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py";s=importlib.util.spec_from_file_location("prepare",p);m=importlib.util.module_from_spec(s);assert s and s.loader;s.loader.exec_module(m);return m
 def emit(v,*codes,facts=None):
  r={"schema":"deploy/persistence-restoration-surface-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":v,"findings":[{"code":c} for c in codes]};
  if facts:r["facts"]=facts
  print(json.dumps(r,sort_keys=True));return 0 if v=="applied" else 1
-def review(change,name,digest):
+def review(change,name,digest,allowed=ADDED):
  if not isinstance(change,dict) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"} or not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)):return False
  params={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
  if params.get("RestoreVerifierImageDigest")!=digest:return False
  seen=set()
  for x in change.get("Changes",[]):
   c=x.get("ResourceChange",{}) if isinstance(x,dict) else {};seen.add(c.get("LogicalResourceId"))
-  if c.get("LogicalResourceId") not in ADDED or c.get("Action")!="Add" or c.get("ResourceType") not in {"AWS::EC2::SecurityGroup","AWS::EC2::SecurityGroupIngress","AWS::EC2::SecurityGroupEgress","AWS::IAM::Role","AWS::ECS::TaskDefinition"}:return False
- return seen==ADDED
+  if c.get("LogicalResourceId") not in allowed or c.get("Action")!="Add" or c.get("ResourceType") not in {"AWS::EC2::SecurityGroup","AWS::EC2::SecurityGroupIngress","AWS::EC2::SecurityGroupEgress","AWS::IAM::Role","AWS::ECS::TaskDefinition"}:return False
+ return seen==allowed
 def surface_parameters(state,digest):
  return [{"ParameterKey":x["ParameterKey"],"UsePreviousValue":True} for x in state.get("Parameters",[]) if isinstance(x,dict) and isinstance(x.get("ParameterKey"),str) and x["ParameterKey"]!="RestoreVerifierImageDigest"] + [{"ParameterKey":"RestoreVerifierImageDigest","ParameterValue":digest}]
-def reconcile(m,name,digest):
- verdict,code=m.observe_update(name,{"RestoreVerifierImageDigest":digest},lambda change:review(change,name,digest))
- return emit("applied" if verdict=="complete" else verdict,code,facts={"change_set":name,"restore_verifier_image_digest":digest})
+def reconcile(m,name,digest,allowed=ADDED,mode="surface"):
+ verdict,code=m.observe_update(name,{"RestoreVerifierImageDigest":digest},lambda change:review(change,name,digest,allowed))
+ return emit("applied" if verdict=="complete" else verdict,code,facts={"change_set":name,"restore_verifier_image_digest":digest,"mode":mode})
 def main():
- p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");a,u=p.parse_known_args()
+ p=argparse.ArgumentParser(add_help=False);p.add_argument("--receipt",type=Path);p.add_argument("--mode",choices=("surface","egress"),default="surface");p.add_argument("--json",action="store_true");p.add_argument("--reconcile",action="store_true");a,u=p.parse_known_args()
  if u or a.receipt is None:return emit("blocked","persistence-restoration-surface-arguments-invalid")
  m=load();receipt=m.validate_receipt(a.receipt)
  if receipt is None:return emit("blocked","package-custody-receipt-invalid")
- digest=receipt["image_digest"];name=f"kanbien-core-platform-persistence-restore-surface-{digest[7:19]}"
- if a.reconcile:return reconcile(m,name,digest)
+ digest=receipt["image_digest"];allowed=EGRESS_ONLY if a.mode=="egress" else ADDED;name=f"kanbien-core-platform-persistence-restore-{'egress' if a.mode=='egress' else 'surface'}-{digest[7:19]}"
+ if a.reconcile:return reconcile(m,name,digest,allowed,a.mode)
  if not m.declaration_covered() or not m.live_budget()[0] or not m.candidate_image(receipt)[0]:return emit("blocked","persistence-restoration-surface-preconditions-not-proven")
  ok,stack,code=m.aws("cloudformation","describe-stacks","--stack-name",STACK);items=stack.get("Stacks") if ok and isinstance(stack,dict) else None; state=items[0] if isinstance(items,list) and len(items)==1 and isinstance(items[0],dict) else None
  if not isinstance(state,dict) or state.get("StackStatus") not in {"CREATE_COMPLETE","UPDATE_COMPLETE"}:return emit("blocked",code if not ok else "persistence-restoration-surface-stack-not-healthy")
@@ -46,13 +47,13 @@ def main():
   for _ in range(6):
    time.sleep(2);ok,change,code=m.aws("cloudformation","describe-change-set","--stack-name",STACK,"--change-set-name",name)
    if ok and isinstance(change,dict) and change.get("Status")!="CREATE_PENDING":break
- if not review(change,name,digest):return reconcile(m,name,digest)
- if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(m,name,digest)
+ if not review(change,name,digest,allowed):return reconcile(m,name,digest,allowed,a.mode)
+ if change.get("ExecutionStatus")!="AVAILABLE":return reconcile(m,name,digest,allowed,a.mode)
  expected={x.get("ParameterKey"):x.get("ParameterValue") for x in state.get("Parameters",[]) if isinstance(x,dict)};expected["RestoreVerifierImageDigest"]=digest
  actual={x.get("ParameterKey"):x.get("ParameterValue") for x in change.get("Parameters",[]) if isinstance(x,dict)}
  if actual!=expected:return emit("blocked","persistence-restoration-surface-parameters-mismatch")
  ok,_,code=m.aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",name)
  if not ok:return emit("uncertain",code,facts={"change_set":name})
- return reconcile(m,name,digest)
+ return reconcile(m,name,digest,allowed,a.mode)
 
 if __name__=="__main__":raise SystemExit(main())

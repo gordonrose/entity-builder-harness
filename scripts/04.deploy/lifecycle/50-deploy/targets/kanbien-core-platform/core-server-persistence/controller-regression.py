@@ -5,7 +5,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -392,6 +392,10 @@ class ControllerRegression(unittest.TestCase):
         values=surface.surface_parameters({'Parameters':[{'ParameterKey':'ImageDigest'},{'ParameterKey':'RestoreVerifierImageDigest'}]},digest)
         self.assertEqual(len([item for item in values if item['ParameterKey']=='RestoreVerifierImageDigest']),1)
         self.assertEqual(values[-1]['ParameterValue'],digest)
+        egress_change={'ChangeSetName':'restore-egress','Status':'CREATE_COMPLETE','ExecutionStatus':'AVAILABLE','ChangeSetType':'UPDATE','Parameters':[{'ParameterKey':item['ParameterKey'],'ParameterValue':item.get('ParameterValue')} for item in values], 'Changes':[{'ResourceChange':{'LogicalResourceId':'RestorationVerifierRestoredDatabaseEgress','ResourceType':'AWS::EC2::SecurityGroupEgress','Action':'Add'}}]}
+        self.assertTrue(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
+        egress_change['Changes'].append({'ResourceChange':{'LogicalResourceId':'RestoredDatabaseIngressFromRestorationVerifier','ResourceType':'AWS::EC2::SecurityGroupIngress','Action':'Add'}})
+        self.assertFalse(surface.review(egress_change,'restore-egress',digest,surface.EGRESS_ONLY))
         route=load(DEPLOY/'apply-private-verifier-route-update/script.py')
         report=result(lambda:route.report('updated','persistence-private-verifier-route-updated',facts={'change_set':'synthetic'}))[1]
         self.assertEqual(report['facts']['change_set'],'synthetic')

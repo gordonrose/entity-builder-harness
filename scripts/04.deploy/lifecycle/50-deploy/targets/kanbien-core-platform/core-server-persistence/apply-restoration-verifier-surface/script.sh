@@ -6,12 +6,12 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Apply only the reviewed isolated restoration-verifier provider surface.
+#   purpose: Apply only the reviewed isolated restoration-verifier provider surface or its explicit missing-egress correction.
 #   portability: { class: internal, targets: [] }
 #   effects: [aws-mutation]
 #   used_by:
