@@ -535,6 +535,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Promoted private observability collector implementation
   Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
 
+
+- Decision: Promoted verified observability evidence controls to origin/main
+  Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
+
 ## Context Hygiene
 
 
@@ -3861,6 +3865,13 @@ Message: feat(deploy): retain observability readiness proof
 Summary: Added durable, integrity-checked readiness failure, notification, and recovery receipts; wired acceptance to retained receipts while preserving fresh current-state checks.
 
 ADR impact: No ADR: this is a bounded target-scoped extension of existing receipt and acceptance controls.
+
+
+### 2026-10-26T11:47:27Z - Decision
+
+Decision: Promoted verified observability evidence controls to origin/main
+
+Rationale: Fast-forwarded origin/main from 67798a47 to 089f63c9 through isolated integration branch agentic/remote-promotion/chat_2026-10-05-09-59-can-you-walk-me-through-which-part-of-my-repo-work-on-the-fo-20261026T114630Z after receipt, controller, acceptance-route, and target-declaration checks passed. SNS delivery remains PendingConfirmation; no live credential revocation or rehearsal was submitted.
 
 ## Sub-Agent Activity
 
