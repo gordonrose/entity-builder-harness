@@ -1,7 +1,7 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: aws.workflow.kanbien-core-platform-core-server-persistence-candidate
-version: 5
+version: 6
 status: active
 created_on: "2026-10-23"
 updated_on: "2026-10-26"
@@ -659,6 +659,34 @@ not permission to change the source database or credentials.
 Use the same receipt plus `--reconcile` after interruption; observation contains
 no mutation. The normal CREATE includes this surface already.
 
+## RDS IAM-Authentication Log-Export Reconciliation
+
+The persistence template requires both `postgresql` and
+`iam-db-auth-error` exports. The latter is needed to diagnose a rejected
+restoration-verifier IAM database connection without treating application output
+as provider evidence. CloudFormation can report an otherwise healthy stack
+while the live RDS export set has drifted, so do not use an empty stack update
+or an ad-hoc `modify-db-instance` command to repair it.
+
+Use the target-bound controller below. It first observes the exact private
+PostgreSQL instance and template declaration. If and only if PostgreSQL logging
+is present and the sole required export missing is `iam-db-auth-error`, it
+enables that one export, preserves all existing exports, and returns `pending`.
+It never changes credentials, IAM, engine settings, networking, database data,
+or the ECS service. A transitional RDS status or lost response is a
+stop-and-reconcile boundary; `--reconcile` makes no provider mutation.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.sh --json
+
+# Repeat only this read-only observation until it returns reconciled.
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.sh --reconcile --json
+```
+
+Only after `reconciled` may a new isolated restore operation rely on the two-log
+collector. The controller's observation is configuration evidence, not a
+successful restore or an acceptance record.
+
 ## Applicable Controller Continuation Audit
 
 All commands below belong to this workflow's existing persistence scope. Their
@@ -680,6 +708,7 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `apply-private-verifier-route-update` | Same receipt with `--reconcile`; no repeated route update. |
 | `apply-restoration-verifier-surface` | Same receipt with `--reconcile`; no repeated surface update. |
 | `apply-observability-mvp-surface` | Same server/collector receipts with `--reconcile`; no repeated observability update. |
+| `reconcile-rds-log-export-surface` | `--reconcile` only observes the exact target's required export set; it never repeats an in-flight RDS mutation. |
 | `retire-failed-candidate` | Retained exact stack ARN with `--reconcile-stack-id`; explicit `--continue-stack-id` advances only the incomplete deletion stage after safety checks. |
 
 The regression suite at

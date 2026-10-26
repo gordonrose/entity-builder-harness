@@ -28,6 +28,7 @@ REPLACE="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/
 ROUTE_UPDATE="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh"
 TRANSITION="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh"
 OBSERVABILITY="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh"
+RDS_LOG_EXPORTS="$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.sh"
 expect_failure() { local code="$1"; shift; local output; if output="$("$@" 2>&1)"; then echo 'ERROR: expected failure' >&2; exit 1; fi; [[ "$output" == *"$code"* ]] || { echo "ERROR: expected $code: $output" >&2; exit 1; }; }
 expect_failure persistence-candidate-preparation-arguments-invalid "$PREPARE" --target staging --json
 expect_failure package-custody-receipt-invalid "$CREATE" --receipt /tmp/missing-persistence-receipt.json --json
@@ -41,6 +42,67 @@ expect_failure persistence-replacement-arguments-invalid "$REPLACE" --json
 expect_failure persistence-private-route-update-arguments-invalid "$ROUTE_UPDATE" --json
 expect_failure persistence-release-transition-arguments-invalid "$TRANSITION" --json
 expect_failure persistence-observability-mvp-arguments-invalid bash "$OBSERVABILITY" --json
+expect_failure persistence-rds-log-export-arguments-invalid bash "$RDS_LOG_EXPORTS" --target staging --json
+python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/reconcile-rds-log-export-surface/script.py" <<'PY'
+import importlib.util, sys
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location("rds_log_exports", sys.argv[1])
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+assert module.template_declares_required_exports()
+
+def instance(*, status="available", exports=("postgresql", "iam-db-auth-error"), identifier=module.DATABASE):
+    return {"DBInstances": [{
+        "DBInstanceIdentifier": identifier, "DBInstanceStatus": status,
+        "EnabledCloudwatchLogsExports": list(exports), "Engine": "postgres",
+        "PubliclyAccessible": False, "IAMDatabaseAuthenticationEnabled": True,
+    }]}
+
+state, code = module.database_state(instance())
+assert code == "ok" and state == {"status": "available", "exports": ["iam-db-auth-error", "postgresql"]}
+assert module.database_state(instance(identifier="other"))[1] == "persistence-rds-log-export-target-mismatch"
+assert module.database_state({"DBInstances": []})[1] == "persistence-rds-log-export-observation-invalid"
+
+calls = []
+def complete(*parts):
+    calls.append(parts)
+    return True, instance(), "ok"
+with patch.object(module, "aws", side_effect=complete):
+    assert module.main([]) == 0
+assert all(parts[1] != "modify-db-instance" for parts in calls)
+
+calls = []
+def missing(*parts):
+    calls.append(parts)
+    if parts[1] == "describe-db-instances": return True, instance(exports=("postgresql", "upgrade")), "ok"
+    assert parts[:2] == ("rds", "modify-db-instance")
+    assert parts[parts.index("--cloudwatch-logs-export-configuration") + 1] == '{"EnableLogTypes":["iam-db-auth-error"]}'
+    return True, {}, "ok"
+with patch.object(module, "aws", side_effect=missing):
+    assert module.main([]) == 1
+assert sum(parts[1] == "modify-db-instance" for parts in calls) == 1
+
+calls = []
+with patch.object(module, "aws", side_effect=missing):
+    assert module.main(["--reconcile"]) == 1
+assert all(parts[1] != "modify-db-instance" for parts in calls)
+
+calls = []
+def transitional(*parts):
+    calls.append(parts)
+    return True, instance(status="configuring-log-exports", exports=("postgresql", "upgrade")), "ok"
+with patch.object(module, "aws", side_effect=transitional):
+    assert module.main([]) == 1
+assert len(calls) == 1 and calls[0][1] == "describe-db-instances"
+
+calls = []
+def unowned(*parts):
+    calls.append(parts)
+    return True, instance(exports=("iam-db-auth-error", "upgrade")), "ok"
+with patch.object(module, "aws", side_effect=unowned):
+    assert module.main([]) == 1
+assert len(calls) == 1 and calls[0][1] == "describe-db-instances"
+PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.py" <<'PY'
 import importlib.util, sys, tempfile
 from pathlib import Path
