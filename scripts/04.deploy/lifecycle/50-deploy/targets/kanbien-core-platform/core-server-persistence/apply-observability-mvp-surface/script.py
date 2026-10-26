@@ -144,11 +144,11 @@ def name_matches(value: object, name: str) -> bool:
     return value == name or (isinstance(value, str) and value.startswith("arn:aws:cloudformation:") and value.split(":changeSet/", 1)[-1].split("/", 1)[0] == name)
 
 
-def review(change: object, name: str, server: dict, collector: dict, alert_email: str) -> bool:
+def review(change: object, name: str, server: dict, collector: dict, alert_email: str, collector_image: str) -> bool:
     if not isinstance(change, dict) or change.get("Status") != "CREATE_COMPLETE" or change.get("ChangeSetType") not in {None, "UPDATE"} or not name_matches(change.get("ChangeSetName"), name):
         return False
     values = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if values.get("ImageDigest") != server["image_digest"] or values.get("SupportImageDigest") != server["image_digest"] or values.get("RestoreVerifierImageDigest") != server["image_digest"] or values.get("SourceRevision") != server["source_revision"] or values.get("EnableObservability") != "true" or values.get("ObservabilityCollectorImage") != collector["image_digest"] or values.get("ObservabilityAlertEmail") != alert_email:
+    if values.get("ImageDigest") != server["image_digest"] or values.get("SupportImageDigest") != server["image_digest"] or values.get("RestoreVerifierImageDigest") != server["image_digest"] or values.get("SourceRevision") != server["source_revision"] or values.get("EnableObservability") != "true" or values.get("ObservabilityCollectorImage") != collector_image or values.get("ObservabilityAlertEmail") != alert_email:
         return False
     added, modified = set(), set()
     changes = change.get("Changes")
@@ -173,18 +173,18 @@ def change_name(server: dict, collector: dict) -> str:
 
 
 def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str) -> int:
-    verdict, code = prepare.observe_update(name, expected, lambda value: review(value, name, server, collector, alert_email))
+    verdict, code = prepare.observe_update(name, expected, lambda value: review(value, name, server, collector, alert_email, expected["ObservabilityCollectorImage"]))
     return report("updated-awaiting-observability-proof" if verdict == "complete" else verdict, code, facts={"change_set": name, "server_image_digest": server["image_digest"], "collector_image_digest": collector["image_digest"]})
 
 
-def wait_for_review(prepare, name: str, server: dict, collector: dict, alert_email: str) -> tuple[dict | None, str]:
+def wait_for_review(prepare, name: str, server: dict, collector: dict, alert_email: str, collector_image: str) -> tuple[dict | None, str]:
     for attempt in range(6):
         ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
         if not ok:
             return None, code
         if isinstance(change, dict) and change.get("Status") == "FAILED":
             return None, "persistence-observability-mvp-change-set-failed"
-        if review(change, name, server, collector, alert_email):
+        if review(change, name, server, collector, alert_email, collector_image):
             return change, "ok"
         if attempt < 5:
             time.sleep(2)
@@ -208,9 +208,6 @@ def main() -> int:
     if server is None or collector is None or server.get("source_revision") != collector.get("source_revision"):
         return report("blocked", "persistence-observability-mvp-package-receipts-invalid")
     name = change_name(server, collector)
-    expected = {"ImageDigest": server["image_digest"], "SupportImageDigest": server["image_digest"], "RestoreVerifierImageDigest": server["image_digest"], "SourceRevision": server["source_revision"], "EnableObservability": "true", "ObservabilityCollectorImage": collector["image_digest"], "ObservabilityAlertEmail": args.alert_email}
-    if args.reconcile:
-        return reconcile(prepare, name, expected, server, collector, args.alert_email)
     import subprocess
     collector_gate = subprocess.run(["bash", str(COLLECTOR_GATE), "--json"], capture_output=True, text=True)
     if collector_gate.returncode or not create.package_gates(args.server_receipt) or not prepare.declaration_covered() or not prepare.live_budget()[0] or not prepare.candidate_image(server)[0] or not collector_image_available(prepare, collector):
@@ -218,6 +215,9 @@ def main() -> int:
     foundation, code = prepare.foundation_outputs()
     if foundation is None:
         return report("blocked", code)
+    expected = {"ImageDigest": server["image_digest"], "SupportImageDigest": server["image_digest"], "RestoreVerifierImageDigest": server["image_digest"], "SourceRevision": server["source_revision"], "EnableObservability": "true", "ObservabilityCollectorImage": f"{foundation['RepositoryUri']}@{collector['image_digest']}", "ObservabilityAlertEmail": args.alert_email}
+    if args.reconcile:
+        return reconcile(prepare, name, expected, server, collector, args.alert_email)
     infrastructure, code = prepare.infrastructure_parameters(foundation)
     if infrastructure is None:
         return report("blocked", code)
@@ -243,7 +243,7 @@ def main() -> int:
             ok, _, code = prepare.aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
         if not ok:
             return report("uncertain", code, facts={"change_set": name})
-    change, code = wait_for_review(prepare, name, server, collector, args.alert_email)
+    change, code = wait_for_review(prepare, name, server, collector, args.alert_email, expected["ObservabilityCollectorImage"])
     if change is None:
         return reconcile(prepare, name, expected, server, collector, args.alert_email)
     if change.get("ExecutionStatus") != "AVAILABLE":
