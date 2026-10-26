@@ -48,6 +48,8 @@ let integrationPhase = "initialization";
 
 async function main(): Promise<void> {
   const environment = localFixtureEnvironment();
+  integrationPhase = "fixture-authentication-ready";
+  await waitForFixtureAuthentication(environment);
   integrationPhase = "diagnostic-engine-failures";
   await diagnosticEngineFailures(environment);
   const rawPool = new Pool({
@@ -266,6 +268,38 @@ async function main(): Promise<void> {
   } finally {
     await rawPool.end();
   }
+}
+
+async function waitForFixtureAuthentication(environment: ReturnType<typeof localFixtureEnvironment>): Promise<void> {
+  // `pg_isready` establishes that the postmaster accepts probes, not that a
+  // freshly created container has reached a stable password-authentication
+  // boundary. Establish that boundary with the real driver before testing a
+  // deliberately rejected password. Bounded retries only cover fixture start;
+  // they never turn an expected diagnostic assertion into a pass.
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const pool = new Pool({
+      host: environment.host,
+      port: environment.port,
+      database: environment.database,
+      user: "postgres",
+      password: environment.password,
+      max: 1,
+      connectionTimeoutMillis: 1_000,
+      ssl: false,
+    });
+    try {
+      const client = await pool.connect();
+      client.release();
+      return;
+    } catch {
+      // The fixture is still starting. Provider detail is deliberately not
+      // emitted because it can contain connection material.
+    } finally {
+      await pool.end();
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error("The disposable PostgreSQL fixture did not reach authenticated readiness.");
 }
 
 async function bootstrapOwnershipRepeat(environment: ReturnType<typeof localFixtureEnvironment>, rawPool: Pool): Promise<void> {
