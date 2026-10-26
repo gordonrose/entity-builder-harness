@@ -97,6 +97,8 @@ canary = "password=synthetic-not-for-output"
 assert module.classify_restored_postgresql_log_events([{"message": f'FATAL: password authentication failed for user "runtime" {canary}'}]) == "persistence-restore-server-log-authentication-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": "FATAL: no pg_hba.conf entry"}]) == "persistence-restore-server-log-client-authentication-policy-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": 'FATAL: role "runtime" does not exist'}]) == "persistence-restore-server-log-role-state-invalid"
+assert module.classify_restored_postgresql_log_events([{"message": "Failed to authorize the connection request because the caller is not authorized to perform `rds-db:connect` " + canary}]) == "persistence-restore-server-log-iam-authorization-rejected"
+assert module.classify_restored_postgresql_log_events([{"message": "Failed to authenticate the connection request because the provided token is malformed " + canary}]) == "persistence-restore-server-log-iam-authentication-rejected"
 assert module.classify_restored_postgresql_log_events([{"message": "unexpected provider detail " + canary}]) == "persistence-restore-server-log-no-classified-event"
 assert module.classify_restored_postgresql_log_events({}) == "persistence-restore-server-log-observation-invalid"
 
@@ -134,8 +136,11 @@ module.OPERATION_DIAGNOSTICS = original_diagnostics
 # RDS IAM authentication can lag the IAM policy read that binds the temporary
 # restored instance.  A first verifier launch waits for an aged, exact
 # CloudTrail policy observation, then launches at most one bound task.
-restored = {"DBInstanceStatus": "available", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "Endpoint": {"Address": "restore.example.invalid"}}
+restored = {"DBInstanceStatus": "available", "Engine": "postgres", "DbiResourceId": "db-RESTORE-A", "PubliclyAccessible": False, "StorageEncrypted": True, "IAMDatabaseAuthenticationEnabled": True, "EnabledCloudwatchLogsExports": ["postgresql", "iam-db-auth-error"], "VpcSecurityGroups": [{"VpcSecurityGroupId": "sg-restored"}], "DBSubnetGroup": {"DBSubnetGroupName": "subnet-group"}, "Endpoint": {"Address": "restore.example.invalid"}}
 controls = {"CoreServerPersistenceRestorationVerifierTaskDefinitionArn": "definition-safe", "PersistenceRestoredDatabaseSecurityGroupId": "sg-restored", "PersistenceRestorationVerifierTaskRoleName": "restore-role", "PrivateSubnetIds": "subnet-safe", "PersistenceRestorationVerifierSecurityGroupId": "sg-verifier"}
+source_for_posture = {"DBSubnetGroup": {"DBSubnetGroupName": "subnet-group"}}
+assert module.correct(restored, source_for_posture, "sg-restored")
+assert not module.correct({**restored, "EnabledCloudwatchLogsExports": ["postgresql"]}, source_for_posture, "sg-restored")
 class LaunchFixture:
     def __init__(self): self.calls = []
     def aws(self, *args):
@@ -160,6 +165,28 @@ with contextlib.redirect_stdout(output):
 module.source, module.controls, module.db, module.correct, module.task_def_valid, module.temporary_restore_identity_policy, module.temporary_restore_identity_policy_stable, module.verifier_tasks = originals
 assert any(call[1] == "run-task" for call in launch.calls)
 assert json.loads(output.getvalue())["findings"] == [{"code": "persistence-restoration-verifier-submitted-awaiting-provider-observation"}]
+
+# A new isolated restore must request both ordinary PostgreSQL and dedicated
+# IAM-authentication error exports.  The controller retains only closed
+# classifications; this extra provider signal is for in-memory diagnosis.
+class RestoreLaunchFixture:
+    def __init__(self): self.calls = []
+    def aws(self, *args): self.calls.append(args); return True, {}, "ok"
+
+originals = module.source, module.snapshot, module.controls, module.read_record_proof, module.recovery_point_binding, module.db
+module.source = lambda _m: ({"DBInstanceClass": "db.t4g.micro", "DBSubnetGroup": {"DBSubnetGroupName": "subnet-safe"}}, "ok")
+module.snapshot = lambda _m, _id: ({"Status": "available", "Encrypted": True, "DBInstanceIdentifier": module.DATABASE}, "ok")
+module.controls = lambda _m: (controls, "ok")
+module.read_record_proof = lambda _path: ({}, "ok")
+module.recovery_point_binding = lambda *_args: (({"Target": "kanbien-core-platform"}, {"snapshot": "safe"}), "ok")
+module.db = lambda _m, _id: (None, "aws-resource-missing")
+restore_launch = RestoreLaunchFixture()
+with contextlib.redirect_stdout(io.StringIO()):
+    assert module.restore(restore_launch, "kanbien-core-platform-persistence-recovery-20261025-r2", "kanbien-core-platform-persistence-restore-20261025-r2", record_proof_path=Path("safe")) == 1
+module.source, module.snapshot, module.controls, module.read_record_proof, module.recovery_point_binding, module.db = originals
+restore_call = next(call for call in restore_launch.calls if call[1] == "restore-db-instance-from-db-snapshot")
+export_index = restore_call.index("--enable-cloudwatch-logs-exports")
+assert restore_call[export_index + 1:export_index + 3] == module.RESTORE_SERVER_LOG_EXPORTS
 
 # The non-blocking stabilization check has to identify the exact temporary
 # policy mutation, and must fail closed for fresh, unrelated, or malformed
