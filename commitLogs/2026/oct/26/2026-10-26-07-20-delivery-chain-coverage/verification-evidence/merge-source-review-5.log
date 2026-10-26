@@ -1,0 +1,48 @@
+{
+  "counts": {
+    "failed": 0,
+    "fixtures": 1,
+    "passed": 1
+  },
+  "fixtures": [
+    {
+      "counts": {
+        "gaps": 0,
+        "matched_corpora": 1,
+        "recognition_matches": 11,
+        "selected_chunks": 10
+      },
+      "errors": [],
+      "fixture_id": "retrieval-selector.v1.container-image-management",
+      "ok": true,
+      "packet_id": "packet.selector-fixture.136bce4be0030483",
+      "path": ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml",
+      "routing": {
+        "classification_source": "request-context-plus-recognition-sources",
+        "continuity_reason": "No previous context packet supplied; current prompt is resolved from request context and available session continuity.",
+        "layer": "04.deploy",
+        "mode": "planning",
+        "previous_packet_id": "",
+        "recognition_summary": {
+          "evidence-family": 3,
+          "file-path": 1,
+          "intent-form": 1,
+          "layer-name": 2,
+          "mode-name": 1,
+          "question-category": 1,
+          "workflow-name": 2
+        },
+        "scope": "prompt",
+        "status": "ready",
+        "target_paths": [],
+        "task_type": "generate_retrieval_selector_fixture",
+        "workflow": ".agentic/aws/workflows/plan-aws-change.md"
+      },
+      "warnings": []
+    }
+  ],
+  "ok": true,
+  "schema": "rag-rulebook/retrieval-selector-evaluation/v1"
+}
+
+STDERR

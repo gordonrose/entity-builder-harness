@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-06-28"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -41,6 +41,7 @@ required_fields:
   - schema
   - compiled_policy_id
   - generated_at
+  - source_layout
   - compiler
   - policy_pack
   - dimensions
@@ -72,6 +73,10 @@ fields:
   generated_at:
     type: string
     format: iso-8601-utc
+
+  source_layout:
+    type: string
+    allowed_values: [checkout, packaged-source-archive]
 
   compiler:
     type: object
@@ -121,7 +126,8 @@ fields:
     type: array
     rules:
       - Evidence bundles must come from governed evidence-bundles policy.
-      - Every source path must resolve or be reported as a compilation error.
+      - Every source path must resolve or be reported as a compilation error, except exact governed archive_unavailable_sources when packaged-source-archive is explicitly selected.
+      - Archive exclusions preserve the original always/family path and reason in unavailable_sources; matching queries must expose missing-evidence gaps. Checkout compilation has no exclusion exception.
 
   retrieval_strategy:
     type: object

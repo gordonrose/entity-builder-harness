@@ -335,7 +335,7 @@ def classify_cloudformation_failure(change_set: object, events: object) -> tuple
             resource_status = event.get("ResourceStatus")
             if classification == "provider-details-unavailable" and isinstance(resource_status, str) and resource_status.endswith("FAILED"):
                 facts.update(_event_facts(event))
-    outcome = "rejected" if change.get("Status") == "FAILED" else "unknown"
+    outcome = "rejected" if change.get("Status") == "FAILED" else "pending" if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"} else "unknown"
     return classification, facts, outcome
 
 

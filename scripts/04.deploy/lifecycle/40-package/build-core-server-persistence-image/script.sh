@@ -22,6 +22,7 @@ cd "$ROOT"
 TAG="entity-builder-harness/04.deploy/kanbien-core-server-persistence:local"
 if [[ $# -eq 2 && "$1" == "--tag" && -n "$2" ]]; then TAG="$2"; elif [[ $# -ne 0 ]]; then printf '%s\n' 'Usage: script.sh [--tag <tag>]' >&2; exit 2; fi
 bash scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh --scope-contract infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml --json
+python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
 bash scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh --target-root infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes --json
 bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json >/dev/null
 bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh

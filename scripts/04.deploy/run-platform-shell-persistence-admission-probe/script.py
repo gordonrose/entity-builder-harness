@@ -149,6 +149,7 @@ def resolve_policy(profile: dict[str, Any]) -> dict[str, str]:
         raise AdmissionProbeError("the admission probe requires the exact deployed proof-client allowlist")
 
     base_probe = {
+        "entrypoint": "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh",
         "route": "POST /smoke/work-items/admission",
         "permission": "platform-smoke.persistence.work-item:create",
         "request_body": "none",

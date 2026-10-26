@@ -344,6 +344,18 @@ change_impact:
       consumers connected to their existing checks.
     owner: persistence-platform
     required_by:
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
+    - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.sh
+    - scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/retire-failed-candidate/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-restoration-verifier-surface/script.sh
+    - scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh
+    - scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.sh
+    - scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecr-read-access/script.sh
     - infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml
     - infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml
     declarations:

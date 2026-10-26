@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-28"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -85,8 +85,8 @@ ROOT = repo_root()
 
 def usage() -> str:
     return """Usage:
-  compile-retrieval-policy/script.sh --current [--index <path>] [--output <path>] [--pretty]
-  compile-retrieval-policy/script.sh --policy <path> [--index <path>] [--output <path>] [--pretty]
+  compile-retrieval-policy/script.sh --current [--index <path>] [--output <path>] [--source-layout checkout|packaged-source-archive] [--pretty]
+  compile-retrieval-policy/script.sh --policy <path> [--index <path>] [--output <path>] [--source-layout checkout|packaged-source-archive] [--pretty]
 
 Compiles governed retrieval selector policy and recognition inputs into a
 rag-rulebook/compiled-retrieval-policy/v1 JSON artifact. The command is
@@ -100,6 +100,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--policy")
     parser.add_argument("--index")
     parser.add_argument("--output")
+    parser.add_argument("--source-layout", choices=["checkout", "packaged-source-archive"], default="checkout")
     parser.add_argument("--pretty", action="store_true")
     parser.add_argument("-h", "--help", action="store_true")
     args = parser.parse_args(argv)
@@ -343,7 +344,7 @@ def compile_user_intents(user_intents_dimension: dict[str, Any]) -> list[dict[st
     return intents
 
 
-def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[dict[str, Any]], source_layout: str) -> list[dict[str, Any]]:
     bundles = []
     known_question_categories = set()
     known_evidence_families = set()
@@ -371,15 +372,31 @@ def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[d
                 compiled_when[field] = value.strip()
         always_source_paths = list_of_strings(raw_bundle.get("always_source_paths"))
         family_source_paths = dict_value(raw_bundle.get("family_source_paths"))
+        archive_unavailable = raw_bundle.get("archive_unavailable_sources", {})
+        declared_paths = set(always_source_paths) | set(family_source_paths.values())
+        if not isinstance(archive_unavailable, dict) or any(
+            not isinstance(path, str) or path not in declared_paths or Path(path).is_absolute() or ".." in Path(path).parts
+            or not isinstance(reason, str) or not reason.strip()
+            for path, reason in archive_unavailable.items()
+        ):
+            raise ValueError("invalid archive evidence availability declaration")
+        unavailable = {}
+        def require_source(source_path):
+            if not isinstance(source_path, str):
+                raise ValueError("evidence source path must be a string")
+            if repo_path(source_path).is_file():
+                return
+            if source_layout == "packaged-source-archive" and source_path in archive_unavailable:
+                unavailable[source_path] = archive_unavailable[source_path]
+                return
+            raise ValueError(f"evidence bundle source path does not exist: {source_path}")
         for source_path in always_source_paths:
-            if not repo_path(source_path).is_file():
-                raise ValueError(f"evidence bundle source path does not exist: {source_path}")
+            require_source(source_path)
         compiled_family_paths: dict[str, str] = {}
         for family_id, source_path in sorted(family_source_paths.items()):
             if family_id not in known_evidence_families:
                 raise ValueError(f"evidence bundle references unknown evidence family: {family_id}")
-            if not isinstance(source_path, str) or not repo_path(source_path).is_file():
-                raise ValueError(f"evidence family source path does not exist: {source_path}")
+            require_source(source_path)
             compiled_family_paths[str(family_id)] = source_path
         bundles.append(
             {
@@ -388,6 +405,7 @@ def compile_evidence_bundles(evidence_dimension: dict[str, Any], sources: list[d
                 "when": compiled_when,
                 "always_source_paths": always_source_paths,
                 "family_source_paths": compiled_family_paths,
+                "unavailable_sources": unavailable,
             }
         )
     return bundles
@@ -501,6 +519,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         "schema": SCHEMA,
         "compiled_policy_id": "pending",
         "generated_at": generated_at,
+        "source_layout": args.source_layout,
         "compiler": {
             "id": COMPILER_ID,
             "version": COMPILER_VERSION,
@@ -518,7 +537,7 @@ def build_compiled_policy(args: argparse.Namespace) -> dict[str, Any]:
         "thresholds": policy.get("thresholds") or {},
         "intent_resolution": compile_intent_resolution(prompt_dimension, sources),
         "user_intents": compile_user_intents(user_intents_dimension),
-        "evidence_bundles": compile_evidence_bundles(evidence_dimension, sources),
+        "evidence_bundles": compile_evidence_bundles(evidence_dimension, sources, args.source_layout),
         "retrieval_strategy": compile_retrieval_strategy(strategy_dimension),
         "chunk_selection": compile_chunk_selection(strategy_dimension),
         "recognition_sources": {

@@ -7,7 +7,7 @@
 #   version: 6
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import json
@@ -68,11 +69,18 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Safely reconcile the declared Kanbien staging deployment state.")
     parser.add_argument("--validate", action="store_true", help="Validate source only; make no AWS call.")
-    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set", "role-policy-alignment"), default="continuous")
+    parser.add_argument("--mode", choices=("continuous", "pre-foundation-change-set", "pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", "pre-relational-stage6-service-change-set", "pre-relational-stage6-bootstrap-recovery-service-change-set", "pre-candidate-execution-preflight-onboarding-change-set", "pre-candidate-execution-preflight-image-change-set", "role-policy-alignment", "runtime-alignment", "service-update", "service-rollback", "service-operation-status"), default="continuous")
     parser.add_argument("--foundation-change-set", help="The reviewed Foundation change-set name, required only for a Foundation preflight mode.")
     parser.add_argument("--service-change-set", help="The reviewed service change-set name, required only for the isolated relational Stage 6 service preflight.")
     parser.add_argument("--service-drift-evidence", help="New /tmp safe Service-drift evidence, required only for the isolated relational Stage 6 service preflight.")
     parser.add_argument("--known-foundation-drift-evidence", help="A new safe /tmp evidence record, required only for the exact egress-remediation preflight.")
+    parser.add_argument("--deployment-manifest")
+    parser.add_argument("--realization-facts")
+    parser.add_argument("--realization-change-summary")
+    parser.add_argument("--rehearsal-root")
+    parser.add_argument("--current-deployment-manifest")
+    parser.add_argument("--expected-predecessor")
+    parser.add_argument("--rollback-compatibility-id")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE)
     parser.add_argument("--aws-cli", default="aws")
     parser.add_argument("--aws-credential-source", choices=("target-profile", "environment"), default="target-profile")
@@ -94,7 +102,7 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("--foundation-change-set is permitted only for a Foundation preflight mode")
     if service_preflight_mode and not arguments.validate and not arguments.service_change_set:
         parser.error("--service-change-set is required for the isolated relational Stage 6 service preflight")
-    if not service_preflight_mode and arguments.service_change_set:
+    if not service_preflight_mode and arguments.mode not in {"service-update","service-rollback","service-operation-status"} and arguments.service_change_set:
         parser.error("--service-change-set is permitted only for the isolated relational Stage 6 service preflight")
     if arguments.mode in {"pre-foundation-egress-remediation-change-set", "pre-relational-stage6-foundation-change-set", *relational_service_preflight_modes} and not arguments.validate:
         if not arguments.known_foundation_drift_evidence:
@@ -118,6 +126,16 @@ def parse_arguments() -> argparse.Namespace:
         parser.error("a relational Foundation preflight requires declared administrator target-profile credentials")
     if service_preflight_mode and not arguments.validate and arguments.aws_credential_source != "target-profile":
         parser.error("a controlled Service preflight requires declared administrator target-profile credentials")
+    release_modes={"runtime-alignment","service-update","service-rollback","service-operation-status"}
+    if arguments.mode in release_modes and not arguments.validate:
+        if not arguments.deployment_manifest:parser.error("--deployment-manifest is required for release control")
+        if arguments.mode!="runtime-alignment" and not arguments.service_change_set:parser.error("--service-change-set is required for service operation control")
+        if arguments.mode in {"service-update","service-rollback"} and not arguments.expected_predecessor:parser.error("--expected-predecessor is required before mutation")
+        if arguments.mode in {"service-update","service-rollback"} and not all((arguments.realization_facts,arguments.realization_change_summary)):parser.error("--realization-facts and --realization-change-summary are required before mutation")
+        if arguments.mode=="service-rollback" and not arguments.rollback_compatibility_id:parser.error("--rollback-compatibility-id is required before rollback")
+        if arguments.mode in {"service-update","service-rollback"} and arguments.aws_credential_source!="target-profile":parser.error("service mutation requires declared administrator target-profile credentials")
+    elif any((arguments.deployment_manifest,arguments.current_deployment_manifest,arguments.expected_predecessor,arguments.rollback_compatibility_id)):
+        parser.error("release controls require a release mode")
     return arguments
 
 
@@ -834,6 +852,15 @@ def main() -> int:
     try:
         policy = resolve_policy(load_yaml(Path(arguments.target_profile)))
         checks.append({"id": "source-policy", "verdict": "passed"})
+        if not arguments.validate:
+            spec=importlib.util.spec_from_file_location("aws_response",REPOSITORY_ROOT/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+            adapter=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapter)
+            if not adapter.inventory_covered(REPOSITORY_ROOT):raise ReconciliationError("delivery-inventory-not-covered")
+
+        if not arguments.validate and arguments.mode in {"runtime-alignment","service-update","service-rollback","service-operation-status"}:
+            spec=importlib.util.spec_from_file_location("shell_release_control",Path(__file__).with_name("release_control.py"))
+            control=importlib.util.module_from_spec(spec);spec.loader.exec_module(control)
+            return control.run(sys.modules[__name__],arguments,policy)
         if not arguments.validate and arguments.mode == "role-policy-alignment":
             run_check(
                 "reconciliation-live-role-policy",

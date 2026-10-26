@@ -4,7 +4,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: deployment.realization
 #   disciplines:
@@ -70,7 +70,7 @@ field_guide:
   - path: normalized-facts.gate_evidence and normalized-facts.component_evidence
     what: Safe, normalized proof records from a separately governed provider adapter.
     does: Binds each passed gate and each declared graph component to a named check without provider or sensitive detail.
-    validation: Entries use exact allowlisted fields, stable check identifiers, UTC timestamps, passed verdicts, and complete component coverage.
+    validation: Entries use exact allowlisted fields, stable check identifiers, UTC timestamps, input_sha256 from the compiler evidence_bindings helper, declared gate check IDs, passed verdicts, and complete component coverage.
   - path: normalized-facts.artifact_bindings
     what: Safe evidence for source-declared runtime-bound artifacts.
     does: Binds a logical artifact component to a content digest after publication and before execution.
@@ -78,7 +78,7 @@ field_guide:
   - path: normalized-change-summary
     what: Safe aggregate result of a provider plan or change inspection.
     does: Confirms the proposed mutation shape stays within declared operation classes.
-    validation: Uses exact allowlisted fields, stable check identifier, UTC timestamp, and declared non-negative operation counts only.
+    validation: Uses exact allowlisted fields, stable check identifier, UTC timestamp, input_sha256 bound to the change-set gate, and declared non-negative operation counts only.
 proof_states: [declared, locally-proven, live-read-proven, live-execution-proven]
 gate_order:
   - source
@@ -94,3 +94,14 @@ normalized_change_summary_schema: operational-realization-normalized-change-summ
 provider_adapter_boundary:
   core_accepts: [normalized-facts, normalized-change-summary]
   core_forbids: [provider-sdk, provider-cli, provider-resource-type, provider-import]
+
+evidence_reuse:
+  component_input_identity: declared-outgoing-dependency-closure-and-runtime-artifact-digests
+  gate_input_identity:
+    source: reviewed-contract
+    artifact: artifact-declarations-and-digests-configuration-workload-composition-and-qualification-check
+    later_operational_gates: reviewed-contract-and-runtime-artifact-digests
+  immutable_gate_reuse: original-receipt-and-timestamp-when-stage-inputs-match
+  current_observation_max_age_seconds: 900
+  current_observation_future_tolerance_seconds: 60
+  immutable_proof_age_expiry: none-while-bound-inputs-match

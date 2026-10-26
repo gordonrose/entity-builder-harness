@@ -153,6 +153,30 @@ class DiagnosticTests(unittest.TestCase):
    self.run_diagnostic(provider);provider.tasks[0]['lastStatus']='STOPPED';provider.foreign_policy=True
    _,result=self.run_diagnostic(provider)
    self.assertIn('persistence-restoration-temporary-identity-policy-mismatch',[finding['code'] for finding in result['findings']]);self.assertFalse(any(call[1]=='delete-role-policy' for call in provider.calls))
+ def test_absent_database_still_requires_tasks_policy_and_reservation_resolution(self):
+  provider,stack=self.target()
+  with stack:
+   self.run_diagnostic(provider)
+   with patch.object(self.m,'db',return_value=(None,'aws-resource-missing')):
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(result['verdict'],'pending')
+    provider.tasks[0]['lastStatus']='STOPPED';provider.foreign_policy=True
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(result['verdict'],'blocked')
+    self.assertFalse(any(call[1]=='delete-role-policy' for call in provider.calls))
+    provider.policy=False
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(result['verdict'],'cleaned-up',result)
+    provider.tasks=[]
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+    self.assertEqual(result['verdict'],'uncertain',result)
+    self.assertIn('reservation-binding-unproven',result['findings'][0]['code'])
+ def test_diagnostic_cli_declares_dynamic_host_without_recovery_proof(self):
+  command=['bash',str(HERE/'script.sh'),'--operation','diagnose-connection','--snapshot-id',SID,'--record-proof-receipt','/tmp/fixture-proof.json','--validate-arguments']
+  result=subprocess.run(command,cwd=ROOT,capture_output=True,text=True,timeout=10)
+  report=json.loads(result.stdout);self.assertEqual(result.returncode,0,result.stderr)
+  self.assertEqual(report['runtime_input_contract']['names'],['PERSISTENCE_POSTGRES_HOST'])
+  self.assertTrue(report['runtime_input_contract']['observation_required']);self.assertIsNone(report['proof_contract'])
  def test_cleanup_requires_exact_final_task_set(self):
   provider,stack=self.target()
   with stack:

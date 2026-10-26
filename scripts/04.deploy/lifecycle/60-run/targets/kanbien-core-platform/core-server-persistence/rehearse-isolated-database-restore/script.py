@@ -372,7 +372,7 @@ def verifier_tasks(m,operation,definition):
      tasks = described.get("tasks") if ok and isinstance(described, dict) else None
      if not isinstance(tasks, list) or described.get("failures") or len(tasks) != len(batch) or not all(isinstance(task, dict) and isinstance(task.get("taskArn"), str) for task in tasks) or {task["taskArn"] for task in tasks} != set(batch):
          return None, "persistence-restoration-verifier-observation-uncertain"
-     matching.extend(task["taskArn"] for task in tasks if task.get("startedBy") == operation)
+     matching.extend(task["taskArn"] for task in tasks if operation is None or task.get("startedBy") == operation)
  return matching,"ok"
 def restore_run_identity(restored):
  # A snapshot can be restored more than once.  The ECS started-by value must
@@ -544,7 +544,7 @@ def diagnose_connection(m,sid,rid,observe_only=False,record_proof_path=None):
  if not isinstance(artifact,str) or re.fullmatch(r"sha256:[a-f0-9]{64}",artifact) is None:return emit_diagnostic("blocked","persistence-connection-diagnostic-artifact-unavailable",facts=facts)
  try:
   module=diagnostics()
-  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-connection-diagnostic-not-complete",exit_status=1,outcome="unknown",classification="persistence-connection-diagnostic-launch-reserved",evidence_reference=f"provider-operation:{operation}",next_decision="observe-current-operation",facts={"artifact_identity":artifact})
+  report=module.build_report(target="kanbien-core-platform",scope="core-server-persistence",operation_id=operation,stage="run",original_code="persistence-connection-diagnostic-not-complete",exit_status=1,outcome="unknown",classification="persistence-connection-diagnostic-launch-reserved",evidence_reference=f"provider-operation:{operation}",next_decision="observe-current-operation",facts={"artifact_identity":artifact,"resource_logical_id":rid})
   module.write_report(reservation,report,exclusive=True)
  except FileExistsError:return emit_diagnostic("uncertain","persistence-connection-diagnostic-reserved-reconcile-only",facts=facts) if reservation.is_file() else emit_diagnostic("blocked","persistence-diagnostic-report-write-failed",facts=facts)
  except Exception:return emit_diagnostic("blocked","persistence-diagnostic-report-write-failed",facts=facts)
@@ -553,34 +553,67 @@ def diagnose_connection(m,sid,rid,observe_only=False,record_proof_path=None):
  ok,_,_=m.aws("ecs","run-task","--cluster",CLUSTER,"--task-definition",definition,"--launch-type","FARGATE","--count","1","--started-by",operation,"--client-token",operation,"--network-configuration",net,"--overrides",overrides)
  return emit_diagnostic("pending" if ok else "uncertain","persistence-connection-diagnostic-submitted" if ok else "persistence-connection-diagnostic-launch-uncertain",facts=facts)
 
+def absent_database_reservations_resolved(rid, tasks):
+ """An absent database does not prove a reserved task launch never happened."""
+ if OPERATION_DIAGNOSTICS.exists() and not OPERATION_DIAGNOSTICS.is_dir():return False
+ try:
+  paths=sorted(OPERATION_DIAGNOSTICS.glob("kanbien-connect-*-launch.json"))
+  if len(paths)>100:return False
+  for path in paths:
+   if path.is_symlink() or path.stat().st_size>65536:return False
+   reservation=diagnostics().validate(json.loads(path.read_text(encoding="utf-8")))
+   target=reservation.get("facts",{}).get("resource_logical_id")
+   if not isinstance(target,str) or restore_id_from_database(target)!=target:return False
+   if target!=rid:continue
+   operation=reservation.get("operation_id")
+   if path.name!=f"{operation}-launch.json" or reservation.get("target")!="kanbien-core-platform" or reservation.get("scope")!="core-server-persistence" or reservation.get("classification",{}).get("code")!="persistence-connection-diagnostic-launch-reserved":return False
+   matching=[task for task in tasks if task.get("startedBy")==operation]
+   if len(matching)!=1 or matching[0].get("lastStatus")!="STOPPED":return False
+  return True
+ except Exception:return False
+
 def cleanup(m,sid,rid,observe_only=False):
+ """Prove database, verifier-family and temporary authority cleanup separately."""
+ facts={"snapshot":sid,"restored_database":rid}
  if not m.live_budget()[0]:return emit("blocked","target-budget-live-configuration-invalid")
- restored,c=db(m,rid)
- if restored is None:return emit("cleaned-up","persistence-restored-database-absent",facts={"snapshot":sid,"restored_database":rid}) if c=="aws-resource-missing" else emit("blocked",c)
- ctl,cc=controls(m)
- if ctl is None:return emit("blocked",cc)
- attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]
- if attached!=[ctl["PersistenceRestoredDatabaseSecurityGroupId"]] or restored.get("PubliclyAccessible") is not False:return emit("blocked","persistence-restored-database-cleanup-target-invalid")
- if restored.get("DBInstanceStatus")=="deleting":return emit("pending","persistence-restored-database-deletion-pending",facts={"snapshot":sid,"restored_database":rid})
- if observe_only:return emit("uncertain","persistence-restored-database-deletion-not-observed",facts={"snapshot":sid,"restored_database":rid})
- started=restore_run_identity(restored)
- if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
- tasks,code=verifier_tasks(m,started,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
- if tasks is None:return emit("uncertain",code)
- diagnostic_operation=diagnostic_run_identity(restored)
- diagnostic_tasks,code=verifier_tasks(m,diagnostic_operation,ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"])
- if diagnostic_tasks is None:return emit("uncertain",code)
- if not diagnostic_tasks and diagnostic_operation is not None and (OPERATION_DIAGNOSTICS/f"{diagnostic_operation}-launch.json").exists():return emit("uncertain","persistence-connection-diagnostic-reserved-reconcile-only")
- tasks=list(dict.fromkeys(tasks+diagnostic_tasks))
+ restored,code=db(m,rid)
+ if restored is None and code!="aws-resource-missing":return emit("uncertain",code,facts=facts)
+ ctl,code=controls(m)
+ if ctl is None:return emit("uncertain",code,facts=facts)
+ definition=ctl["CoreServerPersistenceRestorationVerifierTaskDefinitionArn"]
+ if restored is not None:
+  attached=[item.get("VpcSecurityGroupId") for item in restored.get("VpcSecurityGroups",[]) if isinstance(item,dict)]
+  if attached!=[ctl["PersistenceRestoredDatabaseSecurityGroupId"]] or restored.get("PubliclyAccessible") is not False:return emit("blocked","persistence-restored-database-cleanup-target-invalid")
+  started=restore_run_identity(restored)
+  if started is None:return emit("blocked","persistence-restored-database-identity-unavailable")
+ else:started=None
+ tasks,code=verifier_tasks(m,started,definition)
+ if tasks is None:return emit("uncertain",code,facts=facts)
+ if restored is not None:
+  operation=diagnostic_run_identity(restored)
+  diagnostic_tasks,code=verifier_tasks(m,operation,definition)
+  if diagnostic_tasks is None:return emit("uncertain",code,facts=facts)
+  if not diagnostic_tasks and (OPERATION_DIAGNOSTICS/f"{operation}-launch.json").exists():return emit("uncertain","persistence-connection-diagnostic-reserved-reconcile-only",facts=facts)
+  tasks=list(dict.fromkeys(tasks+diagnostic_tasks))
+ listed=[]
  if tasks:
-  ok,described,code=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*tasks)
-  listed=described.get("tasks") if ok and isinstance(described,dict) else None
-  if not isinstance(listed,list) or len(listed)!=len(tasks) or described.get("failures") or not all(isinstance(task,dict) and isinstance(task.get("taskArn"),str) for task in listed) or {task["taskArn"] for task in listed}!=set(tasks):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain")
-  if any(not isinstance(task,dict) or task.get("lastStatus")!="STOPPED" for task in listed):return emit("pending","persistence-restore-cleanup-verifier-still-running")
+  ok,response,code=m.aws("ecs","describe-tasks","--cluster",CLUSTER,"--tasks",*tasks)
+  listed=response.get("tasks") if ok and isinstance(response,dict) else None
+  if not isinstance(listed,list) or len(listed)!=len(tasks) or response.get("failures") or not all(isinstance(task,dict) and isinstance(task.get("taskArn"),str) for task in listed) or {task["taskArn"] for task in listed}!=set(tasks):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain",facts=facts)
+  states={"PROVISIONING","PENDING","ACTIVATING","RUNNING","DEACTIVATING","STOPPING","DEPROVISIONING","STOPPED"}
+  if any(task.get("lastStatus") not in states for task in listed):return emit("uncertain","persistence-restore-cleanup-task-state-uncertain",facts=facts)
+  if any(task["lastStatus"]!="STOPPED" for task in listed):return emit("pending","persistence-restore-cleanup-verifier-still-running",facts=facts)
+ if restored is None and not absent_database_reservations_resolved(rid,listed):return emit("uncertain","persistence-connection-diagnostic-reservation-binding-unproven",facts=facts)
+ # If the database is absent its resource identity cannot own a remaining
+ # policy. Only independently observed policy absence can complete cleanup.
  removed=remove_temporary_restore_identity_policy(m,ctl,observe_only,restored)
- if removed!="ok":return emit("pending" if removed.endswith("submitted") else "uncertain" if removed.endswith("not-observed") else "blocked",removed,facts={"snapshot":sid,"restored_database":rid})
- ok,_,c=m.aws("rds","delete-db-instance","--db-instance-identifier",rid,"--skip-final-snapshot")
- return emit("pending" if ok else "uncertain","persistence-restored-database-deletion-submitted" if ok else c,facts={"snapshot":sid,"restored_database":rid})
+ if removed!="ok":return emit("pending" if removed.endswith("submitted") else "uncertain" if removed.endswith("not-observed") else "blocked",removed,facts=facts)
+ if restored is None:return emit("cleaned-up","persistence-restore-all-temporary-effects-absent",facts={**facts,"database":"absent","temporary_authority":"absent","verifier_tasks":"none-active"})
+ if restored.get("DBInstanceStatus")=="deleting":return emit("pending","persistence-restored-database-deletion-pending",facts=facts)
+ if observe_only:return emit("uncertain","persistence-restored-database-deletion-not-observed",facts=facts)
+ ok,_,code=m.aws("rds","delete-db-instance","--db-instance-identifier",rid,"--skip-final-snapshot")
+ return emit("pending" if ok else "uncertain","persistence-restored-database-deletion-submitted" if ok else code,facts=facts)
+
 def run_locked(action):
  """Serialize this checkout's shared verifier-role launch/cleanup decisions."""
  if fcntl is None:return emit("blocked","persistence-restoration-controller-lock-unavailable")
@@ -606,6 +639,6 @@ def main(argv=None):
  p=argparse.ArgumentParser(add_help=False);p.add_argument("--operation");p.add_argument("--snapshot-id");p.add_argument("--record-proof-receipt",type=Path);p.add_argument("--json",action="store_true");p.add_argument("--observe-only",action="store_true");p.add_argument("--validate-arguments",action="store_true");a,u=p.parse_known_args(argv);rid=restore_id(a.snapshot_id) if isinstance(a.snapshot_id,str) else None
  if u or a.operation not in {"restore","verify","cleanup","diagnose-connection"} or rid is None or (a.operation in {"restore","diagnose-connection"})!=(a.record_proof_receipt is not None):return emit("blocked","persistence-isolated-restore-arguments-invalid")
  if a.validate_arguments:
-  print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[],"proof_contract": {"proof_type":"restore","operation":"isolated-restore","result_code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED","family":"kanbien-core-platform-persistence-restoration-verifier","deadline_workload":"persistence-restoration-verifier"} if a.operation=="verify" else None}));return 0
+  print(json.dumps({"schema":"deploy/command-arguments-report/v1","verdict":"valid","findings":[],"runtime_input_contract":{"workload":"persistence-restoration-verifier-task","names":["PERSISTENCE_POSTGRES_HOST"],"observation_required":True} if a.operation in {"verify","diagnose-connection"} else None,"proof_contract": {"proof_type":"restore","operation":"isolated-restore","result_code":"KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED","family":"kanbien-core-platform-persistence-restoration-verifier","deadline_workload":"persistence-restoration-verifier"} if a.operation=="verify" else None}));return 0
  m=load();return run_locked(lambda: restore(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="restore" else verify(m,a.snapshot_id,rid,a.observe_only) if a.operation=="verify" else diagnose_connection(m,a.snapshot_id,rid,a.observe_only,a.record_proof_receipt) if a.operation=="diagnose-connection" else cleanup(m,a.snapshot_id,rid,a.observe_only))
 if __name__=="__main__":raise SystemExit(main())

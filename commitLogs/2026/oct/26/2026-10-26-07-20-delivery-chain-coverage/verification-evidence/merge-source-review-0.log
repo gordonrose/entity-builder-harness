@@ -1,0 +1,35 @@
+{
+  "counts": {
+    "covered_sources": 0,
+    "errors": 0,
+    "historical_records": 0,
+    "records": 1,
+    "sources": 0,
+    "warnings": 0
+  },
+  "errors": [],
+  "ok": true,
+  "records": [
+    {
+      "current_eligible": true,
+      "current_source_sha256": "d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1",
+      "freshness": "current",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml",
+      "recorded_source_sha256": "d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "status": "accepted"
+    }
+  ],
+  "schema": "rag-rulebook/okf-source-material-review-validation-report/v1",
+  "sources": [],
+  "warnings": []
+}
+
+STDERR

@@ -1,0 +1,62 @@
+{
+  "schema": "delivery/corrective-verifier-reproduction/v1",
+  "evidence_class": "simulated",
+  "commands": [
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+        "--mode",
+        "create",
+        "--json"
+      ],
+      "exit_code": 1,
+      "report": {
+        "facts": {
+          "operation_id": "kp-71dc3c1fe66e497b8afdbbe39c6b6530"
+        },
+        "findings": [
+          {
+            "code": "aws-response-invalid"
+          }
+        ],
+        "schema": "deploy/private-persistence-verification-report/v1",
+        "scope": "core-server-persistence",
+        "target": "kanbien-core-platform",
+        "verdict": "uncertain"
+      },
+      "stderr": "{\"facts\": {\"operation_id\": \"kp-71dc3c1fe66e497b8afdbbe39c6b6530\"}, \"findings\": [{\"code\": \"private-persistence-verifier-submission-prepared\"}], \"schema\": \"deploy/private-persistence-verification-report/v1\", \"scope\": \"core-server-persistence\", \"target\": \"kanbien-core-platform\", \"verdict\": \"pending\"}\n"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+        "--mode",
+        "create",
+        "--json"
+      ],
+      "exit_code": 1,
+      "report": {
+        "facts": {
+          "operation_id": "kp-8a10fccab623453abe1cbc628f57c78e"
+        },
+        "findings": [
+          {
+            "code": "aws-response-invalid"
+          }
+        ],
+        "schema": "deploy/private-persistence-verification-report/v1",
+        "scope": "core-server-persistence",
+        "target": "kanbien-core-platform",
+        "verdict": "uncertain"
+      },
+      "stderr": "{\"facts\": {\"operation_id\": \"kp-8a10fccab623453abe1cbc628f57c78e\"}, \"findings\": [{\"code\": \"private-persistence-verifier-submission-prepared\"}], \"schema\": \"deploy/private-persistence-verification-report/v1\", \"scope\": \"core-server-persistence\", \"target\": \"kanbien-core-platform\", \"verdict\": \"pending\"}\n"
+    }
+  ],
+  "run_task_calls": 2,
+  "started_by": [
+    "kp-71dc3c1fe66e497b8afdbbe39c6b6530",
+    "kp-8a10fccab623453abe1cbc628f57c78e"
+  ],
+  "failure_reproduced": true
+}

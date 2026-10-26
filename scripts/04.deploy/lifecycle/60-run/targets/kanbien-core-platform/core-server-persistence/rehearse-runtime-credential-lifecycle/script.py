@@ -38,6 +38,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[8]
 CHILD_CHECKPOINT: dict[str, Any] | None = None
 LAST_SUCCESS: dict[str, Any] | None = None
+VERIFIER_OPERATIONS: dict[str, dict[str, str]] = {}
 
 def module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -51,6 +52,7 @@ def report(verdict: str, *codes: str, facts: dict[str, object] | None = None) ->
         verdict = CHILD_CHECKPOINT["verdict"]
         facts = {**(facts or {}), "child_checkpoint": CHILD_CHECKPOINT}
     body: dict[str, object] = {"schema": "deploy/persistence-runtime-identity-lifecycle-report/v1", "target": "kanbien-core-platform", "scope": "core-server-persistence", "verdict": verdict, "findings": [{"code": code} for code in codes]}
+    if VERIFIER_OPERATIONS: facts = {**(facts or {}), "verifier_operations": dict(VERIFIER_OPERATIONS)}
     if facts: body["facts"] = facts
     print(json.dumps(body, sort_keys=True))
     return 0 if verdict in {"accepted", "prepared"} else 1
@@ -80,7 +82,7 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
     if not succeeded:
         observed = observed if isinstance(observed, dict) else {}
         raw = observed.get("facts") if isinstance(observed.get("facts"), dict) else {}
-        safe = {key: value for key, value in raw.items() if key in {"operation", "administration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
+        safe = {key: value for key, value in raw.items() if key in {"operation", "operation_id", "evidence_reuse", "administration_task", "verifier_task", "original_task", "recovery_boundary"} and isinstance(value, str)}
         CHILD_CHECKPOINT = {"command": path, "verdict": observed.get("verdict") if observed.get("verdict") in {"pending", "failed", "uncertain"} else "uncertain", "facts": safe}
     if succeeded and isinstance(body, dict):
         # A parent rehearsal may retain only these controller-produced receipt
@@ -96,7 +98,22 @@ def child(path: str, *args: str) -> dict[str, Any] | None:
     return None
 
 def healthy(verify: str) -> bool:
-    return child("scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh", "--mode", verify, "--json") is not None
+    command = "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh"
+    observed = child(command, "--mode", verify, "--json")
+    checkpoint = observed if observed is not None else CHILD_CHECKPOINT
+    if not isinstance(checkpoint, dict) or checkpoint.get("verdict") not in {"accepted", "failed"}: return False
+    facts = checkpoint.get("facts", {})
+    if isinstance(facts, dict) and facts.get("evidence_reuse") == "historical-completion":
+        # Each invocation asks for current health after a concrete lifecycle
+        # boundary. Retained completion identifies the predecessor, not fresh proof.
+        operation = facts.get("operation_id")
+        if not isinstance(operation, str): return False
+        observed = child(command, "--mode", verify, "--new-operation", "--expected-operation", operation, "--json")
+    if observed is None: return False
+    facts = observed.get("facts", {})
+    if isinstance(facts, dict):
+        VERIFIER_OPERATIONS[verify] = {key: value for key, value in facts.items() if key in {"operation_id", "verifier_task", "proof_receipt", "evidence_reuse"} and isinstance(value, str)}
+    return True
 
 
 def verifier_receipt() -> str | None:

@@ -1,0 +1,61 @@
+{"schema": "rag-rulebook/local-image-wiring-test/v1", "verdict": "passed", "evidence_class": "simulated", "cli_checks": 7}
+ERROR: generated recognition source is stale: artifacts
+--- .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
++++ .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml (regenerated)
+@@ -53,8 +53,8 @@
+   --source artifacts --output .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+ generation_summary:
+   artifact_index_schema: agentic-artifact-index/v1
+-  indexed_artifacts: 1403
+-  term_count: 2836
++  indexed_artifacts: 1405
++  term_count: 2840
+   excluded_prefixes:
+   - .agentic/02.rag-rulebook/recognition-sources/
+ terms:
+@@ -4084,6 +4084,18 @@
+   canonical_id: rag-rulebook.derivation-report.04-deploy.2026-09-08-platform-target-alerting-policy
+   evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml
+   confidence_weight: 1
++- term: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
++  category: artifact-id
++  match_type: exact
++  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
++  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
++  confidence_weight: 1
++- term: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
++  category: file-path
++  match_type: exact
++  canonical_id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
++  evidence_path: .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
++  confidence_weight: 1
+ - term: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities
+   category: artifact-id
+   match_type: exact
+@@ -6033,6 +6045,18 @@
+   match_type: exact
+   canonical_id: rag-rulebook.source-material-review.04-deploy.platform-target-alerting-policy.2026-09-08
+   evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml
++  confidence_weight: 1
++- term: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
++  category: artifact-id
++  match_type: exact
++  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
++  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
++  confidence_weight: 1
++- term: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
++  category: file-path
++  match_type: exact
++  canonical_id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities-merge-metadata.2026-10-26
++  evidence_path: .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+   confidence_weight: 1
+ - term: rag-rulebook.source-material-review.04-deploy.container-image-capabilities.2026-10-26
+   category: artifact-id
+Generated recognition source is current: .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
+Refreshing generated recognition sources before building local runtime.
+Generated recognition source: .agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml
+Generated recognition source: .agentic/02.rag-rulebook/recognition-sources/generated/routing.yml
+RAG/rulebook local service smoke test passed.
+
+EXIT_CODE=0
+ELAPSED_SECONDS=32.924

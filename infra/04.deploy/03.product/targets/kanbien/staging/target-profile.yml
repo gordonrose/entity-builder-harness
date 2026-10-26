@@ -4,7 +4,7 @@
 #   version: 70
 #   status: draft
 #   created_on: "2026-07-13"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -57,6 +57,10 @@ product:
         - PLATFORM_SMOKE_APP_NAME
 deployment:
   service_id: platform-shell
+  declaration_contracts:
+    - infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml
+    - infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml
+    - infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml
   runtime_target: aws.ecs-fargate.platform-shell-staging
   mutation_authorized_by_profile: false
   first_mutation_candidate: create-platform-shell-foundation-stack
@@ -396,6 +400,7 @@ deployment:
   candidate_execution_preflight:
     status: dormant-task-boundary-deployed-finite-same-image-attempts-require-durable-reconciliation
     command: npm-run-platform-shell-candidate-execution-preflight
+    entrypoint: scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
     execution_guard: execute-and-approve-candidate-execution-preflight
     realization_contract: infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml
     service_stack: kanbien-staging-platform-shell-service
@@ -646,6 +651,23 @@ auth:
   provider_decision: docs/aws/architecture/adrs/0002-select-cognito-for-platform-shell-auth.md
   adapter: platform/adapters/aws/auth/cognito/
   composition_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-server.main.ts
+  additional_programs:
+    - source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts
+      compiled_entrypoint: .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.js
+      provider_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+      local_proof: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+      behaviour_proof: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
+    - source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts
+      compiled_entrypoint: .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.js
+      provider_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+      local_proof: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
+      behaviour_proof: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
+    - source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts
+      compiled_entrypoint: .cache/platform-shell-image-build/infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.js
+      provider_template: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+      local_proof: scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs
+      behaviour_proof: scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py
+
   user_pool:
     id: eu-west-1_EQaXioA1n
     name: kanbien-staging-platform-shell
@@ -772,6 +794,7 @@ auth:
       post_attempt_state: server-one-running-one-worker-zero-queues-empty
       follow_up: diagnose-possible-pre-server-or-ingress-path-before-any-additional-write-relay-or-worker-action
     admission_probe:
+      entrypoint: scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
       status: executed-passed-iam-remediation-pending
       route: POST /smoke/work-items/admission
       permission: platform-smoke.persistence.work-item:create

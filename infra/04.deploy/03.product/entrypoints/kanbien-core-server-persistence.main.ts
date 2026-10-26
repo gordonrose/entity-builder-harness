@@ -4,7 +4,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-25"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -53,6 +53,7 @@ export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv
   const started = await startPlatformServerProcess({
     apps: [createKanbienCoreServerPersistenceApp(resolvePlatformReleaseIdentity(env["PLATFORM_SOURCE_COMMIT_SHA"]), persistence)],
     env,
+    logger: createPlatformSafeLogger(consoleLogger),
     ...(observability.value.metrics === undefined ? {} : { metrics: observability.value.metrics }),
     installSignalHandlers: false,
   });
@@ -72,6 +73,7 @@ export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv
 type PersistenceObservability = {
   readonly metrics?: Metrics;
   start(): Promise<void>;
+  stop(): Promise<void>;
   close(): Promise<void>;
 };
 
@@ -105,26 +107,37 @@ function persistenceObservabilityFromTargetEnvironment(
     defaultDiagnosticCode: "persistence.unclassified-failure",
   });
   let timer: NodeJS.Timeout | undefined;
-  const observe = async (): Promise<void> => {
-    try {
-      await observer.observe();
-    } catch {
-      // A target telemetry delivery or instrumentation failure cannot turn an
-      // otherwise live server into a business outage. The stale-signal alarm
-      // owns detection of sustained missing observations.
+  let stopped = false;
+  let started = false;
+  let closed = false;
+  let observing: Promise<void> = Promise.resolve();
+  const observe = (): Promise<void> => {
+    observing = observer.observe().then(() => undefined).catch(() => {
       console.error(JSON.stringify({ level: "warn", message: "kanbien-core-server-persistence.readiness_observation_failed" }));
-    }
+    }).finally(() => {
+      if (!stopped) timer = setTimeout(() => { void observe(); }, readinessSchedule.cadenceMs);
+    });
+    return observing;
+  };
+  const stop = async (): Promise<void> => {
+    stopped = true;
+    if (timer !== undefined) clearTimeout(timer);
+    await observing;
   };
   return {
     ok: true,
     value: {
       metrics: metricsRuntime.metrics,
       start: async () => {
+        if (started || stopped) return;
+        started = true;
         await observe();
-        timer = setInterval(() => { void observe(); }, readinessSchedule.cadenceMs);
       },
+      stop,
       close: async () => {
-        if (timer !== undefined) clearInterval(timer);
+        if (closed) return;
+        closed = true;
+        await stop();
         try { await metricsRuntime.shutdown(); } catch { console.error(JSON.stringify({ level: "warn", message: "kanbien-core-server-persistence.observability_shutdown_failed" })); }
       },
     },
@@ -133,6 +146,7 @@ function persistenceObservabilityFromTargetEnvironment(
 
 const noObservability: PersistenceObservability = {
   start: async () => undefined,
+  stop: async () => undefined,
   close: async () => undefined,
 };
 
@@ -148,6 +162,7 @@ function installTargetShutdownHandlers(server: PlatformServerProcess, observabil
 }
 
 async function closeTargetProcess(server: PlatformServerProcess, observability: PersistenceObservability): Promise<void> {
+  await observability.stop();
   try { await server.close(); } finally { await observability.close(); }
 }
 

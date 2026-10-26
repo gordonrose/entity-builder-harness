@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: rag-rulebook.script.validate-okf-source-material-reviews
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-06-29"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: rulebook
 #   disciplines:
@@ -42,6 +42,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -102,7 +104,9 @@ def usage() -> str:
   validate-okf-source-material-reviews/script.sh --record <path> [--record <path> ...] [--json]
 
 Validates rag-rulebook/okf-source-material-review/v1 YAML records. The command
-is read-only.
+is read-only. --current validates all history and requires a matching accepted
+review for each referenced current source. --record also requires each selected
+record to match the current source bytes.
 """
 
 
@@ -166,7 +170,15 @@ def list_files(args: argparse.Namespace, errors: list[str], warnings: list[str])
 
 def load_yaml(path: Path, errors: list[str]) -> dict[str, Any] | None:
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        class UniqueLoader(yaml.SafeLoader):
+            pass
+        def unique_mapping(loader, node, deep=False):
+            keys = [loader.construct_object(key, deep=deep) for key, _ in node.value]
+            if len(set(keys)) != len(keys):
+                raise ValueError("duplicate YAML mapping key")
+            return yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+        UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
+        data = yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueLoader)
     except Exception as exc:
         errors.append(f"{rel(path)} failed to parse as YAML: {exc}")
         return None
@@ -181,7 +193,7 @@ def string_list(value: Any) -> list[str]:
 
 
 def number(value: Any) -> float | None:
-    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) else None
 
 
 def validate_score(owner: str, value: Any, errors: list[str]) -> float | None:
@@ -197,6 +209,8 @@ def validate_iteration(record_path: str, item: Any, errors: list[str]) -> dict[s
         errors.append(f"{record_path}.iterations[] must be an object")
         return {}
     owner = f"{record_path}.iterations[{item.get('iteration', '?')}]"
+    if type(item.get("iteration")) is not int or item["iteration"] < 1:
+        errors.append(f"{owner}.iteration must be a positive integer")
     assessments = item.get("reviewer_assessments")
     if not isinstance(assessments, list) or not assessments:
         errors.append(f"{owner}.reviewer_assessments must be a non-empty array")
@@ -219,7 +233,7 @@ def validate_iteration(record_path: str, item: Any, errors: list[str]) -> dict[s
             errors.append(f"{owner} has duplicate reviewer role: {role}")
         by_role[role] = assessment
         validate_score(f"{assessment_owner}.overall_score", assessment.get("overall_score"), errors)
-        if assessment.get("decision") not in ALLOWED_DECISIONS:
+        if not isinstance(assessment.get("decision"), str) or assessment["decision"] not in ALLOWED_DECISIONS:
             errors.append(f"{assessment_owner}.decision must be one of {sorted(ALLOWED_DECISIONS)}")
         if not isinstance(assessment.get("blocking_gaps"), list):
             errors.append(f"{assessment_owner}.blocking_gaps must be an array")
@@ -252,35 +266,40 @@ def validate_iteration(record_path: str, item: Any, errors: list[str]) -> dict[s
     return by_role
 
 
-def validate_record(path: Path, data: dict[str, Any], errors: list[str]) -> dict[str, Any]:
+def validate_record(path: Path, data: dict[str, Any], errors: list[str], *, require_current: bool) -> dict[str, Any]:
     record_path = rel(path)
     if data.get("schema") != RECORD_SCHEMA:
         errors.append(f"{record_path}.schema must be {RECORD_SCHEMA}")
-    if data.get("status") not in ALLOWED_STATUS:
+    if not isinstance(data.get("status"), str) or data["status"] not in ALLOWED_STATUS:
         errors.append(f"{record_path}.status must be one of {sorted(ALLOWED_STATUS)}")
 
     source = data.get("source_material")
-    source_hash = None
+    source_hash = declared_hash = source_path = None
+    source_available = False
     if not isinstance(source, dict):
         errors.append(f"{record_path}.source_material must be an object")
     else:
-        if source.get("source_state") not in ALLOWED_SOURCE_STATES:
+        if not isinstance(source.get("source_state"), str) or source["source_state"] not in ALLOWED_SOURCE_STATES:
             errors.append(f"{record_path}.source_material.source_state must be one of {sorted(ALLOWED_SOURCE_STATES)}")
-        source_path = source.get("path")
-        if not isinstance(source_path, str) or not source_path.strip():
+        declared_hash = source.get("sha256")
+        if declared_hash is not None and (not isinstance(declared_hash, str) or re.fullmatch(r"[a-f0-9]{64}", declared_hash) is None):
+            errors.append(f"{record_path}.source_material.sha256 must be a lowercase SHA-256")
+        raw_path = source.get("path")
+        if not isinstance(raw_path, str) or not raw_path.strip():
             errors.append(f"{record_path}.source_material.path must be a non-empty string")
         else:
-            source_file = repo_path(source_path)
-            if not source_file.is_file():
-                errors.append(f"{record_path}.source_material.path does not exist: {source_path}")
+            source_file = repo_path(raw_path)
+            if not source_file.resolve().is_relative_to(ROOT.resolve()):
+                errors.append(f"{record_path}.source_material.path must stay inside the repository")
             else:
-                source_hash = file_sha256(source_file)
-                declared_hash = source.get("sha256")
-                if isinstance(declared_hash, str) and declared_hash != source_hash:
-                    errors.append(
-                        f"{record_path}.source_material.sha256 is stale for {source_path}: "
-                        f"expected {declared_hash}, current {source_hash}"
-                    )
+                source_path = rel(source_file)
+                source_available = source_file.is_file()
+                if source_available:
+                    try:
+                        source_hash = file_sha256(source_file)
+                    except OSError:
+                        source_available = False
+
 
     threshold = data.get("threshold")
     passing_score = None
@@ -294,6 +313,8 @@ def validate_record(path: Path, data: dict[str, Any], errors: list[str]) -> dict
                 f"{record_path}.threshold.passing_score must be {CANONICAL_PASSING_SCORE}"
             )
         required_roles = string_list(threshold.get("required_roles"))
+        if not isinstance(threshold.get("required_roles"), list) or len(required_roles) != len(threshold["required_roles"]):
+            errors.append(f"{record_path}.threshold.required_roles must contain only strings")
         if not required_roles:
             errors.append(f"{record_path}.threshold.required_roles must be a non-empty string array")
         if len(set(required_roles)) != len(required_roles):
@@ -312,11 +333,15 @@ def validate_record(path: Path, data: dict[str, Any], errors: list[str]) -> dict
     if not isinstance(iterations, list) or not iterations:
         errors.append(f"{record_path}.iterations must be a non-empty array")
     else:
+        seen_iterations = set()
         for item in iterations:
             roles = validate_iteration(record_path, item, errors)
-            if isinstance(item, dict) and (
-                final_iteration is None
-                or int(item.get("iteration") or 0) >= int(final_iteration.get("iteration") or 0)
+            if isinstance(item, dict) and type(item.get("iteration")) is int:
+                if item["iteration"] in seen_iterations:
+                    errors.append(f"{record_path}.iterations contains duplicate iteration numbers")
+                seen_iterations.add(item["iteration"])
+            if isinstance(item, dict) and type(item.get("iteration")) is int and (
+                final_iteration is None or item["iteration"] >= final_iteration["iteration"]
             ):
                 final_iteration = item
                 final_roles = roles
@@ -324,17 +349,16 @@ def validate_record(path: Path, data: dict[str, Any], errors: list[str]) -> dict
     final_decision = data.get("final_decision")
     if not isinstance(final_decision, dict):
         errors.append(f"{record_path}.final_decision must be an object")
-    elif data.get("status") == "accepted":
+    elif data.get("status") == "accepted" or final_decision.get("status") == "accepted":
         if final_decision.get("status") != "accepted":
             errors.append(f"{record_path}.final_decision.status must be accepted")
-        if source and source.get("source_state") != "accepted":
+        if isinstance(source, dict) and source.get("source_state") != "accepted":
             errors.append(f"{record_path}.source_material.source_state must be accepted when review status is accepted")
         accepted_hash = final_decision.get("accepted_source_sha256")
-        if source_hash and accepted_hash != source_hash:
-            errors.append(
-                f"{record_path}.final_decision.accepted_source_sha256 is stale: "
-                f"expected {accepted_hash}, current {source_hash}"
-            )
+        if not isinstance(declared_hash, str) or re.fullmatch(r"[a-f0-9]{64}", declared_hash) is None:
+            errors.append(f"{record_path}.accepted review requires source_material.sha256")
+        if accepted_hash != declared_hash:
+            errors.append(f"{record_path}.final_decision.accepted_source_sha256 must match the recorded source_material.sha256")
         if not isinstance(final_decision.get("accepted_at_utc"), str) or not final_decision["accepted_at_utc"].strip():
             errors.append(f"{record_path}.final_decision.accepted_at_utc must be a non-empty string")
         if not isinstance(final_decision.get("required_before_derivation"), list):
@@ -361,11 +385,24 @@ def validate_record(path: Path, data: dict[str, Any], errors: list[str]) -> dict
                 if assessment.get("blocking_gaps"):
                     errors.append(f"{record_path}.final reviewer {role} has blocking gaps")
 
+    integrity_valid = not errors
+    freshness = "missing" if not source_available else "current" if declared_hash == source_hash else "historical"
+    current_eligible = integrity_valid and data.get("status") == "accepted" and freshness == "current"
+    if require_current:
+        if not source_available:
+            errors.append(f"{record_path}.source_material.path does not exist or is unreadable: {source_path}")
+        elif declared_hash is not None and declared_hash != source_hash:
+            errors.append(f"{record_path}.source_material.sha256 is stale for {source_path}: recorded {declared_hash}, current {source_hash}")
     return {
         "path": record_path,
-        "status": data.get("status"),
-        "source_path": (source or {}).get("path") if isinstance(source, dict) else None,
+        "status": data.get("status") if isinstance(data.get("status"), str) else None,
+        "source_path": source_path,
         "required_roles": required_roles,
+        "recorded_source_sha256": declared_hash if isinstance(declared_hash, str) else None,
+        "current_source_sha256": source_hash,
+        "integrity_valid": integrity_valid,
+        "freshness": freshness,
+        "current_eligible": current_eligible,
     }
 
 
@@ -374,20 +411,40 @@ def main(argv: list[str]) -> int:
     errors: list[str] = []
     warnings: list[str] = []
     files = list_files(args, errors, warnings)
+    if args.current and not files:
+        errors.append("no source-material review records discovered")
     records = []
-    ids: dict[str, str] = {}
+    ids: dict[str, dict[str, Any]] = {}
     for path in files:
-        data = load_yaml(path, errors)
+        record_errors: list[str] = []
+        data = load_yaml(path, record_errors)
         if data is None:
+            errors.extend(record_errors)
             continue
         review_id = data.get("review_id")
+        if not isinstance(review_id, str) or not review_id.strip():
+            record_errors.append(f"{rel(path)}.review_id must be a non-empty string")
+        record = validate_record(path, data, record_errors, require_current=not args.current)
         if isinstance(review_id, str):
             if review_id in ids:
-                errors.append(f"duplicate review_id {review_id}: {ids[review_id]} and {rel(path)}")
-            ids[review_id] = rel(path)
-        else:
-            errors.append(f"{rel(path)}.review_id must be a string")
-        records.append(validate_record(path, data, errors))
+                previous = ids[review_id]
+                record_errors.append(f"duplicate review_id {review_id}: {previous['path']} and {rel(path)}")
+                for duplicated in (previous, record):
+                    duplicated["integrity_valid"] = duplicated["current_eligible"] = False
+            ids[review_id] = record
+        records.append(record)
+        errors.extend(record_errors)
+
+    sources = []
+    if args.current:
+        for source_path in sorted({item["source_path"] for item in records if item["source_path"] is not None}):
+            related = [item for item in records if item["source_path"] == source_path]
+            eligible = [item["path"] for item in related if item["current_eligible"]]
+            current_hash = related[0]["current_source_sha256"]
+            status = "covered" if eligible else "missing-source" if current_hash is None else "accepted-current-review-missing"
+            sources.append({"path": source_path, "current_sha256": current_hash, "status": status, "eligible_records": eligible})
+            if not eligible:
+                errors.append(f"{source_path}: {status}; no valid accepted review matches the current source bytes")
 
     report = {
         "schema": REPORT_SCHEMA,
@@ -396,8 +453,12 @@ def main(argv: list[str]) -> int:
             "records": len(files),
             "errors": len(errors),
             "warnings": len(warnings),
+            "sources": len(sources),
+            "covered_sources": sum(item["status"] == "covered" for item in sources),
+            "historical_records": sum(item["freshness"] == "historical" for item in records),
         },
         "records": records,
+        "sources": sources,
         "errors": errors,
         "warnings": warnings,
     }
@@ -410,6 +471,8 @@ def main(argv: list[str]) -> int:
             print(f"WARNING: {warning}", file=sys.stderr)
     else:
         print(f"OKF source-material review records valid: {len(files)} record(s).")
+        if args.current:
+            print(f"Current source coverage: {len(sources)}/{len(sources)}; historical records retained: {report['counts']['historical_records']}.")
         for warning in warnings:
             print(f"WARNING: {warning}", file=sys.stderr)
     return 0 if not errors else 1

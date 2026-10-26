@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -41,11 +41,12 @@ cd "$ROOT"
 
 OUTPUT_DIR=".cache/02.rag-rulebook"
 PRETTY=false
+SOURCE_LAYOUT=checkout
 
 usage() {
   cat <<'EOF'
 Usage:
-  build-local-runtime/script.sh [--output-dir <path>] [--pretty]
+  build-local-runtime/script.sh [--output-dir <path>] [--source-layout checkout|packaged-source-archive] [--pretty]
 
 Builds a local deterministic RAG/rulebook runtime cache. The command writes
 JSON runtime files under .cache/02.rag-rulebook by default and does not call
@@ -61,6 +62,14 @@ while [ "$#" -gt 0 ]; do
         exit 2
       fi
       OUTPUT_DIR="$2"
+      shift 2
+      ;;
+    --source-layout)
+      if [ "$#" -lt 2 ] || { [ "$2" != checkout ] && [ "$2" != packaged-source-archive ]; }; then
+        echo "ERROR: --source-layout requires checkout or packaged-source-archive." >&2
+        exit 2
+      fi
+      SOURCE_LAYOUT="$2"
       shift 2
       ;;
     --pretty)
@@ -137,26 +146,34 @@ RECOGNITION_CANDIDATES_REPORT="$TMP_DIR/recognition-candidates.json"
 GENERATED_SOURCES_CHECK="$TMP_DIR/generated-sources-check.txt"
 INDEX_VALIDATION_REPORT="$TMP_DIR/rulebook-index-validation.json"
 
-bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh \
-  --current \
-  --json > "$POLICY_REPORT"
+validate_to_report() {
+  local report="$1" status=0
+  shift
+  "$@" >"$report" || status=$?
+  if [ "$status" -ne 0 ]; then
+    cat "$report" >&2 || true
+    return "$status"
+  fi
+}
 
-bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh \
-  --current \
-  --json > "$RECOGNITION_SOURCES_REPORT"
+validate_to_report "$POLICY_REPORT" \
+  bash scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh --current --json
 
-bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh \
-  --current \
-  --json > "$RECOGNITION_CANDIDATES_REPORT"
-
+# Generated recognition sources describe the selected source closure. Refresh
+# them before validating references that may belong to a fuller checkout.
 refresh_generated_recognition_sources_if_stale "$GENERATED_SOURCES_CHECK"
+
+validate_to_report "$RECOGNITION_SOURCES_REPORT" \
+  bash scripts/02.rag-rulebook/validate-recognition-sources/script.sh --current --json
+
+validate_to_report "$RECOGNITION_CANDIDATES_REPORT" \
+  bash scripts/02.rag-rulebook/validate-recognition-candidates/script.sh --current --json
 
 bash scripts/02.rag-rulebook/generate-rulebook-index/script.sh \
   --pretty > "$INDEX_FILE"
 
-bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh \
-  --index "$INDEX_FILE" \
-  --json > "$INDEX_VALIDATION_REPORT"
+validate_to_report "$INDEX_VALIDATION_REPORT" \
+  bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --index "$INDEX_FILE" --json
 
 bash scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh \
   --index "$INDEX_FILE" \
@@ -166,6 +183,7 @@ bash scripts/02.rag-rulebook/compile-retrieval-policy/script.sh \
   --current \
   --index "$INDEX_FILE" \
   --output "$COMPILED_POLICY_FILE" \
+  --source-layout "$SOURCE_LAYOUT" \
   --pretty
 
 python3 - \
@@ -392,6 +410,7 @@ manifest = {
     "schema": "rag-rulebook/local-runtime-manifest/v1",
     "built_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "git_sha": git_sha(),
+    "source_layout": compiled_policy.get("source_layout"),
     "runtime_dir": rel(output_dir),
     "files": {
         "rulebook_index": rel(index_file),

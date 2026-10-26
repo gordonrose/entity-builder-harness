@@ -1,0 +1,268 @@
+{
+  "schema": "delivery/corrective-repair-report/v1",
+  "id": "CORR-01",
+  "status": "implemented-and-locally-verified",
+  "families": [
+    "E",
+    "F",
+    "H",
+    "I"
+  ],
+  "recorded_at": "2026-10-26T12:56:48.215939+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "evidence_class": "simulated-provider/actual-local-cli",
+  "concrete_failure": "An identical normal verifier invocation after a lost provider response generated a new UUID and submitted a second ECS task instead of reconciling the first logical operation.",
+  "affected_routes": [
+    "core-server-persistence verifier create/read/cleanup/health-ready/health-unready",
+    "runtime IAM credential lifecycle baseline, denial, recovery and read checks",
+    "server replacement, rollback and current-health acceptance phases"
+  ],
+  "downstream_consumers": [
+    "runtime credential lifecycle controller",
+    "persistence acceptance route and collector",
+    "existing provider regression CI selection"
+  ],
+  "contract_files": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md"
+  ],
+  "implementation_files": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py"
+  ],
+  "caller_files": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"
+  ],
+  "existing_reused_owners": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/ecs-task-evidence.py"
+  ],
+  "smallest_reusable_repair": "Extend the existing fixed verifier command with one private per-mode worktree reservation and lock, using the established bounded controller reservation pattern. Retain exact request and logical operation before submission; subsequent calls observe that reservation. Reuse existing immutable terminal proof receipts. Explicit expected-predecessor succession is atomic and idempotent, while fresh-proof callers pass and emit the same-mode operation identity.",
+  "earliest_enforcement_stage": "Private local reservation, initialized marker and exclusive lock are durable before the first ecs run-task. Existing state never reaches submission except an explicit successor after validated retained terminal completion.",
+  "negative_reproduction": {
+    "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-before.json",
+    "failure_reproduced": true,
+    "run_task_calls": 2,
+    "result": "Two identical actual wrapper invocations returned uncertain with distinct operation IDs and performed two fake-provider run-task calls before repair."
+  },
+  "valid_behaviour_preserved": [
+    "Ordinary first invocation needs no new flag and polls to the declared completion deadline.",
+    "All five fixed verifier modes keep their task bindings and safe result checks.",
+    "Normal repeated invocation reconciles the current operation; no task metadata expiry authorizes replay.",
+    "Known terminal success and failure permit an explicit new operation with exact predecessor; repeated successor request reuses its one operation.",
+    "Initial expected-operation none creates or reconciles the initial request, never resets retained state.",
+    "Explicit stored-operation reconciliation can capture the original task after current configuration changes; a successor passes current prerequisites.",
+    "Historical terminal proof retains its original time and bytes; fresh health callers deliberately request and report a successor."
+  ],
+  "regressions": [
+    {
+      "case": "identical lost-response retry",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_identical_lost_response_retry_reconciles_same_operation",
+      "result": "passed"
+    },
+    {
+      "case": "initial explicit compare-and-set and idempotent terminal retry",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_explicit_initial_none_is_idempotent_and_checks_predecessor",
+      "result": "passed"
+    },
+    {
+      "case": "none cannot reset pending/uncertain/missing state",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_initial_none_cannot_replace_pending_uncertain_or_missing_state",
+      "result": "passed"
+    },
+    {
+      "case": "normal first polling and provisioning",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_pending_first_execution_and_repeat_submit_once",
+      "result": "passed"
+    },
+    {
+      "case": "missing/expired/denied observation",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_missing_expired_denied_provider_metadata_never_replays",
+      "result": "passed"
+    },
+    {
+      "case": "missing lock/state, malformed JSON/marker and invalid integrity",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_missing_malformed_private_metadata_blocks",
+      "result": "passed"
+    },
+    {
+      "case": "pending predecessor and changed request blocked",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_request_change_and_new_operation_while_pending_block",
+      "result": "passed"
+    },
+    {
+      "case": "simultaneous processes",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_concurrent_invocations_submit_once",
+      "result": "passed"
+    },
+    {
+      "case": "interrupted before possible submission",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_interruption_before_submission_never_replays_reserved_operation",
+      "result": "passed"
+    },
+    {
+      "case": "interrupted after possible submission",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_interruption_after_possible_submission_reconciles_same_task",
+      "result": "passed"
+    },
+    {
+      "case": "immutable terminal evidence and explicit successor retries",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_terminal_receipt_survives_expiry_and_new_operation_is_idempotent",
+      "result": "passed"
+    },
+    {
+      "case": "known terminal failure and deadline failure succession",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_known_terminal_failures_allow_only_explicit_successor",
+      "result": "passed"
+    },
+    {
+      "case": "missing terminal proof or expired safe logs do not permit successor",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_missing_terminal_proof_or_expired_logs_never_authorize_new_operation",
+      "result": "passed"
+    },
+    {
+      "case": "explicit completion capture attaches to reservation",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_explicit_reconciliation_captures_durable_current_completion",
+      "result": "passed"
+    },
+    {
+      "case": "old request after selected definition change, followed by current successor",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_old_request_reconciles_after_current_definition_changes_before_successor",
+      "result": "passed"
+    },
+    {
+      "case": "fresh health caller pending/failure recovery and emitted predecessor handoff",
+      "test": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py::OperationTests.test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending",
+      "result": "passed"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"
+      ],
+      "exit_code": 0,
+      "tests": 16,
+      "seconds": 24.786,
+      "note": "Initial full operation suite after changed-definition recovery repair."
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py"
+      ],
+      "exit_code": 0,
+      "tests": 31,
+      "seconds": 0.983,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-controller-test.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "tests": 16,
+      "seconds": 23.939,
+      "additional": "existing lower-case provider isolation assertions",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-operation-test.log"
+    },
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+        "OperationTests.test_runtime_identity_caller_requests_fresh_successor_and_resumes_pending"
+      ],
+      "exit_code": 0,
+      "tests": 1,
+      "seconds": 4.859,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-caller-test.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "tests": 51,
+      "suites": {
+        "controller": 31,
+        "provider_cli": 4,
+        "verifier_operation": 16
+      },
+      "additional": "existing argument, template and isolation shell/Python assertions",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-provider-final-test.log",
+      "final_source": true
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "enforcement_wiring": {
+    "catalog_check": "persistence-provider-regression",
+    "catalog": "scripts/repo/check-selection/checks.yml",
+    "existing_check_calls": "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+    "calls": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+    "which_calls": "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+    "new_catalog_required": false
+  },
+  "independent_review": {
+    "reviewer": "/root/independent_review",
+    "result": "No residual mutation/replay bypass found after actual independent CLI challenges.",
+    "cases": [
+      "Two-process explicit-successor race yielded one successor, second busy; retry stable, old proof unchanged.",
+      "Explicit reconcile-task with wrong startedBy rejected and normal retry submitted nothing.",
+      "Changed current definition :8 blocked normal execution; explicit reserved :7 completion captured and reusable historical proof survived provider metadata expiry."
+    ]
+  },
+  "caller_integration_report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-callers.json",
+  "other_worktree_review": {
+    "performed_read_only": true,
+    "newest": "chat_2026-10-26-11-53-bounded-postgresql-restore-diagnostics-3713745611",
+    "result": "Verifier and terminal proof owners matched baseline; no completed duplicate-submission repair. Avoided competing restore controller/shared diagnostics edits."
+  },
+  "closure_evidence": [
+    "Preserved before-fix two-submission actual CLI reproduction.",
+    "Final owned CI entrypoint passes current source with51 Python cases plus shell assertions.",
+    "Pending/uncertain and concurrent/interrupted repeated invocations use at most one run-task per retained operation.",
+    "Explicit fresh successors and failed-terminal recovery verified; historical proof cannot masquerade as a fresh caller check.",
+    "Actual acceptance-route integration separately verified by acceptance owner."
+  ],
+  "limitations": [
+    "These are disposable synthetic provider processes and actual local command tests, not live AWS verification.",
+    "At-most-once submission is scoped to retained private metadata in the recorded worktree. Complete erasure of all metadata or use of a different worktree cannot be distinguished from first use by a local owner; preserve the worktree when resuming.",
+    "A reservation interrupted before the provider call, a definitive provider rejection without a terminal task, or expired task/log evidence before durable capture can remain unobservable and blocks replay. No deletion/reset recovery is provided or claimed.",
+    "Root owns final selected aggregate, inventory, CI trigger coverage and governance verification; this report does not mark the overall corrective goal complete."
+  ],
+  "source_sha256": {
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": "3f7aeb9c7cbbef7e3bff06c975f336e98168d4e434a83d952d114dac9b8f281c",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh": "ea9dbb6cdb4d70b2c839b9c19d233bf6d2c70c31077fd3bf2523f10016a9bf9d",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md": "0021c6629b484589fd32394c9f74ae77687cbe6f67cc60ac7a5403b507405b95",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh": "0aa890b51a6fe6c8b6f8f363d25418d066e822a43c5b12360cb022241d89e5d4",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py": "3cc5ffeb43492f0ab2e9c189d8ab4e535a5ee47de8c276f3d4318fe158a20ed2",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py": "1cd40620606b93b08cd69740cf50bc8db2d9ac2368236f00d6865c127ca4de41",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh": "80e6514db365062351789b2b7d05147e1df5efedfa99bd974b12f834bb049ec1",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py": "7ddd414a68b0b73832df89d443f7b6aa2b3ce78e6b72173e64464c174852c233",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh": "bcf6b1a47b538707c584be15d717dc0dd7ea56afb3dcdd90d4425cde0115c4b9"
+  },
+  "evidence_sha256": {
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-before.json": "b920078de5a4eb3944f6ef9946b2bc8c8e9d057e1675da1228137887045f8be1",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-controller-test.log": "084448b2e2966a3ee9d14d525e617cae3c176d13270dd64bc2f4b7ae44dc9cde",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-operation-test.log": "2f48bffe66db4a378777fdbd7a628efad0c75fed0b43bcfa5d31b39ce0360eb2",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-caller-test.log": "2cbf057739172901800d281e2d8dc60c0edda5462e0aa76e21d7afacb6fe5c15",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-provider-final-test.log": "e187e1edf9d0dd8dea1010c32e8c68eb4731cce1da151a2a408a676dbe8da53b"
+  }
+}

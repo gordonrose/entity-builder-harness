@@ -1,0 +1,18 @@
+{
+  "counts": {
+    "artifacts": 857,
+    "chunk_candidates": 3698,
+    "corpus_packages": 10,
+    "graph_edges": 6006,
+    "rule_packs": 4,
+    "rules": 237,
+    "unresolved_references": 1
+  },
+  "errors": [],
+  "index_id": "index.rulebook.3db60130493a.cd4621654f51",
+  "ok": true,
+  "schema": "rag-rulebook/rulebook-index/v1",
+  "warnings": []
+}
+
+STDERR

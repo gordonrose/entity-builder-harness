@@ -14,7 +14,7 @@
 #   - id: infra.04-deploy.03-product.targets.kanbien-core-platform.pipelines.github-actions.index
 #     path: infra/04.deploy/03.product/targets/kanbien-core-platform/40-package-custody/github-actions/pipeline-index.yml
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-26"
 name: Publish Kanbien Core Platform Core Server
 
 on:
@@ -65,7 +65,13 @@ jobs:
       - name: Install repository dependencies
         run: npm ci --ignore-scripts
 
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.2
+      - name: Enforce delivery-chain registration and contracts
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+
       - name: Qualify the declared core-server candidate
+        id: qualification
         run: |
           bash scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh --contract infra/04.deploy/03.product/entrypoints/runnable-program-index.yml --json
           bash scripts/04.deploy/lifecycle/20-build/core-server-dependency-boundary/script.sh --json
@@ -74,6 +80,8 @@ jobs:
           bash scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/release-contract/script.sh --json
           bash scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh --tag kanbien-core-server:publication
 
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-core-server:publication --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/core-server/image-contract.yml --input scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml '*'
+
       - name: Configure target-scoped AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -81,6 +89,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Prove fixed delivery read access
+        id: access
         run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
 
       - name: Log in to Amazon ECR
@@ -91,40 +100,24 @@ jobs:
         run: |
           set -euo pipefail
           tag="core-${GITHUB_SHA::12}-run${GITHUB_RUN_ID}"
-          local_image='kanbien-core-server:publication'
-          docker tag "$local_image" "$ECR_URI:$tag"
+          qualified_image="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image kanbien-core-server:publication --receipt "$RUNNER_TEMP/qualified-image.json" --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml '*')"
+          docker tag "$qualified_image" "$ECR_URI:$tag"
           docker push "$ECR_URI:$tag"
           digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$tag" --query 'imageDetails[0].imageDigest' --output text)"
-          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-            echo 'Publication blocked: ECR did not return an immutable digest.' >&2
-            exit 1
-          fi
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           image="$ECR_URI@$digest"
           docker pull "$image" >/dev/null
+          test "$(docker image inspect "$image" --format '{{.Id}}')" = "$qualified_image"
           revision="$(docker image inspect "$image" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
-          if [ "$revision" != "$GITHUB_SHA" ]; then
-            echo 'Publication blocked: published image revision does not match checked-out main.' >&2
-            exit 1
-          fi
+          test "$revision" = "$GITHUB_SHA"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Require clean ECR scan
         id: scan
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --max-results 1 >/dev/null 2>"$RUNNER_TEMP/scan.err"; then break; fi
-            if ! grep -q 'ScanNotFoundException' "$RUNNER_TEMP/scan.err" || [ "$attempt" = 30 ]; then echo 'Publication blocked: ECR scan record was unavailable.' >&2; exit 1; fi
-            sleep 10
-          done
-          aws ecr wait image-scan-complete --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}"
-          critical="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.CRITICAL || `0`' --output text)"
-          high="$(aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageDigest="${{ steps.image.outputs.digest }}" --query 'imageScanFindings.findingSeverityCounts.HIGH || `0`' --output text)"
-          if [ "${critical:-0}" != 0 ] || [ "${high:-0}" != 0 ]; then echo 'Publication blocked: ECR scan found blocked severities.' >&2; exit 1; fi
-          echo 'verdict=passed' >> "$GITHUB_OUTPUT"
-
+        run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
       - name: Generate SBOM
+        id: sbom
         uses: anchore/sbom-action@v0
         with:
           image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
@@ -134,6 +127,7 @@ jobs:
           upload-release-assets: false
 
       - name: Attest image provenance
+        id: provenance
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
@@ -142,6 +136,7 @@ jobs:
           create-storage-record: false
 
       - name: Attest image SBOM
+        id: sbom-attestation
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
@@ -153,25 +148,16 @@ jobs:
       - name: Write and validate safe package-custody receipt
         env:
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          QUALIFICATION_OUTCOME: ${{ steps.qualification.outcome }}
+          ACCESS_OUTCOME: ${{ steps.access.outcome }}
+          PUBLICATION_OUTCOME: ${{ steps.image.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
         run: |
-          set -euo pipefail
-          receipt="$RUNNER_TEMP/package-custody-receipt.json"
-          export RECEIPT_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          python3 - "$receipt" <<'PY'
-          import json, os, sys
-          json.dump({
-            'schema': 'deploy/package-custody-receipt/v1', 'target': 'kanbien-core-platform',
-            'environment_class': 'private-bootstrap', 'provider_region_alias': 'aws-eu-west-1',
-            'candidate_id': 'kanbien-core-server-candidate', 'package_contract_id': 'kanbien-core-server-image',
-            'program_id': 'kanbien-core-server', 'source_revision': os.environ['GITHUB_SHA'],
-            'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
-            'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','ecr_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
-            'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
-          }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
-          PY
-          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$receipt" --expected-target kanbien-core-platform --expected-candidate kanbien-core-server-candidate --expected-package-contract kanbien-core-server-image --expected-program kanbien-core-server --json
-
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-bootstrap --provider-region-alias aws-eu-west-1 --candidate kanbien-core-server-candidate --package-contract kanbien-core-server-image --program kanbien-core-server --scan-check ecr_scan --sbom "$RUNNER_TEMP/core-server.sbom.spdx.json" --output "$RUNNER_TEMP/package-custody-receipt.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate kanbien-core-server-candidate --expected-package-contract kanbien-core-server-image --expected-program kanbien-core-server --json
       - name: Upload safe package-custody evidence
         uses: actions/upload-artifact@v4
         with:
@@ -179,7 +165,10 @@ jobs:
           path: |
             ${{ runner.temp }}/package-custody-receipt.json
             ${{ runner.temp }}/core-server.sbom.spdx.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/ecr-scan.json
           if-no-files-found: error
+          overwrite: false
           retention-days: 30
 
       - name: Record package-custody summary

@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.command.qualify-local-public-persistence-images
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -10,7 +10,7 @@
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
 #   kind: script
-#   purpose: Qualify the existing persistence package on the same local engine with a credential-free temporary Docker configuration when its native public-image credential helper is unavailable.
+#   purpose: Qualify the fixed core or persistence package on the same local engine with a credential-free temporary Docker configuration when its native public-image credential helper is unavailable.
 #   portability: { class: internal, targets: [] }
 #   effects: [network, writes-files]
 #   used_by:
@@ -32,6 +32,8 @@ import yaml
 
 BUILD = 'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh'
 SMOKE = 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh'
+CORE_BUILD = 'scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh'
+CORE_SMOKE = 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh'
 RUNNER = 'scripts/01.harness/run-governed-script.sh'
 class RecoveryFailure(Exception):
     def __init__(self,code,status=1): super().__init__(code);self.status=status
@@ -44,16 +46,20 @@ def observe(argv, env=None):
     if result.returncode: fail('local-public-recovery-observation-failed')
     return result.stdout.strip()
 
-def public_owners(root):
+def public_owners(root, package):
     # This optional recovery is qualified only for these reviewed owner bytes.
     # Fail closed on owner changes instead of interpreting arbitrary shell or
     # Dockerfile forms; normal package qualification remains independent.
-    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': 'd09be8dacc031c095b0645c42103d0698572cb933abb0c8fe7ff079bc0394b77', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': '0c760adedbb10b58649ab59eb0b6ff91cc2b65ab23a52673b348acd7abdbf09d', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': 'eb950c9d634078451a66a2fee6d08f59eda0e4228c45fa2e8235b567dd1f5855', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh': '0a56d1d262ef1da4f768e0ad6d498dbd72775fe9bba1d2725942f0758aee1afe', 'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs': 'ed21b67f82426de9f6bf258f5ff2bad8ac1ee0a113999c252aa14171cddb5c27', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh': '386b30f8fd36a6a97dc5fbb23acaba5811f3e9a06a8d3bdd692e433d292da54c'}
+    reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh': 'f6ff3fbb1f9c809a6c99eadfae37bda2ab95c76f91344125f09428b9bd6b6a44', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh': '78e99448743d852a1cbe6798dfc19b3f2a406c0efaef1b73c309514cd2124e99', 'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile': '04c63efcd995a7c815775a9438eecc705d8b6101bd7d69d63b683614cdbce9c1', 'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml': '0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh': '0a56d1d262ef1da4f768e0ad6d498dbd72775fe9bba1d2725942f0758aee1afe', 'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs': 'ed21b67f82426de9f6bf258f5ff2bad8ac1ee0a113999c252aa14171cddb5c27', 'scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh': '386b30f8fd36a6a97dc5fbb23acaba5811f3e9a06a8d3bdd692e433d292da54c'}
+    if package == 'core':
+        reviewed = {'scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh': 'ff93bc6dfc355eba2f07ac042376bf2ea40371e8daf650d38226c8e2bbb2c644', 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh': '0129e31693f2c15b4c4c3b172a94cf3696bdb6327d6b690fe0877b32711423a6', 'infra/04.deploy/03.product/image/core-server/Dockerfile': 'f764797f1a3f7a70e3904f5371bc9f2a7716c9bac0daf453840a488d348e2820', 'infra/04.deploy/03.product/image/core-server/image-contract.yml': '71e5efb910c80f449de0defdf80cb0310a7445d21a839b828f5ab56f94fbbb67'}
     for path, digest in reviewed.items():
         if hashlib.sha256((root/path).read_bytes()).hexdigest()!=digest:
             fail('local-public-recovery-owner-review-required')
-    dockerfile=(root/'infra/04.deploy/03.product/image/core-server-persistence/Dockerfile').read_text()
-    contract=yaml.safe_load((root/'infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml').read_text())
+    image_directory = 'core-server' if package == 'core' else 'core-server-persistence'
+    image_root = root / 'infra/04.deploy/03.product/image' / image_directory
+    dockerfile=(image_root/'Dockerfile').read_text()
+    contract=yaml.safe_load((image_root/'image-contract.yml').read_text())
     syntax=re.findall(r'^# syntax=(\S+)$',dockerfile,re.M)
     build=re.findall(r'^ARG BUILD_NODE_IMAGE=(\S+)$',dockerfile,re.M)
     runtime=re.findall(r'^ARG RUNTIME_NODE_IMAGE=(\S+)$',dockerfile,re.M)
@@ -61,11 +67,12 @@ def public_owners(root):
     if len(syntax)!=1 or re.fullmatch(r'docker/dockerfile:[0-9]+(?:\.[0-9]+)*',syntax[0]) is None: fail('local-public-recovery-frontend-not-public')
     if len(build)!=1 or re.fullmatch(r'node:[0-9]+-bookworm-slim',build[0]) is None: fail('local-public-recovery-build-image-not-public')
     if len(runtime)!=1 or re.fullmatch(r'gcr\.io/distroless/nodejs[0-9]+-debian[0-9]+@sha256:[0-9a-f]{64}',runtime[0]) is None or not isinstance(base,dict) or runtime[0]!=base.get('reference'): fail('local-public-recovery-runtime-image-not-public')
-    postgres=re.findall(r' (postgres:[0-9]+-bookworm) (?:bash -ec|postgres -c) ',(root/SMOKE).read_text())
-    if len(postgres)!=2 or len(set(postgres))!=1: fail('local-public-recovery-test-image-not-public')
-    nested=(root/'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs').read_text()
-    nested_images=re.findall(r'["\'](postgres:[^"\']+)["\']',nested)
-    if nested_images!=['postgres:17.11-bookworm']: fail('local-public-recovery-test-image-not-public')
+    postgres=re.findall(r' (postgres:[0-9]+-bookworm) (?:bash -ec|postgres -c) ',(root/(CORE_SMOKE if package == 'core' else SMOKE)).read_text())
+    if package == 'persistence' and (len(postgres)!=2 or len(set(postgres))!=1): fail('local-public-recovery-test-image-not-public')
+    if package == 'persistence':
+        nested=(root/'platform/adapters/aws/persistence/postgresql/tests/run-disposable-integration.mjs').read_text()
+        nested_images=re.findall(r'["\'](postgres:[^"\']+)["\']',nested)
+        if nested_images!=['postgres:17.11-bookworm']: fail('local-public-recovery-test-image-not-public')
 
 def endpoint():
     # Docker documents DOCKER_CONTEXT precedence over DOCKER_HOST. Inspect that
@@ -113,12 +120,17 @@ def execute(argv,root,environment):
     finally: child=None
 
 def main():
-    args=sys.argv[1:];tag='kanbien-core-server-persistence:local-public-recovery';port='39455'
+    args=sys.argv[1:];package='persistence'
+    if args[:1] == ['--package']:
+        if len(args)<2 or args[1] not in {'core','persistence'}: fail('local-public-recovery-arguments-invalid')
+        package=args[1];args=args[2:]
+    prefix='kanbien-core-server' if package == 'core' else 'kanbien-core-server-persistence'
+    tag=prefix+':local-public-recovery';port='39454' if package == 'core' else '39455'
     if args:
         if len(args)!=4 or args[0]!='--tag' or args[2]!='--port': fail('local-public-recovery-arguments-invalid')
         tag,port=args[1],args[3]
-    if re.fullmatch(r'kanbien-core-server-persistence:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}',tag) is None or not re.fullmatch(r'[0-9]{1,5}',port) or not 1024<=int(port)<=65535: fail('local-public-recovery-arguments-invalid')
-    root=Path(observe(['git','rev-parse','--show-toplevel']));public_owners(root)
+    if re.fullmatch(re.escape(prefix)+r':[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}',tag) is None or not re.fullmatch(r'[0-9]{1,5}',port) or not 1024<=int(port)<=65535: fail('local-public-recovery-arguments-invalid')
+    root=Path(observe(['git','rev-parse','--show-toplevel']));public_owners(root,package)
     host=endpoint();before=engine()
     with tempfile.TemporaryDirectory(prefix='persistence-public-docker-') as directory:
         # Nonempty anonymous registry entries suppress Docker's automatic
@@ -127,12 +139,15 @@ def main():
         environment={key:value for key,value in os.environ.items() if not key.startswith(('DOCKER_','BUILDX_','BUILDKIT_'))}
         environment.update(DOCKER_CONFIG=str(config),DOCKER_HOST=host,DOCKER_BUILDKIT='1',BUILDX_CONFIG=str(config/'buildx'),BUILDX_BUILDER='default')
         if engine(environment)!=before: fail('local-public-recovery-engine-mismatch')
-        print(json.dumps({'schema':'deploy/local-public-qualification-report/v1','verdict':'bound','code':'same-local-engine-anonymous-config','stored_configuration':'untouched'}),flush=True)
-        for stage,arguments in [('build',[BUILD,'--tag',tag]),('smoke',[SMOKE,'--tag',tag,'--port',port])]:
+        print(json.dumps({'schema':'deploy/local-public-qualification-report/v1','verdict':'bound','code':'same-local-engine-anonymous-config','package':package,'stored_configuration':'untouched'}),flush=True)
+        # The fixed core smoke owns its build, so invoke it once. Persistence
+        # keeps its established separate build and finished-image smoke stages.
+        stages = [('smoke',[CORE_SMOKE,'--tag',tag,'--port',port])] if package == 'core' else [('build',[BUILD,'--tag',tag]),('smoke',[SMOKE,'--tag',tag,'--port',port])]
+        for stage,arguments in stages:
             code=execute(['bash',RUNNER,'--approved-action',*arguments],root,environment)
             if code: fail('local-public-recovery-'+stage+'-failed',code if code>0 else 128-code)
             if engine(environment)!=before: fail('local-public-recovery-engine-mismatch')
-    print(json.dumps({'schema':'deploy/local-public-qualification-report/v1','verdict':'passed','code':'existing-build-and-smoke-passed','evidence_class':'container-qualification','stored_configuration':'untouched'}));return 0
+    print(json.dumps({'schema':'deploy/local-public-qualification-report/v1','verdict':'passed','code':'existing-build-and-smoke-passed','package':package,'evidence_class':'container-qualification','stored_configuration':'untouched'}));return 0
 
 signal.signal(signal.SIGTERM,interrupt);signal.signal(signal.SIGINT,interrupt)
 try: result=main()

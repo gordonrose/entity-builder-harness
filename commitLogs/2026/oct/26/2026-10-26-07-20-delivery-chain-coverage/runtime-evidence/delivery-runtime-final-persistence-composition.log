@@ -1,0 +1,9 @@
+{"verdict":"passed","evidence_class":"local-runtime","code":"persistence-payload-imports-resolved"}
+Core-server persistence composition local runtime proof passed.
+Persistence configuration regression passed (75 entrypoint failures before pool creation; migration deadline and TLS authority validated).
+test_actual_cli_and_selected_workload_alternatives (__main__.RuntimeConfigurationTests.test_actual_cli_and_selected_workload_alternatives) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 29.856s
+
+OK

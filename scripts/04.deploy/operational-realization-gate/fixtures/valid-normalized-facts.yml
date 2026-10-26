@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -23,24 +23,24 @@
 schema: operational-realization-normalized-facts/v1
 contract_id: harmless-delivery-route
 gate_evidence:
-  - {gate: source, check_id: source-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: semantic-integration, check_id: semantic-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: live-read, check_id: live-read-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: change-set, check_id: change-set-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: execution-preflight, check_id: preflight-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: controlled-execution, check_id: controlled-execution-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {gate: recovery, check_id: recovery-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {gate: source, check_id: source-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:9147f32d0f89b6e2175e02c686372d85db281e9889bdf682a6d00fb7afe8a39e}
+  - {gate: semantic-integration, check_id: semantic-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: live-read, check_id: live-read-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: change-set, check_id: change-shape-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: execution-preflight, check_id: preflight-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: controlled-execution, check_id: controlled-execution-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
+  - {gate: recovery, check_id: recovery-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:8231534ea27aebe59b901b44402afdf1cdcf4b3e6d0147770b476edcfbd7598d}
 component_evidence:
-  - {component_id: delivery-artifact, component_kind: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-identity, component_kind: identity, check_id: identity-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-configuration, component_kind: configuration, check_id: configuration-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-connection, component_kind: connection, check_id: connection-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-store, component_kind: state-store, check_id: state-store-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-channel, component_kind: async-channel, check_id: async-channel-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-observability, component_kind: observability-profile, check_id: observability-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-recovery, component_kind: recovery-plan, check_id: recovery-plan-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
-  - {component_id: delivery-worker, component_kind: execution-unit, check_id: worker-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed}
+  - {component_id: delivery-artifact, component_kind: artifact, check_id: artifact-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:91a7eaf9f81cc9c37763f4944c2dc3e8e415f3881028c6de5305de3de27bfb5d}
+  - {component_id: delivery-identity, component_kind: identity, check_id: identity-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:38f5d03daef6de4dfa16f947c33de95d9352ac1fde5ae8fabef99e701458871d}
+  - {component_id: delivery-configuration, component_kind: configuration, check_id: configuration-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:e9aa6285ac9ad7c2dc32b1ced244b1c2898804c97df7d17ea960ac9f580d8c0d}
+  - {component_id: delivery-connection, component_kind: connection, check_id: connection-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:3e84a8042c1a5102e59c2ae0d0a49b64f764f1d3080a4956e7957e789d14eb66}
+  - {component_id: delivery-store, component_kind: state-store, check_id: state-store-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:e0ac28ced5c320bcac1a53b76fcc80f3e2fdcf8e02fd85764eaa4115d749794e}
+  - {component_id: delivery-channel, component_kind: async-channel, check_id: async-channel-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:f4ed58e15e618366fc7e292af1f400038783076da2d71596e1aacb747857fb39}
+  - {component_id: delivery-observability, component_kind: observability-profile, check_id: observability-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:c0bb269ae8b736edb301878b90e45414194eccbb715db786a691e15335c3d26e}
+  - {component_id: delivery-recovery, component_kind: recovery-plan, check_id: recovery-plan-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:afeffeb45c21b25f6378d83f583c5a61195c54750ac50ce5b1e85662dd2d8382}
+  - {component_id: delivery-worker, component_kind: execution-unit, check_id: worker-check, timestamp: "2026-09-27T00:00:00Z", verdict: passed, input_sha256: sha256:f4ed58e15e618366fc7e292af1f400038783076da2d71596e1aacb747857fb39}
 recovery_evidence:
   predecessor_attempt_label: prior-attempt
   recovery_attempt_label: recovery-attempt

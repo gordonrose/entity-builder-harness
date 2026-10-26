@@ -1,0 +1,83 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.02-rag-rulebook.local-delivery
+#   version: 1
+#   status: active
+#   created_on: '2026-10-26'
+#   updated_on: '2026-10-26'
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines:
+#   - architecture
+#   - sre
+#   kind: deployment-declaration-contract
+#   purpose: Account for supported local RAG service/image delivery without resurrecting
+#     retired hosted deployment.
+#   portability:
+#     class: reusable
+#     targets:
+#     - entity-builder
+#   used_by:
+#   - id: infra.04-deploy.02-rag-rulebook.local-target
+#     path: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+schema: deploy/declaration-contract/v1
+id: rag-rulebook-local-delivery
+status: active
+target:
+  profile: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+  environment: local
+  service: rag-rulebook
+scope:
+  covers:
+  - local-http-service
+  - local-image
+  - local-query-client
+  excludes:
+  - Hosted staging is retired; this declaration cannot restore publication or cloud
+    deployment.
+  stage_applicability:
+    deploy:
+      applicable: false
+      reason: The supported local image/service has no deployed provider target or
+        publication route.
+    acceptance:
+      applicable: false
+      reason: Disposable local execution is qualified by local service and finished-image
+        tests; no remote accepted release or succession is maintained.
+requirements:
+- id: rag-rulebook.local-service-package
+  purpose: Keep local context retrieval, local HTTP execution and hardened package
+    behaviour connected to fresh source/corpus inputs.
+  owner: rag-rulebook
+  required_by:
+  - .agentic/02.rag-rulebook/service/server.mjs
+  - .agentic/02.rag-rulebook/service/query-local-context.mjs
+  - scripts/02.rag-rulebook/run-local-service/script.sh
+  - scripts/02.rag-rulebook/query-context/script.sh
+  - scripts/02.rag-rulebook/build-service-image/script.sh
+  - scripts/02.rag-rulebook/smoke-test-service-image/script.sh
+  declarations:
+  - path: infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml
+    expectation: Local execution only with declared command, fresh runtime cache and
+      bounded network binding.
+  - path: infra/04.deploy/02.rag-rulebook/image/Dockerfile
+    expectation: Non-root image preserves the configured local service behaviour.
+  expectation: Actual local HTTP and packaged query interfaces succeed with fresh
+    source-bound runtime inputs; failed authentication/freshness and incomplete cleanup
+    fail.
+  local_proofs:
+  - rag-local-retrieval-regression
+  - rag-runtime-build-regression
+  - rag-policy-compiler-regression
+  - rag-selector-regression
+  package_proofs:
+  - rag-local-query-regression
+  - rag-local-service-regression
+  - rag-local-image
+  target_proofs: []
+  run_proofs: []
+  not_applicable:
+    target_proofs: No supported external deployment target belongs to this local execution
+      route.
+    run_proofs: Finished-image and local-service tests own disposable local acceptance;
+      there is no remote release history.

@@ -1,0 +1,22 @@
+[
+  {
+    "case": "future-default-profile-permits-initial-write-local-smoke-stays-isolated",
+    "argv": [
+      "bash",
+      "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+    ],
+    "expected_exit": 0,
+    "exit_code": 0,
+    "seconds": 1.285,
+    "stdout": "Persistence smoke local validation passed (fixture lifecycle guards; no AWS or HTTP).\n",
+    "stderr": ""
+  },
+  {
+    "case": "removed-initial-guard-is-rejected-by-smoke-before-real-aws-or-http",
+    "expected_exit": 1,
+    "exit_code": 1,
+    "seconds": 1.162,
+    "stdout": "",
+    "stderr": "+ set -euo pipefail\n++ git rev-parse --show-toplevel\n+ ROOT=/tmp/persistence-smoke-isolation-proof-2nvophuk\n+ cd /tmp/persistence-smoke-isolation-proof-2nvophuk\n+ python3 -c 'from pathlib import Path; compile(Path(\"scripts/04.deploy/run-platform-shell-persistence-smoke/script.py\").read_text(encoding=\"utf-8\"), \"persistence-smoke.py\", \"exec\")'\n++ bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate\n+ result='{\"persistence_smoke\":\"validated\"}'\n+ [[ {\"persistence_smoke\":\"validated\"} != {\"persistence_smoke\"\\:\"validated\"} ]]\n++ mktemp -d /tmp/persistence-smoke-local.XXXXXX\n+ fixture_dir=/tmp/persistence-smoke-local.MlDVhJ\n+ fixture=/tmp/persistence-smoke-local.MlDVhJ/target-profile.yml\n+ trap 'rm -rf \"$fixture_dir\"' EXIT\n+ python3 - /tmp/persistence-smoke-local.MlDVhJ/target-profile.yml\n+ export PYTHONPATH=/tmp/persistence-smoke-local.MlDVhJ\n+ PYTHONPATH=/tmp/persistence-smoke-local.MlDVhJ\n+ export PYTHONDONTWRITEBYTECODE=1\n+ PYTHONDONTWRITEBYTECODE=1\n+ export PERSISTENCE_SMOKE_TEST_TRIPWIRE=/tmp/persistence-smoke-local.MlDVhJ/external-access-attempted\n+ PERSISTENCE_SMOKE_TEST_TRIPWIRE=/tmp/persistence-smoke-local.MlDVhJ/external-access-attempted\n+ fake_aws=/tmp/persistence-smoke-local.MlDVhJ/aws-denied\n++ bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --target-profile /tmp/persistence-smoke-local.MlDVhJ/target-profile.yml\n+ fixture_result='{\"persistence_smoke\":\"validated\"}'\n+ [[ {\"persistence_smoke\":\"validated\"} != {\"persistence_smoke\"\\:\"validated\"} ]]\n+ bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-fresh-after-iam-remediation --target-profile /tmp/persistence-smoke-local.MlDVhJ/target-profile.yml --aws-cli /tmp/persistence-smoke-local.MlDVhJ/aws-denied\n+ grep -Fq -- '--approve-fresh-after-iam-remediation is valid only with --execute' /tmp/persistence-smoke-local.MlDVhJ/validate.stderr\n+ bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --target-profile /tmp/persistence-smoke-local.MlDVhJ/target-profile.yml --aws-cli /tmp/persistence-smoke-local.MlDVhJ/aws-denied\n+ grep -Fq -- 'the initial persistence acceptance proof may run only after its reviewed service deployment' /tmp/persistence-smoke-local.MlDVhJ/execute.stderr\n+ rm -rf /tmp/persistence-smoke-local.MlDVhJ\n"
+  }
+]

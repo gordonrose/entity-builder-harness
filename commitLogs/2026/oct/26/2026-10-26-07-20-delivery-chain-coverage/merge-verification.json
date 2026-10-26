@@ -1,0 +1,104 @@
+{
+  "schema": "delivery/local-merge-verification/v1",
+  "result": "passed-local-boundaries",
+  "verified_at": "2026-10-26T14:17:20.544624+00:00",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "source_inputs": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-source-inputs.json",
+    "sha256": "01e0dc9bd1794708ff0d80aa6d0c4ec68e795893c4b00ea032ad2ab24f0e48d8"
+  },
+  "inventory": {
+    "report": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-delivery-inventory.json",
+      "sha256": "e09687404b32160d13ca34b419e98dff6fb42085e73d7048da599b7fd169a63e"
+    },
+    "human_view": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-delivery-inventory.md",
+    "summary": {
+      "classifications": {
+        "retired": 4,
+        "supported": 416
+      },
+      "entrypoints": 420,
+      "gaps": 0,
+      "kinds": {
+        "ci-workflow": 9,
+        "command": 184,
+        "image-definition": 5,
+        "package-command": 77,
+        "provider-binding": 2,
+        "provider-template": 27,
+        "regression-command": 87,
+        "runnable-program": 20,
+        "scope": 6,
+        "target": 3
+      },
+      "routes": 6
+    },
+    "input_digest": "127f52ea0c095b03324706d38113da3bc350bc75f23b87172a992e25f9664899",
+    "input_count": 1658
+  },
+  "commit_gate": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-commit-gate.json",
+    "sha256": "94cf08e7e927790388d77166a37cb1a10b2bd42fda52cb93e378c7138ede7c34"
+  },
+  "selected_checks": {
+    "report": {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-selected-execution.json",
+      "sha256": "a4505dfc8baf9b88a2af700ca84783519ef0626c687294442dfefb87bba5617f"
+    },
+    "counts": {
+      "passed": 53,
+      "deferred": 20
+    },
+    "findings": []
+  },
+  "package_qualification": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-qualification-summary.json",
+    "sha256": "4e6b32804f8218f49727889d0dd23b88dd9fec0b1e656fee646055ffcee34a28"
+  },
+  "rag_image_qualification": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-rag-image-qualification-56b1eb2d12ad.json",
+    "sha256": "cdc8b0dcd85152b7b30da8db3409407619f9d57540eb0d2c50ebe75590b3f0cc"
+  },
+  "rag_http_bindings": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-rag-http-current-bindings.json",
+    "sha256": "460ff5c18a01d07c3c4ebd8ec1b6bee02f853009dcf3647784a2890f1ba66178"
+  },
+  "source_review": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-source-review.json",
+    "sha256": "014d36791f9aa30a205dc6abd7677ffd12c2935b72aa506d3651ab5610c8ed94"
+  },
+  "independent_review": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-independent-review.json",
+    "sha256": "e9190fb6b354eaf5dcec27ea2e2701f080a9eb6cfdb8807dc127232dac579e48"
+  },
+  "implementation_reports": [
+    {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/DELIVERY-REPORT.md",
+      "sha256": "724b3bc7035fc15be1bc73eba2e4c9cae1ad154bf00644304ff4f3aedd31b8a3"
+    },
+    {
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-verification.json",
+      "sha256": "80625201aa0fe33feb1f7b77be282194cc96bbb0d6fe17bf321809ea4391e698"
+    }
+  ],
+  "precommit_repairs": [
+    "Required v3 lifecycle dates maintained with the existing owner helper; retained historical source/image proofs unchanged.",
+    "Fresh source review and derivation records bind date-only source changes; current provenance pointers and generated recognition refreshed.",
+    "Existing selector recognizes retained session .stdout/.stderr streams; source/executable coverage exemptions remain unchanged.",
+    "Active migration guidance retains historical argv and documents the current governed invocation.",
+    "Existing guarded local public-image recovery accepts the reviewed fixed core route alongside persistence, preserving same-engine binding and temporary credential-free configuration cleanup."
+  ],
+  "remaining_limits": [
+    "No live cloud operation, publication, deployment, remote push or live CI execution occurred.",
+    "External-stage selector deferrals are not passes; package deferrals have separate local image proof and live deployment/acceptance deferrals remain unexecuted.",
+    "Workspace-wide report is incomplete due to one unrelated missing old worktree registration; the target-specific readiness gate remains mandatory immediately before merge.",
+    "Pre-existing unrelated source-review gaps and warning remain documented in the implementation report.",
+    "This report binds pre-commit source bytes; Git task and merge SHAs are recorded by the session owner and Git history."
+  ],
+  "formatting_review": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-formatting-review.json",
+    "sha256": "eb64b0efe5df142e37f4f10190fa4e962ad238f0aeced89870e4a03fead4c56c"
+  },
+  "changed_source_paths": 218
+}

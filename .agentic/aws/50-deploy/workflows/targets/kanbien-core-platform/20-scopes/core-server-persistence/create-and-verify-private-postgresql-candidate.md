@@ -85,16 +85,15 @@ name, source revision, and both server and restore-verifier image digests.
 
 ### Permission-separation update of an existing candidate
 
-If the persistence candidate already exists and is healthy, do not use the
-CREATE-only candidate controller or the image-only transition controller for
-the privilege-separation change. The bounded route below is the only governed
-update: it uses a newly qualified immutable image because it contains the
+Privilege separation on an existing healthy candidate belongs to the bounded
+permission-surface controller below. Its executable resource-change guard
+requires the exact update scope and a newly qualified immutable image containing the
 administration entrypoint, then permits the exact CloudFormation additions and
 modifications required to separate administrator, ordinary-migration, and
 runtime access.
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$receipt" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$receipt" --rollback-receipt "$rollback_receipt" --rollback-compatibility-id "$rollback_compatibility_id" --json
 ```
 
 Before it executes, the controller re-observes the current healthy stack,
@@ -120,10 +119,19 @@ The parent release coordinator supplies two immutable package-custody receipts:
 accepted persistence-capable image. The latter is never the dependency-free
 bootstrap image. The coordinator must retain the JSON reports produced below,
 because each successful controller reports its durable proof-receipt path.
+Before a fresh verifier phase, set its predecessor to the last completed report's
+`facts.operation_id` for the **same mode**. Use `none` only when that mode has no
+prior reservation. In the examples, `previous_read_operation` selects that read
+predecessor. Preserve the exact arguments when continuing an interrupted phase;
+those arguments reconcile the same reservation and cannot submit another task.
+When the credential-lifecycle controller runs a verifier internally, consume its
+`facts.verifier_operations.read.operation_id` or
+`facts.verifier_operations["health-ready"].operation_id` as the next same-mode
+predecessor. Its child handoff also retains the task ARN and proof-receipt path.
 
 ```bash
 # 1. Provider surface: one reviewed UPDATE only.
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$candidate_receipt" --json > permission_surface_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh --receipt "$candidate_receipt" --rollback-receipt "$rollback_receipt" --rollback-compatibility-id "$rollback_compatibility_id" --json > permission_surface_report.json
 
 # 2. Identities and structural schema, then the narrow runtime DML grant.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh --operation bootstrap-identities --json > administration_bootstrap_report.json
@@ -135,7 +143,7 @@ bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.depl
 # 3. Meaningful server-mediated persistence and retained-data replacement.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode create --json > create_report.json
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$candidate_receipt" --json > replacement_report.json
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > replacement_read_report.json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --new-operation --expected-operation "$previous_read_operation" --json > replacement_read_report.json
 
 # 4. IAM identity revocation, replacement, and recovery.
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh --receipt "$candidate_receipt" --operation revoke-and-recover --json > revocation_recovery_report.json
@@ -438,11 +446,14 @@ running OCI digest to that receipt before any stop, records the original and
 replacement task identities, and stops if ECS
 does not restore one distinct healthy task using the unchanged candidate task
 definition. It does not create or read a record itself: follow it with a fresh
-private `read` verifier so the data-survival evidence is explicit.
+private `read` verifier so the data-survival evidence is explicit. Set
+`previous_read_operation` from the previous read report's `facts.operation_id`,
+or `none` for the first read. A retained `historical-completion` result is retry
+evidence, not a new observation after the replacement.
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-server-replacement/script.sh --receipt "$receipt" --json > "$replacement_report"
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --json > "$replacement_read_report"
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode read --new-operation --expected-operation "$previous_read_operation" --json > "$replacement_read_report"
 ```
 
 ## Runtime IAM Authentication and Urgent Revocation
@@ -494,8 +505,8 @@ compatible; the dependency-free bootstrap image and a predecessor with unknown
 legacy permission facts are never eligible persistence rollbacks.
 
 ```bash
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --expected-predecessor "$current_release_id" --json
-bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --expected-predecessor "$current_release_id" --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_b_receipt" --operation update --json
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.sh --receipt "$release_a_receipt" --operation rollback --rollback-compatibility-id "$rollback_compatibility_id" --support-receipt "$release_b_receipt" --json
 ```
 
 After an interrupted update or rollback, repeat the same operation and receipt
@@ -651,7 +662,8 @@ permissions. A `pending`, `failed`, or `uncertain` result never means acceptance
 | `prepare-candidate` | Read-only preflight; offline declaration coverage precedes provider observation. |
 | `create-change-set` | Same receipt with `--reconcile`; never resubmits the fixed CREATE. |
 | `deploy-candidate` | Same receipt/change-set with `--reconcile`; never executes again. |
-| `run-migration`, `verify-candidate` | Exact `--reconcile-task` or pre-submission `--reconcile-operation`; no new task. |
+| `run-migration` | Exact `--reconcile-task` or pre-submission `--reconcile-operation`; no new task. |
+| `verify-candidate` | Repeat the exact original invocation to reconcile its durable reservation. A fresh phase requires `--new-operation --expected-operation <last-same-mode-operation-id>` (`none` only for initial creation); retrying the identical predecessor reconciles that same successor. Retained completion is explicitly historical. |
 | `create-recovery-point` | Same snapshot with `--observe-only`; absence stays uncertain. |
 | `rehearse-isolated-database-restore` | Same operation/snapshot with `--observe-only`; no restore, launch or deletion. |
 | `rehearse-server-replacement` | `--reconcile-original-task`; no second stop, and no reuse across task definitions. |
@@ -688,7 +700,20 @@ receipts, the fifteen-name `proof_receipts` mapping, the three-name
 `observability_receipts` mapping (`readiness-failure-observed`,
 `readiness-alarm-notified`, `readiness-recovery-observed`), original/successor task
 identities, exact recovery snapshot, successful retained source-record proof,
-and a fresh `current_health_task` from `verify-candidate --mode health-ready`.
+and a fresh `current_health_task` from an explicit new `health-ready` operation.
+The route also retains a predecessor identifier for each fresh read/health phase;
+use the preceding report for the same mode, including across credential recovery,
+rollback and final current-state observation. A health predecessor is never a
+read predecessor. The initial value is `none` only if that mode has no operation.
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh --mode health-ready --new-operation --expected-operation "$previous_health_operation" --json > "$current_health_report"
+```
+
+Require `facts.evidence_reuse: fresh-terminal-observation` for a new phase and
+retain its operation ID and proof-receipt path before the next phase. A retry may
+return the same `historical-completion`; that preserves its original timestamp
+and does not establish a fresh current-state check.
 Use paths to existing controller receipts. Missing ECS history is not permission
 to synthesize a receipt or replay a completed mutation. The normal value of
 `proof_applicability` is `null`: every required proof must bind directly to the
@@ -719,3 +744,28 @@ target-declaration gates. The local regression wrapper
 exercises actual controller receipt capture, collection, record validation,
 promotion and downstream validation with controlled observations. Its temporary
 records are explicitly simulated and are rejected by production validation.
+
+## Executable delivery boundaries
+
+All supported candidate provider calls first require the generated local
+`inventory-deploy-control --delivery --check` result. Missing registration or
+runtime declarations block before provider observation. The actual Python
+controllers enforce this as well as their shell wrappers.
+
+Before a permission-surface change, the proposed current configuration and
+permission contracts must already have an immutable rollback compatibility
+record through the release-succession owner. Supply its identifier and the exact
+retained rollback receipt; missing, stale, altered or differently bound evidence
+blocks before change-set creation. A rollback also requires a qualified support
+receipt matching the current support-image digest, so it cannot restore old
+administration or migration programs. Selecting a retained image with the
+`update` label cannot bypass compatibility checks.
+
+Permission changes support `--reconcile` with the same candidate receipt. This
+is observation-only, including failed or absent change sets. Failed reviews are
+retained for diagnosis; the controller does not delete and recreate them.
+
+Isolated restore cleanup requires independently observed database absence,
+absent temporary IAM authority, and no active verifier tasks. If the database is
+already absent, the bounded verifier family still must be observable. Pending,
+denied, partial or unknown observations never become `cleaned-up`.

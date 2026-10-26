@@ -76,7 +76,7 @@ missing_change = {"Status": "FAILED", "StatusReason": "Resource does not exist: 
 assert diagnostics.classify_cloudformation_failure(missing_change, [])[0] == "provider-resource-missing"
 unknown_change = {"Status": "CREATE_IN_PROGRESS", "StatusReason": "x" * 50000}
 classification, facts, outcome = diagnostics.classify_cloudformation_failure(unknown_change, [{"ResourceStatus": [], "ResourceStatusReason": {}}])
-assert classification == "provider-details-unavailable" and facts == {"provider_status": "CREATE_IN_PROGRESS"} and outcome == "unknown"
+assert classification == "provider-details-unavailable" and facts == {"provider_status": "CREATE_IN_PROGRESS"} and outcome == "pending"
 
 def timeout_provider(*_parts): return False, None, "aws-command-timeout"
 classification, facts, outcome, collection = diagnostics.collect_cloudformation_failure(timeout_provider, stack_name="test-stack", change_set_name="test-change-set")

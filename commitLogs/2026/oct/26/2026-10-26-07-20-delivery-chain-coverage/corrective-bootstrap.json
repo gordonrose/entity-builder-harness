@@ -1,0 +1,140 @@
+{
+  "schema": "delivery-chain/corrective-repair/v1",
+  "id": "E-CORR-BOOTSTRAP-PROPOSAL",
+  "finding": 2,
+  "families": [
+    "B",
+    "E",
+    "I"
+  ],
+  "status": "repaired-focused-cli-and-shared-consumer-verified",
+  "checked_at": "2026-10-26T12:36:42.591752+00:00",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "failure": "The bootstrap deploy CLI accepted a permitted ECS TaskDefinition modification and qualified image/source parameters without reading the selected proposed template. Adding TaskRoleArn therefore executed an unreviewed permission-bearing configuration. Repo-source equality alone would also fail to prove image-only behavior if source and proposal changed together while the deployed template stayed old.",
+  "affected_routes": [
+    "kanbien-core-platform/bootstrap-runtime update execution",
+    "kanbien-core-platform/bootstrap-runtime qualified accepted-image restoration",
+    "direct deploy.py and existing script.sh entrypoints"
+  ],
+  "downstream_consumers": [
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh"
+  ],
+  "contract_files": [
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md"
+  ],
+  "implementation_files": [
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py"
+  ],
+  "caller_files": [
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/bootstrap-runtime/restore-accepted-release/script.sh",
+    "scripts/04.deploy/reconcile-platform-shell-staging/script.py"
+  ],
+  "test_files": [
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py"
+  ],
+  "documentation_files": [
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md"
+  ],
+  "changed_source_files": [
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md"
+  ],
+  "source_inputs_sha256": {
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py": "9adbc231059ffa4b7cdc1ce4c8e41d193b5bb030befb4da26c2d83fe6bdfc835",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py": "57d70bd61b79d2ec38d902f54b47845a013067e7157c3565750148c4bb9cee5d",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py": "502bfe852583bae40fbb8f8b4d8149a8090f52ab296cdbf7a6f0f944ad479c3f",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": "ad34756a433269f35e8329c9b9e22c8931c26c89cc0b7c31345634a614165218",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md": "8694b710bcd5e28cacc356a4fca172da01fc9bf9b617536d6b439fbc77e9369c",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py": "a7f21fb8ccc75aaafcae815f9a00f55deb990c95d7f56d26c54bdd438ef15014",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md": "06093dfc7e5a21871984ce75d05f484fa523924285916708d80dc7a872e8bd3b"
+  },
+  "smallest_reusable_repair": "Extract the existing shell AWS template normalizer for two actual consumers, rejecting duplicate mapping/intrinsic keys, malformed bodies and scalar-type substitutions. Before execute-change-set, bootstrap requires both current-stack and exact selected change-set Original templates to equal the release-contract-validated source; only qualified ImageDigest and SourceRevision parameters may differ from uniquely resolved current declared parameters. UsePreviousValue resolves current values; unknown/missing/duplicate/masked/conflicting bindings and incomplete resource observations reject. A final source-byte check rejects mid-check source changes. Shell retains the same target-owned behavior using the common normalizer.",
+  "before_reproduction": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-before.json",
+    "sha256": "759c19d83f4f6bcc695448e5442cb4b3003a852e936f0bc66ce637272020298b"
+  },
+  "after_same_proposal": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-after-final.json",
+    "sha256": "c6a687a7225594dfab6ff004633139a76d27d813df4976202b7efa286027913e"
+  },
+  "negative_regressions": [
+    "Exact original TaskRoleArn proposal changes from exit0/execute1/no-template-read to change-set-template-mismatch/execute0 after current and selected template reads.",
+    "Selected runtime/verifier role, environment, command, public-network and scalar-type changes reject before execute.",
+    "Unavailable/missing/malformed/null/sequence/duplicate-key/duplicate-intrinsic proposal bodies reject; source mutation and truncated resource changes reject.",
+    "Current template unavailable/missing/malformed/changed description/changed task role reject; jointly changed source+proposal with unchanged old current template also rejects.",
+    "Duplicate/missing/unknown/typed/masked parameter values, conflicting/unavailable/ambiguous inherited values and duplicate current values reject.",
+    "Public shell wrapper reaches the same selected-template boundary; shared parser rejects recursive aliases and nonfinite scalars."
+  ],
+  "valid_behavior": [
+    "Matching image-only updates and qualified restorations execute once with observed completion using mapping, YAML, JSON-text and UsePreviousValue representations.",
+    "Semantically equivalent intrinsic forms remain comparable, preserving GetAtt normalization and JSON scalar types.",
+    "The existing pending/absent/failed/uncertain/reconciliation and prerequisite cases continue passing; six shell control methods pass with the shared parser."
+  ],
+  "earliest_enforcement": "Actual deploy-candidate command before execute-change-set, after package, release-contract, alignment, cost and inventory prerequisites; provider observations remain read-only.",
+  "verification": [
+    {
+      "command": "python3 -B scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+      "exit_code": 0,
+      "unittest_methods": 5,
+      "actual_cli_scenarios": 54,
+      "seconds": 13.132,
+      "log": {
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-final-suite.log",
+        "sha256": "3f918cc0ab3604ffe663f870622ca216807bb7c7ffd69ef42ba3a506a0d2d7c9"
+      },
+      "scope": "14 retained prerequisite/reconciliation cases;26 proposed-template/parameter negatives;6 current/source-binding negatives;8 matching update/restoration cases; separate intrinsic parser assertions."
+    },
+    {
+      "command": "python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+      "exit_code": 0,
+      "unittest_methods": 6,
+      "seconds": 30.645,
+      "log": {
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-shell-suite.log",
+        "sha256": "d0b5f41e9963cc2d4eddafcf7885d90308cdd24700f3b50139166547e5179b09"
+      },
+      "scope": "Existing shell behavior proof retained after parser extraction; parser unchanged by later bootstrap-only current-template refinement. Log is captured completion output."
+    },
+    {
+      "command": "git diff --check -- scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py scripts/04.deploy/reconcile-platform-shell-staging/release_control.py scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py .agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+      "exit_code": 0
+    },
+    {
+      "command": "Actual existing DeploymentCli.command with the exact immutable before-repair proposal and parameters",
+      "exit_code": 1,
+      "expected_code": "change-set-template-mismatch",
+      "execute_calls": 0,
+      "fixture_cleanup": "confirmed-absent",
+      "artifact": {
+        "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-after-final.json",
+        "sha256": "c6a687a7225594dfab6ff004633139a76d27d813df4976202b7efa286027913e"
+      }
+    }
+  ],
+  "closure_evidence": "Before and after immutable actual-CLI records confirm the intended proposed-role bypass is repaired;54 CLI scenarios and existing6 shell methods pass, including genuine current/source/proposal and inherited-parameter boundaries. Independent focused review is recorded separately by its owner.",
+  "read_only_overlap_review": {
+    "main_head": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+    "new_restore_worktree": "chat_2026-10-26-11-53-bounded-postgresql-restore-diagnostics-3713745611",
+    "new_restore_head": "8a6c4fec09d6987c2ccab88900a00153d0bc16bf",
+    "finding": "Main and newest restore worktree have the same prior bootstrap deployment source (sha25692a55f0b4378c09fba500534bf37d0b72b0e5fb150986448bd5f775eda381b56), no dirty bootstrap primary and no shell release_control implementation. Other worktrees were read-only; no replacement of competing work."
+  },
+  "limits": [
+    "Provider observations and mutation calls are disposable local fixtures; execute-change-set creates a temporary marker only. No live AWS, secrets, publication or deployment proof.",
+    "Package, alignment and cost validators are successful fixtures at this command-boundary test; their existing production callers remain enforced and unchanged.",
+    "This route remains bounded to image/source-only update or qualified restoration; a configuration/security transition requires its own qualification and cannot use this route.",
+    "Root owns final aggregate, artifact metadata/generated recognition integration and refreshed RAG image after all source freezes. Earlier delivery proof and corrective reproduction files remain unchanged."
+  ]
+}

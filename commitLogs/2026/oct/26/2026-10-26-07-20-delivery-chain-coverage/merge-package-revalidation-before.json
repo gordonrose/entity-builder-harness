@@ -1,0 +1,105 @@
+{
+  "schema": "delivery/merge-package-revalidation/v1",
+  "checked_at": "2026-10-26T13:36:55.204463+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "checks": [
+    {
+      "image": "core",
+      "argv": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:18a08ca7a0a168d8146c37393c26d11a0f3ed4376cacc703746a869fbe1326ae",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/core-normalized-qualification.json",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml",
+        "*"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"verdict\": \"failed\", \"code\": \"qualification-binding-invalid\"}\n",
+      "stderr": "",
+      "duration_seconds": 0.516,
+      "changed_inputs": [
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh"
+      ],
+      "retained_receipt_sha256": "1d2379f664a38b2af337d11f0f630103e7bb81251e5cc579e5415b454bd65ad8"
+    },
+    {
+      "image": "persistence",
+      "argv": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:0795f6dff20d96e493747d8b5f32c36ce1340ec07cdb288edeaca64cf9c8bde8",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/persistence-normalized-qualification.json",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "core-server-persistence,persistence-migration,persistence-administration,private-persistence-verifier,persistence-restoration-verifier"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"verdict\": \"failed\", \"code\": \"qualification-binding-invalid\"}\n",
+      "stderr": "",
+      "duration_seconds": 0.221,
+      "changed_inputs": [
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh"
+      ],
+      "retained_receipt_sha256": "f441ffd4827d6b08d613be9aa9cf751bd916c56ed927c209b1f9766ff3a64f15"
+    },
+    {
+      "image": "shell",
+      "argv": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/shell-normalized-qualification.json",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml",
+        "*"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"verdict\": \"failed\", \"code\": \"qualification-binding-invalid\"}\n",
+      "stderr": "",
+      "duration_seconds": 0.196,
+      "changed_inputs": [
+        "scripts/04.deploy/smoke-test-platform-shell-image/script.sh"
+      ],
+      "retained_receipt_sha256": "2743cc2d9cd38636431def6f8bba8d699f651705316d1dcb0d8b500ac7d82a75"
+    },
+    {
+      "image": "collector",
+      "argv": [
+        "python3",
+        "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+        "verify",
+        "--image",
+        "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+        "--receipt",
+        "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/collector-normalized-qualification.json",
+        "--configuration-input",
+        "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "observability-collector"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"verdict\": \"failed\", \"code\": \"qualification-binding-invalid\"}\n",
+      "stderr": "",
+      "duration_seconds": 0.158,
+      "changed_inputs": [
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml"
+      ],
+      "retained_receipt_sha256": "ec53751779c0624a95c10bba965d28113717e671357066ddab2edac3e86df766"
+    }
+  ],
+  "result": "requalification-required"
+}

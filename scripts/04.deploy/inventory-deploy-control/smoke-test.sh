@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-10-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.governance
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     - entity-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.script.inventory-deploy-control
 #     path: scripts/04.deploy/inventory-deploy-control/script.sh
@@ -41,12 +42,13 @@ result = subprocess.run(
     encoding="utf-8",
 )
 report = json.loads(result.stdout)
-assert report["schema"] == "deploy/control-inventory/v1"
-assert report["scope"] == "repository source only; no provider reads, writes, or execution"
-assert report["summary"]["script_capabilities"] >= 1
-assert report["summary"]["infra_files"] >= 1
-assert any(item["capability"] == "inventory-deploy-control" for item in report["scripts"])
-assert all("path" in item and "role" in item for item in report["infra"])
+assert report["schema"] == "deploy/delivery-coverage-report/v1"
+assert report["source_revision"] and report["input_digest"] and report["inputs"]
+assert report["summary"]["entrypoints"] >= 1
+assert report["summary"]["routes"] >= 1
+assert any(item["path"] == "scripts/04.deploy/inventory-deploy-control/script.py" for item in report["entrypoints"])
+assert all("path" in item and "classification" in item for item in report["entrypoints"])
 PY
 
+python3 -B scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py
 echo "Deploy control inventory smoke test passed."

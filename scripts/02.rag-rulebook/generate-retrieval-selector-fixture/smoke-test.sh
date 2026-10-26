@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -23,6 +23,7 @@ set -euo pipefail
 #       - design-system-builder
 #   effects:
 #     - read-only
+#     - writes-files
 #   used_by:
 #     - id: rag-rulebook.script.generate-retrieval-selector-fixture
 #       path: scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh

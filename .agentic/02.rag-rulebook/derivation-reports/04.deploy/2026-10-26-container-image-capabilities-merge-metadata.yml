@@ -1,0 +1,129 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: rag-rulebook.derivation-report.04-deploy.2026-10-26-container-image-capabilities-merge-metadata
+#   version: 1
+#   status: active
+#   created_on: "2026-10-26"
+#   updated_on: "2026-10-26"
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines: [architecture, agentic, security, sre]
+#   kind: derivation-report
+#   purpose: Record current source provenance for a date-only container metadata revision without rewriting accepted derivations.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.rules.shared.container-image-management
+#     path: docs/04.deploy/rules/shared/container-image-management.yml
+schema: rag-rulebook/source-to-rule-derivation-report/v1
+report_id: derivation.04.deploy.2026-10-26.container-image-capabilities-merge-metadata
+status: accepted
+source_change:
+  change_type: updated
+  approved_source_state: approved
+  changed_paths:
+  - docs/04.deploy/source-material/shared/container-image-management.md
+  summary: Refresh exact source provenance after changing only artifact updated_on; no container policy or executable
+    behavior changed.
+target:
+  corpus_id: corpus.04.deploy
+  owner_layer: 04.deploy
+  expected_rule_paths:
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  affected_rule_paths:
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  affected_rulesets: []
+  affected_evaluations:
+  - .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+  affected_corpus_gaps: []
+semantic_review:
+  source_claims:
+  - claim_id: container.image.bounded-capability-directory
+    summary: Allow canonical image Dockerfile or one named capability directory; deeper paths remain rejected.
+    evidence_path: docs/04.deploy/source-material/shared/container-image-management.md
+  - claim_id: container.image.effective-ignore-context
+    summary: 'Selected Dockerfile requires its effective ignore file: sibling image ignore for image context, Dockerfile-specific
+      or repository-root fallback only for repository-root context.'
+    evidence_path: docs/04.deploy/source-material/shared/container-image-management.md
+  - claim_id: container.image.metadata-only-source-revision
+    summary: The current source differs from the prior accepted source only in updated_on; rule policy remains byte-for-byte
+      unchanged outside source_derivation metadata.
+    evidence_path: docs/04.deploy/source-material/shared/container-image-management.md
+  conflicts:
+    status: none-found
+    search_scope:
+    - docs/04.deploy/source-material/shared/container-image-management.md
+    - docs/04.deploy/rules/shared/container-image-management.yml
+    - .agentic/02.rag-rulebook/source-projections/v1.yml
+    items: []
+  drift:
+    status: none-found
+    items: []
+  ownership:
+    status: ok
+    notes:
+    - Deploy owner retains Dockerfile boundary and package context enforcement.
+proposed_updates:
+  rules:
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  rule_packs: []
+  recognition_sources: []
+  recognition_candidates: []
+  corpus_gaps: []
+  evaluations: []
+  notes:
+  - Refresh source SHA-256, derivation report/timestamp and active projection pointers only. No rule IDs, policy,
+    required checks or selector expectations change.
+  - Preserve the accepted June30 and earlier October26 source-review/derivation records unchanged.
+downstream_effects:
+  index_required: true
+  chunks_required: true
+  selector_evaluation_required: true
+  publish_required: false
+  stale_artifacts:
+  - .cache/02.rag-rulebook/rulebook-index.json
+  - .cache/02.rag-rulebook/rulebook-chunks.json
+validation:
+  required_checks:
+  - bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+    --json
+  - bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+    --json
+  - bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set projection.04.deploy.shared.container-image-management
+    --json
+  - bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source docs/04.deploy/source-material/shared/container-image-management.md
+    --json
+  - bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current --json
+  - bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+    --json
+  checks_run:
+  - command: bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+      --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+      --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set projection.04.deploy.shared.container-image-management
+      --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source docs/04.deploy/source-material/shared/container-image-management.md
+      --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current --json
+    result: passed
+  - command: bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml
+      --json
+    result: passed
+  checks_pending: []
+review:
+  required: true
+  decision: approved
+  notes:
+  - Independent reviewer /root/independent_review confirmed exact date-only equivalence and no semantic rule delta.
+  - New source review .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml
+    accepts source d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1.
+  - Generated-index/chunk/selector checks use current disposable artifacts; persisted runtime/image freshness remains
+    with the integration owner.
+  - "All six focused review, derivation, projection, coverage, current-index and selected-container retrieval checks\
+    \ passed. Persisted runtime/package rebuilding remains the integration owner\u2019s separate obligation."
+  reviewer: /root/independent_review
+  reviewed_at_utc: '2026-10-26T13:42:09Z'

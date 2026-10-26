@@ -4,7 +4,7 @@ id: repo.check-selection.readme
 version: 2
 status: active
 created_on: '2026-10-24'
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 06.shared
 domain: validation
 disciplines:
@@ -67,6 +67,15 @@ the local operating-system user who owns that Git metadata; it is neither signed
 portable evidence nor protection from that same user editing their own cache.
 `--evidence` reports are explicitly rejected as authority and never create cache
 receipts. Failed, pending, uncertain and nonzero results never qualify reuse.
+
+Each receipt binds the complete catalog definitions of its selected check and
+all aliases sharing that command. An unrelated check definition does not revoke
+that receipt. Checks that explicitly consume the catalog still bind its complete
+bytes. Every invocation validates the current catalog and selection; a catalog
+change during planning or execution makes the invocation uncertain. This drift
+barrier is separate from the reusable proof identity, so the next fresh plan can
+reuse unaffected evidence. Staged execution still requires the catalog authority
+to match the staged version.
 
 The key includes relevant input bytes and file modes, transitive package and
 metadata dependencies, owner capability, argv/effects/stage/evidence class,

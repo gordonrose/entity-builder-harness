@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-01"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -113,6 +113,13 @@ find_engine() {
   exit 1
 }
 
+python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+
+if [ -z "${DOCKER_CONFIG:-}" ]; then
+  export DOCKER_CONFIG="$ROOT/.cache/04.deploy/docker-config"
+fi
+mkdir -p "$DOCKER_CONFIG"
+
 ENGINE="$(find_engine)"
 
 if [ "$REQUIRE_DIGEST_BASE" = true ] && [[ "$BASE_IMAGE" != *@sha256:* ]]; then
@@ -125,7 +132,7 @@ if ! "$ENGINE" info >/dev/null 2>&1; then
   exit 1
 fi
 
-bash scripts/04.deploy/validate-container-boundaries/script.sh >/dev/null
+bash scripts/04.deploy/validate-container-boundaries/script.sh --build-context repository-root >/dev/null
 
 if [ ! -f "$DOCKERIGNORE" ]; then
   echo "ERROR: expected Dockerfile-specific ignore file is missing: $DOCKERIGNORE" >&2

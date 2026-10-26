@@ -1,0 +1,453 @@
+{
+  "cleanup": {
+    "effects_checked": 1,
+    "findings": [],
+    "schema": "deploy/disposable-cleanup/v1",
+    "verdict": "passed"
+  },
+  "command": "bash scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+  "evidence_class": "local-finished-image",
+  "exit_code": 0,
+  "http": {
+    "archive_missing_evidence": [
+      ".codex/rules/governed-scripts.rules",
+      ".claude/settings.json",
+      ".vibe/config.toml"
+    ],
+    "health": "ready",
+    "query_status": 200,
+    "schema": "rag-rulebook/image-http-checks/v1",
+    "selected_chunk_count": 6,
+    "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+    "unauthorized_status": 401
+  },
+  "image_id": "sha256:2c887f0e11148228cbcbcd23f59587d41634c4e9ce95a7c8812525888f7b06a8",
+  "implementation_inputs": {
+    ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml": "322139f4893b436493b9308a062d5ad367542c7175ac1a4839fe6e59488858d8",
+    ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml": "309fcabaf80c227ae9bc846eb3d7d6e8c61f9387eb0a40624d344c7bf32cf997",
+    ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml": "e0e7cb8bf65507e3b4f39d40474b4d4bea61897284d2525e520f4af56271b2f9",
+    "infra/04.deploy/02.rag-rulebook/image/Dockerfile": "c97c3b2f06d2487a786deddba7c0af3daf40676c09d8438b54a04013574acc4a",
+    "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore": "448d1d5d18e49363b98a09c6555efab212e6244e0365fa2374d72c61a5588a65",
+    "scripts/01.harness/artifact-metadata/generate-index/script.sh": "86ee3d929d8420392ced2c2ba9065d1978ed256bfbe60ffe6db8f6a731a0813b",
+    "scripts/01.harness/artifact-metadata/header_discovery.py": "7746893ec23986751f83fd85b184650f1961ef630a766f3b9d2a097848eff5cc",
+    "scripts/02.rag-rulebook/build-local-runtime/script.sh": "11440cc45add6a9523bea65c06217020472009897ab7d79b672ac7d96d8cba12",
+    "scripts/02.rag-rulebook/build-service-image/script.sh": "d8a452b65866ccc6c47b27a8e02ea391ffe030adb6fefdd013e790ea6409ed28",
+    "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh": "3917ce2f52d0fc96e0417c440e0e709dcba0d067393b2ecdc2002d7516e6f5c7",
+    "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh": "50a09314c73a93a0a5ba4ccc97bc0a350c52a6f7832932ebef9a14f4625a4fce",
+    "scripts/02.rag-rulebook/smoke-test-service-image/script.sh": "ba973aea7260cf2fa95f19f0868c28151436076d8d1465a5b5d66ee689f4d8b0"
+  },
+  "limits": [
+    "Local Docker and loopback HTTP only; no hosted service, cloud mutation, registry publication or deployment.",
+    "Baseline Git revision is accompanied by finished image identity and packaged input/output hashes; the image contains authorized uncommitted working-tree changes.",
+    "Three explicitly declared local-tool configuration sources are absent from the source archive and remain visible as missing evidence in matching queries."
+  ],
+  "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-2c887f0e1114.log",
+  "log_sha256": "91e9d9e1c0a71de1de47895e15040380685a92547929a6b7dd06f627a357d97d",
+  "packaged_cache": {
+    "counts": {
+      "artifacts": 819,
+      "chunk_candidates": 3584,
+      "chunks": 3584,
+      "citations": 1770,
+      "compiled_policy_dimensions": 15,
+      "compiled_policy_recognition_sources": 7,
+      "corpus_packages": 10,
+      "graph_edges": 5816,
+      "recognition_candidates": 1,
+      "recognition_source_terms": 3133,
+      "rule_packs": 4,
+      "rules": 237
+    },
+    "fingerprints": {
+      "inputs": {
+        "chunk_generation": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 1,
+          "missing_roots": [],
+          "paths": [
+            "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
+          ],
+          "roots": [
+            "scripts/02.rag-rulebook/generate-rulebook-chunks/script.sh"
+          ],
+          "sha256": "b695b3759dfd8fc42c7a46c29daf9ac11948b5f858e12c3e670041d056aeeb4f"
+        },
+        "corpus_gaps": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 6,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml",
+            ".agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml",
+            ".agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml",
+            ".agentic/02.rag-rulebook/corpus-gaps/04.deploy/github-actions-to-ecs-fargate.yml",
+            ".agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml",
+            ".agentic/02.rag-rulebook/corpus-gaps/README.md"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/corpus-gaps"
+          ],
+          "sha256": "ada4bc7fb06fcdde2e52fb6189a1b2f2074cd803bdaa84903901dfa2e28e63f5"
+        },
+        "index_inputs": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 14,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml",
+            ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/context-packet.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/recognition-candidate.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/recognition-source.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/retirement-record.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/retrieval-policy-pack.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/rulebook-index.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/source-projection-manifest.schema.yml",
+            ".agentic/02.rag-rulebook/schemas/source-to-rule-derivation-report.schema.yml",
+            "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+            "scripts/02.rag-rulebook/validate-rulebook-index/script.sh"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/plans/prototype-corpus-migration-map.yml",
+            ".agentic/02.rag-rulebook/schemas",
+            "scripts/02.rag-rulebook/generate-rulebook-index/script.sh",
+            "scripts/02.rag-rulebook/validate-rulebook-index/script.sh"
+          ],
+          "sha256": "bfdda3c2e5b9d7b4fc142c9b50fcaed749f2a696c7eed1db123538dd424ef1f0"
+        },
+        "recognition_candidates": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 2,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/recognition-candidates/README.md",
+            ".agentic/02.rag-rulebook/recognition-candidates/deferred/2026-06-26-mcp-server.yml"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/recognition-candidates"
+          ],
+          "sha256": "dd157b406dad399c6db7cd4b8f4a27f044523c3973bf8da62dfae6dfc830d222"
+        },
+        "recognition_sources": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 7,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/recognition-sources/curated/actions.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/curated/aliases.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/curated/intent-forms.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/curated/question-categories.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/curated/risks.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+            ".agentic/02.rag-rulebook/recognition-sources/generated/routing.yml"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/recognition-sources"
+          ],
+          "sha256": "1cd47bf4d5316de26d45d0096ac2b57525f586657267c70479dcc2cf91e071ea"
+        },
+        "retirements": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 9,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/retirements/01.harness/2026-08-31-harness-scripts-command-surface-rule.yml",
+            ".agentic/02.rag-rulebook/retirements/01.harness/2026-09-01-final-prototype-architecture-root-pointer.yml",
+            ".agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-07-07-focused-paths-dimension.yml",
+            ".agentic/02.rag-rulebook/retirements/02.rag-rulebook/2026-09-01-prototype-architecture-compatibility-pointers.yml",
+            ".agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-rules-and-packs.yml",
+            ".agentic/02.rag-rulebook/retirements/03.product/2026-08-31-product-source-material-paths.yml",
+            ".agentic/02.rag-rulebook/retirements/04.deploy/2026-08-31-deploy-infra-rule.yml",
+            ".agentic/02.rag-rulebook/retirements/06.shared/2026-08-31-shared-cross-layer-rules.yml",
+            ".agentic/02.rag-rulebook/retirements/README.md"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/retirements"
+          ],
+          "sha256": "bd670f6d5679ccea6caad8028aa6e07262e648cac5f3135b363ce68f5960cfb2"
+        },
+        "retrieval_policy": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 16,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/confidence-thresholds.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/corpus-ownership.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/layer-mode-workflow.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/prompt.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/request-context.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/required-checks.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/retrieval-strategy.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/rule-graph.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/semantic-recall.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/session-metadata.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/stop-conditions.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/token-budget.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/user-intents.yml",
+            ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/validation-handoff.yml"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/policies"
+          ],
+          "sha256": "3d908b9bbf1e0f0a532dfcc9d7219d0944ab18e638e399095ec3a1bda172717b"
+        },
+        "source_derivations": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 16,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-10-platform-app-mount-boundary-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml",
+            ".agentic/02.rag-rulebook/derivation-reports/README.md"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/derivation-reports"
+          ],
+          "sha256": "6299940d8bd1e0948e1c19ba74cccd7a18d8e513959757356e276157978b2e82"
+        },
+        "source_material": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 43,
+          "missing_roots": [
+            "docs/01.harness/source-material",
+            "docs/06.shared/source-material"
+          ],
+          "paths": [
+            ".agentic/02.rag-rulebook/guides/context-packet.md",
+            ".agentic/02.rag-rulebook/guides/retirement-record.md",
+            ".agentic/02.rag-rulebook/guides/retrieval-policy-dimension.md",
+            ".agentic/02.rag-rulebook/guides/rulebook-index.md",
+            ".agentic/02.rag-rulebook/guides/source-projection-manifest.md",
+            "docs/02.rag-rulebook/source-material/README.md",
+            "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md",
+            "docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md",
+            "docs/02.rag-rulebook/source-material/rag-retrieval.md",
+            "docs/03.product/source-material/README.md",
+            "docs/03.product/source-material/core/README.md",
+            "docs/03.product/source-material/core/packages-core-contract-surface-v1.md",
+            "docs/03.product/source-material/guides/README.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md",
+            "docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md",
+            "docs/03.product/source-material/guides/markdown/package-documentation-v1.md",
+            "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md",
+            "docs/03.product/source-material/guides/originals/Kanbien_Architecture_Full_Document.pdf",
+            "docs/03.product/source-material/guides/originals/Kanbien_Modular_Monorepo_Entity_Builder.pdf",
+            "docs/03.product/source-material/guides/originals/Kanbien_TypeScript_Architecture_Guide.pdf",
+            "docs/03.product/source-material/guides/originals/kanbien_core_architecture_guide.pdf",
+            "docs/03.product/source-material/guides/originals/kanbien_core_architecture_guide_v2.pdf",
+            "docs/03.product/source-material/guides/originals/kanbien_frontend_design_system_guide.pdf",
+            "docs/03.product/source-material/guides/originals/kanbien_platform_adapter_consumption_model_guide.pdf",
+            "docs/03.product/source-material/guides/originals/kanbien_platform_layer_architecture.pdf",
+            "docs/03.product/source-material/platform/README.md",
+            "docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md",
+            "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md",
+            "docs/04.deploy/source-material/00.chat/README.md",
+            "docs/04.deploy/source-material/02.rag-rulebook/README.md",
+            "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+            "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md",
+            "docs/04.deploy/source-material/03.product/README.md",
+            "docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md",
+            "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md",
+            "docs/04.deploy/source-material/README.md",
+            "docs/04.deploy/source-material/shared/README.md",
+            "docs/04.deploy/source-material/shared/container-image-management.md"
+          ],
+          "roots": [
+            "docs/01.harness/source-material",
+            "docs/02.rag-rulebook/source-material",
+            "docs/03.product/source-material",
+            "docs/04.deploy/source-material",
+            "docs/06.shared/source-material",
+            ".agentic/02.rag-rulebook/guides"
+          ],
+          "sha256": "ba8b7528a3aec0af8962dc563120e9b854d9ad67b36eb812dcd0ab44f93cfcfa"
+        },
+        "source_projections": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 5,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/source-projections/README.md",
+            ".agentic/02.rag-rulebook/source-projections/v1.yml",
+            "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
+            "scripts/02.rag-rulebook/check-source-projections/script.sh",
+            "scripts/02.rag-rulebook/generate-derived-rules/script.sh"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/source-projections",
+            "scripts/02.rag-rulebook/check-source-projections/script.sh",
+            "scripts/02.rag-rulebook/generate-derived-rules/script.sh",
+            "scripts/02.rag-rulebook/check-source-material-coverage/script.sh"
+          ],
+          "sha256": "f5678a6f9a54a6fb993660091e3b0080957d09a13dfd6cbb497fd5eeb40ad0e7"
+        },
+        "structured_rules": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 50,
+          "missing_roots": [
+            "docs/01.harness/rule-packs",
+            "docs/02.rag-rulebook/rule-packs",
+            "docs/04.deploy/rule-packs",
+            "docs/06.shared/rule-packs"
+          ],
+          "paths": [
+            "docs/01.harness/rules/README.md",
+            "docs/01.harness/rules/layers/scripts-command-surface.yml",
+            "docs/02.rag-rulebook/rules/README.md",
+            "docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml",
+            "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml",
+            "docs/03.product/rule-packs/README.md",
+            "docs/03.product/rule-packs/apps/create-entity.yml",
+            "docs/03.product/rule-packs/core/add-core-module.yml",
+            "docs/03.product/rule-packs/design-system/add-design-system-component.yml",
+            "docs/03.product/rule-packs/platform/add-platform-adapter.yml",
+            "docs/03.product/rules/README.md",
+            "docs/03.product/rules/apps/layers/apps.yml",
+            "docs/03.product/rules/concerns/i18n-localization.yml",
+            "docs/03.product/rules/concerns/package-documentation.yml",
+            "docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml",
+            "docs/03.product/rules/core/concerns/validation-api-errors.yml",
+            "docs/03.product/rules/core/layers/packages-core.yml",
+            "docs/03.product/rules/design-system/concerns/design-label-theming.yml",
+            "docs/03.product/rules/design-system/layers/design-system.yml",
+            "docs/03.product/rules/frontend-kit/layers/frontend-kit.yml",
+            "docs/03.product/rules/platform/concerns/config-runtime-settings.yml",
+            "docs/03.product/rules/platform/concerns/events-messaging-async.yml",
+            "docs/03.product/rules/platform/concerns/identity-access-security.yml",
+            "docs/03.product/rules/platform/concerns/notifications.yml",
+            "docs/03.product/rules/platform/concerns/persistence-files-storage.yml",
+            "docs/03.product/rules/platform/concerns/platform-adapter-consumption.yml",
+            "docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml",
+            "docs/03.product/rules/platform/concerns/reporting-analytics-audit.yml",
+            "docs/03.product/rules/platform/concerns/tenancy.yml",
+            "docs/03.product/rules/platform/layers/platform.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/README.md",
+            "docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml",
+            "docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml",
+            "docs/04.deploy/rules/03.product/README.md",
+            "docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml",
+            "docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml",
+            "docs/04.deploy/rules/README.md",
+            "docs/04.deploy/rules/layers/infra.yml",
+            "docs/04.deploy/rules/shared/README.md",
+            "docs/04.deploy/rules/shared/container-image-management.yml",
+            "docs/06.shared/rules/README.md",
+            "docs/06.shared/rules/concerns/ci-quality.yml",
+            "docs/06.shared/rules/concerns/dependency-direction.yml",
+            "docs/06.shared/rules/concerns/generated-code.yml",
+            "docs/06.shared/rules/concerns/typescript-monorepo-tooling.yml"
+          ],
+          "roots": [
+            "docs/01.harness/rules",
+            "docs/01.harness/rule-packs",
+            "docs/02.rag-rulebook/rules",
+            "docs/02.rag-rulebook/rule-packs",
+            "docs/03.product/rules",
+            "docs/03.product/rule-packs",
+            "docs/04.deploy/rules",
+            "docs/04.deploy/rule-packs",
+            "docs/06.shared/rules",
+            "docs/06.shared/rule-packs"
+          ],
+          "sha256": "055f53e6e6c3f16b03193620f49419f716fba6cb9615dae8e04200da47d91986"
+        },
+        "validation_machinery": {
+          "algorithm": "sha256-relpath-content-v1",
+          "file_count": 16,
+          "missing_roots": [],
+          "paths": [
+            ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+            "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+            "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh",
+            "scripts/02.rag-rulebook/check-runtime-freshness/script.sh",
+            "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
+            "scripts/02.rag-rulebook/check-source-projections/script.sh",
+            "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
+            "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh",
+            "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+            "scripts/02.rag-rulebook/query-local-context/script.sh",
+            "scripts/02.rag-rulebook/validate-context-packet/script.sh",
+            "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
+            "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
+            "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
+            "scripts/02.rag-rulebook/validate-retirement-records/script.sh",
+            "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh"
+          ],
+          "roots": [
+            ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+            "scripts/02.rag-rulebook/validate-retrieval-policy-pack/script.sh",
+            "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
+            "scripts/02.rag-rulebook/validate-recognition-candidates/script.sh",
+            "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
+            "scripts/02.rag-rulebook/validate-derivation-reports/script.sh",
+            "scripts/02.rag-rulebook/validate-retirement-records/script.sh",
+            "scripts/02.rag-rulebook/check-corpus-root-changes/script.sh",
+            "scripts/02.rag-rulebook/check-source-projections/script.sh",
+            "scripts/02.rag-rulebook/check-source-material-coverage/script.sh",
+            "scripts/02.rag-rulebook/validate-context-packet/script.sh",
+            "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+            "scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh",
+            "scripts/02.rag-rulebook/query-local-context/script.sh",
+            "scripts/02.rag-rulebook/check-runtime-freshness/script.sh",
+            "scripts/02.rag-rulebook/build-local-runtime/script.sh"
+          ],
+          "sha256": "ad8b73e1d71fa8a545fdbcb7cdbbea597c9bb3ab7c297ef774f6f7daefa9077b"
+        }
+      },
+      "runtime_outputs": {
+        "compiled_retrieval_policy": {
+          "algorithm": "sha256-content-v1",
+          "bytes": 2192790,
+          "path": ".cache/02.rag-rulebook/compiled-retrieval-policy.json",
+          "sha256": "00f2634a40fcac850a6eff1b0b5505d7c83a57592739167854171fcceaef3f51"
+        },
+        "rulebook_chunks": {
+          "algorithm": "sha256-content-v1",
+          "bytes": 12353888,
+          "path": ".cache/02.rag-rulebook/rulebook-chunks.json",
+          "sha256": "f419e04198dd87607c3b907e2e210749f71a50ffd86d5d80594c6db3c33428ab"
+        },
+        "rulebook_index": {
+          "algorithm": "sha256-content-v1",
+          "bytes": 10025924,
+          "path": ".cache/02.rag-rulebook/rulebook-index.json",
+          "sha256": "dd1702f8c5070cb22b236a687e2225583e08b15e22e51f3cb28102bb42b6fc88"
+        }
+      }
+    },
+    "manifest_sha256": "9cce4ff7f3b5bce9e81cf35de08a19b59b716a50d2f43ec0c5d5dec0418a05ad",
+    "schema": "rag-rulebook/image-cache-evidence/v1",
+    "source_layout": "packaged-source-archive",
+    "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c"
+  },
+  "post_run_container_names": [],
+  "recorded_at": "2026-10-26T10:15:09.784612+00:00",
+  "schema": "delivery-chain/finished-image-evidence/v1"
+}

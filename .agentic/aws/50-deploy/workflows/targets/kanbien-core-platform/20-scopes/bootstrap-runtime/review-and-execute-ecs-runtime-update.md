@@ -4,7 +4,7 @@ id: aws.workflow.kanbien-core-platform-bootstrap-runtime-release
 version: 6
 status: active
 created_on: "2026-10-20"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.bootstrap-runtime
 disciplines: [security, sre]
@@ -108,8 +108,17 @@ boundary. Set `change_set` to that reviewed name. Under execution authority:
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/script.sh --receipt "$receipt" --operation update --approved-change-set "$change_set" --json
 ```
 
-The control rechecks the proposal and waits for completion. A failed wait is an
-uncertain result requiring inspection, not permission to resubmit. AWS may omit
+The control rechecks the exact selected proposal before execution, including its
+complete `Original` template body and the existing stack's `Original` template
+against the release-contract-validated source. A changed source/proposal cannot
+waive a mismatch with the deployed configuration.
+Task roles, commands, environment and network settings must remain unchanged;
+only the qualified image digest and source-revision parameter values may change.
+The complete declared parameter set must preserve current non-image values,
+resolving `UsePreviousValue` from the observed stack. Missing, denied, malformed,
+duplicate-key or mismatched template/parameter observations block before mutation.
+These checks also apply to qualified restoration. A failed completion observation
+is an uncertain result requiring inspection, not permission to resubmit. AWS may omit
 `ChangeSetType`; the control accepts that only with an independently proved
 complete existing stack, and still rejects CREATE and in-progress stacks.
 
@@ -191,3 +200,14 @@ Evidence output is the qualified receipt, reviewed change-set report, deployment
 report, private-verification report, accepted-release record, and any
 restoration report. No command may select another account, region, target,
 stack, or image tag.
+
+## Interrupted command continuation
+
+Both create-change-set and deploy-candidate accept `--reconcile` with the same
+receipt and operation (deployment also retains its approved change-set name).
+Reconciliation observes the existing identity only. Missing, pending, failed and
+uncertain operations stay distinct and never submit another change. The direct
+Python deployment interface repeats release-contract, fresh alignment, cost and
+local inventory prerequisites; reviewed parameters must preserve every unowned
+configuration/permission value and changes must remain within the existing ECS
+logical resources. A lost execute response is uncertain, not proof of failure.

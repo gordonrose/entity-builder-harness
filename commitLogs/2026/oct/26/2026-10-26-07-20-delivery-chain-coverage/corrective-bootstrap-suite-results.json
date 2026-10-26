@@ -1,0 +1,16 @@
+{
+  "bootstrap": {
+    "chunk_id": "6cbcde",
+    "wall_time_seconds": 2.7936e-05,
+    "exit_code": 0,
+    "original_token_count": 26,
+    "output": "....\n----------------------------------------------------------------------\nRan 4 tests in 10.663s\n\nOK\n"
+  },
+  "shell": {
+    "chunk_id": "75494c",
+    "wall_time_seconds": 2.7058e-05,
+    "exit_code": 0,
+    "original_token_count": 26,
+    "output": ".....\n----------------------------------------------------------------------\nRan 6 tests in 30.645s\n\nOK\n"
+  }
+}

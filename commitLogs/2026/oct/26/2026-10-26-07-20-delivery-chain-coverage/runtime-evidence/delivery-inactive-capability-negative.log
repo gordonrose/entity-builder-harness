@@ -1,0 +1,5 @@
+WARNING: Plugin "/usr/local/lib/docker/cli-plugins/docker-sbom" is not valid: failed to fetch metadata: fork/exec /usr/local/lib/docker/cli-plugins/docker-sbom: no such file or directory
+INFO: package-expected-result=PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED
+INFO: package-safe-result=code:PERSISTENCE_ADMINISTRATION_CONFIGURATION_INVALID
+ERROR: persistence-administration-or-workload-rejected
+{"effects_checked": 5, "findings": [], "schema": "deploy/disposable-cleanup/v1", "verdict": "passed"}

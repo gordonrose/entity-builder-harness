@@ -1,0 +1,95 @@
+{
+  "phase": "before-repair",
+  "commands": [
+    "python3 scripts/04.deploy/inventory-deploy-control/script.py --root <disposable> --delivery --check --json",
+    "python3 scripts/repo/check-selection/script.py --root <disposable> --paths <fixture-command> --json"
+  ],
+  "cases": [
+    {
+      "case": "publish.sh",
+      "inventory_exit": 1,
+      "inventory_findings": [
+        {
+          "code": "delivery-entrypoint-unregistered",
+          "kind": "command",
+          "path": "scripts/automation/publish.sh"
+        }
+      ],
+      "entries": [
+        {
+          "classification": "unsupported",
+          "effects": [
+            "network",
+            "aws-mutation"
+          ],
+          "kind": "command",
+          "path": "scripts/automation/publish.sh",
+          "registered_by": [],
+          "requires_delivery_chain": true,
+          "routes": [],
+          "sha256": "9c8b87421e56b16368907009b02143fd5d77cdd63a5592e33518237184781a62"
+        }
+      ],
+      "selector_exit": 1,
+      "selector_findings": [
+        {
+          "code": "delivery-entrypoint-unregistered",
+          "kind": "command",
+          "path": "scripts/automation/publish.sh"
+        }
+      ]
+    },
+    {
+      "case": "publish-test.sh",
+      "inventory_exit": 0,
+      "inventory_findings": [],
+      "entries": [],
+      "selector_exit": 0,
+      "selector_findings": []
+    },
+    {
+      "case": "publish-test.sh-npm-wrapper",
+      "inventory_exit": 0,
+      "inventory_findings": [],
+      "entries": [
+        {
+          "classification": "supported",
+          "command": "bash scripts/automation/publish-test.sh",
+          "kind": "package-command",
+          "path": "package.json#scripts.publish:automation",
+          "registered_by": [
+            "package.json"
+          ],
+          "routes": []
+        }
+      ],
+      "selector_exit": 0,
+      "selector_findings": []
+    },
+    {
+      "case": "ci-trigger-None",
+      "inventory_exit": 0,
+      "findings": []
+    },
+    {
+      "case": "ci-trigger-{'paths': ['unrelated/**']}",
+      "inventory_exit": 0,
+      "findings": []
+    },
+    {
+      "case": "ci-trigger-{'paths-ignore': ['scripts/**', 'infra/**']}",
+      "inventory_exit": 0,
+      "findings": []
+    },
+    {
+      "case": "ci-trigger-{'branches': ['unrelated-branch']}",
+      "inventory_exit": 0,
+      "findings": []
+    },
+    {
+      "case": "ci-trigger-{'branches-ignore': ['main']}",
+      "inventory_exit": 0,
+      "findings": []
+    }
+  ]
+}

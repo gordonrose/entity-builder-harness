@@ -35,6 +35,10 @@ inputs:
     kind: path
     owner: package-custody
     example: /tmp/qualified-rollback.json
+  rollback_compatibility_id:
+    kind: identifier
+    owner: release-succession
+    example: rollback-compatibility-aaaaaaaaaaaaaaaaaaaaaaaa
   proof_receipts:
     kind: proof-map
     owner: completed-proof-controllers
@@ -69,6 +73,42 @@ inputs:
     - readiness-failure-observed
     - readiness-alarm-notified
     - readiness-recovery-observed
+  server_replacement_read_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: none
+  credential_revocation_unready_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: none
+  credential_recovery_health_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: none
+  credential_recovery_read_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  rollback_b_health_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  rollback_b_read_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  rollback_final_health_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  rollback_final_read_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  current_health_predecessor:
+    kind: identifier
+    owner: verify-candidate
+    example: kp-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 commands:
   # Explicitly non-accepting: this command has no proof contract and cannot
   # replace isolated-restore or any other recovery acceptance obligation.
@@ -85,6 +125,10 @@ commands:
     - --json
     owner: deploy.command.kanbien-core-platform.rehearse-isolated-persistence-restore
     effects: [aws-mutation, writes-files]
+    runtime_input_contract:
+      workload: persistence-restoration-verifier-task
+      names: [PERSISTENCE_POSTGRES_HOST]
+      observation_required: true
   qualify-proof-applicability:
     argv:
     - bash
@@ -131,6 +175,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - read
+    - --new-operation
+    - --expected-operation
+    - '{server_replacement_read_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -164,6 +211,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - health-unready
+    - --new-operation
+    - --expected-operation
+    - '{credential_revocation_unready_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -186,6 +236,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - health-ready
+    - --new-operation
+    - --expected-operation
+    - '{credential_recovery_health_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -197,6 +250,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - read
+    - --new-operation
+    - --expected-operation
+    - '{credential_recovery_read_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -208,6 +264,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - health-ready
+    - --new-operation
+    - --expected-operation
+    - '{rollback_b_health_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -219,6 +278,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - read
+    - --new-operation
+    - --expected-operation
+    - '{rollback_b_read_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -230,6 +292,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - health-ready
+    - --new-operation
+    - --expected-operation
+    - '{rollback_final_health_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -241,12 +306,20 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - read
+    - --new-operation
+    - --expected-operation
+    - '{rollback_final_read_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
     - aws-mutation
     - writes-files
   isolated-restore:
+    runtime_input_contract:
+      workload: persistence-restoration-verifier-task
+      names:
+      - PERSISTENCE_POSTGRES_HOST
+      observation_required: true
     argv:
     - bash
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh
@@ -276,6 +349,9 @@ commands:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
     - --mode
     - health-ready
+    - --new-operation
+    - --expected-operation
+    - '{current_health_predecessor}'
     - --json
     owner: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
     effects:
@@ -304,6 +380,7 @@ commands:
     owner: deploy.command.kanbien-core-platform.rehearse-runtime-credential-lifecycle
     effects:
     - aws-mutation
+    - writes-files
   observability-readiness:
     argv:
     - bash
@@ -324,7 +401,11 @@ commands:
     - --receipt
     - '{rollback_receipt}'
     - --operation
-    - update
+    - rollback
+    - --rollback-compatibility-id
+    - '{rollback_compatibility_id}'
+    - --support-receipt
+    - '{candidate_receipt}'
     - --json
     owner: deploy.command.kanbien-core-platform.transition-qualified-persistence-release
     effects:
@@ -336,7 +417,7 @@ commands:
     - --receipt
     - '{candidate_receipt}'
     - --operation
-    - rollback
+    - update
     - --json
     owner: deploy.command.kanbien-core-platform.transition-qualified-persistence-release
     effects:
@@ -432,6 +513,50 @@ commands:
     owner: deploy.command.core-platform-target-declaration
     effects:
     - read-only
+  initialize-release:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - initialize-legacy
+    - --evidence-root
+    - '{evidence_root}'
+    - --legacy-record
+    - '{accepted_record}'
+    - --expected-predecessor
+    - none
+    - --json
+    owner: deploy.command.release-succession
+    effects:
+    - writes-files
+  promote-release:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - promote
+    - --evidence-root
+    - '{evidence_root}'
+    - --candidate-record
+    - '{release_candidate}'
+    - --expected-predecessor
+    - '{expected_predecessor}'
+    - --json
+    owner: deploy.command.release-succession
+    effects:
+    - writes-files
+  validate-current-release:
+    argv:
+    - bash
+    - scripts/04.deploy/lifecycle/60-run/release-succession/script.sh
+    - --operation
+    - validate-current
+    - --evidence-root
+    - '{evidence_root}'
+    - --json
+    owner: deploy.command.release-succession
+    effects:
+    - writes-files
 proofs:
   migration-applied-state:
     command: migration-state-observation
@@ -578,3 +703,9 @@ promotion: promote
 downstream:
 - scope-inventory
 - target-declaration
+release_succession:
+  candidate_schema: deploy/release-candidate/v1
+  candidate_producer: collect
+  initialize: initialize-release
+  promotion: promote-release
+  current_validator: validate-current-release

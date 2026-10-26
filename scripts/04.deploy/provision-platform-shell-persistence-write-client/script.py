@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -31,9 +32,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--execute", action="store_true", help="Provision the fixed client after current-chat approval.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
     parser.add_argument("--aws-cli", default="aws", help="AWS CLI executable for the fixed target operations.")
+    parser.add_argument("--reconcile",action="store_true",help="Observe declared partial resources without mutation or secret retrieval.")
     arguments = parser.parse_args()
-    if arguments.validate == arguments.execute:
-        parser.error("choose exactly one of --validate or --execute")
+    if sum((arguments.validate,arguments.execute,arguments.reconcile))!=1:parser.error("choose exactly one of --validate, --execute or --reconcile")
     return arguments
 
 
@@ -151,7 +152,9 @@ def run_aws(aws_cli: str, policy: dict[str, str], arguments: list[str]) -> str:
     environment = os.environ.copy()
     environment["AWS_PAGER"] = ""
     environment["AWS_CLI_AUTO_PROMPT"] = "off"
-    result = subprocess.run([aws_cli, *arguments, *aws_arguments(policy)], check=False, capture_output=True, encoding="utf-8", env=environment)
+    try:
+        result = subprocess.run([aws_cli, *arguments, *aws_arguments(policy)], check=False, capture_output=True, encoding="utf-8", env=environment,timeout=30)
+    except (OSError,subprocess.TimeoutExpired) as exception:raise PersistenceWriteProvisionError("provider-outcome-uncertain-reconcile-required") from exception
     if result.returncode != 0:
         raise PersistenceWriteProvisionError("an approved persistence-write client operation did not complete")
     return result.stdout
@@ -166,6 +169,10 @@ def run_aws_json(aws_cli: str, policy: dict[str, str], arguments: list[str]) -> 
         raise PersistenceWriteProvisionError("an approved persistence-write client operation returned an unexpected response") from exception
     if not isinstance(value, dict):
         raise PersistenceWriteProvisionError("an approved persistence-write client operation returned an unexpected response")
+    lists={"list-resource-servers":("ResourceServers","Identifier"),"list-user-pool-clients":("UserPoolClients","ClientName"),"list-secrets":("SecretList","Name")}
+    if len(arguments)>1 and arguments[1] in lists:
+        field,identity=lists[arguments[1]];items=value.get(field)
+        if not isinstance(items,list) or value.get("NextToken") or value.get("nextToken") or any(not isinstance(item,dict) or not isinstance(item.get(identity),str) for item in items):raise PersistenceWriteProvisionError("provisioning-observation-incomplete")
     return value
 
 
@@ -202,13 +209,14 @@ def require_expected_starting_state(aws_cli: str, policy: dict[str, str]) -> Non
         raise PersistenceWriteProvisionError("the persistence-write client secret already exists")
 
 
-def rollback_aws(aws_cli: str, policy: dict[str, str], arguments: list[str]) -> None:
+def rollback_aws(aws_cli: str, policy: dict[str, str], arguments: list[str]) -> bool:
     """Attempt rollback only for resources this invocation created or changed."""
 
     try:
         run_aws(aws_cli, policy, arguments)
+        return True
     except PersistenceWriteProvisionError:
-        pass
+        return False
 
 
 def create_resources(aws_cli: str, policy: dict[str, str]) -> tuple[str, str]:
@@ -267,18 +275,22 @@ def create_resources(aws_cli: str, policy: dict[str, str]) -> tuple[str, str]:
             raise PersistenceWriteProvisionError("Secrets Manager did not return a usable persistence-write secret reference")
         return client_id, secret_arn
     except Exception as exception:
+        cleanup_ok=True
         if secret_created:
-            rollback_aws(aws_cli, policy, ["secretsmanager", "delete-secret", "--secret-id", policy["secret_name"], "--force-delete-without-recovery"])
+            cleanup_ok=rollback_aws(aws_cli, policy, ["secretsmanager", "delete-secret", "--secret-id", policy["secret_name"], "--force-delete-without-recovery"]) and cleanup_ok
         if client_id is not None:
-            rollback_aws(aws_cli, policy, ["cognito-idp", "delete-user-pool-client", "--user-pool-id", policy["user_pool_id"], "--client-id", client_id])
+            cleanup_ok=rollback_aws(aws_cli, policy, ["cognito-idp", "delete-user-pool-client", "--user-pool-id", policy["user_pool_id"], "--client-id", client_id]) and cleanup_ok
         if scope_added:
-            rollback_aws(aws_cli, policy, [
+            cleanup_ok=rollback_aws(aws_cli, policy, [
                 "cognito-idp", "update-resource-server",
                 "--user-pool-id", policy["user_pool_id"],
                 "--identifier", policy["resource_server_identifier"],
                 "--name", policy["resource_server_name"],
                 "--scopes", "ScopeName=smoke.read,ScopeDescription=Read platform smoke app",
-            ])
+            ]) and cleanup_ok
+        if not cleanup_ok:
+            original=str(exception) if isinstance(exception,PersistenceWriteProvisionError) else "provisioning-transaction-failed"
+            raise PersistenceWriteProvisionError(original+"; compensation-unproven-reconcile-required") from exception
         if isinstance(exception, PersistenceWriteProvisionError):
             raise
         raise PersistenceWriteProvisionError("the persistence-write client transaction did not complete") from exception
@@ -298,6 +310,19 @@ def emit(result: str, client_id: str | None = None, secret_arn: str | None = Non
     print(json.dumps(payload, separators=(",", ":"), sort_keys=True))
 
 
+def reconcile_resources(aws_cli,policy):
+    root=Path(__file__).resolve().parents[3]
+    spec=importlib.util.spec_from_file_location("cognito_observation",root/"scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py")
+    observer=importlib.util.module_from_spec(spec);spec.loader.exec_module(observer)
+    try:
+        verify_account(aws_cli,policy)
+        result=observer.observe(run_aws_json,aws_cli,policy,['smoke.read','smoke.write'],['smoke.read'])
+    except (PersistenceWriteProvisionError,observer.ObservationFailure) as exception:
+        print(json.dumps({"schema":"deploy/provisioning-reconciliation/v1","verdict":"uncertain","findings":[{"code":"provisioning-observation-unavailable"}],"mutation_performed":False},sort_keys=True));return 1
+    print(json.dumps(result,sort_keys=True))
+    return 0 if result["verdict"]=="absent" else 1
+
+
 def main() -> int:
     """Validate local policy or provision exactly the reviewed scope, client, and secret."""
 
@@ -306,8 +331,13 @@ def main() -> int:
     if arguments.validate:
         emit("validated")
         return 0
-    if policy["status"] != "pending-provisioning":
+    if not arguments.reconcile and policy["status"] != "pending-provisioning":
         raise PersistenceWriteProvisionError("the persistence-write client is not pending provisioning")
+    root=Path(__file__).resolve().parents[3]
+    spec=importlib.util.spec_from_file_location("aws_response",root/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+    adapter=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapter)
+    if not adapter.inventory_covered(root):raise PersistenceWriteProvisionError("delivery-inventory-not-covered")
+    if arguments.reconcile:return reconcile_resources(arguments.aws_cli,policy)
     verify_account(arguments.aws_cli, policy)
     require_expected_starting_state(arguments.aws_cli, policy)
     client_id, secret_arn = create_resources(arguments.aws_cli, policy)

@@ -4,7 +4,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-06-28"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -340,6 +340,10 @@ evidence_bundles:
     family_source_paths:
       evidence.harness.missing-governance-standard: .agentic/01.harness/standards/missing-governance-stop-condition.md
   - question_category_id: question.harness.governed-script-permissions
+    archive_unavailable_sources:
+      .codex/rules/governed-scripts.rules: Local Codex execution permissions are excluded from the read-only packaged source archive.
+      .claude/settings.json: Local Claude settings are excluded from the read-only packaged source archive.
+      .vibe/config.toml: Local Vibe settings are excluded from the read-only packaged source archive.
     always_source_paths:
       - .agentic/01.harness/standards/governed-script-permissions.md
       - scripts/01.harness/run-governed-script.sh

@@ -83,6 +83,11 @@ print('Persistence package stage regression passed (declaration gap blocks befor
 # Coverage itself was exercised above; this stub lets us prove corrupt health
 # cannot reach composition or Docker even when the requirement chain is covered.
 (fixture / coverage / 'script.sh').write_text('#!/usr/bin/env bash\nprintf \'%s\\n\' \'{"verdict":"covered"}\'\n')
+# Delivery inventory has its own CLI regression suite; isolate the later health
+# gate here so malformed health is rejected by its owning implementation.
+inventory = fixture / 'scripts/04.deploy/inventory-deploy-control/script.py'
+inventory.parent.mkdir(parents=True)
+inventory.write_text('print(\'{"verdict":"covered"}\')\n')
 capabilities = (
     'scripts/04.deploy/lifecycle/60-run/release-succession',
     'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery',

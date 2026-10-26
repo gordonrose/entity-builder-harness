@@ -1,0 +1,55 @@
+[
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+      "--paths",
+      "scripts/repo/check-selection/script.py",
+      "scripts/repo/check-selection/smoke-test.py",
+      "scripts/repo/check-selection/README.md"
+    ],
+    "exit_code": 0,
+    "seconds": 0.121,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-governance-1.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-deterministic-process-drift.sh",
+      "--paths",
+      "scripts/repo/check-selection/script.py",
+      "scripts/repo/check-selection/smoke-test.py",
+      "scripts/repo/check-selection/README.md"
+    ],
+    "exit_code": 0,
+    "seconds": 0.014,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-governance-2.log"
+  },
+  {
+    "argv": [
+      "bash",
+      "scripts/01.harness/check-governed-script-command-drift.sh",
+      "--paths",
+      "scripts/repo/check-selection/script.py",
+      "scripts/repo/check-selection/smoke-test.py",
+      "scripts/repo/check-selection/README.md"
+    ],
+    "exit_code": 0,
+    "seconds": 8.364,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-governance-3.log"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      "scripts/repo/check-selection/script.py",
+      "scripts/repo/check-selection/smoke-test.py",
+      "scripts/repo/check-selection/README.md"
+    ],
+    "exit_code": 0,
+    "seconds": 0.007,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selector-catalog-evidence-governance-4.log"
+  }
+]

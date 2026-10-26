@@ -1,0 +1,22 @@
+{
+  "name": "collector-qualification-verify",
+  "argv": [
+    "python3",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+    "verify",
+    "--image",
+    "sha256:62c4ecea7bf4809d0f8563ebc7894dfa418fff2b7ac0bba003bd89dd98121aa1",
+    "--receipt",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification.json",
+    "--configuration-input",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+    "observability-collector"
+  ],
+  "started_at": "2026-10-26T13:40:40.380103+00:00",
+  "finished_at": "2026-10-26T13:40:41.181941+00:00",
+  "duration_seconds": 0.802,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-verify.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-collector-qualification-verify.stderr.log"
+}

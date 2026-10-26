@@ -1,0 +1,41 @@
+{
+  "schema": "delivery/merge-package-recovery-owner-review/v1",
+  "owner": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+  "reviewed_inputs": [
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+      "reviewed_sha256": "8c9ebec51d931a18a2785b8525a41e147b50720c8d62d766dbe705f1c1b35ef4",
+      "current_sha256": "3831d15bd64161415c2262a69d4d66fdb3f101d11cbb0ba291be5496c437fda3",
+      "metadata_only_change_confirmed": true,
+      "unchanged": false
+    },
+    {
+      "path": "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+      "reviewed_sha256": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7",
+      "current_sha256": "faf4cb27f84d7e7e71aa818ff59f1efd94c62af4b5ec976265ab2be76ac13301",
+      "metadata_only_change_confirmed": true,
+      "unchanged": false
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+      "reviewed_sha256": "c176308e81c1c4bc9fba11e3b847f998defadda18eababfb3f483bb24cff2148",
+      "current_sha256": "a9ef8f057231b695bde93f9058084f1c619f3ad23b652396afc9549b01d481dc",
+      "metadata_only_change_confirmed": true,
+      "unchanged": false
+    },
+    {
+      "path": "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+      "reviewed_sha256": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+      "current_sha256": "0c0730f20fdf4530f3eec2f1552f3bbc0faadc50f27d725d16459fbf3ac67003",
+      "metadata_only_change_confirmed": false,
+      "unchanged": true
+    }
+  ],
+  "required_action": "Re-review the governed metadata-only changes and update the exact reviewed hash literals through the owning recovery control before invoking it. No source change made by package verification owner.",
+  "public_images": [
+    "docker/dockerfile:1.7",
+    "node:22-bookworm-slim",
+    "gcr.io/distroless/nodejs22-debian12@sha256:afa48e2ae1100924bfb069244f4ef70c0f9c061654c669da6b7faa7881c1ec7f",
+    "postgres:16-bookworm"
+  ]
+}

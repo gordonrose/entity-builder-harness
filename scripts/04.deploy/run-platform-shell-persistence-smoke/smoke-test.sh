@@ -4,10 +4,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.script.run-platform-shell-persistence-smoke.smoke-test
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-09-24"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -21,6 +21,7 @@ set -euo pipefail
 #     - kanbien/staging
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.script.verify-platform-shell-infrastructure
 #     path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
@@ -35,8 +36,9 @@ if [[ "$result" != '{"persistence_smoke":"validated"}' ]]; then
   exit 1
 fi
 
-fixture="$(mktemp)"
-trap 'rm -f "$fixture"' EXIT
+fixture_dir="$(mktemp -d "${TMPDIR:-/tmp}/persistence-smoke-local.XXXXXX")"
+fixture="$fixture_dir/target-profile.yml"
+trap 'rm -rf "$fixture_dir"' EXIT
 python3 - "$fixture" <<'PY'
 import json
 from pathlib import Path
@@ -59,7 +61,24 @@ document["config"]["secret_refs"]["cognito_persistence_write_client_secret"] = {
     "value_format": "opaque-raw-string",
 }
 target.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
+# Fail closed even if a production lifecycle guard regresses. The fixtures must
+# not reach AWS, retrieve credentials, or issue an HTTP acceptance request.
+(target.parent / "aws-denied").write_text('#!/bin/sh\nprintf aws > "$PERSISTENCE_SMOKE_TEST_TRIPWIRE"\nexit 97\n', encoding="utf-8")
+(target.parent / "aws-denied").chmod(0o700)
+(target.parent / "sitecustomize.py").write_text("""import os
+from pathlib import Path
+from urllib import request
+def deny_http(*args, **kwargs):
+    Path(os.environ['PERSISTENCE_SMOKE_TEST_TRIPWIRE']).write_text('http')
+    raise AssertionError('local persistence smoke attempted HTTP')
+request.urlopen = deny_http
+""", encoding="utf-8")
 PY
+
+export PYTHONPATH="$fixture_dir${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
+export PERSISTENCE_SMOKE_TEST_TRIPWIRE="$fixture_dir/external-access-attempted"
+fake_aws="$fixture_dir/aws-denied"
 
 fixture_result="$(bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --target-profile "$fixture")"
 if [[ "$fixture_result" != '{"persistence_smoke":"validated"}' ]]; then
@@ -67,19 +86,27 @@ if [[ "$fixture_result" != '{"persistence_smoke":"validated"}' ]]; then
   exit 1
 fi
 
-if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-fresh-after-iam-remediation >/dev/null 2>&1; then
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --validate --approve-fresh-after-iam-remediation --target-profile "$fixture" --aws-cli "$fake_aws" >"$fixture_dir/validate.stdout" 2>"$fixture_dir/validate.stderr"; then
   echo "ERROR: persistence smoke IAM-remediation guard must be unavailable in validation mode" >&2
   exit 1
 fi
+grep -Fq -- '--approve-fresh-after-iam-remediation is valid only with --execute' "$fixture_dir/validate.stderr"
 
-if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute >/dev/null 2>&1; then
-  echo "ERROR: initial persistence smoke execution must not run against the recorded remediation-pending lifecycle" >&2
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --target-profile "$fixture" --aws-cli "$fake_aws" >"$fixture_dir/execute.stdout" 2>"$fixture_dir/execute.stderr"; then
+  echo "ERROR: initial persistence smoke execution must not run against the controlled remediation-pending lifecycle" >&2
   exit 1
 fi
+grep -Fq -- 'the initial persistence acceptance proof may run only after its reviewed service deployment' "$fixture_dir/execute.stderr"
 
-if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --approve-fresh-after-iam-remediation --approve-replacement-after-remediation --target-profile "$fixture" >/dev/null 2>&1; then
+if bash scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh --execute --approve-fresh-after-iam-remediation --approve-replacement-after-remediation --target-profile "$fixture" --aws-cli "$fake_aws" >"$fixture_dir/conflicting.stdout" 2>"$fixture_dir/conflicting.stderr"; then
   echo "ERROR: persistence smoke must reject conflicting fresh-write guards before live AWS access" >&2
   exit 1
 fi
+grep -Fq -- 'choose at most one governed fresh-write approval guard' "$fixture_dir/conflicting.stderr"
 
-echo "Persistence smoke local validation passed."
+if [ -e "$PERSISTENCE_SMOKE_TEST_TRIPWIRE" ]; then
+  echo "ERROR: local persistence smoke attempted AWS or HTTP access" >&2
+  exit 1
+fi
+
+echo "Persistence smoke local validation passed (fixture lifecycle guards; no AWS or HTTP)."

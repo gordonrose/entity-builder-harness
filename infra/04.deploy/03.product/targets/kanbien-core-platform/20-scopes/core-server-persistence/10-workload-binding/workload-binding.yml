@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-23"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [architecture, security, sre]
@@ -30,6 +30,7 @@ workloads:
     workload_type: long-running-server
     runtime_class: service
     provider_reference: CoreServerPersistenceService
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
     health_signal_mapping: { provider_replacement_signal: liveness, dependency_readiness_effect: block-candidate-acceptance, candidate_acceptance_signals: [liveness, readiness] }
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts, command_description: node artifacts/kanbien-core-server-persistence.main.js }
   - id: private-release-verifier-task
@@ -41,11 +42,13 @@ workloads:
     workload_type: run-to-completion-task
     runtime_class: task
     provider_reference: CoreServerPersistenceMigrationTaskDefinition
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"] }
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts, command_description: node artifacts/kanbien-core-server-persistence-migration.main.js }
   - id: persistence-administration-task
     workload_type: run-to-completion-task
     runtime_class: task
     provider_reference: CoreServerPersistenceAdministrationTaskDefinition
+    required_role_actions: { TaskRoleArn: ["rds-db:connect"], ExecutionRoleArn: ["secretsmanager:GetSecretValue"] }
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts, command_description: node artifacts/kanbien-core-server-persistence-administration.main.js }
   - id: persistence-restoration-verifier-task
     workload_type: run-to-completion-task
@@ -53,6 +56,7 @@ workloads:
     provider_reference: CoreServerPersistenceRestorationVerifierTaskDefinition
     execution: { kind: compiled-entrypoint, source_reference: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts, command_description: node artifacts/kanbien-core-server-persistence-restore-verifier.main.js }
 proposed_provider_binding:
+  configuration_adapter: scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py
   template: 30-provider-realization/aws/cloudformation/core-server-persistence.yml
   workload_kind: ecs-fargate-service-and-run-to-completion-tasks
   immutable_image_reference: repository-at-sha256-digest-only
@@ -60,3 +64,106 @@ proposed_provider_binding:
   workload_identity: separate-server-migration-administration-server-mediated-verifier-and-restoration-verifier-execution-roles
   release_verifier: one-shot-private-ecs-task-with-no-database-credential-or-route
 mutation: { status: blocked, allowed_operation: candidate-deploy-after-fresh-alignment-reviewed-change-set-and-package-qualification }
+
+runtime_requirements:
+- workload: core-server-service
+  declaration_workload: core-server
+  required_names:
+  - PERSISTENCE_POSTGRES_HOST
+  - PERSISTENCE_POSTGRES_PORT
+  - PERSISTENCE_POSTGRES_DATABASE
+  - PERSISTENCE_POSTGRES_SCHEMA
+  - PERSISTENCE_POSTGRES_IAM_REGION
+  - PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE
+  - PERSISTENCE_POSTGRES_CA_PATH
+  - NODE_ENV
+  - HOST
+  - PORT
+  - PLATFORM_SOURCE_COMMIT_SHA
+  - PERSISTENCE_RUNTIME_DATABASE_USERNAME
+  secret_names: []
+  identity_required: true
+  command:
+  - artifacts/kanbien-core-server-persistence.main.js
+  optional_capabilities:
+  - selector:
+      name: PLATFORM_OBSERVABILITY_METRICS_PROVIDER
+      equals: cloudwatch-otel
+    required_names:
+    - PLATFORM_OBSERVABILITY_METRICS_ENDPOINT
+    - PLATFORM_OBSERVABILITY_METRICS_REGION
+    - PLATFORM_OBSERVABILITY_SERVICE_NAME
+    - PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT
+    - PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS
+    - PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS
+    - PLATFORM_OBSERVABILITY_TARGET
+    - PLATFORM_OBSERVABILITY_SCOPE
+    - PLATFORM_OBSERVABILITY_WORKLOAD
+    - PLATFORM_OBSERVABILITY_DEPENDENCY
+    - PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS
+    - PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS
+    - PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS
+    - PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON
+- workload: private-release-verifier-task
+  declaration_workload: private-release-verifier
+  required_names:
+  - PERSISTENCE_VERIFIER_MODE
+  - KANBIEN_PRIVATE_PERSISTENCE_URL
+  secret_names: []
+  identity_required: false
+  command:
+  - artifacts/kanbien-core-server-persistence-verifier.main.js
+- workload: persistence-migration-task
+  declaration_workload: persistence-migration
+  required_names:
+  - PERSISTENCE_POSTGRES_HOST
+  - PERSISTENCE_POSTGRES_PORT
+  - PERSISTENCE_POSTGRES_DATABASE
+  - PERSISTENCE_POSTGRES_SCHEMA
+  - PERSISTENCE_POSTGRES_IAM_REGION
+  - PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE
+  - PERSISTENCE_POSTGRES_CA_PATH
+  - PERSISTENCE_MIGRATION_DATABASE_USERNAME
+  secret_names: []
+  identity_required: true
+  command:
+  - artifacts/kanbien-core-server-persistence-migration.main.js
+- workload: persistence-administration-task
+  declaration_workload: persistence-administration
+  required_names:
+  - PERSISTENCE_POSTGRES_HOST
+  - PERSISTENCE_POSTGRES_PORT
+  - PERSISTENCE_POSTGRES_DATABASE
+  - PERSISTENCE_POSTGRES_SCHEMA
+  - PERSISTENCE_POSTGRES_IAM_REGION
+  - PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE
+  - PERSISTENCE_POSTGRES_CA_PATH
+  - PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE
+  - PERSISTENCE_ADMINISTRATOR_CREDENTIALS
+  - PERSISTENCE_MIGRATION_DATABASE_USERNAME
+  - PERSISTENCE_RUNTIME_DATABASE_USERNAME
+  secret_names:
+  - PERSISTENCE_ADMINISTRATOR_CREDENTIALS
+  identity_required: true
+  command:
+  - artifacts/kanbien-core-server-persistence-administration.main.js
+- workload: persistence-restoration-verifier-task
+  declaration_workload: persistence-restoration-verifier
+  required_names:
+  - PERSISTENCE_POSTGRES_HOST
+  - PERSISTENCE_POSTGRES_PORT
+  - PERSISTENCE_POSTGRES_DATABASE
+  - PERSISTENCE_POSTGRES_SCHEMA
+  - PERSISTENCE_POSTGRES_IAM_REGION
+  - PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE
+  - PERSISTENCE_POSTGRES_CA_PATH
+  - PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME
+  secret_names: []
+  identity_required: true
+  command:
+  - artifacts/kanbien-core-server-persistence-restore-verifier.main.js
+  runtime_inputs:
+    PERSISTENCE_POSTGRES_HOST:
+      source: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py
+      command: isolated-restore
+      proof: persistence-provider-regression

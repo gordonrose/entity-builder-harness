@@ -77,6 +77,7 @@ if [[ "$command_path" == "$QUAL_FAIL" ]]; then exit 23; fi
 if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path" "$@"; fi
 ''')
     (binaries / 'npm').write_text('#!/bin/bash\nprintf "npm:%s\\n" "$*" >> "$QUAL_CALLS"\nif [[ "npm:$*" == "$QUAL_FAIL" ]]; then exit 23; fi\n')
+    (binaries / 'python3').write_text('#!/bin/bash\nprintf "%s\\n" "$1" >> "$QUAL_CALLS"\n[[ "$1" != "$QUAL_FAIL" ]]\n')
     (binaries / 'docker').write_text('#!/bin/bash\nprintf "docker:%s\\n" "$1" >> "$QUAL_CALLS"\n')
     for binary in binaries.iterdir():
         binary.chmod(0o755)
@@ -84,6 +85,7 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
     boundary = fixture / 'qualification-complete'
     environment = {**os.environ, 'PATH': str(binaries) + os.pathsep + os.environ['PATH'], 'QUAL_ROOT': str(fixture), 'QUAL_CALLS': str(calls), 'QUAL_BUILDER': module.BUILD}
     required = [command[1] for command in module.QUALIFICATION] + [
+        'scripts/04.deploy/inventory-deploy-control/script.py',
         'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.sh',
         'scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh',
         'scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.sh',
@@ -103,7 +105,7 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
         else:
             assert result.returncode != 0 and not boundary.exists(), rejected
             assert executed.count(rejected) == 1, executed
-            if rejected != module.SMOKE:
+            if rejected not in (module.SMOKE, 'scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py', 'scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py'):
                 assert module.SMOKE not in executed and 'docker:build' not in executed, executed
     with contextlib.chdir(fixture):
         assert module.qualification_route_valid(text)
@@ -123,4 +125,4 @@ if [[ "$command_path" == "$QUAL_BUILDER" ]]; then exec /bin/bash "$command_path"
             builder.write_text(altered)
             assert not module.qualification_route_valid(text), change
         builder.write_text(original)
-print('Publication qualification passed: actual workflow/builder route runs all focused qualification commands once; all required failures stop progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.')
+print('Publication qualification passed: actual workflow/builder route runs every declared command once; each required failure stops progression; conditional skips, altered arguments and inherited shell defaults fail closed; no provider or Docker engine invoked.')

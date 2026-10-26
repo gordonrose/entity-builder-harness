@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-23"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -20,7 +20,7 @@ set -euo pipefail
 #     targets:
 #     - kanbien/staging
 #   effects:
-#   - read-only
+#   - writes-files
 #   used_by:
 #   - id: package.script.platform-shell-worker-smoke-check
 #     path: package.json
@@ -39,5 +39,7 @@ if npm run platform:shell:worker-smoke -- --execute >/dev/null 2>&1; then
   echo "ERROR: worker smoke must require an explicit live-operation guard." >&2
   exit 1
 fi
+
+python3 -B scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py
 
 echo "Platform-shell worker smoke local validation passed."

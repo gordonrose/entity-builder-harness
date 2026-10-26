@@ -23,6 +23,7 @@ import importlib.util
 import io
 import json
 import sys
+import subprocess
 import tempfile
 import unittest
 import yaml
@@ -53,6 +54,7 @@ def temporary_receipts(controller):
     receipts = load(RUN / 'proof-receipts.py')
     with tempfile.TemporaryDirectory(prefix='persistence-controller-receipts-') as directory:
         root = Path(directory)
+        subprocess.run(["git", "init", "--quiet", str(root)], check=True)
         receipts.RECEIPTS = root / 'proof-receipts'
         receipts.EVIDENCE_CLASS = 'simulated'
         with patch.object(controller, 'proof_receipts', return_value=receipts), patch.object(controller, 'ROOT', root), (patch.object(controller, 'OPERATION_DIAGNOSTICS', root / 'operation-diagnostics') if hasattr(controller, 'OPERATION_DIAGNOSTICS') else contextlib.nullcontext()):
@@ -67,6 +69,8 @@ class Provider:
         if parts[1] == 'list-tasks':
             assert not ('--started-by' in parts and ('--desired-status' in parts or '--family' in parts)), 'unsupported AWS filter combination'
         return self.responder(parts)
+    def retained_release(self,receipt):
+        return False
     def live_budget(self):
         return True, 'ok'
 
@@ -524,7 +528,7 @@ class ControllerRegression(unittest.TestCase):
                 stack.enter_context(patch.object(module,'aws',provider.aws))
                 receipts = stack.enter_context(temporary_receipts(module))
                 if name=='verify-candidate':stack.enter_context(patch.object(module,'no_direct_database_credential',return_value=True))
-                for status,exitcode,verdict in [('RUNNING',0,'pending'),('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
+                for status,exitcode,verdict in [(status,0,'pending') for status in ('PROVISIONING','PENDING','ACTIVATING','RUNNING','DEACTIVATING','STOPPING','DEPROVISIONING')]+[('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
                     task['lastStatus']=status;task['containers'][0]['exitCode']=exitcode
                     with patch.object(sys,'argv',['test',mode_arg,mode,'--reconcile-operation',operation]):
                         self.assertEqual(result(module.main)[1]['verdict'],verdict)
@@ -584,6 +588,7 @@ class ControllerRegression(unittest.TestCase):
             module=load(RUN/name/'script.py')
             output={output_key:'definition-safe','PersistenceMigrationSecurityGroupId':'sg-safe','PrivateSubnetIds':'subnet-safe','VerifierSecurityGroupId':'sg-safe'}
             with contextlib.ExitStack() as stack:
+                stack.enter_context(temporary_receipts(module))
                 stack.enter_context(patch.object(module,'outputs',return_value=(output,'ok')))
                 stack.enter_context(patch.object(module,'deadline',return_value=120))
                 if name=='verify-candidate':stack.enter_context(patch.object(module,'no_direct_database_credential',return_value=True))
@@ -759,7 +764,7 @@ class ControllerRegression(unittest.TestCase):
         provider=Provider(response)
         ctl={'CoreServerPersistenceRestorationVerifierTaskDefinitionArn':'definition-safe','PersistenceRestoredDatabaseSecurityGroupId':'sg-restored','PersistenceRestorationVerifierTaskRoleName':'restore-role','PrivateSubnetIds':'subnet-safe','PersistenceRestorationVerifierSecurityGroupId':'sg-verifier'}
         with temporary_receipts(module),patch.object(module,'source',return_value=({},'ok')),patch.object(module,'controls',return_value=(ctl,'ok')),patch.object(module,'db',return_value=(restored,'ok')),patch.object(module,'correct',return_value=True),patch.object(module,'task_def_valid',return_value=True),patch.object(module,'temporary_restore_identity_policy',return_value=('ok',identity)):
-            for status,exitcode,verdict in [('RUNNING',0,'pending'),('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
+            for status,exitcode,verdict in [(status,0,'pending') for status in ('PROVISIONING','PENDING','ACTIVATING','RUNNING','DEACTIVATING','STOPPING','DEPROVISIONING')]+[('STOPPED',1,'failed'),('STOPPED',0,'accepted')]:
                 task['lastStatus']=status;task['containers'][0]['exitCode']=exitcode
                 self.assertEqual(result(lambda:module.verify(provider,sid,rid))[1]['verdict'],verdict)
             log='prefix '+log
@@ -782,7 +787,8 @@ class ControllerRegression(unittest.TestCase):
             self.assertEqual(result(lambda:module.verify(provider,sid,rid,True))[1]['verdict'],'uncertain')
             self.assertFalse(any(parts[1]=='run-task' for parts in provider.calls))
             restored['DBInstanceStatus']='deleting'; provider.calls=[]
-            self.assertEqual(result(lambda:module.cleanup(provider,sid,rid))[1]['verdict'],'pending')
+            with patch.object(module,'verifier_tasks',return_value=([],'ok')),patch.object(module,'remove_temporary_restore_identity_policy',return_value='ok'):
+                self.assertEqual(result(lambda:module.cleanup(provider,sid,rid))[1]['verdict'],'pending')
             self.assertFalse(provider.calls)
 
 if __name__ == '__main__':

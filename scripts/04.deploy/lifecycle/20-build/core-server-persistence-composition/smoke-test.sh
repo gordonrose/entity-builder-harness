@@ -40,3 +40,5 @@ NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-se
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/observability-runtime-test.mjs "$TEMPORARY_DIRECTORY"
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"

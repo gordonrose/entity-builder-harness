@@ -1,0 +1,19 @@
+{
+  "name": "persistence-public-recovery",
+  "argv": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+    "--tag",
+    "kanbien-core-server-persistence:merge-qualified",
+    "--port",
+    "39555"
+  ],
+  "started_at": "2026-10-26T13:47:29.991545+00:00",
+  "finished_at": "2026-10-26T13:52:50.646047+00:00",
+  "duration_seconds": 320.773,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stderr.log"
+}
