@@ -52,6 +52,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 - Raised: Provider fixture mock-state race observed once
   Resolution: A concurrent JSON state-file read in verify-candidate/operation-test.py failed during refresh validation. Its failed receipt was rejected; an unchanged trusted-runner retry passed and reused the other50 proofs. Production behavior and requirements were not changed.
 
+
+- Raised: Local-main promotion blocked by parallel root evidence
+  Resolution: Final source is committed, verified and includes main85747a3d. Apply reused all51 local proofs with0 executions in66.233s. Root readiness correctly stopped before any merge because two untracked kanbien-restore-0c337daa4b5a52be diagnostic files belong to parallel deployment work. Files left untouched; owner clarification requested. Continue with clean-root check, refresh only if main advances, readiness census+integration reuse, then authorized local no-ff merge. No task source work remains.
+
 ## Decisions Made
 
 
@@ -225,6 +229,13 @@ Durable evidence: Full qualified run: selected 68, executed 51, reused 0, deferr
 Raised: Provider fixture mock-state race observed once
 
 Resolution: A concurrent JSON state-file read in verify-candidate/operation-test.py failed during refresh validation. Its failed receipt was rejected; an unchanged trusted-runner retry passed and reused the other50 proofs. Production behavior and requirements were not changed.
+
+
+### 2026-10-26T20:38:15Z - Issue
+
+Raised: Local-main promotion blocked by parallel root evidence
+
+Resolution: Final source is committed, verified and includes main85747a3d. Apply reused all51 local proofs with0 executions in66.233s. Root readiness correctly stopped before any merge because two untracked kanbien-restore-0c337daa4b5a52be diagnostic files belong to parallel deployment work. Files left untouched; owner clarification requested. Continue with clean-root check, refresh only if main advances, readiness census+integration reuse, then authorized local no-ff merge. No task source work remains.
 
 ## Sub-Agent Activity
 
