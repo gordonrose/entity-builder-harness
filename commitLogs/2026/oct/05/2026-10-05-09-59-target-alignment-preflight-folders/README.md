@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:53:11Z
-latest_commit_sha: ebc54f65
-chat_duration: 1832022s (21:04:53:42)
+latest_commit_at_utc: 2026-10-26T14:07:58Z
+latest_commit_sha: 43509078
+chat_duration: 1832909s (21:05:08:29)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3939,6 +3939,17 @@ Summary: Treat an already-absent rejected change set as a reconciled terminal st
 
 ADR impact: No ADR change; completes bounded recovery idempotency.
 
+
+### 2026-10-26T14:07:58Z - Commit recorded
+
+Commit: `43509078`
+
+Message: evidence(deploy): retain qualified image transition proof
+
+Summary: Retained the safe provisional update diagnostic and fresh server-mediated read proof from the newly qualified image before recovery rehearsal.
+
+ADR impact: No ADR change; durable evidence only.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5076,6 +5087,13 @@ ADR impact: No ADR change; completes bounded recovery idempotency.
   Summary: Treat an already-absent rejected change set as a reconciled terminal state, without issuing another deletion or claiming a fresh mutation.
   ADR impact: No ADR change; completes bounded recovery idempotency.
 
+
+- Commit: `43509078`
+  Time UTC: 2026-10-26T14:07:58Z
+  Message: evidence(deploy): retain qualified image transition proof
+  Summary: Retained the safe provisional update diagnostic and fresh server-mediated read proof from the newly qualified image before recovery rehearsal.
+  ADR impact: No ADR change; durable evidence only.
+
 ## Main Refresh Conflicts
 
 
@@ -5099,9 +5117,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:53:11Z
-Latest commit SHA: ebc54f65
-Chat duration: 1832022s (21:04:53:42)
+Latest commit at UTC: 2026-10-26T14:07:58Z
+Latest commit SHA: 43509078
+Chat duration: 1832909s (21:05:08:29)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
