@@ -147,6 +147,10 @@ class ControllerRegression(unittest.TestCase):
         self.assertEqual(report['verdict'], 'discarded')
         self.assertEqual(len([parts for parts in provider.calls if parts[1] == 'delete-change-set']), 1)
 
+        provider = Provider(lambda parts: (False, None, 'aws-resource-missing'))
+        self.assertEqual(result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]['verdict'], 'reconciled')
+        self.assertFalse(any(parts[1] == 'delete-change-set' for parts in provider.calls))
+
         executable = {**rejected, 'Changes': [{'ResourceChange': {'ResourceType': 'AWS::ECS::Service'}}]}
         provider = Provider(lambda parts: (True, executable, 'ok') if parts[1] == 'describe-change-set' else (_ for _ in ()).throw(AssertionError('must not delete executable review')))
         self.assertEqual(result(lambda: module.discard_rejected_review(provider, name, current, digest, revision))[1]['verdict'], 'blocked')

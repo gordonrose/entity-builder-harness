@@ -55,7 +55,7 @@ def retain_failure_diagnostic(prepare,name,digest,code,outcome):
 def emit(verdict,*codes,facts=None):
     value={"schema":"deploy/persistence-release-transition-report/v1","target":"kanbien-core-platform","scope":"core-server-persistence","verdict":verdict,"findings":[{"code":code} for code in codes]}
     if facts: value["facts"]=facts
-    print(json.dumps(value,sort_keys=True)); return 0 if verdict in {"transitioned", "discarded"} else 1
+    print(json.dumps(value,sort_keys=True)); return 0 if verdict in {"transitioned", "discarded", "reconciled"} else 1
 def reviewable(change, status, name, digest, revision):
     if not isinstance(change,dict) or status not in STABLE_STACK_STATES: return False
     if not (change.get("ChangeSetName")==name or (isinstance(change.get("ChangeSetName"),str) and change["ChangeSetName"].startswith("arn:aws:cloudformation:") and change["ChangeSetName"].split(":changeSet/",1)[-1].split("/",1)[0]==name)) or change.get("Status")!="CREATE_COMPLETE" or change.get("ChangeSetType") not in {None,"UPDATE"}: return False
@@ -90,6 +90,11 @@ def discard_rejected_review(prepare, name, current, digest, revision):
     """
     if current.get("ImageDigest") == digest: return emit("blocked", "persistence-release-transition-discard-current-image-matches-candidate")
     ok, change, code = prepare.aws("cloudformation", "describe-change-set", "--stack-name", STACK, "--change-set-name", name)
+    if not ok and code == "aws-resource-missing":
+        # A prior controller invocation may have completed deletion just before
+        # its response was interrupted.  Absence is the desired, non-mutating
+        # terminal state; record it as reconciliation, not a fresh discard.
+        return emit("reconciled", "persistence-release-transition-rejected-review-already-absent", facts={"change_set": name, "image_digest": digest, "source_revision": revision})
     if not ok or not isinstance(change, dict): return emit("blocked", code if not ok else "persistence-release-transition-discard-observation-invalid")
     if not (change.get("Status") == "CREATE_COMPLETE" and change.get("ExecutionStatus") == "AVAILABLE"):
         return emit("blocked", "persistence-release-transition-discard-state-invalid")
