@@ -16,7 +16,7 @@ latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
 latest_commit_at_utc: 2026-10-26T19:11:44Z
-latest_commit_sha: HEAD
+latest_commit_sha: 3bbd801fb1be34469dc69f6aa5586a093dc80bf4
 chat_duration: 4639s (00:01:17:19)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
@@ -119,13 +119,24 @@ Resolution: Latest main omitted 49 previously accepted check definitions. Restor
 
 ### 2026-10-26T19:11:44Z - Commit recorded
 
-Commit: `HEAD`
+Commit: `3bbd801fb1be34469dc69f6aa5586a093dc80bf4`
 
 Message: refactor(verification): separate preparation and integration proof
 
 Summary: Implemented prepared-input receipts, explicit consumed-input contracts, commit/integration scheduling and trusted refresh reuse. Independent review resolved material findings. Checkpoint gate passed: selected57, executed31, deferred26, 360.571s; broader final verification remains pending on the combined latest-main tree.
 
 ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T19:13:40Z - Main refresh conflict recorded
+
+Path: `scripts/repo/check-selection/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Combine bounded header reads and commit-log exclusion with optional metadata proof edges; retain dormant-scope exclusion and incoming non-probing selection. Preserve both branches tests.
 
 ## Sub-Agent Activity
 
@@ -148,7 +159,7 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
 
 
 
-- Commit: `HEAD`
+- Commit: `3bbd801fb1be34469dc69f6aa5586a093dc80bf4`
   Time UTC: 2026-10-26T19:11:44Z
   Message: refactor(verification): separate preparation and integration proof
   Summary: Implemented prepared-input receipts, explicit consumed-input contracts, commit/integration scheduling and trusted refresh reuse. Independent review resolved material findings. Checkpoint gate passed: selected57, executed31, deferred26, 360.571s; broader final verification remains pending on the combined latest-main tree.
@@ -156,7 +167,17 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `scripts/repo/check-selection/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches refine the same selector; the user explicitly authorized routine implementation/governance resolution and local-main integration in the goal.
+  Action: Combine bounded header reads and commit-log exclusion with optional metadata proof edges; retain dormant-scope exclusion and incoming non-probing selection. Preserve both branches tests.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268/20261026191146`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-17-54-simplify-repository-verifi-bdf8abc50268-20261026191146`
+  Files changed by resolution: script.py; checks.yml auto-merge duplicate consolidation preserves audited definitions, all eight incoming new checks, dormant package exclusions and restore applicability
+  Checks: Syntax and diff checks passed; final integration selector and regression suites pending on prepared combined inputs.
 
 ## ADR Disposition
 
@@ -168,7 +189,7 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 
 Raised at UTC: 2026-10-26T17:54:25Z
 Latest commit at UTC: 2026-10-26T19:11:44Z
-Latest commit SHA: HEAD
+Latest commit SHA: 3bbd801fb1be34469dc69f6aa5586a093dc80bf4
 Chat duration: 4639s (00:01:17:19)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
