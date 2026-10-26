@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T16:22:03Z
-latest_commit_sha: cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b
-chat_duration: 16091s (00:04:28:11)
+latest_commit_at_utc: 2026-10-26T16:55:52Z
+latest_commit_sha: f56b288745d32755f54524fe8e9ca301f8b661bb
+chat_duration: 18120s (00:05:02:00)
 estimated_chat_tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -721,6 +721,17 @@ Summary: Reviewed remote reconciliation preserves private SCRAM classification, 
 
 ADR impact: no new ADR
 
+
+### 2026-10-26T16:55:52Z - Commit recorded
+
+Commit: `f56b288745d32755f54524fe8e9ca301f8b661bb`
+
+Message: test(rag): align archive fixture with regenerated artifact inventory
+
+Summary: Final combined source verification passed: 41 local catalog checks, 20 correctly deferred external checks, zero findings; 40 unchanged successful results reused. Mandatory commit preparation passed. Independent review has no material findings. Actual local finished-image qualification, real PostgreSQL/TLS/protocol fixtures, 20 restore diagnostic tests and 19 acceptance route checks passed; all eight retained v1 reports validate and accepted release evidence is unchanged. Final narrow archive fixture and generated-index changes do not affect image inputs. Promotion workspace report encounters an unrelated missing historical /tmp registration; Git worktree inventory still identifies this exact recorded source and clean root main unambiguously. Leave historical references untouched and use the required targeted promotion verifier. Source contains local main 8d479627 and fetched origin/main 494693ef. No live AWS mutation, image publication or deployment performed.
+
+ADR impact: no new ADR
+
 ## Sub-Agent Activity
 
 
@@ -760,6 +771,13 @@ Summary: Reviewed baseline and adapter diff. Fixed invocation-scoping stale obse
   Time UTC: 2026-10-26T16:22:03Z
   Message: Merge remote deployment fixes with bounded diagnostics
   Summary: Reviewed remote reconciliation preserves private SCRAM classification, read-only rejection diagnosis, immutable candidate evidence and simulated-root isolation; affected suites passed.
+  ADR impact: no new ADR
+
+
+- Commit: `f56b288745d32755f54524fe8e9ca301f8b661bb`
+  Time UTC: 2026-10-26T16:55:52Z
+  Message: test(rag): align archive fixture with regenerated artifact inventory
+  Summary: Final combined source verification passed: 41 local catalog checks, 20 correctly deferred external checks, zero findings; 40 unchanged successful results reused. Mandatory commit preparation passed. Independent review has no material findings. Actual local finished-image qualification, real PostgreSQL/TLS/protocol fixtures, 20 restore diagnostic tests and 19 acceptance route checks passed; all eight retained v1 reports validate and accepted release evidence is unchanged. Final narrow archive fixture and generated-index changes do not affect image inputs. Promotion workspace report encounters an unrelated missing historical /tmp registration; Git worktree inventory still identifies this exact recorded source and clean root main unambiguously. Leave historical references untouched and use the required targeted promotion verifier. Source contains local main 8d479627 and fetched origin/main 494693ef. No live AWS mutation, image publication or deployment performed.
   ADR impact: no new ADR
 
 ## Main Refresh Conflicts
@@ -1269,9 +1287,9 @@ Reason: Existing adapter, shared diagnostic and restore-controller owners were e
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T11:53:52Z
-Latest commit at UTC: 2026-10-26T16:22:03Z
-Latest commit SHA: cec8b1aa365ed9c5fb15ded7db265ef0ee5a709b
-Chat duration: 16091s (00:04:28:11)
+Latest commit at UTC: 2026-10-26T16:55:52Z
+Latest commit SHA: f56b288745d32755f54524fe8e9ca301f8b661bb
+Chat duration: 18120s (00:05:02:00)
 Estimated chat tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
