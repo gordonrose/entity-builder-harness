@@ -82,6 +82,15 @@ identity matches, reporting `verification-preparation-missing` or
 any execution. This prevents late lifecycle metadata edits from silently
 turning commit preparation into a new verification cycle.
 
+Each receipt binds the complete catalog definitions of its selected check and
+all aliases sharing that command. An unrelated check definition does not revoke
+that receipt. Checks that explicitly consume the catalog still bind its complete
+bytes. Every invocation validates the current catalog and selection; a catalog
+change during planning or execution makes the invocation uncertain. This drift
+barrier is separate from the reusable proof identity, so the next fresh plan can
+reuse unaffected evidence. Staged execution still requires the catalog authority
+to match the staged version.
+
 The key includes relevant input bytes and file modes, transitive package and
 metadata dependencies, owner capability, argv/effects/stage/evidence class,
 resolved declared Bash/Python/PyYAML/Node/npm/TypeScript identities, declared

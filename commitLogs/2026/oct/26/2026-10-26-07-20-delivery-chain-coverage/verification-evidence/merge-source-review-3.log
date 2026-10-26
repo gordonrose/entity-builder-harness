@@ -1,0 +1,69 @@
+{
+  "counts": {
+    "chunked_rule_paths": 41,
+    "errors": 0,
+    "indexed_rule_paths": 41,
+    "sources": 1,
+    "sources_with_corpus_gaps": 0,
+    "sources_with_derivation_reports": 1,
+    "sources_with_structured_rules": 1,
+    "warnings": 0
+  },
+  "errors": [],
+  "ok": true,
+  "rule_roots": [
+    "docs/01.harness/rules",
+    "docs/01.harness/rule-packs",
+    "docs/02.rag-rulebook/rules",
+    "docs/02.rag-rulebook/rule-packs",
+    "docs/03.product/rules",
+    "docs/03.product/rule-packs",
+    "docs/04.deploy/rules",
+    "docs/04.deploy/rule-packs",
+    "docs/06.shared/rules",
+    "docs/06.shared/rule-packs"
+  ],
+  "schema": "rag-rulebook/source-material-coverage-report/v1",
+  "scope": {
+    "mode": "source",
+    "source": "docs/04.deploy/source-material/shared/container-image-management.md"
+  },
+  "source_roots": [
+    "docs/01.harness/source-material",
+    "docs/02.rag-rulebook/source-material",
+    "docs/03.product/source-material",
+    "docs/04.deploy/source-material",
+    "docs/06.shared/source-material"
+  ],
+  "sources": [
+    {
+      "chunked_rule_paths": [
+        "docs/04.deploy/rules/shared/container-image-management.yml"
+      ],
+      "claimed_rule_paths": [
+        "docs/04.deploy/rules/shared/container-image-management.yml"
+      ],
+      "indexed_rule_paths": [
+        "docs/04.deploy/rules/shared/container-image-management.yml"
+      ],
+      "missing_chunk_rule_paths": [],
+      "missing_index_rule_paths": [],
+      "ok": true,
+      "outcomes": {
+        "corpus_gaps": [],
+        "derivation_reports": [
+          ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-30-container-image-management.yml",
+          ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml",
+          ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml"
+        ],
+        "structured_rules": [
+          "docs/04.deploy/rules/shared/container-image-management.yml"
+        ]
+      },
+      "path": "docs/04.deploy/source-material/shared/container-image-management.md"
+    }
+  ],
+  "warnings": []
+}
+
+STDERR

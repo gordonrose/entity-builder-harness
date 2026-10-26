@@ -1,0 +1,125 @@
+{
+  "purpose": "Byte-preserved linked evidence for the historical completion report; no current proof or route authority is introduced.",
+  "files": [
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/collector-image-behavior.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/collector-image-behavior.json",
+      "sha256": "5e686f18494e70fdd68b6aa5fcfa76d377d443817601e19b8d32a7e0d91a6b00"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/core-shell-image-verification.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/core-shell-image-verification.json",
+      "sha256": "5114d03333d55a1e45afc53e7a01fbc13736d6038efe83f491ff91c9d2ad7dd3"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory-baseline.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory-baseline.json",
+      "sha256": "e9593e4d3123fdc3b26b5d9ed952cc387903719c6e3108f34e88b020b7b26805"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory-baseline.md",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory-baseline.md",
+      "sha256": "ac4dc61f93f1279e8e1611aaaf913ed1378425c5c8c3c5db4eaa2a3e5cce55c9"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory.json",
+      "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.md",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-inventory.md",
+      "sha256": "8c7cd09c6e6a5fa60f2d7baaa19d6d09398a893a2029e97887fce3837f4c959c"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-verification.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/delivery-verification.json",
+      "sha256": "e8fac668f4974ce56bdaa34908ab60682000caeb2fb31a5d531f488bbeb29172"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/governance-final-20261026T-verification/container-report.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/governance-final-20261026T-verification/container-report.json",
+      "sha256": "c0abc36f28b4c6f157de3ce6af56eb2afd09a92a55737e5a53241e9d4ffd67df"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/independent-review.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/independent-review.json",
+      "sha256": "e529ec6fc027d166cdb56b3e5d3a2bae1aca394544845790d0b993f3bf2884c5"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/rag-image-qualification-b4d9f64549a8.json",
+      "sha256": "35807919962f507722638ddbe7b95b6bf5fba56167e2095873afba73dba2cd15"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-acceptance.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-acceptance.json",
+      "sha256": "aa9e03f0700f1069a2c140374b050d03f9717cb16e96f8a282214ce09e484307"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-entrypoint-agreement.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-entrypoint-agreement.json",
+      "sha256": "3f46a5040282a7ed8a1fc1adc8de563c71b4b0407bccec8409a3920bdb230377"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-inventory.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-inventory.json",
+      "sha256": "85dba617a114f1979a4cb5d840ef52e9eeee17d7c3267fad9431f38970a9b397"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-local-test-isolation.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-local-test-isolation.json",
+      "sha256": "98b13ab73b50c65b63feaedfd10edefa315d9ba7890d618fa6691afe0ba4dc6c"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-provider.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-provider.json",
+      "sha256": "aa5e07f23044d056231aa7eacf0cacf3a86c4760ef3ff3de89dea1d8d4a83d66"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-runtime.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-runtime.json",
+      "sha256": "230c382cf1432ba058cc16267a40142b6771f35dd30c178738ad34e9977c8034"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-selector-catalog-evidence.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-selector-catalog-evidence.json",
+      "sha256": "d3bee6c128e88d1b98ff4a270dd3f68bc30a5f2d494c1f9b8e1139a48517167f"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-selector-performance.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-selector-performance.json",
+      "sha256": "d4098049b0a105e1f1f1f5a1cf12c0b2ae6273e382973ee64b69bf1b1cdb1c77"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/repairs-source-review-history.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/repairs-source-review-history.json",
+      "sha256": "81ed23aaabbdb97b99dd282e7abe532c40e65d11c9ce6a65336dc4036abdf51a"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/source-review-current-coverage.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/source-review-current-coverage.json",
+      "sha256": "be0d7849e63e767eb5005296cd278585cdb9e987a65df5338bda9afa0e149964"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final-invocation.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/verification-evidence/selected-execution-final-invocation.json",
+      "sha256": "1706dd5d0adbf7b580f1415e239c89a792ecf34e708c2e5353230b9c9a7a184e"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/verification-evidence/selected-execution-final.json",
+      "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-input-drift.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/verification-evidence/selected-execution-input-drift.json",
+      "sha256": "bec35a1ebcdf61e169a9953fac76286dd4bfa41249a1cc18403840c8141ee401"
+    },
+    {
+      "original_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-governance-frozen.json",
+      "retained_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/historical/before-four-gap-correction/verification-governance-frozen.json",
+      "sha256": "de4a2578f28ca2b8babed841d846097f7100aa1f806ca7cd2021b297783f71c3"
+    }
+  ]
+}

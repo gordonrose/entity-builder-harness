@@ -1,0 +1,2 @@
+Persistence admission-probe CLI regressions passed (20 cases; no AWS or HTTP).
+Persistence admission-probe local validation passed.

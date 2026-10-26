@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -103,5 +103,26 @@ assert compiled_policy["user_intents"][0]["intent_id"] == "user-intent.explain"
 assert compiled_policy["evidence_bundles"]
 assert compiled_policy["retrieval_strategy"]["strategy_id"] == "retrieval-selector.v1.hybrid-deterministic-first"
 PY
+
+python3 - "$TMP_DIR" <<'ARCHIVE_INDEX'
+import json, os, shutil, subprocess, sys
+from pathlib import Path
+root=Path.cwd();temporary=Path(sys.argv[1]);archive=temporary/'source-archive';archive.mkdir()
+(archive/'component.ts').write_text('// agentic-artifact:\n//   schema: agentic-artifact/v2\n//   id: test.rag.archive\n//   status: active\n'.replace('\\n','\n'))
+commands=temporary/'without-git';commands.mkdir()
+(commands/'bash').symlink_to(shutil.which('bash'))
+(commands/'python3').symlink_to(sys.executable)
+environment={**os.environ,'PATH':str(commands),'RAG_REPO_ROOT':str(archive),'RAG_SOURCE_COMMIT_SHA':'b'*40}
+command=[str(commands/'bash'),str(root/'scripts/01.harness/artifact-metadata/generate-index/script.sh'),'--all','--strict','--check-coverage']
+result=subprocess.run(command,env=environment,text=True,capture_output=True)
+assert result.returncode==0,(result.stdout,result.stderr)
+report=json.loads(result.stdout)
+assert report['coverage']['scope']=='source-archive' and report['git_commit']=='b'*40
+assert [item['path'] for item in report['artifacts']]==['component.ts']
+environment.pop('RAG_SOURCE_COMMIT_SHA')
+result=subprocess.run(command,env=environment,text=True,capture_output=True)
+assert result.returncode!=0 and 'RAG_SOURCE_COMMIT_SHA is required' in result.stderr
+print('Source archive without Git CLI checks passed (2).')
+ARCHIVE_INDEX
 
 echo "Local RAG/rulebook runtime smoke test passed."

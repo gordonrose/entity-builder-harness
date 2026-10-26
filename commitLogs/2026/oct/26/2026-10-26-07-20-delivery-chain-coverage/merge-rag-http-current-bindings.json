@@ -1,0 +1,28 @@
+{
+  "schema": "delivery-chain/package-current-input-binding/v1",
+  "checked_at": "2026-10-26T13:49:41.923185+00:00",
+  "verdict": "passed",
+  "checks": [
+    {
+      "check_id": "rag-local-query-regression",
+      "receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-rag-query-suite.json",
+      "receipt_sha256": "d940a9330463ef99ce581a7be338acc14c5a5e78a4f293724468ba7320eaadac",
+      "current_input_digest": "852d492ce47e2b9a45b42387d18b7b4da4d6bd7602eee62dc366bda38e5c7333",
+      "current_catalog_entry_sha256": "8752d6c6bff4e8407e1c862bbd60d980fc33ba4eb2536e8ea61313690c374404",
+      "unchanged_after_final_source_freeze": true
+    },
+    {
+      "check_id": "rag-local-service-regression",
+      "receipt": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-rag-service-suite.json",
+      "receipt_sha256": "7a6da5bdde69062d9f346edd082d49c3335459691dca94bebb32f3237598113e",
+      "current_input_digest": "5149bf9040670569ade79065045d2a5cc860a549587f86d5d2f2f983c0481f86",
+      "current_catalog_entry_sha256": "3a0fb7a1b0f9d70447db22154e3dedad7d5d737f4f6c341c3a146a1e72f2d2fe",
+      "unchanged_after_final_source_freeze": true
+    }
+  ],
+  "source_generation_note": "The supported local service suite refreshed generated recognition for the new review and derivation. Its log retains the stale diagnostic followed by successful regeneration. Root performed final generation before this current binding check.",
+  "limits": [
+    "Binding is to the two owning catalog entries and their declared input scopes; complete selector metadata-expanded keys remain with root integration.",
+    "The separately rebuilt finished RAG image provides current packaged-cache and complete COPY-source evidence."
+  ]
+}

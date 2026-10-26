@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.compiler.local-check-cache
-#   version: 3
+#   version: 1
 #   status: active
 #   created_on: "2026-10-25"
 #   updated_on: "2026-10-26"
@@ -29,7 +29,7 @@ import sys
 import tempfile
 import yaml
 
-TOOLS = {'bash', 'python3', 'node', 'npm', 'typescript'}
+TOOLS = {'bash', 'python3', 'node', 'npm', 'typescript', 'openssl'}
 
 
 def valid_node_package(value: object) -> bool:
@@ -160,7 +160,7 @@ def runtime_identity(root: Path, declaration: dict) -> dict:
         executable = root / 'node_modules/.bin/tsc' if tool == 'typescript' else Path(shutil.which(tool) or '/missing-tool/' + tool)
         if not executable.is_file(): raise ValueError('check-runtime-tool-missing:' + tool)
         resolved = executable.resolve()
-        argv = [str(executable), '--version']
+        argv = [str(executable), 'version' if tool == 'openssl' else '--version']
         completed = subprocess.run(argv, cwd=root, capture_output=True, text=True, timeout=15, env=probe_environment)
         if completed.returncode: raise ValueError('check-runtime-tool-unavailable:' + tool)
         info = resolved.stat()
@@ -233,14 +233,7 @@ class LocalCache:
         self.write(item['evidence_key'] + '.json', {**item, 'schema': 'repo/local-check-cache/v1', 'worktree': self.worktree})
 
     def invalidation_reasons(self, item: dict) -> list[str]:
-        """Explain a local-cache miss without trusting a stale receipt.
-
-        Receipts remain reusable only through their exact evidence key. This
-        diagnostic is deliberately advisory: it finds the newest successful
-        receipt for the same logical check and compares the components that
-        form a key; it never relaxes receipt validation or accepts the old
-        result as proof.
-        """
+        """Explain a cache miss without treating a stale receipt as proof."""
         candidates: list[tuple[int, dict]] = []
         for path in self.directory.iterdir():
             if not re.fullmatch(r'[0-9a-f]{64}\.json', path.name):

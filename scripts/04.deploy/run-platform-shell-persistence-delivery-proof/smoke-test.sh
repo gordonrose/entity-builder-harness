@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: persistence
 #   disciplines:
@@ -20,7 +20,7 @@ set -euo pipefail
 #     targets:
 #     - kanbien/staging
 #   effects:
-#   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.script.verify-platform-shell-infrastructure
 #     path: scripts/04.deploy/verify-platform-shell-infrastructure/script.sh
@@ -70,5 +70,7 @@ if '"TargetGroupArn"' not in source or 'def public_target_health_is_healthy' not
 if 'RECOVERY_COMPLETED = "outbox-delivery-proven-terminal"' not in source:
     raise SystemExit("ERROR: persistence delivery proof must make completed terminal evidence explicit.")
 PY
+
+python3 -B scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py
 
 echo "Persistence delivery-proof local validation passed."

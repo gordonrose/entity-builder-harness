@@ -1,0 +1,17 @@
+{
+  "name": "shell-smoke",
+  "argv": [
+    "bash",
+    "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+    "--image",
+    "sha256:5d2a509d9b031c2d3114361193197815f935691c1812071699ade713434d8fda",
+    "--port",
+    "39553"
+  ],
+  "started_at": "2026-10-26T13:37:55.409134+00:00",
+  "finished_at": "2026-10-26T13:38:59.023318+00:00",
+  "duration_seconds": 63.623,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-smoke.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-shell-smoke.stderr.log"
+}

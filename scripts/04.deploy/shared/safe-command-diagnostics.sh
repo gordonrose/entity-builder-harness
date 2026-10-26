@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.diagnostics
 #   disciplines:
@@ -86,7 +86,7 @@ safe_command_deployment_diagnostic() {
   } >&2
   if ! python3 "$root/scripts/04.deploy/shared/deployment-operation-diagnostics.py" record \
       --target "$target" --scope "$scope" --operation-id "$operation_id" --stage "$stage" \
-      --original-code "$code" --exit-status "$status" --outcome failed --classification child-command-failed \
+      --original-code "$code" --exit-status "$status" --outcome unknown --classification child-command-failed \
       --evidence-reference "$evidence_reference" --next-decision inspect-retained-evidence \
       --report "$report_path" >/dev/null; then
     printf 'DIAGNOSTIC_COLLECTION_STATUS=failed\n' >&2

@@ -1,0 +1,521 @@
+{
+  "accepted_retirements": {
+    ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/focused-paths.yml": [
+      "rag-rulebook.retirement.2026-07-07-focused-paths-dimension"
+    ],
+    "docs/harness/architecture/README.md": [
+      "rag-rulebook.retirement.2026-09-01-final-prototype-architecture-root-pointer"
+    ],
+    "docs/harness/architecture/adrs/0001-record-harness-session-decisions-before-commit.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0002-clean-up-duplicate-chat-branches.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0003-review-process-prose-for-deterministic-gates.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0004-group-chat-logs-and-summarize-session-metrics.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0005-preserve-bootstrap-dirty-worktree-before-workflow-loading.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0006-use-session-metadata-for-routing-after-chat-start.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0007-require-explicit-write-permission-with-bookkeeping-exception.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0008-add-education-layer.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0009-allow-automatic-session-branch-commit-context.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0010-protect-commit-logs-with-recorded-work.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0011-use-chat-owned-worktrees-for-local-convergence.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0012-treat-missing-governance-as-stop-condition.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0013-create-chat-layer-and-on-demand-session-summary.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0014-promote-reusable-lessons-upstream.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0015-use-shared-upstream-repo-bootstrap-standard.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0016-add-aws-layer.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0017-organize-scripts-by-owner-domain-and-capability.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0018-govern-artifact-path-migrations.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0019-use-chat-docs-namespace.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0020-use-scripts-for-layer-command-surfaces.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0021-use-versioned-artifact-metadata-for-agent-navigation.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0022-add-rag-rulebook-layer.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0023-require-rag-knowledge-disposition-for-code-changes.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0024-use-translation-ready-message-descriptors.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0025-place-composed-runtime-contexts-in-platform-contracts.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0026-use-app-mount-as-platform-integration-boundary.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0027-use-provider-type-service-adapter-layout.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0028-use-client-environment-deployment-target-profiles.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0029-use-purpose-and-authority-aware-rag-retrieval.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0030-require-formal-commit-readiness-gate-before-task-commits.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/0031-use-products-as-app-composition-boundary.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/adrs/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/guides/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/guides/originals/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/plans/platform-runtime-implementation-plan.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/rule-packs/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/rule-packs/add-core-module.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rule-packs/add-design-system-component.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rule-packs/add-platform-adapter.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rule-packs/create-entity.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/rules/concerns/ci-quality.yml": [
+      "rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules"
+    ],
+    "docs/harness/architecture/rules/concerns/config-runtime-settings.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/dependency-direction.yml": [
+      "rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules"
+    ],
+    "docs/harness/architecture/rules/concerns/design-label-theming.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/events-messaging-async.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/generated-code.yml": [
+      "rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules"
+    ],
+    "docs/harness/architecture/rules/concerns/i18n-localization.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/identity-access-security.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/notifications.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/persistence-files-storage.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/platform-adapter-consumption.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/platform-infra-capability-layering.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/reporting-analytics-audit.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/tenancy.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/concerns/typescript-monorepo-tooling.yml": [
+      "rag-rulebook.retirement.2026-08-31-shared-cross-layer-rules"
+    ],
+    "docs/harness/architecture/rules/concerns/validation-api-errors.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/apps.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/design-system.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/frontend-kit.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/infra.yml": [
+      "rag-rulebook.retirement.2026-08-31-deploy-infra-rule"
+    ],
+    "docs/harness/architecture/rules/layers/packages-core.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/platform.yml": [
+      "rag-rulebook.retirement.2026-08-31-product-rules-and-packs"
+    ],
+    "docs/harness/architecture/rules/layers/scripts-command-surface.yml": [
+      "rag-rulebook.retirement.2026-08-31-harness-scripts-command-surface-rule"
+    ],
+    "docs/harness/architecture/source-material/README.md": [
+      "rag-rulebook.retirement.2026-09-01-prototype-architecture-compatibility-pointers"
+    ],
+    "docs/harness/architecture/source-material/packages-core-contract-surface-v1.md": [
+      "rag-rulebook.retirement.2026-08-31-product-source-material-paths"
+    ],
+    "docs/harness/architecture/source-material/platform-infra-capability-layering-v1.md": [
+      "rag-rulebook.retirement.2026-08-31-product-source-material-paths"
+    ],
+    "docs/harness/architecture/source-material/platform-runtime-enterprise-obligations-v1.md": [
+      "rag-rulebook.retirement.2026-08-31-product-source-material-paths"
+    ]
+  },
+  "counts": {
+    "accepted_retirement_paths": 70,
+    "active_projection_sets": 12,
+    "checked_projection_sets": 1,
+    "current_source_material_files": 20,
+    "declared_rule_paths": 17,
+    "declared_source_material_files": 20,
+    "derived_rules": 17,
+    "errors": 0,
+    "projection_sets": 14,
+    "warnings": 0
+  },
+  "errors": [],
+  "manifest_path": ".agentic/02.rag-rulebook/source-projections/v1.yml",
+  "ok": true,
+  "projection_sets": [
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml"
+      ],
+      "id": "projection.02.rag-rulebook.mcp-server-deployment-architecture",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-06-27-mcp-server-deployment-architecture.yml"
+      ],
+      "rule_paths": [
+        "docs/02.rag-rulebook/rules/concerns/mcp-server-deployment-architecture.yml"
+      ],
+      "source_paths": [
+        "docs/02.rag-rulebook/source-material/mcp-server-deployment-architecture.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [
+        ".agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/hosted-context-provider-contract.yml"
+      ],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/hosted-rag-provider-over-local-runtime.yml"
+      ],
+      "id": "projection.02.rag-rulebook.hosted-context-provider-contract",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-07-07-hosted-context-provider-contract.yml",
+        ".agentic/02.rag-rulebook/derivation-reports/02.rag-rulebook/2026-10-25-local-provider-retirement.yml"
+      ],
+      "rule_paths": [
+        "docs/02.rag-rulebook/rules/concerns/hosted-context-provider-contract.yml"
+      ],
+      "source_paths": [
+        "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [
+        ".agentic/02.rag-rulebook/corpus-gaps/02.rag-rulebook/rag-retrieval-source-of-truth.yml"
+      ],
+      "expected_selector_evaluations": [],
+      "id": "projection.02.rag-rulebook.rag-retrieval-source-of-truth",
+      "projection_mode": "planned",
+      "report_paths": [],
+      "rule_paths": [],
+      "source_paths": [
+        "docs/02.rag-rulebook/source-material/rag-retrieval.md"
+      ],
+      "status": "planned"
+    },
+    {
+      "corpus_gap_paths": [
+        ".agentic/02.rag-rulebook/corpus-gaps/04.deploy/mcp-server-deployment.yml"
+      ],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-execution-mcp-server-blocked.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-explanation-question.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-negation.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-plan-request.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-deploy-planning-question.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/intent-form-planning-mcp-server.yml"
+      ],
+      "id": "projection.04.deploy.02-rag-rulebook.mcp-server-deployment",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-26-mcp-server-deployment.yml"
+      ],
+      "rule_paths": [
+        "docs/04.deploy/rules/02.rag-rulebook/aws-runtime-boundaries.yml",
+        "docs/04.deploy/rules/02.rag-rulebook/deployment-readiness-checks.yml",
+        "docs/04.deploy/rules/02.rag-rulebook/github-to-aws-deployment.yml",
+        "docs/04.deploy/rules/02.rag-rulebook/mcp-server-deployment.yml"
+      ],
+      "source_paths": [
+        "docs/04.deploy/source-material/02.rag-rulebook/mcp-server-deployment.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [
+        ".agentic/02.rag-rulebook/corpus-gaps/04.deploy/github-actions-to-ecs-fargate.yml"
+      ],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/deploy-planning-ecs-fargate.yml"
+      ],
+      "id": "projection.04.deploy.02-rag-rulebook.github-actions-to-ecs-fargate",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml"
+      ],
+      "rule_paths": [
+        "docs/04.deploy/rules/02.rag-rulebook/context-provider-data-boundaries.yml",
+        "docs/04.deploy/rules/02.rag-rulebook/ecs-fargate-deployment.yml",
+        "docs/04.deploy/rules/02.rag-rulebook/supply-chain-provenance.yml"
+      ],
+      "source_paths": [
+        "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml"
+      ],
+      "id": "projection.04.deploy.shared.container-image-management",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml"
+      ],
+      "rule_paths": [
+        "docs/04.deploy/rules/shared/container-image-management.yml"
+      ],
+      "source_paths": [
+        "docs/04.deploy/source-material/shared/container-image-management.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [],
+      "id": "projection.04.deploy.03-product.platform-shell-runtime-family",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-07-10-platform-shell-runtime-family.yml"
+      ],
+      "rule_paths": [
+        "docs/04.deploy/rules/03.product/platform-shell-runtime-family.yml"
+      ],
+      "source_paths": [
+        "docs/04.deploy/source-material/03.product/platform-shell-runtime-family.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [],
+      "id": "projection.04.deploy.03-product.platform-target-alerting-policy",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-09-08-platform-target-alerting-policy.yml"
+      ],
+      "rule_paths": [
+        "docs/04.deploy/rules/03.product/platform-target-alerting-policy.yml"
+      ],
+      "source_paths": [
+        "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-audit-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-compatibility.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-contract-surface.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-diagnostics-self-healing.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-events-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-files-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-i18n-localization-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-monitoring-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-persistence-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-queues-contract.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/packages-core-security-contract.yml"
+      ],
+      "id": "projection.03.product.core.packages-core-contract-surface-v1",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/03.product.core/2026-07-04-packages-core-contract-surface-v1.yml"
+      ],
+      "rule_paths": [
+        "docs/03.product/rules/core/layers/packages-core.yml"
+      ],
+      "source_paths": [
+        "docs/03.product/source-material/core/packages-core-contract-surface-v1.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-contract-identifier-naming.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-enterprise-obligations.yml",
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-runtime-source-explanation.yml"
+      ],
+      "id": "projection.03.product.platform.platform-runtime-enterprise-obligations-v1",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-07-platform-runtime-enterprise-obligations-v1.yml"
+      ],
+      "rule_paths": [
+        "docs/03.product/rules/platform/layers/platform.yml"
+      ],
+      "source_paths": [
+        "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/platform-infra-capability-layering.yml"
+      ],
+      "id": "projection.03.product.platform.platform-infra-capability-layering-v1",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/03.product.platform/2026-07-08-platform-infra-capability-layering-v1.yml"
+      ],
+      "rule_paths": [
+        "docs/03.product/rules/platform/concerns/platform-infra-capability-layering.yml"
+      ],
+      "source_paths": [
+        "docs/03.product/source-material/platform/platform-infra-capability-layering-v1.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/package-documentation.yml"
+      ],
+      "id": "projection.03.product.package-documentation-v1",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-package-documentation-v1.yml"
+      ],
+      "rule_paths": [
+        "docs/03.product/rules/concerns/package-documentation.yml"
+      ],
+      "source_paths": [
+        "docs/03.product/source-material/guides/markdown/package-documentation-v1.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [],
+      "expected_selector_evaluations": [
+        ".agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/untrusted-input-and-bounded-agent-safety.yml"
+      ],
+      "id": "projection.03.product.untrusted-input-and-bounded-agent-safety-v1",
+      "projection_mode": "manual-reviewed",
+      "report_paths": [
+        ".agentic/02.rag-rulebook/derivation-reports/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml"
+      ],
+      "rule_paths": [
+        "docs/03.product/rules/concerns/untrusted-input-and-bounded-agent-safety.yml"
+      ],
+      "source_paths": [
+        "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md"
+      ],
+      "status": "active"
+    },
+    {
+      "corpus_gap_paths": [
+        ".agentic/02.rag-rulebook/corpus-gaps/03.product/product-architecture-guides.yml"
+      ],
+      "expected_selector_evaluations": [],
+      "id": "projection.03.product.product-architecture-guides",
+      "projection_mode": "planned",
+      "report_paths": [],
+      "rule_paths": [],
+      "source_paths": [
+        "docs/03.product/source-material/guides/markdown/kanbien-architecture-full-discussion.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-core-architecture-guide.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-frontend-design-system-guide.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-modular-monorepo-entity-builder.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-platform-adapter-consumption-model-guide.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-platform-layer-architecture.md",
+        "docs/03.product/source-material/guides/markdown/kanbien-typescript-architecture-guide.md"
+      ],
+      "status": "planned"
+    }
+  ],
+  "schema": "rag-rulebook/source-projection-check-report/v1",
+  "undeclared_derived_rules": [],
+  "undeclared_source_material_files": [],
+  "validation_scope": {
+    "all_content_checked": false,
+    "global_manifest_inventory_checked": true,
+    "mode": "projection-set",
+    "projection_set_ids": [
+      "projection.04.deploy.shared.container-image-management"
+    ]
+  },
+  "warnings": []
+}
+
+STDERR

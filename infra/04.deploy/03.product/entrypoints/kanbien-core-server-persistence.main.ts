@@ -4,7 +4,7 @@
 //   version: 2
 //   status: draft
 //   created_on: "2026-10-23"
-//   updated_on: "2026-10-25"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines:
@@ -21,6 +21,10 @@
 //   - id: infra.04-deploy.03-product.image.core-server-persistence.dockerfile
 //     path: infra/04.deploy/03.product/image/core-server-persistence/Dockerfile
 
+import { systemClock } from "@kanbien/core/shared";
+import type { Logger } from "@kanbien/core/logging";
+import { createPlatformReadinessObserver } from "@kanbien/platform-observability";
+import { observabilityFromTargetEnvironment, readinessObservationFromTargetEnvironment } from "./kanbien-platform-observability";
 import {
   createNodePostgreSqlTokenConnectionPool,
 } from "@kanbien/platform-adapter-aws-persistence-postgresql";
@@ -39,17 +43,60 @@ export async function runKanbienCoreServerPersistenceMain(env: NodeJS.ProcessEnv
   const certificateAuthority = persistenceCertificateAuthority(env);
   if (certificateAuthority === undefined) return startupFailed("tls-authority-unavailable");
 
+  const observation = readinessObservationFromTargetEnvironment(env);
+  if (!observation.ok) return startupFailed(observation.error.code);
+  const observability = observabilityFromTargetEnvironment(env);
+  if (!observability.ok) return startupFailed(observability.error.code);
+  const logger: Logger = { write: (record) => console.log(JSON.stringify(record)) };
   const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
   const persistence = createKanbienCoreServerPostgreSqlPersistenceRuntime({ pool, schema: configuration.schema });
   const started = await startPlatformServerProcess({
     apps: [createKanbienCoreServerPersistenceApp(resolvePlatformReleaseIdentity(env["PLATFORM_SOURCE_COMMIT_SHA"]), persistence)],
     env,
+    logger,
+    ...(observability.value === undefined ? {} : { metrics: observability.value.metrics }),
+    installSignalHandlers: false,
   });
   if (!started.ok) {
     await persistence.close();
+    await observability.value?.shutdown();
     return startupFailed(started.error.code);
   }
-  if (env["PLATFORM_SERVER_EXIT_AFTER_START"] === "1") await started.value.close();
+  // The composition owns this timer and exporter together with the server.
+  // No request traffic is needed to prove that the dependency remains ready.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
+  let observing: Promise<unknown> = Promise.resolve();
+  if (observation.value !== undefined && observability.value !== undefined) {
+    const options = observation.value;
+    const observer = createPlatformReadinessObserver({
+      identity: options.identity,
+      probe: async () => ({ readiness: await persistence.readiness() }),
+      logger, metrics: observability.value.metrics, clock: systemClock,
+      timeoutMs: options.timeoutMs,
+      allowedDiagnosticCodes: ["persistence.readiness-not-ready"],
+      defaultDiagnosticCode: "persistence.readiness-not-ready",
+    });
+    const observe = () => {
+      observing = observer.observe().catch(() => {
+        console.error(JSON.stringify({ level: "warn", message: "persistence.readiness_observation_failed" }));
+      }).finally(() => { if (!stopped) timer = setTimeout(observe, options.cadenceMs); });
+    };
+    observe();
+  }
+  const close = async () => {
+    if (stopped) return;
+    stopped = true;
+    if (timer !== undefined) clearTimeout(timer);
+    await observing;
+    try { await started.value.close(); }
+    finally { await observability.value?.shutdown(); }
+  };
+  if (env["PLATFORM_SERVER_EXIT_AFTER_START"] === "1") await close();
+  else {
+    process.once("SIGTERM", () => { void close(); });
+    process.once("SIGINT", () => { void close(); });
+  }
 }
 
 function startupFailed(code: string): void {

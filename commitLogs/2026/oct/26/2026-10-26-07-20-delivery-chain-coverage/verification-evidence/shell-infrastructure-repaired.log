@@ -1,0 +1,37 @@
+Platform-shell synthetic scheduler policy check passed.
+Platform-shell metric-coverage static policy check passed.
+Platform-shell deployment-artifact store static policy check passed.
+PostgreSQL relational-reference static policy check passed.
+Platform-shell deployment reconciliation static policy check passed.
+Platform-shell drift-detection boundary check passed.
+Negative authorization test-client local validation passed.
+.
+----------------------------------------------------------------------
+Ran 1 test in 6.187s
+
+OK
+Negative authorization smoke local validation passed.
+Persistence-write client local validation passed.
+Persistence smoke local validation passed.
+Persistence admission-probe CLI regressions passed (20 cases; no AWS or HTTP).
+Persistence admission-probe local validation passed.
+{"schema": "deploy/persistence-delivery-recovery-test/v1", "verdict": "passed", "evidence_class": "simulated", "cli_checks": 24}
+Persistence delivery-proof local validation passed.
+Platform-shell rate-limit smoke local validation passed.
+Platform-shell ingress smoke local validation passed.
+{"schema": "deploy/worker-recovery-test/v1", "verdict": "passed", "evidence_class": "simulated", "cli_checks": 17}
+Platform-shell worker smoke local validation passed.
+PostgreSQL relational smoke local validation passed.
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.720s
+
+OK
+Candidate execution preflight local validation passed.
+Candidate realization prerequisites, artifact identity and original failure retention passed (synthetic only).
+..
+----------------------------------------------------------------------
+Ran 2 tests in 3.369s
+
+OK
+Platform-shell infrastructure static policy check passed.

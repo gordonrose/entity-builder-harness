@@ -1,0 +1,80 @@
+{
+  "schema": "delivery-chain/corrective-bootstrap-reproduction/v1",
+  "before": "corrective-bootstrap-before.json",
+  "exact_original_proposal_sha256": "1fdec880d188d07fecde5598bb3b964904d794e8c8ec8812b0f2105d961a209f",
+  "exact_original_parameters": true,
+  "implementation_sha256": "8f7dca2db509cd173370c40e94e2c8a379322af71a8d0fd29457e3271aa7dbaa",
+  "provider_calls": [
+    [
+      "cloudformation",
+      "describe-change-set",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--change-set-name",
+      "kanbien-core-platform-update-aaaaaaaaaaaa",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ],
+    [
+      "cloudformation",
+      "describe-stacks",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ],
+    [
+      "cloudformation",
+      "get-template",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--change-set-name",
+      "kanbien-core-platform-update-aaaaaaaaaaaa",
+      "--template-stage",
+      "Original",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ]
+  ],
+  "report": {
+    "findings": [
+      {
+        "code": "change-set-template-mismatch"
+      }
+    ],
+    "schema": "deploy/runtime-deployment-report/v1",
+    "stack": "kanbien-core-platform-bootstrap-runtime",
+    "target": "kanbien-core-platform",
+    "verdict": "blocked"
+  },
+  "exit_code": 1,
+  "execute_calls": 0,
+  "proposed_template_read": true,
+  "verdict": "blocked-for-intended-reason",
+  "evidence_class": "actual-cli-disposable-provider-fixture",
+  "fixture_cleanup": "confirmed-absent"
+}

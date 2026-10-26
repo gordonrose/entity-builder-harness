@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-22"
-#   updated_on: "2026-10-22"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.foundation-cost-control
 #   disciplines: [security, sre]
@@ -23,6 +23,8 @@ import argparse
 import datetime as dt
 from decimal import Decimal, InvalidOperation
 import json
+import hashlib
+import importlib.util
 import os
 import subprocess
 import sys
@@ -43,14 +45,18 @@ def report(verdict: str, *, findings: list[str] | None = None, **fields: Any) ->
     print(json.dumps({"schema": "deploy/foundation-budget-provisioning-report/v1", "target": TARGET, "stack": STACK, "budget_name": BUDGET_NAME, "verdict": verdict, "findings": [{"code": code} for code in findings or []], **fields}, sort_keys=True))
     return 0 if verdict in {"created-awaiting-review", "reviewed", "executed-and-verified", "verified"} else 1
 
+_AWS_RESPONSE=None
+
 def aws(service: str, *arguments: str, budget: bool = False, expect_json: bool = True) -> tuple[bool, Any, str]:
-    completed = subprocess.run(["aws", service, *arguments, "--profile", PROFILE, "--region", BUDGET_REGION if budget else STACK_REGION, "--output", "json"], capture_output=True, text=True, check=False)
-    if completed.returncode:
-        lowered = completed.stderr.lower()
-        if "accessdenied" in lowered or "not authorized" in lowered: return False, None, "aws-access-denied"
-        if "does not exist" in lowered or "notfound" in lowered: return False, None, "aws-resource-missing"
-        if "already exists" in lowered: return False, None, "aws-resource-already-exists"
-        return False, None, "aws-command-failed"
+    global _AWS_RESPONSE
+    if _AWS_RESPONSE is None:
+        spec=importlib.util.spec_from_file_location("aws_response",ROOT/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+        _AWS_RESPONSE=importlib.util.module_from_spec(spec);spec.loader.exec_module(_AWS_RESPONSE)
+    if not _AWS_RESPONSE.inventory_covered(ROOT):return False,None,"delivery-inventory-not-covered"
+    try:
+        completed = subprocess.run(["aws", service, *arguments, "--profile", PROFILE, "--region", BUDGET_REGION if budget else STACK_REGION, "--output", "json", "--cli-connect-timeout", "5", "--cli-read-timeout", "20"], capture_output=True, text=True, check=False,timeout=30)
+    except subprocess.TimeoutExpired:return False,None,"aws-command-timeout"
+    if completed.returncode:return False,None,_AWS_RESPONSE.classify_error(service,arguments[0],completed.stderr)
     if not expect_json and not completed.stdout.strip(): return True, {}, "ok"
     try: return True, json.loads(completed.stdout), "ok"
     except json.JSONDecodeError: return False, None, "aws-response-invalid"
@@ -111,10 +117,34 @@ def verify() -> tuple[dict[str, Any] | None, str | None]:
         return None, "target-budget-provider-configuration-mismatch"
     return {"budget_type": "COST", "time_unit": "MONTHLY", "amount": "100", "unit": "USD", "target_filter": EXPECTED_FILTER, "checked_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")}, None
 
+def reconcile(name: str) -> int:
+    """Observe one retained operation identity; never create, execute or delete."""
+    change,code=describe_change_set(name)
+    if change is None:return report("uncertain",findings=[code or "foundation-budget-operation-unobserved"],change_set=name)
+    actual=change.get("ChangeSetName")
+    if actual!=name and not (isinstance(actual,str) and actual.startswith("arn:aws:cloudformation:") and actual.split(":changeSet/",1)[-1].split("/",1)[0]==name):return report("uncertain",findings=["foundation-budget-operation-identity-unproven"],change_set=name)
+    status=change.get("Status")
+    if status in {"CREATE_PENDING","CREATE_IN_PROGRESS"}:return report("pending",findings=["foundation-budget-review-pending"],change_set=name)
+    if status in {"FAILED","DELETE_FAILED","DELETE_COMPLETE"}:return report("failed",findings=["foundation-budget-review-failed"],change_set=name)
+    execution=change.get("ExecutionStatus")
+    if execution in {"AVAILABLE","EXECUTE_IN_PROGRESS"}:return report("pending",findings=["foundation-budget-execution-pending"],change_set=name)
+    if execution!="EXECUTE_COMPLETE":return report("uncertain",findings=["foundation-budget-execution-unknown"],change_set=name)
+    ok,payload,code=aws("cloudformation","describe-stacks","--stack-name",STACK)
+    stacks=payload.get("Stacks") if ok and isinstance(payload,dict) else None
+    if not isinstance(stacks,list) or len(stacks)!=1 or not isinstance(stacks[0],dict):return report("uncertain",findings=[code if not ok else "foundation-budget-stack-unobservable"],change_set=name)
+    status=stacks[0].get("StackStatus")
+    if status in {"UPDATE_IN_PROGRESS","UPDATE_COMPLETE_CLEANUP_IN_PROGRESS","UPDATE_ROLLBACK_IN_PROGRESS","UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"}:return report("pending",findings=["foundation-budget-stack-pending"],change_set=name)
+    if status in {"UPDATE_FAILED","UPDATE_ROLLBACK_FAILED","UPDATE_ROLLBACK_COMPLETE"}:return report("failed",findings=["foundation-budget-stack-update-failed"],change_set=name)
+    if status!="UPDATE_COMPLETE":return report("uncertain",findings=["foundation-budget-stack-state-unknown"],change_set=name)
+    observation,code=verify()
+    return report("executed-and-verified",change_set=name,provider_observation=observation) if code is None else report("uncertain",findings=[code],change_set=name)
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(); parser.add_argument("--mode", choices=("create", "review", "execute", "verify"), required=True); parser.add_argument("--change-set"); parser.add_argument("--json", action="store_true"); args = parser.parse_args()
-    if args.mode in {"review", "execute"} and not args.change_set: return report("blocked", findings=["foundation-budget-change-set-required"])
+    parser = argparse.ArgumentParser(); parser.add_argument("--mode", choices=("create", "review", "execute", "verify", "reconcile"), required=True); parser.add_argument("--change-set"); parser.add_argument("--json", action="store_true"); args = parser.parse_args()
+    if args.mode in {"review", "execute", "reconcile"} and not args.change_set: return report("blocked", findings=["foundation-budget-change-set-required"])
     if args.mode == "verify" and args.change_set: return report("blocked", findings=["foundation-budget-arguments-invalid"])
+    if args.mode == "reconcile":return reconcile(args.change_set)
     if args.mode == "create":
         email = cost_alert_email()
         if email is None: return report("blocked", findings=["cost-alert-email-required"])
@@ -122,35 +152,29 @@ def main() -> int:
         if code: return report("blocked", findings=[code])
         parameters, code = stack_parameters(email)
         if code: return report("blocked", findings=[code])
-        name = f"kanbien-core-platform-budget-{dt.datetime.now(dt.UTC).strftime('%Y%m%d%H%M%S')}"
+        identity=hashlib.sha256(TEMPLATE.read_bytes()+json.dumps(parameters,sort_keys=True,separators=(",",":")).encode()).hexdigest()[:16]
+        name=f"kanbien-core-platform-budget-{identity}"
+        existing,observed_code=describe_change_set(name)
+        if existing is not None:return reconcile(name)
+        if observed_code!="aws-resource-missing":return report("uncertain",findings=[observed_code or "foundation-budget-operation-unobservable"],change_set=name)
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as handle:
             json.dump(parameters, handle); handle.flush()
-            ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{handle.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
-        if not ok: return report("blocked", findings=[code])
-        for _ in range(24):
-            proposed, code = describe_change_set(name)
-            if proposed and proposed.get("Status") in {"CREATE_COMPLETE", "FAILED"}: break
-            time.sleep(5)
-        else: return report("blocked", findings=["foundation-budget-change-set-creation-unresolved"], change_set=name)
-        _, code = review(name)
-        if code: return report("blocked", findings=[code], change_set=name)
-        return report("created-awaiting-review", change_set=name, changes=[{"action": "Add", "resource": "Budget", "type": "AWS::Budgets::Budget"}])
+            ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", STACK, "--change-set-name", name, "--change-set-type", "UPDATE", "--client-token", name, "--template-body", f"file://{TEMPLATE}", "--parameters", f"file://{handle.name}", "--capabilities", "CAPABILITY_NAMED_IAM")
+        if not ok:return report("uncertain",findings=[code],change_set=name)
+        return report("pending",findings=["foundation-budget-review-submitted"],change_set=name)
     if args.mode == "review":
         _, code = review(args.change_set)
         return report("reviewed", change_set=args.change_set, changes=[{"action": "Add", "resource": "Budget", "type": "AWS::Budgets::Budget"}]) if not code else report("blocked", findings=[code], change_set=args.change_set)
     if args.mode == "execute":
-        _, code = review(args.change_set)
-        if code: return report("blocked", findings=[code], change_set=args.change_set)
-        ok, _, code = aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", args.change_set, expect_json=False)
-        if not ok: return report("blocked", findings=[code], change_set=args.change_set)
-        for _ in range(48):
-            ok, payload, code = aws("cloudformation", "describe-stacks", "--stack-name", STACK); stacks = payload.get("Stacks", []) if ok and isinstance(payload, dict) else []; status = stacks[0].get("StackStatus") if len(stacks) == 1 else None
-            if status == "UPDATE_COMPLETE":
-                observation, code = verify()
-                return report("executed-and-verified", change_set=args.change_set, provider_observation=observation) if not code else report("blocked", findings=[code], change_set=args.change_set)
-            if isinstance(status, str) and (status.endswith("FAILED") or status in {"UPDATE_ROLLBACK_COMPLETE", "UPDATE_ROLLBACK_FAILED"}): return report("blocked", findings=["foundation-budget-stack-update-failed"], change_set=args.change_set, stack_status=status)
-            time.sleep(5)
-        return report("blocked", findings=["foundation-budget-stack-update-unresolved"], change_set=args.change_set)
+        proposed,code=describe_change_set(args.change_set)
+        if proposed is None or proposed.get("ExecutionStatus")!="AVAILABLE":return reconcile(args.change_set)
+        _,code=review(args.change_set)
+        if code:return report("blocked",findings=[code],change_set=args.change_set)
+        code=require_active_tag()
+        if code:return report("blocked",findings=[code],change_set=args.change_set)
+        ok,_,code=aws("cloudformation","execute-change-set","--stack-name",STACK,"--change-set-name",args.change_set,expect_json=False)
+        if not ok:return report("uncertain",findings=[code],change_set=args.change_set)
+        return reconcile(args.change_set)
     observation, code = verify()
     return report("verified", provider_observation=observation) if not code else report("blocked", findings=[code])
 

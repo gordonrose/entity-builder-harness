@@ -1,0 +1,24 @@
+{
+  "schema": "delivery/local-merge-commit-gate/v1",
+  "argv": [
+    "bash",
+    "scripts/01.harness/run-governed-script.sh",
+    "--approved-action",
+    "scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh"
+  ],
+  "started_at": "2026-10-26T13:50:39.477324+00:00",
+  "finished_at": "2026-10-26T14:14:06.024545+00:00",
+  "seconds": 1406.547221,
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "exit_code": 0,
+  "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-commit-gate.log",
+  "log_sha256": "24bbaa56e41bd6665440a443e180e1c731f8be5c602be673c8ea1a7667b59f6c",
+  "source_drift": [],
+  "result": "passed",
+  "inventory_input_digest": "127f52ea0c095b03324706d38113da3bc350bc75f23b87172a992e25f9664899",
+  "selected_status_counts": {
+    "passed": 53,
+    "deferred": 20
+  },
+  "selected_findings": []
+}

@@ -1043,3 +1043,74 @@ repository_inputs:
   checks:
   - collector-package-custody-regression
   - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/inventory-deploy-control
+  - .github/workflows/delivery-coverage.yml
+  checks:
+  - delivery-inventory-regression
+- inputs:
+  - infra/04.deploy/03.product/targets/kanbien/staging
+  - .github/workflows/deploy-platform-shell-staging.yml
+  - scripts/04.deploy/verify-platform-shell-deployment-workflow
+  checks:
+  - shell-declaration
+  - shell-infrastructure
+  - shell-publication
+
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/package-custody-receipt
+  - scripts/04.deploy/shared/provider-adapters/docker
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py
+  - scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py
+  checks:
+  - package-custody-regression
+  - core-package-custody-regression
+  - collector-package-custody-regression
+  - shell-publication
+- inputs:
+  - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody
+  checks:
+  - core-package-custody-regression
+- inputs:
+  - scripts/04.deploy/shared/provider-adapters/aws/response.py
+  - scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py
+  - scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py
+  checks:
+  - persistence-provider-regression
+  - shell-negative-authz-client-check
+  - shell-postgresql-relational-smoke-check
+  - deployment-operation-diagnostics-regression
+- inputs:
+  - scripts/04.deploy/validate-container-boundaries
+  - docs/04.deploy/source-material/shared/container-image-management.md
+  - docs/04.deploy/rules/shared/container-image-management.yml
+  checks:
+  - container-boundaries-regression
+- inputs:
+  - scripts/04.deploy/verify-platform-shell-deploy-readiness
+  - scripts/04.deploy/lifecycle/60-run/release-succession
+  checks:
+  - shell-release-evidence-regression
+- inputs:
+  - scripts/02.rag-rulebook/validate-okf-source-material-reviews
+  - .agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml
+  - .agentic/02.rag-rulebook/workflows/review-okf-source-material.md
+  checks:
+  - source-review-history-regression
+- inputs:
+  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight
+  checks:
+  - shell-candidate-preflight-regression
+- inputs:
+  - scripts/02.rag-rulebook/build-local-runtime
+  - scripts/01.harness/artifact-metadata
+  checks:
+  - rag-runtime-build-regression
+- inputs:
+  - scripts/02.rag-rulebook/compile-retrieval-policy
+  checks:
+  - rag-policy-compiler-regression
+- inputs:
+  - scripts/02.rag-rulebook/generate-retrieval-selector-fixture
+  checks:
+  - rag-selector-regression

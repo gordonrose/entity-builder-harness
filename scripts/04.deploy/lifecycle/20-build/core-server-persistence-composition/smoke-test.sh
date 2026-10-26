@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines:
@@ -34,4 +34,6 @@ bash scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/bu
 node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
 NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/verify-runtime.mjs --compiled-root "$TEMPORARY_DIRECTORY"
 node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/runtime-test.mjs "$TEMPORARY_DIRECTORY"
-node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"
+NODE_PATH="$ROOT/node_modules" node scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs "$TEMPORARY_DIRECTORY"
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"

@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines:
@@ -60,6 +60,17 @@ requirement_optional:
   - package_proofs
   - run_proofs
   - notes
+  - not_applicable
+proof_contract:
+  references: Stable check IDs from scripts/repo/check-selection/checks.yml; informal command strings do not qualify.
+  subject: Each check binds kind profile and the exact target.profile of this declaration.
+  stages: local_proofs local; package_proofs package; target_proofs deploy; run_proofs acceptance.
+  non_applicability: Empty package/target/run lists require a nonempty not_applicable reason; local proof is mandatory.
+local_only_scope:
+  profile_schema: deploy/local-target-profile/v1
+  execution: {kind: local, publication: none, provider_deployment: none}
+  stage_applicability: Deploy and acceptance may be explicitly inapplicable with reasons only for this local execution profile; applicable scopes cannot use this exemption.
+  package_proof: Finished-image behaviour remains required for supported local images.
 prohibitions:
   - secret values
   - tokens

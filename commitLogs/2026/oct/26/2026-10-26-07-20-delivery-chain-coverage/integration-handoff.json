@@ -1,0 +1,748 @@
+{
+  "chat_head": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "chat_worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "conditional_post_integration_checks": [
+    "Run scripts/repo/check-selection/script.sh --paths <actual integrated authoritative paths> --execute-local --json after conflict resolution and generated recognition refresh.",
+    "Run provider restore/observability/acceptance and source-governance checks selected for any integrated overlapping controller/contracts/catalog changes.",
+    "Run PostgreSQL adapter runtime/integration diagnostics tests only if adopting that workstream changes its adapter or dependent runtime inputs.",
+    "Requalify finished images only when actual admitted build/runtime inputs change; controller/inventory corrections alone do not justify unrelated image rebuilds."
+  ],
+  "constraints": [
+    "No merge, push, commit, cloud or secret operation performed.",
+    "This is a read-only integration handoff, not adoption on main.",
+    "Final file lists and corrective regressions will be refreshed after owner changes freeze."
+  ],
+  "current_local_main": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "final_verification": {
+    "additional_local_package_cli_passed": 2,
+    "deferred_not_passed": 20,
+    "independent_review": "corrective-independent-review.json",
+    "inventory_digest": "8b79625e7dc8b4538c4c6891a45badbaa330756d2c25b8b72cc1e82de0146968",
+    "local_http_report": "corrective-rag-http.json",
+    "local_passed": 43,
+    "rag_image": "sha256:73dcbf5c2ec49b106d0746cded20cec4badb6b42ad6a32d81337c3e0bbf63ac2",
+    "result": "passed",
+    "selected_aggregate_sha256": "242fc8bdf99f2edbafe629c2db40c18d9c580c9e82024d1d3273c1d1a1da879c",
+    "unchanged_package_qualifications_reused": 4
+  },
+  "findings": [
+    "Four corrective primaries are not already repaired in the newer restore-diagnostics worktree; verifier/proof owner equal current main, bootstrap deploy equal old main, delivery inventory and delivery CI absent.",
+    "Restore-diagnostics currently has adapter src/test edits; latest session authorization permits isolated continuation into restore/shared diagnostics/contracts/catalog, followed by reconciliation after user integrates delivery-chain. Keep other worktrees read-only.",
+    "Database-permissions and observability worktrees are95commits behind local main; dirty older receipt/admin/observability features must be compared semantically, not copied over newer current owners.",
+    "Existing locally observed origin/main and restore-diagnostics base include observability receipt/readiness/restore/acceptance updates beyond local main. Preserve their catalog mappings and proof schemas during later authorized integration."
+  ],
+  "main_checkout_status": "",
+  "origin_main_tracking_ref": "c91638ecb98a2917a5aae1b3220963b907278cbc",
+  "other_worktrees": [
+    {
+      "base_overlap_with_chat": [
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+        "scripts/repo/check-selection/checks.yml"
+      ],
+      "head": "8a6c4fec09d6987c2ccab88900a00153d0bc16bf",
+      "main_only_and_branch_only_commits": [
+        "0",
+        "54"
+      ],
+      "merge_base_main": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+      "overlap_sha256": {
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md": {
+          "chat": "389ce7a39f58cbad80b5ab5f58780eac92838ba7a23a2e8aece80fe0c8d52bc1",
+          "other_worktree": "bde90bf634df7dd85423087466fa88b5f21726a61bedf8d79d36a8742b3799ae"
+        },
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md": {
+          "chat": "308ca47f0805bc6f3e8353f052ef45f4ea50258c425d38c8531fd2973002ebbc",
+          "other_worktree": "314b0e1584b2655cf5bc446b42356fd2253847e3801d742bbe8c1ee922485dc4"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml": {
+          "chat": "218453ca2a9db58df102037a03dcdb7e691b5b47b6c628e1bd505dc960d56c68",
+          "other_worktree": "72f085f80ba5eb055b19800e5dd3a46f70f13d7b1330b0f4f96683bf4d16c2a2"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml": {
+          "chat": "637740ef983d9f9b42a3167a5f1896e26ef2bafa8b2ab8299b68eb2705753886",
+          "other_worktree": "fe6066c0719e51b01a6653ed52e8b271e80e575cec6130378c6c000943b10342"
+        },
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh": {
+          "chat": "4fe66268c6c6f5f47ce4777c2356a01351956c2f349814d9ce7c4182dc5292af",
+          "other_worktree": "b25825ee28b9fd9a976f94c8ddbcb3c72b23fd636bdb2ce2750f8552e7df64ad"
+        },
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh": {
+          "chat": "8c9ebec51d931a18a2785b8525a41e147b50720c8d62d766dbe705f1c1b35ef4",
+          "other_worktree": "d09be8dacc031c095b0645c42103d0698572cb933abb0c8fe7ff079bc0394b77"
+        },
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py": {
+          "chat": "981a1fe3ca371fbb628004f957592c9d351ae1c9c8b7dac1daab364cedfed9be",
+          "other_worktree": "1cd50fb9a0449967af18db2929940104abaf3883021f864518dcc3e7aec51791"
+        },
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh": {
+          "chat": "8b740d84ba859f197ef83741164970f5bc40f0c853bc6707a641a771b722c213",
+          "other_worktree": "f1ac773edfd33dc83b92a66a66bdbbee6ad9eb0f0dab0bddfc281ddb695ed0e0"
+        },
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": {
+          "chat": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7",
+          "other_worktree": "0c760adedbb10b58649ab59eb0b6ff91cc2b65ab23a52673b348acd7abdbf09d"
+        },
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py": {
+          "chat": "0067c635d3d0d158b9151a6b0c0dc2411a7cded70e8c021b6db54b3a963d364c",
+          "other_worktree": "e02a24e8b2a963ad58f9edc6523008d06e99b723add111ae1c25c2ef058ebd47"
+        },
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py": {
+          "chat": "7ddd414a68b0b73832df89d443f7b6aa2b3ce78e6b72173e64464c174852c233",
+          "other_worktree": "dc8f29e2ac493ed7c4f72614783d626c3ca906cc5cd49bb47a7a2f0d8ba93b16"
+        },
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py": {
+          "chat": "1dc8f4a8b29db5ca1cb2e2877cb381e6a8e42ffa0424e60e3584abe70430bbc8",
+          "other_worktree": "d749d649bda871a5b3595173c666a794075464c4faa87407600e0564cec0ec4b"
+        },
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py": {
+          "chat": "bc51dec4e3bfd60a7966d17572b70091178971cd0dd23ee534ad9f243351a6e2",
+          "other_worktree": "72b64ec80a2f94b4e61411f372908a647c81eefd06fd514c5afa97051860e06c"
+        },
+        "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py": {
+          "chat": "0a0b434d7c564fb5f57f52a2c3dfe04a6d9287a93856d64fef864d33dcd2a486",
+          "other_worktree": "32afb0d53715c6467acf8e5d41166449715a31c0b83e5881b64099124ae7701d"
+        },
+        "scripts/04.deploy/shared/deployment-operation-diagnostics.py": {
+          "chat": "d05c12dcf75339edbe84664e39e4ba14e48ee11c2bf1bfae1839de1109e44218",
+          "other_worktree": "55f4387ec8bf8904eeedfaa28ac084ef6850c25b4f5bbe7deab0bb2c0c8c7fad"
+        },
+        "scripts/repo/check-selection/checks.yml": {
+          "chat": "cb0b7cb643999fe22d06adf9e896853e4d5b582887c5e7b3a5706452b61a3ca4",
+          "other_worktree": "280f5afeda52e7210cb4d03ce9359696aaef9264412196b0bff0dc7809db89b9"
+        },
+        "scripts/repo/check-selection/smoke-test.py": {
+          "chat": "010b6e1a44807244750b3b7a50bc89f0e35b42ce02fe5e4a90dc53728e193499",
+          "other_worktree": "274d6ae5e0ecf40e01a92ada446f618fee26e5f262b78eb37f04dac79d83b696"
+        }
+      },
+      "owner": "restore-diagnostics",
+      "primary_hashes": {
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": null,
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": "92a55f0b4378c09fba500534bf37d0b72b0e5fb150986448bd5f775eda381b56",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py": "3558d06506710325c0d36ddbeeb9d05541a9ee82cf43c35f88084bfb2baf8ec2",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": "43123fa3ce2c829bfaffbc660bbd74bcd19853a4cf86c5597c2f58f1fd8334d4",
+        "scripts/repo/check-selection/checks.yml": "280f5afeda52e7210cb4d03ce9359696aaef9264412196b0bff0dc7809db89b9"
+      },
+      "uncommitted_overlap_with_chat": [
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics.py",
+        "scripts/repo/check-selection/checks.yml",
+        "scripts/repo/check-selection/smoke-test.py"
+      ],
+      "uncommitted_paths": [
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+        ".agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.guide.md",
+        ".agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        "commitLogs/2026/oct/26/2026-10-26-11-53-bounded-postgresql-restore-diagnostics/README.md",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-restore-verifier.main.ts",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "platform/adapters/aws/persistence/postgresql/README.md",
+        "platform/adapters/aws/persistence/postgresql/src/connection.ts",
+        "platform/adapters/aws/persistence/postgresql/src/errors.ts",
+        "platform/adapters/aws/persistence/postgresql/src/index.ts",
+        "platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts",
+        "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-boundaries.test.mjs",
+        "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-integration.test.ts",
+        "platform/adapters/aws/persistence/postgresql/tests/run-local-integration-tests.mjs",
+        "platform/adapters/aws/persistence/postgresql/tests/run-runtime-tests.mjs",
+        "platform/adapters/aws/persistence/postgresql/tsconfig.integration-test.json",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/configuration-test.mjs",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-diagnostics-check.sh",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/postgresql-integration-check.sh",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/restore-diagnostic-test.mjs",
+        "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/diagnostic-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/smoke-test.sh",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py",
+        "scripts/04.deploy/shared/deployment-operation-diagnostics.py",
+        "scripts/repo/check-selection/checks.yml",
+        "scripts/repo/check-selection/local_cache.py",
+        "scripts/repo/check-selection/smoke-test.py"
+      ],
+      "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-11-53-bounded-postgresql-restore-diagnostics-3713745611"
+    },
+    {
+      "base_overlap_with_chat": [],
+      "head": "c884c3216412633eac4ba09452abaeaa1071036e",
+      "main_only_and_branch_only_commits": [
+        "95",
+        "0"
+      ],
+      "merge_base_main": "c884c3216412633eac4ba09452abaeaa1071036e",
+      "overlap_sha256": {
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml": {
+          "chat": "804bc392ecf55b2024ddb5b588b72acd55ebc7e10701d65664174b5bec4bb2a9",
+          "other_worktree": "55c6ea1a3f82c066d3e5b1ff951740e037e9dff0d89bebb3f768073817c4e361"
+        },
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md": {
+          "chat": "389ce7a39f58cbad80b5ab5f58780eac92838ba7a23a2e8aece80fe0c8d52bc1",
+          "other_worktree": "8c023aa4a96a7f19de5b54db9838128c3ed66be0f2d2740f6a2817393519129d"
+        },
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md": {
+          "chat": "308ca47f0805bc6f3e8353f052ef45f4ea50258c425d38c8531fd2973002ebbc",
+          "other_worktree": "cce01cf9b5b5e69bf160d1d631400577b6d2ee209429b66b8392bfea779c08c3"
+        },
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml": {
+          "chat": "1cba6e1f4027301e790c64e7adf0063cd656c563a3ff817efd2390f67aecaa9a",
+          "other_worktree": "c4b2773e9a932833a8fa23d4fa831efdc36f3269eb0aa0e89614f01f06079736"
+        },
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile": {
+          "chat": "c176308e81c1c4bc9fba11e3b847f998defadda18eababfb3f483bb24cff2148",
+          "other_worktree": "19a769f1f192effb1fb81cd14788608a870dd43708d638f2c553ddbad51b2309"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml": {
+          "chat": "637740ef983d9f9b42a3167a5f1896e26ef2bafa8b2ab8299b68eb2705753886",
+          "other_worktree": "bbd92bd3175afe23ccff572b33946ae63bc3463f0928aa5910fa992dfc85450b"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml": {
+          "chat": "ed22007e1ff98a721bd9f0f868ab0cc45c5d6ad5ca1515767df73afebdc827df",
+          "other_worktree": "98dabea4acb63fdd45dc5521feb2cce03bf7f6f54d02542abae2cadb5982a568"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml": {
+          "chat": "9964f5754f66ec3adc6395060a7f190f67e38c8fe58cf0196fb1c651ff0bcb2f",
+          "other_worktree": "9b74b1d979e740b7a9ef38b34ae619af72157d1542edb8a1b3c4aca276e684d7"
+        },
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs": {
+          "chat": "51d2b99bd2ae07f4bf42ae3c7100f8925a5c4617a3a2ad109dec9186b26a765b",
+          "other_worktree": "6625b07cde997d718bcda6123c13a8436b91419828fb66743fa981dbed009d1d"
+        },
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh": {
+          "chat": "8c683b4aeeeb75f2ce88a81dd7848421eb915794642795aed6eea9de35924246",
+          "other_worktree": "f1c2c179f0b77fcc48943f49cc35853708a0d876793ede7e0cf57c91752214f7"
+        },
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh": {
+          "chat": "cd6ba7debf13c2c6dcb02d3c09c90c2d170df83dca9d9a603acdfba8adb230e7",
+          "other_worktree": "e10ab7908de8fba25fc4c1929d4283434e42284a1e23e180e6688dff46739502"
+        },
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py": {
+          "chat": "748f092ef3b7fab00bbe7725ad420cf3c327540facb4a2dd8c53bd3bbd312a0d",
+          "other_worktree": "97778e3191306757cc8a5e0c4395651b117299df1d69d63e072b15d0e8748d03"
+        },
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh": {
+          "chat": "bcf6b1a47b538707c584be15d717dc0dd7ea56afb3dcdd90d4425cde0115c4b9",
+          "other_worktree": "d590a6d6e4881cf618fd4a4ffb155fed0f33f6e09e15024bf040a070bc694cc7"
+        },
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py": {
+          "chat": "3310b4b4f7e53d78f220c96a75d8069d8143c3d497423ae93919e020c667545b",
+          "other_worktree": "413d2663f710c4c291c39fad3c6b1c81f8737f1e68d4e9ae5e33d2eca7aaecb1"
+        },
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py": {
+          "chat": "5c48ba01b92c9d31b7e181265d44883433e2804b31298d7905e67fda53870f8e",
+          "other_worktree": "0b42fb0b8616dd640473142c140ce1221529cf770a3003c7365045fc81ccfc84"
+        },
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh": {
+          "chat": "de312059da428bad7e7f3f3e2162c3b39e99a0b2d58b3753108853344994cd67",
+          "other_worktree": "962b460756cbf397117f36594e8d4217bf7ec4e595ee68896f36d9daacdaa8b8"
+        },
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py": {
+          "chat": "baae90b51e39fd65d10324b6611575386e6e93e58f131552e7ac6ba63a07c97c",
+          "other_worktree": "0878defa4469e0cfad687fe0e178adf161623c9a397239333a12a836a047f7a0"
+        },
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py": {
+          "chat": "1dc8f4a8b29db5ca1cb2e2877cb381e6a8e42ffa0424e60e3584abe70430bbc8",
+          "other_worktree": "1911840edbef6c585a4c3633f7fb83f1118a9243220b645ea59f68add75543df"
+        },
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py": {
+          "chat": "1cd40620606b93b08cd69740cf50bc8db2d9ac2368236f00d6865c127ca4de41",
+          "other_worktree": "ae7a642c57e47794ddf1983c284e1ce3aacccb58d5ce1e1a2f50f80d64fedc26"
+        }
+      },
+      "owner": "database-permissions",
+      "primary_hashes": {
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": null,
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": "92a55f0b4378c09fba500534bf37d0b72b0e5fb150986448bd5f775eda381b56",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py": "dec4f6b4c8ffb6262d122418fa4536bfe31a00eaf3e211e1820f3d4c916d9ea6",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": "0de1021fe35b32d6e6af62f7ece3bf471c374e21969322699ad11ee1a12996d1",
+        "scripts/repo/check-selection/checks.yml": null
+      },
+      "uncommitted_overlap_with_chat": [
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml",
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py"
+      ],
+      "uncommitted_paths": [
+        ".agentic/04.deploy/50-deploy/workflows/review-and-execute-target-update.md",
+        ".agentic/04.deploy/60-run/schemas/health-failure-and-recovery-declaration.v2.schema.yml",
+        ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml",
+        ".agentic/04.deploy/60-run/standards/retain-accepted-release-for-restoration.md",
+        ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+        ".agentic/04.deploy/lifecycle/README.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-administration.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-migration.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/.gitignore",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/accepted-releases/release-652d4dfa24d1096a23a346d1.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/30-release-evidence/current-accepted-release.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/scope-index.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "platform/adapters/aws/persistence/postgresql/src/migrations.ts",
+        "platform/adapters/aws/persistence/postgresql/tests/postgresql-persistence-adapter-runtime.test.ts",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/script.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration/smoke-test.py",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+        "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-private-verifier-route-update/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/create-change-set/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-administration/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/run-migration/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/script.py",
+        "scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration/smoke-test.py"
+      ],
+      "worktree": "/home/owner/projects/entity-builder-database-permissions-20261025"
+    },
+    {
+      "base_overlap_with_chat": [],
+      "head": "c884c3216412633eac4ba09452abaeaa1071036e",
+      "main_only_and_branch_only_commits": [
+        "95",
+        "0"
+      ],
+      "merge_base_main": "c884c3216412633eac4ba09452abaeaa1071036e",
+      "overlap_sha256": {
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts": {
+          "chat": "7ac0db369f6a8fcdc7e3620017b1f4049784af666bd4a7a68187d0eba14fca4e",
+          "other_worktree": "17e35eb8ac933237b181e0bf1e7244894f247a2e3a96180c167d671d63a4707c"
+        },
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile": {
+          "chat": "c176308e81c1c4bc9fba11e3b847f998defadda18eababfb3f483bb24cff2148",
+          "other_worktree": "5b91a7d60a261c2e437eef0d93728489ce9bf420479c540b80a1a7ef5287333a"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml": {
+          "chat": "7c7e72b6fa34e37052336f83b98f98c484fb5262a9f07c66d85fbe45c7203724",
+          "other_worktree": "55513cfc05306c203e170cd12ea7fe6ca8869c5f74d2bdab9d9222d1afa209ae"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml": {
+          "chat": "637740ef983d9f9b42a3167a5f1896e26ef2bafa8b2ab8299b68eb2705753886",
+          "other_worktree": "ccad9e1094b7d54061bdfc80e66dec012281b7cb26ff144106b00ddd1583f089"
+        },
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml": {
+          "chat": "9964f5754f66ec3adc6395060a7f190f67e38c8fe58cf0196fb1c651ff0bcb2f",
+          "other_worktree": "6598f5268e5177868af421d80493f4940f99dc122167d175c80d03a699201b05"
+        },
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh": {
+          "chat": "af57d16b2f6e3466526a7a18bd9f6b65c1629fb6e010d5341b98cf45c1b8ab6b",
+          "other_worktree": "1cb189e5f6f590ab9f070a1a5d64a18627aaf926fa904822059f5d248026f563"
+        },
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs": {
+          "chat": "51d2b99bd2ae07f4bf42ae3c7100f8925a5c4617a3a2ad109dec9186b26a765b",
+          "other_worktree": "9f6d717282319390a9cb73f62d178b879fefff2e3de8e7c32bd2379b2b8ec27a"
+        },
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py": {
+          "chat": "1dc8f4a8b29db5ca1cb2e2877cb381e6a8e42ffa0424e60e3584abe70430bbc8",
+          "other_worktree": "99c0372f7e7151028910827f5c6aeef6cfe5ed64e62f30f6969af20ea4e32a61"
+        }
+      },
+      "owner": "observability",
+      "primary_hashes": {
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": null,
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": "92a55f0b4378c09fba500534bf37d0b72b0e5fb150986448bd5f775eda381b56",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py": "01668b6bead0ce759fc69f10c21a620bc42c77ce3b216dd320e1131a41be127d",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": "0de1021fe35b32d6e6af62f7ece3bf471c374e21969322699ad11ee1a12996d1",
+        "scripts/repo/check-selection/checks.yml": null
+      },
+      "uncommitted_overlap_with_chat": [
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py"
+      ],
+      "uncommitted_paths": [
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+        "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.tsconfig.json",
+        "infra/04.deploy/03.product/entrypoints/kanbien-platform-observability.ts",
+        "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+        "infra/04.deploy/03.product/image/core-server-persistence/image-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/observability.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+        "platform/contracts/src/index.ts",
+        "platform/contracts/src/operational-events.ts",
+        "platform/observability/src/index.ts",
+        "platform/observability/src/readiness-observation.ts",
+        "platform/observability/tests/platform-observability-runtime.test.ts",
+        "scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.py",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh",
+        "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py"
+      ],
+      "worktree": "/tmp/entity-builder-observability-20261025"
+    },
+    {
+      "base_overlap_with_chat": [],
+      "head": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+      "main_only_and_branch_only_commits": [
+        "34",
+        "0"
+      ],
+      "merge_base_main": "dc8fbbd64775b1997230a325ffdb8eb01be30420",
+      "overlap_sha256": {},
+      "owner": "permissions-observability-chat",
+      "primary_hashes": {
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": null,
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": "92a55f0b4378c09fba500534bf37d0b72b0e5fb150986448bd5f775eda381b56",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts.py": "1a24e87678d9d83c62991cf6dfd048f8abe9278acdac469b56f61500d1e0d6bb",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": "43123fa3ce2c829bfaffbc660bbd74bcd19853a4cf86c5597c2f58f1fd8334d4",
+        "scripts/repo/check-selection/checks.yml": "5573889ad1807543b9ff1a73e845f75ec557d5657bbce36651f76124b12eb047"
+      },
+      "uncommitted_overlap_with_chat": [],
+      "uncommitted_paths": [
+        "commitLogs/2026/oct/25/2026-10-25-16-54-extend-the-current-permissions-observability-goal-to-include/README.md"
+      ],
+      "worktree": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-25-16-54-extend-the-current-permissions-observability-goal-to-include-336764311"
+    }
+  ],
+  "recorded_at": "2026-10-26T13:20:21.046407+00:00",
+  "remote_fetched": false,
+  "required_post_integration_checks": [
+    [
+      "bash",
+      "scripts/04.deploy/inventory-deploy-control/smoke-test.sh"
+    ],
+    [
+      "bash",
+      "scripts/repo/check-selection/smoke-test.sh"
+    ],
+    [
+      "bash",
+      "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh"
+    ],
+    [
+      "python3",
+      "-B",
+      "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/proof-receipts-smoke-test.py"
+    ],
+    [
+      "bash",
+      "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh"
+    ],
+    [
+      "bash",
+      "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.sh"
+    ],
+    [
+      "python3",
+      "scripts/04.deploy/inventory-deploy-control/script.py",
+      "--delivery",
+      "--check",
+      "--json"
+    ],
+    [
+      "python3",
+      "-B",
+      "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py"
+    ]
+  ],
+  "schema": "delivery-corrective/integration-handoff/v1",
+  "semantic_integration_notes": [
+    "Keep this chat verifier reservations, explicit successor protocol, current/proposed bootstrap template checks and inventory/trigger enforcement when adopting later work.",
+    "The newer restore-diagnostics acceptance-route change adds a non-accepting connection-diagnostic command; preserve it alongside this chat nine fresh verifier phase predecessor inputs.",
+    "The newer restore base already has observability proof/applicability changes and runtime credential readiness-receipt return values. Integrate the new healthy()/verifier-operation handoff without replacing those newer result contracts.",
+    "Preserve restore diagnostic schema, source/runtime diagnostic tests and three additional diagnostic catalogue entries from that isolated worktree; do not copy either full catalogue over the other.",
+    "Older database-permissions/observability dirty files require semantic comparison against newer completed owners, never wholesale replacement."
+  ],
+  "source_difference_from_local_main": [
+    ".agentic/01.harness/templates/operational-realization-contract.v1.schema.yml",
+    ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml",
+    ".agentic/02.rag-rulebook/policies/retrieval-selector/v1/dimensions/evidence-bundles.yml",
+    ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+    ".agentic/02.rag-rulebook/schemas/compiled-retrieval-policy.schema.yml",
+    ".agentic/02.rag-rulebook/schemas/okf-source-material-review.schema.yml",
+    ".agentic/02.rag-rulebook/schemas/retrieval-policy-dimension.schema.yml",
+    ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml",
+    ".agentic/02.rag-rulebook/source-projections/v1.yml",
+    ".agentic/02.rag-rulebook/workflows/review-okf-source-material.md",
+    ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.guide.md",
+    ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.schema.yml",
+    ".agentic/04.deploy/20-build/schemas/runnable-program-contract.v1.template.yml",
+    ".agentic/04.deploy/20-build/standards/require-runnable-program-contract.md",
+    ".agentic/04.deploy/60-run/schemas/release-succession.v1.schema.yml",
+    ".agentic/04.deploy/60-run/workflows/govern-scope-lifecycle.md",
+    ".agentic/04.deploy/60-run/workflows/verify-accept-or-restore-release.md",
+    ".agentic/04.deploy/schemas/declaration-contract.v1.guide.md",
+    ".agentic/04.deploy/schemas/declaration-contract.v1.schema.yml",
+    ".agentic/04.deploy/standards/declaration-coverage.md",
+    ".agentic/04.deploy/standards/operational-realization-gate.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+    ".github/workflows/delivery-coverage.yml",
+    ".github/workflows/deploy-platform-shell-staging.yml",
+    ".github/workflows/publish-kanbien-core-platform-core-server-persistence.yml",
+    ".github/workflows/publish-kanbien-core-platform-core-server.yml",
+    ".github/workflows/publish-kanbien-core-platform-observability-collector.yml",
+    "docs/04.deploy/rules/shared/container-image-management.yml",
+    "docs/04.deploy/source-material/shared/container-image-management.md",
+    "docs/aws/runbooks/platform-shell-staging-rollback.md",
+    "infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml",
+    "infra/04.deploy/02.rag-rulebook/environments/local/target-profile.yml",
+    "infra/04.deploy/02.rag-rulebook/environments/staging/deploy-readiness.yml",
+    "infra/04.deploy/02.rag-rulebook/image/Dockerfile",
+    "infra/04.deploy/02.rag-rulebook/image/Dockerfile.dockerignore",
+    "infra/04.deploy/02.rag-rulebook/image/README.md",
+    "infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts",
+    "infra/04.deploy/03.product/entrypoints/runnable-program-index.yml",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/Dockerfile.dockerignore",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/README.md",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml",
+    "infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml",
+    "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile",
+    "infra/04.deploy/03.product/image/core-server-persistence/Dockerfile.dockerignore",
+    "infra/04.deploy/03.product/image/core-server-persistence/README.md",
+    "infra/04.deploy/03.product/image/core-server/Dockerfile.dockerignore",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/budget-control.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/10-foundation/foundation-index.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/acceptance-route-contract.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/00-declaration/declaration-contract.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/10-workload-binding/workload-binding.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/declaration-contract.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml",
+    "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+    "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+    "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+    "scripts/02.rag-rulebook/build-local-runtime/README.md",
+    "scripts/02.rag-rulebook/build-local-runtime/script.sh",
+    "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh",
+    "scripts/02.rag-rulebook/build-service-image/README.md",
+    "scripts/02.rag-rulebook/build-service-image/script.sh",
+    "scripts/02.rag-rulebook/compile-retrieval-policy/script.sh",
+    "scripts/02.rag-rulebook/compile-retrieval-policy/smoke-test.sh",
+    "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/script.sh",
+    "scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh",
+    "scripts/02.rag-rulebook/run-local-service/smoke-test.sh",
+    "scripts/02.rag-rulebook/smoke-test-service-image/README.md",
+    "scripts/02.rag-rulebook/smoke-test-service-image/script.sh",
+    "scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py",
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/README.md",
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh",
+    "scripts/02.rag-rulebook/validate-okf-source-material-reviews/smoke-test.sh",
+    "scripts/04.deploy/build-platform-shell-image/README.md",
+    "scripts/04.deploy/build-platform-shell-image/check-source.sh",
+    "scripts/04.deploy/build-platform-shell-image/script.sh",
+    "scripts/04.deploy/build-platform-shell-image/verify-runtime-payload.mjs",
+    "scripts/04.deploy/inventory-deploy-control/README.md",
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+    "scripts/04.deploy/inventory-deploy-control/script.py",
+    "scripts/04.deploy/inventory-deploy-control/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/script.py",
+    "scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/runtime-alignment/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh",
+    "scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/fixtures/valid-contract.yml",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/script.py",
+    "scripts/04.deploy/lifecycle/20-build/runnable-program-contract/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/prepare-runtime.mjs",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-persistence-image/script.sh",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/validate.py",
+    "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/workflow_guard.py",
+    "scripts/04.deploy/lifecycle/40-package/qualify-retained-persistence-rollback-image/script.sh",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/capability-negative-test.py",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/payload-fixture-test.sh",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualification-route-test.py",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/script.sh",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-package-custody/verify-workflow.py",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/verify-workflow.py",
+    "scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-package-custody/verify-workflow.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/create-change-set/script.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-database-permission-surface/script.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/prepare-candidate/script.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/provider-cli-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/transition-qualified-release/script.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/README.md",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/script.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/foundation/provision-target-budget/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/script.py",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/release-succession/smoke-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/collect-acceptance-evidence/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/validate-accepted-release/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py",
+    "scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py",
+    "scripts/04.deploy/operational-realization-gate/fixtures/preflight-normalized-facts.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-change-summary.yml",
+    "scripts/04.deploy/operational-realization-gate/fixtures/valid-normalized-facts.yml",
+    "scripts/04.deploy/operational-realization-gate/script.py",
+    "scripts/04.deploy/operational-realization-gate/smoke-test.sh",
+    "scripts/04.deploy/provision-platform-shell-negative-authz-client/README.md",
+    "scripts/04.deploy/provision-platform-shell-negative-authz-client/script.py",
+    "scripts/04.deploy/provision-platform-shell-negative-authz-client/smoke-test.sh",
+    "scripts/04.deploy/provision-platform-shell-persistence-write-client/README.md",
+    "scripts/04.deploy/provision-platform-shell-persistence-write-client/script.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/README.md",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/script.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/README.md",
+    "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py",
+    "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py",
+    "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.py",
+    "scripts/04.deploy/run-platform-shell-persistence-admission-probe/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/README.md",
+    "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/recovery-test.py",
+    "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.py",
+    "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/script.sh",
+    "scripts/04.deploy/run-platform-shell-persistence-delivery-proof/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.py",
+    "scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/smoke-test.sh",
+    "scripts/04.deploy/run-platform-shell-worker-smoke/README.md",
+    "scripts/04.deploy/run-platform-shell-worker-smoke/recovery-test.py",
+    "scripts/04.deploy/run-platform-shell-worker-smoke/script.py",
+    "scripts/04.deploy/run-platform-shell-worker-smoke/smoke-test.sh",
+    "scripts/04.deploy/shared/deployment-operation-diagnostics-smoke-test.py",
+    "scripts/04.deploy/shared/deployment-operation-diagnostics.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cognito-provisioning.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/ecr_publication_contract.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/response.py",
+    "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py",
+    "scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py",
+    "scripts/04.deploy/shared/safe-command-diagnostics-smoke-test.sh",
+    "scripts/04.deploy/shared/safe-command-diagnostics.sh",
+    "scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py",
+    "scripts/04.deploy/smoke-test-platform-shell-image/script.sh",
+    "scripts/04.deploy/validate-container-boundaries/README.md",
+    "scripts/04.deploy/validate-container-boundaries/script.sh",
+    "scripts/04.deploy/validate-container-boundaries/smoke-test.sh",
+    "scripts/04.deploy/verify-platform-shell-deploy-readiness/README.md",
+    "scripts/04.deploy/verify-platform-shell-deploy-readiness/release-evidence-test.py",
+    "scripts/04.deploy/verify-platform-shell-deploy-readiness/release_evidence.py",
+    "scripts/04.deploy/verify-platform-shell-deploy-readiness/script.sh",
+    "scripts/04.deploy/verify-platform-shell-deploy-readiness/smoke-test.sh",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh",
+    "scripts/04.deploy/verify-platform-shell-deployment-workflow/script.sh",
+    "scripts/04.deploy/verify-platform-shell-infrastructure/script.sh",
+    "scripts/repo/check-selection/README.md",
+    "scripts/repo/check-selection/checks.yml",
+    "scripts/repo/check-selection/script.py",
+    "scripts/repo/check-selection/smoke-test.py"
+  ],
+  "state": "ready-for-authorized-integration-local-corrective-verification-passed"
+}

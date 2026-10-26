@@ -26,6 +26,7 @@ def parse_arguments() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="Validate or run the guarded Kanbien staging worker-consumer proof.")
     parser.add_argument("--validate", action="store_true", help="Validate the source policy only; do not contact AWS.")
+    parser.add_argument("--reconcile", action="store_true", help="Observe worker and queue cleanup after interruption; never submit or retry effects.")
     parser.add_argument("--execute", action="store_true", help="Run the reviewed bounded worker proof after current approval.")
     parser.add_argument("--approve-live-worker-smoke", action="store_true", help="Acknowledge that --execute sends two harmless queue messages and briefly starts one worker task.")
     parser.add_argument("--target-profile", default=DEFAULT_PROFILE, help="Path to the Kanbien staging target profile.")
@@ -33,9 +34,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--aws-credential-source", choices=("target-profile", "environment"), default="target-profile", help="Use the declared AWS profile or explicitly configured environment credentials.")
     parser.add_argument("--timeout-seconds", type=int, default=360, help="Bound worker convergence and cleanup waits to 60-600 seconds.")
     arguments = parser.parse_args()
-    if arguments.validate == arguments.execute:
-        parser.error("choose exactly one of --validate or --execute")
-    if arguments.validate and arguments.approve_live_worker_smoke:
+    if sum((arguments.validate,arguments.execute,arguments.reconcile)) != 1:
+        parser.error("choose exactly one of --validate, --execute or --reconcile")
+    if not arguments.execute and arguments.approve_live_worker_smoke:
         parser.error("--approve-live-worker-smoke is valid only with --execute")
     if arguments.execute and not arguments.approve_live_worker_smoke:
         parser.error("--execute requires --approve-live-worker-smoke")
@@ -160,7 +161,10 @@ def run_aws(arguments: list[str], policy: dict[str, Any], aws_cli: str, credenti
     environment["AWS_CLI_AUTO_PROMPT"] = "off"
     if credential_source == "environment":
         environment.pop("AWS_PROFILE", None)
-    result = subprocess.run([aws_cli, *arguments, *aws_arguments(policy, credential_source), "--output", "json"], check=False, capture_output=True, encoding="utf-8", env=environment)
+    try:
+        result = subprocess.run([aws_cli, *arguments, *aws_arguments(policy, credential_source), "--output", "json"], check=False, capture_output=True, encoding="utf-8", env=environment, timeout=30)
+    except (OSError,subprocess.SubprocessError) as exception:
+        raise WorkerSmokeError("an approved AWS worker-proof operation has an uncertain outcome") from exception
     if result.returncode != 0:
         raise WorkerSmokeError("an approved AWS worker-proof operation did not complete")
     try:
@@ -218,6 +222,7 @@ def service_state(policy: dict[str, Any], aws_cli: str, credential_source: str) 
         return {
             "desired": int(service.get("desiredCount")),
             "running": int(service.get("runningCount")),
+            "pending": int(service.get("pendingCount")),
             "task_revision": task_definition.rsplit(":", 1)[1],
         }
     except (TypeError, ValueError) as exception:
@@ -276,7 +281,7 @@ def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeou
     started = time.monotonic()
     source_url = ""
     dlq_url = ""
-    worker_enabled = False
+    effects_possible = False
     cleanup_failed = False
     task_revision = "unknown"
     result = "inconclusive"
@@ -289,12 +294,13 @@ def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeou
         task_revision = before_worker["task_revision"]
         before_source = queue_counts(source_url, policy, aws_cli, credential_source)
         before_dlq = queue_counts(dlq_url, policy, aws_cli, credential_source)
-        if before_worker["desired"] != 0 or before_worker["running"] != 0 or before_source["visible"] != 0 or before_source["not_visible"] != 0 or before_dlq["visible"] != 0 or before_dlq["not_visible"] != 0:
+        if before_worker["desired"] != 0 or before_worker["running"] != 0 or before_worker["pending"] != 0 or before_source["visible"] != 0 or before_source["not_visible"] != 0 or before_dlq["visible"] != 0 or before_dlq["not_visible"] != 0:
             raise WorkerSmokeError("worker or queue preconditions are not empty and dormant")
 
+        # Either API may have accepted the effect even when its response is lost.
+        effects_possible = True
         enqueue_smoke_message(source_url, policy, aws_cli, credential_source)
         set_desired_count(1, policy, aws_cli, credential_source)
-        worker_enabled = True
 
         def settled() -> bool:
             state = service_state(policy, aws_cli, credential_source)
@@ -313,15 +319,21 @@ def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeou
     except WorkerSmokeError as exception:
         failure_message = str(exception)
     finally:
-        if worker_enabled:
+        if effects_possible:
             try:
                 set_desired_count(0, policy, aws_cli, credential_source)
-                if not wait_until(lambda: service_state(policy, aws_cli, credential_source)["desired"] == 0 and service_state(policy, aws_cli, credential_source)["running"] == 0, timeout_seconds):
-                    cleanup_failed = True
+            except WorkerSmokeError:
+                # A failed response does not establish whether scale-down applied.
+                # The read-only observation below decides whether cleanup finished.
+                pass
+            try:
+                cleanup_failed = not wait_until(lambda: effects_absent(source_url,dlq_url,policy,aws_cli,credential_source),timeout_seconds)
             except WorkerSmokeError:
                 cleanup_failed = True
         if cleanup_failed:
-            print("worker-smoke: worker cleanup did not reach the required dormant state", file=sys.stderr)
+            print("worker-smoke: cleanup could not confirm dormant worker and empty source/dead-letter queues", file=sys.stderr)
+        if failure_message:
+            print(f"worker-smoke: {failure_message}",file=sys.stderr)
 
     duration_ms = round((time.monotonic() - started) * 1000)
     if cleanup_failed:
@@ -331,8 +343,28 @@ def execute(policy: dict[str, Any], aws_cli: str, credential_source: str, timeou
         emit("passed", duration_ms=duration_ms, task_revision=task_revision)
         return 0
     emit("inconclusive", duration_ms=duration_ms, task_revision=task_revision)
-    print(f"worker-smoke: {failure_message}", file=sys.stderr)
     return 1
+
+
+def effects_absent(source_url: str, dlq_url: str, policy: dict[str,Any], aws_cli: str, credential_source: str) -> bool:
+    state=service_state(policy,aws_cli,credential_source)
+    source=queue_counts(source_url,policy,aws_cli,credential_source)
+    dlq=queue_counts(dlq_url,policy,aws_cli,credential_source)
+    return state['desired']==state['running']==state['pending']==0 and source['visible']==source['not_visible']==dlq['visible']==dlq['not_visible']==0
+
+
+def reconcile(policy: dict[str,Any], aws_cli: str, credential_source: str) -> int:
+    """Observe every declared temporary effect without retrying any mutation."""
+    try:
+        verify_account(policy,aws_cli,credential_source)
+        source=queue_url(policy['source_queue_name'],policy,aws_cli,credential_source)
+        dlq=queue_url(policy['dead_letter_queue_name'],policy,aws_cli,credential_source)
+        absent=effects_absent(source,dlq,policy,aws_cli,credential_source)
+    except WorkerSmokeError:
+        emit('uncertain',reconciliation='read-only')
+        return 1
+    emit('cleaned-up' if absent else 'pending',reconciliation='read-only')
+    return 0 if absent else 1
 
 
 def main() -> int:
@@ -343,6 +375,8 @@ def main() -> int:
     if arguments.validate:
         emit("validated", message_count=policy["message_count"], inter_message_wait_seconds=policy["inter_message_wait_seconds"], maximum_wait_seconds=policy["maximum_wait_seconds"], metric_export_settlement_wait_seconds=policy["metric_export_settlement_wait_seconds"])
         return 0
+    if arguments.reconcile:
+        return reconcile(policy,arguments.aws_cli,arguments.aws_credential_source)
     return execute(policy, arguments.aws_cli, arguments.aws_credential_source, arguments.timeout_seconds)
 
 

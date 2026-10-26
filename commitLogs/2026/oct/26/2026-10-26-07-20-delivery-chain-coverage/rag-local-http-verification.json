@@ -1,0 +1,31 @@
+{
+  "schema": "deploy/local-http-verification-report/v1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "checks": [
+    {
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "evidence_class": "local-loopback-http",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/delivery-rag-service-final.log",
+      "log_sha256": "45922b4591f3a8933987e332bade7a326b86ba246a971f8dec4bd78189e4da77",
+      "source_sha256": "295bd23cbc8e5a9c06776b2ca10716f268d2c96ba7391be834d09d76cc9ab73e"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/query-context/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "evidence_class": "local-loopback-http",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/delivery-rag-query-final.log",
+      "log_sha256": "f9a626cc7b479258382e5c98a3ecac667ffee40d8e24aab04b10efd6953194e1",
+      "source_sha256": "875a0509cf520e215e961325d1a2a26f7ceb2c2f8e3df060b4e644488dc5589e"
+    }
+  ],
+  "limits": [
+    "Only disposable loopback HTTP resources; no hosted/cloud service accessed."
+  ]
+}

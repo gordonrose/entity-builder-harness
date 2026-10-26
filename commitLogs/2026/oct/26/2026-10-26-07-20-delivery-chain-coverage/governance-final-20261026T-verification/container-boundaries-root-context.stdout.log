@@ -1,0 +1,15 @@
+{
+  "allowed_dockerfile_pattern": "infra/<deploy-layer>/<deploy-track>/image/[<capability>/]Dockerfile",
+  "build_context": "repository-root",
+  "counts": {
+    "dockerfiles": 5,
+    "dockerignores": 5,
+    "errors": 0,
+    "warnings": 0
+  },
+  "errors": [],
+  "ok": true,
+  "root": "/home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476",
+  "schema": "deploy/container-boundary-report/v1",
+  "warnings": []
+}

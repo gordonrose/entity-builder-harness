@@ -156,6 +156,39 @@ Summary: Quarantined dormant RAG impact traversal and added idempotent verificat
 
 ADR impact: No ADR: bounded refinement of existing harness owners.
 
+
+### 2026-10-26T17:37:13Z - Main refresh conflict recorded
+
+Path: `scripts/repo/check-selection/checks.yml`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+
+
+### 2026-10-26T17:37:13Z - Main refresh conflict recorded
+
+Path: `scripts/repo/check-selection/script.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+
+
+### 2026-10-26T17:37:13Z - Main refresh conflict recorded
+
+Path: `scripts/repo/check-selection/smoke-test.py`
+
+Type: `normal-repo-conflict`
+
+Mode: manual
+
+Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+
 ## Sub-Agent Activity
 
 
@@ -227,7 +260,39 @@ Summary: Added the pre-verification preparation sequence, protected preparation 
 
 ## Main Refresh Conflicts
 
-- None recorded yet.
+
+
+- Path: `scripts/repo/check-selection/checks.yml`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches changed the selector implementation independently; the changes are additive and the user explicitly authorized resolution.
+  Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71/20261026161431`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71-20261026161431`
+  Files changed by resolution: scripts/repo/check-selection/checks.yml, scripts/repo/check-selection/script.py, scripts/repo/check-selection/smoke-test.py
+  Checks: YAML catalog validation and focused dormant-root, preparation-reuse, and cache-reuse regressions passed. The full selector suite has an independently reproduced pre-existing main failure in delivery inventory bindings.
+
+
+- Path: `scripts/repo/check-selection/script.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches changed the selector implementation independently; the changes are additive and the user explicitly authorized resolution.
+  Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71/20261026161431`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71-20261026161431`
+  Files changed by resolution: scripts/repo/check-selection/checks.yml, scripts/repo/check-selection/script.py, scripts/repo/check-selection/smoke-test.py
+  Checks: YAML catalog validation and focused dormant-root, preparation-reuse, and cache-reuse regressions passed. The full selector suite has an independently reproduced pre-existing main failure in delivery inventory bindings.
+
+
+- Path: `scripts/repo/check-selection/smoke-test.py`
+  Type: `normal-repo-conflict`
+  Mode: manual
+  Reason: Both branches changed the selector implementation independently; the changes are additive and the user explicitly authorized resolution.
+  Action: Preserved main delivery-coverage behavior and retained the chat branch dormant-RAG and preparation-evidence behavior.
+  Preflight branch: `agentic/preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71/20261026161431`
+  Preflight worktree: `/tmp/agentic-main-refresh-preflight/chat-2026-10-26-13-19-assess-rag-layer-retiremen-38a461abbf71-20261026161431`
+  Files changed by resolution: scripts/repo/check-selection/checks.yml, scripts/repo/check-selection/script.py, scripts/repo/check-selection/smoke-test.py
+  Checks: YAML catalog validation and focused dormant-root, preparation-reuse, and cache-reuse regressions passed. The full selector suite has an independently reproduced pre-existing main failure in delivery inventory bindings.
 
 ## ADR Disposition
 

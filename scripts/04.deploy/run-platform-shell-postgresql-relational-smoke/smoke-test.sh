@@ -6,7 +6,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -179,7 +179,8 @@ def empty_task_list(arguments, _policy, allow_not_found=False):
 
 module["no_prior_label"].__globals__["aws"] = empty_task_list
 module["no_prior_label"]("reviewed-fixed-label-a1", {"cluster": "reviewed-cluster"})
-assert [arguments[-1] for arguments in observed] == ["RUNNING", "STOPPED"]
+assert "--started-by" in observed[0] and "--desired-status" not in observed[0]
+assert observed[1][-1] == "STOPPED" and "--started-by" not in observed[1]
 
 # The relational controller must consume the exact successful candidate receipt,
 # including a successful later same-image reattempt, rather than re-deriving a
@@ -332,8 +333,8 @@ observed = []
 def successful_predecessor(arguments, _policy, allow_not_found=False):
     observed.append(arguments)
     if arguments[0:2] == ["ecs", "list-tasks"]:
-        return {"taskArns": [] if arguments[-1] == "RUNNING" else ["reviewed-task"]}
-    return {"tasks": [{"containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
+        return {"taskArns": [] if "--started-by" in arguments else ["reviewed-task"]}
+    return {"tasks": [{"taskArn":"reviewed-task", "startedBy": module["load_ledger"](predecessor_policy)["stages"]["bootstrap"]["label"], "containers": [{"name": "reviewed-container", "exitCode": 0}]}]}
 
 module["prior_label_succeeded"].__globals__["aws"] = successful_predecessor
 predecessor_policy = {
@@ -342,7 +343,8 @@ predecessor_policy = {
     "containers": {"bootstrap": "reviewed-container"},
 }
 module["prior_label_succeeded"]("bootstrap", predecessor_policy)
-assert [arguments[-1] for arguments in observed[:2]] == ["RUNNING", "STOPPED"]
+assert "--started-by" in observed[0] and "--desired-status" not in observed[0]
+assert observed[1][-1] == "STOPPED" and "--started-by" not in observed[1]
 
 # ECS may expire stopped-task history after a successful durable receipt.  It
 # remains a safe predecessor only when no matching task is still running.
@@ -387,6 +389,16 @@ except module["RelationalSmokeError"] as error:
 else:
     raise AssertionError("uncertain acceptance was not blocked")
 assert module["load_ledger"](ledger_policy)["stages"]["restore_verification"]["state"] == "unknown"
+# A missing task after a lost response remains uncertain, never rejected.
+module["reconcile_unacknowledged_submission"].__globals__["aws"] = lambda *_args, **_kwargs: {"taskArns": []}
+try:
+    module["reconcile_unacknowledged_submission"]("restore_verification", "reviewed-restore-verification-a1", {**ledger_policy, "cluster": "reviewed-cluster"})
+except module["RelationalSmokeError"] as error:
+    assert "uncertain and blocks retry" in str(error)
+else:
+    raise AssertionError("absence after unacknowledged submission authorized replay")
+assert module["load_ledger"](ledger_policy)["stages"]["restore_verification"]["state"] == "unknown"
+
 
 # Reloading the ledger preserves consumed limits; restart cannot reset the allowance.
 reloaded = module["load_ledger"](ledger_policy)
@@ -438,3 +450,5 @@ if ! grep -q 'ALTER DEFAULT PRIVILEGES IN SCHEMA platform_smoke GRANT SELECT, IN
   exit 1
 fi
 echo "PostgreSQL relational smoke local validation passed."
+
+python3 -B scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py RecoveryCli.test_relational_provider_filters_and_partial_observations

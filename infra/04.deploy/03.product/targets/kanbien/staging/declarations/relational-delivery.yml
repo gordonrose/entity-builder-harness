@@ -1,0 +1,71 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: infra.04-deploy.03-product.targets.kanbien.staging.relational-delivery
+#   version: 1
+#   status: active
+#   created_on: '2026-10-26'
+#   updated_on: '2026-10-26'
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines:
+#   - security
+#   - sre
+#   kind: deployment-declaration-contract
+#   purpose: Bind existing relational task entrypoints and their current configuration,
+#     local package behaviour and bounded live proof.
+#   portability:
+#     class: internal
+#     targets: []
+#   used_by:
+#   - id: infra.04-deploy.03-product.targets.kanbien.staging.target-profile
+#     path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+schema: deploy/declaration-contract/v1
+id: kanbien-staging-relational-delivery
+status: active
+target:
+  profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+  environment: staging
+  service: platform-shell
+scope:
+  covers:
+  - platform-shell.relational-programs
+  excludes:
+  - Base server release is governed by ../declaration-contract.yml; this scope adds
+    only the listed target capabilities.
+requirements:
+- id: platform-shell.relational-programs
+  purpose: Trace every supported relational task and controller through enabled package
+    qualification and current target configuration.
+  required_by:
+  - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-bootstrap.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-migration.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-relay.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-worker.main.ts
+  - infra/04.deploy/03.product/entrypoints/kanbien-platform-postgresql-restore-verify.main.ts
+  - scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh
+  - scripts/04.deploy/run-platform-shell-persistence-admission-probe/script.sh
+  - scripts/04.deploy/verify-platform-shell-postgresql-live-boundary/script.sh
+  - scripts/04.deploy/run-platform-shell-postgresql-relational-smoke/script.sh
+  declarations:
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml
+    expectation: Each supported task binds its actual command, capability configuration
+      and role.
+  - path: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
+    expectation: Capability declarations bind the selected target and their existing
+      command owners.
+  expectation: Enabled assembled task behavior passes against disposable dependencies
+    before publication; current identity/configuration proof and scoped operational
+    proof are required before target use.
+  local_proofs:
+  - shell-package-source
+  - shell-infrastructure
+  - shell-postgresql-live-boundary-check
+  - shell-postgresql-relational-smoke-check
+  - shell-persistence-admission-probe-check
+  package_proofs:
+  - shell-image-smoke
+  target_proofs:
+  - shell-runtime-alignment
+  run_proofs:
+  - shell-postgresql-relational-smoke
+  owner: platform-runtime

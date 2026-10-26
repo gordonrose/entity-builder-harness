@@ -1,0 +1,130 @@
+{
+  "schema": "delivery-repair/v1",
+  "id": "E-LOCAL-TEST-ISOLATION",
+  "extension_of": "E-ENTRYPOINT-AGREEMENT",
+  "family": "E",
+  "status": "repaired-local-verified",
+  "checked_at": "2026-10-26T10:46:48.545202+00:00",
+  "revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "concrete_failure": "The local persistence smoke invoked --execute against the real default target profile, assuming its recorded lifecycle would reject execution. A future deployed-pending-write-proof profile permits AWS identity/secret lookup and a persistence-write request before the smoke can determine failure.",
+  "affected_routes": [
+    "shell-persistence-smoke-check",
+    "shell-infrastructure local umbrella"
+  ],
+  "contract_files": [
+    "infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml",
+    "scripts/repo/check-selection/checks.yml"
+  ],
+  "contract_field": "auth.persistence_write_test_client.status",
+  "implementation": "scripts/04.deploy/run-platform-shell-persistence-smoke/script.py",
+  "caller": "scripts/04.deploy/run-platform-shell-persistence-smoke/script.sh",
+  "test": "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh",
+  "changed_source_files": [
+    "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+  ],
+  "integration_metadata_file": "scripts/repo/check-selection/checks.yml",
+  "source_inputs_sha256": {
+    "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh": "27bbf5a3924712e8818349a93c3df70eacc304f0bf51d7d06ccf776c148c870e",
+    "scripts/04.deploy/run-platform-shell-persistence-smoke/script.py": "5cf73adb9c17ee5a5598206bff6d8b58fc7b34fc7c35cacf63070e6f4728dcbb",
+    "scripts/repo/check-selection/checks.yml": "cb0b7cb643999fe22d06adf9e896853e4d5b582887c5e7b3a5706452b61a3ca4"
+  },
+  "production_module_unchanged_from_HEAD": true,
+  "smallest_reusable_repair": "Use the existing controlled IAM-remediation fixture for every executable or invalid-mode invocation. Pass its explicit --target-profile and a denying --aws-cli; install a temporary urllib HTTP tripwire. Require exact intended parser/lifecycle errors and no external-access marker. Retain the valid default-profile --validate and fixture --validate checks. Declare temporary writes in the owning header and catalog.",
+  "negative_regressions": [
+    "initial execution against controlled remediation state rejects with the exact lifecycle guard message",
+    "approval flag in validate mode rejects for intended parser reason",
+    "conflicting fresh-write approval flags reject for intended parser reason",
+    "disposable removal of initial lifecycle guard makes the repaired smoke fail; attempted provider access is contained by fake AWS"
+  ],
+  "valid_behaviour": [
+    "current real profile offline --validate passes",
+    "controlled remediation fixture offline --validate passes",
+    "a disposable default profile in future deployed-pending-write-proof state still passes the local smoke without AWS or HTTP access"
+  ],
+  "earliest_enforcement_stage": "Local/CI smoke command, independent of the mutable target lifecycle.",
+  "verification": [
+    {
+      "argv": [
+        "bash",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 1.361,
+      "stdout": "Persistence smoke local validation passed (fixture lifecycle guards; no AWS or HTTP).\n",
+      "stderr": "",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-smoke-isolation.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "--paths",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 0.151,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-1.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-deterministic-process-drift.sh",
+        "--paths",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 0.013,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-2.log"
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-governed-script-command-drift.sh",
+        "--paths",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 9.913,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-3.log"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "--",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "exit_code": 0,
+      "seconds": 0.005,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-governance-4.log"
+    }
+  ],
+  "fault_and_future_state_proof": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/shell-persistence-isolation-fault-proof.json",
+  "fault_and_future_state_results": [
+    {
+      "case": "future-default-profile-permits-initial-write-local-smoke-stays-isolated",
+      "argv": [
+        "bash",
+        "scripts/04.deploy/run-platform-shell-persistence-smoke/smoke-test.sh"
+      ],
+      "expected_exit": 0,
+      "exit_code": 0,
+      "seconds": 1.285,
+      "stdout": "Persistence smoke local validation passed (fixture lifecycle guards; no AWS or HTTP).\n"
+    },
+    {
+      "case": "removed-initial-guard-is-rejected-by-smoke-before-real-aws-or-http",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "seconds": 1.162,
+      "stdout": ""
+    }
+  ],
+  "closure_evidence": "Owner smoke passes, future executable-default fixture passes, removed-guard fault is caught, metadata/drift/diff checks pass.",
+  "limits": [
+    "Fixture-only verification, no cloud access, no live secret retrieval and no HTTP write.",
+    "Only the existing smoke-test source changed; no production command or target-profile behaviour changed.",
+    "Root owns catalog effects, recognition refresh and final selected-suite integration after the prior frozen 53-check run."
+  ]
+}

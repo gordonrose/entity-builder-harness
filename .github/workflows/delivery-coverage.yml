@@ -1,0 +1,48 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: github.workflow.delivery-coverage
+#   version: 1
+#   status: active
+#   created_on: "2026-10-26"
+#   updated_on: "2026-10-26"
+#   layer: 04.deploy
+#   domain: deployment.declaration-coverage
+#   disciplines: [architecture, sre]
+#   kind: ci-workflow
+#   purpose: Enforce independent delivery registration and selected local proof before changes reach package or provider operations.
+#   portability: { class: reusable, targets: [entity-builder] }
+#   effects: [network, writes-files]
+#   used_by:
+#   - id: repo.check-selection.catalog
+#     path: scripts/repo/check-selection/checks.yml
+name: Delivery coverage
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-and-local-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install PyYAML==6.0.2
+      - name: Reconcile independent delivery census
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - name: Exercise discovery and command boundaries
+        run: bash scripts/04.deploy/inventory-deploy-control/smoke-test.sh
+      - name: Execute selected local proofs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: bash scripts/repo/check-selection/script.sh --ci --execute-local --json

@@ -1,0 +1,15 @@
+{
+  "name": "core-build-diagnostic",
+  "argv": [
+    "bash",
+    "scripts/04.deploy/lifecycle/40-package/build-core-server-image/script.sh",
+    "--tag",
+    "kanbien-core-server:merge-qualification"
+  ],
+  "started_at": "2026-10-26T13:40:02.540397+00:00",
+  "finished_at": "2026-10-26T13:41:06.599727+00:00",
+  "duration_seconds": 64.067,
+  "exit_code": 1,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stderr.log"
+}

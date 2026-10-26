@@ -1,0 +1,110 @@
+{
+  "schema": "delivery-chain/corrective-bootstrap-reproduction/v1",
+  "before": "corrective-bootstrap-before.json",
+  "exact_original_proposal_sha256": "1fdec880d188d07fecde5598bb3b964904d794e8c8ec8812b0f2105d961a209f",
+  "exact_original_parameters": true,
+  "implementation_sha256": "ad34756a433269f35e8329c9b9e22c8931c26c89cc0b7c31345634a614165218",
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/tmp/delivery-bootstrap-cli-dda92m_r/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "--receipt",
+    "synthetic.json",
+    "--operation",
+    "update",
+    "--approved-change-set",
+    "kanbien-core-platform-update-aaaaaaaaaaaa",
+    "--json"
+  ],
+  "provider_calls": [
+    [
+      "cloudformation",
+      "describe-change-set",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--change-set-name",
+      "kanbien-core-platform-update-aaaaaaaaaaaa",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ],
+    [
+      "cloudformation",
+      "describe-stacks",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ],
+    [
+      "cloudformation",
+      "get-template",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--template-stage",
+      "Original",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ],
+    [
+      "cloudformation",
+      "get-template",
+      "--stack-name",
+      "kanbien-core-platform-bootstrap-runtime",
+      "--change-set-name",
+      "kanbien-core-platform-update-aaaaaaaaaaaa",
+      "--template-stage",
+      "Original",
+      "--profile",
+      "kanbien-dev",
+      "--region",
+      "eu-west-1",
+      "--output",
+      "json",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "20"
+    ]
+  ],
+  "report": {
+    "findings": [
+      {
+        "code": "change-set-template-mismatch"
+      }
+    ],
+    "schema": "deploy/runtime-deployment-report/v1",
+    "stack": "kanbien-core-platform-bootstrap-runtime",
+    "target": "kanbien-core-platform",
+    "verdict": "blocked"
+  },
+  "exit_code": 1,
+  "execute_calls": 0,
+  "current_and_selected_template_reads": 2,
+  "verdict": "blocked-for-intended-reason",
+  "evidence_class": "actual-cli-disposable-provider-fixture",
+  "fixture_cleanup": "confirmed-absent"
+}

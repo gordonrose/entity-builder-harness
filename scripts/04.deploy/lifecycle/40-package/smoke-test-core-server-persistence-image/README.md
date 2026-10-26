@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: deploy.command.smoke-test-core-server-persistence-image.readme
-version: 4
+version: 5
 status: draft
 created_on: "2026-10-23"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.core-server-persistence
 disciplines: [security, sre]
@@ -55,18 +55,30 @@ These local tests do not execute CI, publish an image or establish package custo
 
 When native qualification fails because the workstation Docker credential helper
 is unavailable, an explicitly authorized local recovery can isolate the client
-configuration for this package's public images:
+configuration for the fixed persistence or core package's public images:
 
 ```bash
 bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh --tag kanbien-core-server-persistence:local-public-recovery --port 39456
 ```
 
+Persistence remains the default. For the fixed core bootstrap package, use:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/qualify-local-public-images.sh --package core --tag kanbien-core-server:local-public-recovery --port 39454
+```
+
+The package selector accepts only `core` and `persistence`; each has its own
+reviewed owner hashes and local tag prefix. Core invokes its existing image
+smoke once, which already owns the build. Persistence invokes its existing
+separate build and smoke commands. This wrapper cannot select an arbitrary
+image builder or change any build argument.
+
 The wrapper resolves the effective Docker context or host before isolation,
 requires a local Unix socket, and compares the original engine ID with the
 isolated connection before building and after each stage. It clears inherited
 Docker, Buildx and BuildKit selectors, then pins the same socket and the default
-local builder. It invokes the existing governed image build followed by the
-existing image smoke, preserving their preflights and stopping on failure.
+local builder. It invokes the selected fixed package owners, preserving their preflights
+and stopping on failure.
 Child failure exits retain the original numeric status.
 
 The private temporary Docker configuration contains only empty anonymous
@@ -79,7 +91,8 @@ socket/engine identifiers are not printed by this wrapper.
 
 This optional recovery accepts only the reviewed canonical builder, smoke,
 Dockerfile and image-contract bytes. It derives and validates their public
-frontend, Node, pinned distroless and PostgreSQL image declarations. Any owner
+frontend, Node and pinned distroless image declarations, plus the persistence
+PostgreSQL fixture declaration when that package is selected. Any owner
 change fails with `local-public-recovery-owner-review-required`; review those
 changes and deliberately update the wrapper's reviewed hashes before using this
 recovery again. The normal package commands remain available independently.

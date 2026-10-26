@@ -7,7 +7,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -29,6 +29,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -92,7 +93,9 @@ SAFE_ID = re.compile(r"^[a-z][a-z0-9-]{2,127}$")
 UTC_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 FACTS_FIELDS = {"schema", "contract_id", "gate_evidence", "component_evidence"}
 RECOVERY_FACTS_FIELDS = FACTS_FIELDS | {"recovery_evidence"}
-CHANGE_SUMMARY_FIELDS = {"schema", "contract_id", "check_id", "timestamp", "operation_counts"}
+CHANGE_SUMMARY_FIELDS = {"schema", "contract_id", "check_id", "timestamp", "operation_counts", "input_sha256"}
+CURRENT_EVIDENCE_MAX_AGE_SECONDS = 900
+CURRENT_GATES = {"live-read", "change-set", "execution-preflight"}
 
 
 class ContractFailure(Exception):
@@ -460,6 +463,54 @@ def runtime_bound_artifact_ids(contract: dict[str, Any]) -> set[str]:
     }
 
 
+def evidence_bindings(contract: dict[str, Any], facts: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Stable bindings for reusable proof; timestamps/verdicts are not inputs.
+
+    A component depends on its declared outgoing graph closure. Changing a
+    configuration or permission declaration invalidates its consumers while an
+    unchanged artifact keeps its independently qualified proof.
+    """
+    def digest(value: Any) -> str:
+        return "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    nodes = {item["id"]: item for group in COMPONENTS for item in contract[group]}
+    edges = contract["edges"]
+    artifacts = {item["component_id"]: item["immutable_reference"] for item in facts.get("artifact_bindings", [])}
+    components = {}
+    for identifier in nodes:
+        reached, pending = set(), [identifier]
+        while pending:
+            selected = pending.pop()
+            if selected in reached: continue
+            reached.add(selected)
+            pending.extend(edge["to"] for edge in edges if edge["from"] == selected)
+        components[identifier] = digest({"components": {name: nodes[name] for name in sorted(reached)}, "edges": [edge for edge in edges if edge["from"] in reached], "artifact_bindings": {name: value for name, value in artifacts.items() if name in reached}})
+    # Package qualification consumes the assembled artifacts, their declared
+    # configuration, and workload composition. Target permission changes require
+    # fresh source/operational checks, not repetition of unchanged package tests.
+    package_inputs = {
+        "contract_id": contract["id"],
+        "contract_schema": contract["schema"],
+        "artifacts": contract["artifacts"],
+        "configuration_inputs": contract["configuration_inputs"],
+        "workload_composition": [
+            {key: unit[key] for key in ("id", "artifact", "configuration_inputs")}
+            for unit in contract["execution_units"]
+        ],
+        "qualification_gate": contract["gates"][GATE_ORDER.index("artifact")],
+        "artifact_bindings": artifacts,
+    }
+    gates = {gate: digest({"contract": contract, "artifact_bindings": {} if gate == "source" else artifacts}) for gate in GATE_ORDER}
+    gates["artifact"] = digest(package_inputs)
+    return {"components": components, "gates": gates}
+
+
+def require_fresh(timestamp: str, code: str) -> None:
+    observed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    age = (datetime.now(timezone.utc) - observed).total_seconds()
+    if age < -60 or age > CURRENT_EVIDENCE_MAX_AGE_SECONDS:
+        raise ContractFailure(code)
+
+
 def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id: str, known: dict[str, str], through: str) -> None:
     reject_provider_leakage(facts)
     reject_unsafe_value_fields(facts)
@@ -474,19 +525,30 @@ def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id:
     required = GATE_ORDER[:GATE_ORDER.index(through) + 1]
     if len(evidence) != len(required):
         raise ContractFailure("normalized-facts-evidence-sequence-invalid")
+    previous_current_timestamp = None
     for index, item in enumerate(evidence):
         entry = safe_mapping(item, "normalized-facts-entry-invalid")
-        require_exact_keys(entry, {"gate", "check_id", "timestamp", "verdict"}, "normalized-facts-entry-fields-invalid")
+        require_exact_keys(entry, {"gate", "check_id", "timestamp", "verdict", "input_sha256"}, "normalized-facts-entry-fields-invalid")
         gate = safe_string(entry.get("gate"), "normalized-facts-gate-missing")
         safe_identifier(entry.get("check_id"), "normalized-facts-check-id-invalid")
         safe_timestamp(entry.get("timestamp"), "normalized-facts-timestamp-invalid")
         if gate != required[index] or entry.get("verdict") != "passed":
             raise ContractFailure("normalized-facts-evidence-sequence-invalid")
+        if entry["check_id"] not in contract["gates"][index]["evidence"]:
+            raise ContractFailure("normalized-facts-check-not-declared")
+        if gate in CURRENT_GATES:
+            # A current structural recheck may be newer than a reusable package
+            # receipt. Only current-state observations have temporal ordering;
+            # immutable proof reuse is governed by relevant input identity.
+            if previous_current_timestamp is not None and entry["timestamp"] < previous_current_timestamp:
+                raise ContractFailure("normalized-facts-evidence-time-order-invalid")
+            previous_current_timestamp = entry["timestamp"]
+            require_fresh(entry["timestamp"], "normalized-facts-current-evidence-stale")
     component_evidence = safe_list(facts.get("component_evidence"), "component-evidence-missing")
     observed: set[str] = set()
     for item in component_evidence:
         entry = safe_mapping(item, "component-evidence-entry-invalid")
-        require_exact_keys(entry, {"component_id", "component_kind", "check_id", "timestamp", "verdict"}, "component-evidence-entry-fields-invalid")
+        require_exact_keys(entry, {"component_id", "component_kind", "check_id", "timestamp", "verdict", "input_sha256"}, "component-evidence-entry-fields-invalid")
         component_id = safe_identifier(entry.get("component_id"), "component-evidence-id-invalid")
         if component_id in observed or component_id not in known or entry.get("component_kind") != known[component_id]:
             raise ContractFailure("component-evidence-binding-invalid")
@@ -494,6 +556,8 @@ def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id:
         safe_timestamp(entry.get("timestamp"), "component-evidence-timestamp-invalid")
         if entry.get("verdict") != "passed":
             raise ContractFailure("component-evidence-verdict-invalid")
+        if known[component_id] != "artifact" and GATE_ORDER.index(through) >= GATE_ORDER.index("live-read"):
+            require_fresh(entry["timestamp"], "component-current-evidence-stale")
         observed.add(component_id)
     if observed != set(known):
         raise ContractFailure("component-evidence-incomplete")
@@ -515,6 +579,13 @@ def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id:
             bound.add(component_id)
         if bound != runtime_bound_artifacts:
             raise ContractFailure("artifact-binding-incomplete")
+    bindings = evidence_bindings(contract, facts)
+    for entry in evidence:
+        if entry["input_sha256"] != bindings["gates"][entry["gate"]]:
+            raise ContractFailure("gate-evidence-input-mismatch")
+    for entry in component_evidence:
+        if entry["input_sha256"] != bindings["components"][entry["component_id"]]:
+            raise ContractFailure("component-evidence-input-mismatch")
     if through == "recovery":
         recovery = safe_mapping(facts.get("recovery_evidence"), "recovery-evidence-missing")
         require_exact_keys(recovery, {"predecessor_attempt_label", "recovery_attempt_label", "predecessor_terminal_state", "check_id", "timestamp", "verdict"}, "recovery-evidence-fields-invalid")
@@ -530,7 +601,7 @@ def validate_facts(facts: dict[str, Any], contract: dict[str, Any], contract_id:
             raise ContractFailure("recovery-evidence-verdict-invalid")
 
 
-def validate_change_summary(summary: dict[str, Any], contract: dict[str, Any], contract_id: str) -> None:
+def validate_change_summary(summary: dict[str, Any], contract: dict[str, Any], contract_id: str, facts: dict[str, Any] | None = None) -> None:
     reject_provider_leakage(summary)
     reject_unsafe_value_fields(summary)
     require_exact_keys(summary, CHANGE_SUMMARY_FIELDS, "normalized-change-summary-fields-invalid")
@@ -538,6 +609,12 @@ def validate_change_summary(summary: dict[str, Any], contract: dict[str, Any], c
         raise ContractFailure("normalized-change-summary-schema-or-contract-invalid")
     safe_identifier(summary.get("check_id"), "normalized-change-summary-check-id-invalid")
     safe_timestamp(summary.get("timestamp"), "normalized-change-summary-timestamp-invalid")
+    require_fresh(summary["timestamp"], "normalized-change-summary-stale")
+    change_gate = contract["gates"][GATE_ORDER.index("change-set")]
+    if summary["check_id"] not in change_gate["evidence"]:
+        raise ContractFailure("normalized-change-summary-check-not-declared")
+    if summary["input_sha256"] != evidence_bindings(contract, facts or {})["gates"]["change-set"]:
+        raise ContractFailure("normalized-change-summary-input-mismatch")
     counts = safe_mapping(summary.get("operation_counts"), "normalized-change-summary-counts-missing")
     shape = safe_mapping(contract["change_shape"], "change-shape-missing")
     allowed = set(shape["allowed_operation_classes"])
@@ -568,11 +645,12 @@ def main() -> int:
         scope = through
         groups, known = ids(contract)
         del groups
-        validate_facts(load_yaml(args.facts, "normalized-facts-unreadable"), contract, contract_id, known, through)
+        facts = load_yaml(args.facts, "normalized-facts-unreadable")
+        validate_facts(facts, contract, contract_id, known, through)
         if GATE_ORDER.index(through) >= GATE_ORDER.index("change-set") and not args.change_summary:
             raise ContractFailure("normalized-change-summary-required-for-gate")
         if args.change_summary:
-            validate_change_summary(load_yaml(args.change_summary, "normalized-change-summary-unreadable"), contract, contract_id)
+            validate_change_summary(load_yaml(args.change_summary, "normalized-change-summary-unreadable"), contract, contract_id, facts)
         emit(contract_id, "passed", [], scope)
         return 0
     except ContractFailure as error:

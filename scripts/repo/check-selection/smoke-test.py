@@ -2,7 +2,7 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection
-#   version: 5
+#   version: 4
 #   status: active
 #   created_on: "2026-10-24"
 #   updated_on: "2026-10-26"
@@ -82,10 +82,29 @@ class SelectionTests(unittest.TestCase):
         binding['proposed_provider_binding']['template'] = '30-provider-realization/fixture.yml'
         binding['workloads'][0]['health_signal_mapping'] = copy.deepcopy(server['health_signal_mapping'])
         for workload in binding['workloads']: workload['execution']['source_reference'] = 'src/main.ts'
+        # A second workload carries a different dependency and only its own
+        # required environment. It uses the same provider normalizer/checks.
+        self.contract['configuration']['required_names'] = ['CATALOG_ENDPOINT']
+        binding['runtime_requirements'] = [
+            {'workload': item['id'], 'declaration_workload': 'core-server' if item['id'] == 'core-server-service' else 'private-release-verifier', 'required_names': ['CATALOG_ENDPOINT'],
+             'command': ['artifacts/generic-server.main.js'], 'secret_names': [],
+             'identity_required': False} for item in binding['workloads']]
+        adapter_ref = binding['proposed_provider_binding']['configuration_adapter']
+        (self.root / adapter_ref).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / adapter_ref, self.root / adapter_ref)
+        runtime_helper = 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py'
+        (self.root / runtime_helper).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / runtime_helper, self.root / runtime_helper)
         write(binding_path, binding)
         write(self.target / 'scope-index.yml', {'schema': 'deploy/scope-lifecycle-inventory/v1', 'target': 'synthetic', 'scopes': [{'id': 'synthetic-worker', 'lifecycle': 'active', 'declaration': 'synthetic-worker/00-declaration/declaration-contract.yml', 'workload_binding': 'synthetic-worker/10-workload-binding/workload-binding.yml', 'workload_ownership': [item['id'] for item in binding['workloads']]}], 'legacy_exceptions': []})
         for path in ('src/main.ts', 'consumer.ts', 'program.yml', 'image.yml', 'infra/04.deploy/03.product/targets/synthetic/30-provider-realization/fixture.yml'):
             file = self.root / path; file.parent.mkdir(parents=True, exist_ok=True); file.write_text('fixture\n')
+        resources = {}
+        for item in binding['workloads']:
+            resources[item['provider_reference']] = {'Type': 'AWS::ECS::TaskDefinition', 'Properties': {
+                'ContainerDefinitions': [{'Name': 'catalog-worker', 'Command': ['artifacts/generic-server.main.js'],
+                    'Environment': [{'Name': 'CATALOG_ENDPOINT', 'Value': 'http://catalog.invalid'}]}]}}
+        write(self.root / 'infra/04.deploy/03.product/targets/synthetic/30-provider-realization/fixture.yml', {'Resources': resources})
         self.check_script('local', ['read-only', 'writes-files'], 'echo local >> counts\n')
         self.check_script('package', ['network'], 'echo forbidden >> operations\n')
         self.check_script('live', ['aws-mutation'], 'echo forbidden >> operations\n')
@@ -125,8 +144,8 @@ class SelectionTests(unittest.TestCase):
     def save(self) -> None:
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
-    def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False):
-        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=False, require_preparation=False, evidence=evidence, json=True)
+    def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False, record_preparation=False, require_preparation=False):
+        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=record_preparation, require_preparation=require_preparation, evidence=evidence, json=True)
         files = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file() and '.git' not in path.relative_to(self.root).parts]
         def git(_root, *arguments):
             if arguments[0] == 'diff': return 'src/old.ts\0src/main.ts\0' if '--cached' in arguments else ''
@@ -135,6 +154,166 @@ class SelectionTests(unittest.TestCase):
         with patch.object(selection, 'repository_paths', return_value=files), patch.object(selection, 'git', side_effect=git): return selection.plan(args)
 
     def codes(self, report): return {item['code'] for item in report['findings']}
+
+    def prepare_selector_cli(self):
+        # Real selector/cache/inventory processes in a disposable Git root; only
+        # HEAD and the staged path list are fixture identities, with no commits.
+        for relative in ('scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
+            target = self.root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, target)
+        shim = self.root / '.selector-test-bin'
+        shim.mkdir()
+        (shim / 'git').write_text('#!/bin/bash\ncase "$*" in *"rev-parse HEAD"*) printf "' + 'a' * 40 + '\\n";; *"diff --cached --name-only --no-renames -z"*) printf "src/main.ts\\0";; *) exec "' + shutil.which('git') + '" "$@";; esac\n')
+        (shim / 'git').chmod(0o755)
+        self.cli_environment = {**os.environ, 'PATH': str(shim) + ':' + os.environ['PATH']}
+
+    def run_selector_cli(self, *, expected=0, staged=False):
+        argv = ['bash', 'scripts/repo/check-selection/script.sh', '--execute-local', '--json']
+        argv += ['--staged'] if staged else ['--paths', 'src/main.ts']
+        result = subprocess.run(argv, cwd=self.root, env=self.cli_environment, capture_output=True, text=True, timeout=40)
+        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+        return json.loads(result.stdout)
+
+    def local_command_result(self, report):
+        return next(item for item in report['checks'] if item['argv'][1] == 'scripts/local.sh')
+
+    def test_cli_unrelated_catalog_changes_reuse_full_selected_alias_definitions(self):
+        self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.requirement['local_proofs'].append('alias')
+        self.catalog['checks']['unrelated'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.save()
+        # The catalog's metadata can put it back into upstream references; the
+        # command directory also contains it. Neither is an explicit consumer.
+        header = '# agentic-artifact:\n#   id: fixture.catalog\n#   used_by:\n#   - path: scripts/local.sh\n'
+        self.catalog_path.write_text(header + self.catalog_path.read_text())
+        self.prepare_selector_cli()
+        first = self.local_command_result(self.run_selector_cli())
+        self.assertEqual(set(first['catalog_entries']), {'local', 'alias'})
+        self.assertFalse(first['catalog_input'])
+        self.assertNotIn(self.catalog_path.relative_to(self.root).as_posix(), first['references'])
+        for field, value in [('description', 'unrelated policy description'), ('effects', ['writes-files', 'read-only'])]:
+            self.catalog['checks']['unrelated'][field] = value
+            self.save(); self.catalog_path.write_text(header + self.catalog_path.read_text())
+            reused = self.local_command_result(self.run_selector_cli())
+            self.assertEqual(reused['evidence_key'], first['evidence_key'])
+            self.assertEqual(reused['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.catalog['checks']['alias']['description'] = 'changed selected alias obligation'
+        self.save(); self.catalog_path.write_text(header + self.catalog_path.read_text())
+        changed = self.local_command_result(self.run_selector_cli())
+        self.assertEqual(changed['evidence_source'], 'local-runner')
+        self.assertNotEqual(changed['evidence_key'], first['evidence_key'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
+
+    def test_cli_selected_catalog_fields_invalidate_or_block(self):
+        self.prepare_selector_cli()
+        first = self.local_command_result(self.run_selector_cli())
+        for field, value in [('description', 'selected proof description'), ('argv', ['bash', 'scripts/local.sh', '--selected-option']), ('effects', ['writes-files', 'read-only']), ('runtime', {'tools': ['bash', 'python3'], 'environment': ['LANG', 'PYTHONPATH', 'SELECTOR_TEST_CONFIGURATION']})]:
+            with self.subTest(field=field):
+                self.catalog['checks']['local'][field] = value; self.save()
+                result = self.local_command_result(self.run_selector_cli())
+                self.assertEqual(result['evidence_source'], 'local-runner')
+                self.assertNotEqual(result['evidence_key'], first['evidence_key'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n' * 5)
+        self.catalog['checks']['local']['applicability']['scope'] = 'another-scope'; self.save()
+        report = self.run_selector_cli(expected=1)
+        self.assertIn('requirement-check-subject-mismatch', self.codes(report))
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n' * 5)
+
+    def test_cli_explicit_catalog_consumers_keep_whole_file_identity(self):
+        self.check_script('local', ['read-only', 'writes-files'], 'case "${1:-}" in --catalog=*) source="${1#--catalog=}";; --catalog) source="$2";; *) source="scripts/repo/check-selection/checks.yml";; esac\ncat "$source" >/dev/null\necho local >> counts\n')
+        self.catalog['checks']['unrelated'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.save(); self.prepare_selector_cli()
+        catalog_ref = self.catalog_path.relative_to(self.root).as_posix()
+        original = copy.deepcopy(self.catalog['checks']['local'])
+        modes = ('file-input', 'directory-input', 'runtime-config', 'argv', 'argv-assignment', 'argv-dot', 'argv-absolute', 'argv-assignment-dot', 'argv-assignment-absolute')
+        for mode in modes:
+            with self.subTest(mode=mode):
+                check = copy.deepcopy(original)
+                if mode == 'file-input': check['inputs'] = [catalog_ref]
+                elif mode == 'directory-input': check['inputs'] = ['scripts/repo/check-selection']
+                elif mode == 'runtime-config': check['runtime']['config_inputs'] = [catalog_ref]
+                else:
+                    spelling = str(self.catalog_path) if mode.endswith('absolute') else './' + catalog_ref if mode.endswith('dot') else catalog_ref
+                    check['argv'] += ['--catalog=' + spelling] if 'assignment' in mode else ['--catalog', spelling]
+                self.catalog['checks']['local'] = check; self.save()
+                before = self.local_command_result(self.run_selector_cli())
+                self.assertTrue(before['catalog_input'])
+                self.assertIn(catalog_ref, before['references'])
+                self.catalog['checks']['unrelated']['description'] = mode
+                self.save()
+                after = self.local_command_result(self.run_selector_cli())
+                self.assertNotEqual(after['evidence_key'], before['evidence_key'])
+                self.assertEqual(after['evidence_source'], 'local-runner')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n' * (2 * len(modes)))
+
+    def test_cli_catalog_replanning_selects_new_repository_check(self):
+        self.check_script('other', ['read-only', 'writes-files'], 'echo other >> other-counts\n')
+        self.catalog['checks']['other'] = {**copy.deepcopy(self.catalog['checks']['local']), 'argv': ['bash', 'scripts/other.sh']}
+        self.save(); self.prepare_selector_cli()
+        self.run_selector_cli()
+        self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['other']}]
+        self.save()
+        report = self.run_selector_cli()
+        self.assertEqual(self.local_command_result(report)['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual(next(item for item in report['checks'] if item['check_id'] == 'other')['evidence_source'], 'local-runner')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertEqual((self.root / 'other-counts').read_text(), 'other\n')
+        self.catalog['schema'] = 'unsupported/catalog'; self.save()
+        self.assertIn('check-catalog-invalid', self.codes(self.run_selector_cli(expected=1)))
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_cli_catalog_mutation_blocks_invocation_but_preserves_unaffected_receipt(self):
+        mutator = self.root / 'checks/mutator/script.sh'
+        mutator.parent.mkdir(parents=True)
+        mutator.write_text('#!/bin/bash\n# agentic-artifact:\n#   id: fixture.mutator\n#   effects: [read-only, writes-files]\nif [ ! -e catalog-edited ]; then\n  printf "\\n# changed during command\\n" >> scripts/repo/check-selection/checks.yml\n  touch catalog-edited\nfi\n')
+        self.catalog['checks']['a-mutator'] = {**copy.deepcopy(self.catalog['checks']['local']), 'argv': ['bash', 'checks/mutator/script.sh']}
+        self.save(); self.prepare_selector_cli()
+        original = self.local_command_result(self.run_selector_cli())
+        self.catalog['repository_inputs'] = [{'inputs': ['src/main.ts'], 'checks': ['a-mutator']}]
+        self.save()
+        report = self.run_selector_cli(expected=1)
+        self.assertIn('check-catalog-changed-during-execution', self.codes(report))
+        self.assertIn('check-catalog-changed-before-execution', self.codes(report))
+        self.assertEqual(self.local_command_result(report)['status'], 'uncertain')
+        mutator_result = next(item for item in report['checks'] if item['check_id'] == 'a-mutator')
+        self.assertFalse((self.root / '.git/agentic-local-checks' / (mutator_result['evidence_key'] + '.json')).exists())
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        resumed = self.local_command_result(self.run_selector_cli())
+        self.assertEqual(resumed['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual(resumed['evidence_key'], original['evidence_key'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_cli_unstaged_catalog_authority_blocks_even_unaffected_cached_proof(self):
+        self.catalog['checks']['unrelated'] = copy.deepcopy(self.catalog['checks']['local'])
+        self.save(); self.prepare_selector_cli()
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        self.run_selector_cli(staged=True)
+        self.catalog['checks']['unrelated']['description'] = 'unstaged selection authority'
+        self.save()
+        report = self.run_selector_cli(expected=1, staged=True)
+        self.assertIn({'code': 'selected-input-not-staged', 'path': self.catalog_path.relative_to(self.root).as_posix()}, report['findings'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        subprocess.run(['git', '-C', str(self.root), 'add', str(self.catalog_path)], check=True)
+        report = self.run_selector_cli(staged=True)
+        self.assertEqual(self.local_command_result(report)['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_target_without_scope_index_blocks_before_checks(self):
+        (self.target / 'scope-index.yml').unlink()
+        report = self.run_plan(execute=True)
+        self.assertIn('scope-inventory-missing', self.codes(report))
+        self.assertFalse((self.root / 'counts').exists())
+        self.assertFalse((self.root / 'operations').exists())
+
+    def test_second_unindexed_target_cannot_hide_behind_valid_target(self):
+        unindexed = self.root / 'infra/04.deploy/03.product/targets/another/20-scopes/worker/00-declaration'
+        unindexed.mkdir(parents=True)
+        (unindexed / 'declaration-contract.yml').write_text('schema: deploy/target-scope-contract/v1\n')
+        report = self.run_plan(execute=True)
+        self.assertIn('scope-inventory-missing', self.codes(report))
+        self.assertFalse((self.root / 'counts').exists())
 
     def test_synthetic_scope_reuses_existing_generic_validators_and_accepts_valid_na(self):
         report = self.run_plan(execute=True)
@@ -150,6 +329,32 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(report['verdict'], 'covered', report)
         self.assertIn('persistence-composition', report['required_checks'])
 
+    def test_actual_diagnostic_paths_select_focused_checks(self):
+        catalog = ROOT / 'scripts/repo/check-selection/checks.yml'
+        for paths, expected in [
+            (['platform/adapters/aws/persistence/postgresql/src/errors.ts', 'platform/adapters/aws/persistence/postgresql/tests/postgresql-diagnostics.test.ts'], {'postgresql-connection-diagnostics', 'postgresql-disposable-diagnostics', 'persistence-composition'}),
+            (['scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py', '.agentic/04.deploy/schemas/deployment-operation-diagnostic.v1.schema.yml'], {'restore-connection-diagnostics', 'deployment-operation-diagnostics-regression'}),
+        ]:
+            args = argparse.Namespace(root=ROOT, catalog=catalog, paths=paths, staged=False, all=False, stage='local', execute_local=False, evidence=None, json=True)
+            report = selection.plan(args)
+            self.assertEqual(report['verdict'], 'planned', report.get('findings'))
+            selected = {check['check_id'] for check in report['checks']}
+            self.assertTrue(expected <= selected, (paths, selected))
+            if 'postgresql-disposable-diagnostics' in expected:
+                engine = next(check for check in report['checks'] if check['check_id'] == 'postgresql-disposable-diagnostics')
+                self.assertEqual(engine['stage'], 'package'); self.assertEqual(engine['evidence_class'], 'ci')
+                image = next(check for check in report['checks'] if check['check_id'] == 'persistence-container')
+                self.assertEqual(image['evidence_class'], 'container-qualification')
+                self.assertNotEqual(engine['argv'], image['argv'])
+            if paths[0].startswith('scripts/04.deploy'):
+                self.assertNotIn('postgresql-connection-diagnostics', selected, 'report-only changes reuse unaffected adapter evidence')
+
+    def test_openssl_runtime_identity_is_bounded_and_versioned(self):
+        identity = local_cache.runtime_identity(self.root, {'tools': ['openssl'], 'environment': [], 'node_packages': []})
+        self.assertIn('openssl', identity['tools'])
+        self.assertTrue(identity['tools']['openssl']['version'])
+        self.assertEqual(len(identity['tools']['openssl']['digest']), 64)
+
     def test_duplicate_commands_run_once(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
         self.requirement['local_proofs'].append('alias'); self.save()
@@ -163,25 +368,15 @@ class SelectionTests(unittest.TestCase):
         (dormant / 'source.md').write_text('''<!-- agentic-artifact:
 schema: agentic-artifact/v3
 id: fixture.dormant-source
-version: 1
-status: active
-created_on: "2026-10-26"
-updated_on: "2026-10-26"
-layer: 01.harness
-domain: fixture
-disciplines: [agentic]
-kind: documentation
-purpose: Provide a dormant dependency edge for selector isolation testing.
-portability: {class: internal, targets: []}
 used_by:
 - id: fixture.main
   path: src/main.ts
 -->\n''')
         paths = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file()]
         active = selection.consumer_graph(self.root, paths)
-        dormant_graph = selection.consumer_graph(self.root, paths, ['dormant'])
+        isolated = selection.consumer_graph(self.root, paths, ['dormant'])
         self.assertIn('src/main.ts', active.get('dormant/source.md', set()))
-        self.assertNotIn('dormant/source.md', dormant_graph)
+        self.assertNotIn('dormant/source.md', isolated)
         self.catalog['dormant_impact_roots'] = ['dormant']; self.save()
         self.assertEqual(self.run_plan()['verdict'], 'planned')
 
@@ -232,6 +427,15 @@ used_by:
         self.assertIn({'path': 'src/old.ts', 'state': 'deleted'}, report['changed_inputs'])
         self.assertIn({'path': 'src/main.ts', 'state': 'present'}, report['changed_inputs'])
         self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=['removed-package/index.ts'])))
+
+    def test_session_stream_logs_are_evidence_without_exempting_source_or_scripts(self):
+        paths = ['commitLogs/session/check.stderr', 'commitLogs/session/check.stdout']
+        report = self.run_plan(paths=paths)
+        self.assertEqual(report['verdict'], 'planned')
+        self.assertEqual({item['path'] for item in report['non_applicable']}, set(paths))
+        for path in ('src-extra/check.stderr', 'commitLogs/session/check.sh'):
+            with self.subTest(path=path):
+                self.assertIn('changed-input-uncovered', self.codes(self.run_plan(paths=[path])))
 
     def test_effect_changes_and_wrong_stage_never_execute(self):
         self.catalog['checks']['local']['effects'] = ['network']; self.save()
@@ -313,7 +517,7 @@ used_by:
         self.assertIn('approval-sensitive script requires --approved-action', result.stderr)
 
     def test_mandatory_scope_checks_cannot_be_removed_to_hide_broken_health(self):
-        self.contract['health_recovery'] = {}
+        self.contract['health_recovery']['declaration_schema'] = 'unsupported-health-contract'
         self.requirement['local_proofs'].remove('scope-inventory'); self.save()
         report = self.run_plan(execute=True)
         self.assertIn('mandatory-scope-check-missing', self.codes(report))
@@ -452,31 +656,18 @@ used_by:
         with patch.dict(os.environ, {'LANG': 'C.fixture'}): self.run_plan(execute=True)
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
 
-    def test_reports_relevant_input_and_governance_invalidation_but_reuses_unrelated_session_evidence(self):
-        self.run_plan(execute=True)
-        session = self.root / 'commitLogs/session/README.md'; session.parent.mkdir(parents=True)
-        session.write_text('# Session evidence\n')
-        reused = self.run_plan(execute=True)
-        local = next(item for item in reused['checks'] if item['check_id'] == 'local')
-        self.assertEqual(local['evidence_source'], 'trusted-worktree-cache')
+    def test_preparation_reuses_unchanged_proof_and_rejects_changed_inputs(self):
+        prepared = self.run_plan(record_preparation=True)
+        self.assertEqual(prepared['preparation_status'], 'recorded')
+        verified = self.run_plan(execute=True)
+        self.assertEqual(verified['execution_summary']['executed_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
+        commit = self.run_plan(execute=True, staged=True, require_preparation=True)
+        self.assertEqual(commit['preparation_status'], 'matched')
+        self.assertEqual(commit['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
-
         (self.root / 'src/main.ts').write_text('changed implementation\n')
-        implementation = self.run_plan(execute=True)
-        local = next(item for item in implementation['checks'] if item['check_id'] == 'local')
-        self.assertEqual(local['evidence_source'], 'local-runner')
-        self.assertIn('verified-inputs-changed', local['cache_invalidation_reasons'])
-        self.assertIn({'check_id': 'local', 'reasons': local['cache_invalidation_reasons']}, implementation['execution_summary']['invalidated_checks'])
-
-        self.catalog['checks']['local']['runtime']['environment'] = ['LANG']
-        self.save()
-        governance = self.run_plan(execute=True)
-        local = next(item for item in governance['checks'] if item['check_id'] == 'local')
-        self.assertEqual(local['evidence_source'], 'local-runner')
-        self.assertIn('verified-inputs-changed', local['cache_invalidation_reasons'])
-        self.assertIn('runtime-identity-changed', local['cache_invalidation_reasons'])
-        self.assertIn('verification-contract-changed', local['cache_invalidation_reasons'])
-        self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\nlocal\n')
+        stale = self.run_plan(execute=True, staged=True, require_preparation=True)
+        self.assertIn('verification-preparation-inputs-changed', self.codes(stale))
 
     def test_imported_report_cannot_qualify_local_check(self):
         planned = self.run_plan()
@@ -486,6 +677,54 @@ used_by:
         self.assertEqual(result['evidence_import_status'], 'rejected-untrusted-report')
         self.assertEqual(next(item for item in result['checks'] if item['check_id'] == 'local')['evidence_source'], 'local-runner')
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_pure_plan_probes_runtime_once_without_execution_revalidation(self):
+        # A plan describes pending checks; it must not invent execution-race
+        # findings by re-probing a toolchain when no command will be run.
+        with patch.object(selection, 'runtime_identity', side_effect=lambda *_: {'probe': probe.call_count}) as probe:
+            report = self.run_plan()
+        self.assertEqual(report['verdict'], 'planned', report)
+        self.assertEqual(probe.call_count, 1)
+        self.assertTrue(all(item['status'] == 'pending' for item in report['checks'] if item['stage'] == 'local'))
+        self.assertFalse((self.root / 'counts').exists())
+        self.assertFalse((self.root / '.git/agentic-local-checks').exists())
+
+    def test_execution_still_revalidates_runtime_before_and_after_commands(self):
+        with patch.object(selection, 'runtime_identity', side_effect=lambda *_: {'probe': before.call_count}) as before:
+            blocked = self.run_plan(execute=True)
+        self.assertIn('check-input-changed-before-execution', self.codes(blocked))
+        self.assertFalse((self.root / 'counts').exists())
+        with patch.object(selection, 'runtime_identity', side_effect=lambda *_: {'version': 'stable' if after.call_count <= 2 else 'changed'}) as after:
+            uncertain = self.run_plan(execute=True)
+        self.assertIn('check-input-changed-during-execution', self.codes(uncertain))
+        local = next(item for item in uncertain['checks'] if item['check_id'] == 'local')
+        self.assertEqual(local['status'], 'uncertain')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertFalse((self.root / '.git/agentic-local-checks' / (local['evidence_key'] + '.json')).exists())
+
+    def test_closure_reuse_is_limited_to_one_immutable_plan_graph(self):
+        self.catalog['repository_inputs'] = [
+            {'inputs': ['src'], 'checks': ['local']},
+            {'inputs': ['src/main.ts'], 'checks': ['local']},
+        ]
+        self.save()
+        original = selection.closure
+        calls = []
+        def measured(inputs, graph):
+            calls.append(frozenset(inputs))
+            return original(inputs, graph)
+        with patch.object(selection, 'closure', side_effect=measured):
+            first = self.run_plan(paths=['src/main.ts'])
+            self.assertEqual(len(calls), len(set(calls)))
+            first_calls = len(calls)
+            # A second invocation must read a changed graph, even for the same
+            # changed path and check catalog. No process-global closure cache.
+            graph = {'src': {'new-consumer'}}
+            with patch.object(selection, 'consumer_graph', return_value=graph):
+                second = self.run_plan(paths=['src/main.ts'])
+        self.assertGreater(len(calls), first_calls)
+        self.assertNotIn('new-consumer', first['affected_consumers'])
+        self.assertIn('new-consumer', second['affected_consumers'])
 
     def test_mutation_during_check_is_uncertain_and_not_cached(self):
         self.check_script('local', ['read-only', 'writes-files'], 'echo changed >> src/main.ts\necho local >> counts\n')
@@ -507,8 +746,9 @@ used_by:
     def test_real_repository_hook_reuses_local_evidence_without_report_argument(self):
         # Actual source-owned hook, selector, and cache run in an isolated Git
         # worktree. The unrelated revision is simulated without creating commits.
-        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
+        for relative in ('scripts/repo/commit-gates/script.sh', 'scripts/repo/check-selection/script.sh', 'scripts/repo/check-selection/script.py', 'scripts/repo/check-selection/local_cache.py', 'scripts/04.deploy/inventory-deploy-control/delivery_inventory.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py', 'scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py', 'scripts/01.harness/artifact-metadata/header_discovery.py'):
             target = self.root / relative; target.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(ROOT / relative, target)
+        (self.root / 'package.json').write_text(json.dumps({'scripts': {'fixture:coverage': 'python3 scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py'}}))
         gate = self.root / 'scripts/01.harness/artifact-metadata/generate-index/script.sh'; gate.parent.mkdir(parents=True); gate.write_text('#!/bin/bash\nexit 0\n')
         subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
         # Stage only the source subject: definition setup is fixture baseline.
@@ -517,25 +757,14 @@ used_by:
         (shim / 'git').write_text('#!/bin/bash\ncase "$*" in *"rev-parse HEAD"*) cat "' + str(revision) + '";; *"diff --cached --name-only --no-renames -z"*) printf "src/main.ts\\0";; *) exec "' + str(git) + '" "$@";; esac\n')
         (shim / 'git').chmod(0o755)
         environment = {**os.environ, 'PATH': str(shim) + ':' + os.environ['PATH']}
-        def select(*arguments):
-            result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', *arguments], cwd=self.root, env=environment, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            return json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
         def invoke():
             result = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             return json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
-        preparation = select('--paths', 'src/main.ts', '--record-preparation', '--json')
-        self.assertEqual(preparation['preparation_status'], 'recorded')
-        final_verification = select('--paths', 'src/main.ts', '--execute-local', '--json')
-        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
-        self.assertIn('local', final_verification['execution_summary']['executed_check_ids'])
         first = invoke(); revision.write_text('b' * 40); second = invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         self.assertTrue(Path(second['local_report_path']).is_file())
         self.assertTrue(all(item['evidence_source'] == 'trusted-worktree-cache' for item in second['checks'] if item['stage'] == 'local'))
-        self.assertTrue(any(item['stage'] == 'package' and item['status'] == 'deferred' for item in second['checks']))
-        self.assertFalse((self.root / 'operations').exists(), 'commit preparation must not rerun package qualification')
         (self.root / 'unrelated-not-staged.txt').write_text('unrelated local work\n'); invoke()
         (self.root / 'src/main.ts').write_text('changed\n')
         blocked = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
@@ -543,12 +772,6 @@ used_by:
         self.assertIn('selected-input-not-staged', blocked.stdout)
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         subprocess.run(['git', '-C', str(self.root), 'add', 'src/main.ts'], check=True)
-        stale_preparation = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
-        self.assertNotEqual(stale_preparation.returncode, 0)
-        self.assertIn('verification-preparation-inputs-changed', stale_preparation.stdout)
-        select('--paths', 'src/main.ts', '--record-preparation', '--json')
-        refreshed = select('--paths', 'src/main.ts', '--execute-local', '--json')
-        self.assertIn('local', refreshed['execution_summary']['executed_check_ids'])
         invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
 

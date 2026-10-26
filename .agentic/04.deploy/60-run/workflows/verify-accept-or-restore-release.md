@@ -4,7 +4,7 @@ id: deploy.workflow.verify-accept-or-restore-release
 version: 4
 status: active
 created_on: "2026-10-21"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.release-lifecycle
 disciplines: [security, sre]
@@ -86,3 +86,9 @@ Complete only when the declared final release is healthy, independently verified
 and reflected in the accepted record. Output the candidate verdict, final live
 identity, accepted record and safe evidence references. No result grants new
 permissions, expands the scope, or substitutes for missing mutation authority.
+
+Historical succession validation checks the retained evidence hashes and full
+predecessor lineage without comparing historical contracts to today's files.
+New candidate promotion and rollback compatibility still require exact current
+configuration/permission contract hashes. This permits a corrected successor
+without rewriting or invalidating genuine historical proof.

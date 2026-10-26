@@ -1,0 +1,188 @@
+test_actual_cli_and_selected_workload_alternatives (__main__.RuntimeConfigurationTests.test_actual_cli_and_selected_workload_alternatives) ... ok
+test_command_alias_requires_its_own_runtime_input_contract (__main__.RuntimeConfigurationTests.test_command_alias_requires_its_own_runtime_input_contract) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 124.139s
+
+OK
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 8.50kB 0.0s done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+<3>WSL (51860 - ) ERROR: UtilAcceptVsock:273: accept4 failed 110
+#2 ERROR: error getting credentials - err: exit status 1, out: ``
+------
+ > resolve image config for docker-image://docker.io/docker/dockerfile:1.7:
+------
+Dockerfile:1
+--------------------
+   1 | >>> # syntax=docker/dockerfile:1.7
+   2 |     # agentic-artifact:
+   3 |     #   schema: agentic-artifact/v3
+--------------------
+ERROR: failed to build: failed to solve: error getting credentials - err: exit status 1, out: ``
+111  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+github.com/moby/buildkit/client/llb/sourceresolver.(*imageMetaResolver).ResolveImageConfig
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/client/llb/sourceresolver/imageresolver.go:51
+github.com/moby/buildkit/frontend/gateway.(*gatewayFrontend).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/gateway.go:163
+github.com/moby/buildkit/solver/llbsolver.(*provenanceBridge).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/provenance.go:203
+github.com/moby/buildkit/frontend/gateway/forwarder.(*BridgeClient).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/forwarder/forward.go:66
+github.com/moby/buildkit/frontend/dockerfile/builder.forwardGateway
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/dockerfile/builder/build.go:253
+github.com/moby/buildkit/frontend/dockerfile/builder.Build
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/dockerfile/builder/build.go:63
+github.com/moby/buildkit/frontend/gateway/forwarder.(*GatewayForwarder).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/forwarder/frontend.go:36
+github.com/moby/buildkit/solver/llbsolver.(*provenanceBridge).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/provenance.go:203
+github.com/moby/buildkit/frontend/gateway.(*llbBridgeForwarder).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/gateway.go:744
+github.com/moby/buildkit/control/gateway.(*GatewayForwarder).Solve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/control/gateway/gateway.go:77
+github.com/moby/buildkit/frontend/gateway/pb._LLBBridge_Solve_Handler.func1
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/pb/gateway_grpc.pb.go:415
+google.golang.org/grpc.getChainUnaryHandler.func1
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1256
+github.com/moby/moby/v2/daemon/server/router/grpc.unaryInterceptor
+	/root/build-deb/engine/daemon/server/router/grpc/grpc.go:77
+google.golang.org/grpc.NewServer.chainUnaryServerInterceptors.chainUnaryInterceptors.func1
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1247
+github.com/moby/buildkit/frontend/gateway/pb._LLBBridge_Solve_Handler
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/pb/gateway_grpc.pb.go:417
+google.golang.org/grpc.(*Server).processUnaryRPC
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1443
+google.golang.org/grpc.(*Server).handleStream
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1858
+google.golang.org/grpc.(*Server).serveStreams.func2.1
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1078
+runtime.goexit
+	/usr/local/go/src/runtime/asm_amd64.s:1771
+
+111  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+google.golang.org/grpc.(*ClientConn).Invoke
+	/root/build-deb/engine/vendor/google.golang.org/grpc/call.go:35
+github.com/moby/buildkit/session/auth.(*authClient).GetTokenAuthority
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/session/auth/auth_grpc.pb.go:69
+github.com/moby/buildkit/session/auth.GetTokenAuthority.func1
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/session/auth/auth.go:118
+github.com/moby/buildkit/session.(*Manager).Any
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/session/group.go:87
+github.com/moby/buildkit/session/auth.GetTokenAuthority
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/session/auth/auth.go:115
+github.com/moby/buildkit/util/resolver.(*dockerAuthorizer).AddResponses
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/resolver/authorizer.go:198
+github.com/containerd/containerd/v2/core/remotes/docker.(*request).retryRequest
+	/root/build-deb/engine/vendor/github.com/containerd/containerd/v2/core/remotes/docker/resolver.go:827
+github.com/containerd/containerd/v2/core/remotes/docker.(*request).doWithRetriesInner
+	/root/build-deb/engine/vendor/github.com/containerd/containerd/v2/core/remotes/docker/resolver.go:762
+github.com/containerd/containerd/v2/core/remotes/docker.(*request).doWithRetries
+	/root/build-deb/engine/vendor/github.com/containerd/containerd/v2/core/remotes/docker/resolver.go:737
+github.com/containerd/containerd/v2/core/remotes/docker.(*dockerResolver).Resolve
+	/root/build-deb/engine/vendor/github.com/containerd/containerd/v2/core/remotes/docker/resolver.go:320
+github.com/moby/buildkit/util/resolver.(*Resolver).Resolve
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/resolver/pool.go:261
+github.com/moby/buildkit/util/imageutil.Config
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/imageutil/config.go:107
+github.com/moby/buildkit/source/containerimage.(*Source).ResolveImageMetadata.func2
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/source/containerimage/source.go:190
+github.com/moby/buildkit/util/flightcontrol.(*call[...]).run
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/flightcontrol/flightcontrol.go:122
+sync.(*Once).doSlow
+	/usr/local/go/src/sync/once.go:78
+sync.(*Once).Do
+	/usr/local/go/src/sync/once.go:69
+runtime.goexit
+	/usr/local/go/src/runtime/asm_amd64.s:1771
+
+51832 v0.37.1 /usr/local/lib/docker/cli-plugins/docker-buildx buildx build --file infra/04.deploy/03.product/image/core-server-persistence/Dockerfile --tag kanbien-core-server-persistence:merge-qualification --label org.opencontainers.image.revision=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c --label org.opencontainers.image.source=entity-builder-harness --build-arg SOURCE_COMMIT_SHA=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476
+github.com/docker/buildx/commands.runBuildWithOptions
+	github.com/docker/buildx/commands/build.go:506
+github.com/docker/buildx/commands.runBuild
+	github.com/docker/buildx/commands/build.go:421
+github.com/docker/buildx/commands.buildCmd.func1
+	github.com/docker/buildx/commands/build.go:542
+github.com/docker/cli/cli-plugins/plugin.RunPlugin.func1.1.2
+	github.com/docker/cli@v29.7.2+incompatible/cli-plugins/plugin/plugin.go:65
+github.com/spf13/cobra.(*Command).execute
+	github.com/spf13/cobra@v1.10.2/command.go:1015
+github.com/spf13/cobra.(*Command).ExecuteC
+	github.com/spf13/cobra@v1.10.2/command.go:1148
+github.com/spf13/cobra.(*Command).Execute
+	github.com/spf13/cobra@v1.10.2/command.go:1071
+github.com/docker/cli/cli-plugins/plugin.RunPlugin
+	github.com/docker/cli@v29.7.2+incompatible/cli-plugins/plugin/plugin.go:80
+main.runPlugin
+	github.com/docker/buildx/cmd/buildx/main.go:66
+main.run
+	github.com/docker/buildx/cmd/buildx/main.go:80
+main.main
+	github.com/docker/buildx/cmd/buildx/main.go:90
+runtime.main
+	runtime/proc.go:290
+runtime.goexit
+	runtime/asm_amd64.s:1771
+
+51832 v0.37.1 /usr/local/lib/docker/cli-plugins/docker-buildx buildx build --file infra/04.deploy/03.product/image/core-server-persistence/Dockerfile --tag kanbien-core-server-persistence:merge-qualification --label org.opencontainers.image.revision=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c --label org.opencontainers.image.source=entity-builder-harness --build-arg SOURCE_COMMIT_SHA=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476
+google.golang.org/grpc.(*ClientConn).Invoke
+	google.golang.org/grpc@v1.83.2/call.go:35
+github.com/moby/buildkit/frontend/gateway/pb.(*lLBBridgeClient).Solve
+	github.com/moby/buildkit@v0.33.0/frontend/gateway/pb/gateway_grpc.pb.go:105
+github.com/moby/buildkit/client.(*gatewayClientForBuild).Solve
+	github.com/moby/buildkit@v0.33.0/client/build.go:98
+github.com/moby/buildkit/frontend/gateway/grpcclient.(*grpcClient).Solve
+	github.com/moby/buildkit@v0.33.0/frontend/gateway/grpcclient/client.go:416
+github.com/docker/buildx/build.solve
+	github.com/docker/buildx/build/build.go:1402
+github.com/docker/buildx/build.BuildWithResultHandler.func2.4.2
+	github.com/docker/buildx/build/build.go:704
+github.com/moby/buildkit/frontend/gateway/grpcclient.(*grpcClient).Run
+	github.com/moby/buildkit@v0.33.0/frontend/gateway/grpcclient/client.go:219
+github.com/moby/buildkit/client.(*Client).Build.func2
+	github.com/moby/buildkit@v0.33.0/client/build.go:59
+github.com/moby/buildkit/client.(*Client).solve.func3
+	github.com/moby/buildkit@v0.33.0/client/solve.go:349
+golang.org/x/sync/errgroup.(*Group).Go.func1
+	golang.org/x/sync@v0.22.0/errgroup/errgroup.go:93
+runtime.goexit
+	runtime/asm_amd64.s:1771
+
+111  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json
+github.com/moby/buildkit/frontend/gateway.(*llbBridgeForwarder).Return
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/gateway.go:1033
+github.com/moby/buildkit/control/gateway.(*GatewayForwarder).Return
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/control/gateway/gateway.go:109
+github.com/moby/buildkit/frontend/gateway/pb._LLBBridge_Return_Handler.func1
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/pb/gateway_grpc.pb.go:523
+google.golang.org/grpc.getChainUnaryHandler.func1
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1256
+github.com/moby/moby/v2/daemon/server/router/grpc.unaryInterceptor
+	/root/build-deb/engine/daemon/server/router/grpc/grpc.go:77
+google.golang.org/grpc.NewServer.chainUnaryServerInterceptors.chainUnaryInterceptors.func1
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1247
+github.com/moby/buildkit/frontend/gateway/pb._LLBBridge_Return_Handler
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/frontend/gateway/pb/gateway_grpc.pb.go:525
+google.golang.org/grpc.(*Server).processUnaryRPC
+	/root/build-deb/engine/vendor/google.golang.org/grpc/server.go:1443
+
+51832 v0.37.1 /usr/local/lib/docker/cli-plugins/docker-buildx buildx build --file infra/04.deploy/03.product/image/core-server-persistence/Dockerfile --tag kanbien-core-server-persistence:merge-qualification --label org.opencontainers.image.revision=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c --label org.opencontainers.image.source=entity-builder-harness --build-arg SOURCE_COMMIT_SHA=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476
+google.golang.org/grpc.(*ClientConn).Invoke
+	google.golang.org/grpc@v1.83.2/call.go:35
+github.com/moby/buildkit/api/services/control.(*controlClient).Solve
+	github.com/moby/buildkit@v0.33.0/api/services/control/control_grpc.pb.go:88
+github.com/moby/buildkit/client.(*Client).solve.func2
+	github.com/moby/buildkit@v0.33.0/client/solve.go:337
+golang.org/x/sync/errgroup.(*Group).Go.func1
+	golang.org/x/sync@v0.22.0/errgroup/errgroup.go:93
+
+51832 v0.37.1 /usr/local/lib/docker/cli-plugins/docker-buildx buildx build --file infra/04.deploy/03.product/image/core-server-persistence/Dockerfile --tag kanbien-core-server-persistence:merge-qualification --label org.opencontainers.image.revision=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c --label org.opencontainers.image.source=entity-builder-harness --build-arg SOURCE_COMMIT_SHA=3db60130493a1ad7af4bbe5c6f0adf9715e6b96c /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-3842312794/chat_2026-10-26-07-20-new-chat-implement-and-verify-reusable-executable-delivery-c-2706328476
+github.com/moby/buildkit/client.(*Client).solve.func2
+	github.com/moby/buildkit@v0.33.0/client/solve.go:339
+golang.org/x/sync/errgroup.(*Group).Go.func1
+	golang.org/x/sync@v0.22.0/errgroup/errgroup.go:93
+

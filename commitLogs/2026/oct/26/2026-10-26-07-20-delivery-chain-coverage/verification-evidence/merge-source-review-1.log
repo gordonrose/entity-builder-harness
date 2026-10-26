@@ -1,0 +1,16 @@
+{
+  "counts": {
+    "errors": 0,
+    "reports": 1,
+    "warnings": 0
+  },
+  "errors": [],
+  "ok": true,
+  "reports": [
+    "derivation.04.deploy.2026-10-26.container-image-capabilities-merge-metadata"
+  ],
+  "schema": "rag-rulebook/source-to-rule-derivation-report/v1",
+  "warnings": []
+}
+
+STDERR

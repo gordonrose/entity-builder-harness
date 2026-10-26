@@ -4,7 +4,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -47,5 +47,6 @@ runtime:
   exporter: aws-emf-cloudwatch-logs
   application_failure_effect: bounded-telemetry-failure-only
 qualification:
-  required_checks: [source-identity, minimal-source-build, configuration-startup, vulnerability-scan, sbom, provenance-attestation]
+  required_checks: [source-identity, minimal-source-build, configuration-startup, enabled-metric-export, vulnerability-scan, sbom, provenance-attestation]
+  behaviour_proof: scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py
   receipt_schema: deploy/package-custody-receipt/v1
