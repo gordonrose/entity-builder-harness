@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-06-24"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 01.harness
 #   domain: metadata
 #   disciplines:
@@ -273,6 +273,15 @@ with tempfile.TemporaryDirectory(prefix="artifact-discovery-index-") as temporar
     data = generate("--all", "--strict", "--check-coverage", env=archive_env)
     assert [item["path"] for item in data["artifacts"]] == ["component.ts"]
     assert data["coverage"]["scope"] == "source-archive" and data["git_commit"] == "c" * 40
+    # The packaged source archive deliberately excludes Git and its metadata.
+    no_git = temporary / "without-git"
+    no_git.mkdir()
+    (no_git / "bash").symlink_to(shutil.which("bash"))
+    (no_git / "python3").symlink_to(sys.executable)
+    archive_env["PATH"] = str(no_git)
+    without_git = generate("--all", "--strict", "--check-coverage", env=archive_env)
+    assert without_git["coverage"]["scope"] == "source-archive"
+    assert without_git["artifacts"] == data["artifacts"]
     archive_env.pop("RAG_SOURCE_COMMIT_SHA")
     assert "RAG_SOURCE_COMMIT_SHA is required" in generate("--all", env=archive_env, succeeds=False).stderr
 

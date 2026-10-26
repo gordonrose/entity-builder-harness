@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -27,6 +27,7 @@ version: 1
 runnable_programs:
   - id: replace-with-program-id
     entrypoint: artifacts/replace-with-program.main.js
+    runtime_executable: node
     approved_dependencies:
       - replace-with-reviewed-dependency-id
     observed_dependencies:

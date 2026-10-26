@@ -1,0 +1,25 @@
+{
+  "schema": "delivery/raw-evidence-formatting-review/v1",
+  "result": "passed-source-and-authored-artifacts",
+  "all_path_exit_code": 2,
+  "raw_logs_preserved": {
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stderr.log": "076c83a63bf8cb02ab113bb60b319420f82ce69b600bce475461c9da6520c60c",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-build.stderr.log": "4ea121f19e981506ac8823576fbdcc23952d7c12a44c539d1b840882dabd75be",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stderr.log": "6f7e831addb172b9227f4a77ea73efc522a8bca68a39c889cd87068f55fcd7c6",
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-shell-build.log": "a95b4458ebeb93d99764dae7ac06065d750ac593a01f21075bcb0d943d021a04"
+  },
+  "reason": "Literal terminal output contains original CRLF/progress whitespace and blank EOF; user requires accepted and captured evidence to remain unchanged. No source or authored artifact formatting finding remains.",
+  "checked_argv": [
+    "git",
+    "diff",
+    "--cached",
+    "--check",
+    "--",
+    ".",
+    ":(exclude)commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-build-diagnostic.stderr.log",
+    ":(exclude)commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-build.stderr.log",
+    ":(exclude)commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-persistence-public-recovery.stderr.log",
+    ":(exclude)commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/runtime-evidence/delivery-shell-build.log"
+  ],
+  "checked_exit_code": 0
+}

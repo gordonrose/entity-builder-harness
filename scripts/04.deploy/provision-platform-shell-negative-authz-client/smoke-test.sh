@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-23"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: runtime.operations
 #   disciplines:
@@ -102,3 +102,5 @@ if [[ "$execution_result" != '{"client_id":"negative-client-id","negative_authz_
 fi
 
 echo "Negative authorization test-client local validation passed."
+
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/recovery-test.py" RecoveryCli.test_cognito_partial_absent_unknown_and_present_never_mutate

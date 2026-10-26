@@ -4,7 +4,7 @@ id: deploy.command.kanbien-core-platform.provision-target-budget.readme
 version: 1
 status: active
 created_on: "2026-10-22"
-updated_on: "2026-10-22"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.foundation-cost-control
 disciplines: [security, sre]
@@ -33,3 +33,11 @@ After successful verification, update
 `10-foundation/evidence/target-filtered-monthly-budget.yml` to `verified`;
 then the normal cost-condition gate resumes as the authority for later target
 mutations.
+
+`--mode reconcile` reads the exact deterministic change-set identity and current
+stack/budget outcome without execution. Create uses a source-and-parameter-bound
+name and stable client token, observes it before creation, and leaves lost
+responses uncertain. Execute observes prior execution first; normal provisioning
+states remain pending, missing observations uncertain, rollback/failure terminal,
+and completion requires the budget's actual declared shape. These local fixtures
+do not assert live budget proof.

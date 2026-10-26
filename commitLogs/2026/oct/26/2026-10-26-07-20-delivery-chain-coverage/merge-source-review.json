@@ -1,0 +1,158 @@
+{
+  "schema": "delivery-merge-source-review/v1",
+  "result": "passed",
+  "reviewer": "/root/independent_review",
+  "reviewer_model": "one independent reviewer performing four role-specific assessments",
+  "scope": "Date-only source metadata revision and current source provenance pointers; no policy changes.",
+  "source_date_only_equivalence": {
+    "before_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+    "after_sha256": "d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1",
+    "only_change": "updated_on: 2026-10-20 -> 2026-10-26",
+    "verified_by": "Reversing exactly that field in current bytes reproduces the accepted prior hash."
+  },
+  "rule_policy_unchanged": true,
+  "preserved_historical_records": {
+    ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml": "63124d99266336feff875f0de4734e22e8b03186777c4ce11a087971675c64f1",
+    ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities.yml": "79e8fdc61737b34a6f1d67f877d1bc9fd2df4a7faa4c593278dc5294efb8a459"
+  },
+  "current_sources": {
+    ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml": "39bd779f3076027442a6a1d5872026f55947e1e5b3fae6d8fcded481ecdd7f4a",
+    ".agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml": "950a2a100eaf595013b673f4550ff5613b656ef6941b68abe1a43f806fe5cff2",
+    "docs/04.deploy/source-material/shared/container-image-management.md": "d62fd11c70a2a289d83376122bf804b20b257f9a49caece7d3c66d86902f89f1",
+    "docs/04.deploy/rules/shared/container-image-management.yml": "bba9c8705c2c10cd8518e0c19f1cd27185b874adb661f51a643f17590b938cac",
+    ".agentic/02.rag-rulebook/source-projections/v1.yml": "8d427d31b275b651bcd1fb38532891a1381e2a4702f208dfdafe7e076d979d26"
+  },
+  "checks": [
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-okf-source-material-reviews/script.sh --record .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml --json",
+      "exit_code": 0,
+      "seconds": 0.481,
+      "log": "verification-evidence/merge-source-review-0.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "covered_sources": 0,
+          "errors": 0,
+          "historical_records": 0,
+          "records": 1,
+          "sources": 0,
+          "warnings": 0
+        },
+        "errors": []
+      },
+      "log_sha256": "85a418de5170b6a68563ea76e4ed697a394e48d2c1472a992c0a114a3384ddb8"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml --json",
+      "exit_code": 0,
+      "seconds": 0.542,
+      "log": "verification-evidence/merge-source-review-1.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "errors": 0,
+          "reports": 1,
+          "warnings": 0
+        },
+        "errors": []
+      },
+      "log_sha256": "e70af024d6b5cc46b1bc5a45f4731979c9588f42303cff3c51f7d2660aec1997"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/check-source-projections/script.sh --current --projection-set projection.04.deploy.shared.container-image-management --json",
+      "exit_code": 0,
+      "seconds": 2.852,
+      "log": "verification-evidence/merge-source-review-2.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "accepted_retirement_paths": 70,
+          "active_projection_sets": 12,
+          "checked_projection_sets": 1,
+          "current_source_material_files": 20,
+          "declared_rule_paths": 17,
+          "declared_source_material_files": 20,
+          "derived_rules": 17,
+          "errors": 0,
+          "projection_sets": 14,
+          "warnings": 0
+        },
+        "errors": []
+      },
+      "log_sha256": "704f35eac474fd5d1a5ae994db651e67663d6cc560d689cd5385188608dc7a48"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/check-source-material-coverage/script.sh --current --source docs/04.deploy/source-material/shared/container-image-management.md --json",
+      "exit_code": 0,
+      "seconds": 45.991,
+      "log": "verification-evidence/merge-source-review-3.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "chunked_rule_paths": 41,
+          "errors": 0,
+          "indexed_rule_paths": 41,
+          "sources": 1,
+          "sources_with_corpus_gaps": 0,
+          "sources_with_derivation_reports": 1,
+          "sources_with_structured_rules": 1,
+          "warnings": 0
+        },
+        "errors": []
+      },
+      "log_sha256": "ea3ced6616520efc88835a96fca523f044c97d17f92d1d32c0780d3ce444f627"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-rulebook-index/script.sh --generate-current --json",
+      "exit_code": 0,
+      "seconds": 23.937,
+      "log": "verification-evidence/merge-source-review-4.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "artifacts": 857,
+          "chunk_candidates": 3698,
+          "corpus_packages": 10,
+          "graph_edges": 6006,
+          "rule_packs": 4,
+          "rules": 237,
+          "unresolved_references": 1
+        },
+        "errors": []
+      },
+      "log_sha256": "13a8ff4a0e3e5caf4115f774818f6cd3dd7a5cf16170ba4010f5d9857cb8f122"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/evaluate-retrieval-selector-fixtures/script.sh --fixture .agentic/02.rag-rulebook/evaluations/retrieval-selector/v1/fixtures/container-image-management.yml --json",
+      "exit_code": 0,
+      "seconds": 52.107,
+      "log": "verification-evidence/merge-source-review-5.log",
+      "detail": {
+        "ok": true,
+        "counts": {
+          "failed": 0,
+          "fixtures": 1,
+          "passed": 1
+        }
+      },
+      "log_sha256": "069b6cf1571636238f227c048ae8bff3f0734607498f1666892fc4048aeb8fc0"
+    },
+    {
+      "command": "bash scripts/02.rag-rulebook/validate-derivation-reports/script.sh --report .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml --json",
+      "exit_code": 0,
+      "log": "verification-evidence/merge-source-review-6.log",
+      "log_sha256": "e70af024d6b5cc46b1bc5a45f4731979c9588f42303cff3c51f7d2660aec1997"
+    },
+    {
+      "command": "bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths .agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml .agentic/02.rag-rulebook/derivation-reports/04.deploy/2026-10-26-container-image-capabilities-merge-metadata.yml docs/04.deploy/rules/shared/container-image-management.yml .agentic/02.rag-rulebook/source-projections/v1.yml",
+      "exit_code": 0,
+      "log": "verification-evidence/merge-source-review-7.log",
+      "log_sha256": "8045e5bc4103179b6b883eead1f62510416ade74556fa5742c6d4c3ff24d4cf4"
+    }
+  ],
+  "limits": [
+    "Generated index/chunks were validated from current source in disposable output; no claim that an existing persistent runtime cache became current.",
+    "Source review and derivation do not replace image, publication or live deployment evidence.",
+    "No stage, commit, merge, push or cloud action performed."
+  ]
+}

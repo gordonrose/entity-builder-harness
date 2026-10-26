@@ -4,7 +4,7 @@
   version: 3
   status: active
   created_on: "2026-09-27"
-  updated_on: "2026-10-25"
+  updated_on: "2026-10-26"
   layer: 04.deploy
   domain: deployment.realization
   disciplines:
@@ -164,3 +164,29 @@ Run `npm run deployment:realization:test` when changing the compiler,
 template, schema, or fixtures. A target-specific execution workflow must cite
 the realization contract and retain the gate evidence before it performs a
 provider mutation.
+
+## Executable evidence reuse
+
+Normalized gate and component evidence carries `input_sha256`, computed by the
+compiler's `evidence_bindings(contract, facts)` helper. Component bindings cover
+the declared outgoing dependency closure and exact runtime artifact digests.
+The artifact gate binds artifact declarations and exact digests, qualification
+configuration declarations, workload artifact/configuration composition, and
+its declared qualification check. Source validation binds the full reviewed
+contract; later operational gates also bind runtime artifact identities. A
+permission-only change therefore preserves the actual artifact gate receipt,
+including its original timestamp, while requiring affected structural and
+operational checks again. Changed package bytes, entrypoint, configuration or
+workload composition invalidates that receipt. Adapters retain
+qualified immutable evidence rather than replacing its timestamps with now.
+
+The core requires each gate's declared check ID and chronological current-state
+stage evidence. Fresh structural revalidation may consume older immutable proof
+when its stage-specific input identity still matches.
+At live stages, live-read, change-set and execution-preflight observations, the
+change summary, and non-artifact component observations expire after 900 seconds;
+future observations beyond 60 seconds are rejected. Historical source, artifact
+and semantic-integration proof does not expire solely with age when its relevant
+inputs still match. Provider adapters remain responsible for obtaining actual
+current target/configuration/permission facts and exact artifact identity. A
+locally constructed fixture proves only these compiler boundaries.

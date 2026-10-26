@@ -4,7 +4,7 @@ id: deploy.standards.runnable-program-candidates
 version: 2
 status: active
 created_on: "2026-10-19"
-updated_on: "2026-10-21"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.package-candidates
 disciplines:
@@ -78,3 +78,21 @@ Update the contract before a change adds, removes, or redirects a program
 entrypoint, package dependency, image command, candidate identity rule, or
 verification evidence field. Run the contract checker and the program's
 dependency report before considering a package candidate qualified.
+
+## Finished-image qualification and custody
+
+When a capability depends on assembled behaviour, qualification must execute
+its enabled composition in the finished image. Import resolution and disabled
+capability smoke tests remain useful earlier checks but cannot satisfy this
+proof. Preserve an optional-disabled positive case alongside enabled behaviour
+and an intended-failure regression.
+
+Publication workflows bind successful qualification to the local immutable
+image ID and hashes of relevant configuration and proof inputs with
+`package-custody-receipt/qualification.py`. The publication owner verifies that
+binding before tagging and compares the pulled published digest's image ID with
+the qualified ID.
+Cross-job transport additionally checks the archive hash before loading it.
+The receipt is local qualification evidence, not a live acceptance receipt.
+Existing workflow owners reject missing, conditional, reordered and substituted
+qualification boundaries; reusable step rules live with the custody validator.

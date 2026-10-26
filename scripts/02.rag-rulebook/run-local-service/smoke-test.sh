@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-29"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -30,6 +30,8 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+
+python3 -B scripts/02.rag-rulebook/smoke-test-service-image/wiring-test.py
 
 TMP_DIR="$(mktemp -d)"
 RUNTIME_DIR="$TMP_DIR/runtime"

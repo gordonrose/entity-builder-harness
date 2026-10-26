@@ -4,7 +4,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-07-14"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -98,7 +98,11 @@ jobs:
       - name: Install script dependencies
         run: python -m pip install PyYAML==6.0.2
 
+      - name: Enforce delivery-chain registration and contracts
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+
       - name: Run platform shell checks
+        id: source-checks
         run: |
           npm run platform:server:check
           npm run platform:server:image-runtime-check
@@ -116,6 +120,7 @@ jobs:
             --json
 
       - name: Configure AWS credentials
+        id: credentials
         if: ${{ inputs.publish_image }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -123,6 +128,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Log in to Amazon ECR
+        id: registry-login
         if: ${{ inputs.publish_image }}
         uses: aws-actions/amazon-ecr-login@v2
 
@@ -212,9 +218,21 @@ jobs:
             --runtime-image "${{ steps.base-image.outputs.runtime_image }}" \
             --require-digest-base
 
+      - name: Qualify exact platform shell image
+        id: qualification
+        env:
+          EXISTING_IMAGE: ${{ steps.existing-image.outputs.exists }}
+          EXISTING_DIGEST: ${{ steps.existing-image.outputs.digest }}
+          CANDIDATE_IMAGE: ${{ steps.image-tag.outputs.uri }}
+        run: bash scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh
+
       - name: Push platform shell image
         if: ${{ inputs.publish_image && steps.existing-image.outputs.exists != 'true' }}
-        run: docker push "${{ steps.image-tag.outputs.uri }}"
+        run: |
+          set -euo pipefail
+          qualified_image="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image "${{ steps.qualification.outputs.image_id }}" --receipt "$RUNNER_TEMP/qualified-image.json" --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml '*')"
+          docker tag "$qualified_image" "${{ steps.image-tag.outputs.uri }}"
+          docker push "${{ steps.image-tag.outputs.uri }}"
 
       - name: Resolve immutable image digest
         if: ${{ inputs.publish_image }}
@@ -240,11 +258,13 @@ jobs:
           echo "uri=$ECR_URI@$digest" >> "$GITHUB_OUTPUT"
 
       - name: Verify published target-platform image
+        id: published-image
         if: ${{ inputs.publish_image }}
         run: |
           set -euo pipefail
           expected_platform="linux/amd64"
           docker pull --platform "$expected_platform" "${{ steps.image.outputs.uri }}" >/dev/null
+          test "$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{.Id}}')" = "${{ steps.qualification.outputs.image_id }}"
           actual_platform="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{.Os}}/{{.Architecture}}')"
           source_revision="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
           if [ "$actual_platform" != "$expected_platform" ]; then
@@ -259,84 +279,7 @@ jobs:
       - name: Read ECR scan finding counts
         if: ${{ inputs.publish_image }}
         id: scan
-        run: |
-          set -euo pipefail
-
-          # ECR creates the scan record asynchronously after an image push.
-          # The AWS waiter exits immediately if that record is not present yet,
-          # so first poll specifically for record creation, then use the waiter
-          # for the actual scan-completion state.
-          for attempt in $(seq 1 30); do
-            set +e
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --max-results 1 >/dev/null 2>"$RUNNER_TEMP/ecr-scan-record.err"
-            describe_status=$?
-            set -e
-
-            if [ "$describe_status" -eq 0 ]; then
-              break
-            fi
-            if ! grep -q "ScanNotFoundException" "$RUNNER_TEMP/ecr-scan-record.err"; then
-              cat "$RUNNER_TEMP/ecr-scan-record.err" >&2
-              exit "$describe_status"
-            fi
-            if [ "$attempt" = "30" ]; then
-              echo "ECR did not create an image scan record within five minutes." >&2
-              exit 1
-            fi
-            sleep 10
-          done
-
-          if ! aws ecr wait image-scan-complete \
-            --repository-name "$ECR_REPOSITORY" \
-            --image-id imageDigest="${{ steps.image.outputs.digest }}"; then
-            echo "Image scan did not complete for the immutable image digest." >&2
-            exit 1
-          fi
-
-          scan_status="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanStatus.status" \
-              --output text
-          )"
-          critical="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanFindings.findingSeverityCounts.CRITICAL || \`0\`" \
-              --output text
-          )"
-          high="$(
-            aws ecr describe-image-scan-findings \
-              --repository-name "$ECR_REPOSITORY" \
-              --image-id imageDigest="${{ steps.image.outputs.digest }}" \
-              --query "imageScanFindings.findingSeverityCounts.HIGH || \`0\`" \
-              --output text
-          )"
-
-          critical="${critical:-0}"
-          high="${high:-0}"
-          echo "status=$scan_status" >> "$GITHUB_OUTPUT"
-          echo "critical=$critical" >> "$GITHUB_OUTPUT"
-          echo "high=$high" >> "$GITHUB_OUTPUT"
-
-          if [ "$scan_status" != "COMPLETE" ]; then
-            echo "Image scan did not report COMPLETE: $scan_status" >&2
-            exit 1
-          fi
-          if [ "$critical" != "0" ]; then
-            echo "Image scan found CRITICAL vulnerabilities: $critical" >&2
-            exit 1
-          fi
-          if [ "$high" != "0" ]; then
-            echo "Image scan found HIGH vulnerabilities: $high. Fix them before deployment; this initial public target has no risk-acceptance mechanism." >&2
-            exit 1
-          fi
-
+        run: python3 scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py --repository "$ECR_REPOSITORY" --image-digest "${{ steps.image.outputs.digest }}" --report "$RUNNER_TEMP/ecr-scan.json"
       - name: Generate image SBOM
         if: ${{ inputs.publish_image }}
         id: sbom
@@ -368,6 +311,38 @@ jobs:
           sbom-path: ${{ runner.temp }}/platform-shell.sbom.spdx.json
           push-to-registry: true
           create-storage-record: false
+
+      - name: Capture durable package custody receipt
+        if: ${{ inputs.publish_image }}
+        env:
+          SOURCE_CHECKS_OUTCOME: ${{ steps.source-checks.outcome }}
+          QUALIFICATION_OUTCOME: ${{ steps.qualification.outcome }}
+          CREDENTIALS_OUTCOME: ${{ steps.credentials.outcome }}
+          REGISTRY_LOGIN_OUTCOME: ${{ steps.registry-login.outcome }}
+          PUBLISHED_IMAGE_OUTCOME: ${{ steps.published-image.outcome }}
+          SCAN_OUTCOME: ${{ steps.scan.outcome }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance-attestation.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
+          PUBLISHED_DIGEST: ${{ steps.image.outputs.digest }}
+          SBOM_PATH: ${{ runner.temp }}/platform-shell.sbom.spdx.json
+        run: |
+          python3 scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py --output "$RUNNER_TEMP/platform-shell-custody.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/platform-shell-custody.json" --expected-target kanbien-staging --expected-candidate platform-shell --expected-package-contract kanbien-staging-platform-shell --expected-program platform-shell --json
+
+      - name: Retain immutable package custody evidence
+        if: ${{ inputs.publish_image }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-shell-package-custody-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/platform-shell-custody.json
+            ${{ runner.temp }}/qualified-image.json
+            ${{ runner.temp }}/platform-shell.sbom.spdx.json
+            ${{ runner.temp }}/ecr-scan.json
+          if-no-files-found: error
+          retention-days: 90
+          overwrite: false
 
       - name: Record image-publication summary
         run: |

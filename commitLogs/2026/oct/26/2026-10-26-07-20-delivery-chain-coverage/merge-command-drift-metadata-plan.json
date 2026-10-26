@@ -1,0 +1,48 @@
+{
+  "mode": "report",
+  "today_utc": "2026-10-26",
+  "plans": [
+    {
+      "path": ".agentic/03.product/plans/migration/agentic-product-namespace.md",
+      "id": "product.migration-plan.agentic-product-namespace",
+      "changed": true,
+      "content_differs_from_head": true,
+      "head_baseline_path": ".agentic/03.product/plans/migration/agentic-product-namespace.md",
+      "creation_evidence": {
+        "basis": "existing-header",
+        "created_on": "2026-08-30",
+        "history": {
+          "last_committed_on": "2026-10-20",
+          "last_commit": "f1e2a2dbf137ae6a841ea89f2f78320a6fa19ffb",
+          "basis": "git-first-added",
+          "created_on": "2026-08-30",
+          "commit": "beb2f5cbc2dadd7446223e95717f7451275cc5c1",
+          "meaning": "Repository introduction in available Git history; not a claim of original authorship."
+        }
+      },
+      "last_committed_on": "2026-10-20",
+      "before": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-08-30",
+        "updated_on": "2026-10-20",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "after": {
+        "schema": "agentic-artifact/v3",
+        "status": "active",
+        "created_on": "2026-08-30",
+        "updated_on": "2026-10-26",
+        "deprecated_on": null,
+        "superseded_on": null,
+        "superseded_by": null
+      },
+      "sha256_before": "ad64883c9cd65c540045df7fdb1c3d7071e8f6f5bafc7ef0ac61ff55f87daa40",
+      "sha256_after": "8a466afb2ba04a38006a31796547771d24fb59f5b476a04f16b9474152eae2d2"
+    }
+  ],
+  "errors": [],
+  "applied": false
+}

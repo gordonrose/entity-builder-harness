@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-09-27"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.realization
 #   disciplines:
@@ -29,9 +29,19 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 SCRIPT="scripts/04.deploy/operational-realization-gate/script.sh"
-FIXTURES="scripts/04.deploy/operational-realization-gate/fixtures"
+FIXTURE_SOURCE="scripts/04.deploy/operational-realization-gate/fixtures"
 TEMPORARY_DIRECTORY="$(mktemp -d)"
 trap 'rm -rf "$TEMPORARY_DIRECTORY"' EXIT
+FIXTURES="$TEMPORARY_DIRECTORY/fixtures"
+python3 - "$FIXTURE_SOURCE" "$FIXTURES" <<'PY'
+from datetime import datetime, timezone
+from pathlib import Path
+import shutil, sys
+shutil.copytree(sys.argv[1], sys.argv[2])
+now=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+for path in Path(sys.argv[2]).glob('*.yml'):
+    path.write_text(path.read_text().replace('2026-09-27T00:00:00Z',now))
+PY
 
 expect_failure() {
   local expected_code="$1"
@@ -80,6 +90,8 @@ python3 - "$FIXTURES/valid-contract.yml" "$FIXTURES/preflight-normalized-facts.y
 from pathlib import Path
 import sys
 import yaml
+import importlib.util
+from datetime import datetime, timezone
 
 contract = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8"))
 facts = yaml.safe_load(Path(sys.argv[2]).read_text(encoding="utf-8"))
@@ -90,13 +102,21 @@ facts["artifact_bindings"] = [{
     "component_id": "delivery-artifact",
     "immutable_reference": "sha256:" + "b" * 64,
     "check_id": "artifact-binding-check",
-    "timestamp": "2026-09-27T00:00:00Z",
+    "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "verdict": "passed",
 }]
+spec=importlib.util.spec_from_file_location('gate',Path('scripts/04.deploy/operational-realization-gate/script.py'))
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+bindings=module.evidence_bindings(contract,facts)
+for item in facts['gate_evidence']: item['input_sha256']=bindings['gates'][item['gate']]
+for item in facts['component_evidence']: item['input_sha256']=bindings['components'][item['component_id']]
+summary=yaml.safe_load((Path(sys.argv[2]).parent/'valid-normalized-change-summary.yml').read_text())
+summary['input_sha256']=bindings['gates']['change-set']
+(Path(sys.argv[3]).parent/'runtime-bound-summary.yml').write_text(yaml.safe_dump(summary))
 Path(sys.argv[3]).write_text(yaml.safe_dump(contract, sort_keys=False), encoding="utf-8")
 Path(sys.argv[4]).write_text(yaml.safe_dump(facts, sort_keys=False), encoding="utf-8")
 PY
-runtime_bound_output="$(bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" --facts "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through execution-preflight --json)"
+runtime_bound_output="$(bash "$SCRIPT" --contract "$TEMPORARY_DIRECTORY/runtime-bound-contract.yml" --facts "$TEMPORARY_DIRECTORY/runtime-bound-facts.yml" --change-summary "$TEMPORARY_DIRECTORY/runtime-bound-summary.yml" --through execution-preflight --json)"
 if [[ "$runtime_bound_output" != *'"verdict": "passed"'* ]]; then
   echo "ERROR: a runtime-bound candidate artifact must require and accept one safe immutable binding" >&2
   exit 1
@@ -183,7 +203,7 @@ expect_failure "unsafe-value-field-declared" bash "$SCRIPT" --contract "$FIXTURE
 sed 's/check_id: source-check, //' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-check-id.yml"
 expect_failure "normalized-facts-entry-fields-invalid" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/missing-check-id.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
 
-sed 's/timestamp: "2026-09-27T00:00:00Z", //' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-timestamp.yml"
+sed 's/timestamp: "[^"]*", //' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-timestamp.yml"
 expect_failure "normalized-facts-entry-fields-invalid" bash "$SCRIPT" --contract "$FIXTURES/valid-contract.yml" --facts "$TEMPORARY_DIRECTORY/missing-timestamp.yml" --change-summary "$FIXTURES/valid-normalized-change-summary.yml" --through recovery --json
 
 sed '/component_id: delivery-identity/d' "$FIXTURES/valid-normalized-facts.yml" > "$TEMPORARY_DIRECTORY/missing-component-binding.yml"
@@ -215,4 +235,5 @@ if grep -Eq -- 'subprocess|socket|urllib|requests' scripts/04.deploy/operational
   echo "ERROR: generic realization core must not invoke network or provider tooling" >&2
   exit 1
 fi
+python3 -B scripts/04.deploy/operational-realization-gate/evidence-reuse-test.py
 echo "Operational Realization Gate local tests passed."

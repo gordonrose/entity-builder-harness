@@ -1,0 +1,198 @@
+{
+  "counts": {
+    "covered_sources": 2,
+    "errors": 5,
+    "historical_records": 6,
+    "records": 8,
+    "sources": 7,
+    "warnings": 0
+  },
+  "errors": [
+    "docs/03.product/source-material/guides/markdown/package-documentation-v1.md: accepted-current-review-missing; no valid accepted review matches the current source bytes",
+    "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md: accepted-current-review-missing; no valid accepted review matches the current source bytes",
+    "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md: accepted-current-review-missing; no valid accepted review matches the current source bytes",
+    "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md: accepted-current-review-missing; no valid accepted review matches the current source bytes",
+    "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md: accepted-current-review-missing; no valid accepted review matches the current source bytes"
+  ],
+  "ok": false,
+  "records": [
+    {
+      "current_eligible": true,
+      "current_source_sha256": "e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019",
+      "freshness": "current",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml",
+      "recorded_source_sha256": "e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "56fa64149041b4fc99d645ec782add66011435b0289db09393abe60482199f64",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-package-documentation-v1.yml",
+      "recorded_source_sha256": "099dc9bb1eb69a7977817ee4b8768d1b40898fef1402b7606335107686dd8979",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/03.product/source-material/guides/markdown/package-documentation-v1.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "380afd33e1addb6b1acca6d91de1df0cb2941d3938656e355a31177763416f5e",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/03.product/2026-09-02-untrusted-input-and-bounded-agent-safety-v1.yml",
+      "recorded_source_sha256": "6cb6af3535b44d5e9b002bfd62273f0eb654d8b5c33d713e905c97445aa77b18",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "26e195e94586c71a2168aec21ffbc1a9646a7f9b89a07af4cb916ded0620eed3",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/03.product.platform/2026-09-01-platform-contract-identifier-naming.yml",
+      "recorded_source_sha256": "b32e5b917b45965cfb2634fdb88ccf795552ccabe64a6baab1d64b69ae4eeae4",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-29-github-actions-to-ecs-fargate.yml",
+      "recorded_source_sha256": "d3f0a4be86c1551a22800c9743ec3ba28f508cb34ef0a40036482d69b9945ef0",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-06-30-container-image-management.yml",
+      "recorded_source_sha256": "f6f224ce56fb55b65fc575502454a68a81da368273d56fc1aa5eb78f2d80d221",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": false,
+      "current_source_sha256": "826ec060288b126b9a13d5d97c46f3c08e539b80ab9305d19fdff14ac54f77cf",
+      "freshness": "historical",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-09-08-platform-target-alerting-policy.yml",
+      "recorded_source_sha256": "f0b8de8d3e143c941b3a356143ec095c5e056491a57b8ac2334ae4cf8ec21e6a",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md",
+      "status": "accepted"
+    },
+    {
+      "current_eligible": true,
+      "current_source_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "freshness": "current",
+      "integrity_valid": true,
+      "path": ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml",
+      "recorded_source_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "required_roles": [
+        "architect",
+        "agentic-engineer",
+        "secops-engineer",
+        "senior-sre"
+      ],
+      "source_path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "status": "accepted"
+    }
+  ],
+  "schema": "rag-rulebook/okf-source-material-review-validation-report/v1",
+  "sources": [
+    {
+      "current_sha256": "e2c485ed262fcdaedd3195ef4dca1313ab1502e4ae8ecb683a1f61205fdd8019",
+      "eligible_records": [
+        ".agentic/02.rag-rulebook/source-material-reviews/02.rag-rulebook/2026-10-25-local-provider-retirement.yml"
+      ],
+      "path": "docs/02.rag-rulebook/source-material/hosted-context-provider-contract.md",
+      "status": "covered"
+    },
+    {
+      "current_sha256": "56fa64149041b4fc99d645ec782add66011435b0289db09393abe60482199f64",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/guides/markdown/package-documentation-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "380afd33e1addb6b1acca6d91de1df0cb2941d3938656e355a31177763416f5e",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/guides/markdown/untrusted-input-and-bounded-agent-safety-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "26e195e94586c71a2168aec21ffbc1a9646a7f9b89a07af4cb916ded0620eed3",
+      "eligible_records": [],
+      "path": "docs/03.product/source-material/platform/platform-runtime-enterprise-obligations-v1.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "e91bf7fa7c7ec95f5575febd824d7005812958b5d2ad3b4796e66544df2c9362",
+      "eligible_records": [],
+      "path": "docs/04.deploy/source-material/02.rag-rulebook/github-actions-to-ecs-fargate.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "826ec060288b126b9a13d5d97c46f3c08e539b80ab9305d19fdff14ac54f77cf",
+      "eligible_records": [],
+      "path": "docs/04.deploy/source-material/03.product/platform-target-alerting-policy.md",
+      "status": "accepted-current-review-missing"
+    },
+    {
+      "current_sha256": "6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2",
+      "eligible_records": [
+        ".agentic/02.rag-rulebook/source-material-reviews/04.deploy/2026-10-26-container-image-capabilities.yml"
+      ],
+      "path": "docs/04.deploy/source-material/shared/container-image-management.md",
+      "status": "covered"
+    }
+  ],
+  "warnings": []
+}

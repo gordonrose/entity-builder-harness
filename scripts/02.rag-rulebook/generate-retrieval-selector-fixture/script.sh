@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 2
 #   status: active
 #   created_on: "2026-06-25"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: retrieval
 #   disciplines:
@@ -1231,7 +1231,7 @@ def evidence_bundle_gaps(
                 source_path = family_source_paths.get(family_id)
                 if isinstance(source_path, str):
                     expected_paths.append(source_path)
-            expected_paths = sorted(set(path for path in expected_paths if repo_path(path).is_file()))
+            expected_paths = sorted(set(expected_paths))
             if not expected_paths:
                 gaps.append(
                     {
@@ -1252,6 +1252,11 @@ def evidence_bundle_gaps(
                         "description": (
                             f"Evidence bundle {bundle_id} expected evidence that was not selected: "
                             + ", ".join(missing_paths)
+                            + "".join(
+                                f" Unavailable source {path}: {reason}."
+                                for path, reason in sorted(dict_value(bundle.get("unavailable_sources")).items())
+                                if path in missing_paths
+                            )
                         ),
                         "blocking": False,
                         "suggested_resolution": "Add the expected evidence paths to required source selection or tune ranking/trimming.",

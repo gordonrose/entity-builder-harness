@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-09-06"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -35,6 +35,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import shlex
 
 try:
     import yaml
@@ -139,17 +140,6 @@ require(
 
 scan_index, scan_step = ordered_steps[1]
 scan_run = text(scan_step.get("run"))
-for required_text, message in {
-    "set -euo pipefail": "scan step must fail closed",
-    "ScanNotFoundException": "scan step must distinguish ECR scan-record creation from scan completion",
-    "seq 1 30": "scan step must bound the ECR scan-record availability wait",
-    "ECR did not create an image scan record within five minutes.": "scan step must fail when ECR does not create a scan record",
-    "aws ecr wait image-scan-complete": "scan step must wait for the ECR scan",
-    'scan_status" != "COMPLETE"': "scan step must require COMPLETE status",
-    'critical" != "0"': "scan step must block CRITICAL findings",
-    'high" != "0"': "scan step must block HIGH findings until a governed risk-acceptance path exists",
-}.items():
-    require(required_text in scan_run, message)
 
 base_image_index, base_image_step = step("Resolve digest-pinned build and runtime images")
 base_image_run = text(base_image_step.get("run"))
@@ -183,6 +173,62 @@ require(
     build_index >= 0 and platform_index > build_index and platform_index < scan_index,
     "published image platform verification must occur after build/push and before scan evidence",
 )
+
+# The enabled publication path must exercise the finished image, including a
+# retained image selected on resume. It then publishes that immutable local ID.
+sys.path.insert(0, str(Path("scripts/04.deploy/lifecycle/40-package/package-custody-receipt").resolve()))
+from workflow_guard import protected_script, job_steps, protected_step, unconditional_run, scan_step
+try:
+    guarded = job_steps(WORKFLOW_PATH.read_text(), "build-image")
+    scan_step(guarded, ["python3","scripts/04.deploy/shared/provider-adapters/aws/ecr-scan.py","--repository","$ECR_REPOSITORY","--image-digest","${{ steps.image.outputs.digest }}","--report","$RUNNER_TEMP/ecr-scan.json"], "Read ECR scan finding counts", "${{ inputs.publish_image }}")
+    expected_published='''set -euo pipefail
+expected_platform="linux/amd64"
+docker pull --platform "$expected_platform" "${{ steps.image.outputs.uri }}" >/dev/null
+test "$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{.Id}}')" = "${{ steps.qualification.outputs.image_id }}"
+actual_platform="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{.Os}}/{{.Architecture}}')"
+source_revision="$(docker image inspect "${{ steps.image.outputs.uri }}" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+if [ "$actual_platform" != "$expected_platform" ]; then
+  echo "Published image does not match the reviewed runtime platform." >&2
+  exit 1
+fi
+if [ "$source_revision" != "$GITHUB_SHA" ]; then
+  echo "Published image source revision does not match the checked-out commit." >&2
+  exit 1
+fi'''
+    protected_step(guarded,"Verify published target-platform image",[shlex.split(line) for line in expected_published.splitlines()],condition="${{ inputs.publish_image }}")
+    qualification_environment={"EXISTING_IMAGE":"${{ steps.existing-image.outputs.exists }}","EXISTING_DIGEST":"${{ steps.existing-image.outputs.digest }}","CANDIDATE_IMAGE":"${{ steps.image-tag.outputs.uri }}"}
+    qualification_index, qualification = protected_step(guarded, "Qualify exact platform shell image", [["bash", "scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh"]], environment=qualification_environment)
+    push_index, push = protected_step(guarded, "Push platform shell image", condition="${{ inputs.publish_image && steps.existing-image.outputs.exists != 'true' }}")
+    unconditional_run(push)
+    expected_push='''set -euo pipefail
+qualified_image="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image "${{ steps.qualification.outputs.image_id }}" --receipt "$RUNNER_TEMP/qualified-image.json" --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml '*')"
+docker tag "$qualified_image" "${{ steps.image-tag.outputs.uri }}"
+docker push "${{ steps.image-tag.outputs.uri }}"'''
+    require([shlex.split(line) for line in push.get("run", "").splitlines() if line.strip()]==[shlex.split(line) for line in expected_push.splitlines()], "publication executable command was substituted")
+    require(build_index < qualification_index < push_index, "actual image qualification must precede publication")
+    protected_script(Path('scripts/04.deploy/verify-platform-shell-deployment-workflow/qualify-image.sh'), 'set -euo pipefail\nif [ "${EXISTING_IMAGE:-}" = true ]; then\n  docker pull "$ECR_URI@${EXISTING_DIGEST:-}" >/dev/null\n  candidate="$ECR_URI@${EXISTING_DIGEST:-}"\nelse\n  candidate="$CANDIDATE_IMAGE"\nfi\nqualified_image="$(docker image inspect "$candidate" --format \'{{.Id}}\')"\nbash scripts/04.deploy/smoke-test-platform-shell-image/script.sh --image "$qualified_image"\npython3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image "$qualified_image" --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/Dockerfile --input scripts/04.deploy/smoke-test-platform-shell-image/script.sh --input scripts/04.deploy/smoke-test-platform-shell-image/relational-package-test.py --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien/staging/cloudformation/service.yml \'*\'\necho "image_id=$qualified_image" >> "$GITHUB_OUTPUT"')
+    require('qualification.py verify --image "${{ steps.qualification.outputs.image_id }}"' in push.get("run", ""), "publication must verify the qualified identity")
+    require('docker tag "$qualified_image" "${{ steps.image-tag.outputs.uri }}"' in push.get("run", ""), "publication must tag the qualified ID")
+    publish_condition = "${{ inputs.publish_image }}"
+    expected_ids = {"Run platform shell checks":"source-checks", "Qualify exact platform shell image":"qualification", "Configure AWS credentials":"credentials", "Log in to Amazon ECR":"registry-login", "Verify published target-platform image":"published-image", "Read ECR scan finding counts":"scan", "Generate image SBOM":"sbom", "Attest image provenance":"provenance-attestation", "Attest image SBOM":"sbom-attestation"}
+    evidence_indices = []
+    for name, identifier in expected_ids.items():
+        condition = None if name in ("Run platform shell checks", "Qualify exact platform shell image") else publish_condition
+        evidence_index, evidence = protected_step(guarded, name, condition=condition, environment=qualification_environment if name=="Qualify exact platform shell image" else None)
+        require(evidence.get("id") == identifier, "custody producer outcome identifier changed: " + name)
+        evidence_indices.append(evidence_index)
+    capture_environment = {key:"${{ steps."+value+".outcome }}" for key,value in {"SOURCE_CHECKS_OUTCOME":"source-checks", "QUALIFICATION_OUTCOME":"qualification", "CREDENTIALS_OUTCOME":"credentials", "REGISTRY_LOGIN_OUTCOME":"registry-login", "PUBLISHED_IMAGE_OUTCOME":"published-image", "SCAN_OUTCOME":"scan", "SBOM_OUTCOME":"sbom", "PROVENANCE_OUTCOME":"provenance-attestation", "SBOM_ATTESTATION_OUTCOME":"sbom-attestation"}.items()}
+    capture_environment.update(PUBLISHED_DIGEST="${{ steps.image.outputs.digest }}", SBOM_PATH="${{ runner.temp }}/platform-shell.sbom.spdx.json")
+    capture_index, capture = protected_step(guarded, "Capture durable package custody receipt", [
+        ["python3", "scripts/04.deploy/verify-platform-shell-deployment-workflow/emit-custody.py", "--output", "$RUNNER_TEMP/platform-shell-custody.json"],
+        ["bash", "scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh", "--receipt", "$RUNNER_TEMP/platform-shell-custody.json", "--expected-target", "kanbien-staging", "--expected-candidate", "platform-shell", "--expected-package-contract", "kanbien-staging-platform-shell", "--expected-program", "platform-shell", "--json"],
+    ], condition=publish_condition, environment=capture_environment)
+    require(capture.get("env") == capture_environment, "custody must consume the exact prerequisite outcomes and published digest")
+    retain_index, retain = protected_step(guarded, "Retain immutable package custody evidence", condition=publish_condition)
+    require(max(evidence_indices) < capture_index < retain_index, "all qualification and provenance evidence must precede durable custody")
+    require(retain.get("uses") == "actions/upload-artifact@v4" and retain.get("with") == {"name":"platform-shell-package-custody-${{ github.run_id }}", "path":"${{ runner.temp }}/platform-shell-custody.json\n${{ runner.temp }}/qualified-image.json\n${{ runner.temp }}/platform-shell.sbom.spdx.json\n${{ runner.temp }}/ecr-scan.json\n", "if-no-files-found":"error", "retention-days":90, "overwrite":False}, "durable custody upload must retain immutable exact-run receipt, qualification and SBOM")
+except (ValueError, TypeError, KeyError, AttributeError, yaml.YAMLError):
+    failures.append("finished-image qualification route invalid")
 
 image_profile = target_profile.get("artifacts", {}).get("image", {})
 if not isinstance(image_profile, dict):

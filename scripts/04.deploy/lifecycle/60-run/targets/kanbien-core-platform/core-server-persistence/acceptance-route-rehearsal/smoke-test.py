@@ -5,7 +5,7 @@
 #   version: 1
 #   status: active
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -102,7 +102,54 @@ def route_tests():
     check_mutation(lambda v:v['commands']['collect'].__setitem__('effects',[]),'acceptance-route-command-owner-or-effects-mismatch',True)
     check_mutation(lambda v:v['commands']['collect'].__setitem__('owner','foreign.owner'),'acceptance-route-command-owner-or-effects-mismatch',True)
     check_mutation(lambda v:v['accepted_record'].__setitem__('schema_path','missing/schema.yml'),'acceptance-route-record-schema-missing',True)
-    passed('malformed proof, wrong owner/effects and missing schema never execute commands')
+    check_mutation(lambda v:v.pop('release_succession'),'acceptance-route-release-succession-missing',True)
+    check_mutation(lambda v:v['release_succession'].__setitem__('promotion','promote'),'acceptance-route-release-succession-command-invalid',True)
+    passed('malformed proof, missing succession, scope activation substitution, wrong owner/effects and missing schema never execute commands')
+
+
+
+def fresh_verifier_route_tests():
+    """Resolve the declared phase argv and exercise real CLI producer/consumer IDs."""
+    route_api=load(Path('scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py'),'fresh_route_api')
+    operation_tests=load(RUN/'verify-candidate/operation-test.py','fresh_operation_fixture')
+    route=yaml.safe_load((ROOT/ROUTE).read_text())
+    phases=['server-replacement-read','credential-revocation-unready','credential-recovery-health','credential-recovery-read','rollback-b-health','rollback-b-read','rollback-final-health','rollback-final-read','current-health']
+    fixture=operation_tests.Fixture();temporary=fixture.root
+    latest={};proofs={}
+    try:
+        fixture.update(submission='normal',status='STOPPED')
+        def invoke(argv):
+            result=subprocess.run(argv,cwd=fixture.root,env=fixture.env,capture_output=True,text=True,timeout=20)
+            return result,json.loads(result.stdout)
+        for name in phases:
+            command=route['commands'][name];argv=command['argv'];mode=argv[argv.index('--mode')+1]
+            predecessor_key=name.replace('-','_')+'_predecessor'
+            assert '--new-operation' in argv and argv[argv.index('--expected-operation')+1]=='{'+predecessor_key+'}',name
+            predecessor=latest.get(mode,'none');values={predecessor_key:predecessor}
+            resolved=route_api.resolve(argv,values);assert resolved is not None
+            before=len(fixture.runs());result,observed=invoke(resolved)
+            assert result.returncode==0 and observed['verdict']=='accepted' and observed['facts']['evidence_reuse']=='fresh-terminal-observation',(name,result.stdout,result.stderr)
+            current=observed['facts']['operation_id'];assert current!=predecessor and len(fixture.runs())==before+1
+            latest[mode]=current;proof=fixture.root/observed['facts']['proof_receipt'];proofs[str(proof)]=hashlib.sha256(proof.read_bytes()).hexdigest()
+            retry,reused=invoke(resolved)
+            assert retry.returncode==0 and reused['facts']['operation_id']==current and reused['facts']['evidence_reuse']=='historical-completion' and len(fixture.runs())==before+1
+            assert reused['facts']['proof_receipt']==observed['facts']['proof_receipt']
+        passed('nine declared fresh verifier phases consume actual same-mode predecessor outputs; identical retries retain historical completion without new tasks')
+        # Removing both successor flags is syntactically valid but cannot stand
+        # in for a new phase: the actual command exposes retained completion.
+        argv=route_api.resolve(route['commands']['credential-recovery-read']['argv'],{'credential_recovery_read_predecessor':latest['read']})
+        old=list(argv);old.remove('--new-operation');at=old.index('--expected-operation');del old[at:at+2]
+        before=len(fixture.runs());result,historical=invoke(old)
+        assert result.returncode==0 and historical['facts']['evidence_reuse']=='historical-completion' and len(fixture.runs())==before
+        invalid=list(argv);invalid.remove('--new-operation');result,blocked=invoke(invalid)
+        assert result.returncode==1 and blocked['findings'][0]['code']=='private-persistence-verifier-new-operation-arguments-invalid' and len(fixture.runs())==before
+        wrong=list(argv);wrong[wrong.index('--expected-operation')+1]=latest['health-ready'];result,blocked=invoke(wrong)
+        assert result.returncode==1 and blocked['findings'][0]['code']=='private-persistence-verifier-operation-predecessor-mismatch' and len(fixture.runs())==before
+        assert all(hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest for path,digest in proofs.items())
+        passed('omitted fresh flags expose historical proof; incomplete and cross-mode predecessors block; prior immutable receipts remain unchanged')
+    finally:fixture.close()
+    assert not temporary.exists()
+    passed('fresh-phase CLI rehearsal disposable operation state and provider effects are removed')
 
 
 def full_route():
@@ -113,15 +160,19 @@ def full_route():
         shutil.copytree(ROOT/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector',root/'infra/04.deploy/03.product/image/core-server-persistence-observability-collector')
         image_contract=Path(yaml.safe_load((root/CONTRACT).read_text())['program']['image_contract']);(root/image_contract).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/image_contract,root/image_contract)
         shutil.rmtree(root/SCOPE/'30-release-evidence/proof-receipts');(root/RECORD).unlink()
+        (root/SCOPE/'30-release-evidence/current-accepted-release.yml').unlink()
+        shutil.rmtree(root/SCOPE/'30-release-evidence/accepted-releases')
         facts=fixtures.capture_proofs(root)
         assert len(facts['proof_receipts'])==15
         passed('actual controller observations retain all 15 simulated proof receipts')
-        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_CLASS='simulated'
+        collector=load(RUN/'collect-acceptance-evidence/script.py','rehearsal_collector');collector.ROOT=root;collector.RECORD=root/RECORD;collector.EVIDENCE_ROOT=collector.RECORD.parent;collector.EVIDENCE_CLASS='simulated'
         now=datetime.now(timezone.utc);stamp=lambda value:value.isoformat().replace('+00:00','Z')
         runnable='sha256:'+'c'*64;image='337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@'+facts['candidate_digest']
         current=ARN+'f'*32;health=ARN+'e'*32
         definitions={'CoreServerPersistenceTaskDefinitionArn':DEFINITION+'kanbien-core-platform-core-server-persistence:1','CoreServerPersistenceVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-verifier:1','CoreServerPersistenceMigrationTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-migration:1','CoreServerPersistenceRestorationVerifierTaskDefinitionArn':DEFINITION+'kanbien-core-platform-persistence-restoration-verifier:1'}
-        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health}
+        values={'candidate_receipt':custody(root/'candidate.json',facts['candidate_digest']),'rollback_receipt':custody(root/'rollback.json',facts['rollback_digest']),'proof_receipts':facts['proof_receipts'],'server_replacement_original':facts['original_task'],'server_replacement_successor':facts['successor_task'],'recovery_snapshot':facts['recovery_snapshot'],'record_proof_receipt':facts['record_proof_receipt'],'current_health_task':health,'rollback_compatibility_id':'rollback-compatibility-'+'a'*24}
+        route_inputs=yaml.safe_load((ROOT/ROUTE).read_text())['inputs']
+        values.update({key:spec['example'] for key,spec in route_inputs.items() if key.endswith('_predecessor')})
         manifest=root/'inputs.yml';manifest.write_text(yaml.safe_dump({'schema':'deploy/acceptance-inputs/v1','target':'kanbien-core-platform','scope':'core-server-persistence','values':values}))
         health_task={'taskArn':health,'taskDefinitionArn':definitions['CoreServerPersistenceVerifierTaskDefinitionArn'],'lastStatus':'STOPPED','startedAt':stamp(now-timedelta(seconds=60)),'stoppedAt':stamp(now-timedelta(seconds=40)),'containers':[{'name':'private-persistence-verifier','exitCode':0,'image':image,'imageDigest':runnable}],'overrides':{'containerOverrides':[{'name':'private-persistence-verifier','environment':[{'name':'PERSISTENCE_VERIFIER_MODE','value':'health-ready'},{'name':'PERSISTENCE_ACCEPTANCE_RECORD_ID','value':'core-persistence-acceptance-v1'},{'name':'PERSISTENCE_ACCEPTANCE_FACT','value':'kanbien-core-persistence-acceptance-v1'}]}]}}
         observations=[];state={'healthy':True,'cleanup':True}
@@ -154,6 +205,7 @@ def full_route():
             state['cleanup']=True;original=(health_task['startedAt'],health_task['stoppedAt']);health_task['startedAt']=stamp(now-timedelta(hours=1));health_task['stoppedAt']=stamp(now-timedelta(minutes=59,seconds=40));code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code and report['findings']==[{'code':'acceptance-evidence-current-health-stale-or-mismatched'}] and not collector.RECORD.exists(),report;health_task['startedAt'],health_task['stoppedAt']=original
             passed('fresh unhealthy, stale readiness and remaining restore block writes')
             code,report=capture(collector,['--inputs',str(manifest),'--write','--json']);assert code==0 and report['verdict']=='recorded',report
+        candidate_path=Path(report['facts']['candidate_record'])
         record=yaml.safe_load(collector.RECORD.read_text());assert record['status']=='rehearsed' and record['evidence_class']=='simulated'
         assert {parts[-1] for parts in observations if parts[:2]==('ecs','describe-tasks')}=={health,current}
         passed('complete collector writes temporary rehearsal using zero historical task queries')
@@ -207,7 +259,7 @@ def full_route():
                 else:raise AssertionError('outside-root index promoted')
         index_before=index.read_text();invalid=copy.deepcopy(value);invalid['scopes'].append(copy.deepcopy(invalid['scopes'][1]));index.write_text(yaml.safe_dump(invalid));invalid_bytes=index.read_bytes()
         try:promotion.promote(root/CONTRACT,root,True,True)
-        except ValueError as error:assert str(error)=='scope-promotion-inventory-invalid',error
+        except ValueError as error:assert str(error)=='scope-promotion-inventory-invalid',(str(error),route_api.inspect(root/CONTRACT,root,ROOT))
         else:raise AssertionError('duplicate scope promoted')
         assert index.read_bytes()==invalid_bytes
         index.write_text(index_before)
@@ -217,6 +269,17 @@ def full_route():
         cli(Path('scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery/script.sh'),'--target-root',root/TARGET/'20-scopes','--rehearsal-root',root,'--json')
         cli(Path('scripts/04.deploy/lifecycle/00-target-alignment/core-platform-target-declaration/script.sh'),'--target-root',root/TARGET,'--rehearsal-root',root,'--json')
         passed('actual promotion and lifecycle/target downstream gates accept complete temporary route')
+        succession=Path('scripts/04.deploy/lifecycle/60-run/release-succession/script.sh')
+        evidence=collector.RECORD.parent
+        first=cli(succession,'--operation','initialize-legacy','--evidence-root',evidence,'--legacy-record',collector.RECORD,'--expected-predecessor','none','--rehearsal-root',root,'--json')
+        predecessor=first['facts']['release_id'];accepted_bytes=collector.RECORD.read_bytes()
+        successor=cli(succession,'--operation','promote','--evidence-root',evidence,'--candidate-record',candidate_path,'--expected-predecessor',predecessor,'--rehearsal-root',root,'--json')
+        assert successor['facts']['release_id'] != predecessor and collector.RECORD.read_bytes()==accepted_bytes
+        cli(succession,'--operation','validate-current','--evidence-root',evidence,'--rehearsal-root',root,'--json')
+        cli(succession,'--operation','promote','--evidence-root',evidence,'--candidate-record',candidate_path,'--expected-predecessor',predecessor,'--rehearsal-root',root,'--json')
+        cli(succession,'--operation','promote','--evidence-root',evidence,'--candidate-record',candidate_path,'--expected-predecessor','release-'+ '0'*24,'--rehearsal-root',root,'--json',ok=False)
+        cli(validator,'--record',collector.RECORD,'--rehearsal-root',root,'--json')
+        passed('actual producer candidate uses evidence-relative paths and CLI succession preserves legacy, resumes idempotently and rejects stale predecessor')
         # Incomplete inputs and old raw task forms fail safely without provider access.
         with patch.object(collector,'aws',side_effect=AssertionError('malformed input queried provider')):
             code,report=capture(collector,['--receipt']);assert code and report['findings'],report
@@ -227,4 +290,4 @@ def full_route():
     passed('all genuine accepted evidence and lifecycle files preserved byte-for-byte')
 
 if __name__=='__main__':
-    route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))
+    route_tests();fresh_verifier_route_tests();full_route();print(json.dumps({'schema':'deploy/acceptance-route-rehearsal-report/v1','verdict':'passed','evidence_class':'simulated','checks':COUNT}))

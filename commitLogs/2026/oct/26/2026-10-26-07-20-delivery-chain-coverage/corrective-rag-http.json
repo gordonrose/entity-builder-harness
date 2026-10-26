@@ -1,0 +1,41 @@
+{
+  "schema": "delivery-corrective-local-http/v1",
+  "result": "passed",
+  "checks": [
+    {
+      "check_id": "rag-local-query-regression",
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/query-context/smoke-test.sh"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "evidence_class": "local-loopback-http",
+      "source_sha256": "875a0509cf520e215e961325d1a2a26f7ceb2c2f8e3df060b4e644488dc5589e",
+      "selected_input_digest": "f68a7d49e1b96e7cfbce30f57fae0e2e087689d49d0a40d6d4512e766db55bcc",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-rag-query-context.log",
+      "log_sha256": "f9a626cc7b479258382e5c98a3ecac667ffee40d8e24aab04b10efd6953194e1"
+    },
+    {
+      "check_id": "rag-local-service-regression",
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/run-local-service/smoke-test.sh"
+      ],
+      "environment": {
+        "RAG_SERVICE_SMOKE_PORT": "41441"
+      },
+      "exit_code": 0,
+      "evidence_class": "local-loopback-http",
+      "source_sha256": "295bd23cbc8e5a9c06776b2ca10716f268d2c96ba7391be834d09d76cc9ab73e",
+      "selected_input_digest": "3f1418928a73fc56ba855566da99da44455c5b40b17c033778552a3a65306e35",
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-rag-local-service.log",
+      "log_sha256": "c96e7571cf0d5fe350cc46ecb27c6019a003a888c0dea1b0001622406c37f684"
+    }
+  ],
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "limits": [
+    "Disposable local runtime and loopback servers only; no hosted service or cloud access.",
+    "These package-stage commands were executed separately after the local aggregate; their deferred selector status is not represented as an executed selector pass."
+  ]
+}

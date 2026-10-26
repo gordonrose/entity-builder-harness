@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 5
 #   status: active
 #   created_on: "2026-09-26"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -211,3 +211,5 @@ if [[ "$result" != *'"verdict": "passed"'* || "$result" != *'"id": "source-polic
   exit 1
 fi
 echo "Platform-shell deployment reconciliation local check passed."
+
+python3 -B scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py

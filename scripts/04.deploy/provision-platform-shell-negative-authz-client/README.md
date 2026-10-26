@@ -4,7 +4,7 @@ id: deploy.script.provision-platform-shell-negative-authz-client.readme
 version: 1
 status: active
 created_on: "2026-09-23"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: runtime.operations
 disciplines:
@@ -59,3 +59,12 @@ Provisioning alone does not make the client trusted by the service. A reviewed
 service deployment must add its exact, non-secret client ID to
 `PLATFORM_AUTH_COGNITO_ADDITIONAL_APP_CLIENT_IDS` before the status-only `403`
 smoke can run.
+
+`--reconcile --json` is observation-only: it lists the declared resource server,
+client and secret metadata without retrieving secret values. It distinguishes
+absent, partial, present-but-unqualified and uncertain outcomes. Secret deletion
+pending, duplicate identities, denied reads and paginated/incomplete results
+cannot become completed cleanup or qualification. Failed compensation preserves
+the original safe failure and reports `compensation-unproven-reconcile-required`.
+The existing invocation remains blocked until the reviewed partial state is
+resolved; reconciliation never repeats provisioning automatically.

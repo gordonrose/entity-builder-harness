@@ -1,0 +1,14 @@
+{
+  "name": "public-recovery-boundaries",
+  "argv": [
+    "python3",
+    "-B",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-persistence-image/local-public-recovery-test.py"
+  ],
+  "started_at": "2026-10-26T13:45:54.150015+00:00",
+  "finished_at": "2026-10-26T13:46:01.012689+00:00",
+  "duration_seconds": 6.865,
+  "exit_code": 0,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-public-recovery-boundaries.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-public-recovery-boundaries.stderr.log"
+}

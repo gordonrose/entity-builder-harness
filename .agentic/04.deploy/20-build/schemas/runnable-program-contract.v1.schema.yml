@@ -4,7 +4,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.package-candidates
 #   disciplines:
@@ -48,13 +48,13 @@ safe_evidence_fields:
 field_guide:
   - path: runnable_programs[]
     what: One program that may be selected as a package root.
-    validation: Requires a stable ID, a relative entrypoint, and approved and observed dependency lists.
+    validation: Requires a stable ID, a relative entrypoint, runtime_executable, and approved and observed dependency lists.
   - path: runnable_programs[].approved_dependencies
     what: Dependencies deliberately allowed in the program boundary.
     validation: Every observed dependency must be listed here before package construction may continue.
   - path: image_contracts[]
     what: An executable image boundary for one declared program.
-    validation: Requires exec-form command tokens containing the selected program entrypoint and no shell syntax.
+    validation: Requires exec-form tokens beginning with the declared runtime_executable followed immediately by the selected program entrypoint, without shell syntax.
   - path: package_candidates[]
     what: A candidate package formed from one image contract.
     validation: Requires runtime-bound-sha256 as its immutable identity rule until a package digest exists.

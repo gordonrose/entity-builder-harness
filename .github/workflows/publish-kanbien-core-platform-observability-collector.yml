@@ -4,7 +4,7 @@
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-25"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence.observability
 #   disciplines: [security, sre]
@@ -23,6 +23,7 @@ jobs:
   build-and-qualify:
     outputs:
       archive_sha256: ${{ steps.archive.outputs.sha256 }}
+      image_id: ${{ steps.archive.outputs.image_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -30,6 +31,11 @@ jobs:
         with: { persist-credentials: false }
       - name: Enforce protected main source
         run: test "$GITHUB_REF" = refs/heads/main
+      - name: Install script dependencies
+        run: python3 -m pip install PyYAML==6.0.2
+      - name: Enforce delivery-chain registration and contracts
+        run: python3 scripts/04.deploy/inventory-deploy-control/script.py --delivery --check
+
       - name: Qualify target collector contract
         run: |
           bash scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration/script.sh --json
@@ -43,31 +49,25 @@ jobs:
             --tag kanbien-observability-collector:qualification .
       - name: Qualify exact collector startup with non-secret configuration
         run: |
-          set -euo pipefail
-          name="kanbien-observability-collector-qualification-$GITHUB_RUN_ID"
-          docker run --detach --rm --name "$name" --read-only \
-            --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL \
-            --security-opt no-new-privileges \
-            -e "AOT_CONFIG_CONTENT=$(cat infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml)" \
-            kanbien-observability-collector:qualification >/dev/null
-          trap 'docker logs "$name" || true; docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
-          sleep 5
-          test "$(docker inspect --format '{{.State.Running}}' "$name")" = true
-          ! docker logs "$name" 2>&1 | grep -Ei 'error.*(config|awsemf)|failed.*(config|awsemf)'
-          docker rm -f "$name" >/dev/null
-          trap - EXIT
+          bash scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py record --image kanbien-observability-collector:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --input infra/04.deploy/03.product/image/core-server-persistence-observability-collector/image-contract.yml --input infra/04.deploy/03.product/image/core-server-persistence-observability-collector/collector-qualification-config.yml --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml observability-collector --input scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/qualify-image.sh --input scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody/behavior-test.py
       - name: Export exact qualified collector archive
         id: archive
         run: |
           set -euo pipefail
+          image_id="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image kanbien-observability-collector:qualification --receipt "$RUNNER_TEMP/qualified-image.json" --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml observability-collector)"
+          echo "image_id=$image_id" >> "$GITHUB_OUTPUT"
           docker save kanbien-observability-collector:qualification -o "$RUNNER_TEMP/observability-collector.scan-input.tar"
           sha256sum "$RUNNER_TEMP/observability-collector.scan-input.tar" | awk '{print "sha256=" $1}' >> "$GITHUB_OUTPUT"
       - name: Export exact qualified image for unprivileged scan
         uses: actions/upload-artifact@v4
         with:
           name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
-          path: ${{ runner.temp }}/observability-collector.scan-input.tar
+          path: |
+            ${{ runner.temp }}/observability-collector.scan-input.tar
+            ${{ runner.temp }}/qualified-image.json
           if-no-files-found: error
+          overwrite: false
           retention-days: 1
 
   scan-qualified-payload:
@@ -108,6 +108,7 @@ jobs:
           name: kanbien-core-platform-observability-collector-vulnerability-scan-${{ github.run_id }}
           path: observability-collector.trivy.json
           if-no-files-found: error
+          overwrite: false
           retention-days: 30
       - name: Require clean portable vulnerability scan of qualified payload
         if: steps.vulnerability_scan.outcome != 'success'
@@ -133,15 +134,22 @@ jobs:
         with:
           name: kanbien-core-platform-observability-collector-scan-input-${{ github.run_id }}
           path: scan-input
+      - name: Retrieve clean collector scan evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: kanbien-core-platform-observability-collector-vulnerability-scan-${{ github.run_id }}
+          path: scan-proof
       - name: Verify archive is the scanned qualified payload
         run: |
           set -euo pipefail
           actual="$(sha256sum scan-input/observability-collector.scan-input.tar | awk '{print $1}')"
           test "$actual" = "${{ needs.build-and-qualify.outputs.archive_sha256 }}"
           docker load --input scan-input/observability-collector.scan-input.tar
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image "${{ needs.build-and-qualify.outputs.image_id }}" --receipt scan-input/qualified-image.json --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml observability-collector
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: '${{ env.AWS_ROLE_ARN }}', aws-region: '${{ env.AWS_REGION }}' }
       - name: Prove fixed delivery read access
+        id: access
         run: bash scripts/04.deploy/lifecycle/00-target-alignment/targets/kanbien-core-platform/verify-delivery-role-access/script.sh
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -149,12 +157,16 @@ jobs:
         id: image
         run: |
           set -euo pipefail
-          docker tag kanbien-observability-collector:qualification "$ECR_URI:$CANDIDATE_TAG"
+          qualified_image="$(python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification.py verify --image "${{ needs.build-and-qualify.outputs.image_id }}" --receipt scan-input/qualified-image.json --configuration-input scripts/04.deploy/lifecycle/00-target-alignment/provider-adapters/aws/ecs-runtime-configuration.py infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/core-server-persistence.yml observability-collector)"
+          docker tag "$qualified_image" "$ECR_URI:$CANDIDATE_TAG"
           docker push "$ECR_URI:$CANDIDATE_TAG"
           digest="$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$CANDIDATE_TAG" --query 'imageDetails[0].imageDigest' --output text)"
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          docker pull "$ECR_URI@$digest" >/dev/null
+          test "$(docker image inspect "$ECR_URI@$digest" --format '{{.Id}}')" = "$qualified_image"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
       - name: Generate SBOM
+        id: sbom
         uses: anchore/sbom-action@v0
         with:
           image: ${{ env.ECR_URI }}@${{ steps.image.outputs.digest }}
@@ -163,6 +175,7 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
       - name: Attest collector provenance
+        id: provenance
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
@@ -170,6 +183,7 @@ jobs:
           push-to-registry: true
           create-storage-record: false
       - name: Attest collector SBOM
+        id: sbom-attestation
         uses: actions/attest@v4
         with:
           subject-name: ${{ env.ECR_URI }}
@@ -180,28 +194,16 @@ jobs:
       - name: Write and validate safe collector custody receipt
         env:
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          QUALIFICATION_OUTCOME: ${{ needs.build-and-qualify.result }}
+          ACCESS_OUTCOME: ${{ steps.access.outcome }}
+          PUBLICATION_OUTCOME: ${{ steps.image.outcome }}
+          SCAN_OUTCOME: ${{ needs.scan-qualified-payload.result }}
+          SBOM_OUTCOME: ${{ steps.sbom.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          SBOM_ATTESTATION_OUTCOME: ${{ steps.sbom-attestation.outcome }}
         run: |
-          set -euo pipefail
-          receipt="$RUNNER_TEMP/observability-collector-package-custody-receipt.json"
-          export RECEIPT_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          python3 - "$receipt" <<'PY'
-          import json, os, sys
-          json.dump({
-            'schema': 'deploy/package-custody-receipt/v1', 'target': 'kanbien-core-platform',
-            'environment_class': 'private-persistence-candidate', 'provider_region_alias': 'aws-eu-west-1',
-            'candidate_id': 'observability-collector', 'package_contract_id': 'core-server-persistence-observability-collector-image',
-            'program_id': 'kanbien-observability-collector', 'source_revision': os.environ['GITHUB_SHA'],
-            'image_digest': os.environ['IMAGE_DIGEST'], 'release_identity': 'source-' + os.environ['GITHUB_SHA'],
-            'checked_at': os.environ['RECEIPT_CHECKED_AT'],
-            # The generic custody receipt carries the reusable check vocabulary.
-            # Target-specific proof names remain in the collector contract and
-            # pipeline declaration; adding them here would make this otherwise
-            # valid receipt fail the generic schema.
-            'checks': {'runnable_program_contract':'passed','dependency_boundary':'passed','delivery_access_static':'passed','delivery_access_live':'passed','local_image_smoke':'passed','vulnerability_scan':'passed','sbom':'passed','provenance_attestation':'passed'},
-            'verdict': 'qualified', 'receipt_reference': 'github-actions-run:' + os.environ['GITHUB_RUN_ID']
-          }, open(sys.argv[1], 'w', encoding='utf-8'), sort_keys=True)
-          PY
-          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$receipt" --expected-target kanbien-core-platform --expected-candidate observability-collector --expected-package-contract core-server-persistence-observability-collector-image --expected-program kanbien-observability-collector --json
+          python3 scripts/04.deploy/lifecycle/40-package/package-custody-receipt/capture.py --target kanbien-core-platform --environment-class private-persistence-candidate --provider-region-alias aws-eu-west-1 --candidate observability-collector --package-contract core-server-persistence-observability-collector-image --program kanbien-observability-collector --scan-check vulnerability_scan --sbom "$RUNNER_TEMP/observability-collector.sbom.spdx.json" --output "$RUNNER_TEMP/observability-collector-package-custody-receipt.json"
+          bash scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh --receipt "$RUNNER_TEMP/observability-collector-package-custody-receipt.json" --expected-target kanbien-core-platform --expected-candidate observability-collector --expected-package-contract core-server-persistence-observability-collector-image --expected-program kanbien-observability-collector --json
       - name: Upload safe collector custody evidence
         uses: actions/upload-artifact@v4
         with:
@@ -209,7 +211,10 @@ jobs:
           path: |
             ${{ runner.temp }}/observability-collector-package-custody-receipt.json
             ${{ runner.temp }}/observability-collector.sbom.spdx.json
+            scan-input/qualified-image.json
+            scan-proof/observability-collector.trivy.json
           if-no-files-found: error
+          overwrite: false
           retention-days: 30
 
   retain-safe-failure-diagnostic:
@@ -243,4 +248,5 @@ jobs:
           name: kanbien-core-platform-observability-collector-package-failure-${{ github.run_id }}
           path: ${{ runner.temp }}/observability-collector-package-failure-diagnostic.json
           if-no-files-found: error
+          overwrite: false
           retention-days: 30

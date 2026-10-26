@@ -1,0 +1,7 @@
+test_actual_cli_and_selected_workload_alternatives (__main__.RuntimeConfigurationTests.test_actual_cli_and_selected_workload_alternatives) ... ok
+test_command_alias_requires_its_own_runtime_input_contract (__main__.RuntimeConfigurationTests.test_command_alias_requires_its_own_runtime_input_contract) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 57.173s
+
+OK

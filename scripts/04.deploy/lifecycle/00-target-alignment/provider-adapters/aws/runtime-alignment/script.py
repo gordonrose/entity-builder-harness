@@ -5,7 +5,7 @@
 #   version: 1
 #   status: draft
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.target-alignment
 #   disciplines: [security, sre]
@@ -20,7 +20,8 @@
 #   effects: [network]
 """AWS-only read adapter.  It emits normalized assertions, never raw responses."""
 from __future__ import annotations
-import argparse, json, subprocess, sys
+import argparse, importlib.util, json, subprocess, sys
+from functools import lru_cache
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -29,15 +30,23 @@ import yaml
 IDS = ("right-destination", "right-application", "known-healthy-baseline", "allowed-deployment-route", "package-destination", "required-access", "required-settings", "change-safety", "freshness-and-drift")
 STABLE_SUCCESSFUL_STACK_STATUSES = frozenset({"CREATE_COMPLETE", "UPDATE_COMPLETE"})
 
+@lru_cache(maxsize=1)
+def response_adapter():
+    root=Path(__file__).resolve().parents[7]
+    spec=importlib.util.spec_from_file_location("runtime_aws_response",root/"scripts/04.deploy/shared/provider-adapters/aws/response.py")
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return root,module
+
 def command(args: argparse.Namespace, *items: str) -> tuple[bool, Any, str]:
-    result = subprocess.run(["aws", *items, "--profile", args.profile, "--region", args.region, "--output", "json"], capture_output=True, text=True)
+    root,adapter=response_adapter()
+    if not adapter.inventory_covered(root):return False,None,"delivery-inventory-not-covered"
+    try:result = subprocess.run(["aws", *items, "--profile", args.profile, "--region", args.region, "--output", "json"], capture_output=True, text=True,timeout=30)
+    except (OSError,subprocess.SubprocessError):return False,None,"unavailable"
     if result.returncode:
-        error = result.stderr.lower()
-        if "does not exist" in error or "does not exist for stack" in error: return False, None, "not-found"
-        if "accessdenied" in error or "not authorized" in error: return False, None, "access-denied"
-        return False, None, "unavailable"
-    try: return True, json.loads(result.stdout), "ok"
-    except json.JSONDecodeError: return False, None, "invalid-response"
+        code=adapter.classify_error(items[0],items[1],result.stderr)
+        return False,None,{"aws-resource-missing":"not-found","aws-access-denied":"access-denied"}.get(code,"unavailable")
+    try:return True,json.loads(result.stdout),"ok"
+    except json.JSONDecodeError:return False,None,"invalid-response"
 
 def assertion(identifier: str, matched: bool, code: str, failed_outcome: str = "unknown") -> dict[str, str]:
     return {"id": identifier, "outcome": "match" if matched else failed_outcome, "finding_code": code}
@@ -70,7 +79,7 @@ def main() -> int:
         print(json.dumps({"schema":"deploy/target-alignment-evidence/v1", "assertions":[assertion(i, False, "arguments-invalid") for i in IDS]})); return 2
     assertions: dict[str, dict[str, str]] = {}
     ok, identity, code = command(args, "sts", "get-caller-identity")
-    assertions["right-destination"] = assertion("right-destination", ok and identity.get("Account") == args.account_id, "account-match" if ok else code, "mismatch" if ok else "unknown")
+    assertions["right-destination"] = assertion("right-destination", ok and isinstance(identity,dict) and identity.get("Account") == args.account_id, "account-match" if ok else code, "mismatch" if ok else "unknown")
     ok, image, code = command(args, "ecr", "describe-images", "--repository-name", args.repository, "--image-ids", f"imageDigest={args.image_digest}")
     details = image.get("imageDetails", []) if isinstance(image, dict) else []
     assertions["package-destination"] = assertion("package-destination", ok and bool(details), "immutable-digest-present" if ok else code, "missing" if ok else "unknown")

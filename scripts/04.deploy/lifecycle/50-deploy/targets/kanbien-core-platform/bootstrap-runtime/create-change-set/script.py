@@ -5,7 +5,7 @@
 #   version: 3
 #   status: active
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-21"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines: [security, sre]
@@ -20,7 +20,7 @@
 #   effects: [aws-mutation]
 """Fixed target change-set creation; no target or stack selector is accepted."""
 from __future__ import annotations
-import argparse, json, subprocess, sys, tempfile
+import argparse, importlib.util, json, subprocess, sys, tempfile
 from pathlib import Path
 import yaml
 
@@ -31,16 +31,17 @@ REPOSITORY = "kanbien-core-platform/core-server"
 REQUIRED = {"VpcId", "PrivateSubnetIds", "RepositoryUri", "ClusterArn", "LogGroupName", "TaskExecutionRoleArn", "ServiceSecurityGroupId", "VerifierSecurityGroupId", "ServiceDiscoveryArn"}
 ALLOWED_TYPES = {"AWS::ECS::TaskDefinition", "AWS::ECS::Service"}
 
+_DEPLOY=None
+
+def deployment_control():
+    global _DEPLOY
+    if _DEPLOY is None:
+        spec=importlib.util.spec_from_file_location("bootstrap_deploy",ROOT/"scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py")
+        _DEPLOY=importlib.util.module_from_spec(spec);spec.loader.exec_module(_DEPLOY)
+    return _DEPLOY
+
 def aws(*parts: str) -> tuple[bool, object, str]:
-    completed = subprocess.run(["aws", *parts, "--profile", PROFILE, "--region", REGION, "--output", "json"], capture_output=True, text=True)
-    if completed.returncode:
-        lowered = completed.stderr.lower()
-        if "accessdenied" in lowered or "not authorized" in lowered: return False, None, "aws-access-denied"
-        if "does not exist" in lowered: return False, None, "aws-resource-missing"
-        if "must match pattern" in lowered or "parameter validation failed" in lowered: return False, None, "aws-parameter-invalid"
-        return False, None, "aws-command-failed"
-    try: return True, json.loads(completed.stdout), "ok"
-    except json.JSONDecodeError: return False, None, "aws-response-invalid"
+    return deployment_control().aws(*parts)
 
 def fail(code: str) -> int:
     print(json.dumps({"schema":"deploy/runtime-change-set-report/v1", "target":"kanbien-core-platform", "verdict":"blocked", "findings":[{"code":code}]})); return 1
@@ -64,12 +65,15 @@ def baseline() -> tuple[str, str] | None:
     return (digest, revision) if isinstance(digest, str) and isinstance(revision, str) else None
 
 def main() -> int:
-    parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--operation", choices=("update", "restore"), required=True); parser.add_argument("--json", action="store_true")
+    parser = argparse.ArgumentParser(add_help=False); parser.add_argument("--receipt", type=Path, required=True); parser.add_argument("--operation", choices=("update", "restore"), required=True); parser.add_argument("--json", action="store_true"); parser.add_argument("--reconcile",action="store_true")
     args, unknown = parser.parse_known_args()
     if unknown: return fail("runtime-change-set-arguments-invalid")
     candidate = receipt(args.receipt)
     if candidate is None: return fail("package-custody-receipt-invalid")
     digest, revision = candidate
+    change_set=f"kanbien-core-platform-{args.operation}-{digest[7:19]}"
+    if args.reconcile:
+        return deployment_control().reconcile(change_set,{"image_digest":digest,"source_revision":revision})
     accepted = baseline()
     if accepted is None: return fail("accepted-release-invalid")
     if args.operation == "update" and digest == accepted[0]: return fail("update-candidate-matches-accepted-release")
@@ -93,9 +97,13 @@ def main() -> int:
         {"ParameterKey":"LogGroupName", "ParameterValue":outputs["LogGroupName"]}, {"ParameterKey":"ImageRepositoryUri", "ParameterValue":outputs["RepositoryUri"]},
         {"ParameterKey":"ImageDigest", "ParameterValue":digest}, {"ParameterKey":"SourceRevision", "ParameterValue":revision},
     ]
+    observed,existing,code=aws("cloudformation","describe-change-set","--stack-name",RUNTIME,"--change-set-name",change_set)
+    if observed:return deployment_control().reconcile(change_set,{"image_digest":digest,"source_revision":revision})
+    if code!="aws-resource-missing":return fail(code)
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as file:
         json.dump(parameters, file); file.flush()
-        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "UPDATE", "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
-    if not ok: return fail(code)
+        ok, _, code = aws("cloudformation", "create-change-set", "--stack-name", RUNTIME, "--change-set-name", change_set, "--change-set-type", "UPDATE", "--client-token", change_set, "--template-body", f"file://{ROOT / 'infra/04.deploy/03.product/targets/kanbien-core-platform/30-provider-realization/aws/cloudformation/bootstrap-runtime.yml'}", "--parameters", f"file://{file.name}", "--capabilities", "CAPABILITY_NAMED_IAM", "--tags", "Key=Target,Value=kanbien-core-platform")
+    if not ok:
+        print(json.dumps({"schema":"deploy/runtime-change-set-report/v1","verdict":"uncertain","change_set":change_set,"findings":[{"code":code}]}));return 1
     print(json.dumps({"schema":"deploy/runtime-change-set-report/v1", "target":"kanbien-core-platform", "stack":"kanbien-core-platform-bootstrap-runtime", "operation":args.operation, "change_set":change_set, "image_digest":digest, "source_revision":revision, "verdict":"created-awaiting-review", "findings":[]} , sort_keys=True)); return 0
 if __name__ == "__main__": sys.exit(main())

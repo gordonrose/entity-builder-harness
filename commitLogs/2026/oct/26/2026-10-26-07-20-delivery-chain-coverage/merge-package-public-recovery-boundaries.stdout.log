@@ -1,0 +1,1 @@
+{"schema": "deploy/local-public-recovery-test-report/v1", "verdict": "passed", "cases": 40, "evidence_class": "local-runtime-controlled", "real_docker_calls": 0, "stored_configuration": "unchanged", "temporary_configuration_cleanup": "passed"}

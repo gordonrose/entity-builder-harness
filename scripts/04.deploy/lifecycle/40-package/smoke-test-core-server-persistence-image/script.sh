@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: draft
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -43,15 +43,27 @@ assert_database_logs_safe() {
 }
 expect_code() { local expected="$1"; shift; local output; if ! output="$("$@" 2>&1)"; then assert_safe_output "$output"; local observed; observed="$(grep -oE '"code":"[A-Z0-9_]+' <<<"$output" | tail -1 | tr -d '"' || true)"; printf 'INFO: package-expected-result=%s\n' "$expected" >&2; [[ -z "$observed" ]] || printf 'INFO: package-safe-result=%s\n' "$observed" >&2; fail 'persistence-administration-or-workload-rejected'; fi; assert_safe_output "$output"; grep -F '"code":"'"$expected"'"' <<<"$output" >/dev/null || fail 'persistence-program-safe-result-code-mismatch'; }
 
-suffix="$$"; network="kanbien-persistence-smoke-${suffix}"; database="kanbien-persistence-db-${suffix}"; server="kanbien-persistence-server-${suffix}"; volume="kanbien-persistence-cert-${suffix}"; temporary="$(mktemp -d)"
-cleanup() { docker rm -f "$server" "$database" >/dev/null 2>&1 || true; docker network rm "$network" >/dev/null 2>&1 || true; docker volume rm "$volume" >/dev/null 2>&1 || true; rm -rf "$temporary"; }
-trap cleanup EXIT
+suffix="$(python3 -c 'import uuid; print(uuid.uuid4().hex[:12])')"; network="kanbien-persistence-smoke-${suffix}"; database="kanbien-persistence-db-${suffix}"; server="kanbien-persistence-server-${suffix}"; volume="kanbien-persistence-cert-${suffix}"; task="${network}-task"; temporary="$(mktemp -d)"
+cleanup() {
+  local status=0
+  python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$server" --container "$database" --container "$task" --network "$network" --volume "$volume" || status=$?
+  rm -rf "$temporary"
+  return "$status"
+}
+finish() {
+  local original=$? cleanup_status=0
+  trap - EXIT
+  cleanup || cleanup_status=$?
+  if [[ "$original" -ne 0 ]]; then exit "$original"; fi
+  exit "$cleanup_status"
+}
+trap finish EXIT
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$temporary/ca.key" -out "$temporary/ca.crt" -subj '/CN=kanbien-persistence-smoke-ca' -days 1 >/dev/null 2>&1
 openssl req -newkey rsa:2048 -nodes -keyout "$temporary/server.key" -out "$temporary/server.csr" -subj '/CN=postgres' >/dev/null 2>&1
 printf 'subjectAltName=DNS:postgres\n' > "$temporary/server.ext"
 openssl x509 -req -in "$temporary/server.csr" -CA "$temporary/ca.crt" -CAkey "$temporary/ca.key" -CAcreateserial -out "$temporary/server.crt" -days 1 -extfile "$temporary/server.ext" >/dev/null 2>&1
 docker network create "$network" >/dev/null; docker volume create "$volume" >/dev/null
-docker run --rm --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt' >/dev/null
+docker run --rm --name "$task" --user root -v "$temporary:/source:ro" -v "$volume:/certs" postgres:16-bookworm bash -ec 'cp /source/server.crt /source/server.key /certs/; chown 999:999 /certs/server.crt /certs/server.key; chmod 600 /certs/server.key; chmod 644 /certs/server.crt' >/dev/null
 docker run --detach --rm --name "$database" --network "$network" --network-alias postgres -e POSTGRES_DB=kanbienpersistence -e POSTGRES_USER=fixture_root -e POSTGRES_PASSWORD="$ADMIN_PASSWORD" -v "$volume:/certs:ro" postgres:16-bookworm postgres -c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key -c log_destination=stderr -c logging_collector=on -c log_directory=/var/lib/postgresql/data/log -c log_filename=postgresql.log -c log_min_error_statement=error >/dev/null
 for attempt in $(seq 1 40); do docker exec -e PGPASSWORD="$ADMIN_PASSWORD" "$database" psql -X -v ON_ERROR_STOP=1 -U fixture_root -d kanbienpersistence -c 'SELECT 1' >/dev/null 2>&1 && break; [[ "$attempt" != 40 ]] || fail 'disposable-postgresql-unavailable'; sleep 1; done
 # fixture_root is used only to approximate managed-RDS bootstrap. Every actual
@@ -85,17 +97,17 @@ set_fixture_credential core_schema_migration "$IAM_TOKEN"
 set_fixture_credential core_runtime "$IAM_TOKEN"
 common=(--network "$network" -v "$temporary/ca.crt:/app/assets/test-ca.crt:ro" -e NODE_ENV=test -e PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN="$IAM_TOKEN" -e PERSISTENCE_POSTGRES_HOST=postgres -e PERSISTENCE_POSTGRES_PORT=5432 -e PERSISTENCE_POSTGRES_DATABASE=kanbienpersistence -e PERSISTENCE_POSTGRES_SCHEMA=platform -e PERSISTENCE_POSTGRES_IAM_REGION=eu-west-1 -e PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE=arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-ABCDEFGHIJKLMNOP/core_runtime -e PERSISTENCE_POSTGRES_CA_PATH=/app/assets/test-ca.crt)
 administration_environment=( -e "PERSISTENCE_ADMINISTRATOR_CREDENTIALS={\"username\":\"core_administrator\",\"password\":\"${ADMIN_PASSWORD}\"}" -e PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-administrator -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime )
-run_administration() { docker run --rm "${common[@]}" "${administration_environment[@]}" -e "PERSISTENCE_ADMINISTRATION_OPERATION=$1" "$TAG" artifacts/kanbien-core-server-persistence-administration.main.js; }
+run_administration() { docker run --rm --name "$task" "${common[@]}" "${administration_environment[@]}" -e "PERSISTENCE_ADMINISTRATION_OPERATION=$1" "$TAG" artifacts/kanbien-core-server-persistence-administration.main.js; }
 expect_code PERSISTENCE_ADMINISTRATION_IDENTITIES_BOOTSTRAPPED run_administration bootstrap-identities
 expect_code PERSISTENCE_MIGRATION_STATE_REPLAY_PERMITTED run_administration observe-migration-state
 # A rejected live entrypoint path must be inspected too. The restricted
 # administrator can connect but has no rds_iam ADMIN OPTION, so PostgreSQL
 # rejects the actual GRANT command while normal server error logging remains on.
-rejected_output="$(docker run --rm "${common[@]}" -e "PERSISTENCE_ADMINISTRATOR_CREDENTIALS={\"username\":\"core_rejected_administrator\",\"password\":\"${REJECTED_PASSWORD}\"}" -e PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-rejected-administrator -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ADMINISTRATION_OPERATION=confirm-runtime-iam-access "$TAG" artifacts/kanbien-core-server-persistence-administration.main.js 2>&1 || true)"
+rejected_output="$(docker run --rm --name "$task" "${common[@]}" -e "PERSISTENCE_ADMINISTRATOR_CREDENTIALS={\"username\":\"core_rejected_administrator\",\"password\":\"${REJECTED_PASSWORD}\"}" -e PERSISTENCE_ADMINISTRATOR_SECRET_REFERENCE=arn:aws:secretsmanager:eu-west-1:123456789012:secret:synthetic-rejected-administrator -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ADMINISTRATION_OPERATION=confirm-runtime-iam-access "$TAG" artifacts/kanbien-core-server-persistence-administration.main.js 2>&1 || true)"
 assert_safe_output "$rejected_output"
 grep -F '"code":"PERSISTENCE_ADMINISTRATION_ACCESS_DENIED"' <<<"$rejected_output" >/dev/null || fail 'restricted-administration-rejection-not-confirmed'
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_CONFIRMED run_administration confirm-runtime-iam-access
-expect_code PERSISTENCE_MIGRATION_APPLIED docker run --rm "${common[@]}" -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration "$TAG" artifacts/kanbien-core-server-persistence-migration.main.js
+expect_code PERSISTENCE_MIGRATION_APPLIED docker run --rm --name "$task" "${common[@]}" -e PERSISTENCE_MIGRATION_DATABASE_USERNAME=core_schema_migration "$TAG" artifacts/kanbien-core-server-persistence-migration.main.js
 expect_code PERSISTENCE_MIGRATION_STATE_APPLIED_CONFIRMED run_administration observe-migration-state
 expect_code PERSISTENCE_RUNTIME_APPLICATION_ACCESS_GRANTED run_administration grant-runtime-application-access
 expect_code PERSISTENCE_RUNTIME_PRIVILEGE_PROVEN run_administration prove-effective-privilege
@@ -108,15 +120,31 @@ const created = await fetch(`${base}/internal/persistence-acceptance`, { method:
 const read = await fetch(`${base}/internal/persistence-acceptance?record_id=${id}`); const body = await read.json(); if (read.status !== 200 || body?.record?.id !== id || body?.record?.factDigest !== fact) throw new Error('persistence-read-not-confirmed');
 NODE
 restore_digest="$(node -e 'process.stdout.write("f".repeat(64))')"
-expect_code KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED docker run --rm "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ACCEPTANCE_RECORD_ID=core-persistence-package-smoke-0001 -e "PERSISTENCE_ACCEPTANCE_FACT_DIGEST=$restore_digest" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js
+expect_code KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED docker run --rm --name "$task" "${common[@]}" -e PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME=core_runtime -e PERSISTENCE_ACCEPTANCE_RECORD_ID=core-persistence-package-smoke-0001 -e "PERSISTENCE_ACCEPTANCE_FACT_DIGEST=$restore_digest" "$TAG" artifacts/kanbien-core-server-persistence-restore-verifier.main.js
 # A synthetic legacy password is rejected on a new connection. It is only a
 # local canary; the governed live proof checks the already-exposed target
 # credential without putting its value in a report or shell output.
-docker run --rm --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e LEGACY_PASSWORD="$OLD_PASSWORD" "$TAG" -e 'const {Pool}=require("pg"),fs=require("fs");const p=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.LEGACY_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}});p.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="28P01")process.exitCode=1}).finally(()=>p.end());' || fail 'legacy-password-new-connection-rejection-not-confirmed'
+docker run --rm --name "$task" --entrypoint /nodejs/bin/node "${common[@]}" -e NODE_PATH=/app/artifacts/node_modules -e LEGACY_PASSWORD="$OLD_PASSWORD" "$TAG" -e 'const {Pool}=require("pg"),fs=require("fs");const p=new Pool({host:"postgres",port:5432,database:"kanbienpersistence",user:"core_runtime",password:process.env.LEGACY_PASSWORD,ssl:{rejectUnauthorized:true,ca:fs.readFileSync("/app/assets/test-ca.crt","utf8"),servername:"postgres"}});p.query("SELECT 1").then(()=>{process.exitCode=1}).catch((error)=>{if(error.code!=="28P01")process.exitCode=1}).finally(()=>p.end());' || fail 'legacy-password-new-connection-rejection-not-confirmed'
+# Exercise the enabled capability in this finished image. The receiver is a
+# disposable task-local endpoint; no provider service or credential is used.
+docker rm -f "$server" >/dev/null
+metrics_series='[{"sourceName":"platform.dependency.readiness","sourceKind":"gauge","sourceUnit":"count","instrumentName":"kanbien.core_server.postgresql_readiness","description":"Package readiness","allowedLabelNames":["target","scope","workload","dependency","readiness"],"cardinalityLimit":16}]'
+telemetry_environment=(-e PLATFORM_OBSERVABILITY_METRICS_PROVIDER=cloudwatch-otel -e PLATFORM_OBSERVABILITY_METRICS_ENDPOINT=http://127.0.0.1:4318/v1/metrics -e PLATFORM_OBSERVABILITY_METRICS_REGION=eu-west-1 -e PLATFORM_OBSERVABILITY_SERVICE_NAME=kanbien-core-server-persistence -e PLATFORM_OBSERVABILITY_DEPLOYMENT_ENVIRONMENT=package-qualification -e PLATFORM_OBSERVABILITY_EXPORT_INTERVAL_MS=1000 -e PLATFORM_OBSERVABILITY_EXPORT_TIMEOUT_MS=500 -e PLATFORM_OBSERVABILITY_TARGET=package-qualification -e PLATFORM_OBSERVABILITY_SCOPE=core-server-persistence -e PLATFORM_OBSERVABILITY_WORKLOAD=core-server -e PLATFORM_OBSERVABILITY_DEPENDENCY=postgresql -e PLATFORM_OBSERVABILITY_READINESS_CADENCE_MS=1000 -e PLATFORM_OBSERVABILITY_READINESS_TIMEOUT_MS=500 -e PLATFORM_OBSERVABILITY_READINESS_STALE_AFTER_MS=5000 -e "PLATFORM_OBSERVABILITY_METRIC_SERIES_JSON=$metrics_series")
+docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" "${telemetry_environment[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-observability "$TAG" >/dev/null
+docker exec --detach "$server" /nodejs/bin/node -e 'const fs=require("fs");require("http").createServer((req,res)=>{const chunks=[];req.on("data",b=>chunks.push(b));req.on("end",()=>{const b=Buffer.concat(chunks);if(req.url!=="/v1/metrics"||!b.includes(Buffer.from("kanbien.core_server.postgresql_readiness"))){res.statusCode=400;res.end();return;}if(b.includes(Buffer.from("package-qualification"))&&b.includes(Buffer.from("core-server"))&&b.includes(Buffer.from("postgresql"))){const state=b.includes(Buffer.from("not-ready"))?"not-ready":"ready";fs.writeFileSync("/tmp/package-metric-"+state,"observed");}res.end();});}).listen(4318,"127.0.0.1");'
+observe_package_metric() {
+  for attempt in $(seq 1 30); do
+    docker exec "$server" /nodejs/bin/node -e 'process.exit(require("fs").existsSync("/tmp/package-metric-"+process.argv[1])?0:1)' "$1" && return 0
+    sleep 1
+  done
+  fail "packaged-readiness-metric-$1-not-exported"
+}
+observe_package_metric ready
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_REVOKED run_administration revoke-runtime
 node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; let last = 'unreachable'; for (let attempt = 0; attempt < 80; attempt += 1) { const [live, ready] = await Promise.all([fetch(`${base}/livez`).catch(() => undefined), fetch(`${base}/readyz`).catch(() => undefined)]); last = `live-${live?.status ?? 'unreachable'}-ready-${ready?.status ?? 'unreachable'}`; if (live?.status === 200 && ready !== undefined && ready.status !== 200) process.exit(0); await new Promise((resolve) => setTimeout(resolve, 250)); } throw new Error(`revoked-server-did-not-remain-live-and-become-unready:${last}`);
 NODE
+observe_package_metric not-ready
 expect_code PERSISTENCE_RUNTIME_IAM_ACCESS_RESTORED run_administration restore-runtime
 docker rm -f "$server" >/dev/null
 docker run --detach --rm --name "$server" --publish "127.0.0.1:${PORT}:3000" --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m --cap-drop ALL --security-opt no-new-privileges "${common[@]}" -e PERSISTENCE_RUNTIME_DATABASE_USERNAME=core_runtime -e PLATFORM_SOURCE_COMMIT_SHA=package-smoke-recovered "$TAG" >/dev/null
@@ -124,4 +152,6 @@ node - "$PORT" <<'NODE'
 const base = `http://127.0.0.1:${process.argv[2]}`; const id = 'core-persistence-package-smoke-0001'; const fact = 'f'.repeat(64); for (let attempt = 0; attempt < 80; attempt += 1) { const response = await fetch(`${base}/internal/persistence-acceptance?record_id=${id}`).catch(() => undefined); const body = response === undefined ? undefined : await response.json().catch(() => undefined); if (response?.status === 200 && body?.record?.factDigest === fact) process.exit(0); await new Promise((resolve) => setTimeout(resolve, 250)); } throw new Error('recovered-server-could-not-read-original-record');
 NODE
 server_output="$(docker logs "$server" 2>&1 || true)"; assert_safe_output "$server_output"; assert_database_logs_safe
+cleanup
+trap - EXIT
 echo 'Core-server persistence image PostgreSQL/TLS/package smoke test passed.'

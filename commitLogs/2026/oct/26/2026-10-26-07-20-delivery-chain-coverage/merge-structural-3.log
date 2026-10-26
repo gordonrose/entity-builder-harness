@@ -1,0 +1,6 @@
+.agentic/03.product/plans/migration/agentic-product-namespace.md:104
+  Type: direct-approved-governed-script
+  Text: - Passed: `bash scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh`
+  Suggestion: Use bash scripts/01.harness/run-governed-script.sh --approved-action scripts/02.rag-rulebook/generate-retrieval-selector-fixture/smoke-test.sh
+
+Governed script command drift found: 1 finding(s).

@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-07-01"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 02.rag-rulebook
 #   domain: runtime
 #   disciplines:
@@ -38,7 +38,10 @@ ENGINE="docker"
 PORT="${RAG_IMAGE_SMOKE_PORT:-39452}"
 ALLOW_SKIP=false
 TAG="entity-builder-harness/02.rag-rulebook/rag-rulebook-service:smoke"
-RUNTIME_DIR=".cache/02.rag-rulebook-image-smoke"
+CONTAINER_POSSIBLE=false
+CACHE_SENTINEL_DIR=""
+if [ -z "${DOCKER_CONFIG:-}" ]; then export DOCKER_CONFIG="$ROOT/.cache/04.deploy/docker-config"; fi
+mkdir -p "$DOCKER_CONFIG"
 CONTAINER_NAME="rag-rulebook-service-smoke-$$"
 TOKEN="smoke-token-$$"
 
@@ -109,7 +112,7 @@ find_engine() {
 if ! ENGINE="$(find_engine)"; then
   if [ "$ALLOW_SKIP" = true ]; then
     echo "SKIP: no container engine found."
-    exit 0
+    exit 77
   fi
   echo "ERROR: docker is required for this image smoke test." >&2
   exit 1
@@ -118,27 +121,50 @@ fi
 if ! "$ENGINE" info >/dev/null 2>&1; then
   if [ "$ALLOW_SKIP" = true ]; then
     echo "SKIP: container engine is not running or not reachable: $ENGINE"
-    exit 0
+    exit 77
   fi
   echo "ERROR: container engine is not running or not reachable: $ENGINE" >&2
   exit 1
 fi
 
 cleanup() {
-  "$ENGINE" rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
-  rm -rf "$RUNTIME_DIR"
+  local status=0
+  if [ "$CONTAINER_POSSIBLE" = true ]; then
+    python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup.py" --container "$CONTAINER_NAME" || status=$?
+  fi
+  if [ -n "$CACHE_SENTINEL_DIR" ]; then
+    rm -f -- "$CACHE_SENTINEL_DIR/__pycache__/host-sentinel.pyc" "$CACHE_SENTINEL_DIR/host-sentinel.pyc" || status=$?
+    rmdir -- "$CACHE_SENTINEL_DIR/__pycache__" "$CACHE_SENTINEL_DIR" || status=$?
+    if [ -e "$CACHE_SENTINEL_DIR" ]; then status=1; else CACHE_SENTINEL_DIR=""; fi
+  fi
+  return "$status"
 }
-trap cleanup EXIT
+finish() {
+  local original=$? cleanup_status=0
+  trap - EXIT
+  cleanup || cleanup_status=$?
+  if [ "$original" -ne 0 ]; then exit "$original"; fi
+  exit "$cleanup_status"
+}
+trap finish EXIT
 
-rm -rf "$RUNTIME_DIR"
-
-bash scripts/02.rag-rulebook/build-local-runtime/script.sh \
-  --output-dir "$RUNTIME_DIR" \
-  --pretty >/dev/null
+# These unique disposable files exercise the actual Docker ignore ordering.
+# Existing interpreter caches are never modified or removed.
+CACHE_SENTINEL_DIR="$(mktemp -d "$ROOT/scripts/02.rag-rulebook/smoke-test-service-image/.cache-sentinel.XXXXXX")"
+mkdir "$CACHE_SENTINEL_DIR/__pycache__"
+printf 'host-only package-boundary sentinel\n' > "$CACHE_SENTINEL_DIR/__pycache__/host-sentinel.pyc"
+printf 'host-only package-boundary sentinel\n' > "$CACHE_SENTINEL_DIR/host-sentinel.pyc"
 
 bash scripts/02.rag-rulebook/build-service-image/script.sh \
-  --tag "$TAG" >/dev/null
+  --tag "$TAG"
 
+IMAGE_ID="$("$ENGINE" image inspect --format '{{.Id}}' "$TAG")"
+if [[ ! "$IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "ERROR: built image has no immutable image identity." >&2
+  exit 1
+fi
+
+CONTAINER_POSSIBLE=true
 "$ENGINE" run \
   --detach \
   --rm \
@@ -151,12 +177,11 @@ bash scripts/02.rag-rulebook/build-service-image/script.sh \
   --env RAG_ALLOW_NON_LOOPBACK=1 \
   --env RAG_SERVICE_TOKEN="$TOKEN" \
   --env RAG_REPO_ROOT=/app \
-  --env RAG_RUNTIME_DIR="$RUNTIME_DIR" \
-  --volume "$ROOT/$RUNTIME_DIR:/app/$RUNTIME_DIR:ro" \
-  "$TAG" >/dev/null
+  --env RAG_RUNTIME_DIR=/app/.cache/02.rag-rulebook \
+  "$IMAGE_ID" >/dev/null
 
-node - "$PORT" "$TOKEN" <<'NODE'
-const [port, token] = process.argv.slice(2);
+node - "$PORT" "$TOKEN" "$(git rev-parse HEAD)" <<'NODE'
+const [port, token, expectedCommit] = process.argv.slice(2);
 const base = `http://127.0.0.1:${port}`;
 
 async function waitForHealth() {
@@ -183,6 +208,10 @@ async function main() {
   const version = await fetch(`${base}/version`).then((response) => response.json());
   if (version.service !== "rag-rulebook-service") {
     throw new Error(`unexpected service name: ${version.service}`);
+  }
+
+  if (version.commit !== expectedCommit || version.runtime?.ready !== true) {
+    throw new Error("packaged service version/runtime does not match the built source revision");
   }
 
   const unauthorized = await fetch(`${base}/context/query`, {
@@ -223,6 +252,17 @@ async function main() {
   if (!packet.packet_summary || packet.packet_summary.selected_chunk_count < 1) {
     throw new Error("query returned no selected chunks");
   }
+  const archiveQuery = await fetch(`${base}/context/query`, {
+    method:"POST", headers:{authorization:`Bearer ${token}`,"content-type":"application/json"},
+    body:JSON.stringify({requestText:"How do governed script permissions, run-governed-script, and governed scripts rules apply to Codex Claude Mistral?",maxChunks:8,format:"compact"}),
+  });
+  if(archiveQuery.status!==200)throw new Error(`archive evidence query failed: ${await archiveQuery.text()}`);
+  const archivePacket=await archiveQuery.json();
+  const unavailable=[".codex/rules/governed-scripts.rules",".claude/settings.json",".vibe/config.toml"];
+  const missing=(archivePacket.gaps||[]).filter(gap=>gap.type==="missing-evidence").map(gap=>gap.description).join(" ");
+  if(!unavailable.every(path=>missing.includes(path)) || !missing.includes("Unavailable source"))throw new Error("archive query hid unavailable canonical evidence");
+  if((archivePacket.selected_chunks||[]).some(chunk=>unavailable.includes(chunk.source_path)))throw new Error("archive query included excluded local tool configuration");
+  console.log(JSON.stringify({schema:"rag-rulebook/image-http-checks/v1",source_revision:version.commit,health:"ready",unauthorized_status:unauthorized.status,query_status:query.status,selected_chunk_count:packet.packet_summary.selected_chunk_count,archive_missing_evidence:unavailable}));
 }
 
 main().catch((error) => {
@@ -231,4 +271,25 @@ main().catch((error) => {
 });
 NODE
 
+"$ENGINE" exec "$CONTAINER_NAME" node -e '
+const fs=require("node:fs"),crypto=require("node:crypto"),path=require("node:path");
+const hostCaches=[];
+function inspectSources(root){
+  for(const item of fs.readdirSync(root,{withFileTypes:true})){
+    const name=path.join(root,item.name);
+    if(item.name==="__pycache__" || /\.py[co]$/.test(item.name))hostCaches.push(name);
+    else if(item.isDirectory())inspectSources(name);
+  }
+}
+inspectSources("/app");
+if(hostCaches.length)throw new Error("packaged host Python cache is present: "+hostCaches.join(","));
+console.log(JSON.stringify({schema:"rag-rulebook/image-source-hygiene/v1",host_cache_sentinels:"excluded",python_cache_paths:hostCaches,verdict:"passed"}));
+const bytes=fs.readFileSync("/app/.cache/02.rag-rulebook/manifest.json");
+const manifest=JSON.parse(bytes);
+if(manifest.git_sha!==process.env.COMMIT_SHA)throw new Error("packaged runtime source revision mismatch");
+console.log(JSON.stringify({schema:"rag-rulebook/image-cache-evidence/v1",source_revision:manifest.git_sha,source_layout:manifest.source_layout,manifest_sha256:crypto.createHash("sha256").update(bytes).digest("hex"),fingerprints:manifest.fingerprints,counts:manifest.counts}));
+'
+cleanup
+CONTAINER_POSSIBLE=false
+printf '{"schema":"rag-rulebook/image-qualification/v1","image_id":"%s","cleanup":"confirmed-absent","verdict":"passed"}\n' "$IMAGE_ID"
 echo "RAG/rulebook service image smoke test passed."

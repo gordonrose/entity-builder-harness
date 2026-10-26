@@ -1,0 +1,16 @@
+{
+  "schema": "delivery-corrective-invalidation/v1",
+  "result": "retained-uncertain-not-passing",
+  "report": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-selected-input-drift.json",
+  "report_sha256": "552384dddfab6e10b00be7a66e66033de577654176eb396e7447cffeb75ef147",
+  "observed_counts": {
+    "passed": 42,
+    "uncertain": 1,
+    "deferred": 20
+  },
+  "finding": "check-input-changed-before-execution:rag-local-retrieval-regression",
+  "source_hash_drift": [],
+  "cause": "The concurrent RAG package test creates and removes an owner-local .cache-sentinel directory under scripts/02.rag-rulebook/smoke-test-service-image to prove context exclusion. That non-__pycache__ sentinel affects parent-directory fingerprints while present, consistent with this observed before-execution invalidation. The source census excludes hidden scratch directories.",
+  "resolution": "Keep the completed image proof, finish temporary cleanup, then rerun the same selected aggregate using matching trusted worktree evidence. No source code change or image rebuild is required.",
+  "cause_assessment": "inference from concurrent test timing, unchanged durable source hashes and owner scratch-path fingerprinting; the transient path name was not retained as an individual input manifest"
+}

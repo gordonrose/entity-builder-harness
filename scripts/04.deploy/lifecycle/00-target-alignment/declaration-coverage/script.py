@@ -5,7 +5,7 @@
 #   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.declaration-coverage
 #   disciplines: [agentic, architecture, sre]
@@ -94,8 +94,81 @@ def check_applicability(check: dict[str, Any], contract: dict[str, Any], image: 
     return None
 
 
-def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[str, Any]:
+def inspect_declaration(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[str, Any]:
+    """Validate the existing declaration-contract format without migrating its owner."""
     contract = document(contract_path)
+    findings, references, consumers, required_checks = [], set(), set(), set()
+    def gap(code, reference=""):
+        item = {"code": code, "reference": reference}
+        if item not in findings: findings.append(item)
+    def reference(value, code):
+        path = within(root, value)
+        if path is None or not path.exists(): gap(code, str(value)); return
+        references.add(value.rstrip('/'))
+    checks = catalog.get('checks', {})
+    if not isinstance(checks, dict): checks = {}
+    target = contract.get('target', {})
+    profile = target.get('profile') if isinstance(target, dict) else None
+    reference(profile, 'declaration-target-profile-missing')
+    profile_data = document(root / profile) if isinstance(profile, str) and safe_path(profile) else {}
+    if not profile_data: gap('declaration-target-profile-invalid')
+    requirements = contract.get('requirements')
+    if not isinstance(requirements, list) or not requirements:
+        gap('requirement-chain-missing'); requirements = []
+    identities, stages = set(), set()
+    for requirement in requirements:
+        if not isinstance(requirement, dict): gap('requirement-chain-invalid'); continue
+        identity = requirement.get('id')
+        if not isinstance(identity, str) or not identity or identity in identities:
+            gap('requirement-identity-invalid'); continue
+        identities.add(identity)
+        for field in ('purpose', 'owner', 'expectation'):
+            if not isinstance(requirement.get(field), str) or not requirement[field].strip(): gap('requirement-chain-incomplete', identity + ':' + field)
+        implementations = requirement.get('required_by')
+        if not strings(implementations): gap('requirement-chain-incomplete', identity + ':required_by'); implementations = []
+        for value in implementations:
+            reference(value, 'requirement-implementation-missing'); consumers.add(value)
+        declarations = requirement.get('declarations')
+        if not isinstance(declarations, list) or not declarations: gap('requirement-chain-incomplete', identity + ':declarations'); declarations = []
+        for declaration in declarations:
+            if not isinstance(declaration, dict) or not isinstance(declaration.get('expectation'), str) or not declaration['expectation'].strip(): gap('requirement-declaration-invalid', identity); continue
+            reference(declaration.get('path'), 'requirement-declaration-missing')
+        non_applicable = requirement.get('not_applicable', {})
+        if not isinstance(non_applicable, dict): non_applicable = {}; gap('requirement-applicability-invalid', identity)
+        for field, stage in PROOF_STAGES.items():
+            proofs = requirement.get(field, [])
+            if not strings(proofs, empty=True): gap('requirement-proof-list-invalid', identity + ':' + field); continue
+            if not proofs:
+                if field == 'local_proofs' or not isinstance(non_applicable.get(field), str) or not non_applicable[field].strip(): gap('requirement-proof-missing', identity + ':' + field)
+                continue
+            stages.add(stage)
+            if field in non_applicable: gap('requirement-applicability-conflict', identity + ':' + field)
+            for proof in proofs:
+                check = checks.get(proof)
+                if isinstance(check, dict):
+                    if check.get('stage') != stage: gap('requirement-proof-stage-invalid', proof)
+                    if check.get('applicability') != {'kind': 'profile', 'target_profile': profile}:
+                        gap('requirement-check-subject-mismatch', proof)
+                    argv = check.get('argv')
+                    if not isinstance(argv, list) or len(argv) < 2: gap('requirement-check-invalid', proof); continue
+                    reference(argv[1], 'requirement-proof-command-missing'); required_checks.add(proof)
+                else: gap('requirement-proof-command-unmapped', proof)
+    applicability = contract.get('scope', {}).get('stage_applicability', {}) if isinstance(contract.get('scope'), dict) else {}
+    if not isinstance(applicability, dict): applicability = {}; gap('scope-stage-applicability-invalid')
+    local_only = profile_data.get('schema') == 'deploy/local-target-profile/v1' and profile_data.get('execution') == {'kind': 'local', 'publication': 'none', 'provider_deployment': 'none'}
+    for stage, choice in applicability.items():
+        if stage not in {'deploy', 'acceptance'} or not local_only or not isinstance(choice, dict) or set(choice) != {'applicable', 'reason'} or choice.get('applicable') is not False or not isinstance(choice.get('reason'), str) or not choice['reason'].strip() or stage in stages:
+            gap('scope-stage-applicability-invalid', stage)
+    for stage in set(PROOF_STAGES.values()) - stages:
+        if stage not in applicability: gap('scope-stage-proof-missing', stage)
+    references.add(contract_path.resolve().relative_to(root.resolve()).as_posix())
+    return {"schema": "deploy/declaration-coverage-report/v1", "target": profile or "invalid-target", "scope": contract.get('id', 'invalid-scope'), "verdict": "gap" if findings else "covered", "findings": findings, "inputs": sorted(references), "references": sorted(references), "consumers": sorted(consumers), "required_checks": sorted(required_checks)}
+
+
+def inspect(contract_path: Path, root: Path, catalog: dict[str, Any], *, probe_commands: bool = True) -> dict[str, Any]:
+    contract = document(contract_path)
+    if contract.get("schema") == "deploy/declaration-contract/v1":
+        return inspect_declaration(contract_path, root, catalog)
     findings: list[dict[str, str]] = []
     references: set[str] = set()
     checks: set[str] = set()
@@ -232,7 +305,7 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
                     assert loader and loader.loader
                     module = importlib.util.module_from_spec(loader)
                     loader.loader.exec_module(module)
-                    result = module.inspect(contract_path, root)
+                    result = module.inspect(contract_path, root, probe_commands=probe_commands)
                     findings.extend(item for item in result.get("findings", []) if item not in findings)
                     for value in result.get("references", []): reference(value, "acceptance-route-reference-missing")
                     references.add(helper.relative_to(root).as_posix())
@@ -270,6 +343,14 @@ def inspect(contract_path: Path, root: Path, catalog: dict[str, Any]) -> dict[st
         try:
             ref = (contract_path.parents[3] / template).resolve().relative_to(root.resolve()).as_posix()
             reference(ref, "scope-provider-declaration-missing")
+            helper = Path(__file__).with_name("runtime_configuration.py")
+            loader = importlib.util.spec_from_file_location("delivery_runtime_configuration", helper)
+            assert loader and loader.loader
+            runtime_configuration = importlib.util.module_from_spec(loader)
+            loader.loader.exec_module(runtime_configuration)
+            findings.extend(runtime_configuration.inspect(contract, binding, image, root / ref, root))
+            reference("scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py", "runtime-configuration-validator-missing")
+
         except ValueError: gap("scope-provider-declaration-missing")
     else: gap("scope-provider-declaration-missing")
     return {"schema": "deploy/declaration-coverage-report/v1", "scope": contract.get("scope") if isinstance(contract.get("scope"), str) else "invalid-scope", "target": contract.get("target") if isinstance(contract.get("target"), str) else "invalid-target", "verdict": "gap" if findings else "covered", "findings": findings, "inputs": inputs, "references": sorted(references), "consumers": sorted(consumers), "required_checks": sorted(checks)}

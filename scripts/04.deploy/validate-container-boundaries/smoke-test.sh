@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-30"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: infra.ci-cd
 #   disciplines:
@@ -23,6 +23,7 @@ set -euo pipefail
 #     - design-system-builder
 #   effects:
 #   - read-only
+#   - writes-files
 #   used_by:
 #   - id: deploy.script.validate-container-boundaries
 #     path: scripts/04.deploy/validate-container-boundaries/script.sh
@@ -241,4 +242,30 @@ fi
 grep -q "allowlist can re-include high-risk files" "$TMP_ROOT/late-deny.json" \
   || fail "late-deny report did not mention allowlist re-include risk"
 
+# A declared repo-root context may use its governed shared ignore file.
+mkdir -p "$TMP_ROOT/root-fallback/infra/04.deploy/03.product/image/catalog"
+cp "$TMP_ROOT/valid/infra/04.deploy/02.rag-rulebook/image/Dockerfile" "$TMP_ROOT/root-fallback/infra/04.deploy/03.product/image/catalog/Dockerfile"
+printf '%s\n' '# Image' 'Build context: repository root. Effective ignore: .dockerignore.' > "$TMP_ROOT/root-fallback/infra/04.deploy/03.product/image/catalog/README.md"
+cp "$TMP_ROOT/valid/infra/04.deploy/02.rag-rulebook/image/.dockerignore" "$TMP_ROOT/root-fallback/.dockerignore"
+bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/root-fallback" --build-context repository-root --json > "$TMP_ROOT/root-fallback.json"
+if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/root-fallback" --build-context image-directory --json > "$TMP_ROOT/root-fallback-wrong-context.json"; then
+  fail "validator accepted repository-root ignore for an image-directory context"
+fi
+grep -q 'missing an effective ignore file' "$TMP_ROOT/root-fallback-wrong-context.json" || fail "wrong-context rejection has wrong reason"
+printf '%s\n' '.git' > "$TMP_ROOT/root-fallback/.dockerignore"
+if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/root-fallback" --build-context repository-root --json > "$TMP_ROOT/root-fallback-bad.json"; then
+  fail "validator accepted ineffective root fallback coverage"
+fi
+grep -q 'coverage is too weak' "$TMP_ROOT/root-fallback-bad.json" || fail "root fallback failed for an unintended reason"
+
+# Existing capability images use one bounded image subdirectory.
+mkdir -p "$TMP_ROOT/capability/infra/04.deploy/03.product/image/catalog"
+cp "$TMP_ROOT/valid/infra/04.deploy/02.rag-rulebook/image/"{Dockerfile,README.md,.dockerignore} "$TMP_ROOT/capability/infra/04.deploy/03.product/image/catalog/"
+bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/capability" --json > "$TMP_ROOT/capability.json"
+mkdir -p "$TMP_ROOT/capability/infra/04.deploy/03.product/image/catalog/nested"
+cp "$TMP_ROOT/valid/infra/04.deploy/02.rag-rulebook/image/Dockerfile" "$TMP_ROOT/capability/infra/04.deploy/03.product/image/catalog/nested/Dockerfile"
+if bash scripts/04.deploy/validate-container-boundaries/script.sh --root "$TMP_ROOT/capability" --json > "$TMP_ROOT/capability-bad.json"; then
+  fail "validator accepted arbitrary nested image paths"
+fi
+grep -q "outside the governed infra image boundary" "$TMP_ROOT/capability-bad.json" || fail "nested boundary failure has wrong reason"
 echo "Container boundary validator smoke test passed."

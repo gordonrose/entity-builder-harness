@@ -4,7 +4,7 @@ id: deploy.workflow.govern-scope-lifecycle
 version: 2
 status: active
 created_on: "2026-10-23"
-updated_on: "2026-10-25"
+updated_on: "2026-10-26"
 layer: 04.deploy
 domain: deployment.scope-lifecycle
 disciplines: [agentic, security, sre]
@@ -72,3 +72,22 @@ promote those temporary records; ordinary validation and promotion require
 accepted live evidence. Existing genuine records without this additive field
 retain their historical live meaning. Rehearsal success is local runtime
 evidence, never container, CI, provider, or production acceptance evidence.
+
+## Executable release succession
+
+An active or candidate acceptance route must also declare `release_succession`:
+the candidate schema/producer, legacy initialization, generic release promotion,
+and current-reference validator. The route compiler probes each real parser and
+rejects scope activation substituted for release promotion. Only an indexed
+`accepted-historical` or `retired` scope can declare the matching explicit
+non-applicability. A future active scope inherits this check through declaration
+coverage.
+
+The collector writes a content-addressed observation receipt and candidate under
+the existing evidence root. It preserves the first accepted record. Candidate
+proof paths are relative to the evidence root; configuration and permission
+contract paths are relative to the repository. Release promotion requires the
+exact current predecessor. Interrupted archive publication resumes through the
+same command; the current reference advances only after complete immutable
+custody and predecessor validation. Temporary rehearsals use explicit simulated
+evidence and `--rehearsal-root`; ordinary promotion rejects those records.

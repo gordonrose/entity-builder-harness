@@ -1,0 +1,627 @@
+{
+  "additional_valid_behaviour": [
+    {
+      "case": "nested package relative bash target, registered and bound",
+      "inventory_exit": 0,
+      "selector_exit": 0
+    },
+    {
+      "case": "nested package npm alias, registered and bound",
+      "inventory_exit": 0,
+      "selector_exit": 0
+    },
+    {
+      "case": "nested package relative bash target, unbound",
+      "finding": "delivery-command-unbound",
+      "inventory_exit": 1,
+      "selector_exit": 1
+    }
+  ],
+  "bootstrap_owner_evidence_current": {
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md": true,
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-after-final.json": true,
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-final-suite.log": true,
+    "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-shell-suite.log": true,
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md": true,
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": true,
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py": true,
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py": true,
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py": true,
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py": true
+  },
+  "discovery_owner_evidence_current": {
+    ".agentic/04.deploy/standards/declaration-coverage.md": true,
+    "log": true,
+    "scripts/04.deploy/inventory-deploy-control/README.md": true,
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py": true,
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": true
+  },
+  "final_aggregate_review": {
+    "aggregate_path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-selected-execution.json",
+    "aggregate_sha256": "242fc8bdf99f2edbafe629c2db40c18d9c580c9e82024d1d3273c1d1a1da879c",
+    "checks_verified": 63,
+    "current_input_digest_mismatches": [],
+    "delivery_inventory": {
+      "input_digest": "8b79625e7dc8b4538c4c6891a45badbaa330756d2c25b8b72cc1e82de0146968",
+      "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+      "summary": {
+        "classifications": {
+          "retired": 4,
+          "supported": 416
+        },
+        "entrypoints": 420,
+        "gaps": 0,
+        "kinds": {
+          "ci-workflow": 9,
+          "command": 184,
+          "image-definition": 5,
+          "package-command": 77,
+          "provider-binding": 2,
+          "provider-template": 27,
+          "regression-command": 87,
+          "runnable-program": 20,
+          "scope": 6,
+          "target": 3
+        },
+        "routes": 6
+      }
+    },
+    "evidence_key_mismatches": [],
+    "evidence_sources": {
+      "local-runner": 1,
+      "not-local": 20,
+      "trusted-worktree-cache": 42
+    },
+    "findings": [],
+    "seconds": 4.628,
+    "selected_catalog_definition_mismatches": [],
+    "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+    "status_counts": {
+      "deferred": 20,
+      "passed": 43
+    }
+  },
+  "final_http_review": {
+    "checks_verified": 2,
+    "final_all_selected_input_digests_rechecked": 63,
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-http.json",
+    "selected_argv_input_digest_source_and_log_bindings": "all current",
+    "sha256": "4e41d33b5644a3749b3cabec14e8efc1e856bbf4f0cc1129fde0641cab0be09a",
+    "source_and_image_closure_unchanged_after_checks": true
+  },
+  "final_inventory_review": {
+    "current_physical_input_count": 1656,
+    "input_digest": "8b79625e7dc8b4538c4c6891a45badbaa330756d2c25b8b72cc1e82de0146968",
+    "mismatched_hashes_or_modes": [],
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+    "sha256": "18f8f2dc39f7cb8d7685b30ea41c983b929808b69d0e36a66babbd0c3a4bfb02",
+    "summary": {
+      "classifications": {
+        "retired": 4,
+        "supported": 416
+      },
+      "entrypoints": 420,
+      "gaps": 0,
+      "kinds": {
+        "ci-workflow": 9,
+        "command": 184,
+        "image-definition": 5,
+        "package-command": 77,
+        "provider-binding": 2,
+        "provider-template": 27,
+        "regression-command": 87,
+        "runnable-program": 20,
+        "scope": 6,
+        "target": 3
+      },
+      "routes": 6
+    },
+    "unaccounted_physical_sources": []
+  },
+  "final_owner_binding_review": {
+    "corrective-bootstrap.json": {
+      "sha256": "4080844d6f7cdc945c1fd07b767893392a1fc7d238a2e8c8d0aefb1bc5d92e49",
+      "source_bindings_current": 7
+    },
+    "corrective-discovery-ci.json": {
+      "sha256": "f6de65b20be101a000dc57149773037c91ee6b0b626a3c18cc36f9453858f8e0",
+      "source_bindings_current": 4
+    },
+    "corrective-governance.json": {
+      "sha256": "b5fa190b132216a42d16ad0c046804eb2aa3a7edb74a2252c18bf6bcb42a2fde",
+      "source_bindings_current": 24
+    },
+    "corrective-verifier-callers.json": {
+      "sha256": "fc9a591a07d8ee21121b9eedc66961b285b7f1a8416c873474f118624882a5c7",
+      "source_bindings_current": 4
+    },
+    "corrective-verifier.json": {
+      "evidence_bindings_current": 5,
+      "sha256": "76d1038d0fcdfd7b2c7077ec7a2b2d73f79843829eef666ae59ada7ab2a84213",
+      "source_bindings_current": 9
+    }
+  },
+  "final_rag_review": {
+    "image": "sha256:73dcbf5c2ec49b106d0746cded20cec4badb6b42ad6a32d81337c3e0bbf63ac2",
+    "independent_probe": {
+      "cleanup": "confirmed-absent",
+      "command": "docker run --rm -i --network none --entrypoint python3 sha256:73dcbf5c2ec49b106d0746cded20cec4badb6b42ad6a32d81337c3e0bbf63ac2 -c <read-only source hash and Python-cache check>",
+      "container": "delivery-corrective-review-554b19136765",
+      "expected_generated_archive_projection": ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+      "files_checked": 1540,
+      "mismatches": [],
+      "network": "none",
+      "python_cache_paths": []
+    },
+    "limit": "Actual local image and loopback HTTP proof; no hosted, registry or cloud proof.",
+    "log_sha256": "7443b8804c50b5856b140de07699a39419e8b1fe1d8061370dd2a7024dbaead6",
+    "owner_cleanup": {
+      "effects_checked": 1,
+      "findings": [],
+      "schema": "deploy/disposable-cleanup/v1",
+      "verdict": "passed"
+    },
+    "owner_http": {
+      "archive_missing_evidence": [
+        ".codex/rules/governed-scripts.rules",
+        ".claude/settings.json",
+        ".vibe/config.toml"
+      ],
+      "health": "ready",
+      "query_status": 200,
+      "schema": "rag-rulebook/image-http-checks/v1",
+      "selected_chunk_count": 6,
+      "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+      "unauthorized_status": 401
+    },
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-rag-image-qualification-73dcbf5c2ec4.json",
+    "sha256": "1c6341163c8a50b87e39d24b22f5257bc463d4e717c5436282945e00dc0ed6db",
+    "source_files": 1540,
+    "source_snapshot_sha256": "9e80173e15a54e80eb82dc4ce8e9c0425a1a94f89a8d623d9ace31920bc55857"
+  },
+  "final_signoff": {
+    "additional_package_cli_checks": {
+      "passed": 2,
+      "proof_class": "actual local loopback HTTP",
+      "selector_status": "deferred preserved; separately executed proof"
+    },
+    "conclusion": "All four corrections are implemented and locally verified; actual CLI negative/positive tests, immutable retained proof, current source/inventory, package bindings and fail-closed command wiring are consistent. No main adoption or live provider/hosted-CI proof is claimed.",
+    "historical_evidence": "Previous independent review and prior package/accepted evidence remain preserved.",
+    "local_aggregate": {
+      "deferred": 20,
+      "executed_in_stable_run": 1,
+      "findings": 0,
+      "passed": 43,
+      "trusted_worktree_cache_reused": 42
+    },
+    "pending_required_local_checks": [],
+    "result": "passed",
+    "reviewed_at": "2026-10-26T13:23:42.931792+00:00",
+    "reviewer": "/root/independent_review",
+    "scope": "The four authorized enforcement corrections and their integration in the recorded worktree.",
+    "unresolved_material_findings": []
+  },
+  "historical_review_untouched": {
+    "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/independent-review.json",
+    "sha256": "e529ec6fc027d166cdb56b3e5d3a2bae1aca394544845790d0b993f3bf2884c5"
+  },
+  "independent_before_fix_reproductions": {
+    "owner_sha256_after": "85c860bb928da04ab4e8c8f47f3c4026d85e3d275d35d72f87856ede472b02ca",
+    "owner_sha256_before": "85c860bb928da04ab4e8c8f47f3c4026d85e3d275d35d72f87856ede472b02ca",
+    "reproductions": [
+      {
+        "case": "publish.sh",
+        "entries": [
+          {
+            "classification": "supported",
+            "effects": [
+              "network",
+              "aws-mutation"
+            ],
+            "kind": "command",
+            "path": "scripts/automation/publish.sh",
+            "registered_by": [
+              "package.json"
+            ],
+            "requires_delivery_chain": true,
+            "routes": [],
+            "sha256": "d03d8295ff8775615ac308dfd327c769c1acd10fbd9ac20586dceef98a0ef7a3"
+          },
+          {
+            "classification": "supported",
+            "command": "bash scripts/automation/publish.sh",
+            "kind": "package-command",
+            "path": "package.json#scripts.publish:fixture",
+            "registered_by": [
+              "package.json"
+            ],
+            "routes": []
+          }
+        ],
+        "inventory_exit": 1,
+        "inventory_findings": [
+          {
+            "code": "delivery-consumer-unbound",
+            "kind": "command",
+            "path": "scripts/automation/publish.sh"
+          }
+        ],
+        "selected_exit": 1,
+        "selected_findings": [
+          {
+            "code": "delivery-consumer-unbound",
+            "kind": "command",
+            "path": "scripts/automation/publish.sh"
+          },
+          {
+            "code": "changed-input-uncovered",
+            "path": "package.json",
+            "state": "present"
+          }
+        ]
+      },
+      {
+        "case": "publish-test.sh",
+        "entries": [
+          {
+            "classification": "supported",
+            "command": "bash scripts/automation/publish-test.sh",
+            "kind": "package-command",
+            "path": "package.json#scripts.publish:fixture",
+            "registered_by": [
+              "package.json"
+            ],
+            "routes": []
+          }
+        ],
+        "inventory_exit": 0,
+        "inventory_findings": [],
+        "selected_exit": 1,
+        "selected_findings": [
+          {
+            "code": "changed-input-uncovered",
+            "path": "package.json",
+            "state": "present"
+          }
+        ]
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": null
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": {
+          "paths": [
+            "unrelated/**"
+          ]
+        }
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": {
+          "paths-ignore": [
+            "infra/**",
+            "scripts/**"
+          ]
+        }
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": {
+          "branches": [
+            "never-delivery-branch"
+          ]
+        }
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": {
+          "branches-ignore": [
+            "main"
+          ]
+        }
+      },
+      {
+        "case": "pull_request",
+        "findings": [],
+        "inventory_exit": 0,
+        "trigger": {
+          "types": [
+            "closed"
+          ]
+        }
+      },
+      {
+        "case": "mapped package.json selector false green",
+        "details": "Add repository_inputs package.json\u2192local, publish:fixture invokes bash scripts/automation/publish-test.sh with network/aws-mutation effects.",
+        "findings": [],
+        "selected_exit": 0
+      }
+    ]
+  },
+  "independent_bootstrap_current_source_rechecks": [
+    {
+      "changed_source_and_proposal_TaskRoleArn": "blocked:runtime-template-mismatch",
+      "entrypoint": "Python CLI",
+      "invalid_execute_count": 0,
+      "operation": "update",
+      "valid_current_and_proposed_templates": "deployed-awaiting-private-verification",
+      "valid_execute_count": 1
+    },
+    {
+      "changed_source_and_proposal_TaskRoleArn": "blocked:runtime-template-mismatch",
+      "entrypoint": "shell CLI",
+      "invalid_execute_count": 0,
+      "operation": "restore",
+      "valid_current_and_proposed_templates": "deployed-awaiting-private-verification",
+      "valid_execute_count": 1
+    }
+  ],
+  "independent_correction_review": [
+    {
+      "actual_cli_reproduction": {
+        "command": "bash scripts/automation/publish-test.sh && aws cloudformation deploy --stack-name orphan",
+        "findings": [],
+        "fixture": "Bound scripts/automation/publish-test.sh; mapped package.json input",
+        "inventory_exit": 0,
+        "selector_exit": 0
+      },
+      "failure": "An appended direct provider command inherits an unrelated bound wrapper route.",
+      "id": "CORR-3-R1",
+      "owner": "delivery_inventory.py:package_execution/report",
+      "required_resolution": "Direct provider package-command segments need their own governed implementation; a bound sibling cannot provide coverage.",
+      "resolution": {
+        "finding": "delivery-command-relationship-unsupported",
+        "inventory_exit": 1,
+        "reason": "inline-provider-command-requires-owned-script",
+        "selector_exit": 1
+      },
+      "status": "repaired-independent-actual-cli-recheck-passed"
+    },
+    {
+      "actual_cli_reproduction": {
+        "command": "scripts/01.harness/run-governed-script.sh --approved-action scripts/automation/publish-test.sh",
+        "finding": "delivery-command-relationship-unsupported/governed-action-unresolved",
+        "inventory_exit": 1,
+        "selector_exit": 1
+      },
+      "failure": "Direct run-governed-script.sh invocation is parsed with the bash-wrapper argument offset.",
+      "id": "CORR-3-R2",
+      "resolution": {
+        "inventory_exit": 0,
+        "route_present": true,
+        "selector_exit": 0,
+        "target_implementation_present": true
+      },
+      "severity": "valid-interface-false-rejection",
+      "status": "repaired-independent-actual-cli-recheck-passed"
+    },
+    {
+      "cases": [
+        {
+          "case": "changed task role reference",
+          "result": "blocked:change-set-template-mismatch,execute=0"
+        },
+        {
+          "case": "changed resource type",
+          "result": "blocked:change-set-template-mismatch,execute=0"
+        },
+        {
+          "case": "duplicate nested JSON template key",
+          "result": "blocked:change-set-template-invalid,execute=0"
+        },
+        {
+          "case": "changed intrinsic argument type",
+          "result": "blocked:change-set-template-mismatch,execute=0"
+        },
+        {
+          "case": "reordered valid JSON",
+          "result": "deployed-awaiting-private-verification,execute=1"
+        }
+      ],
+      "id": "CORR-2-independent-challenge",
+      "limit": "Disposable provider only; real prerequisites are fixture stubs.",
+      "status": "passed-focused-disposable-cli"
+    }
+  ],
+  "independent_javascript_discovery_rechecks": [
+    {
+      "bound_inventory_exit": 0,
+      "bound_selector_exit": 0,
+      "comment_form": "// multiline network/aws-mutation",
+      "extension": "mjs",
+      "unbound_inventory_exit": 1,
+      "unbound_selector_exit": 1
+    },
+    {
+      "bound_inventory_exit": 0,
+      "bound_selector_exit": 0,
+      "comment_form": "// multiline network/aws-mutation",
+      "extension": "js",
+      "unbound_inventory_exit": 1,
+      "unbound_selector_exit": 1
+    },
+    {
+      "bound_inventory_exit": 0,
+      "bound_selector_exit": 0,
+      "comment_form": "// multiline network/aws-mutation",
+      "extension": "cjs",
+      "unbound_inventory_exit": 1,
+      "unbound_selector_exit": 1
+    }
+  ],
+  "independent_trigger_rechecks": {
+    "entrypoints": [
+      "inventory actual CLI",
+      "selector actual CLI"
+    ],
+    "invalid": [
+      {
+        "exit_code": 1,
+        "finding": "delivery-ci-enforcement-invalid",
+        "pull_request": {
+          "paths": [
+            "unrelated/**"
+          ]
+        },
+        "reason": "ci-pull-request-restrictions-unsupported"
+      },
+      {
+        "exit_code": 1,
+        "finding": "delivery-ci-enforcement-invalid",
+        "pull_request": {
+          "paths-ignore": [
+            "infra/**",
+            "scripts/**"
+          ]
+        },
+        "reason": "ci-pull-request-restrictions-unsupported"
+      },
+      {
+        "exit_code": 1,
+        "finding": "delivery-ci-enforcement-invalid",
+        "pull_request": {
+          "branches": [
+            "never-delivery"
+          ]
+        },
+        "reason": "ci-pull-request-restrictions-unsupported"
+      },
+      {
+        "exit_code": 1,
+        "finding": "delivery-ci-enforcement-invalid",
+        "pull_request": {
+          "branches-ignore": [
+            "main"
+          ]
+        },
+        "reason": "ci-pull-request-restrictions-unsupported"
+      },
+      {
+        "exit_code": 1,
+        "finding": "delivery-ci-enforcement-invalid",
+        "pull_request": {
+          "types": [
+            "closed"
+          ]
+        },
+        "reason": "ci-pull-request-restrictions-unsupported"
+      }
+    ],
+    "valid": [
+      {
+        "exit_code": 0,
+        "pull_request": null
+      },
+      {
+        "exit_code": 0,
+        "pull_request": {}
+      }
+    ]
+  },
+  "independent_verifier_challenges": {
+    "cases": [
+      {
+        "case": "concurrent explicit successor followed by identical retry",
+        "concurrent_result": "private-persistence-verifier-operation-busy",
+        "original_plus_successor_submissions": 2,
+        "prior_proof_unchanged": true,
+        "successor_identity_stable": true
+      },
+      {
+        "case": "explicit task reconciliation with wrong startedBy",
+        "result": "private-persistence-verifier-controller-task-identity-mismatch",
+        "submissions": 1,
+        "subsequent_normal_verdict": "uncertain"
+      },
+      {
+        "case": "old-definition reconciliation after current-definition change then provider expiry",
+        "changed_default_result": "private-persistence-verifier-operation-request-changed",
+        "expired_recovery": "historical-completion",
+        "explicit_recovery": "accepted",
+        "submissions": 1
+      }
+    ],
+    "evidence_class": "actual CLI and subprocess concurrency using disposable provider fixture",
+    "source_sha256": "3f7aeb9c7cbbef7e3bff06c975f336e98168d4e434a83d952d114dac9b8f281c"
+  },
+  "integration_preflight_observation": {
+    "disposition": "Owning route effect declaration corrected; updated19-case acceptance rehearsal, governance7checks, final image and stable aggregate all pass.",
+    "evidence": "verification-evidence/corrective-preflight-effects-mismatch.json",
+    "finding": "credential-revoke-recover-route omitted writes-files after its command wrapper acquired durable writes",
+    "result": "blocked-before-consequence-for-intended-contract-effect-mismatch"
+  },
+  "limits": [
+    "All provider mutation outcomes in review are disposable fixtures; no live AWS, cloud change, live secret retrieval, publication, deployment, merge or push.",
+    "Verifier exclusion is scoped to retained local operation metadata in the governed worktree; deliberate removal of the entire store, a new worktree or another host is outside this local continuation guarantee.",
+    "Missing retained state/sentinel/proof or unavailable provider/log evidence blocks replay; there is no automatic reset or expiry-based replay authorization.",
+    "The supported package-command syntax is bounded; unknown shell relationships and inline provider commands require an owning script rather than inferred coverage.",
+    "Current delivery CI restrictions are unsupported; only unrestricted pull-request trigger coverage is accepted.",
+    "Other-worktree differences are read-only snapshots; existing remote-tracking references were not fetched.",
+    "No main adoption or live verification is claimed.",
+    "The selector keeps20 later-stage checks deferred: six package entries are covered separately by retained/refreshed local package proof and the two loopback CLI suites;14 live deployment/acceptance checks remain unexecuted under the authorization boundary. Deferred status is never counted as an executed selector pass."
+  ],
+  "owner_before_fix_evidence_reviewed": [
+    {
+      "observed": "Two identical real shell CLI invocations returned uncertain and fake provider received two run-task calls with different identities.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-verifier-before.json",
+      "sha256": "b920078de5a4eb3944f6ef9946b2bc8c8e9d057e1675da1228137887045f8be1"
+    },
+    {
+      "observed": "Selected changed TaskRoleArn reached one execute-change-set without proposed template retrieval.",
+      "path": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/corrective-bootstrap-before.json",
+      "sha256": "759c19d83f4f6bcc695448e5442cb4b3003a852e936f0bc66ce637272020298b"
+    }
+  ],
+  "owner_before_fix_reproductions_pending": [],
+  "ownership_assessment": "integration-handoff.json",
+  "package_reuse_assessment": {
+    "checks": [
+      "core",
+      "persistence",
+      "shell",
+      "collector"
+    ],
+    "independent_checks": [
+      "Retained qualification receipt hashes match corrective-package-reuse.json.",
+      "Every recorded input hash matches current source.",
+      "Recomputed normalized configuration projections and adapter hashes match all four receipts.",
+      "The 24 corrective source paths do not intersect the four images actual Docker COPY inputs; RAG COPY roots include changed sources and need fresh proof."
+    ],
+    "limit": "Historical package behavior proof is retained; no new runtime or cloud behavior is claimed for unchanged packages.",
+    "result": "four-unaffected-package-bindings-current"
+  },
+  "recorded_at": "2026-10-26T13:23:42.931792+00:00",
+  "remaining_required_integration_evidence": [],
+  "retained_uncertain_aggregate": {
+    "independent_mechanism_check": "Disposable fixture using actual selector fingerprint and inventory census reproduced hidden host-cache sentinel changing the declared parent directory fingerprint while source census stays unchanged; cleanup restores original fingerprint. The affected retrieval check references that parent.",
+    "path": "verification-evidence/corrective-selected-input-drift.json",
+    "resolution": "After completed image cleanup, stable aggregate reused42 valid local results and ran the affected proof once; no source edit or image rebuild.",
+    "status": "uncertain retained; never counted as pass"
+  },
+  "reviewer": "/root/independent_review",
+  "schema": "delivery-corrective/independent-review/v1",
+  "scope": "Four user-specified corrective gaps only; read-only overlap assessment and adversarial correction review.",
+  "source_freeze_pending": [],
+  "state": "passed",
+  "verifier_complexity_assessment": "A single current reservation per fixed verifier mode and a filesystem lock remain inside the existing controller; terminal evidence stays in existing proof-receipts. This is bounded command continuation, not a general execution engine or journal.",
+  "verifier_review_resolution": [
+    "Terminal nonzero exit and exceeded completion deadline retain failure proof before an explicit successor can start.",
+    "Initial command polling remains bounded; repeated existing operations observe without resubmission.",
+    "Operation-directory creation, reservation replacement and initialization sentinel are durable before submission.",
+    "Explicit old-operation reconciliation uses its stored request and deadline after current task-definition changes.",
+    "Runtime credential caller requests fresh successors for historical successful or failed completion and preserves pending/uncertain identity.",
+    "Nine declared acceptance phases carry explicit per-phase predecessor inputs; actual CLI rehearsal consumes same-mode predecessor outputs and tests retries."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "core-smoke",
+  "argv": [
+    "bash",
+    "scripts/04.deploy/lifecycle/40-package/smoke-test-core-server-image/script.sh",
+    "--tag",
+    "kanbien-core-server:merge-qualification",
+    "--port",
+    "39554"
+  ],
+  "started_at": "2026-10-26T13:37:52.022132+00:00",
+  "finished_at": "2026-10-26T13:38:54.329304+00:00",
+  "duration_seconds": 62.318,
+  "exit_code": 102,
+  "stdout": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-smoke.stdout.log",
+  "stderr": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/merge-package-core-smoke.stderr.log"
+}

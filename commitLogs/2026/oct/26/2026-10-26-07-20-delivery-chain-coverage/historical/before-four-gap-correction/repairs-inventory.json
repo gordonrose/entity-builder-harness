@@ -1,0 +1,411 @@
+{
+  "schema": "deploy/delivery-repair-report/v1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "evidence_class": "local-and-simulated-only",
+  "items": [
+    {
+      "id": "A-INV-01",
+      "families": [
+        "A"
+      ],
+      "failure": "Indexes and governance path mentions could hide a missing scope index, unregistered delivery entrypoints or consumers without requirements.",
+      "affected_routes": [
+        "all supported delivery scopes and alternative CLI/package entrypoints"
+      ],
+      "files": {
+        "contract": [
+          ".agentic/04.deploy/standards/declaration-coverage.md",
+          "scripts/repo/check-selection/checks.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+          "scripts/04.deploy/inventory-deploy-control/script.py"
+        ],
+        "caller": [
+          "scripts/repo/check-selection/script.py",
+          ".github/workflows/delivery-coverage.yml"
+        ],
+        "tests": [
+          "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+        ]
+      },
+      "repair": "Extend the existing inventory with physical discovery, exact source-bound declarations and proof-chain reconciliation; make every existing selection and guarded delivery entrypoint use it.",
+      "negative_regressions": [
+        "missing whole target scope index",
+        "root Dockerfile/Containerfile plus direct publication npm command",
+        "governance-only orphan AWS command",
+        "test-like external command name",
+        "named serve command and nonstandard executable without a chain",
+        "malformed declaration"
+      ],
+      "valid_behaviour": [
+        "synthetic second target with two different workloads and CATALOG_ENDPOINT",
+        "registered local-only RAG service with explicit non-applicable remote stages",
+        "existing supported old declaration format"
+      ],
+      "earliest_enforcement": "source selection and pre-build/pre-provider guard",
+      "closure_evidence": [
+        "inventory actual CLI regressions pass",
+        "generated inventory has zero unexplained entrypoints",
+        "builders fail before fake compiler/Docker"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes."
+      }
+    },
+    {
+      "id": "A-DECL-02",
+      "families": [
+        "A",
+        "B"
+      ],
+      "failure": "Older supported declarations were treated as covered without validating executable proof chains, stage, or target ownership.",
+      "affected_routes": [
+        "platform shell baseline, relational and operational scopes",
+        "local RAG service/image"
+      ],
+      "files": {
+        "contract": [
+          ".agentic/04.deploy/schemas/declaration-contract.v1.schema.yml",
+          "infra/04.deploy/03.product/targets/kanbien/staging/declaration-contract.yml",
+          "infra/04.deploy/03.product/targets/kanbien/staging/declarations/relational-delivery.yml",
+          "infra/04.deploy/03.product/targets/kanbien/staging/declarations/operational-controls.yml",
+          "infra/04.deploy/02.rag-rulebook/environments/local/declaration-contract.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/script.py"
+        ],
+        "caller": [
+          "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+          "scripts/repo/check-selection/script.py"
+        ],
+        "tests": [
+          "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+        ]
+      },
+      "repair": "Validate both existing declaration formats against the same check catalog; preserve workload-specific bounded contracts and explicitly govern local-only stage applicability.",
+      "negative_regressions": [
+        "empty requirement chain",
+        "wrong-stage proof",
+        "wrong-profile proof",
+        "false missing configuration producer"
+      ],
+      "valid_behaviour": [
+        "actual generic selector selects older-format proof commands",
+        "valid repeated CLI arguments remain valid"
+      ],
+      "earliest_enforcement": "source declaration coverage",
+      "closure_evidence": [
+        "actual declaration and selection CLI tests",
+        "no unsupported relabeling of active RAG image or older shell routes"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes."
+      }
+    },
+    {
+      "id": "B-CMD-03",
+      "families": [
+        "B",
+        "H"
+      ],
+      "failure": "Source file existence could be claimed as delivery of runtime configuration; cleanup aliases could impersonate the verify producer; duplicate argv aliases could bypass individual declared contracts.",
+      "affected_routes": [
+        "declared workloads with runtime-provided configuration",
+        "isolated restore and bootstrap verifier"
+      ],
+      "files": {
+        "contract": [
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/10-workload-binding/workload-binding.yml",
+          "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime_configuration.py",
+          "scripts/04.deploy/lifecycle/60-run/validate-acceptance-route/script.py"
+        ],
+        "caller": [
+          "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-isolated-database-restore/script.py"
+        ],
+        "tests": [
+          "scripts/04.deploy/lifecycle/00-target-alignment/declaration-coverage/runtime-configuration-test.py"
+        ]
+      },
+      "repair": "Bind runtime inputs to the existing acceptance command identity, selected proof owner and actual --validate-arguments contract; validate each alias after caching only subprocess work.",
+      "negative_regressions": [
+        "source-only claimed producer",
+        "missing required command",
+        "wrong producer mode",
+        "duplicate argv alias claiming NEVER_DELIVERED",
+        "malformed optional capability or secret identities"
+      ],
+      "valid_behaviour": [
+        "repeated flags delivered exactly",
+        "matching-contract aliases",
+        "optional capability remains optional"
+      ],
+      "earliest_enforcement": "declaration and actual command-parser preflight",
+      "closure_evidence": [
+        "actual runtime-configuration CLI suite including alias reproduction"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes."
+      }
+    },
+    {
+      "id": "D-CI-04",
+      "families": [
+        "D",
+        "E"
+      ],
+      "failure": "A CI gate could be omitted, reordered, conditional, suppressed or substituted, leaving future scopes without automatic checks.",
+      "affected_routes": [
+        "repository pull request and manual CI selection"
+      ],
+      "files": {
+        "contract": [
+          "scripts/repo/check-selection/checks.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py"
+        ],
+        "caller": [
+          ".github/workflows/delivery-coverage.yml",
+          "scripts/repo/check-selection/script.py"
+        ],
+        "tests": [
+          "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py"
+        ]
+      },
+      "repair": "Protect exact unconditional census, regression and selected-local commands, their order and real diff identities through the existing workflow guard.",
+      "negative_regressions": [
+        "missing workflow",
+        "omitted gate",
+        "conditional gate",
+        "suppressed failure",
+        "reordered gate",
+        "substituted command",
+        "wrong base/head identity"
+      ],
+      "valid_behaviour": [
+        "pull request diff and full manual selection use the same selector"
+      ],
+      "earliest_enforcement": "cheap source gate before npm install/build/publication/deploy",
+      "closure_evidence": [
+        "actual mutated-workflow CLI tests",
+        "source checks of real CI definition"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes."
+      }
+    },
+    {
+      "id": "C-CTX-05",
+      "families": [
+        "C"
+      ],
+      "failure": "Container-boundary grammar rejected established capability image locations; implicit root-ignore fallback could validate an ignore file that Docker would not use.",
+      "affected_routes": [
+        "five current image definitions"
+      ],
+      "files": {
+        "contract": [
+          "docs/04.deploy/source-material/shared/container-image-management.md",
+          "docs/04.deploy/rules/shared/container-image-management.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/validate-container-boundaries/script.sh"
+        ],
+        "caller": [
+          "scripts/04.deploy/build-platform-shell-image/script.sh",
+          "scripts/02.rag-rulebook/build-service-image/script.sh"
+        ],
+        "tests": [
+          "scripts/04.deploy/validate-container-boundaries/smoke-test.sh"
+        ]
+      },
+      "repair": "Allow the existing single capability segment and Dockerfile-specific ignores; make repository-root versus image-directory context explicit and validate the effective default-deny ignore.",
+      "negative_regressions": [
+        "arbitrary nested image locations",
+        "weak root ignore",
+        "root fallback with wrong actual context"
+      ],
+      "valid_behaviour": [
+        "one capability image segment",
+        "Dockerfile.dockerignore",
+        "explicit repository-root fallback"
+      ],
+      "earliest_enforcement": "pre-build source boundary",
+      "closure_evidence": [
+        "boundary smoke passes",
+        "current source review and projection checks pass",
+        "historical accepted review preserved"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes.",
+        "governance": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-governance-frozen.json",
+          "sha256": "de4a2578f28ca2b8babed841d846097f7100aa1f806ca7cd2021b297783f71c3"
+        }
+      }
+    },
+    {
+      "id": "F-CONCURRENT-06",
+      "families": [
+        "F",
+        "G"
+      ],
+      "failure": "Concurrent candidate reservations for different immutable images could both be admitted and one receipt overwritten, preventing reliable recovery of every submitted task.",
+      "affected_routes": [
+        "platform-shell candidate execution preflight"
+      ],
+      "files": {
+        "contract": [
+          "infra/04.deploy/03.product/targets/kanbien/staging/operational-realization/candidate-execution-preflight.v1.yml"
+        ],
+        "implementation": [
+          "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.py"
+        ],
+        "caller": [
+          "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/script.sh"
+        ],
+        "tests": [
+          "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/continuation-test.py",
+          "scripts/04.deploy/run-platform-shell-candidate-execution-preflight/smoke-test.sh"
+        ]
+      },
+      "repair": "Serialize the existing owner receipt load/check/save and state-update transactions with a process lock; busy writers fail before another submission.",
+      "negative_regressions": [
+        "two real processes reserving different image digests cannot both pass or lose a permitted receipt"
+      ],
+      "valid_behaviour": [
+        "sequential terminal attempts remain available",
+        "lost provider response reconciles and cleans without replay"
+      ],
+      "earliest_enforcement": "local durable reservation before task submission",
+      "closure_evidence": [
+        "independent concurrent process test passed",
+        "full candidate command smoke"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes."
+      }
+    },
+    {
+      "id": "C-ARCHIVE-07",
+      "families": [
+        "C"
+      ],
+      "failure": "The established source-archive metadata index fallback raised FileNotFoundError when the packaged service correctly omitted Git.",
+      "affected_routes": [
+        "local RAG finished image and exported source archives"
+      ],
+      "files": {
+        "contract": [
+          "scripts/01.harness/artifact-metadata/generate-index/script.sh"
+        ],
+        "implementation": [
+          "scripts/01.harness/artifact-metadata/generate-index/script.sh"
+        ],
+        "caller": [
+          "scripts/02.rag-rulebook/build-local-runtime/script.sh"
+        ],
+        "tests": [
+          "scripts/01.harness/artifact-metadata/generate-index/smoke-test.sh",
+          "scripts/02.rag-rulebook/build-local-runtime/smoke-test.sh"
+        ]
+      },
+      "repair": "Treat absent Git as a source archive and retain the existing explicit source revision requirement.",
+      "negative_regressions": [
+        "actual archive CLI with no Git previously failed before discovery",
+        "archive missing explicit source revision still fails"
+      ],
+      "valid_behaviour": [
+        "Git checkout enumeration unchanged",
+        "archive returns identical declared artifacts with and without Git"
+      ],
+      "earliest_enforcement": "local archive CLI regression before finished-image build",
+      "closure_evidence": [
+        "full metadata index smoke passed",
+        "selected RAG runtime regression",
+        "actual RAG package query"
+      ],
+      "status": "verified-local",
+      "integration_evidence": {
+        "status": "passed",
+        "selected_local_execution": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/selected-execution-final.json",
+          "sha256": "52b6c7c992176202d13f7d91ce9f9145ce8ae45330082314db57a977d751d8a9"
+        },
+        "inventory": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/delivery-inventory.json",
+          "sha256": "12ba0f07360bc5719b149a726f6ae55a7659c53067aa213b828d18fa0886c776"
+        },
+        "proof_boundary": "Actual local CLI and package behavior where applicable; provider responses are disposable fixtures, not live outcomes.",
+        "finished_image": {
+          "artifact": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/rag-image-qualification-b4d9f64549a8.json",
+          "sha256": "35807919962f507722638ddbe7b95b6bf5fba56167e2095873afba73dba2cd15"
+        }
+      }
+    }
+  ]
+}

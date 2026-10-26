@@ -1,0 +1,26 @@
+durable persistence proof receipt checks passed
+Fresh acceptance observations passed: exact qualified image/source/overrides, bounded health freshness, retained record/snapshot/source ordering and fresh cleanup; 20 negative observations rejected without provider access.
+retained persistence acceptance receipt checks passed
+PASS complete template probes actual command parsers
+PASS missing actual required mode fails through declaration coverage
+PASS valid wrong operation, missing proof contract and omitted required restore fail preflight
+PASS malformed proof, missing succession, scope activation substitution, wrong owner/effects and missing schema never execute commands
+PASS nine declared fresh verifier phases consume actual same-mode predecessor outputs; identical retries retain historical completion without new tasks
+PASS omitted fresh flags expose historical proof; incomplete and cross-mode predecessors block; prior immutable receipts remain unchanged
+PASS fresh-phase CLI rehearsal disposable operation state and provider effects are removed
+PASS actual controller observations retain all 15 simulated proof receipts
+PASS fresh unhealthy, stale readiness and remaining restore block writes
+PASS complete collector writes temporary rehearsal using zero historical task queries
+PASS production rejects simulation; explicit temporary rehearsal validates retained chain
+PASS simulation cannot write canonical evidence and malformed receipts fail safely
+PASS record validation rejects cross-proof snapshot mismatch
+PASS direct promotion rejects a mutating record validator before invocation
+PASS promotion and downstream reject foreign evidence, outside roots and invalid current ownership before writes
+PASS actual promotion and lifecycle/target downstream gates accept complete temporary route
+PASS actual producer candidate uses evidence-relative paths and CLI succession preserves legacy, resumes idempotently and rejects stale predecessor
+PASS missing argument and incomplete retained proof set return structured pre-observation failures
+PASS all genuine accepted evidence and lifecycle files preserved byte-for-byte
+{"schema": "deploy/acceptance-route-rehearsal-report/v1", "verdict": "passed", "evidence_class": "simulated", "checks": 19}
+
+EXIT_CODE=0
+ELAPSED_SECONDS=44.493

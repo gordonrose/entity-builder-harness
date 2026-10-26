@@ -1,0 +1,287 @@
+{
+  "schema": "delivery-corrective-governance/v1",
+  "source_revision": "3db60130493a1ad7af4bbe5c6f0adf9715e6b96c",
+  "checked_at": "2026-10-26T12:59:03.323414+00:00",
+  "generation": {
+    "id": "recognition-refresh",
+    "argv": [
+      "bash",
+      "scripts/02.rag-rulebook/generate-recognition-sources/script.sh",
+      "--write-all"
+    ],
+    "exit_code": 0,
+    "seconds": 3.913334,
+    "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/recognition-refresh.log",
+    "log_sha256": "97a3b81aa7c8008578cdfe61894b3b5377dfc71bea8a79f4678f40f471470c37"
+  },
+  "changed_paths": [
+    ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+    ".agentic/04.deploy/standards/declaration-coverage.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+    "scripts/04.deploy/inventory-deploy-control/README.md",
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+  ],
+  "source_inputs": {
+    ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml": {
+      "sha256": "b4ca6fb4a6e99f82068a04c305346064090d0bca87ddc4ff06d23edfc501d216",
+      "mode": 420
+    },
+    ".agentic/04.deploy/standards/declaration-coverage.md": {
+      "sha256": "9fa5ff1a23f9a03a414acb086b92cbd03551d76b1a5f00d05862770d8ab3a4d0",
+      "mode": 420
+    },
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md": {
+      "sha256": "06093dfc7e5a21871984ce75d05f484fa523924285916708d80dc7a872e8bd3b",
+      "mode": 420
+    },
+    ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md": {
+      "sha256": "308ca47f0805bc6f3e8353f052ef45f4ea50258c425d38c8531fd2973002ebbc",
+      "mode": 420
+    },
+    "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml": {
+      "sha256": "218453ca2a9db58df102037a03dcdb7e691b5b47b6c628e1bd505dc960d56c68",
+      "mode": 420
+    },
+    "scripts/04.deploy/inventory-deploy-control/README.md": {
+      "sha256": "494989391d9ed28520de872367f60a7936ee2b43546f137b071bd54ce8e31964",
+      "mode": 420
+    },
+    "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py": {
+      "sha256": "faf0d72c3f6ab094b43df01b8dea0303e9c21af198ce4b497f262edc1fdd87b5",
+      "mode": 420
+    },
+    "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py": {
+      "sha256": "36bd8b829e4bc15337b47e6f97ee77557db4a0bd43685a99dcfdbeae21420fa2",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md": {
+      "sha256": "8694b710bcd5e28cacc356a4fca172da01fc9bf9b617536d6b439fbc77e9369c",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py": {
+      "sha256": "ad34756a433269f35e8329c9b9e22c8931c26c89cc0b7c31345634a614165218",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py": {
+      "sha256": "a7f21fb8ccc75aaafcae815f9a00f55deb990c95d7f56d26c54bdd438ef15014",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py": {
+      "sha256": "7ddd414a68b0b73832df89d443f7b6aa2b3ce78e6b72173e64464c174852c233",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh": {
+      "sha256": "bcf6b1a47b538707c584be15d717dc0dd7ea56afb3dcdd90d4425cde0115c4b9",
+      "mode": 493
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py": {
+      "sha256": "d46ecdf800f6b7b94d10f343f9794304956de6f6624c6c0c0a170a368094867a",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py": {
+      "sha256": "1cd40620606b93b08cd69740cf50bc8db2d9ac2368236f00d6865c127ca4de41",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh": {
+      "sha256": "80e6514db365062351789b2b7d05147e1df5efedfa99bd974b12f834bb049ec1",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md": {
+      "sha256": "0021c6629b484589fd32394c9f74ae77687cbe6f67cc60ac7a5403b507405b95",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py": {
+      "sha256": "3cc5ffeb43492f0ab2e9c189d8ab4e535a5ee47de8c276f3d4318fe158a20ed2",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py": {
+      "sha256": "3f7aeb9c7cbbef7e3bff06c975f336e98168d4e434a83d952d114dac9b8f281c",
+      "mode": 420
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh": {
+      "sha256": "ea9dbb6cdb4d70b2c839b9c19d233bf6d2c70c31077fd3bf2523f10016a9bf9d",
+      "mode": 493
+    },
+    "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh": {
+      "sha256": "0aa890b51a6fe6c8b6f8f363d25418d066e822a43c5b12360cb022241d89e5d4",
+      "mode": 420
+    },
+    "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py": {
+      "sha256": "502bfe852583bae40fbb8f8b4d8149a8090f52ab296cdbf7a6f0f944ad479c3f",
+      "mode": 420
+    },
+    "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py": {
+      "sha256": "57d70bd61b79d2ec38d902f54b47845a013067e7157c3565750148c4bb9cee5d",
+      "mode": 420
+    },
+    "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py": {
+      "sha256": "9adbc231059ffa4b7cdc1ce4c8e41d193b5bb030befb4da26c2d83fe6bdfc835",
+      "mode": 420
+    }
+  },
+  "source_drift": [],
+  "checks": [
+    {
+      "id": "metadata-headers",
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/check-headers/script.sh",
+        "--all"
+      ],
+      "exit_code": 0,
+      "seconds": 2.514741,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/metadata-headers.log",
+      "log_sha256": "ba72ec9cfb01b3705163c5435118d3751d9130573e7ed6b353326e723ce91bc2"
+    },
+    {
+      "id": "metadata-index",
+      "argv": [
+        "bash",
+        "scripts/01.harness/artifact-metadata/generate-index/script.sh",
+        "--all",
+        "--strict",
+        "--check-coverage"
+      ],
+      "exit_code": 0,
+      "seconds": 2.551788,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/metadata-index.log",
+      "log_sha256": "93f81042dceb21ea3d0a343becf3bd4030c1c819227f8241dedfe100fedab4d0"
+    },
+    {
+      "id": "recognition-generated",
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/generate-recognition-sources/script.sh",
+        "--check",
+        "--source",
+        "all"
+      ],
+      "exit_code": 0,
+      "seconds": 3.198472,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/recognition-generated.log",
+      "log_sha256": "263ff6630ad5719f1715d111b2de1e78d7dc40970d910af7a1e8e6788b54e481"
+    },
+    {
+      "id": "recognition-valid",
+      "argv": [
+        "bash",
+        "scripts/02.rag-rulebook/validate-recognition-sources/script.sh",
+        "--current",
+        "--json"
+      ],
+      "exit_code": 0,
+      "seconds": 1.248265,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/recognition-valid.log",
+      "log_sha256": "3376a7b6d4cccde1df9abf325f333d85b9e806c71fb589be0cacd64b12983696"
+    },
+    {
+      "id": "deterministic-drift",
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-deterministic-process-drift.sh",
+        "--paths",
+        ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+        ".agentic/04.deploy/standards/declaration-coverage.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "scripts/04.deploy/inventory-deploy-control/README.md",
+        "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+      ],
+      "exit_code": 0,
+      "seconds": 0.044035,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/deterministic-drift.log",
+      "log_sha256": "b07513304ae36b4154441c1a9b10aba3129943f9abc935d310a0dac59b249c5a"
+    },
+    {
+      "id": "governed-command-drift",
+      "argv": [
+        "bash",
+        "scripts/01.harness/check-governed-script-command-drift.sh",
+        "--paths",
+        ".agentic/02.rag-rulebook/recognition-sources/generated/artifacts.yml",
+        ".agentic/04.deploy/standards/declaration-coverage.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/bootstrap-runtime/review-and-execute-ecs-runtime-update.md",
+        ".agentic/aws/50-deploy/workflows/targets/kanbien-core-platform/20-scopes/core-server-persistence/create-and-verify-private-postgresql-candidate.md",
+        "infra/04.deploy/03.product/targets/kanbien-core-platform/20-scopes/core-server-persistence/00-declaration/acceptance-route-contract.yml",
+        "scripts/04.deploy/inventory-deploy-control/README.md",
+        "scripts/04.deploy/inventory-deploy-control/delivery-smoke-test.py",
+        "scripts/04.deploy/inventory-deploy-control/delivery_inventory.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/README.md",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deploy-candidate/deploy.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/bootstrap-runtime/deployment-cli-regression.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/controller-regression.py",
+        "scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/acceptance-route-rehearsal/smoke-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/README.md",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh",
+        "scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/smoke-test.sh",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release-control-test.py",
+        "scripts/04.deploy/reconcile-platform-shell-staging/release_control.py",
+        "scripts/04.deploy/shared/provider-adapters/aws/cloudformation-template.py"
+      ],
+      "exit_code": 0,
+      "seconds": 12.952298,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/governed-command-drift.log",
+      "log_sha256": "2598ecb7450e3ba81be89ce67c1698300846cbe154d56c3a77b1ba4337160bf9"
+    },
+    {
+      "id": "diff-check",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 0.088341,
+      "log": "commitLogs/2026/oct/26/2026-10-26-07-20-delivery-chain-coverage/verification-evidence/corrective-governance-20261026T125836/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "result": "passed",
+  "limits": [
+    "Prior unrelated current-source review gaps and rulebook warning remain recorded separately; this focused correction does not rewrite historical reviews."
+  ]
+}

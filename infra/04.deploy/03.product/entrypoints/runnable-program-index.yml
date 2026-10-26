@@ -4,7 +4,7 @@
 #   version: 4
 #   status: active
 #   created_on: "2026-10-19"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.bootstrap-runtime
 #   disciplines:
@@ -28,6 +28,7 @@ runnable_programs:
   - id: kanbien-core-server
     source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-core-server.main.ts
     entrypoint: artifacts/kanbien-core-server.main.js
+    runtime_executable: node
     role: http-server
     configuration_boundary: platform/server/src/configuration/
     dependency_failure_boundary: platform/server/src/configuration/
@@ -64,13 +65,14 @@ runnable_programs:
   - id: kanbien-core-server-persistence
     source_entrypoint: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.main.ts
     entrypoint: artifacts/kanbien-core-server-persistence.main.js
+    runtime_executable: node
     role: http-server
     configuration_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence-configuration.ts
     dependency_failure_boundary: infra/04.deploy/03.product/entrypoints/kanbien-core-server-persistence.app.ts
     local_proof: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
     owner: 04.deploy/03.product
-    approved_dependencies: [core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
-    observed_dependencies: [core, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    approved_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
+    observed_dependencies: [core, platform-adapter-aws-cloudwatch-otel, opentelemetry-metrics-runtime, platform-adapter-aws-postgresql, platform-config, platform-contracts, platform-health, platform-observability, platform-persistence, platform-runtime, platform-security, platform-server, postgresql]
     forbidden_dependencies: [app-platform-smoke, platform-workers, product-kanbien-platform, staging-platform-server, relay, worker]
 image_contracts:
   - id: kanbien-core-server-image

@@ -5,7 +5,7 @@
 //   version: 6
 //   status: active
 //   created_on: "2026-09-06"
-//   updated_on: "2026-10-20"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: infra.ci-cd
 //   disciplines:
@@ -24,7 +24,6 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, renameSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -37,8 +36,6 @@ const persistenceCompositionEntrypoint = join(runtimeRoot, "infra", "04.deploy",
 const relationalBootstrapEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-postgresql-bootstrap.main.js");
 const relationalRestoreVerificationEntrypoint = join(runtimeRoot, "infra", "04.deploy", "03.product", "entrypoints", "kanbien-platform-postgresql-restore-verify.main.js");
 const workspacePackageScope = join(repositoryRoot, "node_modules", "@kanbien");
-const hiddenWorkspaceRoot = mkdtempSync(join(tmpdir(), "platform-shell-runtime-payload-"));
-const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
 
 const requiredPayloadFiles = [
   serverEntrypoint,
@@ -66,9 +63,14 @@ if (!existsSync(workspacePackageScope)) {
   throw new Error("Expected local workspace package links are unavailable for runtime-payload isolation.");
 }
 
-renameSync(workspacePackageScope, hiddenWorkspaceScope);
-
+// Keep the reversible isolation rename on the package scope filesystem.
+// A system temporary directory can live on another mount (EXDEV).
+const hiddenWorkspaceRoot = mkdtempSync(join(repositoryRoot, "node_modules", ".platform-shell-runtime-payload-"));
+const hiddenWorkspaceScope = join(hiddenWorkspaceRoot, "@kanbien");
+let workspaceHidden = false;
 try {
+  renameSync(workspacePackageScope, hiddenWorkspaceScope);
+  workspaceHidden = true;
   await verifyCompiledPersistenceComposition();
   verifyCompiledRelationalBootstrap();
   verifyCompiledRelationalRestoreVerification();
@@ -228,7 +230,7 @@ try {
     throw new Error(`Compiled platform shell relay runtime failed with exit code ${String(relayResult.status)}.`);
   }
 } finally {
-  renameSync(hiddenWorkspaceScope, workspacePackageScope);
+  if (workspaceHidden) renameSync(hiddenWorkspaceScope, workspacePackageScope);
   rmSync(hiddenWorkspaceRoot, { force: true, recursive: true });
 }
 

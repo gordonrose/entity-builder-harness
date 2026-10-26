@@ -11,12 +11,12 @@ set -euo pipefail
 #   kind: script
 #   purpose: Prove receipt validation accepts safe evidence and rejects mismatched or unsafe evidence.
 #   portability: { class: internal, targets: [] }
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 #   used_by:
 #   - id: deploy.command.package-custody-receipt
 #     path: scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh
 #   created_on: "2026-10-20"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 ROOT="$(git rev-parse --show-toplevel)"; SCRIPT="$ROOT/scripts/04.deploy/lifecycle/40-package/package-custody-receipt/script.sh"
 TEMP="$(mktemp -d)"; trap 'rm -rf "$TEMP"' EXIT
 python3 - "$TEMP/safe.json" <<'PY'
@@ -41,3 +41,9 @@ v=json.load(open(sys.argv[1])); v["receipt_reference"]="https://unsafe.example";
 PY
 if bash "$SCRIPT" --receipt "$TEMP/unsafe.json" "${ARGS[@]}" >/dev/null; then echo 'ERROR: unsafe receipt passed' >&2; exit 1; fi
 echo 'Package-custody receipt tests passed.'
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/40-package/package-custody-receipt/qualification-test.py"
+
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/docker/disposable-cleanup-test.py"
+
+python3 -B "$ROOT/scripts/04.deploy/shared/provider-adapters/aws/ecr-scan-test.py"

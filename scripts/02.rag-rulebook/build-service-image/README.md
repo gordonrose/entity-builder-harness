@@ -4,7 +4,7 @@ id: rag-rulebook.script.build-service-image.readme
 version: 1
 status: active
 created_on: "2026-07-01"
-updated_on: "2026-10-20"
+updated_on: "2026-10-26"
 layer: 02.rag-rulebook
 domain: runtime
 disciplines:
@@ -59,3 +59,7 @@ Local smoke builds may use a tag-based base image. Staging and production
 deployments require additional deploy-readiness evidence beyond this local
 build wrapper, including immutable image digest, corpus identity, SBOM/scan,
 and provenance or attestation policy.
+
+The wrapper runs the repository delivery inventory before contacting Docker.
+A missing or unsupported route blocks before build work. Local Docker
+configuration defaults to the repository cache directory.

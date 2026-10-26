@@ -3,10 +3,10 @@ set -euo pipefail
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: deploy.test.kanbien-core-platform.private-persistence-verifier-isolation
-#   version: 1
+#   version: 2
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-24"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -14,9 +14,11 @@ set -euo pipefail
 #   purpose: Prove private persistence verifier isolation uses the real lower-case ECS response fields.
 #   portability: { class: internal, targets: [] }
 #   used_by:
+#   - id: deploy.test.kanbien-core-platform.core-server-persistence-target-controls
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/smoke-test.sh
 #   - id: deploy.command.kanbien-core-platform.verify-core-server-persistence-candidate
 #     path: scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.sh
-#   effects: [read-only]
+#   effects: [read-only, writes-files]
 
 ROOT="$(git rev-parse --show-toplevel)"
 SCRIPT="$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/script.py"
@@ -50,3 +52,5 @@ finally:
     module.aws = original
 print("private persistence verifier isolation checks passed")
 PY
+
+python3 -B "$ROOT/scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/verify-candidate/operation-test.py"

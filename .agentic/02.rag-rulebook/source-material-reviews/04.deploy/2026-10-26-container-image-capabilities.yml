@@ -1,0 +1,164 @@
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: rag-rulebook.source-material-review.04-deploy.container-image-capabilities.2026-10-26
+#   version: 1
+#   status: active
+#   created_on: "2026-10-26"
+#   updated_on: "2026-10-26"
+#   layer: 02.rag-rulebook
+#   domain: rulebook
+#   disciplines: [architecture, agentic, security, sre]
+#   kind: review-record
+#   purpose: Track fresh source review for bounded capability image directories without rewriting historical proof.
+#   portability: { class: internal, targets: [] }
+#   used_by:
+#   - id: deploy.rules.shared.container-image-management
+#     path: docs/04.deploy/rules/shared/container-image-management.yml
+schema: rag-rulebook/okf-source-material-review/v1
+review_id: review.2026-10-26.04-deploy.container-image-capabilities
+status: accepted
+source_material:
+  path: docs/04.deploy/source-material/shared/container-image-management.md
+  corpus_id: corpus.04.deploy
+  vertical: shared-container-image-management-and-anti-sprawl
+  source_state: accepted
+  sha256: 6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2
+  target_rule_paths:
+  - docs/04.deploy/rules/shared/container-image-management.yml
+threshold:
+  passing_score: 9.5
+  required_roles:
+  - architect
+  - agentic-engineer
+  - secops-engineer
+  - senior-sre
+  pass_rule: every required reviewer score must be greater than 9.5 and no blocking gaps may remain
+iterations:
+- iteration: 1
+  source_revision_summary: Independent review of the final bounded capability-directory source revision.
+    Preliminary review requested explicit slug/depth and effective-context wording; source was reread
+    after those changes before the recorded scorecards were produced. Historical June30 evidence is preserved.
+  reviewer_assessments:
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.8
+      execution_variables: 9.7
+      human_readability: 9.8
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: architect
+    evidence:
+    - 'Independent reviewer: /root/independent_review. This record contains four role-specific assessments
+      by one reviewer, not four distinct agents.'
+    - Canonical Placement precisely limits capability slug and depth.
+    - Ownership Boundaries keeps source/package/script authority separate.
+    - Build Context and Secrets define context and exclusion obligations.
+    - Required Variables and local-only exception distinguish execution stages.
+    - Health/Provenance/Update Rules require package behavior and immutable identity before deployment.
+    - Drift controls preserve bounded lookup and maintenance cost.
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.7
+      execution_variables: 9.8
+      human_readability: 9.7
+      machine_readability: 9.8
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.8
+    overall_score: 9.7
+    recommendations: []
+    role: agentic-engineer
+    evidence:
+    - 'Independent reviewer: /root/independent_review. This record contains four role-specific assessments
+      by one reviewer, not four distinct agents.'
+    - Canonical Placement precisely limits capability slug and depth.
+    - Ownership Boundaries keeps source/package/script authority separate.
+    - Build Context and Secrets define context and exclusion obligations.
+    - Required Variables and local-only exception distinguish execution stages.
+    - Health/Provenance/Update Rules require package behavior and immutable identity before deployment.
+    - Drift controls preserve bounded lookup and maintenance cost.
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.6
+      coverage: 9.7
+      execution_variables: 9.7
+      human_readability: 9.7
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.6
+      production_grade_gaps: 9.6
+      security: 9.8
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: secops-engineer
+    evidence:
+    - 'Independent reviewer: /root/independent_review. This record contains four role-specific assessments
+      by one reviewer, not four distinct agents.'
+    - Canonical Placement precisely limits capability slug and depth.
+    - Ownership Boundaries keeps source/package/script authority separate.
+    - Build Context and Secrets define context and exclusion obligations.
+    - Required Variables and local-only exception distinguish execution stages.
+    - Health/Provenance/Update Rules require package behavior and immutable identity before deployment.
+    - Drift controls preserve bounded lookup and maintenance cost.
+  - blocking_gaps: []
+    decision: pass
+    dimension_scores:
+      cost_optimization: 9.7
+      coverage: 9.7
+      execution_variables: 9.7
+      human_readability: 9.7
+      machine_readability: 9.7
+      necessity: 9.8
+      performance: 9.7
+      production_grade_gaps: 9.6
+      security: 9.7
+      token_optimization: 9.7
+    overall_score: 9.7
+    recommendations: []
+    role: senior-sre
+    evidence:
+    - 'Independent reviewer: /root/independent_review. This record contains four role-specific assessments
+      by one reviewer, not four distinct agents.'
+    - Canonical Placement precisely limits capability slug and depth.
+    - Ownership Boundaries keeps source/package/script authority separate.
+    - Build Context and Secrets define context and exclusion obligations.
+    - Required Variables and local-only exception distinguish execution stages.
+    - Health/Provenance/Update Rules require package behavior and immutable identity before deployment.
+    - Drift controls preserve bounded lookup and maintenance cost.
+  cross_review_summary:
+    agreement:
+    - All four role-specific assessments accept this exact source hash without blocking source gaps.
+    - The source allows exactly one lowercase capability directory and matches ownership, build-context,
+      sensitive-data, qualification and provenance boundaries.
+    - Source acceptance does not assert deployment, package-test or current derivation acceptance.
+    disagreement: []
+    unresolved_blockers: []
+  recommendation_handling:
+    applied:
+    - recommendation_id: source-capability-depth-and-context
+      summary: Specify exactly one lowercase capability directory, no deeper nesting, sibling README and
+        ignore paths, and repository-root ignore fallback only for repository-root context.
+      evidence_path: docs/04.deploy/source-material/shared/container-image-management.md
+    rejected: []
+  rerun_required: false
+final_decision:
+  status: accepted
+  summary: Accepted final source by independent reviewer /root/independent_review using four role-specific
+    scorecards. Current derivation and executable checks remain separate evidence obligations.
+  accepted_source_sha256: 6058cf0bc0e195027162ddf00c005ab26881f2958fdcce838fba2b86acf67ed2
+  accepted_at_utc: '2026-10-26T09:21:29Z'
+  required_before_derivation: []
