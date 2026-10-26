@@ -10,17 +10,17 @@ status: ready
 raised_at_utc: 2026-10-26T11:53:52Z
 transcript_provider: codex
 transcript_path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl
-transcript_bytes:
-transcript_source:
+transcript_bytes: 3683841
+transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-26T14:57:02Z
+latest_commit_sha: b86b990fd1a90df1c42592e83244aec6964f2e17
+chat_duration: 10990s (00:03:03:10)
+estimated_chat_tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
+estimated_chat_cost: unavailable; no pricing profile selected
+estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 -->
 
 ## Initial Intent
@@ -193,6 +193,17 @@ Decision: Required intake preservation points
 
 Rationale: Read-only review of accepted local main requires whole-family task observation after database absence, independent task/authority cleanup, runtime_input_contract for dynamic restored host and no diagnostic proof contract. Newer origin adds us-east-1 IAM CloudTrail observation, read-only diagnose-rejected operation-id mode and IAM_TOKEN_MATERIAL_INVALID exact pg invariant classification. Preserve all of these during reconciliation; move provider interpretation into adapter with independent code_status, actual SCRAM fixture, no raw text retention. Associate new diagnostic reservations with safe resource_logical_id and keep unbound historical reservation cleanup uncertain. Final combined-result review remains required.
 
+
+### 2026-10-26T14:57:02Z - Commit recorded
+
+Commit: `b86b990fd1a90df1c42592e83244aec6964f2e17`
+
+Message: feat(diagnostics): bound restored PostgreSQL connection diagnosis
+
+Summary: Verified intermediate implementation checkpoint: bounded adapter/controller diagnostics, typed compatible readers, one-attempt connection investigation, fixture isolation and focused qualification/selection wiring. Fifteen selected local checks passed; real-engine CI wrapper separately passed. Full goal remains active for reconciliation of main8d479627 and origin494693ef, preservation of newer diagnostic/runtime contracts, combined verification, independent review, actual image qualification, main integration and normal push.
+
+ADR impact: No new architectural owner; additive diagnostics and governed mode in existing owners.
+
 ## Sub-Agent Activity
 
 
@@ -212,7 +223,13 @@ Summary: Reviewed baseline and adapter diff. Fixed invocation-scoping stale obse
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `b86b990fd1a90df1c42592e83244aec6964f2e17`
+  Time UTC: 2026-10-26T14:57:02Z
+  Message: feat(diagnostics): bound restored PostgreSQL connection diagnosis
+  Summary: Verified intermediate implementation checkpoint: bounded adapter/controller diagnostics, typed compatible readers, one-attempt connection investigation, fixture isolation and focused qualification/selection wiring. Fifteen selected local checks passed; real-engine CI wrapper separately passed. Full goal remains active for reconciliation of main8d479627 and origin494693ef, preservation of newer diagnostic/runtime contracts, combined verification, independent review, actual image qualification, main integration and normal push.
+  ADR impact: No new architectural owner; additive diagnostics and governed mode in existing owners.
 
 ## Main Refresh Conflicts
 
@@ -227,12 +244,12 @@ Reason: Current adapter slice extends existing error/connection owners and Core 
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T11:53:52Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-26T14:57:02Z
+Latest commit SHA: b86b990fd1a90df1c42592e83244aec6964f2e17
+Chat duration: 10990s (00:03:03:10)
+Estimated chat tokens: 920961 estimated from chat transcript bytes (3683841 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T11-53-04-01a1780e-95ea-7cb2-a140-a2adbe0d1a8b.jsonl)
+Estimated chat cost: unavailable; no pricing profile selected
+Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
 
 ## Notes
 
