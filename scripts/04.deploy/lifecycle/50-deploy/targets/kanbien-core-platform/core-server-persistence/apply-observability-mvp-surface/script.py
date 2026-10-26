@@ -157,7 +157,9 @@ def review(change: object, name: str, server: dict, collector: dict, alert_email
     if not isinstance(change, dict) or change.get("Status") != "CREATE_COMPLETE" or change.get("ChangeSetType") not in {None, "UPDATE"} or not name_matches(change.get("ChangeSetName"), name):
         return False
     values = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if values.get("ImageDigest") != server["image_digest"] or values.get("SupportImageDigest") != server["image_digest"] or values.get("RestoreVerifierImageDigest") != server["image_digest"] or values.get("SourceRevision") != server["source_revision"] or values.get("EnableObservability") != "true" or values.get("ObservabilityCollectorImage") != collector_image or values.get("ObservabilityAlertEmail") != alert_email:
+    # A NoEcho parameter is intentionally redacted by CloudFormation. Its
+    # input is instead bound into this operation's deterministic name.
+    if values.get("ImageDigest") != server["image_digest"] or values.get("SupportImageDigest") != server["image_digest"] or values.get("RestoreVerifierImageDigest") != server["image_digest"] or values.get("SourceRevision") != server["source_revision"] or values.get("EnableObservability") != "true" or values.get("ObservabilityCollectorImage") != collector_image or values.get("ObservabilityAlertEmail") != "****":
         return False
     added, modified = set(), set()
     changes = change.get("Changes")
@@ -197,8 +199,9 @@ def inline_template_body_is_supported(path: Path = TEMPLATE) -> bool:
     return 0 < size <= CLOUDFORMATION_INLINE_TEMPLATE_LIMIT_BYTES
 
 
-def change_name(server: dict, collector: dict) -> str:
-    return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}-{template_fingerprint()}"
+def change_name(server: dict, collector: dict, alert_email: str) -> str:
+    recipient = hashlib.sha256(alert_email.encode("utf-8")).hexdigest()[:12]
+    return f"kanbien-core-platform-observability-{server['image_digest'][7:19]}-{collector['image_digest'][7:19]}-{template_fingerprint()}-{recipient}"
 
 
 def reconcile(prepare, name: str, expected: dict[str, str], server: dict, collector: dict, alert_email: str) -> int:
@@ -238,7 +241,7 @@ def main() -> int:
         return report("blocked", "persistence-observability-mvp-package-receipts-invalid")
     if not inline_template_body_is_supported():
         return report("blocked", "persistence-observability-mvp-template-body-too-large")
-    name = change_name(server, collector)
+    name = change_name(server, collector, args.alert_email)
     import subprocess
     collector_gate = subprocess.run(["bash", str(COLLECTOR_GATE), "--json"], capture_output=True, text=True)
     if collector_gate.returncode or not create.package_gates(args.server_receipt) or not prepare.declaration_covered() or not prepare.live_budget()[0] or not prepare.candidate_image(server)[0] or not collector_image_available(prepare, collector):
@@ -280,7 +283,8 @@ def main() -> int:
     if change.get("ExecutionStatus") != "AVAILABLE":
         return reconcile(prepare, name, expected, server, collector, args.alert_email)
     actual = {item.get("ParameterKey"): item.get("ParameterValue") for item in change.get("Parameters", []) if isinstance(item, dict)}
-    if not prepare.update_parameters_match(actual, expected, current):
+    observable_expected = {key: value for key, value in expected.items() if key != "ObservabilityAlertEmail"}
+    if not prepare.update_parameters_match(actual, observable_expected, current):
         return report("blocked", "persistence-observability-mvp-parameters-mismatch")
     ok, _, code = prepare.aws("cloudformation", "execute-change-set", "--stack-name", STACK, "--change-set-name", name)
     if not ok:

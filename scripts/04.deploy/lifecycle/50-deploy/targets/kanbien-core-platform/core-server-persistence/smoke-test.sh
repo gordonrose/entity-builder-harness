@@ -48,8 +48,8 @@ spec = importlib.util.spec_from_file_location("observability_surface", sys.argv[
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
 server = {"image_digest": "sha256:" + "a" * 64, "source_revision": "a" * 40}
 collector = {"image_digest": "sha256:" + "b" * 64, "source_revision": "a" * 40}
-name = module.change_name(server, collector)
 email = "operator@example.invalid"
+name = module.change_name(server, collector, email)
 collector_image = "337159794548.dkr.ecr.eu-west-1.amazonaws.com/kanbien-core-platform/core-server@" + collector["image_digest"]
 parameters = [
     {"ParameterKey": "ImageDigest", "ParameterValue": server["image_digest"]},
@@ -58,7 +58,7 @@ parameters = [
     {"ParameterKey": "SourceRevision", "ParameterValue": server["source_revision"]},
     {"ParameterKey": "EnableObservability", "ParameterValue": "true"},
     {"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector_image},
-    {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": email},
+    {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"},
 ]
 changes = [
     {"ResourceChange": {"Action": "Add", "LogicalResourceId": logical, "ResourceType": resource_type}}
@@ -72,7 +72,8 @@ assert module.review(valid, name, server, collector, email, collector_image)
 assert not module.review({**valid, "Changes": changes[:-1]}, name, server, collector, email, collector_image)
 assert not module.review({**valid, "Changes": changes + [{"ResourceChange": {"Action": "Modify", "LogicalResourceId": "PersistenceDatabase", "ResourceType": "AWS::RDS::DBInstance"}}]}, name, server, collector, email, collector_image)
 assert not module.review({**valid, "Parameters": parameters[:-1]}, name, server, collector, email, collector_image)
-assert not module.review({**valid, "Parameters": parameters[:-2] + [{"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector["image_digest"]}, {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": email}]}, name, server, collector, email, collector_image)
+assert not module.review({**valid, "Parameters": parameters[:-2] + [{"ParameterKey": "ObservabilityCollectorImage", "ParameterValue": collector["image_digest"]}, {"ParameterKey": "ObservabilityAlertEmail", "ParameterValue": "****"}]}, name, server, collector, email, collector_image)
+assert module.change_name(server, collector, "other@example.invalid") != name
 assert module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 1})
 assert not module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 0})
 class Prepare:
