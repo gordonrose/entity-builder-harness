@@ -74,7 +74,6 @@ MODIFIED = {
     "CoreServerPersistenceTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceVerifierTaskDefinition": "AWS::ECS::TaskDefinition",
     "CoreServerPersistenceService": "AWS::ECS::Service",
-    "ServerExecutionRole": "AWS::IAM::Role",
     "ServerTaskRole": "AWS::IAM::Role",
 }
 
