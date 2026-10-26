@@ -7,7 +7,7 @@ set -euo pipefail
 #   version: 1
 #   status: active
 #   created_on: "2026-06-16"
-#   updated_on: "2026-10-20"
+#   updated_on: "2026-10-26"
 #   layer: 00.chat
 #   domain: local-merge
 #   disciplines:
@@ -243,5 +243,28 @@ session="2026-06-16-22-38-log-mismatch"
 branch="chat/$session"
 create_chat_branch_with_log "$repo" "$session" "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 run_expect_state "$repo" "$branch" "blocked-log-head-mismatch" "no"
+
+repo="$(init_repo integration-proof)"
+session="2026-06-16-22-39-integration-proof"
+branch="chat/$session"
+create_chat_branch_with_log "$repo" "$session"
+worktree="$(canonical_worktree_path "$repo" "$branch")"
+mkdir -p "$worktree/scripts/repo/check-selection"
+cat > "$worktree/scripts/repo/check-selection/script.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$*" == '--ci --boundary integration --execute-local --json' ]]
+[[ "$(git rev-parse HEAD)" == "$HEAD_SHA" ]]
+git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA"
+printf '%s\n' invoked > "$(git rev-parse --git-path integration-invoked)"
+if [ "${FIXTURE_INTEGRATION_DRIFT:-0}" = 1 ]; then touch unqualified-drift; fi
+exit "${FIXTURE_INTEGRATION_EXIT:-0}"
+EOF
+git -C "$worktree" add scripts/repo/check-selection/script.sh
+git -C "$worktree" commit -qm "Add fixture integration proof"
+run_expect_state "$repo" "$branch" "eligible" "yes"
+test -f "$(git -C "$worktree" rev-parse --git-path integration-invoked)" || fail "integration proof was skipped"
+FIXTURE_INTEGRATION_EXIT=1 run_expect_state "$repo" "$branch" "blocked-integration-proof" "no"
+FIXTURE_INTEGRATION_DRIFT=1 run_expect_state "$repo" "$branch" "blocked-integration-input-drift" "no"
 
 echo "local merge readiness verifier smoke test passed."

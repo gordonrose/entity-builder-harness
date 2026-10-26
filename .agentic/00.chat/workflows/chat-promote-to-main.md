@@ -4,7 +4,7 @@
   version: 1
   status: active
   created_on: "2026-06-17"
-  updated_on: "2026-10-22"
+  updated_on: "2026-10-26"
   layer: 00.chat
   domain: local-merge
   disciplines:
@@ -56,11 +56,14 @@ and preservation requirements.
 2. Verify the target chat branch is ready to merge into local `main`:
 
    ```bash
-   bash scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh <chat-branch>
+   bash scripts/01.harness/run-governed-script.sh --approved-action scripts/00.chat/local-merge/verify-chat-ready-to-merge-local-main/script.sh <chat-branch>
    ```
 
-   This verification is read-only. It may inspect a session log from the chat
-   branch before that log exists on root `main`.
+   It may inspect a session log from the chat branch before that log exists on
+   root `main`. When the repository selector exists, it also requires affected
+   local integration proof from the combined clean chat tree, reusing matching
+   private receipts. Its declared effects include local check/cache writes;
+   package and provider operations remain with their owning controllers.
 
 3. If verification reports `State: eligible`, ask for explicit user approval
    before merging the chat branch into local `main`.
@@ -144,6 +147,8 @@ Before promoting a chat branch into local `main`:
   initial merge or promotion request approves the non-rewriting refresh from
   `main`.
 - Relevant checks for the changed layer must pass.
+- The verifier's affected integration selection must pass on the chat tree
+  containing the base. Branch/worktree drift requires verification again.
 - User approval is required before merging into `main`.
 
 For an approved local merge, run from the root integration worktree:

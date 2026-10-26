@@ -44,6 +44,13 @@ Directory input matching observes slash boundaries, so `src-extra` cannot
 silently match an input declared as `src`.
 
 The default is a plan, with pending checks and explicit later-stage obligations.
+The default scheduling boundary is `integration`. `--boundary commit` requires
+only checks scheduled for commit preparation. The catalogue's `boundary` field
+is independent of `stage`, `effects` and evidence class: an integration check
+does not acquire network, provider or publication permission. CI retains its
+protected command and uses the integration default. Direct local-main promotion
+runs the same integration selection in the clean chat worktree after confirming
+that it contains the base; failure or branch/input drift blocks promotion.
 `--execute-local` runs only catalogued local checks whose effects agree with the
 command metadata and contain only `read-only` and/or `writes-files`. This flag
 requires task authorization for local execution. It never executes package,
@@ -68,12 +75,12 @@ portable evidence nor protection from that same user editing their own cache.
 `--evidence` reports are explicitly rejected as authority and never create cache
 receipts. Failed, pending, uncertain and nonzero results never qualify reuse.
 Each report has an `execution_summary` naming reused, executed and deferred
-checks. A rerun after a previous trusted receipt records concrete
+checks, selected check IDs and elapsed/execution seconds. A rerun after a previous trusted receipt records concrete
 `invalidated_checks` reasons: verified input bytes changed, the declared runtime
 identity changed, or the verification contract changed. These reasons explain
 why a new local run is needed; they never make an old receipt acceptable.
 
-`--record-preparation` stores the exact selected input identities in the same
+`--record-preparation` stores the exact selected preparation identities in the same
 private worktree cache, without executing checks. The chat pre-verification
 sequence uses it before final verification. `--require-preparation` is limited
 to `--staged`: it rejects a relevant commit-boundary check until its recorded
@@ -81,6 +88,31 @@ identity matches, reporting `verification-preparation-missing` or
 `verification-preparation-inputs-changed` and the affected check IDs before
 any execution. This prevents late lifecycle metadata edits from silently
 turning commit preparation into a new verification cycle.
+Preparation identities bind declared input bytes and the complete verification
+contract. Deferred integration checks do not probe installed runtimes during
+commit preparation; runtime identity is established at their verification
+boundary. The lifecycle owner retains exact prepared artifact hashes/modes in
+that same private preparation record, allowing unchanged content to retain its
+date across UTC rollover. Modified content must be prepared again.
+
+Impact references and `repository_inputs` mappings select obligations; they are
+not automatically consumed proof inputs. Audited checks declare `scope_inputs:
+false` and their complete `inputs`, including implementation helpers. Structural
+scope validators and legacy subject-bound checks retain scope references until
+their inputs are explicitly audited. Command/capability identity, runtime/config
+bindings and transitive workspace package dependencies remain part of audited
+proofs. Metadata consumer edges still select affected checks; consumed schemas
+and contracts must be declared as proof inputs.
+
+`--reuse-from-worktree <path>` reads only the private cache of a registered
+worktree sharing the same Git common directory. It validates receipt contents
+against their key and compares the target's own inputs, contract and runtime.
+Matching local receipts are retained in the target's existing cache; arbitrary
+JSON reports and package/live proofs remain ineligible. The refresh apply owner
+uses this route before removing a clean preflight worktree. Repository-installed
+tools bind their relative location plus actual bytes, modes and versions;
+external installations retain absolute identity. A final identity sweep rejects
+a pass invalidated by a later command in the same invocation.
 
 Each receipt binds the complete catalog definitions of its selected check and
 all aliases sharing that command. An unrelated check definition does not revoke

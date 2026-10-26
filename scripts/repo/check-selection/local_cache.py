@@ -164,7 +164,11 @@ def runtime_identity(root: Path, declaration: dict) -> dict:
         completed = subprocess.run(argv, cwd=root, capture_output=True, text=True, timeout=15, env=probe_environment)
         if completed.returncode: raise ValueError('check-runtime-tool-unavailable:' + tool)
         info = resolved.stat()
-        identity = {'path': str(resolved), 'version': completed.stdout.strip(), 'mode': info.st_mode & 0o777, 'digest': hashlib.sha256(resolved.read_bytes()).hexdigest()}
+        # A repository-installed tool at the same relative location, with the
+        # same bytes/mode/version and dependency closure, survives a worktree
+        # transfer. External tools retain their absolute installation identity.
+        tool_path = '$REPO/' + resolved.relative_to(root).as_posix() if resolved.is_relative_to(root) else str(resolved)
+        identity = {'path': tool_path, 'version': completed.stdout.strip(), 'mode': info.st_mode & 0o777, 'digest': hashlib.sha256(resolved.read_bytes()).hexdigest()}
         if tool == 'python3':
             # Probe the interpreter actually selected by shell scripts, including its YAML installation.
             probe = subprocess.run([str(executable), '-c', 'import json,yaml; print(json.dumps([yaml.__version__,yaml.__file__]))'], cwd=root, capture_output=True, text=True, timeout=15, env=probe_environment)
@@ -183,7 +187,7 @@ class LocalCache:
     This is local acceleration, not a signed or portable acceptance receipt.
     A user able to edit their own Git metadata is inside this trust boundary.
     """
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, create: bool = True):
         completed = subprocess.run(['git', '-C', str(root), 'rev-parse', '--absolute-git-dir'], capture_output=True, text=True)
         if completed.returncode: raise ValueError('local-cache-worktree-unavailable')
         git_dir = Path(completed.stdout.strip())
@@ -193,7 +197,8 @@ class LocalCache:
         if git_dir.stat().st_uid != os.getuid(): raise ValueError('local-cache-owner-invalid')
         self.directory = git_dir / 'agentic-local-checks'
         if self.directory.is_symlink(): raise ValueError('local-cache-symlink-forbidden')
-        self.directory.mkdir(mode=0o700, exist_ok=True)
+        if create:
+            self.directory.mkdir(mode=0o700, exist_ok=True)
         info = self.directory.stat()
         if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
             raise ValueError('local-cache-permissions-invalid')
@@ -209,6 +214,8 @@ class LocalCache:
                 value = json.load(stream)
             if not isinstance(value, dict) or value.get('schema') != 'repo/local-check-cache/v1' or value.get('worktree') != self.worktree: return {}
             if value.get('evidence_key') != key or value.get('stage') != 'local' or value.get('status') != 'passed' or value.get('exit_code') != 0: return {}
+            payload = {field: value.get(field) for field in ('input_digest', 'argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime_identity', 'parameters', 'applicability', 'catalog_entries')}
+            if hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest() != key: return {}
             return value
         except (OSError, ValueError): return {}
 
@@ -217,10 +224,19 @@ class LocalCache:
             raise ValueError('local-cache-name-invalid')
         path = self.directory / name
         if path.is_symlink(): raise ValueError('local-cache-symlink-forbidden')
+        encoded = json.dumps(value, sort_keys=True).encode()
+        try:
+            existing = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+            with os.fdopen(existing, 'rb') as stream:
+                info = os.fstat(stream.fileno())
+                if stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid() and not info.st_mode & 0o077 and info.st_nlink == 1 and info.st_size == len(encoded) and stream.read() == encoded:
+                    return path
+        except FileNotFoundError:
+            pass
         descriptor, temporary = tempfile.mkstemp(prefix='.pending-', dir=self.directory)
         try:
             with os.fdopen(descriptor, 'w') as stream:
-                json.dump(value, stream, sort_keys=True)
+                stream.write(encoded.decode())
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(temporary, path)
@@ -252,7 +268,7 @@ class LocalCache:
             reasons.append('verified-inputs-changed')
         if previous.get('runtime_identity') != item.get('runtime_identity'):
             reasons.append('runtime-identity-changed')
-        if any(previous.get(field) != item.get(field) for field in ('argv', 'effects', 'stage', 'evidence_class', 'runtime', 'parameters', 'applicability')):
+        if any(previous.get(field) != item.get(field) for field in ('argv', 'effects', 'stage', 'boundary', 'evidence_class', 'runtime', 'parameters', 'applicability', 'catalog_entries')):
             reasons.append('verification-contract-changed')
         return reasons or ['evidence-key-changed']
 
@@ -283,3 +299,31 @@ class LocalCache:
             return value
         except (OSError, ValueError):
             return {}
+
+    def prepared_artifact(self, path: str, content: bytes, mode: int) -> bool:
+        """A date rollover cannot revoke the exact bytes prepared by the owner."""
+        records = self.read_preparation().get('lifecycle_inputs', {})
+        record = records.get(path) if isinstance(records, dict) else None
+        return isinstance(record, dict) and record.get('sha256') == hashlib.sha256(content).hexdigest() and record.get('mode') == mode
+
+    @classmethod
+    def registered_source(cls, root: Path, source: Path):
+        """Resolve a same-repository registered cache, never a supplied report."""
+        source = source.absolute()
+        if any(path.is_symlink() for path in (source, *source.parents)):
+            raise ValueError('reuse-worktree-symlink-forbidden')
+        def query(directory, *args):
+            return subprocess.run(['git', '-C', str(directory), *args], check=True, capture_output=True, text=True).stdout.strip()
+        if query(root, 'rev-parse', '--path-format=absolute', '--git-common-dir') != query(source, 'rev-parse', '--path-format=absolute', '--git-common-dir'):
+            raise ValueError('reuse-worktree-repository-mismatch')
+        records = query(root, 'worktree', 'list', '--porcelain', '-z').split('\0')
+        registered = {Path(record[9:]).resolve() for record in records if record.startswith('worktree ')}
+        if source.resolve() not in registered:
+            raise ValueError('reuse-worktree-not-registered')
+        return cls(source, create=False)
+
+    def record_artifacts(self, records: dict) -> None:
+        preparation = self.read_preparation()
+        previous = preparation.get('lifecycle_inputs', {})
+        if not isinstance(previous, dict): previous = {}
+        self.save_preparation({**preparation, 'checks': preparation.get('checks', []), 'lifecycle_inputs': {**previous, **records}})

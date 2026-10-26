@@ -40,6 +40,6 @@ for required in scripts/repo/check-selection/script.sh; do
     exit 1
   fi
 done
-bash scripts/repo/check-selection/script.sh --staged --execute-local --require-preparation --json
+bash scripts/repo/check-selection/script.sh --staged --boundary commit --execute-local --require-preparation --json
 
 echo "Repository commit extension gates passed."

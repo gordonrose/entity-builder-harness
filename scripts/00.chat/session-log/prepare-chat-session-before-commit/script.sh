@@ -81,8 +81,10 @@ PY
   fi
   rm -f "$lifecycle_report"
   bash scripts/01.harness/artifact-metadata/check-headers/script.sh --paths "$@"
+  bash scripts/01.harness/check-deterministic-process-drift.sh --paths "$@"
+  bash scripts/01.harness/check-governed-script-command-drift.sh --paths "$@"
   if [ -f scripts/repo/check-selection/script.sh ]; then
-    bash scripts/repo/check-selection/script.sh --paths "$@" --stage local --record-preparation --json
+    bash scripts/repo/check-selection/script.sh --paths "$@" --stage local --boundary commit --record-preparation --json
   else
     echo "Repository selector is absent; portable lifecycle preparation completed without repository verification planning."
   fi
