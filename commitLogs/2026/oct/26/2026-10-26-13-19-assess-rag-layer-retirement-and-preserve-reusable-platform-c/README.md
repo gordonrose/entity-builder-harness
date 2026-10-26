@@ -8,19 +8,19 @@ worktree: /home/owner/projects/.chat-worktrees/entity-builder-harness-restart-38
 chat_lifecycle_workflow: .agentic/00.chat/workflows/chat-start.md
 status: ready
 raised_at_utc: 2026-10-26T13:19:52Z
-transcript_provider:
-transcript_path:
-transcript_bytes:
-transcript_source:
+transcript_provider: 
+transcript_path: 
+transcript_bytes: 
+transcript_source: 
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc:
-latest_commit_sha:
-chat_duration:
-estimated_chat_tokens:
-estimated_chat_cost:
-estimated_chat_cost_basis:
+latest_commit_at_utc: 2026-10-26T16:14:01Z
+latest_commit_sha: 1044d85ec83c4e2e67b73ca7a7f3109ee9a155af
+chat_duration: 10449s (00:02:54:09)
+estimated_chat_tokens: unavailable; transcript source not supplied by chat
+estimated_chat_cost: unavailable; estimated chat tokens are unavailable
+estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
 -->
 
 ## Initial Intent
@@ -145,6 +145,17 @@ ADR needed: no
 
 Reason: This is a bounded refinement of existing chat, metadata, and selector owners; it introduces no new architectural boundary.
 
+
+### 2026-10-26T16:14:01Z - Commit recorded
+
+Commit: `1044d85ec83c4e2e67b73ca7a7f3109ee9a155af`
+
+Message: chore(harness): quarantine RAG verification
+
+Summary: Quarantined dormant RAG impact traversal and added idempotent verification preparation with commit-time evidence reuse.
+
+ADR impact: No ADR: bounded refinement of existing harness owners.
+
 ## Sub-Agent Activity
 
 
@@ -206,7 +217,13 @@ Summary: Added the pre-verification preparation sequence, protected preparation 
 
 ## Commits
 
-- None recorded yet.
+
+
+- Commit: `1044d85ec83c4e2e67b73ca7a7f3109ee9a155af`
+  Time UTC: 2026-10-26T16:14:01Z
+  Message: chore(harness): quarantine RAG verification
+  Summary: Quarantined dormant RAG impact traversal and added idempotent verification preparation with commit-time evidence reuse.
+  ADR impact: No ADR: bounded refinement of existing harness owners.
 
 ## Main Refresh Conflicts
 
@@ -221,12 +238,12 @@ Reason: This is a bounded refinement of existing chat, metadata, and selector ow
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T13:19:52Z
-Latest commit at UTC:
-Latest commit SHA:
-Chat duration:
-Estimated chat tokens:
-Estimated chat cost:
-Estimated chat cost basis:
+Latest commit at UTC: 2026-10-26T16:14:01Z
+Latest commit SHA: 1044d85ec83c4e2e67b73ca7a7f3109ee9a155af
+Chat duration: 10449s (00:02:54:09)
+Estimated chat tokens: unavailable; transcript source not supplied by chat
+Estimated chat cost: unavailable; estimated chat tokens are unavailable
+Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
 
 ## Notes
 
