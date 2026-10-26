@@ -76,7 +76,7 @@ class Provider:
   if operation=='lookup-events':return True,{'Events':[{'EventTime':'2020-01-01T00:00:00Z','CloudTrailEvent':json.dumps({'requestParameters':{'roleName':'fixture-role','policyName':'kanbien-core-platform-restoration-verifier-current-instance'}})}]},'ok'
   if operation=='run-task':
    identity=args[args.index('--started-by')+1];overrides=json.loads(args[args.index('--overrides')+1])
-   self.tasks=[{'taskArn':'fixture/task-1','startedBy':identity,'taskDefinitionArn':'fixture-definition:1','lastStatus':'RUNNING','createdAt':datetime.now(timezone.utc).isoformat(),'startedAt':'2026-10-26T02:00:00Z','stoppedAt':'2026-10-26T02:00:01Z','overrides':overrides,'containers':[{'exitCode':0,'imageDigest':IMAGE}]}]
+   self.tasks=[{'taskArn':'arn:aws:ecs:eu-west-1:337159794548:task/kanbien-core-platform/'+'a'*32,'startedBy':identity,'taskDefinitionArn':'fixture-definition:1','lastStatus':'RUNNING','createdAt':datetime.now(timezone.utc).isoformat(),'startedAt':'2026-10-26T02:00:00Z','stoppedAt':'2026-10-26T02:00:01Z','overrides':overrides,'containers':[{'exitCode':0,'imageDigest':IMAGE}]}]
    return (False,None,'aws-command-timeout') if self.lost_response else (True,{},'ok')
   if operation=='stop-task':return True,{},'ok'
   if operation=='get-log-events':return logs([event(self.result)])
@@ -178,6 +178,19 @@ class DiagnosticTests(unittest.TestCase):
     _,result=self.capture(self.m.cleanup,provider,SID,RID)
     self.assertEqual(result['verdict'],'uncertain',result)
     self.assertIn('reservation-binding-unproven',result['findings'][0]['code'])
+ def test_historical_terminal_diagnostic_report_resolves_retention_after_database_deletion(self):
+  provider,stack=self.target()
+  with stack:
+   # A legacy diagnostic may have a validated terminal report but no newer
+   # compact completion receipt. It must resolve an expired ECS task without
+   # accepting a launch reservation by itself.
+   self.run_diagnostic(provider);provider.tasks=[];provider.policy=False
+   operation=self.m.diagnostic_run_identity(provider.restored)
+   report=self.m.diagnostics().build_report(target='kanbien-core-platform',scope='core-server-persistence',operation_id=operation,stage='run',original_code='KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE',exit_status=1,outcome='failed',classification='unknown',evidence_reference='provider-operation:'+operation+'/'+'b'*32,next_decision='inspect-retained-evidence',facts={'resource_logical_id':RID})
+   self.m.persist_observation(self.m.diagnostics(),report)
+   with patch.object(self.m,'db',return_value=(None,'aws-resource-missing')):
+    _,result=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(result['verdict'],'cleaned-up',result)
  def test_diagnostic_cli_declares_dynamic_host_without_recovery_proof(self):
   command=['bash',str(HERE/'script.sh'),'--operation','diagnose-connection','--snapshot-id',SID,'--record-proof-receipt','/tmp/fixture-proof.json','--validate-arguments']
   result=subprocess.run(command,cwd=ROOT,capture_output=True,text=True,timeout=10)
@@ -253,6 +266,15 @@ class DiagnosticTests(unittest.TestCase):
    self.run_diagnostic(provider);provider.tasks[0]['lastStatus']='STOPPED'
    _,result=self.run_diagnostic(provider);self.assertEqual(result['verdict'],'pending');self.assertFalse(provider.policy)
    status,result=self.run_diagnostic(provider);self.assertEqual((status,result['verdict']),(0,'diagnosed'));self.assertFalse(result['acceptance_evidence'])
+   operation=self.m.diagnostic_run_identity(provider.restored)
+   self.assertTrue(self.m.diagnostic_completion_path(operation).is_file())
+   self.assertTrue(self.m.diagnostic_completion_resolves(operation,RID))
+   # ECS stopped-task retention must not prevent cleanup after the controller
+   # has retained this terminal, target-bound diagnostic completion.
+   provider.tasks=[]
+   with patch.object(self.m,'db',return_value=(None,'aws-resource-missing')):
+    _,cleanup=self.capture(self.m.cleanup,provider,SID,RID)
+   self.assertEqual(cleanup['verdict'],'cleaned-up',cleanup)
    self.assertEqual(sum(call[1]=='run-task' for call in provider.calls),1)
    self.assertFalse(any(call[1] in {'restore-db-instance-from-db-snapshot','create-db-instance','modify-db-instance'} for call in provider.calls))
    self.assertFalse(list(self.m.OPERATION_DIAGNOSTICS.glob('*receipt*')))

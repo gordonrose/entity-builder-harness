@@ -55,8 +55,10 @@ const valid = {
   PERSISTENCE_ACCEPTANCE_RECORD_ID: "core-persistence-config-fixture",
   PERSISTENCE_ACCEPTANCE_FACT_DIGEST: "a".repeat(64),
 };
-for (const [purpose, timeout] of [["server", 5000], ["migration", 240000], ["restore", 30000]]) {
-  assert.equal(config.persistenceConfiguration(valid, purpose).statementTimeoutMs, timeout);
+for (const [purpose, connectionTimeout, statementTimeout] of [["server", 5000, 5000], ["migration", 30000, 240000], ["restore", 30000, 30000]]) {
+  const configured = config.persistenceConfiguration(valid, purpose);
+  assert.equal(configured.connectionTimeoutMs, connectionTimeout);
+  assert.equal(configured.statementTimeoutMs, statementTimeout);
 }
 const certificate = fs.readFileSync("platform/adapters/aws/persistence/postgresql/assets/rds-eu-west-1-bundle.crt", "utf8");
 const originalRead = fs.readFileSync;

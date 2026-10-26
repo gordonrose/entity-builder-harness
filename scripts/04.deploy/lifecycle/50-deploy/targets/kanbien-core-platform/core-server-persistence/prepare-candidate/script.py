@@ -209,6 +209,29 @@ def observe_update(name: str, expected_parameters: dict, review) -> tuple[str, s
         return "blocked", "persistence-update-change-set-identity-invalid"
     if change.get("Status") in {"CREATE_PENDING", "CREATE_IN_PROGRESS"}:
         return "pending", "persistence-update-review-pending"
+    # A controller may resume after an acknowledged update completed and its
+    # executed change set has disappeared.  CloudFormation then permits a new
+    # change set with the same name, but reports it as FAILED because the
+    # desired parameters are already applied.  This is not an update failure:
+    # accept it only for CloudFormation's exact no-change shape and only after
+    # independently proving the healthy stack still has every expected value.
+    no_change = (
+        change.get("Status") == "FAILED"
+        and change.get("ExecutionStatus") == "UNAVAILABLE"
+        and change.get("Changes") == []
+        and isinstance(change.get("StatusReason"), str)
+        and "didn't contain changes" in change["StatusReason"]
+    )
+    if no_change:
+        stack_ok, observed, stack_code = aws("cloudformation", "describe-stacks", "--stack-name", STACK)
+        stacks = observed.get("Stacks") if stack_ok and isinstance(observed, dict) else None
+        if not isinstance(stacks, list) or len(stacks) != 1 or not isinstance(stacks[0], dict):
+            return "uncertain", "persistence-update-stack-observation-uncertain" if stack_ok else stack_code
+        stack = stacks[0]
+        params = {item.get("ParameterKey"): item.get("ParameterValue") for item in stack.get("Parameters", []) if isinstance(item, dict)}
+        if stack.get("StackStatus") == "UPDATE_COMPLETE" and all(params.get(key) == value for key, value in expected_parameters.items()):
+            return "complete", "persistence-update-noop-candidate-already-applied"
+        return "failed", "persistence-update-change-set-failed"
     if change.get("Status") in {"FAILED", "DELETE_COMPLETE", "DELETE_FAILED"}:
         return "failed", "persistence-update-change-set-failed"
     if not review(change):

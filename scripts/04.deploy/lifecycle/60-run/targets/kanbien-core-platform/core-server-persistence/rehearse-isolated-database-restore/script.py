@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[8]
-DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"; STACK="kanbien-core-platform-core-server-persistence"; FOUNDATION="kanbien-core-platform-foundation"; LOG_GROUP="/aws/ecs/kanbien-core-platform"
+REGION="eu-west-1"; DATABASE="kanbien-core-platform-persistence"; CLUSTER="kanbien-core-platform"; SERVICE="kanbien-core-platform-core-server-persistence"; STACK="kanbien-core-platform-core-server-persistence"; FOUNDATION="kanbien-core-platform-foundation"; LOG_GROUP="/aws/ecs/kanbien-core-platform"
 EVIDENCE_CLASS="live"  # Only isolated imported test harnesses may change this; no CLI bypass.
 SNAPSHOT=re.compile(r"^kanbien-core-platform-persistence-recovery-(?P<day>[0-9]{8})(?P<suffix>-[a-z0-9]{1,8})?$"); RECORD_ID="core-persistence-acceptance-v1"; FACT_DIGEST=hashlib.sha256(b"kanbien-core-persistence-acceptance-v1").hexdigest(); DEADLINE=120
 RESTORE_ACCEPTED_RESULT="KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"
@@ -30,6 +30,7 @@ RESTORE_SERVER_LOG_TAIL_SECONDS=300
 RESTORE_SERVER_LOG_EVENT_LIMIT=100
 LOG_READ_LIMIT=3
 DIAGNOSTIC_RESULT="KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED"
+DIAGNOSTIC_COMPLETION_SCHEMA="deploy/persistence-connection-diagnostic-completion/v1"
 RESTORE_REJECTED_RESULTS={
  "PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID",
  "KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH",
@@ -147,6 +148,54 @@ def persist_observation(module, report):
  except FileExistsError:
   if json.loads(path.read_text(encoding="utf-8"))!=report:raise ValueError("diagnostic-observation-collision")
  return path
+
+def diagnostic_completion_path(operation):
+ return OPERATION_DIAGNOSTICS/f"{operation}-completion.json"
+
+def persist_diagnostic_completion(operation, restored_database, task):
+ """Retain a terminal, allowlisted completion fact for cleanup reconciliation.
+
+ This is deliberately not acceptance evidence: it only establishes that the
+ owned one-shot diagnostic finished successfully, so a later ECS retention
+ expiry cannot make cleanup permanently impossible.
+ """
+ containers=task.get("containers") if isinstance(task,dict) else None
+ container=containers[0] if isinstance(containers,list) and len(containers)==1 and isinstance(containers[0],dict) else None
+ task_arn=task.get("taskArn") if isinstance(task,dict) else None
+ digest=container.get("imageDigest") if isinstance(container,dict) else None
+ if not isinstance(operation,str) or not re.fullmatch(r"kanbien-connect-[a-f0-9]{16}",operation) or restore_id_from_database(restored_database)!=restored_database or not isinstance(task_arn,str) or re.fullmatch(rf"arn:aws:ecs:{re.escape(REGION)}:[0-9]{{12}}:task/{re.escape(CLUSTER)}/[a-f0-9]{{32}}",task_arn) is None or not isinstance(digest,str) or re.fullmatch(r"sha256:[a-f0-9]{64}",digest) is None:
+  raise ValueError("diagnostic-completion-input-invalid")
+ value={"schema":DIAGNOSTIC_COMPLETION_SCHEMA,"target":"kanbien-core-platform","scope":"core-server-persistence","operation_id":operation,"resource_logical_id":restored_database,"task_id":task_arn.rsplit("/",1)[-1],"artifact_identity":digest,"result_code":DIAGNOSTIC_RESULT}
+ path=diagnostic_completion_path(operation)
+ encoded=json.dumps(value,sort_keys=True,separators=(",",":"))
+ if path.exists():
+  if path.is_symlink() or path.stat().st_size>65536 or path.read_text(encoding="utf-8")!=encoded:raise ValueError("diagnostic-completion-conflict")
+  return path
+ path.parent.mkdir(parents=True,exist_ok=True)
+ temporary=path.with_name("."+path.name+".pending")
+ try:
+  temporary.write_text(encoded,encoding="utf-8")
+  temporary.replace(path)
+ finally:temporary.unlink(missing_ok=True)
+ return path
+
+def diagnostic_completion_resolves(operation, restored_database):
+ """Read only retained, closed facts; launch reservations never resolve themselves."""
+ if not isinstance(operation,str) or restore_id_from_database(restored_database)!=restored_database:return False
+ completion=diagnostic_completion_path(operation)
+ try:
+  if completion.is_file() and not completion.is_symlink() and completion.stat().st_size<=65536:
+   value=json.loads(completion.read_text(encoding="utf-8"))
+   if isinstance(value,dict) and set(value)=={"schema","target","scope","operation_id","resource_logical_id","task_id","artifact_identity","result_code"} and value.get("schema")==DIAGNOSTIC_COMPLETION_SCHEMA and value.get("target")=="kanbien-core-platform" and value.get("scope")=="core-server-persistence" and value.get("operation_id")==operation and value.get("resource_logical_id")==restored_database and value.get("result_code")==DIAGNOSTIC_RESULT and isinstance(value.get("task_id"),str) and re.fullmatch(r"[a-f0-9]{32}",value["task_id"]) and isinstance(value.get("artifact_identity"),str) and re.fullmatch(r"sha256:[a-f0-9]{64}",value["artifact_identity"]):return True
+  # Older completed diagnostics predate the compact completion receipt. Their
+  # already-validated terminal diagnostic reports are equivalent evidence;
+  # an unknown launch reservation remains explicitly unresolved.
+  for path in OPERATION_DIAGNOSTICS.glob(f"{operation}-*.json"):
+   if path.name in {f"{operation}-launch.json",f"{operation}-completion.json"} or path.is_symlink() or path.stat().st_size>65536:continue
+   report=diagnostics().validate(json.loads(path.read_text(encoding="utf-8")))
+   if report.get("target")=="kanbien-core-platform" and report.get("scope")=="core-server-persistence" and report.get("operation_id")==operation and report.get("operation_outcome") in {"failed","rejected"} and report.get("facts",{}).get("resource_logical_id")==restored_database and report.get("evidence",{}).get("reference","").startswith(f"provider-operation:{operation}/"):return True
+ except Exception:return False
+ return False
 
 def retain_verifier_rejection(m, operation, result, restored_database, task, execution=None, task_observation=None):
  """Report collection independently; never erase the safe operation failure."""
@@ -572,6 +621,8 @@ def diagnose_connection(m,sid,rid,observe_only=False,record_proof_path=None):
   if exit_status!=0:return emit_diagnostic("failed",observation["result"] or "persistence-connection-diagnostic-task-failed",*extra,facts=facts)
   if duration>DEADLINE:return emit_diagnostic("failed","persistence-connection-diagnostic-deadline-exceeded",facts=facts)
   if observation["status"]!="diagnosed":return emit_diagnostic("pending","persistence-connection-diagnostic-log-"+observation["status"],facts=facts)
+  try:persist_diagnostic_completion(operation,rid,task)
+  except Exception:return emit_diagnostic("blocked","persistence-connection-diagnostic-completion-receipt-write-failed",facts=facts)
   return emit_diagnostic("diagnosed",DIAGNOSTIC_RESULT,facts=facts)
  reservation=OPERATION_DIAGNOSTICS/f"{operation}-launch.json"
  if reservation.exists():return emit_diagnostic("uncertain","persistence-connection-diagnostic-reserved-reconcile-only",facts=facts)
@@ -613,7 +664,8 @@ def absent_database_reservations_resolved(rid, tasks):
    operation=reservation.get("operation_id")
    if path.name!=f"{operation}-launch.json" or reservation.get("target")!="kanbien-core-platform" or reservation.get("scope")!="core-server-persistence" or reservation.get("classification",{}).get("code")!="persistence-connection-diagnostic-launch-reserved":return False
    matching=[task for task in tasks if task.get("startedBy")==operation]
-   if len(matching)!=1 or matching[0].get("lastStatus")!="STOPPED":return False
+   if len(matching)==1 and matching[0].get("lastStatus")=="STOPPED":continue
+   if not diagnostic_completion_resolves(operation,rid):return False
   return True
  except Exception:return False
 

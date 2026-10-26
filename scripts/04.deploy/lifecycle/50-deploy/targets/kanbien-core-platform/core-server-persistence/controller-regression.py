@@ -394,6 +394,27 @@ class ControllerRegression(unittest.TestCase):
         with patch.object(prepare,'aws',provider.aws):
             self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True)[0],'uncertain')
 
+    def test_no_change_review_is_complete_only_when_the_exact_candidate_is_already_live(self):
+        prepare=load(DEPLOY/'prepare-candidate/script.py')
+        expected={'RestoreVerifierImageDigest':'sha256:'+'a'*64}
+        parameters=[{'ParameterKey':key,'ParameterValue':value} for key,value in expected.items()]
+        no_change={
+            'ChangeSetName':'synthetic-operation','Status':'FAILED','ExecutionStatus':'UNAVAILABLE',
+            'Changes':[],'StatusReason':"The submitted information didn't contain changes.",
+            'Parameters':parameters,
+        }
+        provider=Provider(lambda parts: (True,no_change,'ok') if parts[1]=='describe-change-set' else (True,{'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Parameters':parameters}]},'ok'))
+        with patch.object(prepare,'aws',provider.aws):
+            self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True),('complete','persistence-update-noop-candidate-already-applied'))
+        wrong=[{'ParameterKey':'RestoreVerifierImageDigest','ParameterValue':'sha256:'+'b'*64}]
+        provider=Provider(lambda parts: (True,no_change,'ok') if parts[1]=='describe-change-set' else (True,{'Stacks':[{'StackStatus':'UPDATE_COMPLETE','Parameters':wrong}]},'ok'))
+        with patch.object(prepare,'aws',provider.aws):
+            self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True)[0],'failed')
+        malformed={**no_change,'StatusReason':'unrelated provider failure'}
+        provider=Provider(lambda parts:(True,malformed,'ok'))
+        with patch.object(prepare,'aws',provider.aws):
+            self.assertEqual(prepare.observe_update('synthetic-operation',expected,lambda change: True)[0],'failed')
+
     def test_retirement_reobserves_exact_stack_and_never_repeats_effects(self):
         module=load(DEPLOY/'retire-failed-candidate/script.py')
         identity=f'arn:aws:cloudformation:{module.REGION}:337159794548:stack/{module.STACK}/synthetic'

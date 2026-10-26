@@ -34,7 +34,15 @@ export function persistenceConfiguration(env: NodeJS.ProcessEnv, purpose: "serve
   const checked = postgreSqlPersistenceConfiguration({
     host, database, schema, runtimeCredentialSecretReference: reference, port: Number(port),
     maximumPoolSize: purpose === "server" ? 4 : 1,
-    connectionTimeoutMs: 5_000, idleTimeoutMs: 10_000,
+    // An isolated restore is available before its PostgreSQL authentication
+    // path is necessarily warm.  Its governed operation has a 30-second
+    // completion boundary, so a five-second driver-connect timeout would
+    // manufacture a failure before the one permitted diagnostic/read can
+    // establish the restored database state.  Servers retain their short
+    // readiness timeout; migrations and restore tasks receive the bounded
+    // operation timeout appropriate to their declared lifecycle.
+    connectionTimeoutMs: purpose === "server" ? 5_000 : purpose === "migration" ? 30_000 : 30_000,
+    idleTimeoutMs: 10_000,
     statementTimeoutMs: purpose === "migration" ? 240_000 : purpose === "restore" ? 30_000 : 5_000,
     tls: { mode: "verify-full", certificateAuthoritySource: "injected" },
   });
