@@ -73,6 +73,7 @@ class Provider:
    return True,{'EvaluationResults':[{'EvalActionName':'rds-db:connect','EvalResourceName':resource,'EvalDecision':'allowed' if self.effective_access else 'implicitDeny'}]},'ok'
   if operation=='put-role-policy':self.policy=True;return True,{},'ok'
   if operation=='delete-role-policy':self.policy=False;return True,{},'ok'
+  if operation in {'restore-db-instance-from-db-snapshot','modify-db-instance'}:return True,{},'ok'
   if operation=='lookup-events':return True,{'Events':[{'EventTime':'2020-01-01T00:00:00Z','CloudTrailEvent':json.dumps({'requestParameters':{'roleName':'fixture-role','policyName':'kanbien-core-platform-restoration-verifier-current-instance'}})}]},'ok'
   if operation=='run-task':
    identity=args[args.index('--started-by')+1];overrides=json.loads(args[args.index('--overrides')+1])
@@ -129,7 +130,7 @@ class DiagnosticTests(unittest.TestCase):
   self.assertEqual(self.m.retain_verifier_rejection(provider,'kanbien-restore-fixture',FAILURE,RID,task),('persistence-diagnostic-report-write-failed',))
  def target(self):
   src={'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','InstanceCreateTime':'2020-01-01T00:00:00Z','DBSubnetGroup':{'DBSubnetGroupName':'fixture-subnets'}}
-  point={'DBSnapshotIdentifier':SID,'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','SnapshotCreateTime':'2026-10-24T00:00:00Z'}
+  point={'DBSnapshotIdentifier':SID,'DBInstanceIdentifier':self.m.DATABASE,'DbiResourceId':'db-SOURCE','SnapshotCreateTime':'2026-10-24T00:00:00Z','Status':'available','Encrypted':True}
   proof={'task':{'started_at':'2026-10-23T00:00:00Z','stopped_at':'2026-10-23T00:00:01Z'},'integrity':{'payload_sha256':'b'*64}}
   tags,_=self.m.recovery_point_binding(src,point,SID,RID,proof)[0]
   restored={**src,'DBInstanceIdentifier':RID,'DbiResourceId':'db-RESTORED','DBInstanceStatus':'available','PubliclyAccessible':False,'StorageEncrypted':True,'IAMDatabaseAuthenticationEnabled':True,'Engine':'postgres','VpcSecurityGroups':[{'VpcSecurityGroupId':'sg-restored'}],'EnabledCloudwatchLogsExports':['postgresql','iam-db-auth-error'],'Endpoint':{'Address':'fixture.invalid'},'TagList':[{'Key':k,'Value':v} for k,v in tags.items()]}
@@ -259,6 +260,17 @@ class DiagnosticTests(unittest.TestCase):
    _,result=self.run_diagnostic(provider)
    self.assertEqual(result['verdict'],'blocked',result)
    self.assertIn('persistence-restoration-temporary-identity-not-effective',[finding['code'] for finding in result['findings']])
+   self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
+ def test_restore_requires_iam_authentication_before_it_can_be_accepted(self):
+  provider,stack=self.target()
+  with stack:
+   provider.restored['IAMDatabaseAuthenticationEnabled']=False
+   status,result=self.capture(self.m.restore,provider,SID,RID,record_proof_path=Path('fixture-proof.json'))
+   self.assertEqual((status,result['verdict']),(1,'pending'),result)
+   self.assertEqual(result['findings'][0]['code'],'persistence-restored-database-iam-authentication-submitted')
+   calls=[call for call in provider.calls if call[1]=='modify-db-instance']
+   self.assertEqual(len(calls),1)
+   self.assertIn('--enable-iam-database-authentication',calls[0])
    self.assertFalse(any(call[1]=='run-task' for call in provider.calls))
  def test_terminal_diagnostic_cleanup_and_recovery_separation(self):
   provider,stack=self.target()

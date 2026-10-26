@@ -309,13 +309,22 @@ def restore(m,sid,rid,observe_only=False,record_proof_path=None):
   if observe_only:return emit("uncertain","persistence-restore-operation-not-observed",facts=facts)
   subnet=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; cls=src.get("DBInstanceClass")
   if not isinstance(subnet,str) or not isinstance(cls,str):return emit("blocked","persistence-restore-source-shape-invalid")
-  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-cloudwatch-logs-exports","postgresql","iam-db-auth-error","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
+  # IAM database authentication is not retained by an RDS snapshot restore.
+  # It is required for the deliberately credential-free restoration verifier,
+  # so establish it as part of the isolated copy's initial posture.
+  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-iam-database-authentication","--enable-cloudwatch-logs-exports","postgresql","iam-db-auth-error","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
   return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts=facts)
  bound=existing_restore_binding(value,rid,tags)
  if bound!="ok":return emit("uncertain" if bound.endswith("unproven") else "blocked",bound,facts=facts)
  if value.get("DBInstanceStatus") in {"creating","backing-up","modifying","rebooting","configuring-enhanced-monitoring","configuring-log-exports"}:return emit("pending","persistence-restore-still-provisioning",facts=facts)
  if value.get("DBInstanceStatus") in {"failed","incompatible-restore","inaccessible-encryption-credentials","storage-full"}:return emit("failed","persistence-restore-provider-failed",facts=facts)
  if value.get("DBInstanceStatus")!="available":return emit("uncertain","persistence-restore-provider-status-unknown",facts=facts)
+ if value.get("IAMDatabaseAuthenticationEnabled") is not True:
+  # Reconcile an older in-flight restore created before the initial posture
+  # control existed. This changes only the disposable restored instance.
+  if observe_only:return emit("uncertain","persistence-restored-database-iam-authentication-not-observed",facts=facts)
+  ok,_,c=m.aws("rds","modify-db-instance","--db-instance-identifier",rid,"--enable-iam-database-authentication","--apply-immediately")
+  return emit("pending" if ok else "uncertain","persistence-restored-database-iam-authentication-submitted" if ok else c,facts=facts)
  return emit("restored","persistence-restored-database-ready",facts=facts) if correct(value,src,ctl["PersistenceRestoredDatabaseSecurityGroupId"]) else emit("blocked","persistence-restored-database-posture-invalid")
 def task_def_valid(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None
