@@ -15,9 +15,9 @@ transcript_source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-20
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T21:28:46Z
-latest_commit_sha: 51066af1
-chat_duration: 12861s (00:03:34:21)
+latest_commit_at_utc: 2026-10-26T21:43:08Z
+latest_commit_sha: 60f819b5
+chat_duration: 13723s (00:03:48:43)
 estimated_chat_tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 estimated_chat_cost: unavailable; no pricing profile selected
 estimated_chat_cost_basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
@@ -59,6 +59,10 @@ Simplify repository verification and preserve trusted evidence through local mai
 
 - Raised: Root preservation explicitly authorized by user
   Resolution: User explicitly instructed committing root to unblock local integration. Preserved exactly four runtime/test files and two failed-operation diagnostic JSON records. Direct composition suite and 13 affected local checks passed. Old selector regression hook fixture fails verification-preparation-missing, independently reproduced; its correction already exists on this verified branch. Root preservation commit c5320a73; corrected combined-tree integration remains mandatory. Evidence: /tmp/root-preservation-commit-gates.log and /tmp/root-baseline-hook-failure.log.
+
+
+- Raised: Root preservation and writer coordination resolved
+  Resolution: Root writer paused by user; main51066af1 preserved and incorporated. Combined integration passed: {'selected_check_ids': 68, 'executed_check_ids': 8, 'reused_check_ids': 43, 'deferred_check_ids': 17}, 674.834203s. Unchanged apply passed with 0 executions, 51 reused proofs in 59.844542s. No cloud operations or push. Final independent census and promotion gate precede authorized local-main merge.
 
 ## Decisions Made
 
@@ -325,6 +329,24 @@ Summary: User-directed root preservation of four additional concurrently authore
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-26T21:43:08Z - Commit recorded
+
+Commit: `60f819b5`
+
+Message: Merge preserved root applicability work into verification preflight
+
+Summary: Root writer paused by user; main51066af1 preserved and incorporated. Combined integration passed: {'selected_check_ids': 68, 'executed_check_ids': 8, 'reused_check_ids': 43, 'deferred_check_ids': 17}, 674.834203s. Unchanged apply passed with 0 executions, 51 reused proofs in 59.844542s. No cloud operations or push. Final independent census and promotion gate precede authorized local-main merge.
+
+ADR impact: covered by session ADR disposition
+
+
+### 2026-10-26T21:43:09Z - Issue
+
+Raised: Root preservation and writer coordination resolved
+
+Resolution: Root writer paused by user; main51066af1 preserved and incorporated. Combined integration passed: {'selected_check_ids': 68, 'executed_check_ids': 8, 'reused_check_ids': 43, 'deferred_check_ids': 17}, 674.834203s. Unchanged apply passed with 0 executions, 51 reused proofs in 59.844542s. No cloud operations or push. Final independent census and promotion gate precede authorized local-main merge.
+
 ## Sub-Agent Activity
 
 
@@ -429,6 +451,13 @@ Summary: Resolved final proof drift barrier, deferred runtime cost and missing s
   Summary: User-directed root preservation of four additional concurrently authored files. Reviewed exact test-only IAM delta matcher, retained package/proof records, focused applicability regressions and staged metadata checks passed. Root clean; incoming source changes require affected integration refresh.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `60f819b5`
+  Time UTC: 2026-10-26T21:43:08Z
+  Message: Merge preserved root applicability work into verification preflight
+  Summary: Root writer paused by user; main51066af1 preserved and incorporated. Combined integration passed: {'selected_check_ids': 68, 'executed_check_ids': 8, 'reused_check_ids': 43, 'deferred_check_ids': 17}, 674.834203s. Unchanged apply passed with 0 executions, 51 reused proofs in 59.844542s. No cloud operations or push. Final independent census and promotion gate precede authorized local-main merge.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -463,9 +492,9 @@ Reason: This refines existing verification catalogue, private cache, lifecycle p
 ## Session Metrics
 
 Raised at UTC: 2026-10-26T17:54:25Z
-Latest commit at UTC: 2026-10-26T21:28:46Z
-Latest commit SHA: 51066af1
-Chat duration: 12861s (00:03:34:21)
+Latest commit at UTC: 2026-10-26T21:43:08Z
+Latest commit SHA: 60f819b5
+Chat duration: 13723s (00:03:48:43)
 Estimated chat tokens: 880257 estimated from chat transcript bytes (3521025 bytes; source: codex path: /home/owner/.codex/sessions/2026/10/26/rollout-2026-10-26T17-53-31-01a17958-98d2-7613-acfb-f036111f8ba2.jsonl)
 Estimated chat cost: unavailable; no pricing profile selected
 Estimated chat cost basis: unavailable; set CHAT_COST_PROFILE or CHAT_COST_PRICING_FILE
