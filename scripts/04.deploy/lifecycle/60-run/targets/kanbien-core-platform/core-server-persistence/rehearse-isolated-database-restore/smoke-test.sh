@@ -128,6 +128,8 @@ class LogFixture:
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "accepted", "code": "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED"})]), "task-accepted") == ("accepted", "KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED"})]), "task-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID"})]), "task-tls-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE"})]), "task-token-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE")
+assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE"})]), "task-query-rejected") == ("rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE")
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "password=synthetic"})]), "task-unsafe") == ("unavailable", None)
 assert module.terminal_result(LogFixture([json.dumps({"verdict": "rejected", "code": "KANBIEN_CORE_PERSISTENCE_RESTORE_PERMISSION_DENIED", "provider_message": "synthetic"})]), "task-extra") == ("unavailable", None)
 

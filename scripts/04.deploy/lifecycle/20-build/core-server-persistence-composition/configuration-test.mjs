@@ -133,6 +133,10 @@ function restoreDiagnosticRegression() {
   ]) assert.equal(restore.restoreVerificationFailureCode({ code: providerCode }), diagnostic);
   assert.equal(restore.restoreVerificationFailureCode({ cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" }, message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID", "only an allowlisted causal machine code may cross the diagnostic boundary");
   assert.equal(restore.restoreVerificationFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE", "raw provider detail must never become a diagnostic code");
+  assert.equal(restore.restoreConnectionFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE", "an opaque connection failure must remain closed but distinguish the failed boundary");
+  assert.equal(restore.restoreQueryFailureCode(new Error("password=synthetic-canary")), "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE", "an opaque query failure must remain closed but distinguish the failed boundary");
+  assert.equal(restore.restoreConnectionFailureCode({ code: "28P01", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", "an allowlisted connection error must preserve its safe classification");
+  assert.equal(restore.restoreQueryFailureCode({ code: "42P01", message: "password=synthetic-canary" }), "KANBIEN_CORE_PERSISTENCE_RESTORE_CONTENT_UNAVAILABLE", "an allowlisted query error must preserve its safe classification");
 }
 
 async function rejectedBeforePool(run, env) {

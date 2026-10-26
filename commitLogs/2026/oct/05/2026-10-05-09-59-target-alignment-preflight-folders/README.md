@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-25T23:11:55Z
-latest_commit_sha: ed781c64
-chat_duration: 1779146s (20:14:12:26)
+latest_commit_at_utc: 2026-10-25T23:56:16Z
+latest_commit_sha: b154eea4
+chat_duration: 1781807s (20:14:56:47)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3535,6 +3535,17 @@ Summary: Committed 24 integrity-validated live proof receipts, two safe operatio
 
 ADR impact: No ADR: durable evidence under the existing acceptance model.
 
+
+### 2026-10-25T23:56:16Z - Commit recorded
+
+Commit: `b154eea4`
+
+Message: fix(deploy): stabilize isolated restore identity
+
+Summary: Added a bounded, policy-stability recheck before the isolated restore verifier launches and retained five current-image live proof receipts for migration state, effective privilege, runtime IAM access, health, and read.
+
+ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4525,6 +4536,13 @@ ADR impact: No ADR: durable evidence under the existing acceptance model.
   Summary: Committed 24 integrity-validated live proof receipts, two safe operation diagnostics, and immutable qualified rollback-compatibility records.
   ADR impact: No ADR: durable evidence under the existing acceptance model.
 
+
+- Commit: `b154eea4`
+  Time UTC: 2026-10-25T23:56:16Z
+  Message: fix(deploy): stabilize isolated restore identity
+  Summary: Added a bounded, policy-stability recheck before the isolated restore verifier launches and retained five current-image live proof receipts for migration state, effective privilege, runtime IAM access, health, and read.
+  ADR impact: No ADR: bounded recovery-controller correction under the existing persistence IAM and restore design.
+
 ## Main Refresh Conflicts
 
 
@@ -4548,9 +4566,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-25T23:11:55Z
-Latest commit SHA: ed781c64
-Chat duration: 1779146s (20:14:12:26)
+Latest commit at UTC: 2026-10-25T23:56:16Z
+Latest commit SHA: b154eea4
+Chat duration: 1781807s (20:14:56:47)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable

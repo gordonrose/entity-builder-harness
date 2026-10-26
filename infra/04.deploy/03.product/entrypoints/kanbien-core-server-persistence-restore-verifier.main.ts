@@ -31,9 +31,25 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
   const expected = expectedRecord(env);
   const certificateAuthority = persistenceCertificateAuthority(env);
   if (configuration === undefined || credentials === undefined || expected === undefined || certificateAuthority === undefined) return rejected("PERSISTENCE_RESTORE_VERIFICATION_CONFIGURATION_INVALID");
-  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { ...credentials, certificateAuthority });
+  // Materialise the opaque token before opening the PostgreSQL connection.
+  // This creates a safe, actionable boundary between task-identity/token
+  // acquisition and an actual restored-database connection; neither the token
+  // nor a provider error message is emitted.
+  let token: string;
   try {
-    const result = await pool.query<{ readonly record_id: string; readonly fact_digest: string }>({
+    token = await credentials.authenticationToken();
+  } catch {
+    return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_IAM_TOKEN_UNAVAILABLE");
+  }
+  const pool = createNodePostgreSqlTokenConnectionPool(configuration, { username: credentials.username, authenticationToken: async () => token, certificateAuthority });
+  let client: Awaited<ReturnType<typeof pool.connect>> | undefined;
+  try {
+    try {
+      client = await pool.connect();
+    } catch (error) {
+      return rejected(restoreConnectionFailureCode(error));
+    }
+    const result = await client.query<{ readonly record_id: string; readonly fact_digest: string }>({
       text: `SELECT record_id, fact_digest FROM ${acceptanceTable(configuration.schema)} WHERE record_id = $1`,
       values: [expected.recordId],
     });
@@ -41,9 +57,13 @@ export async function runKanbienCoreServerPersistenceRestoreVerifier(env: NodeJS
     if (row?.record_id === expected.recordId && row.fact_digest === expected.factDigest) return accepted("KANBIEN_CORE_PERSISTENCE_RESTORED_RECORD_RETRIEVED");
     return rejected("KANBIEN_CORE_PERSISTENCE_RESTORE_RECORD_MISMATCH");
   } catch (error) {
-    return rejected(restoreVerificationFailureCode(error));
+    return rejected(restoreQueryFailureCode(error));
   } finally {
-    await pool.end();
+    client?.release();
+    // A failed connection can leave no reusable client. Closing that pool is
+    // cleanup only; it must not overwrite the closed diagnostic emitted for
+    // token, connection, or query failure.
+    try { await pool.end(); } catch { /* safe diagnostic already selected */ }
   }
 }
 
@@ -66,6 +86,30 @@ export function restoreVerificationFailureCode(error: unknown): string {
   if (code === "ECONNREFUSED" || code === "ECONNRESET" || code === "ETIMEDOUT" || code === "EHOSTUNREACH" || code === "ENETUNREACH" || code === "EAI_AGAIN" || code === "ENOTFOUND") return "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE";
   if (code === "CERT_HAS_EXPIRED" || code === "ERR_TLS_CERT_ALTNAME_INVALID" || code === "SELF_SIGNED_CERT_IN_CHAIN" || code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE") return "KANBIEN_CORE_PERSISTENCE_RESTORE_TLS_TRUST_INVALID";
   return "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE";
+}
+
+/**
+ * Unknown connection failures are still safe to distinguish from a query
+ * failure. The category is closed: raw driver/provider text never crosses
+ * the verifier boundary.
+ */
+export function restoreConnectionFailureCode(error: unknown): string {
+  const classified = restoreVerificationFailureCode(error);
+  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
+    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_CONNECTION_UNAVAILABLE"
+    : classified;
+}
+
+/**
+ * A connection can succeed while the restored data is unavailable. Preserve
+ * allowlisted PostgreSQL/TLS classifications, otherwise use this closed query
+ * category so the governed controller can direct the next diagnosis safely.
+ */
+export function restoreQueryFailureCode(error: unknown): string {
+  const classified = restoreVerificationFailureCode(error);
+  return classified === "KANBIEN_CORE_PERSISTENCE_RESTORE_VERIFICATION_UNAVAILABLE"
+    ? "KANBIEN_CORE_PERSISTENCE_RESTORE_QUERY_UNAVAILABLE"
+    : classified;
 }
 
 function errorCode(error: unknown): string | undefined {
