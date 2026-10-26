@@ -247,6 +247,21 @@ def remove_temporary_restore_identity_policy(m, controls, observe_only=False):
  if observe_only:return "persistence-restoration-temporary-identity-policy-removal-not-observed"
  ok,_,code=m.aws("iam","delete-role-policy","--role-name",role,"--policy-name",name)
  return "persistence-restoration-temporary-identity-policy-removal-submitted" if ok else code
+def temporary_restore_identity_policy_stable(m, controls):
+ """Require the exact policy mutation to age before the one verifier launch."""
+ role=controls.get("PersistenceRestorationVerifierTaskRoleName") if isinstance(controls,dict) else None
+ name="kanbien-core-platform-restoration-verifier-current-instance"
+ if not isinstance(role,str) or not role:return False
+ ok,value,_=m.aws("cloudtrail","lookup-events","--lookup-attributes","AttributeKey=EventName,AttributeValue=PutRolePolicy","--max-results","50")
+ events=value.get("Events") if ok and isinstance(value,dict) else None
+ if not isinstance(events,list):return False
+ cutoff=datetime.now(timezone.utc)-timedelta(seconds=RESTORATION_IDENTITY_STABILIZATION_SECONDS)
+ for event in events:
+  raw=event.get("CloudTrailEvent") if isinstance(event,dict) else None; observed=parsed_time(event.get("EventTime")) if isinstance(event,dict) else None
+  try: request=json.loads(raw).get("requestParameters") if isinstance(raw,str) else None
+  except json.JSONDecodeError: request=None
+  if isinstance(request,dict) and request.get("roleName")==role and request.get("policyName")==name and observed is not None and observed<=cutoff:return True
+ return False
 def task_image_digest(m,arn):
  ok,d,_=m.aws("ecs","describe-task-definition","--task-definition",arn); t=d.get("taskDefinition") if ok and isinstance(d,dict) else None; cs=t.get("containerDefinitions") if isinstance(t,dict) else None; c=cs[0] if isinstance(cs,list) and len(cs)==1 and isinstance(cs[0],dict) else None; image=c.get("image") if isinstance(c,dict) else None
  return image.rsplit("@",1)[1] if isinstance(image,str) and image.count("@")==1 and image.rsplit("@",1)[1].startswith("sha256:") else None
@@ -348,7 +363,7 @@ def verify(m,sid,rid,observe_only=False):
  # misleading retryable verifier failure.  Re-observe the exact policy after
  # one bounded stabilization interval, then launch at most one task for this
  # restored database incarnation.
- time.sleep(RESTORATION_IDENTITY_STABILIZATION_SECONDS)
+ if not temporary_restore_identity_policy_stable(m,ctl):return emit("pending","persistence-restoration-temporary-identity-policy-stabilizing",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  identity_status,identity_reference=temporary_restore_identity_policy(m,ctl,restored,True)
  if identity_status!="ok" or identity_reference!=restore_identity_resource(restored):return emit("uncertain","persistence-restoration-temporary-identity-policy-not-stable",facts={"snapshot":sid,"restored_database":rid,"operation_id":started})
  net=f"awsvpcConfiguration={{subnets=[{ctl['PrivateSubnetIds']}],securityGroups=[{ctl['PersistenceRestorationVerifierSecurityGroupId']}],assignPublicIp=DISABLED}}"; overrides=json.dumps({"containerOverrides":[{"name":"persistence-restoration-verifier","environment":[{"name":"PERSISTENCE_POSTGRES_HOST","value":endpoint},{"name":"PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE","value":identity_reference},{"name":"PERSISTENCE_ACCEPTANCE_RECORD_ID","value":RECORD_ID},{"name":"PERSISTENCE_ACCEPTANCE_FACT_DIGEST","value":FACT_DIGEST}]}]})
