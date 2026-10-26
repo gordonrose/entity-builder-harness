@@ -531,6 +531,10 @@ can you walk me through which part of my repo work on the following stages
 - Decision: Bind proof reuse to the immutable image input closure
   Rationale: The new diagnostic image differs from the previously qualified image only in the restoration verifier among package inputs. Target controllers, durable-evidence artifacts and acceptance checks remain in the full audited source delta but do not change the executable image. The applicability control now rejects every changed package input except that verifier and records the full delta for review.
 
+
+- Decision: Promoted private observability collector implementation
+  Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
+
 ## Context Hygiene
 
 
@@ -3806,6 +3810,13 @@ Message: feat(deploy): compose private observability collector
 Summary: Added a dedicated private OTLP collector, target declaration and guarded update controller; local composition, adapter, declaration, package-workflow, target and template checks pass.
 
 ADR impact: No new ADR: this implements the established separate-identity collector decision.
+
+
+### 2026-10-26T08:59:13Z - Decision
+
+Decision: Promoted private observability collector implementation
+
+Rationale: Remote main fast-forwarded from 92adeab0 to d52e7ffd through the clean governed integration worktree after declaration and controller gates passed; server and collector package qualification is the next boundary.
 
 ## Sub-Agent Activity
 
