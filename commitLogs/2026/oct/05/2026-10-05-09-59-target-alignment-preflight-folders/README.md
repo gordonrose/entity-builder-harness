@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T01:05:07Z
-latest_commit_sha: 408d7734
-chat_duration: 1785938s (20:16:05:38)
+latest_commit_at_utc: 2026-10-26T01:16:35Z
+latest_commit_sha: HEAD
+chat_duration: 1786626s (20:16:17:06)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3678,6 +3678,17 @@ Summary: GitHub run 40252659734 qualified source 2a7a3d11 and immutable image sh
 
 Durable evidence: Package receipt: core-server-persistence/30-release-evidence/package-receipts/package-custody-40252659734.json. Applicability: .../proof-applicability/restore-verifier-only-5a7be9c80dea.json. GitHub custody artifact run 40252659734 remains upstream evidence.
 
+
+### 2026-10-26T01:16:35Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): bind proof reuse to image inputs
+
+Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
+
+ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4696,6 +4707,13 @@ Durable evidence: Package receipt: core-server-persistence/30-release-evidence/p
   Summary: Adds a credential-free bounded TCP preflight to the isolated restoration verifier, distinguishes a closed transport boundary from an opaque post-transport PostgreSQL/TLS handshake, accepts only those closed result codes in the governed restore controller, and proves the classification plus transport fixture locally.
   ADR impact: No ADR: this is an implementation refinement within the existing isolated-restore diagnostic and recovery decision.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T01:16:35Z
+  Message: fix(deploy): bind proof reuse to image inputs
+  Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
+  ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
+
 ## Main Refresh Conflicts
 
 
@@ -4719,9 +4737,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T01:05:07Z
-Latest commit SHA: 408d7734
-Chat duration: 1785938s (20:16:05:38)
+Latest commit at UTC: 2026-10-26T01:16:35Z
+Latest commit SHA: HEAD
+Chat duration: 1786626s (20:16:17:06)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
