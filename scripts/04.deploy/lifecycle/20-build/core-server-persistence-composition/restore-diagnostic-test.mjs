@@ -2,7 +2,7 @@
 // agentic-artifact:
 //   schema: agentic-artifact/v3
 //   id: deploy.test.packaged-persistence-connection-diagnostic
-//   version: 1
+//   version: 2
 //   status: active
 //   created_on: "2026-10-26"
 //   updated_on: "2026-10-26"
@@ -80,9 +80,10 @@ try {
   writeFileSync(preload, `const fs=require('node:fs'); const original=fs.readFileSync; fs.readFileSync=function(path,...args){return original.call(this,path==='/app/assets/fixture.crt'?${JSON.stringify(certificate)}:path,...args)};`);
   const environment = { ...process.env, NODE_PATH: resolve("node_modules"), NODE_ENV: "test", PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN: canary, PERSISTENCE_POSTGRES_HOST: "localhost", PERSISTENCE_POSTGRES_PORT: String(server.address().port), PERSISTENCE_POSTGRES_DATABASE: "kanbienpersistence", PERSISTENCE_POSTGRES_SCHEMA: "platform", PERSISTENCE_POSTGRES_IAM_REGION: "eu-west-1", PERSISTENCE_POSTGRES_IAM_AUTHENTICATION_REFERENCE: "arn:aws:rds-db:eu-west-1:123456789012:dbuser:db-FIXTURE/core_runtime", PERSISTENCE_RESTORE_RUNTIME_DATABASE_USERNAME: "core_runtime", PERSISTENCE_POSTGRES_CA_PATH: "/app/assets/fixture.crt", PERSISTENCE_ACCEPTANCE_RECORD_ID: "core-persistence-diagnostic-fixture", PERSISTENCE_ACCEPTANCE_FACT_DIGEST: "a".repeat(64) };
   for (const key of Object.keys(environment)) if (key.startsWith("AWS_") || key.startsWith("PERSISTENCE_ADMINISTRATOR")) delete environment[key];
-  for (const [mode, rejected, verdict, code, exit] of [["connection", false, "diagnosed", "KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED", 0], ["connection", true, "diagnostic-failed", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", 1], [undefined, true, "rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", 1]]) {
+  for (const [mode, rejected, delayedToken, verdict, code, exit] of [["connection", false, false, "diagnosed", "KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED", 0], ["connection", false, true, "diagnosed", "KANBIEN_CORE_PERSISTENCE_CONNECTION_DIAGNOSED", 0], ["connection", true, false, "diagnostic-failed", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", 1], [undefined, true, false, "rejected", "KANBIEN_CORE_PERSISTENCE_RESTORE_AUTHENTICATION_REJECTED", 1]]) {
     rejectAuthentication = rejected;
     const env = { ...environment }; if (mode !== undefined) env.PERSISTENCE_RESTORE_DIAGNOSTIC_MODE = mode; else delete env.PERSISTENCE_RESTORE_DIAGNOSTIC_MODE;
+    if (delayedToken) env.PERSISTENCE_LOCAL_QUALIFICATION_IAM_TOKEN_DELAY_MS = "5500";
     const result = await child(env, preload);
     assert.equal(result.output.includes(canary), false, "wire error/token canary must not escape the real entrypoint");
     assert.equal(result.code, exit, "entrypoint exit status must preserve its result");
@@ -90,7 +91,7 @@ try {
     assert.equal(value.schema, "deploy/persistence-restore-verifier-result/v2"); assert.equal(value.verdict, verdict); assert.equal(value.code, code);
     if (rejected) { assert.equal(value.execution.phase, "pool_connect"); assert.equal(value.execution.classification, "authentication_rejected"); assert.equal(value.execution.code_status, "recognized"); assert.ok(value.execution.elapsed_ms >= 0); }
   }
-  assert.deepEqual(queries, ["SELECT 1"], "diagnosis must issue only its bounded read, never record verification or mutation");
+  assert.deepEqual(queries, ["SELECT 1", "SELECT 1"], "each successful diagnostic must issue only its bounded read, never record verification or mutation");
   console.log("Packaged restore diagnostic CLI and real-driver TLS protocol tests passed.");
 } finally {
   for (const socket of sockets) socket.destroy();
