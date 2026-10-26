@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T15:08:52Z
-latest_commit_sha: a209473122a673754c983db133e5bf2559c47a27
-chat_duration: 1836563s (21:06:09:23)
+latest_commit_at_utc: 2026-10-26T15:20:10Z
+latest_commit_sha: 19407bef32e01250adbd231941cf62c31df757ac
+chat_duration: 1837241s (21:06:20:41)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3972,6 +3972,17 @@ Summary: Second restore rejection was reconciled and cleanup confirmed; isolated
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-26T15:20:10Z - Commit recorded
+
+Commit: `19407bef32e01250adbd231941cf62c31df757ac`
+
+Message: Added exact restored-task-role IAM simulation before a verifier can launch and aligned the restoration workflow.
+
+Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator verification and the next governed restore attempt.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5130,6 +5141,13 @@ ADR impact: covered by session ADR disposition
   Summary: Second restore rejection was reconciled and cleanup confirmed; isolated restoration acceptance remains unproved.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `19407bef32e01250adbd231941cf62c31df757ac`
+  Time UTC: 2026-10-26T15:20:10Z
+  Message: Added exact restored-task-role IAM simulation before a verifier can launch and aligned the restoration workflow.
+  Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator verification and the next governed restore attempt.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -5153,9 +5171,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T15:08:52Z
-Latest commit SHA: a209473122a673754c983db133e5bf2559c47a27
-Chat duration: 1836563s (21:06:09:23)
+Latest commit at UTC: 2026-10-26T15:20:10Z
+Latest commit SHA: 19407bef32e01250adbd231941cf62c31df757ac
+Chat duration: 1837241s (21:06:20:41)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
