@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T01:16:35Z
+latest_commit_at_utc: 2026-10-26T01:42:24Z
 latest_commit_sha: HEAD
-chat_duration: 1786626s (20:16:17:06)
+chat_duration: 1788175s (20:16:42:55)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3700,6 +3700,17 @@ Raised: Restore verifier reached TCP but not a classified PostgreSQL handshake
 
 Resolution: Live recovery proof established the private TCP route works, then returned the closed DATABASE_HANDSHAKE_UNAVAILABLE result. The failed isolated copy is governed for cleanup. Added a credential-free PostgreSQL SSLRequest/TLS certificate preflight so the next image can distinguish TLS negotiation/trust from post-TLS authentication/protocol failure without exposing raw provider text.
 
+
+### 2026-10-26T01:42:24Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): probe restore verifier TLS boundary
+
+Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated restore verifier. It retains closed transport, TLS negotiation, TLS trust and post-TLS handshake outcomes, with composition and restore-controller checks passing.
+
+ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4725,6 +4736,13 @@ Resolution: Live recovery proof established the private TCP route works, then re
   Summary: Retains package custody receipt 40252659734 and its target proof-applicability record. Applicability now compares actual core-server-persistence package input paths, rejects any non-restore verifier image input change, and retains the full source delta for audit.
   ADR impact: No ADR: this corrects the existing durable-evidence applicability control rather than changing the release architecture.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T01:42:24Z
+  Message: fix(deploy): probe restore verifier TLS boundary
+  Summary: Adds a credential-free PostgreSQL SSL/TLS preflight to the isolated restore verifier. It retains closed transport, TLS negotiation, TLS trust and post-TLS handshake outcomes, with composition and restore-controller checks passing.
+  ADR impact: No ADR: focused diagnostic refinement within the established isolated recovery proof.
+
 ## Main Refresh Conflicts
 
 
@@ -4748,9 +4766,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T01:16:35Z
+Latest commit at UTC: 2026-10-26T01:42:24Z
 Latest commit SHA: HEAD
-Chat duration: 1786626s (20:16:17:06)
+Chat duration: 1788175s (20:16:42:55)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
