@@ -6,7 +6,7 @@ set -euo pipefail
 #   version: 3
 #   status: active
 #   created_on: "2026-10-23"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 04.deploy
 #   domain: deployment.core-server-persistence
 #   disciplines: [security, sre]
@@ -72,6 +72,14 @@ assert not module.review({**valid, "Changes": changes + [{"ResourceChange": {"Ac
 assert not module.review({**valid, "Parameters": parameters[:-1]}, name, server, collector, email)
 assert module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 1})
 assert not module.healthy({"status": "ACTIVE", "desiredCount": 1, "runningCount": 0})
+class Prepare:
+    def candidate_runnable_manifest(self, receipt):
+        return ("sha256:" + "c" * 64, "ok")
+assert module.collector_image_available(Prepare(), collector)
+class MissingCollector:
+    def candidate_runnable_manifest(self, receipt):
+        return (None, "persistence-candidate-image-index-unavailable")
+assert not module.collector_image_available(MissingCollector(), collector)
 PY
 python3 - "$ROOT/scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/deploy-candidate/script.py" <<'PY'
 import importlib.util, subprocess, sys

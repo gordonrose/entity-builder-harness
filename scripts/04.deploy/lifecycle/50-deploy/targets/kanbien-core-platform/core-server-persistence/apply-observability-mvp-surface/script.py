@@ -5,6 +5,23 @@ The controller deliberately owns the small transition from no collector to the
 declared dedicated collector.  It never retries an ambiguous provider mutation:
 ``--reconcile`` only observes the deterministic change-set name.
 """
+# agentic-artifact:
+#   schema: agentic-artifact/v3
+#   id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.impl
+#   version: 1
+#   status: active
+#   created_on: "2026-10-26"
+#   updated_on: "2026-10-26"
+#   layer: 04.deploy
+#   domain: deployment.core-server-persistence.observability
+#   disciplines: [security, sre]
+#   kind: script
+#   purpose: Review and reconcile only the receipt-bound dedicated private collector activation change set.
+#   portability: { class: internal, targets: [] }
+#   effects: [aws-mutation]
+#   used_by:
+#   - id: deploy.command.kanbien-core-platform.apply-core-server-persistence-observability-mvp.wrapper
+#     path: scripts/04.deploy/lifecycle/50-deploy/targets/kanbien-core-platform/core-server-persistence/apply-observability-mvp-surface/script.sh
 from __future__ import annotations
 
 import argparse
@@ -93,6 +110,18 @@ def receipt(path: Path, *, candidate: str, contract: str, program: str) -> dict 
 
 def healthy(service: object) -> bool:
     return isinstance(service, dict) and service.get("desiredCount") == 1 and service.get("runningCount") == 1 and service.get("status") == "ACTIVE"
+
+
+def collector_image_available(prepare, value: dict) -> bool:
+    """Prove the collector's runnable index exists without inventing ECR scan proof.
+
+    The collector's custody workflow scans its exact saved archive with the
+    pinned portable scanner and records ``vulnerability_scan`` in its receipt.
+    ECR basic scans are part of the Node server's different custody route, so
+    requiring one here would misrepresent the collector's accepted proof.
+    """
+    digest, _ = prepare.candidate_runnable_manifest(value)
+    return isinstance(digest, str)
 
 
 def parameters(stack: object) -> dict[str, str] | None:
@@ -184,7 +213,7 @@ def main() -> int:
         return reconcile(prepare, name, expected, server, collector, args.alert_email)
     import subprocess
     collector_gate = subprocess.run(["bash", str(COLLECTOR_GATE), "--json"], capture_output=True, text=True)
-    if collector_gate.returncode or not create.package_gates(args.server_receipt) or not prepare.declaration_covered() or not prepare.live_budget()[0] or not prepare.candidate_image(server)[0] or not prepare.candidate_image(collector)[0]:
+    if collector_gate.returncode or not create.package_gates(args.server_receipt) or not prepare.declaration_covered() or not prepare.live_budget()[0] or not prepare.candidate_image(server)[0] or not collector_image_available(prepare, collector):
         return report("blocked", "persistence-observability-mvp-preconditions-not-proven")
     foundation, code = prepare.foundation_outputs()
     if foundation is None:

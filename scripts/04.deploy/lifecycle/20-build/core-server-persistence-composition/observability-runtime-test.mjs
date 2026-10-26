@@ -5,6 +5,7 @@
 //   version: 1
 //   status: draft
 //   created_on: "2026-10-26"
+//   updated_on: "2026-10-26"
 //   layer: 04.deploy
 //   domain: deployment.core-server-persistence
 //   disciplines: [sre, security]
@@ -12,6 +13,9 @@
 //   purpose: Prove the packaged server owns an independent PostgreSQL readiness observation and sends its approved metric to a task-local OTLP collector.
 //   portability: { class: internal, targets: [] }
 //   effects: [writes-files]
+//   used_by:
+//   - id: deploy.test.core-server-persistence-composition
+//     path: scripts/04.deploy/lifecycle/20-build/core-server-persistence-composition/smoke-test.sh
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
