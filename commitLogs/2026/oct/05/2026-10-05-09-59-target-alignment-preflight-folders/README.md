@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T13:35:33Z
-latest_commit_sha: d716bb88
-chat_duration: 1830964s (21:04:36:04)
+latest_commit_at_utc: 2026-10-26T13:47:00Z
+latest_commit_sha: HEAD
+chat_duration: 1831651s (21:04:47:31)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3895,6 +3895,17 @@ Summary: Corrected the check-selection acceptance collector argument so package 
 
 ADR impact: No ADR change; restores agreement between the release contract and required package check.
 
+
+### 2026-10-26T13:47:00Z - Commit recorded
+
+Commit: `HEAD`
+
+Message: fix(deploy): preserve target controls on image update
+
+Summary: Retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+
+ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5004,6 +5015,13 @@ ADR impact: No ADR change; restores agreement between the release contract and r
   Summary: Corrected the check-selection acceptance collector argument so package qualification uses the declared candidate-writing route.
   ADR impact: No ADR change; restores agreement between the release contract and required package check.
 
+
+- Commit: `HEAD`
+  Time UTC: 2026-10-26T13:47:00Z
+  Message: fix(deploy): preserve target controls on image update
+  Summary: Retained the qualified package receipt and made image-only transitions preserve non-image target parameters while allowing only a strictly rejected unexecuted review to be discarded.
+  ADR impact: No ADR change; strengthens existing governed deployment recovery.
+
 ## Main Refresh Conflicts
 
 
@@ -5027,9 +5045,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T13:35:33Z
-Latest commit SHA: d716bb88
-Chat duration: 1830964s (21:04:36:04)
+Latest commit at UTC: 2026-10-26T13:47:00Z
+Latest commit SHA: HEAD
+Chat duration: 1831651s (21:04:47:31)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
