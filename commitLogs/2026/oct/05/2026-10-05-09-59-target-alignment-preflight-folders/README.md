@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T00:05:21Z
-latest_commit_sha: aee7340b
-chat_duration: 1782352s (20:15:05:52)
+latest_commit_at_utc: 2026-10-26T00:33:06Z
+latest_commit_sha: 5a962e64858476e87fb793f7c2b55233c584d0ca
+chat_duration: 1784017s (20:15:33:37)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3579,6 +3579,17 @@ Raised: Prevented historical ECS task expiry from forcing unrelated rehearsals.
 
 Resolution: Acceptance now uses integrity-checked, durable controller receipts and a closed restore-verifier-only applicability record; the collector still independently observes current service, database, cleanup, and budget state.
 
+
+### 2026-10-26T00:33:06Z - Commit recorded
+
+Commit: `5a962e64858476e87fb793f7c2b55233c584d0ca`
+
+Message: feat(deploy): retain persistence proof evidence
+
+Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
+
+ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -4583,6 +4594,13 @@ Resolution: Acceptance now uses integrity-checked, durable controller receipts a
   Summary: Separated restore IAM-token, connection and query failures into closed safe diagnostic categories; added composition and controller regression coverage; confirmed temporary restore cleanup.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `5a962e64858476e87fb793f7c2b55233c584d0ca`
+  Time UTC: 2026-10-26T00:33:06Z
+  Message: feat(deploy): retain persistence proof evidence
+  Summary: Added integrity-checked retained package receipts and a closed restore-verifier-only proof applicability route; acceptance keeps current-state checks and isolated restore fresh.
+  ADR impact: No ADR required: this is a bounded correction to the existing release-evidence architecture.
+
 ## Main Refresh Conflicts
 
 
@@ -4606,9 +4624,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T00:05:21Z
-Latest commit SHA: aee7340b
-Chat duration: 1782352s (20:15:05:52)
+Latest commit at UTC: 2026-10-26T00:33:06Z
+Latest commit SHA: 5a962e64858476e87fb793f7c2b55233c584d0ca
+Chat duration: 1784017s (20:15:33:37)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
