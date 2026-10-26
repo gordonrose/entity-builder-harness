@@ -61,7 +61,8 @@ and preservation requirements.
 
    It may inspect a session log from the chat branch before that log exists on
    root `main`. When the repository selector exists, it also requires affected
-   local integration proof from the combined clean chat tree, reusing matching
+   local integration proof and the independent delivery census from the combined
+   clean chat tree, reusing matching
    private receipts. Its declared effects include local check/cache writes;
    package and provider operations remain with their owning controllers.
 

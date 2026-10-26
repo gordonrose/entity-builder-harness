@@ -212,7 +212,7 @@ def fingerprint(root: Path, refs: set[str], *, exclude: set[str] | frozenset[str
     return digest.hexdigest()
 
 
-def changed_catalog_checks(root: Path, catalog_ref: str, current: dict[str, Any]) -> set[str]:
+def changed_catalog_checks(root: Path, catalog_ref: str, current: dict[str, Any], baseline: str = 'HEAD') -> set[str]:
     """Return only check identities whose executable contract changed.
 
     A catalog is shared selection authority.  A change to one bound check must
@@ -220,7 +220,7 @@ def changed_catalog_checks(root: Path, catalog_ref: str, current: dict[str, Any]
     declaration into a prerequisite for a focused change.
     """
     try:
-        prior = yaml.safe_load(git(root, 'show', 'HEAD:' + catalog_ref))
+        prior = yaml.safe_load(git(root, 'show', baseline + ':' + catalog_ref))
     except (subprocess.SubprocessError, yaml.YAMLError):
         return set()
     before = prior.get('checks', {}) if isinstance(prior, dict) else {}
@@ -257,7 +257,7 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     changed = sorted(set(args.paths or []))
     if args.staged: changed = sorted(set(git(root, 'diff', '--cached', '--name-only', '--no-renames', '-z').split('\0')) - {''})
     if any(not coverage.safe_path(path) for path in changed): findings.append({'code': 'changed-path-invalid'})
-    catalog_check_changes = changed_catalog_checks(root, catalog_ref, catalog) if catalog_ref in changed else set()
+    catalog_check_changes = changed_catalog_checks(root, catalog_ref, catalog, getattr(args, 'comparison_base', 'HEAD')) if catalog_ref in changed else set()
     paths = repository_paths(root)
     dormant, dormant_findings = dormant_roots(root, catalog)
     findings += dormant_findings
@@ -404,8 +404,9 @@ def plan(args: argparse.Namespace) -> dict[str, Any]:
     for rule in repository_rules:
         if not isinstance(rule, dict) or not coverage.strings(rule.get('inputs')) or not coverage.strings(rule.get('checks')):
             findings.append({'code': 'repository-input-rule-invalid'}); continue
-        if not (args.all or any(below(path, ref) or below(ref, path) for path in consumers for ref in rule['inputs'])): continue
+        triggered = args.all or any(below(path, ref) or below(ref, path) for path in consumers for ref in rule['inputs'])
         for identity in rule['checks']:
+            if not triggered and identity not in catalog_check_changes: continue
             check = checks.get(identity)
             command = check.get('argv', [None, None])[1] if isinstance(check, dict) and isinstance(check.get('argv'), list) and len(check['argv']) > 1 else None
             if isinstance(command, str) and any(below(command, owner) for owner in dormant) and not args.all and not any(below(path, owner) for path in changed for owner in dormant):
@@ -615,6 +616,7 @@ def main() -> int:
             if base:
                 if not re.fullmatch(r'[0-9a-f]{40}', base) or not re.fullmatch(r'[0-9a-f]{40}', head):
                     raise ValueError('ci-source-revision-invalid')
+                args.comparison_base = base
                 args.paths = [path for path in git(args.root.resolve(), 'diff', '--name-only', '--no-renames', '-z', base, head).split('\0') if path]
             else:
                 args.all = True

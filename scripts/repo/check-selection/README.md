@@ -51,6 +51,9 @@ does not acquire network, provider or publication permission. CI retains its
 protected command and uses the integration default. Direct local-main promotion
 runs the same integration selection in the clean chat worktree after confirming
 that it contains the base; failure or branch/input drift blocks promotion.
+Promotion also reconciles the independent current delivery census before receipt
+reuse, as CI does. The structural selector regression binds repository-wide
+governance, metadata and script owners because its fixtures inspect the real graph.
 `--execute-local` runs only catalogued local checks whose effects agree with the
 command metadata and contain only `read-only` and/or `writes-files`. This flag
 requires task authorization for local execution. It never executes package,
@@ -116,7 +119,10 @@ a pass invalidated by a later command in the same invocation.
 
 Each receipt binds the complete catalog definitions of its selected check and
 all aliases sharing that command. An unrelated check definition does not revoke
-that receipt. Checks that explicitly consume the catalog still bind its complete
+that receipt. Catalogue-only changes compare check contracts with staged HEAD
+or the validated CI/promotion base. Existing scope and repository mappings select
+the changed identities; an unchanged sibling on the same repository rule is not
+selected solely by that contract change. Checks that explicitly consume the catalog still bind its complete
 bytes. Every invocation validates the current catalog and selection; a catalog
 change during planning or execution makes the invocation uncertain. This drift
 barrier is separate from the reusable proof identity, so the next fresh plan can

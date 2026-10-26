@@ -35,9 +35,24 @@ checks:
     effects:
     - read-only
     - writes-files
-    owner: deploy.test.validate-observability-mvp-declaration
+    owner: deploy.test.validate-core-server-persistence-observability-mvp
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-observability-mvp-declaration
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   secret-dependency-declaration-regression:
     argv:
     - bash
@@ -47,9 +62,24 @@ checks:
     effects:
     - read-only
     - writes-files
-    owner: deploy.test.validate-secret-dependency-declaration
+    owner: deploy.test.validate-secret-dependency-declaration.wrapper
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-secret-dependency-declaration
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   target-alignment-regression:
     argv:
     - bash
@@ -58,10 +88,24 @@ checks:
     evidence_class: static
     effects:
     - read-only
-    - writes-files
-    owner: deploy.test.validate-target-alignment
+    owner: deploy.test.target-alignment-validation
     inputs:
     - scripts/04.deploy/lifecycle/00-target-alignment/validate-target-alignment
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   runtime-credential-lifecycle-regression:
     argv:
     - bash
@@ -70,10 +114,24 @@ checks:
     evidence_class: local-runtime
     effects:
     - read-only
-    - writes-files
     owner: deploy.test.kanbien-core-platform.runtime-credential-lifecycle
     inputs:
     - scripts/04.deploy/lifecycle/60-run/targets/kanbien-core-platform/core-server-persistence/rehearse-runtime-credential-lifecycle
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   active-workload-health-recovery-regression:
     argv:
     - bash
@@ -83,9 +141,24 @@ checks:
     effects:
     - read-only
     - writes-files
-    owner: deploy.test.validate-active-workload-health-recovery
+    owner: deploy.test.validate-active-workload-health-recovery.wrapper
     inputs:
     - scripts/04.deploy/lifecycle/60-run/validate-active-workload-health-recovery
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   health-failure-recovery-declaration-regression:
     argv:
     - bash
@@ -98,6 +171,21 @@ checks:
     owner: deploy.test.validate-health-failure-and-recovery-declaration
     inputs:
     - scripts/04.deploy/lifecycle/60-run/validate-health-failure-and-recovery-declaration
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   persistence-diagnostic-mapping-regression:
     argv:
     - bash
@@ -106,10 +194,24 @@ checks:
     evidence_class: static
     effects:
     - read-only
-    - writes-files
     owner: deploy.test.validate-persistence-diagnostic-mapping
     inputs:
     - scripts/04.deploy/lifecycle/60-run/validate-persistence-diagnostic-mapping
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   shell-postgresql-reference-regression:
     argv:
     - bash
@@ -118,13 +220,28 @@ checks:
     evidence_class: static
     effects:
     - read-only
-    owner: deploy.test.verify-platform-shell-postgresql-reference
+    owner: deploy.script.verify-platform-shell-postgresql-reference.smoke-test
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
     inputs:
     - scripts/04.deploy/verify-platform-shell-postgresql-reference
     - infra/04.deploy/03.product/targets/kanbien/staging
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
   postgresql-disposable-diagnostics:
     argv:
     - bash
@@ -893,6 +1010,11 @@ checks:
       - '@types/node'
       - typescript
     inputs:
+    - .agentic
+    - docs
+    - AGENTS.md
+    - scripts/00.chat
+    - scripts/01.harness
     - "scripts/00.chat/main-refresh/apply-rehearsed-refresh"
     - scripts/repo/check-selection
     - package.json
@@ -1970,12 +2092,12 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-metric-coverage/script.sh
+    - scripts/04.deploy/verify-platform-shell-metric-coverage/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
     - read-only
-    owner: deploy.script.verify-platform-shell-metric-coverage
+    owner: deploy.script.verify-platform-shell-metric-coverage.smoke-test
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
@@ -2008,12 +2130,12 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler/script.sh
+    - scripts/04.deploy/verify-platform-shell-synthetic-scheduler/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
     - read-only
-    owner: deploy.script.verify-platform-shell-synthetic-scheduler
+    owner: deploy.script.verify-platform-shell-synthetic-scheduler.smoke-test
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml
@@ -2188,12 +2310,12 @@ checks:
     scope_inputs: false
     argv:
     - bash
-    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation/script.sh
+    - scripts/04.deploy/verify-platform-shell-deployment-reconciliation/smoke-test.sh
     stage: local
     evidence_class: local-runtime
     effects:
     - read-only
-    owner: deploy.script.verify-platform-shell-deployment-reconciliation
+    owner: deploy.script.verify-platform-shell-deployment-reconciliation.smoke-test
     applicability:
       kind: profile
       target_profile: infra/04.deploy/03.product/targets/kanbien/staging/target-profile.yml

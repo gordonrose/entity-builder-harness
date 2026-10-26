@@ -182,6 +182,12 @@ class SelectionTests(unittest.TestCase):
     def local_command_result(self, report):
         return next(item for item in report['checks'] if item['argv'][1] == 'scripts/local.sh')
 
+    def test_every_registered_check_has_a_valid_execution_contract(self):
+        catalog = yaml.safe_load((ROOT / 'scripts/repo/check-selection/checks.yml').read_text())
+        errors = [error for key, check in catalog['checks'].items()
+                  for error in selection.validate_check(ROOT, key, check)]
+        self.assertEqual(errors, [])
+
     def test_protected_ci_invocation_defaults_to_required_integration(self):
         self.catalog['checks']['local']['boundary'] = 'integration'
         self.save()
@@ -192,6 +198,81 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(report['boundary'], 'integration')
         self.assertIn('local', report['execution_summary']['executed_check_ids'])
         self.assertFalse((self.root / 'operations').exists())
+
+    def test_ci_catalog_only_change_selects_consumers_against_pr_base(self):
+        self.prepare_selector_cli()
+        def git(*argv):
+            result = subprocess.run(['git', *argv], cwd=self.root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Baseline')
+        base = git('rev-parse', 'HEAD')
+        self.catalog['checks']['local']['boundary'] = 'integration'
+        self.save()
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Catalog contract only')
+        head = git('rev-parse', 'HEAD')
+        result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json'],
+            cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': head}, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual([item['path'] for item in report['changed_inputs']], ['scripts/repo/check-selection/checks.yml'])
+        self.assertIn('local', report['execution_summary']['executed_check_ids'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertFalse((self.root / 'operations').exists())
+
+    def test_ci_repository_only_contract_change_selects_only_changed_identity(self):
+        # No scope can accidentally select the mapped command through a broad
+        # fixture command directory; this is the independent repository route.
+        shutil.rmtree(self.target.parent)
+        (self.root / 'trigger.md').write_text('Unchanged selection input.\n')
+        for name in ('mapped', 'sibling', 'catalog-check'):
+            self.check_script(name, ['read-only', 'writes-files'], 'echo ' + name + ' >> ' + name + '-counts\n')
+            self.catalog['checks'][name] = copy.deepcopy(self.catalog['checks']['local'])
+            self.catalog['checks'][name]['argv'] = ['bash', 'scripts/' + name + '.sh']
+            self.catalog['checks'][name]['inputs'] = ['trigger.md']
+        self.catalog['repository_inputs'] = [
+            {'inputs': ['trigger.md'], 'checks': ['mapped', 'sibling']},
+            {'inputs': ['scripts/repo/check-selection/checks.yml'], 'checks': ['catalog-check']},
+        ]
+        write(self.catalog_path, self.catalog)
+        self.prepare_selector_cli()
+        def git(*argv):
+            result = subprocess.run(['git', *argv], cwd=self.root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Mapped baseline')
+        base = git('rev-parse', 'HEAD')
+        self.catalog['checks']['mapped']['boundary'] = 'integration'
+        write(self.catalog_path, self.catalog)
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Mapped contract only')
+        head = git('rev-parse', 'HEAD')
+        def run(boundary):
+            result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--boundary', boundary, '--execute-local', '--json'],
+                cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': head}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            return json.loads(result.stdout)
+        commit = run('commit')
+        self.assertIn('mapped', commit['execution_summary']['deferred_check_ids'])
+        self.assertNotIn('sibling', commit['execution_summary']['selected_check_ids'])
+        self.assertFalse((self.root / 'mapped-counts').exists())
+        integrated = run('integration')
+        self.assertIn('mapped', integrated['execution_summary']['executed_check_ids'])
+        self.assertNotIn('sibling', integrated['execution_summary']['selected_check_ids'])
+        self.assertEqual((self.root / 'mapped-counts').read_text(), 'mapped\n')
+        self.assertEqual(run('integration')['execution_summary']['executed_check_ids'], [])
+        del self.catalog['checks']['mapped']
+        write(self.catalog_path, self.catalog)
+        git('add', str(self.catalog_path.relative_to(self.root)))
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Invalid removed obligation')
+        rejected = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', '--ci', '--execute-local', '--json'],
+            cwd=self.root, env={**os.environ, 'BASE_SHA': base, 'HEAD_SHA': git('rev-parse', 'HEAD')}, capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn('required-check-missing', self.codes(json.loads(rejected.stdout)))
+        self.assertEqual((self.root / 'mapped-counts').read_text(), 'mapped\n')
 
     def test_cli_unrelated_catalog_changes_reuse_full_selected_alias_definitions(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
@@ -612,7 +693,7 @@ used_by:
         self.assertIn('requirement-proof-list-invalid', self.codes(self.run_plan()))
         self.requirement['local_proofs'] = ['local', 'scope-inventory', 'runnable-program']
         self.catalog['checks']['local']['inputs'] = 7; self.save()
-        self.assertIn('check-input-missing', self.codes(self.run_plan()))
+        self.assertIn('check-input-contract-missing', self.codes(self.run_plan()))
 
     def test_malformed_program_shapes_return_structured_gaps(self):
         for malformed in (None, [], 'unsupported-program', {'contract': []}):

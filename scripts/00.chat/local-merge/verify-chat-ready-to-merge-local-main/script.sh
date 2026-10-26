@@ -385,6 +385,17 @@ if [ -f "$CALLER_ROOT/scripts/repo/check-selection/script.sh" ] || [ -f "$WORKTR
   fi
   base_head="$(git -C "$REPO_ROOT" rev-parse "$BASE_REF")"
   target_head="$(git -C "$REPO_ROOT" rev-parse "$TARGET_BRANCH")"
+  # Source registration is independent of reusable behavioural receipts, as
+  # it is in CI. Reconcile the current physical census before accepting reuse.
+  delivery_gate="scripts/04.deploy/inventory-deploy-control/script.py"
+  if [ -f "$CALLER_ROOT/$delivery_gate" ] || [ -f "$WORKTREE_PATH/$delivery_gate" ]; then
+    if [ ! -f "$WORKTREE_PATH/$delivery_gate" ]; then
+      block "blocked-missing-integration-gate" "delivery census is missing from the target branch" "Restore the repository delivery gate."
+    fi
+    if ! (cd "$WORKTREE_PATH" && python3 "$delivery_gate" --delivery --check); then
+      block "blocked-delivery-coverage" "current delivery entrypoints are not fully registered" "Repair the delivery census in the chat worktree, then rerun promotion verification."
+    fi
+  fi
   # The chat already contains main. Its tree is the exact code that a local
   # merge will promote, and its private receipts can be revalidated in place.
   if ! (cd "$WORKTREE_PATH" && BASE_SHA="$base_head" HEAD_SHA="$target_head" \

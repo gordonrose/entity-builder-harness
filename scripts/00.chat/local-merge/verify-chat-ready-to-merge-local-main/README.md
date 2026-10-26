@@ -40,3 +40,7 @@ Required proof failure or branch/worktree drift blocks promotion. Portable
 installations without the repository extension retain lifecycle checks.
 
 Use this before an explicit local merge from a chat branch into `main`.
+
+When the delivery census owner exists, promotion reconciles its current physical
+entrypoints before accepting reusable integration receipts, matching the independent
+CI source-coverage gate. A missing or failing census blocks promotion.
