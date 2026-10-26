@@ -15,9 +15,9 @@ transcript_source:
 latest_context_packet_id:
 latest_context_packet_routing_summary:
 latest_context_packet_at_utc:
-latest_commit_at_utc: 2026-10-26T15:20:10Z
-latest_commit_sha: 19407bef32e01250adbd231941cf62c31df757ac
-chat_duration: 1837241s (21:06:20:41)
+latest_commit_at_utc: 2026-10-26T16:32:37Z
+latest_commit_sha: 29c862d8
+chat_duration: 1841588s (21:07:33:08)
 estimated_chat_tokens: unavailable; transcript source not supplied by chat
 estimated_chat_cost: unavailable; estimated chat tokens are unavailable
 estimated_chat_cost_basis: unavailable; estimated chat tokens are unavailable
@@ -3983,6 +3983,17 @@ Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator ver
 
 ADR impact: covered by session ADR disposition
 
+
+### 2026-10-26T16:32:37Z - Commit recorded
+
+Commit: `29c862d8`
+
+Message: Retained the current-image isolated restore verifier rejection and its safe partial-log diagnostic; the temporary restored database and scoped identity policy were cleaned up.
+
+Summary: Restore acceptance remains unproved: post-TLS PostgreSQL handshake failed despite exact IAM policy simulation; one required RDS log export was unavailable, so no provider cause is claimed.
+
+ADR impact: covered by session ADR disposition
+
 ## Sub-Agent Activity
 
 - None recorded yet.
@@ -5148,6 +5159,13 @@ ADR impact: covered by session ADR disposition
   Summary: Awaiting an active kanbien-dev AWS SSO session for policy-simulator verification and the next governed restore attempt.
   ADR impact: covered by session ADR disposition
 
+
+- Commit: `29c862d8`
+  Time UTC: 2026-10-26T16:32:37Z
+  Message: Retained the current-image isolated restore verifier rejection and its safe partial-log diagnostic; the temporary restored database and scoped identity policy were cleaned up.
+  Summary: Restore acceptance remains unproved: post-TLS PostgreSQL handshake failed despite exact IAM policy simulation; one required RDS log export was unavailable, so no provider cause is claimed.
+  ADR impact: covered by session ADR disposition
+
 ## Main Refresh Conflicts
 
 
@@ -5171,9 +5189,9 @@ Reason: Record the PostgreSQL selection already stated in the programme for this
 ## Session Metrics
 
 Raised at UTC: 2026-10-05T08:59:29Z
-Latest commit at UTC: 2026-10-26T15:20:10Z
-Latest commit SHA: 19407bef32e01250adbd231941cf62c31df757ac
-Chat duration: 1837241s (21:06:20:41)
+Latest commit at UTC: 2026-10-26T16:32:37Z
+Latest commit SHA: 29c862d8
+Chat duration: 1841588s (21:07:33:08)
 Estimated chat tokens: unavailable; transcript source not supplied by chat
 Estimated chat cost: unavailable; estimated chat tokens are unavailable
 Estimated chat cost basis: unavailable; estimated chat tokens are unavailable
