@@ -1,10 +1,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.check-selection.catalog
-#   version: 3
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -15,6 +15,11 @@
 #   - id: repo.command.check-selection
 #     path: scripts/repo/check-selection/script.sh
 schema: repo/check-catalog/v1
+dormant_impact_roots:
+- .agentic/02.rag-rulebook
+- scripts/02.rag-rulebook
+- docs/02.rag-rulebook
+- infra/04.deploy/02.rag-rulebook
 checks:
   rag-retirement-regression:
     argv:
@@ -849,6 +854,81 @@ checks:
     - .github/workflows/publish-kanbien-core-platform-observability-collector.yml
     - scripts/04.deploy/lifecycle/40-package/targets/kanbien-core-platform/core-server-persistence-observability-collector-package-custody
     - scripts/04.deploy/shared/deployment-operation-diagnostics.py
+  task-classification-fixtures:
+    argv:
+    - bash
+    - scripts/00.chat/classification/classify-task/check-fixtures.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: chat.script.classification.classify-task.check-fixtures
+    runtime:
+      tools:
+      - bash
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      config_inputs: []
+    inputs:
+    - .agentic/routing-policy.yaml
+    - scripts/00.chat/classification/classify-task
+  lifecycle-metadata-preparation:
+    argv:
+    - bash
+    - scripts/01.harness/artifact-metadata/update-lifecycle/script.sh
+    - --changed
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    - writes-files
+    owner: harness.script.artifact-metadata.update-lifecycle
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/01.harness/artifact-metadata/update-lifecycle
+  artifact-inventory-audit:
+    argv:
+    - bash
+    - scripts/repo/audit-artifact-inventory/script.sh
+    stage: local
+    evidence_class: static
+    effects:
+    - read-only
+    owner: repo.script.audit-artifact-inventory
+    runtime:
+      tools:
+      - bash
+      - python3
+      environment:
+      - PATH
+      - LANG
+      - LC_ALL
+      - PYTHONPATH
+      - PYTHONHOME
+      - PYTHONHASHSEED
+      config_inputs:
+      - .python-version
+      - pyproject.toml
+      - requirements.txt
+    inputs:
+    - scripts/repo/audit-artifact-inventory
+    - scripts/01.harness/artifact-metadata/generate-index
 repository_inputs:
 - inputs:
   - .github/workflows/deploy-rag-rulebook-staging.yml
@@ -903,6 +983,19 @@ repository_inputs:
   - scripts/00.chat/session-log/prepare-chat-session-before-commit
   checks:
   - check-selection-regression
+- inputs:
+  - .agentic/routing-policy.yaml
+  - scripts/00.chat/classification/classify-task
+  checks:
+  - task-classification-fixtures
+- inputs:
+  - scripts/01.harness/artifact-metadata/update-lifecycle
+  checks:
+  - lifecycle-metadata-preparation
+- inputs:
+  - scripts/repo/audit-artifact-inventory
+  checks:
+  - artifact-inventory-audit
 - inputs:
   - scripts/04.deploy/lifecycle/00-target-alignment/validate-artifact-placement
   checks:

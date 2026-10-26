@@ -2,10 +2,10 @@
 # agentic-artifact:
 #   schema: agentic-artifact/v3
 #   id: repo.test.check-selection
-#   version: 2
+#   version: 5
 #   status: active
 #   created_on: "2026-10-24"
-#   updated_on: "2026-10-25"
+#   updated_on: "2026-10-26"
 #   layer: 06.shared
 #   domain: validation
 #   disciplines: [agentic, security, sre]
@@ -126,7 +126,7 @@ class SelectionTests(unittest.TestCase):
         write(self.contract_path, self.contract); write(self.catalog_path, self.catalog)
 
     def run_plan(self, *, paths=None, stage='local', execute=False, evidence=None, staged=False):
-        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, evidence=evidence, json=True)
+        args = argparse.Namespace(root=self.root, catalog=self.catalog_path, paths=paths or ['src/main.ts'], staged=staged, all=False, stage=stage, execute_local=execute, record_preparation=False, require_preparation=False, evidence=evidence, json=True)
         files = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file() and '.git' not in path.relative_to(self.root).parts]
         def git(_root, *arguments):
             if arguments[0] == 'diff': return 'src/old.ts\0src/main.ts\0' if '--cached' in arguments else ''
@@ -157,6 +157,33 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(report['verdict'], 'passed', report)
         self.assertEqual(len(report['checks']), 6)
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+    def test_dormant_impact_roots_do_not_expand_normal_dependency_proofs(self):
+        dormant = self.root / 'dormant'; dormant.mkdir()
+        (dormant / 'source.md').write_text('''<!-- agentic-artifact:
+schema: agentic-artifact/v3
+id: fixture.dormant-source
+version: 1
+status: active
+created_on: "2026-10-26"
+updated_on: "2026-10-26"
+layer: 01.harness
+domain: fixture
+disciplines: [agentic]
+kind: documentation
+purpose: Provide a dormant dependency edge for selector isolation testing.
+portability: {class: internal, targets: []}
+used_by:
+- id: fixture.main
+  path: src/main.ts
+-->\n''')
+        paths = [path.relative_to(self.root).as_posix() for path in self.root.rglob('*') if path.is_file()]
+        active = selection.consumer_graph(self.root, paths)
+        dormant_graph = selection.consumer_graph(self.root, paths, ['dormant'])
+        self.assertIn('src/main.ts', active.get('dormant/source.md', set()))
+        self.assertNotIn('dormant/source.md', dormant_graph)
+        self.catalog['dormant_impact_roots'] = ['dormant']; self.save()
+        self.assertEqual(self.run_plan()['verdict'], 'planned')
 
     def test_duplicate_command_cannot_claim_conflicting_evidence_classes(self):
         self.catalog['checks']['alias'] = copy.deepcopy(self.catalog['checks']['local'])
@@ -421,8 +448,35 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(local['evidence_source'], 'trusted-worktree-cache')
         self.assertEqual(local['executed_revision'], 'a' * 40)
         self.assertEqual(local['source_revision'], 'b' * 40)
+        self.assertEqual(result['execution_summary']['reused_check_ids'], ['local', 'runnable-program', 'scope-inventory'])
         with patch.dict(os.environ, {'LANG': 'C.fixture'}): self.run_plan(execute=True)
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
+
+    def test_reports_relevant_input_and_governance_invalidation_but_reuses_unrelated_session_evidence(self):
+        self.run_plan(execute=True)
+        session = self.root / 'commitLogs/session/README.md'; session.parent.mkdir(parents=True)
+        session.write_text('# Session evidence\n')
+        reused = self.run_plan(execute=True)
+        local = next(item for item in reused['checks'] if item['check_id'] == 'local')
+        self.assertEqual(local['evidence_source'], 'trusted-worktree-cache')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+
+        (self.root / 'src/main.ts').write_text('changed implementation\n')
+        implementation = self.run_plan(execute=True)
+        local = next(item for item in implementation['checks'] if item['check_id'] == 'local')
+        self.assertEqual(local['evidence_source'], 'local-runner')
+        self.assertIn('verified-inputs-changed', local['cache_invalidation_reasons'])
+        self.assertIn({'check_id': 'local', 'reasons': local['cache_invalidation_reasons']}, implementation['execution_summary']['invalidated_checks'])
+
+        self.catalog['checks']['local']['runtime']['environment'] = ['LANG']
+        self.save()
+        governance = self.run_plan(execute=True)
+        local = next(item for item in governance['checks'] if item['check_id'] == 'local')
+        self.assertEqual(local['evidence_source'], 'local-runner')
+        self.assertIn('verified-inputs-changed', local['cache_invalidation_reasons'])
+        self.assertIn('runtime-identity-changed', local['cache_invalidation_reasons'])
+        self.assertIn('verification-contract-changed', local['cache_invalidation_reasons'])
+        self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\nlocal\n')
 
     def test_imported_report_cannot_qualify_local_check(self):
         planned = self.run_plan()
@@ -463,14 +517,25 @@ class SelectionTests(unittest.TestCase):
         (shim / 'git').write_text('#!/bin/bash\ncase "$*" in *"rev-parse HEAD"*) cat "' + str(revision) + '";; *"diff --cached --name-only --no-renames -z"*) printf "src/main.ts\\0";; *) exec "' + str(git) + '" "$@";; esac\n')
         (shim / 'git').chmod(0o755)
         environment = {**os.environ, 'PATH': str(shim) + ':' + os.environ['PATH']}
+        def select(*arguments):
+            result = subprocess.run(['bash', 'scripts/repo/check-selection/script.sh', *arguments], cwd=self.root, env=environment, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            return json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
         def invoke():
             result = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             return json.loads(next(line for line in result.stdout.splitlines() if line.startswith('{')))
+        preparation = select('--paths', 'src/main.ts', '--record-preparation', '--json')
+        self.assertEqual(preparation['preparation_status'], 'recorded')
+        final_verification = select('--paths', 'src/main.ts', '--execute-local', '--json')
+        self.assertEqual((self.root / 'counts').read_text(), 'local\n')
+        self.assertIn('local', final_verification['execution_summary']['executed_check_ids'])
         first = invoke(); revision.write_text('b' * 40); second = invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         self.assertTrue(Path(second['local_report_path']).is_file())
         self.assertTrue(all(item['evidence_source'] == 'trusted-worktree-cache' for item in second['checks'] if item['stage'] == 'local'))
+        self.assertTrue(any(item['stage'] == 'package' and item['status'] == 'deferred' for item in second['checks']))
+        self.assertFalse((self.root / 'operations').exists(), 'commit preparation must not rerun package qualification')
         (self.root / 'unrelated-not-staged.txt').write_text('unrelated local work\n'); invoke()
         (self.root / 'src/main.ts').write_text('changed\n')
         blocked = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
@@ -478,6 +543,12 @@ class SelectionTests(unittest.TestCase):
         self.assertIn('selected-input-not-staged', blocked.stdout)
         self.assertEqual((self.root / 'counts').read_text(), 'local\n')
         subprocess.run(['git', '-C', str(self.root), 'add', 'src/main.ts'], check=True)
+        stale_preparation = subprocess.run(['bash', 'scripts/repo/commit-gates/script.sh'], cwd=self.root, env=environment, capture_output=True, text=True)
+        self.assertNotEqual(stale_preparation.returncode, 0)
+        self.assertIn('verification-preparation-inputs-changed', stale_preparation.stdout)
+        select('--paths', 'src/main.ts', '--record-preparation', '--json')
+        refreshed = select('--paths', 'src/main.ts', '--execute-local', '--json')
+        self.assertIn('local', refreshed['execution_summary']['executed_check_ids'])
         invoke()
         self.assertEqual((self.root / 'counts').read_text(), 'local\nlocal\n')
 

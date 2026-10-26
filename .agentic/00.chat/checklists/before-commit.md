@@ -1,10 +1,10 @@
 <!-- agentic-artifact:
   schema: agentic-artifact/v3
   id: chat.checklists.before-commit
-  version: 1
+  version: 2
   status: active
   created_on: "2026-06-15"
-  updated_on: "2026-10-20"
+  updated_on: "2026-10-26"
   layer: 00.chat
   domain: git
   disciplines:
@@ -61,6 +61,23 @@ script or gate, or keeping the prose with an allow marker and reason.
 
 ## Artifact Metadata
 
+Before final verification or image qualification, complete preparation for the
+explicit task paths:
+
+```bash
+bash scripts/01.harness/run-governed-script.sh --approved-action \
+  scripts/00.chat/session-log/prepare-chat-session-before-commit/script.sh \
+  --before-verification --paths <task-path> [<task-path>...]
+```
+
+This is the one task-preparation sequence: it applies necessary lifecycle
+metadata updates, refreshes the affected metadata index, runs inexpensive
+structural and prerequisite checks, and prints the focused verification plan.
+Repeat it until it reports no further lifecycle change, then run final
+verification. Do not report ready to merge while this preparation or the staged
+commit-boundary gate remains outstanding. The dormant RAG source-review system
+remains explicit maintenance, not an ordinary preparation side effect.
+
 Run:
 
 ```bash
@@ -71,7 +88,8 @@ New artifact files require metadata. The checker validates staged additions,
 copies, renames and modifications, including v3 lifecycle dates and replacement
 references. Existing v1/v2 artifacts remain valid during focused migration;
 ordinary modifications to legacy files without headers remain grandfathered.
-Prepare lifecycle dates and replacement references before staging. For v3
+Prepare lifecycle dates and replacement references before final verification
+and staging. For v3
 artifacts, preserve `created_on` and set `updated_on` to today's UTC date when
 content changes. The gate itself does not write or stage files.
 
