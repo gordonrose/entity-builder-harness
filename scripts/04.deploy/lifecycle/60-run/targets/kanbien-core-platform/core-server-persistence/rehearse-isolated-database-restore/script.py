@@ -85,7 +85,8 @@ def controls(m):
  s["PrivateSubnetIds"]=f["PrivateSubnetIds"];return s,"ok"
 def correct(restored,src,group):
  attached=[x.get("VpcSecurityGroupId") for x in restored.get("VpcSecurityGroups",[]) if isinstance(x,dict)]; a=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; b=restored.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(restored.get("DBSubnetGroup"),dict) else None
- return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b
+ exports=restored.get("EnabledCloudwatchLogsExports")
+ return restored.get("DBInstanceStatus")=="available" and restored.get("PubliclyAccessible") is False and restored.get("StorageEncrypted") is True and restored.get("IAMDatabaseAuthenticationEnabled") is True and restored.get("Engine")=="postgres" and attached==[group] and isinstance(a,str) and a==b and isinstance(exports,list) and exports==["postgresql"]
 def parsed_time(value):
  if not isinstance(value,str):return None
  try:
@@ -149,7 +150,7 @@ def restore(m,sid,rid,observe_only=False,record_proof_path=None):
   if observe_only:return emit("uncertain","persistence-restore-operation-not-observed",facts=facts)
   subnet=src.get("DBSubnetGroup",{}).get("DBSubnetGroupName") if isinstance(src.get("DBSubnetGroup"),dict) else None; cls=src.get("DBInstanceClass")
   if not isinstance(subnet,str) or not isinstance(cls,str):return emit("blocked","persistence-restore-source-shape-invalid")
-  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
+  ok,_,c=m.aws("rds","restore-db-instance-from-db-snapshot","--db-instance-identifier",rid,"--db-snapshot-identifier",sid,"--db-instance-class",cls,"--db-subnet-group-name",subnet,"--vpc-security-group-ids",ctl["PersistenceRestoredDatabaseSecurityGroupId"],"--no-publicly-accessible","--no-multi-az","--enable-cloudwatch-logs-exports","postgresql","--copy-tags-to-snapshot","--tags",*[f"Key={key},Value={value}" for key,value in tags.items()])
   return emit("pending" if ok else "uncertain","persistence-restore-submitted-awaiting-provider-observation" if ok else c,facts=facts)
  bound=existing_restore_binding(value,rid,tags)
  if bound!="ok":return emit("uncertain" if bound.endswith("unproven") else "blocked",bound,facts=facts)
